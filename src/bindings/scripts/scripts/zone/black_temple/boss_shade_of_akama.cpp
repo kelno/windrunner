@@ -31,7 +31,7 @@ EndScriptData */
 #define SAY_BROKEN_FREE_01          -1564016
 #define SAY_BROKEN_FREE_02          -1564017
 
-#define GOSSIP_ITEM                 "We are ready to fight alongside you, Akama"
+#define GOSSIP_ITEM                 "Nous sommes prêts à combattre à vos côtés, Akama"
 
 struct Location
 {
@@ -449,7 +449,7 @@ struct TRINITY_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
                         Akama->GetMotionMaster()->Clear();
                         // Shade should move to Akama, not the other way around
                         Akama->GetMotionMaster()->MoveIdle();
-                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        //m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         // Crazy amount of threat
                         m_creature->AddThreat(Akama, 10000000.0f);
                         Akama->AddThreat(m_creature, 10000000.0f);
@@ -461,6 +461,12 @@ struct TRINITY_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
         }
         else                                                // No longer banished, let's fight Akama now
         {
+            // Remove NOT_SELECTABLE flag only when reaching Akama melee
+            if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
+                Creature* Akama = Unit::GetCreature((*m_creature), AkamaGUID);
+                if (Akama && m_creature->IsWithinDistInMap(Akama, 5.0f))
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            }
             if(ReduceHealthTimer < diff)
             {
                 if(AkamaGUID)
@@ -468,6 +474,7 @@ struct TRINITY_DLL_DECL boss_shade_of_akamaAI : public ScriptedAI
                     Creature* Akama = Unit::GetCreature((*m_creature), AkamaGUID);
                     if(Akama && Akama->isAlive())
                     {
+                        Akama->SetReactState(REACT_DEFENSIVE);
                         //10 % less health every few seconds.
                         m_creature->DealDamage(Akama, Akama->GetMaxHealth()/10, NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                         ReduceHealthTimer = 12000;
@@ -569,7 +576,9 @@ struct TRINITY_DLL_DECL npc_akamaAI : public ScriptedAI
             m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         }
         summons.DespawnAll();
-        DoCast(m_creature, SPELL_AKAMA_STEALTH);
+        DoCast(m_creature, SPELL_AKAMA_STEALTH, true);
+        // Ignore aggro
+        m_creature->SetReactState(REACT_PASSIVE);
     }
 
     void JustSummoned(Creature *summon) 
@@ -581,6 +590,11 @@ struct TRINITY_DLL_DECL npc_akamaAI : public ScriptedAI
     {
         if(summon->GetEntry() == CREATURE_BROKEN)
             summons.Despawn(summon);
+    }
+
+    void HealReceived(Unit* done_by, uint32& addhealth)
+    {
+        addhealth = 0;
     }
 
     void Aggro(Unit* who) {}
