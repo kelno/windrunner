@@ -24,21 +24,18 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_magisters_terrace.h"
 
-struct Speech
-{
+struct Speech {
     int32 id;
 };
 
-static Speech LackeyDeath[]=
-{
+static Speech LackeyDeath[] = {
     {-1585013},
     {-1585014},
     {-1585015},
     {-1585016},
 };
 
-static Speech PlayerDeath[]=
-{
+static Speech PlayerDeath[]= {
     {-1585017},
     {-1585018},
     {-1585019},
@@ -46,30 +43,30 @@ static Speech PlayerDeath[]=
     {-1585021},
 };
 
-#define SAY_AGGRO               -1585012
-#define SAY_DEATH               -1585022
+enum eDelrissa {
+    SAY_AGGRO               = -1585012,
+    SAY_DEATH               = -1585022
 
-#define SPELL_DISPEL_MAGIC      27609
-#define SPELL_FLASH_HEAL        17843
-#define SPELL_SW_PAIN_NORMAL    14032
-#define SPELL_SW_PAIN_HEROIC    15654
-#define SPELL_SHIELD            44291
-#define SPELL_RENEW_NORMAL      44174
-#define SPELL_RENEW_HEROIC      46192
+    SPELL_DISPEL_MAGIC      = 27609,
+    SPELL_FLASH_HEAL        = 17843,
+    SPELL_SW_PAIN_NORMAL    = 14032,
+    SPELL_SW_PAIN_HEROIC    = 15654,
+    SPELL_SHIELD            = 44291,
+    SPELL_RENEW_NORMAL      = 44174,
+    SPELL_RENEW_HEROIC      = 46192,
+    
+    ORIENT                  = 4.98,
+    POS_Z                   = -19.9215
+};
 
-#define ORIENT                  4.98
-#define POS_Z                   -19.9215
-
-float LackeyLocations[4][2]=
-{
+float LackeyLocations[4][2] = {
     {123.77, 17.6007},
     {131.731, 15.0827},
     {121.563, 15.6213},
     {129.988, 17.2355},
 };
 
-const uint32 AddEntry[8]=
-{
+const uint32 AddEntry[8] = {
     24557,                                                  //Kagani Nightstrike
     24558,                                                  //Elris Duskhallow
     24554,                                                  //Eramas Brightblaze
@@ -80,8 +77,7 @@ const uint32 AddEntry[8]=
     24556,                                                  //Zelfan
 };
 
-struct Add
-{
+struct Add {
     Add(uint32 _entry, uint64 _guid)
     {
         entry = _entry;
@@ -99,8 +95,8 @@ struct boss_priestess_delrissaAI : public ScriptedAI
     boss_priestess_delrissaAI(Creature* c) : ScriptedAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        Adds.clear();
-        SummonAdds();
+        //Adds.clear();
+        //SummonAdds();
         Heroic = c->GetMap()->IsHeroic();
     }
 
@@ -494,12 +490,14 @@ struct boss_priestess_guestAI : public ScriptedAI
     }
 };
 
-#define SPELL_KIDNEY_SHOT        27615
-#define SPELL_GOUGE              12540
-#define SPELL_KICK               27613
-#define SPELL_VANISH             44290
-#define SPELL_BACKSTAB           15657
-#define SPELL_EVISCERATE         27611
+enum eKaganiNightstrike {
+    SPELL_KIDNEY_SHOT        = 27615,
+    SPELL_GOUGE              = 12540,
+    SPELL_KICK               = 27613,
+    SPELL_VANISH             = 44290,
+    SPELL_BACKSTAB           = 15657,
+    SPELL_EVISCERATE         = 27611
+};
 
 struct boss_kagani_nightstrikeAI : public boss_priestess_guestAI
 {
@@ -586,13 +584,15 @@ struct boss_kagani_nightstrikeAI : public boss_priestess_guestAI
     }
 };
 
-#define SPELL_IMMOLATE               44267
-#define SPELL_SHADOW_BOLT            12471
-#define SPELL_SEED_OF_CORRUPTION     44141
-#define SPELL_CURSE_OF_AGONY         14875
-#define SPELL_FEAR                   38595
-#define SPELL_IMP_FIREBALL           44164
-#define SPELL_SUMMON_IMP             44163
+enum eEllrisDuskhallow {
+    SPELL_IMMOLATE               = 44267,
+    SPELL_SHADOW_BOLT            = 12471,
+    SPELL_SEED_OF_CORRUPTION     = 44141,
+    SPELL_CURSE_OF_AGONY         = 14875,
+    SPELL_FEAR                   = 38595,
+    SPELL_IMP_FIREBALL           = 44164,
+    SPELL_SUMMON_IMP             = 44163
+};
 
 //#define CREATURE_IMP                 44163
 //#define CREATURE_FIZZLE              24656
@@ -727,8 +727,10 @@ void mob_fizzleAI::KilledUnit(Unit* victim)
         ((boss_ellris_duskhallowAI*)Ellris->AI())->KilledUnit(victim);
 }*/
 
-#define SPELL_KNOCKDOWN            11428
-#define SPELL_SNAP_KICK            46182
+enum eEramasBrightblaze {
+    SPELL_KNOCKDOWN            = 11428,
+    SPELL_SNAP_KICK            = 46182
+};
 
 struct boss_eramas_brightblazeAI : public boss_priestess_guestAI
 {
@@ -778,13 +780,15 @@ struct boss_eramas_brightblazeAI : public boss_priestess_guestAI
     }
 };
 
-#define SPELL_POLYMORPH             13323
-#define SPELL_ICE_BLOCK             27619
-#define SPELL_BLIZZARD              44178
-#define SPELL_ICE_LANCE             46194
-#define SPELL_CONE_OF_COLD          38384
-#define SPELL_FROSTBOLT             15043
-#define SPELL_BLINK                 14514
+enum eYazzai {
+    SPELL_POLYMORPH             = 13323,
+    SPELL_ICE_BLOCK             = 27619,
+    SPELL_BLIZZARD              = 44178,
+    SPELL_ICE_LANCE             = 46194,
+    SPELL_CONE_OF_COLD          = 38384,
+    SPELL_FROSTBOLT             = 15043,
+    SPELL_BLINK                 = 14514
+};
 
 struct boss_yazzaiAI : public boss_priestess_guestAI
 {
@@ -908,13 +912,15 @@ struct boss_yazzaiAI : public boss_priestess_guestAI
     }
 };
 
-#define SPELL_INTERCEPT_STUN         27577
-#define SPELL_DISARM                 27581
-#define SPELL_PIERCING_HOWL          23600
-#define SPELL_FRIGHTENING_SHOUT      19134
-#define SPELL_HAMSTRING              27584
-#define SPELL_BATTLE_SHOUT           27578
-#define SPELL_MORTAL_STRIKE          44268
+enum eWarlordSalaris {
+    SPELL_INTERCEPT_STUN         = 27577,
+    SPELL_DISARM                 = 27581,
+    SPELL_PIERCING_HOWL          = 23600,
+    SPELL_FRIGHTENING_SHOUT      = 19134,
+    SPELL_HAMSTRING              = 27584,
+    SPELL_BATTLE_SHOUT           = 27578,
+    SPELL_MORTAL_STRIKE          = 44268
+};
 
 struct boss_warlord_salarisAI : public boss_priestess_guestAI
 {
@@ -1012,15 +1018,17 @@ struct boss_warlord_salarisAI : public boss_priestess_guestAI
     }
 };
 
-#define SPELL_AIMED_SHOT            44271
-#define SPELL_SHOOT                 15620
-#define SPELL_CONCUSSIVE_SHOT       27634
-#define TRIGGER_CONCUSSIVE_SHOT     19410
-#define SPELL_MULTI_SHOT            31942
-#define SPELL_WING_CLIP             44286
-#define SPELL_FREEZING_TRAP         44136
+enum eGaraxxas {
+    SPELL_AIMED_SHOT            = 44271,
+    SPELL_SHOOT                 = 15620,
+    SPELL_CONCUSSIVE_SHOT       = 27634,
+    TRIGGER_CONCUSSIVE_SHOT     = 19410,
+    SPELL_MULTI_SHOT            = 31942,
+    SPELL_WING_CLIP             = 44286,
+    SPELL_FREEZING_TRAP         = 44136,
 
-#define CREATURE_SLIVER             24552
+    CREATURE_SLIVER             = 24552
+};
 
 /*struct mob_sliverAI : public ScriptedAI
 {
@@ -1171,13 +1179,15 @@ void mob_sliverAI::KilledUnit(Unit* victim)
         ((boss_garaxxasAI*)Garaxxas->AI())->KilledUnit(victim);
 }*/
 
-#define SPELL_WINDFURY_TOTEM         27621
-#define SPELL_WAR_STOMP              46026
-#define SPELL_PURGE                  27626
-#define SPELL_LESSER_HEALING_WAVE    44256
-#define SPELL_FROST_SHOCK            21401
-#define SPELL_FIRE_NOVA_TOTEM        44257
-#define SPELL_EARTHBIND_TOTEM        15786
+enum eApoko {
+    SPELL_WINDFURY_TOTEM         = 27621,
+    SPELL_WAR_STOMP              = 46026,
+    SPELL_PURGE                  = 27626,
+    SPELL_LESSER_HEALING_WAVE    = 44256,
+    SPELL_FROST_SHOCK            = 21401,
+    SPELL_FIRE_NOVA_TOTEM        = 44257,
+    SPELL_EARTHBIND_TOTEM        = 15786
+};
 
 struct boss_apokoAI : public boss_priestess_guestAI
 {
@@ -1268,14 +1278,16 @@ struct boss_apokoAI : public boss_priestess_guestAI
     }
 };
 
-#define SPELL_GOBLIN_DRAGON_GUN        44272
-#define SPELL_ROCKET_LAUNCH            44137
-#define SPELL_RECOMBOBULATE            44274
-#define SPELL_HIGH_EXPLOSIVE_SHEEP     44276
-#define SPELL_FEL_IRON_BOMB            46024
-#define SPELL_SHEEP_EXPLOSION          44279
+enum eZelfan {
+    SPELL_GOBLIN_DRAGON_GUN        = 44272,
+    SPELL_ROCKET_LAUNCH            = 44137,
+    SPELL_RECOMBOBULATE            = 44274,
+    SPELL_HIGH_EXPLOSIVE_SHEEP     = 44276,
+    SPELL_FEL_IRON_BOMB            = 46024,
+    SPELL_SHEEP_EXPLOSION          = 44279,
 
-#define CREATURE_EXPLOSIVE_SHEEP        24715
+    CREATURE_EXPLOSIVE_SHEEP       = 24715
+};
 
 struct boss_zelfanAI : public boss_priestess_guestAI
 {
