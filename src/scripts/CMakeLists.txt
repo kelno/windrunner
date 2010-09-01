@@ -16,45 +16,6 @@ SET(scripts_STAT_SRCS
     ScriptMgr.h
     azeroth/arathi_highlands/arathi_highlands.cpp
     azeroth/alterac_mountains/alterac_mountains.cpp
-    kalimdor/ashenvale/ashenvale.cpp
-    outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
-    outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
-    outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
-    outland/aunchindoun/mana_tombs/boss_pandemonius.cpp
-    outland/aunchindoun/sethekk_halls/boss_darkweaver_syth.cpp
-    outland/aunchindoun/sethekk_halls/boss_tailonking_ikiss.cpp
-    outland/aunchindoun/sethekk_halls/boss_anzu.cpp
-    outland/aunchindoun/sethekk_halls/def_sethekk_halls.h
-    outland/aunchindoun/sethekk_halls/instance_sethekk_halls.cpp
-    outland/aunchindoun/sethekk_halls/sethekk_halls.cpp
-    outland/aunchindoun/shadow_labyrinth/boss_ambassador_hellmaw.cpp
-    outland/aunchindoun/shadow_labyrinth/boss_blackheart_the_inciter.cpp
-    outland/aunchindoun/shadow_labyrinth/boss_grandmaster_vorpil.cpp
-    outland/aunchindoun/shadow_labyrinth/boss_murmur.cpp
-    outland/aunchindoun/shadow_labyrinth/def_shadow_labyrinth.h
-    outland/aunchindoun/shadow_labyrinth/instance_shadow_labyrinth.cpp
-    kalimdor/azshara/azshara.cpp
-    kalimdor/azshara/boss_azuregos.cpp
-    outland/azuremyst_isle/azuremyst_isle.cpp
-    kalimdor/barrens/the_barrens.cpp
-    outland/black_temple/black_temple.cpp
-    outland/black_temple/boss_bloodboil.cpp
-    outland/black_temple/boss_illidan.cpp
-    outland/black_temple/boss_mother_shahraz.cpp
-    outland/black_temple/boss_reliquary_of_souls.cpp
-    outland/black_temple/boss_shade_of_akama.cpp
-    outland/black_temple/boss_supremus.cpp
-    outland/black_temple/boss_teron_gorefiend.cpp
-    outland/black_temple/boss_warlord_najentus.cpp
-    outland/black_temple/def_black_temple.h
-    outland/black_temple/illidari_council.cpp
-    outland/black_temple/instance_black_temple.cpp
-    kalimdor/blackfathom_depths/instance_blackfathom_deeps.cpp
-    kalimdor/blackfathom_depths/boss_aku_mai.cpp
-    kalimdor/blackfathom_depths/boss_gelihast.cpp
-    kalimdor/blackfathom_depths/boss_kelris.cpp
-    kalimdor/blackfathom_depths/blackfathom_deeps.cpp
-    kalimdor/blackfathom_depths/def_blackfathom_deeps.h
     azeroth/blackrock_depths/blackrock_depths.cpp
     azeroth/blackrock_depths/boss_ambassador_flamelash.cpp
     azeroth/blackrock_depths/boss_anubshiah.cpp
@@ -90,90 +51,15 @@ SET(scripts_STAT_SRCS
     azeroth/blackwing_lair/boss_vaelastrasz.cpp
     azeroth/blackwing_lair/boss_victor_nefarius.cpp
     azeroth/blackwing_lair/instance_blackwing_lair.cpp
-    outland/blades_edge_mountains/blades_edge_mountains.cpp
     azeroth/blasted_lands/blasted_lands.cpp
     azeroth/blasted_lands/boss_kruul.cpp
-    outland/bloodmyst_isle/bloodmyst_isle.cpp
     azeroth/burning_steppes/burning_steppes.cpp
-    kalimdor/caverns_of_time/dark_portal/def_dark_portal.h
-    kalimdor/caverns_of_time/dark_portal/instance_dark_portal.cpp
-    kalimdor/caverns_of_time/dark_portal/dark_portal.cpp
-    kalimdor/caverns_of_time/dark_portal/boss_aeonus.cpp
-    kalimdor/caverns_of_time/dark_portal/boss_chrono_lord_deja.cpp
-    kalimdor/caverns_of_time/dark_portal/boss_temporus.cpp
-    kalimdor/caverns_of_time/hyjal/boss_anetheron.cpp
-    kalimdor/caverns_of_time/hyjal/boss_archimonde.cpp
-    kalimdor/caverns_of_time/hyjal/boss_azgalor.cpp
-    kalimdor/caverns_of_time/hyjal/boss_kazrogal.cpp
-    kalimdor/caverns_of_time/hyjal/boss_rage_winterchill.cpp
-    kalimdor/caverns_of_time/hyjal/def_hyjal.h
-    kalimdor/caverns_of_time/hyjal/hyjal.cpp
-    kalimdor/caverns_of_time/hyjal/hyjal_trash.cpp
-    kalimdor/caverns_of_time/hyjal/hyjal_trash.h
-    kalimdor/caverns_of_time/hyjal/hyjalAI.cpp
-    kalimdor/caverns_of_time/hyjal/hyjalAI.h
-    kalimdor/caverns_of_time/hyjal/instance_hyjal.cpp
-    kalimdor/caverns_of_time/old_hillsbrad/boss_captain_skarloc.cpp
-    kalimdor/caverns_of_time/old_hillsbrad/boss_epoch_hunter.cpp
-    kalimdor/caverns_of_time/old_hillsbrad/boss_leutenant_drake.cpp
-    kalimdor/caverns_of_time/old_hillsbrad/def_old_hillsbrad.h
-    kalimdor/caverns_of_time/old_hillsbrad/instance_old_hillsbrad.cpp
-    kalimdor/caverns_of_time/old_hillsbrad/old_hillsbrad.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_fathomlord_karathress.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_hydross_the_unstable.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_lurker_below.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_lady_vashj.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_leotheras_the_blind.cpp
-    outland/coilfang_resevoir/serpent_shrine/boss_morogrim_tidewalker.cpp
-    outland/coilfang_resevoir/serpent_shrine/def_serpent_shrine.h
-    outland/coilfang_resevoir/serpent_shrine/instance_serpent_shrine.cpp
-    outland/coilfang_resevoir/steam_vault/boss_hydromancer_thespia.cpp
-    outland/coilfang_resevoir/steam_vault/boss_mekgineer_steamrigger.cpp
-    outland/coilfang_resevoir/steam_vault/boss_warlord_kalithresh.cpp
-    outland/coilfang_resevoir/steam_vault/def_steam_vault.h
-    outland/coilfang_resevoir/steam_vault/instance_steam_vault.cpp
-    outland/coilfang_resevoir/underbog/boss_hungarfen.cpp
-    outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
-    kalimdor/darkshore/darkshore.cpp
     azeroth/deadmines/def_deadmines.h
     azeroth/deadmines/deadmines.cpp
-    kalimdor/dire_maul/def_dire_maul.h
-    kalimdor/dire_maul/instance_dire_maul.cpp
-    kalimdor/dire_maul/dire_maul.cpp
-    kalimdor/dire_maul/boss_pusillin.cpp
-    azeroth/dun_morogh/dun_morogh.cpp
-    kalimdor/durotar/durotar.cpp
-    kalimdor/dustwallow_marsh/dustwallow_marsh.cpp
     azeroth/eastern_plaguelands/eastern_plaguelands.cpp
     azeroth/elwynn_forest/elwynn_forest.cpp
-    outland/eversong_woods/eversong_woods.cpp
-    kalimdor/felwood/felwood.cpp
-    kalimdor/feralas/feralas.cpp
-    outland/ghostlands/ghostlands.cpp
-    outland/gruuls_lair/boss_gruul.cpp
-    outland/gruuls_lair/boss_high_king_maulgar.cpp
-    outland/gruuls_lair/def_gruuls_lair.h
-    outland/gruuls_lair/instance_gruuls_lair.cpp
-    outland/hellfire_citadel/blood_furnace/boss_broggok.cpp
-    outland/hellfire_citadel/blood_furnace/boss_kelidan_the_breaker.cpp
-    outland/hellfire_citadel/blood_furnace/boss_the_maker.cpp
-    outland/hellfire_citadel/blood_furnace/instance_blood_furnace.cpp
-    outland/hellfire_citadel/blood_furnace/def_blood_furnace.h
-    outland/hellfire_citadel/hellfire_ramparts/boss_omor_the_unscarred.cpp
-    outland/hellfire_citadel/hellfire_ramparts/boss_watchkeeper_gargolmar.cpp
-    outland/hellfire_citadel/hellfire_ramparts/boss_vazruden_the_herald.cpp
-    outland/hellfire_citadel/magtheridons_lair/boss_magtheridon.cpp
-    outland/hellfire_citadel/magtheridons_lair/def_magtheridons_lair.h
-    outland/hellfire_citadel/magtheridons_lair/instance_magtheridons_lair.cpp
-    outland/hellfire_citadel/shattered_halls/boss_nethekurse.cpp
-    outland/hellfire_citadel/shattered_halls/boss_warbringer_omrogg.cpp
-    outland/hellfire_citadel/shattered_halls/def_shattered_halls.h
-    outland/hellfire_citadel/shattered_halls/instance_shattered_halls.cpp
-    outland/hellfire_citadel/shattered_halls/boss_warchief_kargath_bladefist.cpp
-    outland/hellfire_peninsula/boss_doomlord_kazzak.cpp
-    outland/hellfire_peninsula/hellfire_peninsula.cpp
+    azeroth/dun_morogh/dun_morogh.cpp
     azeroth/ironforge/ironforge.cpp
-    outland/isle_of_queldanas/isle_of_queldanas.cpp
     azeroth/karazhan/boss_curator.cpp
     azeroth/karazhan/boss_maiden_of_virtue.cpp
     azeroth/karazhan/boss_midnight.cpp
@@ -188,16 +74,6 @@ SET(scripts_STAT_SRCS
     azeroth/karazhan/instance_karazhan.cpp
     azeroth/karazhan/karazhan.cpp
     azeroth/loch_modan/loch_modan.cpp
-    outland/magisters_terrace/boss_felblood_kaelthas.cpp
-    outland/magisters_terrace/boss_priestess_delrissa.cpp
-    outland/magisters_terrace/boss_selin_fireheart.cpp
-    outland/magisters_terrace/boss_vexallus.cpp
-    outland/magisters_terrace/def_magisters_terrace.h
-    outland/magisters_terrace/instance_magisters_terrace.cpp
-    kalimdor/maraudon/boss_celebras_the_cursed.cpp
-    kalimdor/maraudon/boss_landslide.cpp
-    kalimdor/maraudon/boss_noxxion.cpp
-    kalimdor/maraudon/boss_princess_theradras.cpp
     azeroth/molten_core/boss_baron_geddon.cpp
     azeroth/molten_core/boss_garr.cpp
     azeroth/molten_core/boss_gehennas.cpp
@@ -211,9 +87,6 @@ SET(scripts_STAT_SRCS
     azeroth/molten_core/def_molten_core.h
     azeroth/molten_core/instance_molten_core.cpp
     azeroth/molten_core/molten_core.cpp
-    kalimdor/moonglade/moonglade.cpp
-    kalimdor/mulgore/mulgore.cpp
-    outland/nagrand/nagrand.cpp
     azeroth/naxxramas/boss_anubrekhan.cpp
     azeroth/naxxramas/boss_faerlina.cpp
     azeroth/naxxramas/boss_gluth.cpp
@@ -231,21 +104,6 @@ SET(scripts_STAT_SRCS
     azeroth/naxxramas/boss_sapphiron.cpp
     azeroth/naxxramas/boss_thaddius.cpp
     azeroth/naxxramas/instance_naxxramas.cpp
-    outland/netherstorm/netherstorm.cpp
-    kalimdor/onyxias_lair/boss_onyxia.cpp
-    kalimdor/orgrimmar/orgrimmar.cpp
-    kalimdor/razorfen_downs/boss_amnennar_the_coldbringer.cpp
-    kalimdor/razorfen_kraul/def_razorfen_kraul.h
-    kalimdor/razorfen_kraul/instance_razorfen_kraul.cpp
-    kalimdor/razorfen_kraul/razorfen_kraul.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_buru.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_moam.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp
-    kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
-    kalimdor/ruins_of_ahnqiraj/def_ruins_of_ahnqiraj.h
-    kalimdor/ruins_of_ahnqiraj/instance_ruins_of_ahnqiraj.cpp
     azeroth/scarlet_monastery/boss_arcanist_doan.cpp
     azeroth/scarlet_monastery/boss_azshir_the_sleepless.cpp
     azeroth/scarlet_monastery/boss_bloodmage_thalnos.cpp
@@ -277,13 +135,7 @@ SET(scripts_STAT_SRCS
     azeroth/shadowfang_keep/def_shadowfang_keep.h
     azeroth/shadowfang_keep/instance_shadowfang_keep.cpp
     azeroth/shadowfang_keep/shadowfang_keep.cpp
-    outland/shadowmoon_valley/boss_doomwalker.cpp
-    outland/shadowmoon_valley/shadowmoon_valley.cpp
-    outland/shattrath/shattrath_city.cpp
-    kalimdor/silithus/silithus.cpp
-    outland/silvermoon/silvermoon_city.cpp
     azeroth/silverpine_forest/silverpine_forest.cpp
-    kalimdor/stonetalon_mountains/stonetalon_mountains.cpp
     azeroth/stormwind/stormwind_city.cpp
     azeroth/stranglethorn_vale/stranglethorn_vale.cpp
     azeroth/stratholme/boss_baron_rivendare.cpp
@@ -303,6 +155,200 @@ SET(scripts_STAT_SRCS
     azeroth/sunken_temple/def_sunken_temple.h
     azeroth/sunken_temple/instance_sunken_temple.cpp
     azeroth/sunken_temple/sunken_temple.cpp
+    azeroth/swamp_of_sorrows/swamp_of_sorrows.cpp
+    azeroth/tirisfal_glades/tirisfal_glades.cpp
+    azeroth/uldaman/boss_archaedas.cpp
+    azeroth/uldaman/instance_uldaman.cpp
+    azeroth/uldaman/boss_ironaya.cpp
+    azeroth/uldaman/uldaman.cpp
+    azeroth/undercity/undercity.cpp
+    azeroth/western_plaguelands/western_plaguelands.cpp
+    azeroth/westfall/westfall.cpp
+    azeroth/wetlands/wetlands.cpp
+    azeroth/zulgurub/boss_arlokk.cpp
+    azeroth/zulgurub/boss_gahzranka.cpp
+    azeroth/zulgurub/boss_grilek.cpp
+    azeroth/zulgurub/boss_hakkar.cpp
+    azeroth/zulgurub/boss_hazzarah.cpp
+    azeroth/zulgurub/boss_jeklik.cpp
+    azeroth/zulgurub/boss_jindo.cpp
+    azeroth/zulgurub/boss_mandokir.cpp
+    azeroth/zulgurub/boss_marli.cpp
+    azeroth/zulgurub/boss_renataki.cpp
+    azeroth/zulgurub/boss_thekal.cpp
+    azeroth/zulgurub/boss_venoxis.cpp
+    azeroth/zulgurub/boss_wushoolay.cpp
+    azeroth/zulgurub/def_zulgurub.h
+    azeroth/zulgurub/instance_zulgurub.cpp
+    kalimdor/ashenvale/ashenvale.cpp
+    kalimdor/azshara/azshara.cpp
+    kalimdor/azshara/boss_azuregos.cpp
+    kalimdor/barrens/the_barrens.cpp
+    kalimdor/blackfathom_depths/instance_blackfathom_deeps.cpp
+    kalimdor/blackfathom_depths/boss_aku_mai.cpp
+    kalimdor/blackfathom_depths/boss_gelihast.cpp
+    kalimdor/blackfathom_depths/boss_kelris.cpp
+    kalimdor/blackfathom_depths/blackfathom_deeps.cpp
+    kalimdor/blackfathom_depths/def_blackfathom_deeps.h
+    kalimdor/caverns_of_time/dark_portal/def_dark_portal.h
+    kalimdor/caverns_of_time/dark_portal/instance_dark_portal.cpp
+    kalimdor/caverns_of_time/dark_portal/dark_portal.cpp
+    kalimdor/caverns_of_time/dark_portal/boss_aeonus.cpp
+    kalimdor/caverns_of_time/dark_portal/boss_chrono_lord_deja.cpp
+    kalimdor/caverns_of_time/dark_portal/boss_temporus.cpp
+    kalimdor/caverns_of_time/hyjal/boss_anetheron.cpp
+    kalimdor/caverns_of_time/hyjal/boss_archimonde.cpp
+    kalimdor/caverns_of_time/hyjal/boss_azgalor.cpp
+    kalimdor/caverns_of_time/hyjal/boss_kazrogal.cpp
+    kalimdor/caverns_of_time/hyjal/boss_rage_winterchill.cpp
+    kalimdor/caverns_of_time/hyjal/def_hyjal.h
+    kalimdor/caverns_of_time/hyjal/hyjal.cpp
+    kalimdor/caverns_of_time/hyjal/hyjal_trash.cpp
+    kalimdor/caverns_of_time/hyjal/hyjal_trash.h
+    kalimdor/caverns_of_time/hyjal/hyjalAI.cpp
+    kalimdor/caverns_of_time/hyjal/hyjalAI.h
+    kalimdor/caverns_of_time/hyjal/instance_hyjal.cpp
+    kalimdor/caverns_of_time/old_hillsbrad/boss_captain_skarloc.cpp
+    kalimdor/caverns_of_time/old_hillsbrad/boss_epoch_hunter.cpp
+    kalimdor/caverns_of_time/old_hillsbrad/boss_leutenant_drake.cpp
+    kalimdor/caverns_of_time/old_hillsbrad/def_old_hillsbrad.h
+    kalimdor/caverns_of_time/old_hillsbrad/instance_old_hillsbrad.cpp
+    kalimdor/caverns_of_time/old_hillsbrad/old_hillsbrad.cpp
+    kalimdor/darkshore/darkshore.cpp
+    kalimdor/dire_maul/def_dire_maul.h
+    kalimdor/dire_maul/instance_dire_maul.cpp
+    kalimdor/dire_maul/dire_maul.cpp
+    kalimdor/dire_maul/boss_pusillin.cpp
+    kalimdor/durotar/durotar.cpp
+    kalimdor/dustwallow_marsh/dustwallow_marsh.cpp
+    kalimdor/felwood/felwood.cpp
+    kalimdor/feralas/feralas.cpp
+    kalimdor/maraudon/boss_celebras_the_cursed.cpp
+    kalimdor/maraudon/boss_landslide.cpp
+    kalimdor/maraudon/boss_noxxion.cpp
+    kalimdor/maraudon/boss_princess_theradras.cpp
+    kalimdor/moonglade/moonglade.cpp
+    kalimdor/mulgore/mulgore.cpp
+    kalimdor/onyxias_lair/boss_onyxia.cpp
+    kalimdor/orgrimmar/orgrimmar.cpp
+    kalimdor/razorfen_downs/boss_amnennar_the_coldbringer.cpp
+    kalimdor/razorfen_kraul/def_razorfen_kraul.h
+    kalimdor/razorfen_kraul/instance_razorfen_kraul.cpp
+    kalimdor/razorfen_kraul/razorfen_kraul.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_ayamiss.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_buru.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_kurinnaxx.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_moam.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_ossirian.cpp
+    kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
+    kalimdor/ruins_of_ahnqiraj/def_ruins_of_ahnqiraj.h
+    kalimdor/ruins_of_ahnqiraj/instance_ruins_of_ahnqiraj.cpp
+    kalimdor/silithus/silithus.cpp
+    kalimdor/stonetalon_mountains/stonetalon_mountains.cpp
+    kalimdor/tanaris/tanaris.cpp
+    kalimdor/temple_of_ahnqiraj/boss_bug_trio.cpp
+    kalimdor/temple_of_ahnqiraj/boss_cthun.cpp
+    kalimdor/temple_of_ahnqiraj/boss_fankriss.cpp
+    kalimdor/temple_of_ahnqiraj/boss_huhuran.cpp
+    kalimdor/temple_of_ahnqiraj/boss_ouro.cpp
+    kalimdor/temple_of_ahnqiraj/boss_sartura.cpp
+    kalimdor/temple_of_ahnqiraj/boss_skeram.cpp
+    kalimdor/temple_of_ahnqiraj/boss_twinemperors.cpp
+    kalimdor/temple_of_ahnqiraj/boss_viscidus.cpp
+    kalimdor/temple_of_ahnqiraj/def_temple_of_ahnqiraj.h
+    kalimdor/temple_of_ahnqiraj/instance_temple_of_ahnqiraj.cpp
+    kalimdor/temple_of_ahnqiraj/mob_anubisath_sentinel.cpp
+    kalimdor/thunder_bluff/thunder_bluff.cpp
+    kalimdor/thousand_needles/thousand_needles.cpp
+    kalimdor/ungoro_crater/ungoro_crater.cpp
+    kalimdor/wailing_caverns/instance_wailing_caverns.cpp
+    kalimdor/wailing_caverns/wailing_caverns.cpp
+    kalimdor/wailing_caverns/def_wailing_caverns.h
+    kalimdor/winterspring/winterspring.cpp
+    kalimdor/zulfarrak/zulfarrak.cpp
+    outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
+    outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
+    outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
+    outland/aunchindoun/mana_tombs/boss_pandemonius.cpp
+    outland/aunchindoun/sethekk_halls/boss_darkweaver_syth.cpp
+    outland/aunchindoun/sethekk_halls/boss_tailonking_ikiss.cpp
+    outland/aunchindoun/sethekk_halls/boss_anzu.cpp
+    outland/aunchindoun/sethekk_halls/def_sethekk_halls.h
+    outland/aunchindoun/sethekk_halls/instance_sethekk_halls.cpp
+    outland/aunchindoun/sethekk_halls/sethekk_halls.cpp
+    outland/aunchindoun/shadow_labyrinth/boss_ambassador_hellmaw.cpp
+    outland/aunchindoun/shadow_labyrinth/boss_blackheart_the_inciter.cpp
+    outland/aunchindoun/shadow_labyrinth/boss_grandmaster_vorpil.cpp
+    outland/aunchindoun/shadow_labyrinth/boss_murmur.cpp
+    outland/aunchindoun/shadow_labyrinth/def_shadow_labyrinth.h
+    outland/aunchindoun/shadow_labyrinth/instance_shadow_labyrinth.cpp
+    outland/azuremyst_isle/azuremyst_isle.cpp
+    outland/black_temple/black_temple.cpp
+    outland/black_temple/boss_bloodboil.cpp
+    outland/black_temple/boss_illidan.cpp
+    outland/black_temple/boss_mother_shahraz.cpp
+    outland/black_temple/boss_reliquary_of_souls.cpp
+    outland/black_temple/boss_shade_of_akama.cpp
+    outland/black_temple/boss_supremus.cpp
+    outland/black_temple/boss_teron_gorefiend.cpp
+    outland/black_temple/boss_warlord_najentus.cpp
+    outland/black_temple/def_black_temple.h
+    outland/black_temple/illidari_council.cpp
+    outland/black_temple/instance_black_temple.cpp
+    outland/blades_edge_mountains/blades_edge_mountains.cpp
+    outland/bloodmyst_isle/bloodmyst_isle.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_fathomlord_karathress.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_hydross_the_unstable.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_lurker_below.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_lady_vashj.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_leotheras_the_blind.cpp
+    outland/coilfang_resevoir/serpent_shrine/boss_morogrim_tidewalker.cpp
+    outland/coilfang_resevoir/serpent_shrine/def_serpent_shrine.h
+    outland/coilfang_resevoir/serpent_shrine/instance_serpent_shrine.cpp
+    outland/coilfang_resevoir/steam_vault/boss_hydromancer_thespia.cpp
+    outland/coilfang_resevoir/steam_vault/boss_mekgineer_steamrigger.cpp
+    outland/coilfang_resevoir/steam_vault/boss_warlord_kalithresh.cpp
+    outland/coilfang_resevoir/steam_vault/def_steam_vault.h
+    outland/coilfang_resevoir/steam_vault/instance_steam_vault.cpp
+    outland/coilfang_resevoir/underbog/boss_hungarfen.cpp
+    outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
+    outland/eversong_woods/eversong_woods.cpp
+    outland/ghostlands/ghostlands.cpp
+    outland/gruuls_lair/boss_gruul.cpp
+    outland/gruuls_lair/boss_high_king_maulgar.cpp
+    outland/gruuls_lair/def_gruuls_lair.h
+    outland/gruuls_lair/instance_gruuls_lair.cpp
+    outland/hellfire_citadel/blood_furnace/boss_broggok.cpp
+    outland/hellfire_citadel/blood_furnace/boss_kelidan_the_breaker.cpp
+    outland/hellfire_citadel/blood_furnace/boss_the_maker.cpp
+    outland/hellfire_citadel/blood_furnace/instance_blood_furnace.cpp
+    outland/hellfire_citadel/blood_furnace/def_blood_furnace.h
+    outland/hellfire_citadel/hellfire_ramparts/boss_omor_the_unscarred.cpp
+    outland/hellfire_citadel/hellfire_ramparts/boss_watchkeeper_gargolmar.cpp
+    outland/hellfire_citadel/hellfire_ramparts/boss_vazruden_the_herald.cpp
+    outland/hellfire_citadel/magtheridons_lair/boss_magtheridon.cpp
+    outland/hellfire_citadel/magtheridons_lair/def_magtheridons_lair.h
+    outland/hellfire_citadel/magtheridons_lair/instance_magtheridons_lair.cpp
+    outland/hellfire_citadel/shattered_halls/boss_nethekurse.cpp
+    outland/hellfire_citadel/shattered_halls/boss_warbringer_omrogg.cpp
+    outland/hellfire_citadel/shattered_halls/def_shattered_halls.h
+    outland/hellfire_citadel/shattered_halls/instance_shattered_halls.cpp
+    outland/hellfire_citadel/shattered_halls/boss_warchief_kargath_bladefist.cpp
+    outland/hellfire_peninsula/boss_doomlord_kazzak.cpp
+    outland/hellfire_peninsula/hellfire_peninsula.cpp
+    outland/isle_of_queldanas/isle_of_queldanas.cpp
+    outland/magisters_terrace/boss_felblood_kaelthas.cpp
+    outland/magisters_terrace/boss_priestess_delrissa.cpp
+    outland/magisters_terrace/boss_selin_fireheart.cpp
+    outland/magisters_terrace/boss_vexallus.cpp
+    outland/magisters_terrace/def_magisters_terrace.h
+    outland/magisters_terrace/instance_magisters_terrace.cpp
+    outland/nagrand/nagrand.cpp
+    outland/netherstorm/netherstorm.cpp
+    outland/shadowmoon_valley/boss_doomwalker.cpp
+    outland/shadowmoon_valley/shadowmoon_valley.cpp
+    outland/shattrath/shattrath_city.cpp
+    outland/silvermoon/silvermoon_city.cpp
     outland/sunwell_plateau/boss_kiljaeden.cpp
     outland/sunwell_plateau/boss_muru.cpp
     outland/sunwell_plateau/boss_eredar_twins.cpp
@@ -312,8 +358,6 @@ SET(scripts_STAT_SRCS
     outland/sunwell_plateau/sunwell_plateau.cpp
     outland/sunwell_plateau/def_sunwell_plateau.h
     outland/sunwell_plateau/instance_sunwell_plateau.cpp
-    azeroth/swamp_of_sorrows/swamp_of_sorrows.cpp
-    kalimdor/tanaris/tanaris.cpp
     outland/tempest_keep/arcatraz/arcatraz.cpp
     outland/tempest_keep/arcatraz/boss_harbinger_skyriss.cpp
     outland/tempest_keep/arcatraz/def_arcatraz.h
@@ -335,35 +379,7 @@ SET(scripts_STAT_SRCS
     outland/tempest_keep/the_mechanar/boss_pathaleon_the_calculator.cpp
     outland/tempest_keep/the_mechanar/def_mechanar.h
     outland/tempest_keep/the_mechanar/instance_mechanar.cpp
-    kalimdor/temple_of_ahnqiraj/boss_bug_trio.cpp
-    kalimdor/temple_of_ahnqiraj/boss_cthun.cpp
-    kalimdor/temple_of_ahnqiraj/boss_fankriss.cpp
-    kalimdor/temple_of_ahnqiraj/boss_huhuran.cpp
-    kalimdor/temple_of_ahnqiraj/boss_ouro.cpp
-    kalimdor/temple_of_ahnqiraj/boss_sartura.cpp
-    kalimdor/temple_of_ahnqiraj/boss_skeram.cpp
-    kalimdor/temple_of_ahnqiraj/boss_twinemperors.cpp
-    kalimdor/temple_of_ahnqiraj/boss_viscidus.cpp
-    kalimdor/temple_of_ahnqiraj/def_temple_of_ahnqiraj.h
-    kalimdor/temple_of_ahnqiraj/instance_temple_of_ahnqiraj.cpp
-    kalimdor/temple_of_ahnqiraj/mob_anubisath_sentinel.cpp
     outland/terokkar_forest/terokkar_forest.cpp
-    kalimdor/thunder_bluff/thunder_bluff.cpp
-    azeroth/tirisfal_glades/tirisfal_glades.cpp
-    kalimdor/thousand_needles/thousand_needles.cpp
-    azeroth/uldaman/boss_archaedas.cpp
-    azeroth/uldaman/instance_uldaman.cpp
-    azeroth/uldaman/boss_ironaya.cpp
-    azeroth/uldaman/uldaman.cpp
-    azeroth/undercity/undercity.cpp
-    kalimdor/ungoro_crater/ungoro_crater.cpp
-    kalimdor/wailing_caverns/instance_wailing_caverns.cpp
-    kalimdor/wailing_caverns/wailing_caverns.cpp
-    kalimdor/wailing_caverns/def_wailing_caverns.h
-    azeroth/western_plaguelands/western_plaguelands.cpp
-    azeroth/westfall/westfall.cpp
-    azeroth/wetlands/wetlands.cpp
-    kalimdor/winterspring/winterspring.cpp
     outland/zangarmarsh/zangarmarsh.cpp
     outland/zulaman/boss_akilzon.cpp
     outland/zulaman/boss_halazzi.cpp
@@ -374,22 +390,6 @@ SET(scripts_STAT_SRCS
     outland/zulaman/def_zulaman.h
     outland/zulaman/instance_zulaman.cpp
     outland/zulaman/zulaman.cpp
-    kalimdor/zulfarrak/zulfarrak.cpp
-    azeroth/zulgurub/boss_arlokk.cpp
-    azeroth/zulgurub/boss_gahzranka.cpp
-    azeroth/zulgurub/boss_grilek.cpp
-    azeroth/zulgurub/boss_hakkar.cpp
-    azeroth/zulgurub/boss_hazzarah.cpp
-    azeroth/zulgurub/boss_jeklik.cpp
-    azeroth/zulgurub/boss_jindo.cpp
-    azeroth/zulgurub/boss_mandokir.cpp
-    azeroth/zulgurub/boss_marli.cpp
-    azeroth/zulgurub/boss_renataki.cpp
-    azeroth/zulgurub/boss_thekal.cpp
-    azeroth/zulgurub/boss_venoxis.cpp
-    azeroth/zulgurub/boss_wushoolay.cpp
-    azeroth/zulgurub/def_zulgurub.h
-    azeroth/zulgurub/instance_zulgurub.cpp
     include/precompiled.cpp
     include/precompiled.h
 )
