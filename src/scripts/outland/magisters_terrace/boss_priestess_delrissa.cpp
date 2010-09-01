@@ -43,10 +43,10 @@ static Speech PlayerDeath[]= {
     {-1585021},
 };
 
-enum eDelrissa {
-    SAY_AGGRO               = -1585012,
-    SAY_DEATH               = -1585022
+#define SAY_AGGRO           -1585012
+#define SAY_DEATH           -1585022
 
+enum eDelrissa {
     SPELL_DISPEL_MAGIC      = 27609,
     SPELL_FLASH_HEAL        = 17843,
     SPELL_SW_PAIN_NORMAL    = 14032,
@@ -54,10 +54,10 @@ enum eDelrissa {
     SPELL_SHIELD            = 44291,
     SPELL_RENEW_NORMAL      = 44174,
     SPELL_RENEW_HEROIC      = 46192,
-    
-    ORIENT                  = 4.98,
-    POS_Z                   = -19.9215
 };
+
+#define ORIENT               4.98
+#define POS_Z               -19.9215
 
 float LackeyLocations[4][2] = {
     {123.77, 17.6007},
