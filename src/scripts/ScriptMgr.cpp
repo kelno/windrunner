@@ -116,6 +116,14 @@ extern void AddSC_npc_xp_blocker();
 //Alterac Mountains
 extern void AddSC_alterac_mountains();
 
+//Alterac Valley
+extern void AddSC_AV_Marshals();
+extern void AddSC_AV_Warmasters();
+extern void AddSC_boss_balinda();
+extern void AddSC_boss_drekthar();
+extern void AddSC_boss_galvangar();
+extern void AddSC_boss_vanndar();
+
 //Arathi Highlands
 extern void AddSC_arathi_highlands();
 
@@ -1478,6 +1486,14 @@ void ScriptsInit(char const* cfg_file = "trinitycore.conf")
 
     //Alterac Mountains
     AddSC_alterac_mountains();
+    
+    //Alterac Valley
+    AddSC_AV_Marshals();
+    AddSC_AV_Warmasters();
+    AddSC_boss_balinda();
+    AddSC_boss_drekthar();
+    AddSC_boss_galvangar();
+    AddSC_boss_vanndar();
 
     //Arathi Highlands
     AddSC_arathi_highlands();

@@ -16,6 +16,12 @@ SET(scripts_STAT_SRCS
     ScriptMgr.h
     azeroth/arathi_highlands/arathi_highlands.cpp
     azeroth/alterac_mountains/alterac_mountains.cpp
+    azeroth/alterac_valley/AV_Marshals.cpp
+    azeroth/alterac_valley/AV_Warmasters.cpp
+    azeroth/alterac_valley/boss_balinda.cpp
+    azeroth/alterac_valley/boss_drekthar.cpp
+    azeroth/alterac_valley/boss_galvangar.cpp
+    azeroth/alterac_valley/boss_vanndar.cpp
     azeroth/blackrock_depths/blackrock_depths.cpp
     azeroth/blackrock_depths/boss_ambassador_flamelash.cpp
     azeroth/blackrock_depths/boss_anubshiah.cpp
