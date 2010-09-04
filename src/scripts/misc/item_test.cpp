@@ -27,7 +27,7 @@ extern void LoadDatabase();
 
 bool ItemUse_item_test(Player *player, Item* _Item, SpellCastTargets const& targets)
 {
-    LoadDatabase();
+    sScriptMgr.LoadDatabase();
     return true;
 }
 

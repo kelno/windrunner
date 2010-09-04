@@ -271,7 +271,7 @@ bool ReciveEmote_mobs_spectral_ghostly_citizen(Player *player, Creature *_Creatu
 ## at_timmy_the_cruel
 ######*/
 
-bool AreaTrigger_at_timmy_the_cruel(Player *pPlayer, AreaTriggerEntry *at)
+bool AreaTrigger_at_timmy_the_cruel(Player *pPlayer, AreaTriggerEntry const *at)
 {
     ScriptedInstance *pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData());
     if (!pInstance)

@@ -22,7 +22,7 @@ SDCategory: Guards
 EndScriptData */
 
 #include "precompiled.h"
-#include "guard_ai.h"
+#include "GuardAI.h"
 
 // **** This script is for use within every single guard to save coding time ****
 

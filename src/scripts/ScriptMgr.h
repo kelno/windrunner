@@ -12,6 +12,10 @@
 #include "Platform/CompilerDefs.h"
 #include "Database/DBCStructure.h"
 
+#ifndef _TRINITY_SCRIPT_CONFIG
+# define _TRINITY_SCRIPT_CONFIG  "trinitycore.conf"
+#endif _TRINITY_SCRIPT_CONFIG
+
 class Player;
 class Creature;
 class CreatureAI;
@@ -56,7 +60,7 @@ struct Script
     bool (*pChooseReward        )(Player*, Creature*, Quest const*, uint32 );
     bool (*pItemHello           )(Player*, Item*, Quest const* );
     bool (*pGOHello             )(Player*, GameObject* );
-    bool (*pAreaTrigger         )(Player*, AreaTriggerEntry* );
+    bool (*pAreaTrigger         )(Player*, AreaTriggerEntry const* );
     bool (*pItemQuestAccept     )(Player*, Item *, Quest const* );
     bool (*pGOQuestAccept       )(Player*, GameObject*, Quest const* );
     bool (*pGOChooseReward      )(Player*, GameObject*, Quest const*, uint32 );
@@ -69,6 +73,62 @@ struct Script
     void RegisterSelf();
 };
 
+class ScriptMgr
+{
+    public:
+        ScriptMgr();
+        ~ScriptMgr();
+        
+        void ScriptsInit(char const* cfg_file);
+        void LoadDatabase();
+        char const* ScriptsVersion();    
+
+        std::string GetConfigValueStr(char const* option);
+        int32 GetConfigValueInt32(char const* option);
+        float GetConfigValueFloat(char const* option);
+
+    //event handlers
+        void OnLogin(Player *pPlayer);
+        void OnLogout(Player *pPlayer);
+        void OnPVPKill(Player *killer, Player *killed);
+        bool OnSpellCast (Unit *pUnitTarget, Item *pItemTarget, GameObject *pGoTarget, uint32 i, SpellEntry const *spell);
+        uint32 OnGetXP(Player *pPlayer, uint32 amount);
+        uint32 OnGetMoney(Player *pPlayer, int32 amount);
+        bool OnPlayerChat(Player *pPlayer, const char *text);
+        void OnServerStartup();
+        void OnServerShutdown();
+        void OnAreaChange(Player *pPlayer, AreaTableEntry const *pArea);
+        bool OnItemClick (Player *pPlayer, Item *pItem);
+        bool OnItemOpen (Player *pPlayer, Item *pItem);
+        bool OnGoClick (Player *pPlayer, GameObject *pGameObject);
+        void OnCreatureKill (Player *pPlayer, Creature *pCreature);
+        bool GossipHello (Player * pPlayer, Creature* pCreature);
+        bool GossipSelect(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction);
+        bool GossipSelectWithCode(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction, const char* sCode);
+        bool GOSelect(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction);
+        bool GOSelectWithCode(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction, const char* sCode);
+        bool QuestAccept(Player* pPlayer, Creature* pCreature, Quest const* pQuest);
+        bool QuestSelect(Player* pPlayer, Creature* pCreature, Quest const* pQuest);
+        bool QuestComplete(Player* pPlayer, Creature* pCreature, Quest const* pQuest);
+        bool ChooseReward(Player* pPlayer, Creature* pCreature, Quest const* pQuest, uint32 opt);
+        uint32 NPCDialogStatus(Player* pPlayer, Creature* pCreature);
+        uint32 GODialogStatus(Player* pPlayer, GameObject* pGO);
+        bool ItemHello(Player* pPlayer, Item* pItem, Quest const* pQuest);
+        bool ItemQuestAccept(Player* pPlayer, Item* pItem, Quest const* pQuest);
+        bool GOHello(Player* pPlayer, GameObject* pGO);
+        bool GOQuestAccept(Player* pPlayer, GameObject* pGO, Quest const* pQuest);
+        bool GOChooseReward(Player* pPlayer, GameObject* pGO, Quest const* pQuest, uint32 opt);
+        bool AreaTrigger(Player* pPlayer,AreaTriggerEntry const* atEntry);
+        CreatureAI* GetAI(Creature* pCreature);
+        bool ItemUse(Player* pPlayer, Item* pItem, SpellCastTargets const& targets);
+        //bool ItemExpire(Player* pPlayer, ItemPrototype const * pItemProto);
+        //bool EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget);
+        //bool EffectDummyGameObj(Unit *caster, uint32 spellId, uint32 effIndex, GameObject *gameObjTarget);
+        //bool EffectDummyItem(Unit *caster, uint32 spellId, uint32 effIndex, Item *itemTarget);
+        InstanceData* CreateInstanceData(Map *map);
+        bool ReceiveEmote(Player *player, Creature *_Creature, uint32 emote);
+};
+
 //Generic scripting text function
 void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target = NULL);
 
@@ -77,7 +137,7 @@ void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target = NULL);
 #else
 #define FUNC_PTR(name, callconvention, returntype, parameters)    typedef returntype(callconvention *name)parameters;
 #endif
-
+/*
 #ifdef WIN32
   #define TRINITY_DLL_EXPORT extern "C" __declspec(dllexport)
 #elif defined( __GNUC__ )
@@ -85,6 +145,7 @@ void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target = NULL);
 #else
 #define TRINITY_DLL_EXPORT extern "C" export
 #endif
-
+*/
+#define sScriptMgr Trinity::Singleton<ScriptMgr>::Instance()
 #endif
 
