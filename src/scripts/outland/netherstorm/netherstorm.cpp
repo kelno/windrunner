@@ -648,7 +648,7 @@ Creature* SearchDawnforge(Player *source, uint32 entry, float range)
     return pCreature;
 }
 
-bool AreaTrigger_at_commander_dawnforge(Player *player, AreaTriggerEntry *at)
+bool AreaTrigger_at_commander_dawnforge(Player *player, AreaTriggerEntry const *at)
 {
     //if player lost aura or not have at all, we should not try start event.
     if (!player->HasAura(SPELL_SUNFURY_DISGUISE,0))

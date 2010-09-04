@@ -446,7 +446,7 @@ InstanceData* GetInstanceData_instance_shattered_halls(Map* pMap)
 }
 
 // AreaTrigger that starts the timed event
-bool AreaTrigger_at_shattered_halls(Player* pPlayer, AreaTriggerEntry* at) {
+bool AreaTrigger_at_shattered_halls(Player* pPlayer, AreaTriggerEntry const *at) {
     if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
         if (pInstance->GetData(DATA_EXECUTIONER_EVENT) != IN_PROGRESS) {
             pInstance->SetData(DATA_EXECUTIONER_EVENT, IN_PROGRESS);

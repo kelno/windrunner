@@ -99,7 +99,7 @@ float RingLocations[6][3]=
     {627.390381, -201.075974, -52.692917}                   // hiding in corner
 };
 
-bool AreaTrigger_at_ring_of_law(Player *player, AreaTriggerEntry *at)
+bool AreaTrigger_at_ring_of_law(Player *player, AreaTriggerEntry const *at)
 {
     ScriptedInstance* pInstance = ((ScriptedInstance*)player->GetInstanceData());
 

@@ -9,8 +9,11 @@
 #include "ObjectMgr.h"
 #include "ProgressBar.h"
 #include "EventAI.h"
+#include "Policies/SingletonImp.h"
 
 #define _FULLVERSION "TrinityScript"
+
+INSTANTIATE_SINGLETON_1(ScriptMgr);
 
 #ifndef _TRINITY_SCRIPT_CONFIG
 # define _TRINITY_SCRIPT_CONFIG  "trinitycore.conf"
@@ -668,7 +671,7 @@ extern void AddSC_instance_zulaman();
 extern void AddSC_zulaman();
 
 // -------------------
-void LoadDatabase()
+void ScriptMgr::LoadDatabase()
 {
     //Get db string from file
     char const* dbstring = NULL;
@@ -1367,7 +1370,7 @@ struct TSpellSummary {
     uint8 Effects;                                          // set of enum SelectEffect
 }extern *SpellSummary;
 
-extern "C"
+
 void ScriptsFree()
 {
     // Free Spell Summary
@@ -1380,8 +1383,17 @@ void ScriptsFree()
     num_sc_scripts = 0;
 }
 
-extern "C"
-void ScriptsInit(char const* cfg_file = "trinitycore.conf")
+ScriptMgr::ScriptMgr()
+{
+    
+}
+
+ScriptMgr::~ScriptMgr()
+{
+    
+}
+
+void ScriptMgr::ScriptsInit(char const* cfg_file)
 {
     bool CanLoadDB = true;
 
@@ -2141,37 +2153,37 @@ void Script::RegisterSelf()
 //********************************
 //*** Functions to be Exported ***
 
-extern "C"
-void OnLogin(Player *pPlayer)
+
+void ScriptMgr::OnLogin(Player *pPlayer)
 {
     Script *tmpscript = m_scripts[GetScriptId("scripted_on_events")];
     if (!tmpscript || !tmpscript->pOnLogin) return;
     tmpscript->pOnLogin(pPlayer);
 }
 
-extern "C"
-void OnLogout(Player *pPlayer)
+
+void ScriptMgr::OnLogout(Player *pPlayer)
 {
     Script *tmpscript = m_scripts[GetScriptId("scripted_on_events")];
     if (!tmpscript || !tmpscript->pOnLogout) return;
     tmpscript->pOnLogout(pPlayer);
 }
 
-extern "C"
-void OnPVPKill(Player *killer, Player *killed)
+
+void ScriptMgr::OnPVPKill(Player *killer, Player *killed)
 {
     Script *tmpscript = m_scripts[GetScriptId("scripted_on_events")];
     if (!tmpscript || !tmpscript->pOnPVPKill) return;
     tmpscript->pOnPVPKill(killer, killed);
 }
 
-extern "C"
-char const* ScriptsVersion()
+
+char const* ScriptMgr::ScriptsVersion()
 {
     return "Default Trinity scripting library";
 }
-extern "C"
-bool GossipHello ( Player * player, Creature *_Creature )
+
+bool ScriptMgr::GossipHello ( Player * player, Creature *_Creature )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipHello) return false;
@@ -2180,8 +2192,8 @@ bool GossipHello ( Player * player, Creature *_Creature )
     return tmpscript->pGossipHello(player,_Creature);
 }
 
-extern "C"
-bool GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 action )
+
+bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
     debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
 
@@ -2192,8 +2204,8 @@ bool GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 ac
     return tmpscript->pGossipSelect(player,_Creature,sender,action);
 }
 
-extern "C"
-bool GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
+
+bool ScriptMgr::GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
 {
     debug_log("TSCR: Gossip selection with code, sender: %d, action: %d",sender, action);
 
@@ -2204,8 +2216,8 @@ bool GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, u
     return tmpscript->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
 }
 
-extern "C"
-bool GOSelect( Player *player, GameObject *_GO, uint32 sender, uint32 action )
+
+bool ScriptMgr::GOSelect( Player *player, GameObject *_GO, uint32 sender, uint32 action )
 {
     if(!_GO)
     return false;
@@ -2218,8 +2230,8 @@ bool GOSelect( Player *player, GameObject *_GO, uint32 sender, uint32 action )
     return tmpscript->pGOSelect(player,_GO,sender,action);
 }
 
-extern "C"
-bool GOSelectWithCode( Player *player, GameObject *_GO, uint32 sender, uint32 action, const char* sCode )
+
+bool ScriptMgr::GOSelectWithCode( Player *player, GameObject *_GO, uint32 sender, uint32 action, const char* sCode )
 {
     if(!_GO)
     return false;
@@ -2232,8 +2244,8 @@ bool GOSelectWithCode( Player *player, GameObject *_GO, uint32 sender, uint32 ac
     return tmpscript->pGOSelectWithCode(player,_GO,sender,action,sCode);
 }
 
-extern "C"
-bool QuestAccept( Player *player, Creature *_Creature, Quest const *_Quest )
+
+bool ScriptMgr::QuestAccept( Player *player, Creature *_Creature, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pQuestAccept) return false;
@@ -2242,8 +2254,8 @@ bool QuestAccept( Player *player, Creature *_Creature, Quest const *_Quest )
     return tmpscript->pQuestAccept(player,_Creature,_Quest);
 }
 
-extern "C"
-bool QuestSelect( Player *player, Creature *_Creature, Quest const *_Quest )
+
+bool ScriptMgr::QuestSelect( Player *player, Creature *_Creature, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pQuestSelect) return false;
@@ -2252,8 +2264,8 @@ bool QuestSelect( Player *player, Creature *_Creature, Quest const *_Quest )
     return tmpscript->pQuestSelect(player,_Creature,_Quest);
 }
 
-extern "C"
-bool QuestComplete( Player *player, Creature *_Creature, Quest const *_Quest )
+
+bool ScriptMgr::QuestComplete( Player *player, Creature *_Creature, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pQuestComplete) return false;
@@ -2262,8 +2274,8 @@ bool QuestComplete( Player *player, Creature *_Creature, Quest const *_Quest )
     return tmpscript->pQuestComplete(player,_Creature,_Quest);
 }
 
-extern "C"
-bool ChooseReward( Player *player, Creature *_Creature, Quest const *_Quest, uint32 opt )
+
+bool ScriptMgr::ChooseReward( Player *player, Creature *_Creature, Quest const *_Quest, uint32 opt )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pChooseReward) return false;
@@ -2272,8 +2284,8 @@ bool ChooseReward( Player *player, Creature *_Creature, Quest const *_Quest, uin
     return tmpscript->pChooseReward(player,_Creature,_Quest,opt);
 }
 
-extern "C"
-uint32 NPCDialogStatus( Player *player, Creature *_Creature )
+
+uint32 ScriptMgr::NPCDialogStatus( Player *player, Creature *_Creature )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pNPCDialogStatus) return 100;
@@ -2282,8 +2294,8 @@ uint32 NPCDialogStatus( Player *player, Creature *_Creature )
     return tmpscript->pNPCDialogStatus(player,_Creature);
 }
 
-extern "C"
-uint32 GODialogStatus( Player *player, GameObject *_GO )
+
+uint32 ScriptMgr::GODialogStatus( Player *player, GameObject *_GO )
 {
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGODialogStatus) return 100;
@@ -2292,8 +2304,8 @@ uint32 GODialogStatus( Player *player, GameObject *_GO )
     return tmpscript->pGODialogStatus(player,_GO);
 }
 
-extern "C"
-bool ItemHello( Player *player, Item *_Item, Quest const *_Quest )
+
+bool ScriptMgr::ItemHello( Player *player, Item *_Item, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_Item->GetProto()->ScriptId];
     if (!tmpscript || !tmpscript->pItemHello) return false;
@@ -2302,8 +2314,8 @@ bool ItemHello( Player *player, Item *_Item, Quest const *_Quest )
     return tmpscript->pItemHello(player,_Item,_Quest);
 }
 
-extern "C"
-bool ItemQuestAccept( Player *player, Item *_Item, Quest const *_Quest )
+
+bool ScriptMgr::ItemQuestAccept( Player *player, Item *_Item, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_Item->GetProto()->ScriptId];
     if (!tmpscript || !tmpscript->pItemQuestAccept) return false;
@@ -2312,8 +2324,8 @@ bool ItemQuestAccept( Player *player, Item *_Item, Quest const *_Quest )
     return tmpscript->pItemQuestAccept(player,_Item,_Quest);
 }
 
-extern "C"
-bool GOHello( Player *player, GameObject *_GO )
+
+bool ScriptMgr::GOHello( Player *player, GameObject *_GO )
 {
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOHello) return false;
@@ -2322,8 +2334,8 @@ bool GOHello( Player *player, GameObject *_GO )
     return tmpscript->pGOHello(player,_GO);
 }
 
-extern "C"
-bool GOQuestAccept( Player *player, GameObject *_GO, Quest const *_Quest )
+
+bool ScriptMgr::GOQuestAccept( Player *player, GameObject *_GO, Quest const *_Quest )
 {
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOQuestAccept) return false;
@@ -2332,8 +2344,8 @@ bool GOQuestAccept( Player *player, GameObject *_GO, Quest const *_Quest )
     return tmpscript->pGOQuestAccept(player,_GO,_Quest);
 }
 
-extern "C"
-bool GOChooseReward( Player *player, GameObject *_GO, Quest const *_Quest, uint32 opt )
+
+bool ScriptMgr::GOChooseReward( Player *player, GameObject *_GO, Quest const *_Quest, uint32 opt )
 {
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if (!tmpscript || !tmpscript->pGOChooseReward) return false;
@@ -2342,8 +2354,8 @@ bool GOChooseReward( Player *player, GameObject *_GO, Quest const *_Quest, uint3
     return tmpscript->pGOChooseReward(player,_GO,_Quest,opt);
 }
 
-extern "C"
-bool AreaTrigger( Player *player, AreaTriggerEntry * atEntry)
+
+bool ScriptMgr::AreaTrigger( Player *player, AreaTriggerEntry const* atEntry)
 {
     Script *tmpscript = m_scripts[GetAreaTriggerScriptId(atEntry->id)];
     if (!tmpscript || !tmpscript->pAreaTrigger) return false;
@@ -2351,8 +2363,8 @@ bool AreaTrigger( Player *player, AreaTriggerEntry * atEntry)
     return tmpscript->pAreaTrigger(player, atEntry);
 }
 
-extern "C"
-CreatureAI* GetAI(Creature *_Creature)
+
+CreatureAI* ScriptMgr::GetAI(Creature *_Creature)
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->GetAI) return NULL;
@@ -2360,8 +2372,8 @@ CreatureAI* GetAI(Creature *_Creature)
     return tmpscript->GetAI(_Creature);
 }
 
-extern "C"
-bool ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
+
+bool ScriptMgr::ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
 {
     Script *tmpscript = m_scripts[_Item->GetProto()->ScriptId];
     if (!tmpscript || !tmpscript->pItemUse) return false;
@@ -2369,8 +2381,8 @@ bool ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
     return tmpscript->pItemUse(player,_Item,targets);
 }
 
-extern "C"
-bool ReceiveEmote( Player *player, Creature *_Creature, uint32 emote )
+
+bool ScriptMgr::ReceiveEmote( Player *player, Creature *_Creature, uint32 emote )
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pReceiveEmote) return false;
@@ -2378,8 +2390,8 @@ bool ReceiveEmote( Player *player, Creature *_Creature, uint32 emote )
     return tmpscript->pReceiveEmote(player, _Creature, emote);
 }
 
-extern "C"
-InstanceData* CreateInstanceData(Map *map)
+
+InstanceData* ScriptMgr::CreateInstanceData(Map *map)
 {
     if (!map->IsDungeon()) return NULL;
 

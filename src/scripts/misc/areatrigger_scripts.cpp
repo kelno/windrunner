@@ -38,7 +38,7 @@ EndContentData */
 #define SPELL_TELE_A_TO   37387
 #define SPELL_TELE_H_TO   37389
 
-bool AreaTrigger_at_legion_teleporter(Player *player, AreaTriggerEntry *at)
+bool AreaTrigger_at_legion_teleporter(Player *player, AreaTriggerEntry const *at)
 {
     if (player->isAlive() && !player->isInCombat())
     {
@@ -59,7 +59,7 @@ bool AreaTrigger_at_legion_teleporter(Player *player, AreaTriggerEntry *at)
     return false;
 }
 
-bool ATtest(Player *player, AreaTriggerEntry *at)
+bool ATtest(Player *player, AreaTriggerEntry const *at)
 {
     player->Say("Hi!",LANG_UNIVERSAL);
     return true;
@@ -74,7 +74,7 @@ enum
     GO_COILFANG_WATERFALL   = 184212
 };
 
-bool AreaTrigger_at_coilfang_waterfall(Player* pPlayer, AreaTriggerEntry* pAt)
+bool AreaTrigger_at_coilfang_waterfall(Player* pPlayer, AreaTriggerEntry const *pAt)
 {
     if (GameObject* pGo = pPlayer->FindGOInGrid(GO_COILFANG_WATERFALL, 50.0f))
     {
@@ -95,7 +95,7 @@ enum eScentLarkorwi
     NPC_LARKORWI_MATE                           = 9683
 };
 
-bool AreaTrigger_at_scent_larkorwi(Player* pPlayer, AreaTriggerEntry* pAt)
+bool AreaTrigger_at_scent_larkorwi(Player* pPlayer, AreaTriggerEntry const *pAt)
 {
     if (!pPlayer->isDead() && pPlayer->GetQuestStatus(QUEST_SCENT_OF_LARKORWI) == QUEST_STATUS_INCOMPLETE)
     {
@@ -113,7 +113,7 @@ bool AreaTrigger_at_scent_larkorwi(Player* pPlayer, AreaTriggerEntry* pAt)
 
 #define DATA_PATHALEON  5
 
-bool AreaTrigger_at_mechanar(Player* pPlayer, AreaTriggerEntry* pAt) {
+bool AreaTrigger_at_mechanar(Player* pPlayer, AreaTriggerEntry const *pAt) {
     if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
         if (pInstance->GetData(DATA_PATHALEON) == DONE)
             pPlayer->TeleportTo(554, -25.639709, 0.213936, -1.812820, 3.076223);
@@ -127,7 +127,7 @@ bool AreaTrigger_at_mechanar(Player* pPlayer, AreaTriggerEntry* pAt) {
 ## at_botanica
 ######*/
 
-bool AreaTrigger_at_botanica(Player *pPlayer, AreaTriggerEntry* pAt) {
+bool AreaTrigger_at_botanica(Player *pPlayer, AreaTriggerEntry const *pAt) {
     pPlayer->TeleportTo(553, 41.069, -29.975, -1.12, 5.49);
     
     return true;
