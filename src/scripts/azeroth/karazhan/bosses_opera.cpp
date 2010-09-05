@@ -746,6 +746,8 @@ struct boss_bigbadwolfAI : public ScriptedAI
         TempThreat = 0;
 
         IsChasing = false;
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
     }
 
     void Aggro(Unit* who)
