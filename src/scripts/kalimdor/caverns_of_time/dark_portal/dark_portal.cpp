@@ -25,6 +25,7 @@ EndScriptData */
 npc_medivh_bm
 npc_time_rift
 npc_saat
+npc_time_keeper
 EndContentData */
 
 #include "precompiled.h"
@@ -427,6 +428,53 @@ bool GossipSelect_npc_saat(Player *pPlayer, Creature *pCreature, uint32 sender, 
     return true;
 }
 
+/*######
+## npc_time_keeper
+######*/
+
+#define SPELL_SAND_BREATH   31478
+
+struct npc_time_keeperAI : public ScriptedAI
+{
+    npc_time_keeperAI(Creature *c) : ScriptedAI(c) {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance *pInstance;
+    
+    uint32 lifeTimer;
+    uint32 sandBreathTimer;
+    
+    void Reset() {
+        lifeTimer = 30000;
+        sandBreathTimer = 10000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff) {
+        if (lifeTimer <= diff)
+            m_creature->DisappearAndDie();
+        else
+            lifeTimer -= diff;
+            
+        if (!UpdateVictim())
+            return;
+            
+        if (sandBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_SAND_BREATH);
+            sandBreathTimer = 25000+rand()%10000;
+        } else sandBreathTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_time_keeper(Creature *pCreature)
+{
+    return new npc_time_keeperAI(pCreature);
+}
+
 void AddSC_dark_portal()
 {
     Script *newscript;
@@ -445,6 +493,11 @@ void AddSC_dark_portal()
     newscript->Name = "npc_saat";
     newscript->pGossipHello = &GossipHello_npc_saat;
     newscript->pGossipSelect = &GossipSelect_npc_saat;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_time_keeper";
+    newscript->GetAI = &GetAI_npc_time_keeper;
     newscript->RegisterSelf();
 }
 
