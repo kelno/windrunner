@@ -12,6 +12,8 @@
 #define DATA_TEMPORUS           4
 #define DATA_AEONUS             5
 
+#define DATA_INSTANCE_BOSS      6
+
 #define DATA_MEDIVH             10
 #define DATA_PORTAL_COUNT       11
 #define DATA_SHIELD             12

@@ -75,11 +75,14 @@ struct instance_dark_portal : public ScriptedInstance
 
     uint64 MedivhGUID;
     uint8 CurrentRiftId;
+    
+    bool bIsInstanceBossInProgress;
 
     void Initialize()
     {
         MedivhGUID          = 0;
         Clear();
+        SetData(DATA_INSTANCE_BOSS, NOT_STARTED);
     }
 
     void Clear()
@@ -272,15 +275,30 @@ struct instance_dark_portal : public ScriptedInstance
             break;
         case DATA_DEJA:
             Encounter[2] = data;
-            if (data == DONE) SaveToDB();
+            if (data == DONE) {
+                SaveToDB();
+                SetData(DATA_INSTANCE_BOSS, NOT_STARTED);
+            }
             break;
         case DATA_TEMPORUS:
             Encounter[3] = data;
-            if (data == DONE) SaveToDB();
+            if (data == DONE) {
+                SaveToDB();
+                SetData(DATA_INSTANCE_BOSS, NOT_STARTED);
+            }
             break;
         case DATA_AEONUS:
             Encounter[4] = data;
-            if (data == DONE) SaveToDB();
+            if (data == DONE) {
+                SaveToDB();
+                SetData(DATA_INSTANCE_BOSS, NOT_STARTED);
+            }
+            break;
+        case DATA_INSTANCE_BOSS:
+            if (data == IN_PROGRESS)
+                bIsInstanceBossInProgress = true;
+            else
+                bIsInstanceBossInProgress = false;
             break;
         }
     }
@@ -303,6 +321,8 @@ struct instance_dark_portal : public ScriptedInstance
             return Encounter[3];
         case DATA_AEONUS:
             return Encounter[4];
+        case DATA_INSTANCE_BOSS:
+            return bIsInstanceBossInProgress ? 1 : 0;
         }
         return 0;
     }
@@ -325,6 +345,8 @@ struct instance_dark_portal : public ScriptedInstance
         
         if (entry == RIFT_BOSS)
             entry = RandRiftBoss();
+        else        // This is an instance boss, don't spawn anything else from that portal
+            SetData(DATA_INSTANCE_BOSS, IN_PROGRESS);
 
         float x,y,z;
         source->GetRandomPoint(source->GetPositionX(),source->GetPositionY(),source->GetPositionZ(),10.0f,x,y,z);
@@ -425,6 +447,9 @@ struct instance_dark_portal : public ScriptedInstance
     void Update(uint32 diff)
     {
         if (Encounter[1] != IN_PROGRESS)
+            return;
+            
+        if (mRiftPortalCount > 18)  // Event is done, stop here
             return;
 
         //add delay timer?
