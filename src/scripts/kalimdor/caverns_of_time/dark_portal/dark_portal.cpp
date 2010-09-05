@@ -358,7 +358,7 @@ struct npc_time_riftAI : public ScriptedAI
         if (!pInstance)
             return;
             
-        if (mRiftWaveCount > 18)
+        if (mRiftWaveCount >= 18)
             return;
             
         if (mRiftWaveCount == 18)
