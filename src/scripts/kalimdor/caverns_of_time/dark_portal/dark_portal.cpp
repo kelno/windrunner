@@ -342,6 +342,9 @@ struct npc_time_riftAI : public ScriptedAI
         debug_log("TSCR: npc_time_rift: summoning wave creature (Wave %u, Entry %u).",mRiftWaveCount,entry);
 
         ++mRiftWaveCount;
+        
+        if (pInstance->GetData(DATA_INSTANCE_BOSS) == IN_PROGRESS)      // Don't spawn anything from portal is boss is in progress
+            entry = 0;
 
         if (entry == C_WHELP)
         {
@@ -388,7 +391,7 @@ CreatureAI* GetAI_npc_time_rift(Creature *pCreature)
 
 #define SAY_SAAT_WELCOME        -1269019
 
-#define GOSSIP_ITEM_OBTAIN      "[PH] Obtain Chrono-Beacon"
+#define GOSSIP_ITEM_OBTAIN      "[PH] Obtenir Chrono-balise"
 #define SPELL_CHRONO_BEACON     34975
 #define ITEM_CHRONO_BEACON      24289
 
