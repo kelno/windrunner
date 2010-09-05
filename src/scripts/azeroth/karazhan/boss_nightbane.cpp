@@ -38,12 +38,12 @@ EndScriptData */
 #define SPELL_SEARING_CINDERS       30127
 #define SPELL_SUMMON_SKELETON       30170
 
-#define EMOTE_SUMMON                "An ancient being awakens in the distance..."
-#define YELL_AGGRO                  "What fools! I shall bring a quick end to your suffering!"
-#define YELL_FLY_PHASE              "Miserable vermin. I shall exterminate you from the air!"
-#define YELL_LAND_PHASE_1           "Enough! I shall land and crush you myself!"
-#define YELL_LAND_PHASE_2           "Insects! Let me show you my strength up close!"
-#define EMOTE_BREATH                "takes a deep breath."
+#define EMOTE_SUMMON                "Un être ancien apparait au loin..."
+#define YELL_AGGRO                  "!Pauvres fous ! Je devrais apporter une fin rapide à votre souffrance !"
+#define YELL_FLY_PHASE              "Misérable vermine. Je vais vous exterminer depuis les airs !"
+#define YELL_LAND_PHASE_1           "Assez ! Je vais atterrir et vous écraser moi-même !"
+#define YELL_LAND_PHASE_2           "Insectes ! Laissez-moi vous montrer ma force !"
+#define EMOTE_BREATH                "prend une profonde respiration."
 
 float IntroWay[8][3] =
 {
@@ -368,6 +368,7 @@ struct boss_nightbaneAI : public ScriptedAI
                 {
                     for (uint8 i = 0; i <= 3; ++i)
                     {
+                        m_creature->InterruptNonMeleeSpells(true);
                         DoCast(m_creature->getVictim(), SPELL_SUMMON_SKELETON);
                         Skeletons = true;
                     }
