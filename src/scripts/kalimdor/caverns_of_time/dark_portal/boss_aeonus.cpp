@@ -55,12 +55,14 @@ struct boss_aeonusAI : public ScriptedAI
     uint32 SandBreath_Timer;
     uint32 TimeStop_Timer;
     uint32 Frenzy_Timer;
+    uint32 Cleave_Timer;
 
     void Reset()
     {
         SandBreath_Timer = 15000+rand()%15000;
         TimeStop_Timer = 10000+rand()%5000;
         Frenzy_Timer = 30000+rand()%15000;
+        Cleave_Timer = 10000;
     }
 
     void Aggro(Unit *who)
@@ -127,6 +129,12 @@ struct boss_aeonusAI : public ScriptedAI
             DoCast(m_creature, SPELL_ENRAGE);
             Frenzy_Timer = 20000+rand()%15000;
         }else Frenzy_Timer -= diff;
+        
+        //Cleave
+        if (Cleave_Timer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            Cleave_Timer = 18000+rand()%5000;
+        }else Cleave_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
