@@ -233,14 +233,11 @@ enum ePantherCage
     ENRAGED_PANTHER = 10992
 };
 
-bool go_panther_cage(Player* pPlayer, GameObject* pGo)
+bool GOHello_go_panther_cage(Player* pPlayer, GameObject* pGo)
 {
-
-    if (pPlayer->GetQuestStatus(5151) == QUEST_STATUS_INCOMPLETE)
-    {
-        if(Creature* panther = pGo->FindCreatureInGrid(ENRAGED_PANTHER, 5.0f, true))
-        {
-            panther->RemoveFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_NON_ATTACKABLE);
+    if (pPlayer->GetQuestStatus(5151) == QUEST_STATUS_INCOMPLETE) {
+        if(Creature* panther = pGo->FindCreatureInGrid(ENRAGED_PANTHER, 5.0f, true)) {
+            panther->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             panther->SetReactState(REACT_AGGRESSIVE);
             panther->AI()->AttackStart(pPlayer);
         }
@@ -259,7 +256,7 @@ struct npc_enraged_pantherAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         m_creature->SetReactState(REACT_PASSIVE);
     }
 
@@ -299,6 +296,16 @@ void AddSC_thousand_needles()
     newscript->pReceiveEmote =  &ReceiveEmote_npc_plucky;
     newscript->pGossipHello =   &GossipHello_npc_plucky;
     newscript->pGossipSelect = &GossipSelect_npc_plucky;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_panther_cage";
+    newscript->pGOHello = &GOHello_go_panther_cage;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_enraged_panther";
+    newscript->GetAI = &GetAI_npc_enraged_panther;
     newscript->RegisterSelf();
 }
 
