@@ -420,6 +420,6 @@ SET(scripts_STAT_SRCS
     outland/zulaman/zulaman.cpp
 )
     
-add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/trinitycore.conf"')
+#add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/trinitycore.conf"')
 add_library(scripts STATIC ${scripts_STAT_SRCS})
 ADD_DEPENDENCIES(game scripts revision.h)
