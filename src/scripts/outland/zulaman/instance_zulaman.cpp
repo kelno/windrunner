@@ -345,7 +345,8 @@ struct instance_zulaman : public ScriptedInstance
             break;
         }
 
-        if(data == DONE && type != DATA_GAUNTLET && type != DATA_GONG_EVENT)   // Don't increase BossKilled for gauntlet or for gong
+        if(data == DONE && type != DATA_GAUNTLET && type != DATA_GONG_EVENT
+            && type != TYPE_RAND_VENDOR_1 && type != TYPE_RAND_VENDOR_2)   // Don't increase BossKilled for gauntlet or for gong
         {
             BossKilled++;
             if(QuestMinute && BossKilled >= 4)
