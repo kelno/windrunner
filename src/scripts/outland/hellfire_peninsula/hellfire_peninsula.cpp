@@ -430,7 +430,6 @@ struct npc_demoniac_scryerAI : public Scripted_NoMovementAI
     uint8 WandlingCount;
     bool WardenSpawned;
     bool sayComeOn;
-    Player* player;
     
     void Reset()
     {
@@ -439,24 +438,17 @@ struct npc_demoniac_scryerAI : public Scripted_NoMovementAI
         WardenSpawned = false;
         WandlingCount = 0;
         sayComeOn = false;
-        
-        player = NULL;
     }
     
     void Aggro(Unit* pWho) {}
     
-    void MoveInLineOfSight(Unit* pWho)
-    {
-        if (pWho->GetTypeId() == TYPEID_PLAYER)
-        {
-            if (m_creature->GetDistance2d(pWho) < 15)
-                player = CAST_PLR(pWho);
-        }
-    }
-    
     void UpdateAI(const uint32 diff)
     {
         //player is gone ?
+        if (!m_creature->GetSummoner())
+            return;
+            
+        Player* player = (m_creature->GetSummoner())->ToPlayer();
         if (!player)
             return;
             
