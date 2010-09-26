@@ -175,6 +175,16 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
         m_creature->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+        
+        if (pInstance) {
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty()) {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource())
+                        plr->RemoveAurasDueToSpell(41520);
+                }
+            }
+        }
     }
 
     void Aggro(Unit* who)
@@ -234,8 +244,17 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
 
     void JustDied(Unit* killer)
     {
-        if(pInstance)
+        if(pInstance) {
             pInstance->SetData(DATA_RELIQUARYOFSOULSEVENT, DONE);
+            
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty()) {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource())
+                        plr->RemoveAurasDueToSpell(41520);
+                }
+            }
+        }
 
         InCombat = false;
     }
