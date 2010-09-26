@@ -24,7 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_zulaman.h"
 
-#define YELL_AGGRO              "Da shadow gonna fall on you... "
+#define YELL_AGGRO              "L'ombre, elle va vous tomber dessus."
 #define SOUND_YELL_AGGRO        12041
 #define YELL_SPIRIT_BOLTS       "Your soul gonna bleed!"
 #define SOUND_YELL_SPIRIT_BOLTS 12047
@@ -38,7 +38,8 @@ EndScriptData */
 #define SOUND_YELL_DEATH        12051
 
 #define SPELL_SPIRIT_BOLTS      43383
-#define SPELL_DRAIN_POWER       44131
+#define SPELL_DRAIN_POWER_LESS  44131   // -1% damage
+#define SPELL_DRAIN_POWER_MORE  44132   // +1% damage
 #define SPELL_SIPHON_SOUL       43501
 
 #define MOB_TEMP_TRIGGER        23920
@@ -228,7 +229,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_HEXLORDEVENT) != DONE)
             pInstance->SetData(DATA_HEXLORDEVENT, NOT_STARTED);
 
         SpiritBolts_Timer = 20000;
@@ -243,6 +244,8 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 46916);
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO, 50268674);
         m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_ATTACK_POWER, true);
     }
 
     void Aggro(Unit* who)
@@ -361,11 +364,25 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
 
         if(DrainPower_Timer < diff)
         {
-            m_creature->CastSpell(m_creature, SPELL_DRAIN_POWER, true);
+            //m_creature->CastSpell(m_creature, SPELL_DRAIN_POWER_MORE, true);
+            Map *map = m_creature->GetMap();
+            if(!map->IsDungeon()) return;
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (Player* i_pl = i->getSource()) {
+                    if(i_pl->isAlive()) {
+                        m_creature->AddAura(SPELL_DRAIN_POWER_LESS, i_pl);          // -1% damage on each active player on boss
+                        m_creature->AddAura(SPELL_DRAIN_POWER_MORE, m_creature);    // +1% damage for each active player on boss
+                    }
+                }
+                        
+            }
+			//m_creature->AddAura(44132, m_creature);
             DoYell(YELL_DRAIN_POWER, LANG_UNIVERSAL, NULL);
             DoPlaySoundToSet(m_creature, SOUND_YELL_DRAIN_POWER);
             DrainPower_Timer = 40000 + rand()%15000;    // must cast in 60 sec, or buff/debuff will disappear
-        }else DrainPower_Timer -= diff;
+           }else DrainPower_Timer -= diff;
 
         if(SpiritBolts_Timer < diff)
         {

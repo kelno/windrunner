@@ -24,16 +24,16 @@ EndScriptData */
 #include "def_zulaman.h"
 
 //Speech
-#define YELL_TRANSFORM_TO_LYNX "Let me introduce to you my new bruddahs: fang and claw!"
+#define YELL_TRANSFORM_TO_LYNX "J'vous présente mes nouveaux frères : griffe et croc !"
 #define SOUND_TRANSFORM_TO_LYNX 12094
 
-#define YELL_TRANSFORM_TO_BEAR "Got me some new tricks...like me bruddah bear!"
+#define YELL_TRANSFORM_TO_BEAR "J'ai des nouveaux tours… comme mon frère ours…"
 #define SOUND_TRANSFORM_TO_BEAR 12092
 
-#define YELL_TRANSFORM_TO_DRAGONHAWK "Ya don' have to look to da sky to see da dragonhawk!"
+#define YELL_TRANSFORM_TO_DRAGONHAWK "Pas besoin d'lever les yeux au ciel pour voir l'faucon-dragon !"
 #define SOUND_TRANSFORM_TO_DRAGONHAWK 12095
 
-#define YELL_TRANSFORM_TO_EAGLE "Dere be no hidin' from da eagle!"
+#define YELL_TRANSFORM_TO_EAGLE "L'aigle, il vous trouvera partout !"
 #define SOUND_TRANSFORM_TO_EAGLE 12093
 
 #define YELL_KILL_ONE "Da Amani de chuka!"
@@ -45,7 +45,7 @@ EndScriptData */
 #define YELL_FIRE_BREATH "Fire kill you just as quick!"
 #define SOUND_FIRE_BRETH 12096
 
-#define YELL_AGGRO "Nobody badduh dan me!"
+#define YELL_AGGRO "Y'a personne plus balèze que moi !"
 #define SOUND_AGGRO 12091
 
 #define YELL_BERSERK "You too slow! Me too strong!"
@@ -173,10 +173,12 @@ struct boss_zuljinAI : public ScriptedAI
     uint32 Pillar_Of_Fire_Timer;
 
     SummonList Summons;
+    
+    Unit* ClawRageTarget;
 
     void Reset()
     {
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_ZULJINEVENT) != DONE)
             pInstance->SetData(DATA_ZULJINEVENT, NOT_STARTED);
 
         Phase = 0;
@@ -203,12 +205,15 @@ struct boss_zuljinAI : public ScriptedAI
 
         ClawTargetGUID = 0;
         TankGUID = 0;
+        
+        ClawRageTarget = NULL;
 
         Summons.DespawnAll();
 
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 47174);
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO, 218172674);
         m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
     }
 
     void Aggro(Unit *who)
@@ -394,14 +399,17 @@ struct boss_zuljinAI : public ScriptedAI
             if(m_creature->GetHealth() < health_20 * (4 - Phase))
                 EnterPhase(Phase + 1);
         }
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
 
-        if(Berserk_Timer < diff)
+        // Zul'jin doesn't have any enrage
+        /*if(Berserk_Timer < diff)
         {
             m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
             DoYell(YELL_BERSERK, LANG_UNIVERSAL, NULL);
             DoPlaySoundToSet(m_creature, SOUND_BERSERK);
             Berserk_Timer = 60000;
-        }else Berserk_Timer -= diff;
+        }else Berserk_Timer -= diff;*/
 
         switch (Phase)
         {
@@ -466,15 +474,16 @@ struct boss_zuljinAI : public ScriptedAI
                 {
                     if(Claw_Loop_Timer < diff)
                     {
-                        Unit* target = m_creature->getVictim();
-                        if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
-                        if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                        if(target)
+                        if (!ClawRageTarget)
+                            ClawRageTarget = SelectUnit(SELECT_TARGET_RANDOM, 1); // Not on tank
+                        //if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
+                        //if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                        if(ClawRageTarget)
                         {
-                            AttackStart(target);
-                            if(m_creature->IsWithinMeleeRange(target))
+                            AttackStart(ClawRageTarget);
+                            if(m_creature->IsWithinMeleeRange(ClawRageTarget))
                             {
-                                m_creature->CastSpell(target, SPELL_CLAW_RAGE_DAMAGE, true);
+                                m_creature->CastSpell(ClawRageTarget, SPELL_CLAW_RAGE_DAMAGE, true);
                                 Claw_Counter++;
                                 if(Claw_Counter == 12)
                                 {
@@ -482,6 +491,7 @@ struct boss_zuljinAI : public ScriptedAI
                                     m_creature->SetSpeed(MOVE_RUN, 1.2f);
                                     AttackStart(Unit::GetUnit(*m_creature, TankGUID));
                                     TankGUID = 0;
+                                    ClawRageTarget = NULL;  // Unset Claw Rage target
                                     return;
                                 }
                                 else

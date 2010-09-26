@@ -14,6 +14,9 @@
 #define DATA_CHESTLOOTED    7
 #define TYPE_RAND_VENDOR_1  8
 #define TYPE_RAND_VENDOR_2  9
+#define DATA_QUESTMINUTE    10
+#define DATA_GAUNTLET       11
+#define DATA_GONG_EVENT     12
 
 #endif
 

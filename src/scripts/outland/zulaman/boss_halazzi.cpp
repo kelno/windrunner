@@ -25,10 +25,12 @@ EndScriptData */
 #include "def_zulaman.h"
 //#include "spell.h"
 
-#define YELL_AGGRO "Get on your knees and bow to da fang and claw!"
-#define SOUND_AGGRO                    12020
+#define YELL_AGGRO "À genoux, les idiots… devant la griffe et le croc !"
+#define SOUND_AGGRO                     12020
 #define YELL_SABER_ONE "You gonna leave in pieces!"
+#define SOUND_SABER_ONE                 12024
 #define YELL_SABER_TWO "Me gonna carve ya now!"
+#define SOUND_SABER_TWO                 12023
 #define YELL_SPLIT "Me gonna carve ya now!"
 #define SOUND_SPLIT                    12021
 #define YELL_MERGE "Spirit, come back to me!"
@@ -77,9 +79,9 @@ struct boss_halazziAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         // need to find out what controls totem's spell cooldown
-        SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_LIGHTNING);
+        /*SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_LIGHTNING);
         if(TempSpell && TempSpell->CastingTimeIndex != 5)
-            TempSpell->CastingTimeIndex = 5; // 2000 ms casting time
+            TempSpell->CastingTimeIndex = 5; // 2000 ms casting time*/
     }
 
     ScriptedInstance *pInstance;
@@ -99,7 +101,7 @@ struct boss_halazziAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_HALAZZIEVENT) != DONE)
             pInstance->SetData(DATA_HALAZZIEVENT, NOT_STARTED);
 
         TransformCount = 0;
@@ -219,6 +221,17 @@ struct boss_halazziAI : public ScriptedAI
         {
             if(SaberlashTimer < diff)
             {
+                switch(rand()%2) {
+                case 0:
+                    DoYell(YELL_SABER_ONE, LANG_UNIVERSAL, NULL);
+                    DoPlaySoundToSet(me, SOUND_SABER_ONE);
+                    break;
+
+                case 1:
+                    DoYell(YELL_SABER_TWO, LANG_UNIVERSAL, NULL);
+                    DoPlaySoundToSet(me, SOUND_SABER_TWO);
+                    break;
+                }
                 // A tank with more than 490 defense skills should receive no critical hit
                 //m_creature->CastSpell(m_creature, 41296, true);
                 m_creature->CastSpell(m_creature->getVictim(), SPELL_SABER_LASH, true);
@@ -245,7 +258,10 @@ struct boss_halazziAI : public ScriptedAI
         {
             if(TotemTimer < diff)
             {
-                DoCast(m_creature, SPELL_SUMMON_TOTEM);
+                //DoCast(m_creature, SPELL_SUMMON_TOTEM);
+                float totemX, totemY, totemZ;
+                m_creature->GetRandomPoint(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ(), 1.0f, totemX, totemY, totemZ);
+                m_creature->SummonCreature(MOB_TOTEM, totemX, totemY, totemZ, 0, TEMPSUMMON_DEAD_DESPAWN, 45000);
                 TotemTimer = 20000;
             }else TotemTimer -= diff;
 
@@ -266,7 +282,7 @@ struct boss_halazziAI : public ScriptedAI
                 {
                     if( ((m_creature->GetHealth()*100) / m_creature->GetMaxHealth() <= 20)/*m_creature->GetHealth() * 10 < m_creature->GetMaxHealth()*/)
                         EnterPhase(PHASE_MERGE);
-                    else
+                    else /* WTF? */
                     {
                         Unit *Lynx = Unit::GetUnit(*m_creature, LynxGUID);
                         if(Lynx && ((Lynx->GetHealth()*100) / Lynx->GetMaxHealth() <= 20)/*Lynx->GetHealth() * 10 < Lynx->GetMaxHealth()*/)
@@ -377,6 +393,34 @@ struct boss_spiritlynxAI : public ScriptedAI
 
 };
 
+struct TRINITY_DLL_DECL npc_corruptedlightningtotemAI : public Scripted_NoMovementAI
+{
+    npc_corruptedlightningtotemAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    uint32 globalCD;
+    
+    void Reset()
+    {
+        globalCD = 100;     // Begin after 100 ms and then every 1000 ms
+    }
+    
+    void Aggro(Unit* pWho) {}
+    
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (globalCD < diff) {
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true);
+            if (target) {
+                DoCast(target, SPELL_LIGHTNING);
+                globalCD = 1000;
+            }
+        }else globalCD -= diff;
+    }
+};
+
 CreatureAI* GetAI_boss_halazziAI(Creature *_Creature)
 {
     return new boss_halazziAI (_Creature);
@@ -385,6 +429,11 @@ CreatureAI* GetAI_boss_halazziAI(Creature *_Creature)
 CreatureAI* GetAI_boss_spiritlynxAI(Creature *_Creature)
 {
     return new boss_spiritlynxAI (_Creature);
+}
+
+CreatureAI* GetAI_npc_corruptedlightningtotemAI(Creature* pCreature)
+{
+    return new npc_corruptedlightningtotemAI(pCreature);
 }
 
 void AddSC_boss_halazzi()
@@ -398,6 +447,11 @@ void AddSC_boss_halazzi()
     newscript = new Script;
     newscript->Name="mob_halazzi_lynx";
     newscript->GetAI = &GetAI_boss_spiritlynxAI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "totem_halazzi";
+    newscript->GetAI = &GetAI_npc_corruptedlightningtotemAI;
     newscript->RegisterSelf();
 }
 
