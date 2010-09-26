@@ -214,6 +214,21 @@ struct boss_zuljinAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO, 218172674);
         m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE);
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31789, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39377, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 54794, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37017, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37486, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 49613, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 694, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 25266, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 27344, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 6795, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1161, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5209, true);
     }
 
     void Aggro(Unit *who)
