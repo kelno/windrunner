@@ -146,7 +146,7 @@ struct instance_zulaman : public ScriptedInstance
         case 186304: ZulJinGateGUID  = go->GetGUID(); break;
         case 186305: HexLordGateGUID = go->GetGUID(); break;
         case 186306: HexLordDoorGUID = go->GetGUID(); break;
-        case 186858: AkilzonDoorGUID = go->GetGUID(); break;
+        case 186858: AkilzonDoorGUID = go->GetGUID(); HandleGameObject(NULL, true, go); break;
         case 186859: ZulJinDoorGUID  = go->GetGUID(); HandleGameObject(NULL, true, go); break;
 
         case 187021: HarkorsSatchelGUID  = go->GetGUID(); break;
