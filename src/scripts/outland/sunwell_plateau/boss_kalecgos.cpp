@@ -76,13 +76,6 @@ enum SpellIds
     SPELL_REVITALIZE            =   45027
 };
 
-enum Creatures
-{
-    MOB_KALECGOS    =  24850,
-    MOB_KALEC       =  24891,
-    MOB_SATHROVARR  =  24892
-};
-
 #define GO_FAILED   "You are unable to use this currently."
 
 #define FLY_X   1679

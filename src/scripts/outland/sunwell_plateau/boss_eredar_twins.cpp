@@ -84,13 +84,6 @@ enum Spells
     SPELL_BLAZE_BURN        =   45246
 };
 
-enum Creatures
-{
-    GRAND_WARLOCK_ALYTHESS  =   25166,
-    MOB_SHADOW_IMAGE        =   25214,
-    LADY_SACROLASH          =   25165
-};
-
 struct boss_sacrolashAI : public ScriptedAI
 {
     boss_sacrolashAI(Creature *c) : ScriptedAI(c){
@@ -99,7 +92,6 @@ struct boss_sacrolashAI : public ScriptedAI
 
     ScriptedInstance *pInstance;
 
-    bool InCombat;
     bool SisterDeath;
     bool Enraged;
 
@@ -112,28 +104,21 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void Reset()
     {
-        InCombat = false;
         Enraged = false;
 
-        if(pInstance)
-        {
+        if (pInstance) {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-            if (Temp)
+            if (Temp) {
                 if (Temp->isDead())
-                {
                     (Temp->ToCreature())->Respawn();
-                }else
-                {
+                else {
                     if(Temp->getVictim())
-                    {
                         m_creature->getThreatManager().addThreat(Temp->getVictim(),0.0f);
-                        InCombat = true;
-                    }
                 }
+            }
         }
 
-        if(!InCombat)
-        {
+        if (!m_creature->isInCombat()) {
             ShadowbladesTimer = 10000;
             ShadownovaTimer = 30000;
             ConfoundingblowTimer = 25000;
@@ -144,7 +129,7 @@ struct boss_sacrolashAI : public ScriptedAI
             SisterDeath = false;
         }
 
-        if(pInstance)
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
     }
 
@@ -165,14 +150,8 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void KilledUnit(Unit *victim)
     {
-        if(rand()%4 == 0)
-        {
-            switch (rand()%2)
-            {
-            case 0: DoScriptText(YELL_SAC_KILL_1, m_creature); break;
-            case 1: DoScriptText(YELL_SAC_KILL_2, m_creature); break;
-            }
-        }
+        if (rand()%4 == 0)
+            DoScriptText(RAND(YELL_SAC_KILL_1,YELL_SAC_KILL_2), me);
     }
 
     void JustDied(Unit* Killer)
@@ -360,7 +339,6 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     ScriptedInstance *pInstance;
 
-    bool InCombat;
     bool SisterDeath;
     bool Enraged;
 
@@ -376,28 +354,20 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     void Reset()
     {
-        InCombat = false;
         Enraged = false;
 
-        if(pInstance)
-        {
+        if (pInstance) {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
             if (Temp)
                 if (Temp->isDead())
-                {
                     (Temp->ToCreature())->Respawn();
-                }else
-                {
+                else {
                     if(Temp->getVictim())
-                    {
                         m_creature->getThreatManager().addThreat(Temp->getVictim(),0.0f);
-                        InCombat = true;
-                    }
                 }
         }
 
-        if(!InCombat)
-        {
+        if (!m_creature->isInCombat()) {
             ConflagrationTimer = 45000;
             BlazeTimer = 100;
             PyrogenicsTimer = 15000;
@@ -409,7 +379,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             SisterDeath = false;
         }
 
-        if(pInstance)
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
     }
 
@@ -430,10 +400,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     void AttackStart(Unit *who)
     {
-        if (!InCombat)
-        {
+        if (!m_creature->isInCombat())
             Scripted_NoMovementAI::AttackStart(who);
-        }
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -441,36 +409,26 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         if (!who || m_creature->getVictim())
             return;
 
-        if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
-        {
+        if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
 
             float attackRadius = m_creature->GetAttackDistance(who);
             if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
             {
-                if (!InCombat)
+                if (!m_creature->isInCombat())
                 {
                     DoStartNoMovement(who);
                     Aggro(who);
-                    InCombat = true;
                 }
             }
         }
-        else if (IntroStepCounter == 10 && m_creature->IsWithinLOSInMap(who)&& m_creature->IsWithinDistInMap(who, 30) )
-        {
+        else if (IntroStepCounter == 10 && m_creature->IsWithinLOSInMap(who)&& m_creature->IsWithinDistInMap(who, 30))
             IntroStepCounter = 0;
-        }
     }
 
     void KilledUnit(Unit *victim)
     {
-        if(rand()%4 == 0)
-        {
-            switch (rand()%2)
-            {
-            case 0: DoScriptText(YELL_ALY_KILL_1, m_creature); break;
-            case 1: DoScriptText(YELL_ALY_KILL_2, m_creature); break;
-            }
-        }
+        if (rand()%4 == 0)
+            DoScriptText(RAND(YELL_ALY_KILL_1,YELL_ALY_KILL_2), me);
     }
 
     void JustDied(Unit* Killer)
@@ -683,6 +641,7 @@ struct mob_shadow_imageAI : public ScriptedAI
 
     void Reset()
     {
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         ShadowfuryTimer = 5000 + (rand()%15000);
         DarkstrikeTimer = 3000;
         KillTimer = 15000;
@@ -711,7 +670,7 @@ struct mob_shadow_imageAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!m_creature->HasAura(SPELL_IMAGE_VISUAL, 0))
+        if(!m_creature->HasAura(SPELL_IMAGE_VISUAL))
             DoCast(m_creature, SPELL_IMAGE_VISUAL);
 
         if(KillTimer < diff)

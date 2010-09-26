@@ -79,21 +79,6 @@ enum Spells
     SPELL_CLOUD_SUMMON          =   45884
 };
 
-enum Creatures
-{
-    MOB_FELMYST        =   25038,
-    //MOB_BRUTALLUS      =
-    //MOB_KALECGOS       =
-    MOB_DEAD           =   25268,
-    MOB_MADRIGOSA      =   25160,
-    MOB_FELMYST_VISUAL =   25041,
-    MOB_FLIGHT_LEFT    =   25357,
-    MOB_FLIGHT_RIGHT   =   25358,
-    MOB_DEATH_CLOUD    =   25703,
-    MOB_VAPOR          =   25265,
-    MOB_VAPOR_TRAIL    =   25267
-};
-
 enum PhaseFelmyst
 {
     PHASE_NULL  = 0,
