@@ -29,6 +29,7 @@ go_za_gong
 npc_amanishi_lookout
 npc_amanishi_tempest
 npc_amanishi_berserker
+npc_amanishi_scout
 EndContentData */
 
 #include "precompiled.h"
@@ -488,6 +489,71 @@ CreatureAI* GetAI_npc_amanishi_berserker(Creature *pCreature)
     return new npc_amanishi_berserkerAI(pCreature);
 }
 
+/*######
+## npc_amanishi_scout
+######*/
+
+enum eAmanishiScout
+{
+    SPELL_ALERT_DRUMS       = 42177,
+    SPELL_MULTI_SHOOT       = 43205,
+    SPELL_SHOOT             = 16496,
+    GO_AMANI_DRUM           = 186865
+};
+
+struct npc_amanishi_scoutAI : public ScriptedAI
+{
+    npc_amanishi_scoutAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 shootTimer;
+    uint32 multiShootTimer;
+    
+    bool hasRunToDrum;
+    
+    void Reset()
+    {
+        shootTimer = 2000;
+        multiShootTimer = 6000;
+        
+        hasRunToDrum = false;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        if (GameObject *amaniDrum = m_creature->FindGOInGrid(GO_AMANI_DRUM, 50.0f))
+            m_creature->GetMotionMaster()->MovePoint(0, amaniDrum->GetPositionX(), amaniDrum->GetPositionY(), amaniDrum->GetPositionZ());
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        // Check here if we're close from the drum
+        
+        if (shootTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SHOOT);
+            shootTimer = 4000+rand()%1000;
+        }
+        else
+            shootTimer -= diff;
+            
+        if (multiShootTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_MULTI_SHOOT);
+            multiShootTimer = 20000+rand()%4000;
+        }
+        else
+            multiShootTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_amanishi_scout(Creature *pCreature)
+{
+    return new npc_amanishi_scoutAI(pCreature);
+}
+
 void AddSC_zulaman()
 {
     Script *newscript;
@@ -529,6 +595,11 @@ void AddSC_zulaman()
     newscript = new Script;
     newscript->Name = "npc_amanishi_berserker";
     newscript->GetAI = &GetAI_npc_amanishi_berserker;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_amanishi_scout";
+    newscript->GetAI = &GetAI_npc_amanishi_scout;
     newscript->RegisterSelf();
 }
 
