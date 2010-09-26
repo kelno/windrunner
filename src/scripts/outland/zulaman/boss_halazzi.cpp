@@ -411,6 +411,10 @@ struct TRINITY_DLL_DECL npc_corruptedlightningtotemAI : public Scripted_NoMoveme
         if (!UpdateVictim())
             return;
             
+        Creature *halazzi = m_creature->FindCreatureInGrid(23577, 10.0f, true);
+        if (!halazzi)
+            m_creature->DisappearAndDie();
+            
         if (globalCD < diff) {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true);
             if (target) {

@@ -190,12 +190,16 @@ struct TRINITY_DLL_DECL npc_harrison_jonesAI : public ScriptedAI
     npc_harrison_jonesAI(Creature *c) : ScriptedAI(c) {}
     
     uint8 gongClicked;
+    uint32 suicideTimer;
+    uint32 deathTimer;
     
     std::vector<uint64> clickGUIDs;
     
     void Reset()
     {
         gongClicked = 0;
+        suicideTimer = 0;
+        deathTimer = 0;
     }
     
     void Aggro(Unit* pWho) {}
@@ -204,10 +208,8 @@ struct TRINITY_DLL_DECL npc_harrison_jonesAI : public ScriptedAI
     {
         // Don't allow the same player to click several times
         for (std::vector<uint64>::const_iterator itr = clickGUIDs.begin(); itr != clickGUIDs.end(); itr++) {
-            if ((*itr) == pGUID) {
-                //m_creature->Say("[DEBUG] Player already clicked.", LANG_UNIVERSAL, 0);
+            if ((*itr) == pGUID)
                 return;
-            }
         }
         
         gongClicked++;
@@ -216,29 +218,60 @@ struct TRINITY_DLL_DECL npc_harrison_jonesAI : public ScriptedAI
             s = "s";
         std::stringstream sst;
         sst << "Encore " << 5 - gongClicked << " personne" << s << " !";
-        if (gongClicked < 5)
+        if (gongClicked < 2)
             m_creature->Say(sst.str().c_str(), LANG_UNIVERSAL, 0);
         
         clickGUIDs.push_back(pGUID);
         
-        if (gongClicked == 5)
+        if (gongClicked >= 2)
             OpenDoorAndStartTimer();
     }
     
     void OpenDoorAndStartTimer()
     {
-        //m_creature->Say("[DEBUG] Starting timed event.", LANG_UNIVERSAL, 0);
         if (GameObject* gong = m_creature->FindGOInGrid(GONG_ENTRY, 15.0f))   // Lock the gong again
             gong->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
-        // TODO: find the door, open it, and then start timed event from instance script
-        if (GameObject* massiveDoor = m_creature->FindGOInGrid(MASSIVEGATE_ENTRY, 50.0f))
-            massiveDoor->SetUInt32Value(GAMEOBJECT_STATE, 0);
         
         if (ScriptedInstance* pInstance = ((ScriptedInstance*)m_creature->GetInstanceData())) {
             pInstance->SetData(DATA_QUESTMINUTE, IN_PROGRESS);
             pInstance->SetData(DATA_GONG_EVENT, DONE);
+            // Also remove aura on all players in map
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty()) {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource())
+                        plr->RemoveAurasDueToSpell(45225);
+                }
+            }
         }
+        
         m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);   // Prevent restarting the timer I don't know how...
+        m_creature->RemoveAurasDueToSpell(45225);
+        
+        m_creature->GetMotionMaster()->MovePath(24358, false);
+        suicideTimer = 14000;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (suicideTimer) {
+            if (suicideTimer <= diff) {
+                if (GameObject* massiveDoor = m_creature->FindGOInGrid(MASSIVEGATE_ENTRY, 50.0f))
+                    massiveDoor->SetUInt32Value(GAMEOBJECT_STATE, 0);
+                suicideTimer = 0;
+                deathTimer = 5000;
+            }
+            else
+                suicideTimer -= diff;
+        }
+        
+        if (deathTimer) {
+            if (deathTimer <= diff) {
+                m_creature->DisappearAndDie();
+            }
+            else
+                deathTimer -= diff;
+        }
     }
 };
 
@@ -268,6 +301,7 @@ bool GossipSelect_npc_harrison_jones(Player* pPlayer, Creature* pCreature, uint3
             pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED);
             pCreature->SetOrientation(5.7499);
             pCreature->Say("Aidez-moi à frapper sur ce gong !", LANG_UNIVERSAL, 0);
+            pCreature->AddAura(45225, pCreature);
         }
         else
             sLog.outError("ERROR: Zul'aman: Harrison Jones couldn't find the gong.");
@@ -293,8 +327,14 @@ bool GOHello_go_za_gong(Player* pPlayer, GameObject* pGo)
     if (pGo->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_LOCKED))
         return false;
     else {
-        if (Creature* harrisonJones = pGo->FindCreatureInGrid(HARRISON_ENTRY, 15.0f, true))
+        if (Creature* harrisonJones = pGo->FindCreatureInGrid(HARRISON_ENTRY, 15.0f, true)) {
             CAST_AI(npc_harrison_jonesAI, (harrisonJones->AI()))->IncreaseClick(pPlayer->GetGUID());
+            pPlayer->InterruptNonMeleeSpells(true);
+            pPlayer->CastSpell(pPlayer, 45226, true);
+            //pPlayer->CastSpell(pPlayer, 44762, true);
+            if (!pPlayer->HasAura(45225))
+                pPlayer->AddAura(45225, pPlayer);
+        }
             
         return true;
     }
