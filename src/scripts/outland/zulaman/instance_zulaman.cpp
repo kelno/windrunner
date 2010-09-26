@@ -24,7 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_zulaman.h"
 
-#define ENCOUNTERS     6
+#define ENCOUNTERS     7
 #define RAND_VENDOR    2
 
 //187021 //Harkor's Satchel
@@ -57,20 +57,28 @@ struct instance_zulaman : public ScriptedInstance
     uint64 TanzarsTrunkGUID;
     uint64 AshlisBagGUID;
     uint64 KrazsPackageGUID;
+    uint64 AmanishiLookoutGUID;
 
     uint64 HexLordGateGUID;
+    uint64 HexLordDoorGUID;     // Located just in his back
     uint64 ZulJinGateGUID;
     uint64 AkilzonDoorGUID;
     uint64 ZulJinDoorGUID;
     uint64 HalazziDoorGUID;
 
     uint32 QuestTimer;
+    uint32 GauntletWarriorsTimer;
+    uint32 GauntletEaglesTimer;
     uint16 BossKilled;
     uint16 QuestMinute;
     uint16 ChestLooted;
+    uint16 GongDone;
 
     uint32 Encounters[ENCOUNTERS];
     uint32 RandVendor[RAND_VENDOR];
+    
+    std::vector<Creature*> warriorsList;
+    std::vector<Creature*> eaglesList;
 
     void Initialize()
     {
@@ -78,17 +86,25 @@ struct instance_zulaman : public ScriptedInstance
         TanzarsTrunkGUID = 0;
         AshlisBagGUID = 0;
         KrazsPackageGUID = 0;
+        AmanishiLookoutGUID = 0;
 
-        uint64 HexLordGateGUID = 0;
-        uint64 ZulJinGateGUID = 0;
-        uint64 AkilzonDoorGUID = 0;
-        uint64 HalazziDoorGUID = 0;
-        uint64 ZulJinDoorGUID = 0;
+        HexLordGateGUID = 0;
+        HexLordDoorGUID = 0;
+        ZulJinGateGUID = 0;
+        AkilzonDoorGUID = 0;
+        HalazziDoorGUID = 0;
+        ZulJinDoorGUID = 0;
 
         QuestTimer = 0;
-        QuestMinute = 21;
+        GauntletWarriorsTimer = 0;
+        GauntletEaglesTimer = 0;
+        QuestMinute = 0;
         BossKilled = 0;
         ChestLooted = 0;
+        GongDone = 0;
+        
+        warriorsList.clear();
+        eaglesList.clear();
 
         for(uint8 i = 0; i < ENCOUNTERS; i++)
             Encounters[i] = NOT_STARTED;
@@ -108,6 +124,7 @@ struct instance_zulaman : public ScriptedInstance
     {
         switch(creature_entry)
         {
+        case 24175: AmanishiLookoutGUID = creature->GetGUID(); break;
         case 23578://janalai
         case 23863://zuljin
         case 24239://hexlord
@@ -121,16 +138,25 @@ struct instance_zulaman : public ScriptedInstance
     {
         switch(go->GetEntry())
         {
-        case 186303: HalazziDoorGUID = go->GetGUID(); break;
+        case 186303: 
+            HalazziDoorGUID = go->GetGUID();
+            if (GetData(DATA_HALAZZIEVENT) != DONE)
+                HandleGameObject(NULL, false, go);
+            break;
         case 186304: ZulJinGateGUID  = go->GetGUID(); break;
         case 186305: HexLordGateGUID = go->GetGUID(); break;
+        case 186306: HexLordDoorGUID = go->GetGUID(); break;
         case 186858: AkilzonDoorGUID = go->GetGUID(); break;
-        case 186859: ZulJinDoorGUID  = go->GetGUID(); break;
+        case 186859: ZulJinDoorGUID  = go->GetGUID(); HandleGameObject(NULL, true, go); break;
 
         case 187021: HarkorsSatchelGUID  = go->GetGUID(); break;
         case 186648: TanzarsTrunkGUID = go->GetGUID(); break;
         case 186672: AshlisBagGUID = go->GetGUID(); break;
         case 186667: KrazsPackageGUID  = go->GetGUID(); break;
+        case 186728:
+            if (GetData(DATA_GONG_EVENT) == DONE)
+                go->SetUInt32Value(GAMEOBJECT_STATE, 0);
+            break;
         default: break;
 
         }
@@ -168,8 +194,10 @@ struct instance_zulaman : public ScriptedInstance
         if(BossKilled >= 4)
             OpenDoor(HexLordGateGUID, true);
 
-        if(BossKilled >= 5)
+        if(BossKilled >= 5) {
             OpenDoor(ZulJinGateGUID, true);
+            OpenDoor(HexLordDoorGUID, true);
+        }
     }
 
     void UpdateWorldState(uint32 field, uint32 value)
@@ -178,11 +206,28 @@ struct instance_zulaman : public ScriptedInstance
         data << field << value;
         instance->SendToPlayers(&data);
     }
+    
+    Player* GetPlayerInMap()
+    {
+        Map::PlayerList const& players = instance->GetPlayers();
+
+        if (!players.isEmpty())
+        {
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+            {
+                if (Player* plr = itr->getSource())
+                    return plr;
+            }
+        }
+
+        debug_log("TSCR: Instance Zul'Aman: GetPlayerInMap, but PlayerList is empty!");
+        return NULL;
+    }
 
     const char* Save()
     {
         std::ostringstream ss;
-        ss << "S " << BossKilled << " " << ChestLooted << " " << QuestMinute;
+        ss << "S " << BossKilled << " " << ChestLooted << " " << QuestMinute << " " << GongDone;
         char* data = new char[ss.str().length()+1];
         strcpy(data, ss.str().c_str());
         //error_log("TSCR: Zul'aman saved, %s.", data);
@@ -195,14 +240,15 @@ struct instance_zulaman : public ScriptedInstance
         std::istringstream ss(load);
         //error_log("TSCR: Zul'aman loaded, %s.", ss.str().c_str());
         char dataHead; // S
-        uint16 data1, data2, data3;
-        ss >> dataHead >> data1 >> data2 >> data3;
+        uint16 data1, data2, data3, data4;
+        ss >> dataHead >> data1 >> data2 >> data3 >> data4;
         //error_log("TSCR: Zul'aman loaded, %d %d %d.", data1, data2, data3);
         if(dataHead == 'S')
         {
             BossKilled = data1;
             ChestLooted = data2;
             QuestMinute = data3;
+            GongDone = data4;
         }else error_log("TSCR: Zul'aman: corrupted save data.");
     }
 
@@ -241,8 +287,11 @@ struct instance_zulaman : public ScriptedInstance
             break;
         case DATA_HALAZZIEVENT:
             Encounters[3] = data;
-            OpenDoor(HalazziDoorGUID, data != IN_PROGRESS);
-            if(data == DONE) SummonHostage(3);
+            //OpenDoor(HalazziDoorGUID, data != IN_PROGRESS);
+            if(data == DONE) {
+                SummonHostage(3);
+                OpenDoor(HalazziDoorGUID, true);
+            }
             break;
         case DATA_HEXLORDEVENT:
             Encounters[4] = data;
@@ -265,9 +314,38 @@ struct instance_zulaman : public ScriptedInstance
         case TYPE_RAND_VENDOR_2:
             RandVendor[1] = data;
             break;
+        case DATA_QUESTMINUTE:  // Started from Harrison Jones script
+            QuestMinute = 21;
+            break;
+        case DATA_GAUNTLET:
+            Encounters[6] = data;
+            if (data == IN_PROGRESS) {
+                GauntletWarriorsTimer = 20000;
+                GauntletEaglesTimer = 90000;
+            }
+            else if (data == FAIL) {
+                // Despawn mobs if wiped, not if tempest is pulled
+                for (std::vector<Creature*>::iterator itr = warriorsList.begin(); itr != warriorsList.end(); itr++)
+                    (*itr)->DisappearAndDie();
+                warriorsList.clear();
+                for (std::vector<Creature*>::iterator itr = eaglesList.begin(); itr != eaglesList.end(); itr++)
+                    (*itr)->DisappearAndDie();
+                eaglesList.clear();
+                
+            }
+            else if (data == DONE) {
+                GauntletWarriorsTimer = 0;
+                GauntletEaglesTimer = 0;
+                SaveToDB();
+            }
+            break;
+        case DATA_GONG_EVENT:
+            GongDone = data;
+            SaveToDB();
+            break;
         }
 
-        if(data == DONE)
+        if(data == DONE && type != DATA_GAUNTLET && type != DATA_GONG_EVENT)   // Don't increase BossKilled for gauntlet or for gong
         {
             BossKilled++;
             if(QuestMinute && BossKilled >= 4)
@@ -284,16 +362,18 @@ struct instance_zulaman : public ScriptedInstance
     {
         switch(type)
         {
-        case DATA_NALORAKKEVENT: return Encounters[0];
-        case DATA_AKILZONEVENT:  return Encounters[1];
-        case DATA_JANALAIEVENT:  return Encounters[2];
-        case DATA_HALAZZIEVENT:  return Encounters[3];
-        case DATA_HEXLORDEVENT:  return Encounters[4];
-        case DATA_ZULJINEVENT:   return Encounters[5];
-        case DATA_CHESTLOOTED:   return ChestLooted;
-        case TYPE_RAND_VENDOR_1: return RandVendor[0];
-        case TYPE_RAND_VENDOR_2: return RandVendor[1];
-        default:                 return 0;
+        case DATA_NALORAKKEVENT:    return Encounters[0];
+        case DATA_AKILZONEVENT:     return Encounters[1];
+        case DATA_JANALAIEVENT:     return Encounters[2];
+        case DATA_HALAZZIEVENT:     return Encounters[3];
+        case DATA_HEXLORDEVENT:     return Encounters[4];
+        case DATA_ZULJINEVENT:      return Encounters[5];
+        case DATA_CHESTLOOTED:      return ChestLooted;
+        case TYPE_RAND_VENDOR_1:    return RandVendor[0];
+        case TYPE_RAND_VENDOR_2:    return RandVendor[1];
+        case DATA_GAUNTLET:         return Encounters[6];
+        case DATA_GONG_EVENT:       return GongDone;
+        default:                    return 0;
         }
     }
 
@@ -313,6 +393,43 @@ struct instance_zulaman : public ScriptedInstance
                 }else UpdateWorldState(3104, 0);
             }
             QuestTimer -= diff;
+        }
+        
+        if (GetData(DATA_GAUNTLET) == IN_PROGRESS) {
+            Player *plr = GetPlayerInMap();
+            if (!plr) {
+                SetData(DATA_GAUNTLET, FAIL);
+                if (Creature *pLookout = instance->GetCreatureInMap(AmanishiLookoutGUID))
+                    pLookout->Respawn();
+                return;
+            }
+            
+            // Timers probably not blizzlike
+            if (GauntletWarriorsTimer <= diff) {
+                for (int i = 0; i < 2; i++) {
+                    if (Creature *pWarrior = plr->SummonCreature(24225, 227.153259, 1477.462524, 25.917961, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000)) {
+                        warriorsList.push_back(pWarrior);
+                        pWarrior->setActive(true);
+                        pWarrior->SetSpeed(MOVE_WALK, 3);
+                        pWarrior->GetMotionMaster()->MovePath(24225, false);
+                    }
+                }
+                GauntletWarriorsTimer = 110000;
+            }
+            else GauntletWarriorsTimer -= diff;
+            
+            if (GauntletEaglesTimer <= diff) {
+                for (int i = 0; i < 5; i++) {
+                    if (Creature *pEagle = plr->SummonCreature(24159, 336.942902, 1395.780396, 74.461060, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000)) {
+                        eaglesList.push_back(pEagle);
+                        pEagle->setActive(true);
+                        pEagle->SetSpeed(MOVE_WALK, 3);
+                        pEagle->GetMotionMaster()->MovePath(24159, false);
+                    }
+                }
+                GauntletEaglesTimer = 90000;
+            }
+            else GauntletEaglesTimer -= diff;
         }
     }
 };

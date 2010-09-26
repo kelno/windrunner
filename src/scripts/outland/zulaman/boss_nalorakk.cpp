@@ -54,7 +54,7 @@ float NalorakkWay[8][3] =
 */
 
 //General defines
-#define YELL_AGGRO              "You be dead soon enough!"
+#define YELL_AGGRO              "Vous s'rez mort bien vite !"
 #define SOUND_YELL_AGGRO        12070
 #define YELL_KILL_ONE           "Mua-ha-ha! Now whatchoo got to say?"
 #define SOUND_YELL_KILL_ONE     12075
@@ -132,7 +132,7 @@ struct boss_nalorakkAI : public ScriptedAI
             (*m_creature).GetMotionMaster()->MovePoint(0,NalorakkWay[7][0],NalorakkWay[7][1],NalorakkWay[7][2]);
         }
 
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_NALORAKKEVENT) != DONE)
             pInstance->SetData(DATA_NALORAKKEVENT, NOT_STARTED);
 
         Surge_Timer = 15000 + rand()%5000;
@@ -143,6 +143,9 @@ struct boss_nalorakkAI : public ScriptedAI
 
         inBearForm = false;
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY + 1, 5122);
+        m_creature->SetOrientation(1.5f);
+        
+        DoResetThreat();
     }
 
     void SendAttacker(Unit* target)
@@ -346,6 +349,9 @@ struct boss_nalorakkAI : public ScriptedAI
 
         if(!UpdateVictim())
             return;
+            
+        if (m_creature->GetPositionY() >= 1380) // Out of his room
+            EnterEvadeMode();
 
         if(Berserk_Timer < diff)
         {
@@ -395,7 +401,8 @@ struct boss_nalorakkAI : public ScriptedAI
             {
                 if(m_creature->getVictim() && !m_creature->getVictim()->HasAura(SPELL_MANGLEEFFECT, 0))
                 {
-                    DoCast(m_creature->getVictim(), SPELL_MANGLE);
+                    //DoCast(m_creature->getVictim(), SPELL_MANGLE);
+                    m_creature->getVictim()->CastSpell(m_creature->getVictim(), SPELL_MANGLE, true);
                     Mangle_Timer = 1000;
                 }
                 else Mangle_Timer = 10000 + rand()%5000;

@@ -27,7 +27,7 @@ EndScriptData */
 #include "def_zulaman.h"
 #include "Weather.h"
 
-#define SPELL_STATIC_DISRUPTION     43622
+#define SPELL_STATIC_DISRUPTION     44008 /*43622*/
 #define SPELL_STATIC_VISUAL         45265
 #define SPELL_CALL_LIGHTNING        43661 //Missing timer
 #define SPELL_GUST_OF_WIND          43621
@@ -38,7 +38,7 @@ EndScriptData */
 #define SPELL_EAGLE_SWOOP           44732
 
 //"Your death gonna be quick, strangers. You shoulda never have come to this place..."
-#define SAY_ONAGGRO "I be da predator! You da prey..."
+#define SAY_ONAGGRO "Moi, chuis le prédateur ! Vous, z'êtes la proie…"
 #define SAY_ONDEATH "You can't... kill... me spirit!"
 #define SAY_ONSLAY1 "Ya got nothin'!"
 #define SAY_ONSLAY2 "Stop your cryin'!"
@@ -87,7 +87,7 @@ struct boss_akilzonAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_AKILZONEVENT) != DONE)
             pInstance->SetData(DATA_AKILZONEVENT, NOT_STARTED);
 
         StaticDisruption_Timer = (10+rand()%10)*1000; //10 to 20 seconds (bosskillers)
@@ -110,6 +110,8 @@ struct boss_akilzonAI : public ScriptedAI
         isRaining = false;
 
         SetWeather(WEATHER_STATE_FINE, 0.0f);
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
     }
 
     void Aggro(Unit *who)
@@ -178,7 +180,7 @@ struct boss_akilzonAI : public ScriptedAI
             for(uint8 i = 2; i < StormCount; ++i)
                 bp0 *= 2;
 
-            CellPair p(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+            /*CellPair p(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
             Cell cell(p);
             cell.data.Part.reserved = ALL_DISTRICT;
             cell.SetNoCreate();
@@ -202,24 +204,36 @@ struct boss_akilzonAI : public ScriptedAI
                 {
                     Cloud->CastCustomSpell(*i, 43137, &bp0, NULL, NULL, true, 0, 0, m_creature->GetGUID());
                 }
+            }*/
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (players.isEmpty()) {
+                EnterEvadeMode();
+                return;
+            }
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                if (Player* plr = itr->getSource()) {
+                    if(Cloud->GetDistance2d(plr)>= 6)
+                        Cloud->CastCustomSpell(plr, 43137, &bp0, NULL, NULL, true, 0, 0, m_creature->GetGUID());
+                }
             }
             // visual
-            float x,y,z;
+            /*float x,y,z;
             z = m_creature->GetPositionZ();
             for(uint8 i = 0; i < 5+rand()%5; ++i)
             {
                 x = 343+rand()%60;
                 y = 1380+rand()%60;
-                if(Unit *trigger = m_creature->SummonTrigger(x, y, z, 0, 2000))
+                //if(Unit *trigger = m_creature->SummonTrigger(x, y, z, 0, 2000))
+                if (Unit *trigger = m_creature->SummonCreature(WORLD_TRIGGER, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 2000))
                 {
                     trigger->setFaction(35);
                     trigger->SetMaxHealth(100000);
                     trigger->SetHealth(100000);
                     trigger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     if (Cloud)
-                        Cloud->CastCustomSpell(trigger, /*43661*/43137, &bp0, NULL, NULL,true, 0, 0, Cloud->GetGUID());
+                        Cloud->CastCustomSpell(trigger, 43137, &bp0, NULL, NULL,true, 0, 0, Cloud->GetGUID());
                 }
-            }
+            }*/
         }
         StormCount++;
         if(StormCount > 10)
@@ -266,10 +280,17 @@ struct boss_akilzonAI : public ScriptedAI
         }else Enrage_Timer -= diff;
 
         if (StaticDisruption_Timer < diff) {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            /*Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
             if(!target) target = m_creature->getVictim();
             TargetGUID = target->GetGUID();
-            m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);
+            m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);*/
+            Unit *target = NULL;
+            std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
+            for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
+                target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
+                if (target && (target->GetTypeId() == TYPEID_PLAYER || ((Creature*)target)->isPet()) && !((Creature*)target)->isTotem() && target->GetDistance2d(m_creature) <= 12 && target != m_creature->getVictim())
+                    DoCast(target, SPELL_STATIC_DISRUPTION);
+            }
             m_creature->SetInFront(m_creature->getVictim());
             StaticDisruption_Timer = (10+rand()%8)*1000; // < 20s
 
@@ -311,7 +332,7 @@ struct boss_akilzonAI : public ScriptedAI
                 target->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
                 target->SendMonsterMove(x,y,m_creature->GetPositionZ()+15,0);
             }
-            Unit *Cloud = m_creature->SummonTrigger(x, y, m_creature->GetPositionZ()+16, 0, 15000);
+            Unit *Cloud = m_creature->SummonCreature(WORLD_TRIGGER, x, y, m_creature->GetPositionZ()+16, 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
             if(Cloud)
             {
                 CloudGUID = Cloud->GetGUID();
@@ -328,8 +349,7 @@ struct boss_akilzonAI : public ScriptedAI
             StormSequenceTimer = 0;
         } else ElectricalStorm_Timer -= diff;
 
-        if (SummonEagles_Timer < diff)
-        {
+        if (SummonEagles_Timer < diff) {
             DoYell(SAY_ONSUMMON, LANG_UNIVERSAL, NULL);
             DoPlaySoundToSet(m_creature, SOUND_ONSUMMON);
 
