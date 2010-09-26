@@ -14,10 +14,10 @@ EndScriptData */
 
 #define ENCOUNTERS 6
 
-enum GoState{
+/*enum GoState{
 CLOSE    = 1,
 OPEN    = 0
-};
+};*/
 
 /* Sunwell Plateau:
 0 - Kalecgos and Sathrovarr
@@ -35,31 +35,36 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 Encounters[ENCOUNTERS];
 
     /** Creatures **/
-    uint64 Kalecgos_Dragon;
-    uint64 Kalecgos_Human;
-    uint64 Sathrovarr;
-    uint64 Brutallus;
-    uint64 Madrigosa;
-    uint64 Felmyst;
-    uint64 Alythess;
-    uint64 Sacrolash;
-    uint64 Muru;
-    uint64 KilJaeden;
-    uint64 KilJaedenController;
-    uint64 Anveena;
-    uint64 KalecgosKJ;
+        uint64 Kalecgos_Dragon;
+        uint64 Kalecgos_Human;
+        uint64 Sathrovarr;
+        uint64 Brutallus;
+        uint64 Madrigosa;
+        uint64 Felmyst;
+        uint64 Alythess;
+        uint64 Sacrolash;
+        uint64 Muru;
+        uint64 KilJaeden;
+        uint64 KilJaedenController;
+        uint64 Anveena;
+        uint64 KalecgosKJ;
+        uint32 SpectralPlayers;
 
-    /** GameObjects **/
-    uint64 ForceField;                                      // Kalecgos Encounter
-    uint64 FireBarrier;                                     // Brutallus Encounter
-    uint64 Gate[5];                                         // Rename this to be more specific after door placement is verified.
+        /** GameObjects **/
+        uint64 ForceField;                                      // Kalecgos Encounter
+        uint64 KalecgosWall[2];
+        uint64 FireBarrier;                                     // Felmysts Encounter
+        uint64 MurusGate[2];                                    // Murus Encounter
 
-    /*** Misc ***/
-    uint32 SpectralRealmTimer;
-    std::vector<uint64> SpectralRealmList;
+        /*** Misc ***/
+        uint32 SpectralRealmTimer;
+        std::vector<uint64> SpectralRealmList;
+
 
     void Initialize()
     {
+        memset(&Encounters, 0, sizeof(Encounters));
+
         /*** Creatures ***/
         Kalecgos_Dragon         = 0;
         Kalecgos_Human          = 0;
@@ -74,22 +79,22 @@ struct instance_sunwell_plateau : public ScriptedInstance
         KilJaedenController     = 0;
         Anveena                 = 0;
         KalecgosKJ              = 0;
+        SpectralPlayers         = 0;
 
         /*** GameObjects ***/
         ForceField  = 0;
         FireBarrier = 0;
-        Gate[0]     = 0;                                    // TODO: Rename Gate[n] with gate_<boss name> for better specificity
-        Gate[1]     = 0;
-        Gate[2]     = 0;
-        Gate[3]     = 0;
-        Gate[4]     = 0;
+        MurusGate[0] = 0;
+        MurusGate[1] = 0;
+        KalecgosWall[0] = 0;
+        KalecgosWall[1] = 0;
+
+        /*** Misc ***/
+        SpectralRealmTimer = 5000;
 
         /*** Encounters ***/
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             Encounters[i] = NOT_STARTED;
-
-        /*** Misc ***/
-        SpectralRealmTimer = 5000;
     }
 
     bool IsEncounterInProgress() const
@@ -119,7 +124,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         return NULL;
     }
 
-    void HandleGameObject(uint64 guid, uint32 state)
+    /*void HandleGameObject(uint64 guid, uint32 state)
     {
         Player *player = GetPlayerInMap();
 
@@ -131,39 +136,46 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
         if (GameObject *go = GameObject::GetGameObject(*player,guid))
             go->SetGoState(state);
-    }
+    }*/
 
-    void OnCreatureCreate(Creature* creature, uint32 entry)
+    void OnCreatureCreate(Creature* pCreature, bool /*add*/)
     {
-        switch(entry)
+        switch(pCreature->GetEntry())
         {
-            case 24850: Kalecgos_Dragon     = creature->GetGUID(); break;
-            case 24891: Kalecgos_Human      = creature->GetGUID(); break;
-            case 24892: Sathrovarr          = creature->GetGUID(); break;
-            case 24882: Brutallus           = creature->GetGUID(); break;
-            case 24895: Madrigosa           = creature->GetGUID(); break;
-            case 25038: Felmyst             = creature->GetGUID(); break;
-            case 25166: Alythess            = creature->GetGUID(); break;
-            case 25165: Sacrolash           = creature->GetGUID(); break;
-            case 25741: Muru                = creature->GetGUID(); break;
-            case 25315: KilJaeden           = creature->GetGUID(); break;
-            case 25608: KilJaedenController = creature->GetGUID(); break;
-            case 26046: Anveena             = creature->GetGUID(); break;
-            case 25319: KalecgosKJ          = creature->GetGUID(); break;
+            case 24850: Kalecgos_Dragon     = pCreature->GetGUID(); break;
+            case 24891: Kalecgos_Human      = pCreature->GetGUID(); break;
+            case 24892: Sathrovarr          = pCreature->GetGUID(); break;
+            case 24882: Brutallus           = pCreature->GetGUID(); break;
+            case 24895: Madrigosa           = pCreature->GetGUID(); break;
+            case 25038: Felmyst             = pCreature->GetGUID(); break;
+            case 25166: Alythess            = pCreature->GetGUID(); break;
+            case 25165: Sacrolash           = pCreature->GetGUID(); break;
+            case 25741: Muru                = pCreature->GetGUID(); break;
+            case 25315: KilJaeden           = pCreature->GetGUID(); break;
+            case 25608: KilJaedenController = pCreature->GetGUID(); break;
+            case 26046: Anveena             = pCreature->GetGUID(); break;
+            case 25319: KalecgosKJ          = pCreature->GetGUID(); break;
         }
     }
 
-    void OnObjectCreate(GameObject* gobj)
+    void OnGameObjectCreate(GameObject* pGo, bool /*add*/)
     {
-        switch(gobj->GetEntry())
+        switch(pGo->GetEntry())
         {
-            case 188421: ForceField     = gobj->GetGUID(); break;
-            case 188075: FireBarrier    = gobj->GetGUID(); break;
-            case 187979: Gate[0]        = gobj->GetGUID(); break;
-            case 187770: Gate[1]        = gobj->GetGUID(); break;
-            case 187896: Gate[2]        = gobj->GetGUID(); break;
-            case 187990: Gate[3]        = gobj->GetGUID(); break;
-            case 188118: Gate[4]        = gobj->GetGUID(); break;
+            case 188421: ForceField     = pGo->GetGUID(); break;
+            case 188523: KalecgosWall[0] = pGo->GetGUID(); break;
+            case 188524: KalecgosWall[0] = pGo->GetGUID(); break;
+            case 188075:
+                if (Encounters[2] == DONE)
+                    HandleGameObject(NULL, true, pGo);
+                FireBarrier = pGo->GetGUID();
+                break;
+            case 187990: MurusGate[0]   = pGo->GetGUID(); break;
+            case 188118:
+                if (Encounters[4] == DONE)
+                    HandleGameObject(NULL, true, pGo);
+                MurusGate[1]= pGo->GetGUID();
+                break;
         }
     }
 
@@ -171,14 +183,13 @@ struct instance_sunwell_plateau : public ScriptedInstance
     {
         switch(id)
         {
-            case DATA_KALECGOS_EVENT:     return Encounters[0]; break;
-            case DATA_BRUTALLUS_EVENT:    return Encounters[1]; break;
-            case DATA_FELMYST_EVENT:      return Encounters[2]; break;
-            case DATA_EREDAR_TWINS_EVENT: return Encounters[3]; break;
-            case DATA_MURU_EVENT:         return Encounters[4]; break;
-            case DATA_KILJAEDEN_EVENT:    return Encounters[5]; break;
+            case DATA_KALECGOS_EVENT:     return Encounters[0];
+            case DATA_BRUTALLUS_EVENT:    return Encounters[1];
+            case DATA_FELMYST_EVENT:      return Encounters[2];
+            case DATA_EREDAR_TWINS_EVENT: return Encounters[3];
+            case DATA_MURU_EVENT:         return Encounters[4];
+            case DATA_KILJAEDEN_EVENT:    return Encounters[5];
         }
-
         return 0;
     }
 
@@ -186,25 +197,24 @@ struct instance_sunwell_plateau : public ScriptedInstance
     {
         switch(id)
         {
-            case DATA_KALECGOS_DRAGON:      return Kalecgos_Dragon;     break;
-            case DATA_KALECGOS_HUMAN:       return Kalecgos_Human;      break;
-            case DATA_SATHROVARR:           return Sathrovarr;          break;
-            case DATA_BRUTALLUS:            return Brutallus;           break;
-            case DATA_MADRIGOSA:            return Madrigosa;           break;
-            case DATA_FELMYST:              return Felmyst;             break;
-            case DATA_ALYTHESS:             return Alythess;            break;
-            case DATA_SACROLASH:            return Sacrolash;           break;
-            case DATA_MURU:                 return Muru;                break;
-            case DATA_KILJAEDEN:            return KilJaeden;           break;
-            case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController; break;
-            case DATA_ANVEENA:              return Anveena;             break;
-            case DATA_KALECGOS_KJ:          return KalecgosKJ;          break;
+            case DATA_KALECGOS_DRAGON:      return Kalecgos_Dragon;
+            case DATA_KALECGOS_HUMAN:       return Kalecgos_Human;
+            case DATA_SATHROVARR:           return Sathrovarr;
+            case DATA_GO_FORCEFIELD:        return ForceField;
+            case DATA_BRUTALLUS:            return Brutallus;
+            case DATA_MADRIGOSA:            return Madrigosa;
+            case DATA_FELMYST:              return Felmyst;
+            case DATA_ALYTHESS:             return Alythess;
+            case DATA_SACROLASH:            return Sacrolash;
+            case DATA_MURU:                 return Muru;
+            case DATA_KILJAEDEN:            return KilJaeden;
+            case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController;
+            case DATA_ANVEENA:              return Anveena;
+            case DATA_KALECGOS_KJ:          return KalecgosKJ;
             case DATA_PLAYER_GUID:
                 Player* Target = GetPlayerInMap();
                 return Target->GetGUID();
-                break;
         }
-
         return 0;
     }
 
@@ -212,38 +222,51 @@ struct instance_sunwell_plateau : public ScriptedInstance
     {
         switch(id)
         {
-            case DATA_KALECGOS_EVENT:      Encounters[0] = data; break;
+            case DATA_KALECGOS_EVENT:
+                {
+                    if (data == NOT_STARTED || data == DONE)
+                    {
+                        HandleGameObject(ForceField,true);
+                        HandleGameObject(KalecgosWall[0],true);
+                        HandleGameObject(KalecgosWall[1],true);
+                    }
+                    else if (data == IN_PROGRESS)
+                    {
+                        HandleGameObject(ForceField,false);
+                        HandleGameObject(KalecgosWall[0],false);
+                        HandleGameObject(KalecgosWall[1],false);
+                    }
+                    Encounters[0] = data;
+                }
+                break;
             case DATA_BRUTALLUS_EVENT:     Encounters[1] = data; break;
             case DATA_FELMYST_EVENT:
-                if(data == DONE)
-                    HandleGameObject(FireBarrier, OPEN);
+                if (data == DONE)
+                    HandleGameObject(FireBarrier, true);
                 Encounters[2] = data; break;
             case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
             case DATA_MURU_EVENT:
-                switch(data){
+                switch(data)
+                {
                     case DONE:
-                        HandleGameObject(Gate[4], OPEN);
-                        HandleGameObject(Gate[3], OPEN);
+                        HandleGameObject(MurusGate[0], true);
+                        HandleGameObject(MurusGate[1], true);
                         break;
                     case IN_PROGRESS:
-                        HandleGameObject(Gate[4], CLOSE);
-                        HandleGameObject(Gate[3], CLOSE);
+                        HandleGameObject(MurusGate[0], false);
+                        HandleGameObject(MurusGate[1], false);
                         break;
                     case NOT_STARTED:
-                        HandleGameObject(Gate[4], CLOSE);
-                        HandleGameObject(Gate[3], OPEN);
+                        HandleGameObject(MurusGate[0], true);
+                        HandleGameObject(MurusGate[1], false);
                         break;
                 }
                 Encounters[4] = data; break;
             case DATA_KILJAEDEN_EVENT:     Encounters[5] = data; break;
         }
 
-        if(data == DONE)
+        if (data == DONE)
             SaveToDB();
-    }
-
-    void SetData64(uint32 id, uint64 guid)
-    {
     }
 
     void Update(uint32 diff)
