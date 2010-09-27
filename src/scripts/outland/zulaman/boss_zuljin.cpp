@@ -229,6 +229,9 @@ struct boss_zuljinAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1161, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5209, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 355, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 34105, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 53477, true);
     }
 
     void Aggro(Unit *who)
