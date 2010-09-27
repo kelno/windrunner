@@ -219,12 +219,12 @@ struct TRINITY_DLL_DECL npc_harrison_jonesAI : public ScriptedAI
             s = "s";
         std::stringstream sst;
         sst << "Encore " << 5 - gongClicked << " personne" << s << " !";
-        if (gongClicked < 2)
+        if (gongClicked < 5)
             m_creature->Say(sst.str().c_str(), LANG_UNIVERSAL, 0);
         
         clickGUIDs.push_back(pGUID);
         
-        if (gongClicked >= 2)
+        if (gongClicked >= 5)
             OpenDoorAndStartTimer();
     }
     
