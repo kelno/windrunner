@@ -255,6 +255,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
     uint64 VazrudenGUID;
     bool summoned;
     bool HeroicMode;
+    bool lootSpawned;
 
     void Reset()
     {
@@ -265,6 +266,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
         m_creature->SetSpeed(MOVE_FLIGHT, 2.5);
         m_creature->GetMotionMaster()->MovePath(PATH_ENTRY, true);
+        lootSpawned = false;
     }
 
     void UnsummonAdds()
@@ -378,10 +380,11 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
                         return;
                     }
                 }
-                else {
+                else if (!lootSpawned) {
                     m_creature->SummonGameObject(ENTRY_REINFORCED_FEL_IRON_CHEST,VazrudenMiddle[0],VazrudenMiddle[1],VazrudenMiddle[2],0,0,0,0,0,0);
                     m_creature->SetLootRecipient(NULL);
                     m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                    lootSpawned = true;
                 }
                 check = 2000;
             } else check -= diff;
