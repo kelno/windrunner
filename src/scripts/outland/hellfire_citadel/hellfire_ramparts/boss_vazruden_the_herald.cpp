@@ -57,6 +57,8 @@ const float VazrudenRing[2][3] =
     {-1377, 1760, 112}
 };
 
+uint64 VazrudenHeraldGUID = 0;
+
 struct boss_nazanAI : public ScriptedAI
 {
     boss_nazanAI(Creature *c) : ScriptedAI(c)
