@@ -171,7 +171,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40175, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40157, true);
 
-        AggroTimer = 20000;
+        AggroTimer = 30000;
 
         Intro = false;
         DespawnConstructs();
@@ -194,7 +194,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 DoZoneInCombat();
             }
 
-            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 60.0f) && (who->GetTypeId() == TYPEID_PLAYER))
+            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 20.0f) && (who->GetTypeId() == TYPEID_PLAYER))
             {
                 if(pInstance)
                     pInstance->SetData(DATA_TERONGOREFIENDEVENT, IN_PROGRESS);
