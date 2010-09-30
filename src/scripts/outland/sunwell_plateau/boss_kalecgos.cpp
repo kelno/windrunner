@@ -172,11 +172,7 @@ struct boss_kalecgosAI : public ScriptedAI
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%2)
-        {
-        case 0: DoScriptText(SAY_EVIL_SLAY1, m_creature); break;
-        case 1: DoScriptText(SAY_EVIL_SLAY2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_EVIL_SLAY1, SAY_EVIL_SLAY2), m_creature);
     }
 
     void MovementInform(uint32 type,uint32 id)
@@ -308,6 +304,9 @@ struct boss_sathrovarrAI : public ScriptedAI
     {
         if(damage >= m_creature->GetHealth() && done_by != m_creature)
             damage = 0;
+        // WORKAROUND
+        if (done_by->GetGUID() == KalecGUID && damage > 1800)
+            damage = 1800;
     }
 
     void KilledUnit(Unit *target)
@@ -323,11 +322,7 @@ struct boss_sathrovarrAI : public ScriptedAI
             EnterEvadeMode();
             return;
         }
-        switch(rand()%2)
-        {
-        case 0: DoScriptText(SAY_SATH_SLAY1, m_creature); break;
-        case 1: DoScriptText(SAY_SATH_SLAY2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_SATH_SLAY1, SAY_SATH_SLAY2), m_creature);
     }
 
     void JustDied(Unit *killer)
