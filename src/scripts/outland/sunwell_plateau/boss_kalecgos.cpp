@@ -641,11 +641,12 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
 
 bool GOkalecgos_teleporter(Player *player, GameObject* _GO)
 {
-    if(player->HasAura(AURA_SPECTRAL_EXHAUSTION, 0))
+    if(player->HasAura(AURA_SPECTRAL_EXHAUSTION))
         player->GetSession()->SendNotification(GO_FAILED);
-    else
+    else {
         player->CastSpell(player, SPELL_TELEPORT_SPECTRAL, true);
         player->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
+    }
     return true;
 }
 
