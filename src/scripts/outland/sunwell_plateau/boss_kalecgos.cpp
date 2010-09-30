@@ -622,7 +622,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         if(SpectralBlastTimer < diff)
         {
             //this is a hack. we need to find a victim without aura in core
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
             if( ( target && target != m_creature->getVictim() ) && target->isAlive() && !(target->HasAura(AURA_SPECTRAL_EXHAUSTION, 0)) )
             {
                 DoCast(target, SPELL_SPECTRAL_BLAST);
