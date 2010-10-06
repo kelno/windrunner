@@ -137,7 +137,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             go->SetGoState(state);
     }*/
 
-    void OnCreatureCreate(Creature* pCreature, bool /*add*/)
+    void OnCreatureCreate(Creature* pCreature, uint32 creature_entry)
     {
         switch(pCreature->GetEntry())
         {
