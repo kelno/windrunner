@@ -35,31 +35,30 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 Encounters[ENCOUNTERS];
 
     /** Creatures **/
-        uint64 Kalecgos_Dragon;
-        uint64 Kalecgos_Human;
-        uint64 Sathrovarr;
-        uint64 Brutallus;
-        uint64 Madrigosa;
-        uint64 Felmyst;
-        uint64 Alythess;
-        uint64 Sacrolash;
-        uint64 Muru;
-        uint64 KilJaeden;
-        uint64 KilJaedenController;
-        uint64 Anveena;
-        uint64 KalecgosKJ;
-        uint32 SpectralPlayers;
+	uint64 Kalecgos_Dragon;
+	uint64 Kalecgos_Human;
+	uint64 Sathrovarr;
+	uint64 Brutallus;
+	uint64 Madrigosa;
+	uint64 Felmyst;
+	uint64 Alythess;
+	uint64 Sacrolash;
+	uint64 Muru;
+	uint64 KilJaeden;
+	uint64 KilJaedenController;
+	uint64 Anveena;
+	uint64 KalecgosKJ;
+	uint32 SpectralPlayers;
 
-        /** GameObjects **/
-        uint64 ForceField;                                      // Kalecgos Encounter
-        uint64 KalecgosWall[2];
-        uint64 FireBarrier;                                     // Felmysts Encounter
-        uint64 MurusGate[2];                                    // Murus Encounter
+	/** GameObjects **/
+	uint64 ForceField;                                      // Kalecgos Encounter
+	uint64 KalecgosWall[2];
+	uint64 FireBarrier;                                     // Felmysts Encounter
+	uint64 MurusGate[2];                                    // Murus Encounter
 
-        /*** Misc ***/
-        uint32 SpectralRealmTimer;
-        std::vector<uint64> SpectralRealmList;
-
+	/*** Misc ***/
+	uint32 SpectralRealmTimer;
+	std::vector<uint64> SpectralRealmList;
 
     void Initialize()
     {
@@ -115,7 +114,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr && !plr->HasAura(45839,0))
+                if (plr && !plr->HasAura(45839))
                         return plr;
             }
         }

@@ -97,7 +97,9 @@ struct boss_kalecgosAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         SathGUID = 0;
-        DoorGUID = 0;
+        ForceFieldGUID = 0;
+        Wall1GUID = 0;
+        Wall2GUID = 0;
     }
 
     ScriptedInstance *pInstance;
@@ -117,20 +119,28 @@ struct boss_kalecgosAI : public ScriptedAI
     bool isBanished;
 
     uint64 SathGUID;
-    uint64 DoorGUID;
+    uint64 ForceFieldGUID;
+    uint64 Wall1GUID;
+    uint64 Wall2GUID;
 
     void Reset()
     {
         if(pInstance)
         {
             SathGUID = pInstance->GetData64(DATA_SATHROVARR);
-            DoorGUID = pInstance->GetData64(DATA_GO_FORCEFIELD);
+            ForceFieldGUID = pInstance->GetData64(DATA_GO_FORCEFIELD);
+            Wall1GUID = pInstance->GetData64(DATA_GO_KALEC_WALL_1);
+            Wall2GUID = pInstance->GetData64(DATA_GO_KALEC_WALL_2);
         }
 
         Unit *Sath = Unit::GetUnit(*m_creature,SathGUID);
         if(Sath) (Sath->ToCreature())->AI()->EnterEvadeMode();
 
-        GameObject *Door = GameObject::GetGameObject(*m_creature, DoorGUID);
+        GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
+        if(Door) Door->SetGoState(0);
+        GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
+        if(Door) Door->SetGoState(0);
+        GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
         if(Door) Door->SetGoState(0);
 
         m_creature->setFaction(14);
@@ -164,7 +174,11 @@ struct boss_kalecgosAI : public ScriptedAI
     {
         m_creature->SetStandState(PLAYER_STATE_NONE);
         DoScriptText(SAY_EVIL_AGGRO, m_creature);
-        GameObject *Door = GameObject::GetGameObject(*m_creature, DoorGUID);
+        GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
+        if(Door) Door->SetGoState(1);
+        GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
+        if(Door) Door->SetGoState(1);
+        GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
         if(Door) Door->SetGoState(1);
         DoZoneInCombat();
         CloseDoorsTimer = 5000;
@@ -541,8 +555,12 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             m_creature->RemoveAllAuras();
             m_creature->DeleteThreatList();
             m_creature->CombatStop();
-            GameObject *Door = GameObject::GetGameObject(*m_creature, DoorGUID);
+            GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
             if(Door) Door->SetGoState(1);
+            GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
+			if(Door) Door->SetGoState(1);
+			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
+			if(Door) Door->SetGoState(1);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
