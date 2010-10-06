@@ -110,6 +110,7 @@ struct boss_kalecgosAI : public ScriptedAI
     uint32 CheckTimer;
     uint32 TalkTimer;
     uint32 TalkSequence;
+    uint32 CloseDoorsTimer;
 
     bool isFriendly;
     bool isEnraged;
@@ -144,6 +145,7 @@ struct boss_kalecgosAI : public ScriptedAI
         TailLashTimer = 25000;
         SpectralBlastTimer = 20000+(rand()%5000);
         CheckTimer = SpectralBlastTimer+20000; //after spectral blast
+        CloseDoorsTimer = 0;
 
         TalkTimer = 0;
         TalkSequence = 0;
@@ -165,6 +167,7 @@ struct boss_kalecgosAI : public ScriptedAI
         GameObject *Door = GameObject::GetGameObject(*m_creature, DoorGUID);
         if(Door) Door->SetLootState(GO_ACTIVATED);
         DoZoneInCombat();
+        CloseDoorsTimer = 5000;
 
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, IN_PROGRESS);
@@ -555,6 +558,29 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
+            
+        /*if (CloseDoorsTimer) {
+			if (CloseDoorsTimer <= diff) {
+				sLog.outString("ForceField GUID: "I64FMTD, pInstance->GetData64(DATA_GO_FORCEFIELD));
+				sLog.outString("Wall1 GUID: "I64FMTD, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
+				sLog.outString("Wall2 GUID: "I64FMTD, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
+				if (GameObject* ForceField = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD))) {
+					sLog.outString("Pom forcefield, state %u", ForceField->GetGoState());
+					ForceField->UseDoorOrButton();
+				}
+                if (GameObject* Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1))) {
+					sLog.outString("Pom wall1, state %u", Wall1->GetGoState());
+					Wall1->UseDoorOrButton();
+				}
+                if (GameObject* Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2))) {
+					sLog.outString("Pom wall2, state %u", Wall2->GetGoState());
+					Wall2->UseDoorOrButton();
+				}
+				CloseDoorsTimer = 0;
+			}
+			else
+				CloseDoorsTimer -= diff;
+		}*/
 
         if(CheckTimer < diff)
          {
