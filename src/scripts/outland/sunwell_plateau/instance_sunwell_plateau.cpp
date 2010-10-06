@@ -158,13 +158,13 @@ struct instance_sunwell_plateau : public ScriptedInstance
         }
     }
 
-    void OnGameObjectCreate(GameObject* pGo, bool /*add*/)
+    void OnObjectCreate(GameObject* pGo)
     {
         switch(pGo->GetEntry())
         {
             case 188421: ForceField     = pGo->GetGUID(); break;
             case 188523: KalecgosWall[0] = pGo->GetGUID(); break;
-            case 188524: KalecgosWall[0] = pGo->GetGUID(); break;
+            case 188524: KalecgosWall[1] = pGo->GetGUID(); break;
             case 188075:
                 if (Encounters[2] == DONE)
                     HandleGameObject(NULL, true, pGo);
@@ -201,6 +201,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_KALECGOS_HUMAN:       return Kalecgos_Human;
             case DATA_SATHROVARR:           return Sathrovarr;
             case DATA_GO_FORCEFIELD:        return ForceField;
+            case DATA_GO_KALEC_WALL_1:		return KalecgosWall[0];
+            case DATA_GO_KALEC_WALL_2:		return KalecgosWall[1];
             case DATA_BRUTALLUS:            return Brutallus;
             case DATA_MADRIGOSA:            return Madrigosa;
             case DATA_FELMYST:              return Felmyst;
@@ -224,7 +226,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         {
             case DATA_KALECGOS_EVENT:
                 {
-                    if (data == NOT_STARTED || data == DONE)
+                    /*if (data == NOT_STARTED || data == DONE)
                     {
                         HandleGameObject(ForceField,true);
                         HandleGameObject(KalecgosWall[0],true);
@@ -235,7 +237,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                         HandleGameObject(ForceField,false);
                         HandleGameObject(KalecgosWall[0],false);
                         HandleGameObject(KalecgosWall[1],false);
-                    }
+                    }*/
                     Encounters[0] = data;
                 }
                 break;
