@@ -326,9 +326,6 @@ struct boss_sathrovarrAI : public ScriptedAI
     {
         if(damage >= m_creature->GetHealth() && done_by != m_creature)
             damage = 0;
-        // WORKAROUND
-        if (done_by->GetGUID() == KalecGUID && damage > 1800)
-            damage = 1800;
     }
 
     void KilledUnit(Unit *target)
