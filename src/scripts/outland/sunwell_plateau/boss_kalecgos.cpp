@@ -72,7 +72,7 @@ enum SpellIds
     SPELL_AGONY_CURSE           =   45032,
     SPELL_SHADOW_BOLT           =   45031,
 
-    SPELL_HEROIC_STRIKE         =   45026,
+    SPELL_HEROIC_STRIKE         =   29426/*45026*/,
     SPELL_REVITALIZE            =   45027
 };
 
