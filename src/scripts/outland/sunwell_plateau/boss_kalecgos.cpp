@@ -470,7 +470,8 @@ struct boss_kalecAI : public ScriptedAI
 
     bool isEnraged; // if demon is enraged
 
-    boss_kalecAI(Creature *c) : ScriptedAI(c){
+    boss_kalecAI(Creature *c) : ScriptedAI(c)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
 
