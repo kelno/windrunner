@@ -191,6 +191,11 @@ struct boss_kalecgosAI : public ScriptedAI
     {
         DoScriptText(RAND(SAY_EVIL_SLAY1, SAY_EVIL_SLAY2), m_creature);
     }
+    
+    void MoveInLineOfSight(Unit *pWho) {
+		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->isInCombat())
+			AttackStart(pWho);
+	}
 
     void MovementInform(uint32 type,uint32 id)
     {
