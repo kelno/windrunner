@@ -139,9 +139,9 @@ struct boss_kalecgosAI : public ScriptedAI
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if(Door) Door->SetGoState(0);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if(Door) Door->SetGoState(0);
+        if(Wall1) Wall1->SetGoState(0);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-        if(Door) Door->SetGoState(0);
+        if(Wall2) Wall2->SetGoState(0);
 
         m_creature->setFaction(14);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
@@ -177,9 +177,9 @@ struct boss_kalecgosAI : public ScriptedAI
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if(Door) Door->SetGoState(1);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if(Door) Door->SetGoState(1);
+        if(Wall1) Wall1->SetGoState(1);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-        if(Door) Door->SetGoState(1);
+        if(Wall2) Wall2->SetGoState(1);
         DoZoneInCombat();
         CloseDoorsTimer = 5000;
 
@@ -558,9 +558,9 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
             if(Door) Door->SetGoState(1);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-			if(Door) Door->SetGoState(1);
+			if(Wall1) Wall1->SetGoState(1);
 			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Door) Door->SetGoState(1);
+			if(Wall2) Wall2->SetGoState(1);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
