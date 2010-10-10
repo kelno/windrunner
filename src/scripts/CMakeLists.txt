@@ -259,6 +259,7 @@ SET(scripts_STAT_SRCS
     kalimdor/silithus/silithus.cpp
     kalimdor/stonetalon_mountains/stonetalon_mountains.cpp
     kalimdor/tanaris/tanaris.cpp
+    kalimdor/teldrassil/teldrassil.cpp
     kalimdor/temple_of_ahnqiraj/boss_bug_trio.cpp
     kalimdor/temple_of_ahnqiraj/boss_cthun.cpp
     kalimdor/temple_of_ahnqiraj/boss_fankriss.cpp
