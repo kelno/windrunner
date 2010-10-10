@@ -30,10 +30,12 @@ npc_stone_watcher_of_norgannon
 npc_OOX17
 go_landmark_treasure
 npc_jhordy_lapforge
+npc_tooga
 EndContentData */
 
 #include "precompiled.h"
 #include "EscortAI.h"
+#include "FollowerAI.h"
 
 /*######
 ## mob_aquementas
@@ -519,6 +521,166 @@ bool GossipSelect_npc_jhordy_lapforge(Player *pPlayer, Creature *pCreature, uint
     }
 }
 
+/*####
+# npc_tooga
+####*/
+
+enum eTooga
+{
+    SAY_TOOG_THIRST             = -1600391,
+    SAY_TOOG_WORRIED            = -1600392,
+    SAY_TOOG_POST_1             = -1600393,
+    SAY_TORT_POST_2             = -1600394,
+    SAY_TOOG_POST_3             = -1600395,
+    SAY_TORT_POST_4             = -1600396,
+    SAY_TOOG_POST_5             = -1600397,
+    SAY_TORT_POST_6             = -1600398,
+
+    QUEST_TOOGA                 = 1560,
+    NPC_TORTA                   = 6015,
+
+    POINT_ID_TO_WATER           = 1,
+    FACTION_TOOG_ESCORTEE       = 113
+};
+
+const float m_afToWaterLoc[] = {-7032.664551f, -4906.199219f, -1.606446f};
+
+struct npc_toogaAI : public FollowerAI
+{
+    npc_toogaAI(Creature* pCreature) : FollowerAI(pCreature) { }
+
+    uint32 m_uiCheckSpeechTimer;
+    uint32 m_uiPostEventTimer;
+    uint32 m_uiPhasePostEvent;
+
+    uint64 TortaGUID;
+
+    void Reset()
+    {
+        m_uiCheckSpeechTimer = 2500;
+        m_uiPostEventTimer = 1000;
+        m_uiPhasePostEvent = 0;
+
+        TortaGUID = 0;
+    }
+    
+    void Aggro(Unit *pWho) {}
+
+    void MoveInLineOfSight(Unit *pWho)
+    {
+        FollowerAI::MoveInLineOfSight(pWho);
+
+        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_TORTA)
+        {
+            if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
+            {
+                if (Player* pPlayer = GetLeaderForFollower())
+                {
+                    if (pPlayer->GetQuestStatus(QUEST_TOOGA) == QUEST_STATUS_INCOMPLETE)
+                        pPlayer->GroupEventHappens(QUEST_TOOGA, me);
+                }
+
+                TortaGUID = pWho->GetGUID();
+                SetFollowComplete(true);
+            }
+        }
+    }
+
+    void MovementInform(uint32 uiMotionType, uint32 uiPointId)
+    {
+        FollowerAI::MovementInform(uiMotionType, uiPointId);
+
+        if (uiMotionType != POINT_MOTION_TYPE)
+            return;
+
+        if (uiPointId == POINT_ID_TO_WATER)
+            SetFollowComplete();
+    }
+
+    void UpdateFollowerAI(const uint32 uiDiff)
+    {
+        if (!UpdateVictim())
+        {
+            //we are doing the post-event, or...
+            if (HasFollowState(STATE_FOLLOW_POSTEVENT))
+            {
+                if (m_uiPostEventTimer <= uiDiff)
+                {
+                    m_uiPostEventTimer = 5000;
+
+                    Unit *pTorta = Unit::GetUnit(*me, TortaGUID);
+                    if (!pTorta || !pTorta->isAlive())
+                    {
+                        //something happened, so just complete
+                        SetFollowComplete();
+                        return;
+                    }
+
+                    switch(m_uiPhasePostEvent)
+                    {
+                        case 1:
+                            DoScriptText(SAY_TOOG_POST_1, me);
+                            break;
+                        case 2:
+                            DoScriptText(SAY_TORT_POST_2, pTorta);
+                            break;
+                        case 3:
+                            DoScriptText(SAY_TOOG_POST_3, me);
+                            break;
+                        case 4:
+                            DoScriptText(SAY_TORT_POST_4, pTorta);
+                            break;
+                        case 5:
+                            DoScriptText(SAY_TOOG_POST_5, me);
+                            break;
+                        case 6:
+                            DoScriptText(SAY_TORT_POST_6, pTorta);
+                            me->GetMotionMaster()->MovePoint(POINT_ID_TO_WATER, m_afToWaterLoc[0], m_afToWaterLoc[1], m_afToWaterLoc[2]);
+                            break;
+                    }
+
+                    ++m_uiPhasePostEvent;
+                }
+                else
+                    m_uiPostEventTimer -= uiDiff;
+            }
+            //...we are doing regular speech check
+            else if (HasFollowState(STATE_FOLLOW_INPROGRESS))
+            {
+                if (m_uiCheckSpeechTimer <= uiDiff)
+                {
+                    m_uiCheckSpeechTimer = 5000;
+
+                    if (urand(0,9) > 8)
+                        DoScriptText(RAND(SAY_TOOG_THIRST,SAY_TOOG_WORRIED), me);
+                }
+                else
+                    m_uiCheckSpeechTimer -= uiDiff;
+            }
+
+            return;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_tooga(Creature* pCreature)
+{
+    return new npc_toogaAI(pCreature);
+}
+
+bool QuestAccept_npc_tooga(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
+{
+    if (pQuest->GetQuestId() == QUEST_TOOGA)
+    {
+        if (npc_toogaAI* pToogaAI = CAST_AI(npc_toogaAI, pCreature->AI()))
+            pToogaAI->StartFollow(pPlayer, FACTION_TOOG_ESCORTEE, pQuest);
+    }
+
+    return true;
+}
+
 /*######
 ## AddSC
 ######*/
@@ -572,5 +734,12 @@ void AddSC_tanaris()
     newscript->pGossipHello = &GossipHello_npc_jhordy_lapforge;
     newscript->pGossipSelect = &GossipSelect_npc_jhordy_lapforge;
     newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_tooga";
+    newscript->GetAI = &GetAI_npc_tooga;
+    newscript->pQuestAccept = &QuestAccept_npc_tooga;
+    newscript->RegisterSelf();
+
 }
 
