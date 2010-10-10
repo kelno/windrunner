@@ -561,6 +561,8 @@ extern void AddSC_swamp_of_sorrows();
 extern void AddSC_tanaris();
 
 //Teldrassil
+extern void AddSC_teldrassil();
+
 //Tempest Keep
 //--Arcatraz
 extern void AddSC_arcatraz();
@@ -1941,6 +1943,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_tanaris();
 
     //Teldrassil
+    AddSC_teldrassil();
+    
     //Tempest Keep
     //--Arcatraz
     AddSC_arcatraz();
