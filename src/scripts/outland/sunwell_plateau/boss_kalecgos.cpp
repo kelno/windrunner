@@ -367,7 +367,7 @@ struct boss_sathrovarrAI : public ScriptedAI
         Map::PlayerList::const_iterator i;
         for(i = PlayerList.begin(); i != PlayerList.end(); ++i)
             if(Player* i_pl = i->getSource())
-                if(i_pl->HasAura(AURA_SPECTRAL_REALM,0))
+                if(i_pl->HasAura(AURA_SPECTRAL_REALM))
                     i_pl->RemoveAurasDueToSpell(AURA_SPECTRAL_REALM);
     }
 
@@ -417,7 +417,7 @@ struct boss_sathrovarrAI : public ScriptedAI
 
         if(ResetThreat < diff)
         {
-            if ( ( m_creature->getVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION,0)) && (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER) )
+            if (( m_creature->getVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION)) && (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER))
             {
                 for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
                 {
@@ -579,29 +579,6 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
-            
-        /*if (CloseDoorsTimer) {
-			if (CloseDoorsTimer <= diff) {
-				sLog.outString("ForceField GUID: "I64FMTD, pInstance->GetData64(DATA_GO_FORCEFIELD));
-				sLog.outString("Wall1 GUID: "I64FMTD, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
-				sLog.outString("Wall2 GUID: "I64FMTD, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
-				if (GameObject* ForceField = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD))) {
-					sLog.outString("Pom forcefield, state %u", ForceField->GetGoState());
-					ForceField->UseDoorOrButton();
-				}
-                if (GameObject* Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1))) {
-					sLog.outString("Pom wall1, state %u", Wall1->GetGoState());
-					Wall1->UseDoorOrButton();
-				}
-                if (GameObject* Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2))) {
-					sLog.outString("Pom wall2, state %u", Wall2->GetGoState());
-					Wall2->UseDoorOrButton();
-				}
-				CloseDoorsTimer = 0;
-			}
-			else
-				CloseDoorsTimer -= diff;
-		}*/
 
         if(CheckTimer < diff)
          {
@@ -670,7 +647,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         {
             //this is a hack. we need to find a victim without aura in core
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if( ( target && target != m_creature->getVictim() ) && target->isAlive() && !(target->HasAura(AURA_SPECTRAL_EXHAUSTION, 0)) )
+            if (( target && target != m_creature->getVictim()) && target->isAlive() && !(target->HasAura(AURA_SPECTRAL_EXHAUSTION)))
             {
                 DoCast(target, SPELL_SPECTRAL_BLAST);
                 DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
