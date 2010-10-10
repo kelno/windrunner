@@ -673,6 +673,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             if( ( target && target != m_creature->getVictim() ) && target->isAlive() && !(target->HasAura(AURA_SPECTRAL_EXHAUSTION, 0)) )
             {
                 DoCast(target, SPELL_SPECTRAL_BLAST);
+                DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
                 target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
                 SpectralBlastTimer = 20000+(rand()%5000);
             }
