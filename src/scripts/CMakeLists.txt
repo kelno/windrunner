@@ -65,6 +65,7 @@ SET(scripts_STAT_SRCS
     azeroth/eastern_plaguelands/eastern_plaguelands.cpp
     azeroth/elwynn_forest/elwynn_forest.cpp
     azeroth/dun_morogh/dun_morogh.cpp
+    azeroth/hinterlands/hinterlands.cpp
     azeroth/ironforge/ironforge.cpp
     azeroth/karazhan/boss_curator.cpp
     azeroth/karazhan/boss_maiden_of_virtue.cpp
