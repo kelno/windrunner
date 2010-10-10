@@ -1,17 +1,19 @@
-/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+/*
+ * Copyright (C) 2008-2010 TrinityCore <http://www.trinitycore.org/>
+ * Copyright (C) 2006-2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /* ScriptData
@@ -22,95 +24,130 @@ SDCategory: Wetlands
 EndScriptData */
 
 /* ContentData
-npc_tapoke_jahn
+npc_mikhail
+npc_tapoke_slim_jahn
 EndContentData */
 
 #include "precompiled.h"
+#include "EscortAI.h"
 
 /*######
-## npc_tapoke_jahn
+## npc_tapoke_slim_jahn
 ######*/
 
-#define QUEST_MISSING_DIPLOMAT  1249
-
-#define FACTION_FRIENDLY        123
-#define FACTION_UNFRIENDLY      14
-
-#define SPELL_PUMMEL            12555
-
-struct npc_tapoke_jahnAI : public ScriptedAI
+enum eTapokeSlim
 {
-    npc_tapoke_jahnAI(Creature* c) : ScriptedAI(c) {}
-    
-    Player* player;
-    
-    uint32 pummelTimer;
-    
+    QUEST_MISSING_DIPLO_PT11    = 1249,
+    FACTION_ENEMY               = 168,
+    SPELL_STEALTH               = 1785,
+    SPELL_CALL_FRIENDS          = 16457,                    //summons 1x friend
+    NPC_SLIMS_FRIEND            = 4971,
+    NPC_TAPOKE_SLIM_JAHN        = 4962
+};
+
+struct npc_tapoke_slim_jahnAI : public npc_escortAI
+{
+    npc_tapoke_slim_jahnAI(Creature* pCreature) : npc_escortAI(pCreature) { }
+
+    bool m_bFriendSummoned;
+
     void Reset()
     {
-        m_creature->setFaction(FACTION_FRIENDLY);
-        m_creature->SetHealth(m_creature->GetMaxHealth());
-        m_creature->CombatStop();
-        m_creature->DeleteThreatList();
-        
-        pummelTimer = 5000;
+        if (!HasEscortState(STATE_ESCORT_ESCORTING))
+            m_bFriendSummoned = false;
     }
-    
-    void Aggro(Unit* who) {}
-    
-    void UpdateAI(const uint32 diff)
+
+    void WaypointReached(uint32 uiPointId)
     {
-        if (m_creature->getFaction() == FACTION_FRIENDLY) //if friendly, event is not running
-            return;
-        
-        if (m_creature->GetHealth() < (m_creature->GetMaxHealth()/5.0f)) //at 20%, he stops fighting and complete the quest
+        switch(uiPointId)
         {
-            player = (m_creature->getVictim()->ToPlayer());
-            
-            if (player && player->GetQuestStatus(QUEST_MISSING_DIPLOMAT) == QUEST_STATUS_INCOMPLETE)
-                player->KilledMonster(4962, m_creature->GetGUID());
-            
-            m_creature->MonsterSay("Arretez, je vais tout vous dire...", LANG_UNIVERSAL, 0);
-            Reset();
-            
-            return;
+            case 2:
+                if (me->HasStealthAura())
+                    me->RemoveAurasDueToSpell(SPELL_AURA_MOD_STEALTH);
+
+                SetRun();
+                me->setFaction(FACTION_ENEMY);
+            break;
         }
-        
-        if (pummelTimer <= diff)
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        Player* pPlayer = GetPlayerForEscort();
+
+        if (HasEscortState(STATE_ESCORT_ESCORTING) && !m_bFriendSummoned && pPlayer)
         {
-            DoCast(m_creature->getVictim(), SPELL_PUMMEL);
-            pummelTimer = 20000;
-        }else pummelTimer -= diff;
-        
-        DoMeleeAttackIfReady();
+            DoCast(me, SPELL_CALL_FRIENDS, true);
+            DoCast(me, SPELL_CALL_FRIENDS, true);
+            DoCast(me, SPELL_CALL_FRIENDS, true);
+
+            m_bFriendSummoned = true;
+        }
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (Player* pPlayer = GetPlayerForEscort())
+            pSummoned->AI()->AttackStart(pPlayer);
+    }
+
+    void AttackedBy(Unit* pAttacker)
+    {
+        if (me->getVictim())
+            return;
+
+        if (me->IsFriendlyTo(pAttacker))
+            return;
+
+        AttackStart(pAttacker);
+    }
+
+    void DamageTaken(Unit* pDoneBy, uint32& uiDamage)
+    {
+        if (me->GetHealth()*100 < me->GetMaxHealth()*20)
+        {
+            if (Player* pPlayer = GetPlayerForEscort())
+            {
+                if (pPlayer->GetTypeId() == TYPEID_PLAYER)
+                    CAST_PLR(pPlayer)->GroupEventHappens(QUEST_MISSING_DIPLO_PT11, me);
+
+                uiDamage = 0;
+
+                me->RestoreFaction();
+                me->RemoveAllAuras();
+                me->DeleteThreatList();
+                me->CombatStop(true);
+
+                //SetRun(false);
+            }
+        }
     }
 };
 
-CreatureAI* GetAI_npc_tapoke_jahn(Creature *pCreature)
+CreatureAI* GetAI_npc_tapoke_slim_jahn(Creature* pCreature)
 {
-    return new npc_tapoke_jahnAI(pCreature);
+    return new npc_tapoke_slim_jahnAI(pCreature);
 }
 
-bool GossipHello_npc_tapoke_jahn(Player *pPlayer, Creature *pCreature)
-{
-    if (pPlayer->GetQuestStatus(QUEST_MISSING_DIPLOMAT) == QUEST_STATUS_INCOMPLETE)
-        pPlayer->ADD_GOSSIP_ITEM(0, "A nous deux, dites-moi tout !", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        
-    pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
-    
-    return true;
-}
+/*######
+## npc_mikhail
+######*/
 
-bool GossipSelect_npc_tapoke_jahn(Player *pPlayer, Creature *pCreature, uint32 sender, uint32 action)
+bool QuestAccept_npc_mikhail(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
 {
-    if (action == GOSSIP_ACTION_INFO_DEF+1)
+    if (pQuest->GetQuestId() == QUEST_MISSING_DIPLO_PT11)
     {
-        pCreature->MonsterSay("Je n'ai rien a vous dire !", LANG_UNIVERSAL, 0);
-        pCreature->setFaction(FACTION_UNFRIENDLY);
-        pCreature->AI()->AttackStart(pPlayer);
+        Creature* pSlim = pCreature->FindNearestCreature(NPC_TAPOKE_SLIM_JAHN, 25.0f);
+
+        if (!pSlim)
+            return false;
+
+        if (!pSlim->HasStealthAura())
+            pSlim->CastSpell(pSlim, SPELL_STEALTH, true);
+
+        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID(), pCreature->GetEntry());
     }
-    
-    return true;
+    return false;
 }
 
 /*######
@@ -120,11 +157,14 @@ bool GossipSelect_npc_tapoke_jahn(Player *pPlayer, Creature *pCreature, uint32 s
 void AddSC_wetlands()
 {
     Script *newscript;
-    
+
     newscript = new Script;
-    newscript->Name="npc_tapoke_jahn";
-    newscript->pGossipHello =  &GossipHello_npc_tapoke_jahn;
-    newscript->pGossipSelect = &GossipSelect_npc_tapoke_jahn;
-    newscript->GetAI = &GetAI_npc_tapoke_jahn;
+    newscript->Name = "npc_tapoke_slim_jahn";
+    newscript->GetAI = &GetAI_npc_tapoke_slim_jahn;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_mikhail";
+    newscript->pQuestAccept = &QuestAccept_npc_mikhail;
     newscript->RegisterSelf();
 }
