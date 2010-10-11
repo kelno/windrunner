@@ -362,6 +362,8 @@ extern void AddSC_hellfire_peninsula();
 
 //Hillsbrad Foothills
 //Hinterlands
+extern void AddSC_hinterlands();
+
 //Ironforge
 extern void AddSC_ironforge();
 
@@ -455,6 +457,8 @@ extern void AddSC_razorfen_kraul();
 extern void AddSC_instance_razorfen_kraul();
 
 //Redridge Mountains
+extern void AddSC_redridge_mountains();
+
 //Ruins of Ahn'Qiraj
 extern void AddSC_boss_kurinnaxx();
 extern void AddSC_boss_rajaxx();
@@ -1744,6 +1748,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     //Hillsbrad Foothills
     //Hinterlands
+    AddSC_hinterlands();
+    
     //Ironforge
     AddSC_ironforge();
 
@@ -1837,6 +1843,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_instance_razorfen_kraul();
 
     //Redridge Mountains
+    AddSC_redridge_mountains();
+    
     //Ruins of Ahn'Qiraj
     AddSC_boss_kurinnaxx();
     AddSC_boss_rajaxx();
