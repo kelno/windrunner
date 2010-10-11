@@ -111,6 +111,7 @@ SET(scripts_STAT_SRCS
     azeroth/naxxramas/boss_sapphiron.cpp
     azeroth/naxxramas/boss_thaddius.cpp
     azeroth/naxxramas/instance_naxxramas.cpp
+    azeroth/redridge_mountains/redridge_mountains.cpp
     azeroth/scarlet_monastery/boss_arcanist_doan.cpp
     azeroth/scarlet_monastery/boss_azshir_the_sleepless.cpp
     azeroth/scarlet_monastery/boss_bloodmage_thalnos.cpp
