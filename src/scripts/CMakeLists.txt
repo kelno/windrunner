@@ -65,6 +65,7 @@ SET(scripts_STAT_SRCS
     azeroth/eastern_plaguelands/eastern_plaguelands.cpp
     azeroth/elwynn_forest/elwynn_forest.cpp
     azeroth/dun_morogh/dun_morogh.cpp
+    azeroth/hinterlands/hinterlands.cpp
     azeroth/ironforge/ironforge.cpp
     azeroth/karazhan/boss_curator.cpp
     azeroth/karazhan/boss_maiden_of_virtue.cpp
@@ -110,6 +111,7 @@ SET(scripts_STAT_SRCS
     azeroth/naxxramas/boss_sapphiron.cpp
     azeroth/naxxramas/boss_thaddius.cpp
     azeroth/naxxramas/instance_naxxramas.cpp
+    azeroth/redridge_mountains/redridge_mountains.cpp
     azeroth/scarlet_monastery/boss_arcanist_doan.cpp
     azeroth/scarlet_monastery/boss_azshir_the_sleepless.cpp
     azeroth/scarlet_monastery/boss_bloodmage_thalnos.cpp
