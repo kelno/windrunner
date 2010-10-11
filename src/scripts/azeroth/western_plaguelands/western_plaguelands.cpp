@@ -24,7 +24,8 @@ EndScriptData */
 /* ContentData
 npcs_dithers_and_arbington
 npc_the_scourge_cauldron
-npc_andorhal_tower
+npc_myranda_the_hag
+npcs_andorhal_tower
 EndContentData */
 
 #include "precompiled.h"
@@ -163,9 +164,9 @@ CreatureAI* GetAI_npc_the_scourge_cauldron(Creature *_Creature)
     return new npc_the_scourge_cauldronAI (_Creature);
 }
 
-/*######
-##	npcs_andorhal_tower
-######*/
+/*##########
+#npcs_andorhal_tower
+##########*/
 
 enum eAndorhalTower
 {
@@ -176,16 +177,17 @@ struct npc_andorhal_towerAI : public Scripted_NoMovementAI
 {
     npc_andorhal_towerAI(Creature *c) : Scripted_NoMovementAI(c) {}
     
+    void Aggro(Unit *pWho) {}
+
     void MoveInLineOfSight(Unit* pWho)
     {
         if (!pWho || pWho->GetTypeId() != TYPEID_PLAYER)
             return;
-            
-        if (m_creature->FindGOInGrid(GO_BEACON_TORCH, 10.0f))
-            CAST_PLR(pWho)->KilledMonster(m_creature->GetEntry(), m_creature->GetGUID());
+
+        if (me->FindNearestGameObject(GO_BEACON_TORCH, 10.0f))
+            CAST_PLR(pWho)->KilledMonster(me->GetEntry(), me->GetGUID());
+        
     }
-    
-    void Aggro(Unit* pWho) {}
 };
 
 CreatureAI* GetAI_npc_andorhal_tower(Creature* pCreature)
@@ -194,7 +196,48 @@ CreatureAI* GetAI_npc_andorhal_tower(Creature* pCreature)
 }
 
 /*######
-##
+## npc_myranda_the_hag
+######*/
+
+enum eMyranda
+{
+    QUEST_SUBTERFUGE        = 5862,
+    QUEST_IN_DREAMS         = 5944,
+    SPELL_SCARLET_ILLUSION  = 17961
+};
+
+#define GOSSIP_ITEM_ILLUSION    "I am ready for the illusion, Myranda."
+
+bool GossipHello_npc_myranda_the_hag(Player* pPlayer, Creature* pCreature)
+{
+    if (pCreature->isQuestGiver())
+        pPlayer->PrepareQuestMenu(pCreature->GetGUID());
+
+    if (pPlayer->GetQuestStatus(QUEST_SUBTERFUGE) == QUEST_STATUS_COMPLETE &&
+        !pPlayer->GetQuestRewardStatus(QUEST_IN_DREAMS) && !pPlayer->HasAura(SPELL_SCARLET_ILLUSION, 0))
+    {
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_ILLUSION, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        pPlayer->SEND_GOSSIP_MENU(4773, pCreature->GetGUID());
+        return true;
+    }
+    else
+        pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_myranda_the_hag(Player* pPlayer, Creature* pCreature, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF + 1)
+    {
+        pPlayer->CLOSE_GOSSIP_MENU();
+        pPlayer->CastSpell(pPlayer, SPELL_SCARLET_ILLUSION, false);
+    }
+    return true;
+}
+
+/*######
+## AddSC
 ######*/
 
 void AddSC_western_plaguelands()
@@ -216,5 +259,10 @@ void AddSC_western_plaguelands()
     newscript->Name = "npc_andorhal_tower";
     newscript->GetAI = &GetAI_npc_andorhal_tower;
     newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_myranda_the_hag";
+    newscript->pGossipHello = &GossipHello_npc_myranda_the_hag;
+    newscript->pGossipSelect = &GossipSelect_npc_myranda_the_hag;
+    newscript->RegisterSelf();
 }
-
