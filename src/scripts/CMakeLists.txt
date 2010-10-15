@@ -230,6 +230,7 @@ SET(scripts_STAT_SRCS
     kalimdor/caverns_of_time/old_hillsbrad/instance_old_hillsbrad.cpp
     kalimdor/caverns_of_time/old_hillsbrad/old_hillsbrad.cpp
     kalimdor/darkshore/darkshore.cpp
+    kalimdor/desolace/desolace.cpp
     kalimdor/dire_maul/def_dire_maul.h
     kalimdor/dire_maul/instance_dire_maul.cpp
     kalimdor/dire_maul/dire_maul.cpp

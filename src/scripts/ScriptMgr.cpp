@@ -294,6 +294,8 @@ extern void AddSC_instance_deadmines();
 
 //Deadwind pass
 //Desolace
+extern void AddSC_desolace();
+
 //Dire Maul
 extern void AddSC_instance_dire_maul();
 extern void AddSC_dire_maul();
@@ -1680,6 +1682,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     //Deadwind pass
     //Desolace
+    AddSC_desolace();
+    
     //Dire Maul
     AddSC_instance_dire_maul();
     AddSC_dire_maul();
