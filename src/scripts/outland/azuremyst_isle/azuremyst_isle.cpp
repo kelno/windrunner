@@ -751,9 +751,11 @@ struct npc_stillpine_capitiveAI : public ScriptedAI
     {
         FleeTimer = 0;
         GameObject* cage = me->FindNearestGameObject(GO_BRISTELIMB_CAGE, 5.0f);
-        if(cage)
-            cage->ResetDoorOrButton();
+        /*if(cage)
+            cage->ResetDoorOrButton();*/
     }
+
+	void Aggro(Unit *pWho) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -779,7 +781,7 @@ bool go_bristlelimb_cage(Player* pPlayer, GameObject* pGo)
         if(pCreature)
         {
             DoScriptText(RAND(CAPITIVE_SAY_1, CAPITIVE_SAY_2, CAPITIVE_SAY_3), pCreature, pPlayer);
-            pCreature->GetMotionMaster()->MoveFleeing(pPlayer, 3500);
+            pCreature->GetMotionMaster()->MoveFleeing(pPlayer);
             pPlayer->KilledMonster(pCreature->GetEntry(), pCreature->GetGUID());
             CAST_AI(npc_stillpine_capitiveAI, pCreature->AI())->FleeTimer = 3500;
             return false;
