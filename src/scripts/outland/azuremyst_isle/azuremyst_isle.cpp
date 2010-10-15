@@ -724,6 +724,70 @@ CreatureAI* GetAI_npc_death_ravagerAI(Creature* pCreature)
     return new npc_death_ravagerAI(pCreature);
 }
 
+/*########
+## Quest: The Prophecy of Akida
+########*/
+
+enum BristlelimbCage
+{
+    CAPITIVE_SAY_1                      = -1600474,
+    CAPITIVE_SAY_2                      = -1600475,
+    CAPITIVE_SAY_3                      = -1600476,
+
+    QUEST_THE_PROPHECY_OF_AKIDA         = 9544,
+    NPC_STILLPINE_CAPITIVE              = 17375,
+    GO_BRISTELIMB_CAGE                  = 181714
+
+};
+
+
+struct npc_stillpine_capitiveAI : public ScriptedAI
+{
+    npc_stillpine_capitiveAI(Creature *c) : ScriptedAI(c){}
+
+    uint32 FleeTimer;
+
+    void Reset()
+    {
+        FleeTimer = 0;
+        GameObject* cage = me->FindNearestGameObject(GO_BRISTELIMB_CAGE, 5.0f);
+        if(cage)
+            cage->ResetDoorOrButton();
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if(FleeTimer)
+        {
+            if(FleeTimer <= diff)
+                me->ForcedDespawn();
+            else FleeTimer -= diff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_stillpine_capitiveAI(Creature* pCreature)
+{
+    return new npc_stillpine_capitiveAI(pCreature);
+}
+
+bool go_bristlelimb_cage(Player* pPlayer, GameObject* pGo)
+{
+    if(pPlayer->GetQuestStatus(QUEST_THE_PROPHECY_OF_AKIDA) == QUEST_STATUS_INCOMPLETE)
+    {
+        Creature* pCreature = pGo->FindNearestCreature(NPC_STILLPINE_CAPITIVE, 5.0f, true);
+        if(pCreature)
+        {
+            DoScriptText(RAND(CAPITIVE_SAY_1, CAPITIVE_SAY_2, CAPITIVE_SAY_3), pCreature, pPlayer);
+            pCreature->GetMotionMaster()->MoveFleeing(pPlayer, 3500);
+            pPlayer->KilledMonster(pCreature->GetEntry(), pCreature->GetGUID());
+            CAST_AI(npc_stillpine_capitiveAI, pCreature->AI())->FleeTimer = 3500;
+            return false;
+        }
+    }
+    return true;
+}
+
 /*######
 ## AddSC
 ######*/
@@ -779,6 +843,16 @@ void AddSC_azuremyst_isle()
     newscript = new Script;
     newscript->Name="go_ravager_cage";
     newscript->pGOHello = &go_ravager_cage;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_stillpine_capitive";
+    newscript->GetAI = &GetAI_npc_stillpine_capitiveAI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="go_bristlelimb_cage";
+    newscript->pGOHello = &go_bristlelimb_cage;
     newscript->RegisterSelf();
 }
 
