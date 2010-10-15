@@ -2404,6 +2404,14 @@ bool ScriptMgr::ReceiveEmote( Player *player, Creature *_Creature, uint32 emote 
     return tmpscript->pReceiveEmote(player, _Creature, emote);
 }
 
+bool ScriptMgr::EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget)
+{
+    Script *tmpscript = m_scripts[crTarget->GetScriptId()];
+
+    if (!tmpscript || !tmpscript->pEffectDummyCreature) return false;
+
+    return tmpscript->pEffectDummyCreature(caster, spellId, effIndex, crTarget);
+}
 
 InstanceData* ScriptMgr::CreateInstanceData(Map *map)
 {

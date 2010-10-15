@@ -38,7 +38,7 @@ struct Script
         pGossipHello(NULL), pQuestAccept(NULL), pGossipSelect(NULL), pGossipSelectWithCode(NULL),
         pQuestSelect(NULL), pQuestComplete(NULL), pNPCDialogStatus(NULL), pGODialogStatus(NULL), pChooseReward(NULL),
         pItemHello(NULL), pGOHello(NULL), pAreaTrigger(NULL), pItemQuestAccept(NULL), pGOQuestAccept(NULL),
-        pGOChooseReward(NULL),pReceiveEmote(NULL),pItemUse(NULL), GetAI(NULL), GetInstanceData(NULL)
+        pGOChooseReward(NULL), pReceiveEmote(NULL), pItemUse(NULL), GetAI(NULL), GetInstanceData(NULL), pEffectDummyCreature(NULL)
     {}
 
     std::string Name;
@@ -66,6 +66,7 @@ struct Script
     bool (*pGOChooseReward      )(Player*, GameObject*, Quest const*, uint32 );
     bool (*pReceiveEmote        )(Player*, Creature*, uint32 );
     bool (*pItemUse             )(Player*, Item*, SpellCastTargets const& );
+    bool (*pEffectDummyCreature )(Unit*, uint32, uint32, Creature*);
 
     CreatureAI* (*GetAI)(Creature*);
     InstanceData* (*GetInstanceData)(Map*);
@@ -127,6 +128,7 @@ class ScriptMgr
         //bool EffectDummyItem(Unit *caster, uint32 spellId, uint32 effIndex, Item *itemTarget);
         InstanceData* CreateInstanceData(Map *map);
         bool ReceiveEmote(Player *player, Creature *_Creature, uint32 emote);
+        bool EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget);
 };
 
 //Generic scripting text function
