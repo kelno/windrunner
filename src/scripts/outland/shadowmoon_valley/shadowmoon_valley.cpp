@@ -40,6 +40,7 @@ npc_enraged_spirit
 npc_deathbringer_jovaan
 npc_grand_commander_ruusk
 npc_skartax
+npc_invis_deathforge_caster
 EndContentData */
 
 #include "precompiled.h"
@@ -1911,6 +1912,30 @@ CreatureAI* GetAI_npc_skartax(Creature *pCreature)
 }
 
 /*######
+## npc_invis_deathforge_caster
+######*/
+
+struct npc_invis_deathforge_casterAI : public ScriptedAI
+{
+	npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
+	
+	void Aggro(Unit *pWho) {}
+	
+	void UpdateAI(uint32 const diff)
+	{
+		if (Creature *pTarget = m_creature->FindNearestCreature(21207, 30.0f)) {
+			if (!pTarget->HasAura(36384))
+				DoCast(pTarget, 36384);
+		}
+	}
+};
+
+CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
+{
+	return new npc_invis_deathforge_casterAI(pCreature);
+}
+
+/*######
 ## AddSC
 #######*/
 
@@ -2019,6 +2044,11 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "npc_skartax";
     newscript->GetAI = &GetAI_npc_skartax;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_invis_deathforge_caster";
+    newscript->GetAI = &GetAI_npc_invis_deathforge_caster;
     newscript->RegisterSelf();
 }
 
