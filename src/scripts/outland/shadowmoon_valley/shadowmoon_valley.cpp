@@ -41,6 +41,7 @@ npc_deathbringer_jovaan
 npc_grand_commander_ruusk
 npc_skartax
 npc_invis_deathforge_caster
+go_arcano_control_unit
 EndContentData */
 
 #include "precompiled.h"
@@ -1936,6 +1937,22 @@ CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
 }
 
 /*######
+## go_arcano_control_unit
+######*/
+
+bool GOHello_go_arcano_control_unit(Player *pPlayer, GameObject* pGo)
+{
+	if (Creature *pCreature = pPlayer->FindNearestCreature(21909, 25.0f)) {
+		pPlayer->CastSpell(pCreature, 37868, true);
+		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+		
+		return true;
+	}
+	
+	return false;
+}
+
+/*######
 ## AddSC
 #######*/
 
@@ -2049,6 +2066,11 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "npc_invis_deathforge_caster";
     newscript->GetAI = &GetAI_npc_invis_deathforge_caster;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_arcano_control_unit";
+    newscript->pGOHello = &GOHello_go_arcano_control_unit;
     newscript->RegisterSelf();
 }
 
