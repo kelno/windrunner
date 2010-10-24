@@ -40,8 +40,9 @@ bool GOHello_go_barrel_old_hillsbrad(Player *player, GameObject* _GO)
         return false;
 
     pInstance->SetData(TYPE_BARREL_DIVERSION, IN_PROGRESS);
+    _GO->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
 
-    return false;
+    return true;
 }
 
 /*######
