@@ -115,32 +115,6 @@ struct instance_shattered_halls : public ScriptedInstance
             if (GetData(DATA_BLADEFIST_EVENT) == NOT_STARTED)
                 pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             break;
-        // Horde prisoners
-        /*case 17296:
-            if (pTeam == HORDE) FirstPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;
-        case 17295:
-            if (pTeam == HORDE) SecondPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;
-        case 17297:
-            if (pTeam == HORDE) ThirdPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;
-        // Alliance prisoners
-        case 17290:
-            if (pTeam == ALLIANCE)  FirstPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;
-        case 17292:
-            if (pTeam == ALLIANCE)  SecondPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;
-        case 17289:
-            if (pTeam == ALLIANCE)  ThirdPrisoner = pCreature;
-            else pCreature->SetVisibility(VISIBILITY_OFF);
-            break;*/
         }
     }
     
@@ -312,59 +286,27 @@ struct instance_shattered_halls : public ScriptedInstance
                 
         TimerLeft = Encounters[5];
                 
-        // Check timer and respawn prisoners if needed
-        /*if (GetData(DATA_EXECUTIONER_EVENT) == IN_PROGRESS) {
-            if (Player* plr = GetPlayerInMap()) {
-                // Less than 25 mins, one is dead
-                if (TimerLeft < 1500000 && FirstPrisoner)
-                    FirstPrisoner->DealDamage(FirstPrisoner, FirstPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                // Less than 15 mins, two are deads
-                if (TimerLeft < 900000 && SecondPrisoner)
-                    SecondPrisoner->DealDamage(SecondPrisoner, SecondPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            }
-        }
-        else if (GetData(DATA_EXECUTIONER_EVENT) == DONE) {         // All prisoners dead
-            if (FirstPrisoner)
-                FirstPrisoner->DealDamage(FirstPrisoner, FirstPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            if (SecondPrisoner)
-                SecondPrisoner->DealDamage(SecondPrisoner, SecondPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-            if (ThirdPrisoner)
-                ThirdPrisoner->DealDamage(ThirdPrisoner, ThirdPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }*/
-                
         OUT_LOAD_INST_DATA_COMPLETE;
     }
     
-    /*void SpawnPrisoners(uint32 team, uint8 amount)      // Amount depends on time left, team depends on player's team
+    void YellToAll(Creature* creature, const char* text, uint32 language)
     {
-        if (!Executioner) {
-            sLog.outError("Instance Shattered Halls: SpawnPrisoners: Executioner not found ! Instance script will fail.");
-            return;
+        Map::PlayerList const& players = instance->GetPlayers();
+
+        if (!players.isEmpty())
+        {
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+            {
+                WorldPacket data(SMSG_MESSAGECHAT, 200);
+                Player* plr = itr->getSource();
+                if(!plr)
+                    continue;
+                
+                creature->BuildMonsterChat(&data,CHAT_MSG_MONSTER_YELL,text,language,creature->GetName(),plr->GetGUID());
+                plr->GetSession()->SendPacket(&data);
+            }
         }
-        
-        switch (team) {
-        case HORDE:
-            FirstPrisoner = Executioner->SummonCreature(HordePrisoners[0], PrisonersCoord[0][0], PrisonersCoord[0][1], PrisonersCoord[0][2], PrisonersCoord[0][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!FirstPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: First prisoner not correctly spawned !");
-            if (amount == 1) break;
-            SecondPrisoner = Executioner->SummonCreature(HordePrisoners[1], PrisonersCoord[1][0], PrisonersCoord[1][1], PrisonersCoord[1][2], PrisonersCoord[1][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!SecondPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: Second prisoner not correctly spawned !");
-            if (amount == 2) break;
-            ThirdPrisoner = Executioner->SummonCreature(HordePrisoners[2], PrisonersCoord[2][0], PrisonersCoord[2][1], PrisonersCoord[2][2], PrisonersCoord[2][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!ThirdPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: Third prisoner not correctly spawned !");
-            break;
-        case ALLIANCE:
-            FirstPrisoner = Executioner->SummonCreature(AlliancePrisoners[0], PrisonersCoord[0][0], PrisonersCoord[0][1], PrisonersCoord[0][2], PrisonersCoord[0][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!FirstPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: First prisoner not correctly spawned !");
-            if (amount == 1) break;
-            SecondPrisoner = Executioner->SummonCreature(AlliancePrisoners[1], PrisonersCoord[1][0], PrisonersCoord[1][1], PrisonersCoord[1][2], PrisonersCoord[1][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!SecondPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: Second prisoner not correctly spawned !");
-            if (amount == 2) break;
-            ThirdPrisoner = Executioner->SummonCreature(AlliancePrisoners[2], PrisonersCoord[2][0], PrisonersCoord[2][1], PrisonersCoord[2][2], PrisonersCoord[2][3], TEMPSUMMON_DEAD_DESPAWN, 0);
-            if (!ThirdPrisoner) sLog.outError("Instance Shattered Halls: SpawnPrisoners: Third prisoner not correctly spawned !");
-            break;
-        }
-    }*/
+    }
     
     // Update is only needed in Heroic, for the timer
     void Update(uint32 const diff)
@@ -389,7 +331,7 @@ struct instance_shattered_halls : public ScriptedInstance
         if (!hasCasted80min) {      // Event just started
             // TODO: Correct this [PH] yell
             if (Executioner)
-                Executioner->Yell("[PH] J'ai 3 otages ! Dans 55 minutes, je tuerai le premier d'entre eux !", LANG_UNIVERSAL, 0);
+                YellToAll(Executioner, "[PH] J'ai 3 otages ! Dans 55 minutes, je tuerai le premier d'entre eux !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(EXEC_TIMER_55);
             Player* plr = GetPlayerInMap();
             if (!plr) {
@@ -403,7 +345,7 @@ struct instance_shattered_halls : public ScriptedInstance
         if (TimerLeft < 1500000 && !hasCasted25min) {               // 25 min left and debuff not casted yet
             // TODO: Correct this [PH] yell
             if (Executioner)
-                Executioner->Yell("[PH] Le premier est mort ! Dans 10 minutes, un autre connaitra le meme sort !", LANG_UNIVERSAL, 0);
+                YellToAll(Executioner, "[PH] Le premier est mort ! Dans 10 minutes, un autre connaitra le meme sort !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(GetData(EXEC_TIMER_10));      // 2nd timer of 10 mins
             /*if (FirstPrisoner && Executioner)
                 Executioner->DealDamage(FirstPrisoner, FirstPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);*/
@@ -413,7 +355,7 @@ struct instance_shattered_halls : public ScriptedInstance
         if (TimerLeft < 900000 && !hasCasted15min) {                // 15 min left and debuff not casted yet
             // TODO: Correct this [PH] yell
             if (Executioner)
-                Executioner->Yell("[PH] Et de deux ! Dans 15 minutes, je tuerai le dernier, et il sera trop tard !", LANG_UNIVERSAL, 0);
+                YellToAll(Executioner, "[PH] Et de deux ! Dans 15 minutes, je tuerai le dernier, et il sera trop tard !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(GetData(EXEC_TIMER_15));      // 3rd (and last) timer of 15 mins
             /*if (SecondPrisoner && Executioner)
                 Executioner->DealDamage(SecondPrisoner, SecondPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);*/
@@ -423,7 +365,7 @@ struct instance_shattered_halls : public ScriptedInstance
         if (TimerLeft < diff) {     // TIME UP ! Kill the third prisoner and stop the timer, killing executioner won't give the quest item
             // TODO: Correct this [PH] yell
             if (Executioner) {
-                Executioner->Yell("[PH] Trop tard ! Vous avez perdu, ils sont tous morts de ma main.", LANG_UNIVERSAL, 0);
+                YellToAll(Executioner, "[PH] Trop tard ! Vous avez perdu, ils sont tous morts de ma main.", LANG_UNIVERSAL);
                 Executioner->loot.RemoveItem(31716);
             }
             /*if (ThirdPrisoner && Executioner)
