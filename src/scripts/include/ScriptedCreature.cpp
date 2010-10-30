@@ -157,6 +157,7 @@ void ScriptedAI::EnterEvadeMode()
     }
 
     InCombat = false;
+    m_creature->ResetAllowedToLootList();
     Reset();
 }
 
