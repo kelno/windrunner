@@ -357,6 +357,10 @@ struct boss_sathrovarrAI : public ScriptedAI
 
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, DONE);
+            
+        // Remove invisibility auras
+        m_creature->RemoveAurasDueToSpell(44800);
+        m_creature->RemoveAurasDueToSpell(44801);
     }
 
     void TeleportAllPlayersBack()
@@ -375,6 +379,14 @@ struct boss_sathrovarrAI : public ScriptedAI
     {
         if (!UpdateVictim())
             return;
+            
+        // If tank has not the aura anymore, maybe he was teleported back -> start attack on Kalecgos human form
+        if (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER && !m_creature->getVictim()->HasAura(AURA_SPECTRAL_REALM)) {
+            if(KalecGUID) {
+                if(Unit* Kalec = Unit::GetUnit(*m_creature, KalecGUID))
+                    m_creature->AI()->AttackStart(Kalec);
+            }
+        }
 
         if(CheckTimer < diff)
         {
