@@ -137,11 +137,16 @@ struct boss_kalecgosAI : public ScriptedAI
         if(Sath) (Sath->ToCreature())->AI()->EnterEvadeMode();
 
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-        if(Door) Door->SetGoState(0);
+        if (Door)
+            Door->SetGoState(0);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if(Wall1) Wall1->SetGoState(0);
+        if (Wall1 && m_creature->isAlive())
+            Wall1->SetGoState(1);
+        else if (Wall1 && m_creature->isDead())
+            Wall1->SetGoState(0);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-        if(Wall2) Wall2->SetGoState(0);
+        if (Wall2)
+            Wall2->SetGoState(0);
 
         m_creature->setFaction(14);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
