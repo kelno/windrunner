@@ -467,9 +467,16 @@ struct mob_shadowy_constructAI : public ScriptedAI
         if (pInstance)
             TeronGUID = pInstance->GetData64(DATA_TERON);
             
-        if (Creature *pTeron = m_creature->FindCreatureInGrid(22871, 80.0f, true)) {
+        /*if (Creature *pTeron = m_creature->FindCreatureInGrid(22871, 80.0f, true)) {
             if (Unit *pTarget = ((boss_teron_gorefiendAI*)pTeron->AI())->GetConstructTarget())
                 m_creature->AI()->AttackStart(pTarget);
+        }*/
+        
+        if (pInstance) {
+            if (Creature *pTeron = pInstance->instance->GetCreatureInMap(TeronGUID)) {
+                if (Unit *pTarget = ((boss_teron_gorefiendAI*)pTeron->AI())->GetConstructTarget())
+                    m_creature->AI()->AttackStart(pTarget);
+            }
         }
         
         m_creature->setActive(true);

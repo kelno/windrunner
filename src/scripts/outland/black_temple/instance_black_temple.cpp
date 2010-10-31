@@ -44,8 +44,6 @@ struct instance_black_temple : public ScriptedInstance
 
     uint32 m_auiEncounter[MAX_ENCOUNTER];
     std::string str_data;
-    
-    uint32 checkTimer;
 
     uint64 Najentus;
     uint64 Akama;                                           // This is the Akama that starts the Illidan encounter.
@@ -59,6 +57,7 @@ struct instance_black_temple : public ScriptedInstance
     uint64 IllidariCouncil;
     uint64 BloodElfCouncilVoice;
     uint64 IllidanStormrage;
+    uint64 TeronGorefiend;
 
     uint64 NajentusGate;
     uint64 MainTempleDoors;
@@ -76,8 +75,6 @@ struct instance_black_temple : public ScriptedInstance
     void Initialize()
     {
         memset(&m_auiEncounter, 0, sizeof(m_auiEncounter));
-        
-        checkTimer = 10000;     // Check every 10 sec
 
         Najentus = 0;
         Akama = 0;
@@ -91,6 +88,7 @@ struct instance_black_temple : public ScriptedInstance
         IllidariCouncil = 0;
         BloodElfCouncilVoice = 0;
         IllidanStormrage = 0;
+        TeronGorefiend = 0;
 
         NajentusGate    = 0;
         MainTempleDoors = 0;
@@ -151,6 +149,7 @@ struct instance_black_temple : public ScriptedInstance
         case 22952:    VerasDarkshadow = creature->GetGUID();           break;
         case 23426:    IllidariCouncil = creature->GetGUID();           break;
         case 23499:    BloodElfCouncilVoice = creature->GetGUID();      break;
+        case 22871:    TeronGorefiend = creature->GetGUID();            break;
         }
     }
 
@@ -204,6 +203,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_GAMEOBJECT_ILLIDAN_DOOR_L:   return IllidanDoor[1];
         case DATA_GAMEOBJECT_SUPREMUS_DOORS:   return MainTempleDoors;
         case DATA_BLOOD_ELF_COUNCIL_VOICE:     return BloodElfCouncilVoice;
+        case DATA_TERON:                       return TeronGorefiend;
         }
 
         return 0;
