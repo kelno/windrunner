@@ -40,7 +40,7 @@ enum Quotes
     SAY_GOOD_NEAR_DEATH2    = -1580008,
     SAY_GOOD_PLRWIN         = -1580009,
 
-    //Shattrowar
+    //Sathrovarr
     SAY_SATH_AGGRO          = -1580010,
     SAY_SATH_DEATH          = -1580011,
     SAY_SATH_SPELL1         = -1580012,
@@ -76,7 +76,7 @@ enum SpellIds
     SPELL_REVITALIZE            =   45027
 };
 
-#define GO_FAILED   "You are unable to use this currently."
+#define GO_FAILED   "Vous ne pouvez pas faire cela maintenant."
 
 #define FLY_X   1679
 #define FLY_Y   900
