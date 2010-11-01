@@ -38,6 +38,7 @@ struct npc_lazy_peonAI : public ScriptedAI
     void Reset ()
     {
         work = false;
+        m_uiRebuffTimer = 0;
     }
 
     void MovementInform(uint32, uint32 id)
@@ -64,8 +65,11 @@ struct npc_lazy_peonAI : public ScriptedAI
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (work = true)
+        if (work == true) {
             m_creature->HandleEmoteCommand(466);
+            work = false;
+        }
+        
         if (m_uiRebuffTimer <= uiDiff)
         {
             DoCast(m_creature, SPELL_BUFF_SLEEP);
@@ -73,8 +77,10 @@ struct npc_lazy_peonAI : public ScriptedAI
         }
         else
             m_uiRebuffTimer -= uiDiff;
+            
         if (!UpdateVictim())
             return;
+            
         DoMeleeAttackIfReady();
     }
 };
