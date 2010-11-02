@@ -45,7 +45,7 @@ struct npc_ironbark_redeemedAI : public ScriptedAI
     {
         if (id == 2) {
             if (pInstance) {
-                if (GameObject *pIronbarkDoor = pInstance->instance->GetGameObjectInMap(pInstance->GetData64(DATA_GUID_IRONBARKDOOR))) {
+                if (GameObject *pIronbarkDoor = m_creature->FindGOInGrid(179549, 20.0f)) {
                     pIronbarkDoor->SwitchDoorOrButton(true);
                     m_creature->Kill(m_creature);
                 }
@@ -74,6 +74,7 @@ bool GossipHello_npc_ironbark_redeemed(Player *pPlayer, Creature *pCreature)
 bool GossipSelect_npc_ironbark_redeemed(Player *pPlayer, Creature *pCreature, uint32 sender, uint32 action)
 {
     if (action == GOSSIP_ACTION_INFO_DEF) {
+        pPlayer->CLOSE_GOSSIP_MENU();
         pCreature->SetSpeed(MOVE_WALK, 3);
         pCreature->GetMotionMaster()->MovePath(14241, false);
         return true;
