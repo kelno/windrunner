@@ -692,62 +692,72 @@ CreatureAI* GetAI_npc_living_flare(Creature* pCreature)
 }
 
 /*######
-## npc_ancestral_spirit_wolf
+## npc_ancestral_wolf
 ######*/
 
-struct npc_ancestral_spirit_wolfAI : public npc_escortAI
+enum eAncestralWolf
 {
-    npc_ancestral_spirit_wolfAI(Creature *c) : npc_escortAI(c) {}
+    EMOTE_WOLF_LIFT_HEAD            = -1000496,
+    EMOTE_WOLF_HOWL                 = -1000497,
+    SAY_WOLF_WELCOME                = -1000498,
 
-    void WaypointReached(uint32 i)
+    SPELL_ANCESTRAL_WOLF_BUFF       = 29981,
+
+    NPC_RYGA                        = 17123
+};
+
+struct npc_ancestral_wolfAI : public npc_escortAI
+{
+    npc_ancestral_wolfAI(Creature* pCreature) : npc_escortAI(pCreature)
     {
-        Player* player = GetPlayerForEscort();
+        if (pCreature->GetOwner() && pCreature->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+            Start(false, false, true, pCreature->GetOwner()->GetGUID(), pCreature->GetEntry());
+        else
+            sLog.outError("TRINITY: npc_ancestral_wolf can not obtain owner or owner is not a player.");
 
-        if (!player)
-            return;
+        pCreature->SetSpeed(MOVE_WALK, 1.5f);
+        Reset();
+    }
 
-        switch (i)
+    Unit* pRyga;
+
+    void Reset()
+    {
+        pRyga = NULL;
+        DoCast(me, SPELL_ANCESTRAL_WOLF_BUFF, true);
+    }
+
+    void Aggro(Unit *pWho) {}
+
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (!pRyga && pWho->GetTypeId() == TYPEID_UNIT && pWho->GetEntry() == NPC_RYGA && me->IsWithinDistInMap(pWho, 15.0f))
+            pRyga = pWho;
+
+        npc_escortAI::MoveInLineOfSight(pWho);
+    }
+
+    void WaypointReached(uint32 uiPointId)
+    {
+        switch(uiPointId)
         {
-        case 16:
-            m_creature->AddAura(29938, player);
-            break;
-        default:
-            break;
+            case 0:
+                DoScriptText(EMOTE_WOLF_LIFT_HEAD, me);
+                break;
+            case 2:
+                DoScriptText(EMOTE_WOLF_HOWL, me);
+                break;
+            case 50:
+                if (pRyga && pRyga->isAlive() && !pRyga->isInCombat())
+                    DoScriptText(SAY_WOLF_WELCOME, pRyga);
+                break;
         }
-    }
-
-    void Reset() 
-    {
-        Player* player = GetPlayerForEscort();
-        if (player)
-            CAST_AI(npc_escortAI, (m_creature->AI()))->Start(true, true, false, player->GetGUID(), m_creature->GetEntry());
-    }
-
-    void Aggro(Unit* pWho) {}
-
-    void JustDied(Unit* pKiller)
-    {
-        if (!IsBeingEscorted)
-            return;
-
-        if (PlayerGUID)
-        {
-            // If NPC dies, player fails the quest
-            Player* player = GetPlayerForEscort();
-            if (player)
-                player->FailQuest(9410);
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        npc_escortAI::UpdateAI(diff);
     }
 };
 
-CreatureAI* GetAI_npc_ancestral_spirit_wolf(Creature* pCreature)
+CreatureAI* GetAI_npc_ancestral_wolf(Creature* pCreature)
 {
-    return new npc_ancestral_spirit_wolfAI(pCreature);
+    return new npc_ancestral_wolfAI(pCreature);
 }
 
 /*######
@@ -820,7 +830,7 @@ void AddSC_hellfire_peninsula()
     newscript->RegisterSelf();
     
     newscript = new Script;
-    newscript->Name="npc_ancestral_spirit_wolf";
-    newscript->GetAI = &GetAI_npc_ancestral_spirit_wolf;
+    newscript->Name = "npc_ancestral_wolf";
+    newscript->GetAI = &GetAI_npc_ancestral_wolf;
     newscript->RegisterSelf();
 }
