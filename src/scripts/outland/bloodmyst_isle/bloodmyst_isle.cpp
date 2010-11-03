@@ -125,6 +125,19 @@ bool GossipSelect_npc_captured_sunhawk_agent(Player* pPlayer, Creature* pCreatur
     return true;
 }
 
+/*######
+## npc_exarch_admetius
+######*/
+
+bool QuestAccept_npc_exarch_admetius(Player* pPlayer, Creature* pCreature, Quest const *quest)
+{
+    sLog.outString("Pom, questId = %u", quest->GetQuestId());
+    if (quest->GetQuestId() == 9756)
+        pPlayer->AddAura(31609, pPlayer);
+        
+    return true;
+}
+
 void AddSC_bloodmyst_isle()
 {
     Script* newscript;
@@ -138,6 +151,11 @@ void AddSC_bloodmyst_isle()
     newscript->Name="npc_captured_sunhawk_agent";
     newscript->pGossipHello =  &GossipHello_npc_captured_sunhawk_agent;
     newscript->pGossipSelect = &GossipSelect_npc_captured_sunhawk_agent;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_exarch_admetius";
+    newscript->pQuestAccept = &QuestAccept_npc_exarch_admetius;
     newscript->RegisterSelf();
 }
 
