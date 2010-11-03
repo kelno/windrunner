@@ -31,6 +31,7 @@ npc_skyguard_handler_irena
 go_legion_obelisk
 npc_prophecy_questcredit
 npc_grishna_falconwing
+go_ethereum_chamber
 EndContentData */
 
 #include "precompiled.h"
@@ -480,6 +481,20 @@ CreatureAI* GetAI_npc_grishna_falconwingAI(Creature *pCreature)
 }
 
 /*######
+## go_ethereum_chamber
+######*/
+
+uint32 ethereumPrisoners[5] = { 22828, 22826, 22827, 20888, 22825 };
+
+bool GOHello_go_ethereum_chamber(Player *pPlayer, GameObject *pGo)
+{
+    if (Creature *pCreature = pPlayer->SummonCreature(ethereumPrisoners[rand()%5], pGo->GetPositionX(), pGo->GetPositionY(), pGo->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
+        pCreature->AI()->AttackStart(pPlayer);
+        
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -533,6 +548,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_grishna_falconwing";
     newscript->GetAI = &GetAI_npc_grishna_falconwingAI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_ethereum_chamber";
+    newscript->pGOHello = &GOHello_go_ethereum_chamber;
     newscript->RegisterSelf();
 }
 
