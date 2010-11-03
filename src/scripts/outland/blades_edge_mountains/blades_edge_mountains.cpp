@@ -32,6 +32,7 @@ go_legion_obelisk
 npc_prophecy_questcredit
 npc_grishna_falconwing
 go_ethereum_chamber
+npc_kolphis_darkscale
 EndContentData */
 
 #include "precompiled.h"
@@ -495,6 +496,17 @@ bool GOHello_go_ethereum_chamber(Player *pPlayer, GameObject *pGo)
 }
 
 /*######
+## npc_kolphis_darkscale
+######*/
+
+bool GossipHello_npc_kolphis_darkscale(Player *pPlayer, Creature *pCreature)
+{
+    pPlayer->GroupEventHappens(10722, pCreature);
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -553,6 +565,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "go_ethereum_chamber";
     newscript->pGOHello = &GOHello_go_ethereum_chamber;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_kolphis_darkscale";
+    newscript->pGossipHello = &GossipHello_npc_kolphis_darkscale;
     newscript->RegisterSelf();
 }
 
