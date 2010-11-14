@@ -136,7 +136,6 @@ struct boss_teron_gorefiendAI : public ScriptedAI
     uint32 ShadowOfDeathTimer;
     uint32 RandomYellTimer;
     uint32 AggroTimer;
-    
 
     uint64 AggroTargetGUID;
 
@@ -170,15 +169,23 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40314, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40175, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40157, true);
+        
+        m_creature->addUnitState(UNIT_STAT_ROOT);
 
         AggroTimer = 30000;
 
         Intro = false;
         DespawnConstructs();
         Summons.DespawnAll();
+        
+        while (Creature *pGhost = m_creature->FindCreatureInGrid(CREATURE_GHOST, 50.0f, true))
+            pGhost->RemoveAurasDueToSpell(40268);
     }
 
-    void Aggro(Unit *who) {}
+    void Aggro(Unit *who)
+    {
+        MoveInLineOfSight(who);
+    }
 
     void MoveInLineOfSight(Unit *who)
     {
@@ -194,13 +201,13 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 DoZoneInCombat();
             }
 
-            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 20.0f) && (who->GetTypeId() == TYPEID_PLAYER))
+            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 25.0f) && (who->GetTypeId() == TYPEID_PLAYER))
             {
                 if(pInstance)
                     pInstance->SetData(DATA_TERONGOREFIENDEVENT, IN_PROGRESS);
 
                 m_creature->GetMotionMaster()->Clear(false);
-                m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 DoScriptText(SAY_INTRO, m_creature);
                 m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_TALK);
                 AggroTargetGUID = who->GetGUID();
@@ -275,6 +282,9 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
         DespawnConstructs();
         Summons.DespawnAll();
+        
+        while (Creature *pGhost = m_creature->FindCreatureInGrid(CREATURE_GHOST, 50.0f, true))
+            pGhost->RemoveAurasDueToSpell(40268);
     }
 
     void SetThreatList(Creature* unit)
@@ -322,6 +332,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 Intro = false;
                 if(AggroTargetGUID)
                 {
+                    m_creature->clearUnitState(UNIT_STAT_ROOT);
                     Unit* pUnit = Unit::GetUnit((*m_creature), AggroTargetGUID);
                     if(pUnit)
                         AttackStart(pUnit);
@@ -345,6 +356,9 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             EnterEvadeMode();
             return;
         }
+        
+        if (m_creature->getVictim())
+            m_creature->SetInFront(m_creature->getVictim());
 
         if(ShadowOfDeathTimer < diff)
         {
@@ -449,6 +463,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
 
     uint32 AtrophyTimer;
     uint32 AttackTimer;
+    uint32 ResetCheckTimer;
     uint64 TeronGUID;
 
     bool SetAggro;
@@ -480,6 +495,8 @@ struct mob_shadowy_constructAI : public ScriptedAI
         }
         
         m_creature->setActive(true);
+        
+        ResetCheckTimer = 1500;
     }
 
     void Aggro(Unit* who) {}
@@ -511,6 +528,17 @@ struct mob_shadowy_constructAI : public ScriptedAI
         m_creature->GetPosition(x,y,z);
         z = m_creature->GetMap()->GetVmapHeight(x, y, z, true);
         m_creature->Relocate(x,y,z,0);
+        
+        if (ResetCheckTimer <= diff) {
+            if (Creature *pTeron = pInstance->instance->GetCreatureInMap(TeronGUID)) {
+                if (!pTeron->isInCombat())
+                    m_creature->DisappearAndDie();
+            }
+            ResetCheckTimer = 1500;
+        }
+        else
+            ResetCheckTimer -= diff;
+            
         if(AttackTimer < diff)
         {
             SetAggro = true;
