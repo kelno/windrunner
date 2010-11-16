@@ -188,6 +188,25 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->SetOrientation(o);
         m_creature->Relocate(x, y, z, o);
         
+        
+        /* TAUNT IMMUNE - DIRTY WAY */
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31789, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39377, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 54794, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37017, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37486, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 49613, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 694, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 25266, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 27344, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 6795, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1161, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5209, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 355, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 34105, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 53477, true);
     }
 
     void Aggro(Unit *who)
