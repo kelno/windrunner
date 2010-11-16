@@ -172,7 +172,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         
         m_creature->addUnitState(UNIT_STAT_ROOT);
 
-        AggroTimer = 30000;
+        AggroTimer = 25000;
 
         Intro = false;
         DespawnConstructs();
@@ -180,11 +180,19 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         
         while (Creature *pGhost = m_creature->FindCreatureInGrid(CREATURE_GHOST, 50.0f, true))
             pGhost->RemoveAurasDueToSpell(40268);
+            
+        //m_creature->GetMotionMaster()->MoveTargetedHome();
+        float x, y, z, o;
+        m_creature->GetHomePosition(x, y, z, o);
+        m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
+        m_creature->SetOrientation(o);
+        m_creature->Relocate(x, y, z, o);
+        
     }
 
     void Aggro(Unit *who)
     {
-        MoveInLineOfSight(who);
+        //MoveInLineOfSight(who);
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -195,13 +203,13 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         {
             float attackRadius = m_creature->GetAttackDistance(who);
 
-            if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
+            /*if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
             {
                 m_creature->AddThreat(who, 1.0f);
                 DoZoneInCombat();
-            }
+            }*/
 
-            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 25.0f) && (who->GetTypeId() == TYPEID_PLAYER))
+            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 20.0f) && (who->GetTypeId() == TYPEID_PLAYER))
             {
                 if(pInstance)
                     pInstance->SetData(DATA_TERONGOREFIENDEVENT, IN_PROGRESS);
@@ -212,6 +220,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_TALK);
                 AggroTargetGUID = who->GetGUID();
                 Intro = true;
+                m_creature->SetOrientation(3.14159);
             }
         }
     }
