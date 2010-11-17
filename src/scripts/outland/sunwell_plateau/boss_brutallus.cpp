@@ -99,6 +99,7 @@ struct boss_brutallusAI : public ScriptedAI
 
         IsIntro = false;
         Enraged = false;
+        //Intro = true; // TODO: RESTORE INTRO IN CONSTRUCTOR AFTER TESTS
 
         m_creature->CastSpell(m_creature, SPELL_DUAL_WIELD, true);
 
@@ -141,7 +142,7 @@ struct boss_brutallusAI : public ScriptedAI
     {
         if(!Intro || IsIntro)
             return;
-        error_log("Start Intro");
+        //error_log("Start Intro");
         Creature *Madrigosa = Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_MADRIGOSA));
         if(Madrigosa){
             (Madrigosa->ToCreature())->Respawn();
@@ -162,8 +163,9 @@ struct boss_brutallusAI : public ScriptedAI
 
     void EndIntro()
     {
-        error_log("Brutallus: Ending intro");
+        //error_log("Brutallus: Ending intro");
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
         Intro = false;
         IsIntro = false;
     }
