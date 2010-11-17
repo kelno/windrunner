@@ -337,6 +337,16 @@ CreatureAI* GetAI_boss_brutallus(Creature *_Creature)
     return new boss_brutallusAI (_Creature);
 }
 
+/*bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
+        if (Creature *Brutallus = Unit::GetCreature(*pPlayer, pInstance ? pInstance->GetData64(DATA_BRUTALLUS) : 0))
+            ((boss_brutallusAI*)Brutallus->AI())->StartIntro();
+        if (GameObject *IceBarrier = GameObject::GetGameObject(*pPlayer, pInstance ? pInstance->GetData64(DATA_ICE_BARRIER) : 0))
+            IceBarrier->UseDoorOrButton();
+    }
+    return false;
+}*/
+
 void AddSC_boss_brutallus()
 {
     Script *newscript;
@@ -345,4 +355,9 @@ void AddSC_boss_brutallus()
     newscript->Name="boss_brutallus";
     newscript->GetAI = &GetAI_boss_brutallus;
     newscript->RegisterSelf();
+    
+    /*newscript = new Script;
+    newscript->Name = "at_brutallus_intro";
+    newscript->pAreaTrigger = &AreaTrigger_at_brutallus_intro;
+    newscript->RegisterSelf();*/
 }

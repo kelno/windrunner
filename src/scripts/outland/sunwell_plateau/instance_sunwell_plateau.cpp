@@ -144,8 +144,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 24850: Kalecgos_Dragon     = pCreature->GetGUID(); break;
             case 24891: Kalecgos_Human      = pCreature->GetGUID(); break;
             case 24892: Sathrovarr          = pCreature->GetGUID(); break;
-            case 24882: Brutallus           = pCreature->GetGUID(); break;
-            case 24895: Madrigosa           = pCreature->GetGUID(); break;
+            case 24882: Brutallus           = pCreature->GetGUID(); pCreature->setActive(true); break;
+            case 24895: Madrigosa           = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25038: Felmyst             = pCreature->GetGUID(); break;
             case 25166: Alythess            = pCreature->GetGUID(); break;
             case 25165: Sacrolash           = pCreature->GetGUID(); break;
