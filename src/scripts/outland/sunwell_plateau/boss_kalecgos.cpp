@@ -264,6 +264,18 @@ struct boss_kalecgosAI : public ScriptedAI
             break;
         }
     }
+    
+    void DeleteFromThreatList(uint64 TargetGUID)
+    {
+        for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
+        {
+            if((*itr)->getUnitGuid() == TargetGUID)
+            {
+                (*itr)->removeReference();
+                break;
+            }
+        }
+    }
 
     void UpdateAI(const uint32 diff);
 };
@@ -379,11 +391,32 @@ struct boss_sathrovarrAI : public ScriptedAI
                 if(i_pl->HasAura(AURA_SPECTRAL_REALM))
                     i_pl->RemoveAurasDueToSpell(AURA_SPECTRAL_REALM);
     }
+    
+    void DeleteFromThreatList(uint64 TargetGUID)
+    {
+        for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
+        {
+            if((*itr)->getUnitGuid() == TargetGUID)
+            {
+                (*itr)->removeReference();
+                break;
+            }
+        }
+    }
 
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
+            
+        // Check LoS EVERY update, maybe the current target was teleported back
+        if (!m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
+            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
+            if(KalecGUID) {
+                if(Unit* Kalec = Unit::GetUnit(*m_creature, KalecGUID))
+                    m_creature->AI()->AttackStart(Kalec);
+            }
+        }
             
         // If tank has not the aura anymore, maybe he was teleported back -> start attack on Kalecgos human form
         if (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER && !m_creature->getVictim()->HasAura(AURA_SPECTRAL_REALM)) {
@@ -596,6 +629,12 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
+            
+        // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
+        if (!m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
+            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
+            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
+        }
 
         if(CheckTimer < diff)
          {
