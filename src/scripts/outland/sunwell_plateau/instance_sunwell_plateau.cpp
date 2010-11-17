@@ -238,6 +238,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
                         HandleGameObject(KalecgosWall[1],false);
                     }*/
                     Encounters[0] = data;
+                    if (data == DONE)
+                        ((InstanceMap *)instance)->PermBindAllPlayers(GetPlayerInMap());
                 }
                 break;
             case DATA_BRUTALLUS_EVENT:     Encounters[1] = data; break;

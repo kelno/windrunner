@@ -365,15 +365,25 @@ struct boss_sathrovarrAI : public ScriptedAI
     {
         DoScriptText(SAY_SATH_DEATH, m_creature);
         m_creature->Relocate(m_creature->GetPositionX(), m_creature->GetPositionY(), DRAGON_REALM_Z, m_creature->GetOrientation());
+        WorldPacket data;                       //send update position to client
+        m_creature->BuildHeartBeatMsg(&data);
+        m_creature->SendMessageToSet(&data,true);
+        
         TeleportAllPlayersBack();
         if(Unit *Kalecgos = Unit::GetUnit(*m_creature, KalecgosGUID))
         {
             ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->TalkTimer = 1;
             ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->isFriendly = true;
         }
-
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, DONE);
+            
+        GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
+        if(Door) Door->SetGoState(0);
+        GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
+        if(Wall1) Wall1->SetGoState(0);
+        GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
+        if(Wall2) Wall2->SetGoState(0);
             
         // Remove invisibility auras
         m_creature->RemoveAurasDueToSpell(44800);
@@ -410,7 +420,7 @@ struct boss_sathrovarrAI : public ScriptedAI
             return;
             
         // Check LoS EVERY update, maybe the current target was teleported back
-        if (!m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
+        if (m_creature->getVictim()->GetPositionZ() >= -65.0f || !m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
             DeleteFromThreatList(m_creature->getVictim()->GetGUID());
             if(KalecGUID) {
                 if(Unit* Kalec = Unit::GetUnit(*m_creature, KalecGUID))
@@ -609,11 +619,11 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             m_creature->DeleteThreatList();
             m_creature->CombatStop();
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-            if(Door) Door->SetGoState(1);
+            if(Door) Door->SetGoState(0);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-			if(Wall1) Wall1->SetGoState(1);
+			if(Wall1) Wall1->SetGoState(!isFriendly);
 			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Wall2) Wall2->SetGoState(1);
+			if(Wall2) Wall2->SetGoState(0);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
@@ -631,7 +641,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             return;
             
         // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
-        if (!m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
+        if (m_creature->getVictim()->GetPositionZ() <= 52.5f || !m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
             DeleteFromThreatList(m_creature->getVictim()->GetGUID());
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
         }
