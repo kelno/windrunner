@@ -504,6 +504,10 @@ struct mob_shadowy_constructAI : public ScriptedAI
     {
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1499, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 14310, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 14311, true);
 
         // immune to frost trap aura
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 3600, true);
