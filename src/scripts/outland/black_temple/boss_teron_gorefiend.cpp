@@ -384,6 +384,10 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             EnterEvadeMode();
             return;
         }
+
+        // I shouldn't have to do that... F*cking program
+        if (m_creature->HasAura(40175))
+            m_creature->RemoveAurasDueToSpell(40175);
         
         if (m_creature->getVictim())
             m_creature->SetInFront(m_creature->getVictim());
