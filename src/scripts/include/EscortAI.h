@@ -80,6 +80,7 @@ struct npc_escortAI : public ScriptedAI
         float GetMaxPlayerDistance() { return MaxPlayerDistance; }
 
         void SetCanMelee(bool usemelee) { CanMelee = usemelee; }
+        void SetCanDefend(bool canDef) { Defend = canDef; }
         void SetDespawnAtEnd(bool despawn) { DespawnAtEnd = despawn; }
         void SetDespawnAtFar(bool despawn) { DespawnAtFar = despawn; }
         bool GetAttack() { return Attack; }//used in EnterEvadeMode override
