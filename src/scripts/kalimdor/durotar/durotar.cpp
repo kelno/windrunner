@@ -33,18 +33,31 @@ struct npc_lazy_peonAI : public ScriptedAI
     npc_lazy_peonAI(Creature *c) : ScriptedAI(c) {}
 
     uint32 m_uiRebuffTimer;
-    uint32 work;
+    uint32 m_homeTimer;
+    uint32 workTimer;
+    
+    uint8 workCount;
+    
+    bool work;
 
     void Reset ()
     {
         work = false;
         m_uiRebuffTimer = 0;
+        workCount = 0;
     }
 
     void MovementInform(uint32, uint32 id)
     {
-        if (id == 1)
+        if (id == 0) {
+            DoCast(m_creature, SPELL_BUFF_SLEEP);
+            workCount = 0;
+        }
+        else if (id == 1) {
             work = true;
+            m_homeTimer = 10000;
+            workTimer = 1000;
+        }
     }
     
     void Aggro(Unit* pWho) {}
@@ -57,26 +70,47 @@ struct npc_lazy_peonAI : public ScriptedAI
             (caster->ToPlayer())->KilledMonster(m_creature->GetEntry(), m_creature->GetGUID());
             DoScriptText(SAY_SPELL_HIT, m_creature, caster);
             m_creature->RemoveAllAuras();
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
             GameObject* Lumberpile = m_creature->FindGOInGrid(GO_LUMBERPILE, 20);
             if(Lumberpile)
-                m_creature->GetMotionMaster()->MovePoint(1,Lumberpile->GetPositionX()-1,Lumberpile->GetPositionY(),Lumberpile->GetPositionZ());
+                m_creature->GetMotionMaster()->MovePoint(1, Lumberpile->GetPositionX()-1, Lumberpile->GetPositionY(), Lumberpile->GetPositionZ());
         }
     }
 
     void UpdateAI(const uint32 uiDiff)
     {
-        if (work == true) {
-            m_creature->HandleEmoteCommand(466);
-            work = false;
+        if (work) {
+            if (workTimer <= uiDiff) {
+                m_creature->HandleEmoteCommand(EMOTE_STATE_WORK_NOSHEATHE);
+                workCount++;
+                workTimer = 1000;
+            }
+            else
+                workTimer -= uiDiff;
+                
+            if (workCount == 5)
+                work = false;
         }
         
         if (m_uiRebuffTimer <= uiDiff)
         {
             DoCast(m_creature, SPELL_BUFF_SLEEP);
-            m_uiRebuffTimer = 300000;                 // Rebuff again in 5 minutes
+            m_uiRebuffTimer = 90000;
         }
         else
             m_uiRebuffTimer -= uiDiff;
+            
+        if (m_homeTimer) {
+            if (m_homeTimer <= uiDiff) {
+                float x, y, z, o;
+                m_creature->SetSheath(SHEATH_STATE_UNARMED);
+                m_creature->GetHomePosition(x, y, z, o);
+                m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
+                m_homeTimer = 0;
+            }
+            else
+                m_homeTimer -= uiDiff;
+        }
             
         if (!UpdateVictim())
             return;
