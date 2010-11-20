@@ -14,8 +14,8 @@ SET(scripts_STAT_SRCS
     include/SimpleAI.h
     include/precompiled.cpp
     include/precompiled.h
-    azeroth/arathi_highlands/arathi_highlands.cpp
-    azeroth/alterac_mountains/alterac_mountains.cpp
+    azeroth/arathi_highlands.cpp
+    azeroth/alterac_mountains.cpp
     azeroth/alterac_valley/AV_Marshals.cpp
     azeroth/alterac_valley/AV_Warmasters.cpp
     azeroth/alterac_valley/boss_balinda.cpp
@@ -57,16 +57,15 @@ SET(scripts_STAT_SRCS
     azeroth/blackwing_lair/boss_vaelastrasz.cpp
     azeroth/blackwing_lair/boss_victor_nefarius.cpp
     azeroth/blackwing_lair/instance_blackwing_lair.cpp
-    azeroth/blasted_lands/blasted_lands.cpp
-    azeroth/blasted_lands/boss_kruul.cpp
-    azeroth/burning_steppes/burning_steppes.cpp
+    azeroth/blasted_lands.cpp
+    azeroth/burning_steppes.cpp
     azeroth/deadmines/def_deadmines.h
     azeroth/deadmines/deadmines.cpp
-    azeroth/eastern_plaguelands/eastern_plaguelands.cpp
-    azeroth/elwynn_forest/elwynn_forest.cpp
-    azeroth/dun_morogh/dun_morogh.cpp
-    azeroth/hinterlands/hinterlands.cpp
-    azeroth/ironforge/ironforge.cpp
+    azeroth/eastern_plaguelands.cpp
+    azeroth/elwynn_forest.cpp
+    azeroth/dun_morogh.cpp
+    azeroth/hinterlands.cpp
+    azeroth/ironforge.cpp
     azeroth/karazhan/boss_curator.cpp
     azeroth/karazhan/boss_maiden_of_virtue.cpp
     azeroth/karazhan/boss_midnight.cpp
@@ -80,7 +79,7 @@ SET(scripts_STAT_SRCS
     azeroth/karazhan/def_karazhan.h
     azeroth/karazhan/instance_karazhan.cpp
     azeroth/karazhan/karazhan.cpp
-    azeroth/loch_modan/loch_modan.cpp
+    azeroth/loch_modan.cpp
     azeroth/molten_core/boss_baron_geddon.cpp
     azeroth/molten_core/boss_garr.cpp
     azeroth/molten_core/boss_gehennas.cpp
@@ -111,7 +110,7 @@ SET(scripts_STAT_SRCS
     azeroth/naxxramas/boss_sapphiron.cpp
     azeroth/naxxramas/boss_thaddius.cpp
     azeroth/naxxramas/instance_naxxramas.cpp
-    azeroth/redridge_mountains/redridge_mountains.cpp
+    azeroth/redridge_mountains.cpp
     azeroth/scarlet_monastery/boss_arcanist_doan.cpp
     azeroth/scarlet_monastery/boss_azshir_the_sleepless.cpp
     azeroth/scarlet_monastery/boss_bloodmage_thalnos.cpp
@@ -139,13 +138,13 @@ SET(scripts_STAT_SRCS
     azeroth/scholomance/def_scholomance.h
     azeroth/scholomance/instance_scholomance.cpp
     azeroth/scholomance/scholomance.cpp
-    azeroth/searing_gorge/searing_gorge.cpp
+    azeroth/searing_gorge.cpp
     azeroth/shadowfang_keep/def_shadowfang_keep.h
     azeroth/shadowfang_keep/instance_shadowfang_keep.cpp
     azeroth/shadowfang_keep/shadowfang_keep.cpp
-    azeroth/silverpine_forest/silverpine_forest.cpp
-    azeroth/stormwind/stormwind_city.cpp
-    azeroth/stranglethorn_vale/stranglethorn_vale.cpp
+    azeroth/silverpine_forest.cpp
+    azeroth/stormwind_city.cpp
+    azeroth/stranglethorn_vale.cpp
     azeroth/stratholme/boss_baron_rivendare.cpp
     azeroth/stratholme/boss_baroness_anastari.cpp
     azeroth/stratholme/boss_cannon_master_willey.cpp
@@ -163,16 +162,16 @@ SET(scripts_STAT_SRCS
     azeroth/sunken_temple/def_sunken_temple.h
     azeroth/sunken_temple/instance_sunken_temple.cpp
     azeroth/sunken_temple/sunken_temple.cpp
-    azeroth/swamp_of_sorrows/swamp_of_sorrows.cpp
-    azeroth/tirisfal_glades/tirisfal_glades.cpp
+    azeroth/swamp_of_sorrows.cpp
+    azeroth/tirisfal_glades.cpp
     azeroth/uldaman/boss_archaedas.cpp
     azeroth/uldaman/instance_uldaman.cpp
     azeroth/uldaman/boss_ironaya.cpp
     azeroth/uldaman/uldaman.cpp
-    azeroth/undercity/undercity.cpp
-    azeroth/western_plaguelands/western_plaguelands.cpp
-    azeroth/westfall/westfall.cpp
-    azeroth/wetlands/wetlands.cpp
+    azeroth/undercity.cpp
+    azeroth/western_plaguelands.cpp
+    azeroth/westfall.cpp
+    azeroth/wetlands.cpp
     azeroth/zulgurub/boss_arlokk.cpp
     azeroth/zulgurub/boss_gahzranka.cpp
     azeroth/zulgurub/boss_grilek.cpp
@@ -298,6 +297,7 @@ SET(scripts_STAT_SRCS
     outdoor/boss_lethon.cpp
     outdoor/boss_taerar.cpp
     outdoor/boss_ysondre.cpp
+    outdoor/boss_kruul.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
