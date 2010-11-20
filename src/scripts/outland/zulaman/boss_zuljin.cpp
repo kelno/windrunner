@@ -496,7 +496,7 @@ struct boss_zuljinAI : public ScriptedAI
                             ClawRageTarget = SelectUnit(SELECT_TARGET_RANDOM, 1); // Not on tank
                         //if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
                         //if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                        if(ClawRageTarget)
+                        if(ClawRageTarget && ClawRageTarget->IsInWorld())
                         {
                             AttackStart(ClawRageTarget);
                             if(m_creature->IsWithinMeleeRange(ClawRageTarget))
