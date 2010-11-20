@@ -292,12 +292,14 @@ SET(scripts_STAT_SRCS
     misc/npc_professions.cpp
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
+    outdoor/boss_azuregos.cpp
+    outdoor/boss_doomwalker.cpp
+    outdoor/boss_doomlord_kazzak.cpp
     outdoor/boss_emeriss.cpp
+    outdoor/boss_kruul.cpp
     outdoor/boss_lethon.cpp
     outdoor/boss_taerar.cpp
     outdoor/boss_ysondre.cpp
-    outdoor/boss_kruul.cpp
-    outdoor/boss_azuregos.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
@@ -314,7 +316,7 @@ SET(scripts_STAT_SRCS
     outland/aunchindoun/shadow_labyrinth/boss_murmur.cpp
     outland/aunchindoun/shadow_labyrinth/def_shadow_labyrinth.h
     outland/aunchindoun/shadow_labyrinth/instance_shadow_labyrinth.cpp
-    outland/azuremyst_isle/azuremyst_isle.cpp
+    outland/azuremyst_isle.cpp
     outland/black_temple/black_temple.cpp
     outland/black_temple/boss_bloodboil.cpp
     outland/black_temple/boss_illidan.cpp
@@ -327,8 +329,8 @@ SET(scripts_STAT_SRCS
     outland/black_temple/def_black_temple.h
     outland/black_temple/illidari_council.cpp
     outland/black_temple/instance_black_temple.cpp
-    outland/blades_edge_mountains/blades_edge_mountains.cpp
-    outland/bloodmyst_isle/bloodmyst_isle.cpp
+    outland/blades_edge_mountains.cpp
+    outland/bloodmyst_isle.cpp
     outland/coilfang_resevoir/serpent_shrine/boss_fathomlord_karathress.cpp
     outland/coilfang_resevoir/serpent_shrine/boss_hydross_the_unstable.cpp
     outland/coilfang_resevoir/serpent_shrine/boss_lurker_below.cpp
@@ -344,8 +346,8 @@ SET(scripts_STAT_SRCS
     outland/coilfang_resevoir/steam_vault/instance_steam_vault.cpp
     outland/coilfang_resevoir/underbog/boss_hungarfen.cpp
     outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
-    outland/eversong_woods/eversong_woods.cpp
-    outland/ghostlands/ghostlands.cpp
+    outland//eversong_woods.cpp
+    outland//ghostlands.cpp
     outland/gruuls_lair/boss_gruul.cpp
     outland/gruuls_lair/boss_high_king_maulgar.cpp
     outland/gruuls_lair/def_gruuls_lair.h
@@ -366,21 +368,19 @@ SET(scripts_STAT_SRCS
     outland/hellfire_citadel/shattered_halls/def_shattered_halls.h
     outland/hellfire_citadel/shattered_halls/instance_shattered_halls.cpp
     outland/hellfire_citadel/shattered_halls/boss_warchief_kargath_bladefist.cpp
-    outland/hellfire_peninsula/boss_doomlord_kazzak.cpp
-    outland/hellfire_peninsula/hellfire_peninsula.cpp
-    outland/isle_of_queldanas/isle_of_queldanas.cpp
+    outland/hellfire_peninsula.cpp
+    outland//isle_of_queldanas.cpp
     outland/magisters_terrace/boss_felblood_kaelthas.cpp
     outland/magisters_terrace/boss_priestess_delrissa.cpp
     outland/magisters_terrace/boss_selin_fireheart.cpp
     outland/magisters_terrace/boss_vexallus.cpp
     outland/magisters_terrace/def_magisters_terrace.h
     outland/magisters_terrace/instance_magisters_terrace.cpp
-    outland/nagrand/nagrand.cpp
-    outland/netherstorm/netherstorm.cpp
-    outland/shadowmoon_valley/boss_doomwalker.cpp
-    outland/shadowmoon_valley/shadowmoon_valley.cpp
-    outland/shattrath/shattrath_city.cpp
-    outland/silvermoon/silvermoon_city.cpp
+    outland/nagrand.cpp
+    outland/netherstorm.cpp
+    outland/shadowmoon_valley.cpp
+    outland/shattrath_city.cpp
+    outland/silvermoon_city.cpp
     outland/sunwell_plateau/boss_kiljaeden.cpp
     outland/sunwell_plateau/boss_muru.cpp
     outland/sunwell_plateau/boss_eredar_twins.cpp
@@ -411,8 +411,8 @@ SET(scripts_STAT_SRCS
     outland/tempest_keep/the_mechanar/boss_pathaleon_the_calculator.cpp
     outland/tempest_keep/the_mechanar/def_mechanar.h
     outland/tempest_keep/the_mechanar/instance_mechanar.cpp
-    outland/terokkar_forest/terokkar_forest.cpp
-    outland/zangarmarsh/zangarmarsh.cpp
+    outland/terokkar_forest.cpp
+    outland/zangarmarsh.cpp
     outland/zulaman/boss_akilzon.cpp
     outland/zulaman/boss_halazzi.cpp
     outland/zulaman/boss_hexlord.cpp
