@@ -194,10 +194,9 @@ SET(scripts_STAT_SRCS
     custom/custom_training_dummy.cpp
     custom/on_events.cpp
     custom/test.cpp
-    kalimdor/ashenvale/ashenvale.cpp
-    kalimdor/azshara/azshara.cpp
-    kalimdor/azshara/boss_azuregos.cpp
-    kalimdor/barrens/the_barrens.cpp
+    kalimdor/ashenvale.cpp
+    kalimdor/azshara.cpp
+    kalimdor/the_barrens.cpp
     kalimdor/blackfathom_depths/instance_blackfathom_deeps.cpp
     kalimdor/blackfathom_depths/boss_aku_mai.cpp
     kalimdor/blackfathom_depths/boss_gelihast.cpp
@@ -228,24 +227,24 @@ SET(scripts_STAT_SRCS
     kalimdor/caverns_of_time/old_hillsbrad/def_old_hillsbrad.h
     kalimdor/caverns_of_time/old_hillsbrad/instance_old_hillsbrad.cpp
     kalimdor/caverns_of_time/old_hillsbrad/old_hillsbrad.cpp
-    kalimdor/darkshore/darkshore.cpp
-    kalimdor/desolace/desolace.cpp
+    kalimdor/darkshore.cpp
+    kalimdor/desolace.cpp
     kalimdor/dire_maul/def_dire_maul.h
     kalimdor/dire_maul/instance_dire_maul.cpp
     kalimdor/dire_maul/dire_maul.cpp
     kalimdor/dire_maul/boss_pusillin.cpp
-    kalimdor/durotar/durotar.cpp
-    kalimdor/dustwallow_marsh/dustwallow_marsh.cpp
-    kalimdor/felwood/felwood.cpp
-    kalimdor/feralas/feralas.cpp
+    kalimdor/durotar.cpp
+    kalimdor/dustwallow_marsh.cpp
+    kalimdor/felwood.cpp
+    kalimdor/feralas.cpp
     kalimdor/maraudon/boss_celebras_the_cursed.cpp
     kalimdor/maraudon/boss_landslide.cpp
     kalimdor/maraudon/boss_noxxion.cpp
     kalimdor/maraudon/boss_princess_theradras.cpp
-    kalimdor/moonglade/moonglade.cpp
-    kalimdor/mulgore/mulgore.cpp
+    kalimdor/moonglade.cpp
+    kalimdor/mulgore.cpp
     kalimdor/onyxias_lair/boss_onyxia.cpp
-    kalimdor/orgrimmar/orgrimmar.cpp
+    kalimdor/orgrimmar.cpp
     kalimdor/razorfen_downs/boss_amnennar_the_coldbringer.cpp
     kalimdor/razorfen_kraul/def_razorfen_kraul.h
     kalimdor/razorfen_kraul/instance_razorfen_kraul.cpp
@@ -258,10 +257,10 @@ SET(scripts_STAT_SRCS
     kalimdor/ruins_of_ahnqiraj/boss_rajaxx.cpp
     kalimdor/ruins_of_ahnqiraj/def_ruins_of_ahnqiraj.h
     kalimdor/ruins_of_ahnqiraj/instance_ruins_of_ahnqiraj.cpp
-    kalimdor/silithus/silithus.cpp
-    kalimdor/stonetalon_mountains/stonetalon_mountains.cpp
-    kalimdor/tanaris/tanaris.cpp
-    kalimdor/teldrassil/teldrassil.cpp
+    kalimdor/silithus.cpp
+    kalimdor/stonetalon_mountains.cpp
+    kalimdor/tanaris.cpp
+    kalimdor/teldrassil.cpp
     kalimdor/temple_of_ahnqiraj/boss_bug_trio.cpp
     kalimdor/temple_of_ahnqiraj/boss_cthun.cpp
     kalimdor/temple_of_ahnqiraj/boss_fankriss.cpp
@@ -274,13 +273,13 @@ SET(scripts_STAT_SRCS
     kalimdor/temple_of_ahnqiraj/def_temple_of_ahnqiraj.h
     kalimdor/temple_of_ahnqiraj/instance_temple_of_ahnqiraj.cpp
     kalimdor/temple_of_ahnqiraj/mob_anubisath_sentinel.cpp
-    kalimdor/thunder_bluff/thunder_bluff.cpp
-    kalimdor/thousand_needles/thousand_needles.cpp
-    kalimdor/ungoro_crater/ungoro_crater.cpp
+    kalimdor/thunder_bluff.cpp
+    kalimdor/thousand_needles.cpp
+    kalimdor/ungoro_crater.cpp
     kalimdor/wailing_caverns/instance_wailing_caverns.cpp
     kalimdor/wailing_caverns/wailing_caverns.cpp
     kalimdor/wailing_caverns/def_wailing_caverns.h
-    kalimdor/winterspring/winterspring.cpp
+    kalimdor/winterspring.cpp
     kalimdor/zulfarrak/zulfarrak.cpp
     misc/GuardAI.cpp
     misc/GuardAI.h
@@ -298,6 +297,7 @@ SET(scripts_STAT_SRCS
     outdoor/boss_taerar.cpp
     outdoor/boss_ysondre.cpp
     outdoor/boss_kruul.cpp
+    outdoor/boss_azuregos.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
