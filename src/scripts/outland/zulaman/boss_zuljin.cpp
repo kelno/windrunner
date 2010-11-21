@@ -174,7 +174,7 @@ struct boss_zuljinAI : public ScriptedAI
 
     SummonList Summons;
     
-    Unit* ClawRageTarget;
+    uint64 ClawRageTargetGUID;
 
     void Reset()
     {
@@ -206,7 +206,7 @@ struct boss_zuljinAI : public ScriptedAI
         ClawTargetGUID = 0;
         TankGUID = 0;
         
-        ClawRageTarget = NULL;
+        ClawRageTargetGUID = 0;
 
         Summons.DespawnAll();
 
@@ -492,11 +492,11 @@ struct boss_zuljinAI : public ScriptedAI
                 {
                     if(Claw_Loop_Timer < diff)
                     {
-                        if (!ClawRageTarget)
-                            ClawRageTarget = SelectUnit(SELECT_TARGET_RANDOM, 1); // Not on tank
+                        if (!ClawRageTargetGUID)
+                            ClawRageTargetGUID = SelectUnit(SELECT_TARGET_RANDOM, 1)->GetGUID(); // Not on tank
                         //if(!target || !target->isTargetableForAttack()) target = Unit::GetUnit(*m_creature, TankGUID);
                         //if(!target || !target->isTargetableForAttack()) target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                        if(ClawRageTarget && ClawRageTarget->IsInWorld())
+                        if(Unit* ClawRageTarget = ObjectAccessor::GetUnit(*m_creature, ClawRageTargetGUID))
                         {
                             AttackStart(ClawRageTarget);
                             if(m_creature->IsWithinMeleeRange(ClawRageTarget))
@@ -509,7 +509,7 @@ struct boss_zuljinAI : public ScriptedAI
                                     m_creature->SetSpeed(MOVE_RUN, 1.2f);
                                     AttackStart(Unit::GetUnit(*m_creature, TankGUID));
                                     TankGUID = 0;
-                                    ClawRageTarget = NULL;  // Unset Claw Rage target
+                                    ClawRageTargetGUID = 0;  // Unset Claw Rage target
                                     return;
                                 }
                                 else
