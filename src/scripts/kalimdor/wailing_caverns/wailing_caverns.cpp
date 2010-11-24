@@ -82,6 +82,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
         eventProgress = 0;
         m_creature->setActive(true);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+        m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);   // I don't know if flags are reloaded from template in case NPC is respawned after death
     }
 
     uint32 eventTimer;
@@ -146,6 +147,18 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
     {
          summoned->AI()->AttackStart(m_creature);
     }
+    
+    /*void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        sLog.outString("Pom %u", spellId);
+    }*/
+    
+    void EnterEvadeMode() {
+        if (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2)
+            return;
+        else
+            npc_escortAI::EnterEvadeMode();
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -176,7 +189,8 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                             ++eventProgress;
                             DoScriptText(SAY_BANISH_THE_SPIRITS, m_creature);
                             DoCast(m_creature, SPELL_SERPENTINE_CLEANSING);
-                            //CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(false);
+                            m_creature->addUnitState(UNIT_STAT_ROOT);
+                            CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(false);
                             eventTimer = 30000;
                             m_creature->SummonCreature(NPC_DEVIATE_VIPER, -61.5261, 273.676, -92.8442, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000);
                             m_creature->SummonCreature(NPC_DEVIATE_VIPER, -58.4658, 280.799, -92.8393, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 5000);
@@ -185,7 +199,8 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                         else
                         if (eventProgress == 2)
                         {
-                            //CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(true);
+                            CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(true);
+                            m_creature->clearUnitState(UNIT_STAT_ROOT);
                             DoScriptText(SAY_CAVERNS_PURIFIED, m_creature);
                             pInstance->SetData(TYPE_NARALEX_PART2, DONE);
                             if (m_creature->HasAura(SPELL_SERPENTINE_CLEANSING))
@@ -205,7 +220,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                         {
                             ++eventProgress;
                             eventTimer = 15000;
-                            //CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(false);
+                            CAST_AI(npc_escortAI, m_creature->AI())->SetCanDefend(false);
                             if (Creature* naralex = pInstance->instance->GetCreature(pInstance->GetData64(DATA_NARALEX)))
                                 DoCast(naralex, SPELL_NARALEXS_AWAKENING, true);
                             DoScriptText(EMOTE_AWAKENING_RITUAL, m_creature);
@@ -277,10 +292,12 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                             {
                                 DoScriptText(SAY_FAREWELL, naralex);
                                 naralex->AddAura(SPELL_FLIGHT_FORM, naralex);
+                                naralex->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
                             }
                             SetRun();
                             m_creature->SetStandState(UNIT_STAND_STATE_STAND);
                             m_creature->AddAura(SPELL_FLIGHT_FORM, m_creature);
+                            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
                         }
                         else
                         if (eventProgress == 9)
@@ -363,6 +380,7 @@ bool GossipSelect_npc_disciple_of_naralex(Player* pPlayer, Creature* pCreature, 
 
         pCreature->setFaction(250);
         pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+        pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
         CAST_AI(npc_escortAI, (pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
         CAST_AI(npc_escortAI, (pCreature->AI()))->SetDespawnAtFar(false);

@@ -171,7 +171,7 @@ void SpellCastTargets::Update(Unit* caster)
             // here it is not guid but slot
             Player* pTrader = (caster->ToPlayer())->GetTrader();
             if(pTrader && m_itemTargetGUID < TRADE_SLOT_COUNT)
-                m_itemTarget = pTrader->GetItemByGuid(m_itemTargetGUID);
+                m_itemTarget = pTrader->GetItemByPos(pTrader->GetItemPosByTradeSlot(m_itemTargetGUID));
         }
         if(m_itemTarget)
             m_itemTargetEntry = m_itemTarget->GetEntry();
@@ -2370,7 +2370,13 @@ void Spell::cast(bool skipCheck)
         EffectCharge(0);
 
     // Okay, everything is prepared. Now we need to distinguish between immediate and evented delayed spells
-    if (m_spellInfo->speed > 0.0f && !IsChanneledSpell(m_spellInfo))
+    if (m_spellInfo->Id == 2094)       // Delay Blind for 200ms to fake retail lag
+    {
+        m_immediateHandled = false;
+        m_spellState = SPELL_STATE_DELAYED;
+        m_delayMoment = uint64(200);
+    }
+    else if (m_spellInfo->speed > 0.0f && !IsChanneledSpell(m_spellInfo))
     {
         // Remove used for cast item if need (it can be already NULL after TakeReagents call
         // in case delayed spell remove item at cast delay start
@@ -2815,6 +2821,10 @@ void Spell::finish(bool ok)
     // Stop Attack for some spells
     if( m_spellInfo->Attributes & SPELL_ATTR_STOP_ATTACK_TARGET )
         m_caster->AttackStop();
+        
+        
+    if (m_caster->GetTypeId() == TYPEID_UNIT && (m_caster->ToCreature())->IsAIEnabled)
+        (m_caster->ToCreature())->AI()->OnSpellFinish(m_caster, m_spellInfo->Id, m_targets.getUnitTarget());
 }
 
 void Spell::SendCastResult(uint8 result)

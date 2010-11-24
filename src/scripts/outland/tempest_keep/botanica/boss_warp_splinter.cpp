@@ -106,7 +106,7 @@ float treant_pos[6][3] =
 
 struct boss_warp_splinterAI : public ScriptedAI
 {
-    boss_warp_splinterAI(Creature *c) : ScriptedAI(c)
+    boss_warp_splinterAI(Creature *c) : ScriptedAI(c), summons(m_creature)
     {
         HeroicMode = c->GetMap()->IsHeroic();
         Treant_Spawn_Pos_X = c->GetPositionX();
@@ -120,6 +120,8 @@ struct boss_warp_splinterAI : public ScriptedAI
 
     float Treant_Spawn_Pos_X;
     float Treant_Spawn_Pos_Y;
+    
+    SummonList summons;
 
     void Reset()
     {
@@ -128,7 +130,16 @@ struct boss_warp_splinterAI : public ScriptedAI
         Arcane_Volley_Timer = 8000 + rand()%12000;
 
         m_creature->SetSpeed( MOVE_RUN, 0.7f, true);
+        
+        summons.DespawnAll();
     }
+    
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+    
+    void SummonedCreatureDespawn(Creature* pSummon) { summons.Despawn(pSummon); }
 
     void Aggro(Unit *who)
     {

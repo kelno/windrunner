@@ -9129,6 +9129,9 @@ uint8 Player::_CanTakeMoreSimilarItems(uint32 entry, uint32 count, Item* pItem, 
         return EQUIP_ERR_CANT_CARRY_MORE_OF_THIS;
     }
 
+    if (pItem && pItem->m_lootGenerated)
+        return EQUIP_ERR_ALREADY_LOOTED;
+
     // no maximum
     if(pProto->MaxCount == 0)
         return EQUIP_ERR_OK;
@@ -11710,7 +11713,7 @@ void Player::ClearTrade()
     tradeGold = 0;
     acceptTrade = false;
     for(int i = 0; i < TRADE_SLOT_COUNT; i++)
-        tradeItems[i] = 0;
+        tradeItems[i] = NULL_SLOT;
 }
 
 void Player::TradeCancel(bool sendback)
@@ -14544,21 +14547,6 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     uint16 newDrunkenValue = uint16(soberFactor*(GetUInt32Value(PLAYER_BYTES_3) & 0xFFFE));
     SetDrunkValue(newDrunkenValue);
 
-    m_rest_bonus = fields[LOAD_DATA_REST_BONUS].GetFloat();
-    //speed collect rest bonus in offline, in logout, far from tavern, city (section/in hour)
-    float bubble0 = 0.031;
-    //speed collect rest bonus in offline, in logout, in tavern, city (section/in hour)
-    float bubble1 = 0.125;
-
-    if((int32)fields[LOAD_DATA_LOGOUT_TIME].GetUInt32() > 0)
-    {
-        float bubble = fields[LOAD_DATA_IS_LOGOUT_RESTING].GetUInt32() > 0
-            ? bubble1*sWorld.getRate(RATE_REST_OFFLINE_IN_TAVERN_OR_CITY)
-            : bubble0*sWorld.getRate(RATE_REST_OFFLINE_IN_WILDERNESS);
-
-        SetRestBonus(GetRestBonus()+ time_diff*((float)GetUInt32Value(PLAYER_NEXT_LEVEL_XP)/72000)*bubble);
-    }
-
     m_cinematic = fields[LOAD_DATA_CINEMATIC].GetUInt32();
     m_Played_time[0]= fields[LOAD_DATA_TOTALTIME].GetUInt32();
     m_Played_time[1]= fields[LOAD_DATA_LEVELTIME].GetUInt32();
@@ -14596,8 +14584,6 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     std::string taxi_nodes = fields[LOAD_DATA_TAXI_PATH].GetCppString();
 
-    delete result;
-
     // clear channel spell data (if saved at channel spell casting)
     SetUInt64Value(UNIT_FIELD_CHANNEL_OBJECT, 0);
     SetUInt32Value(UNIT_CHANNEL_SPELL,0);
@@ -14627,6 +14613,21 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
     InitStatsForLevel();
     InitTaxiNodesForLevel();
 
+    // After InitStatsForLevel(), or PLAYER_NEXT_LEVEL_XP is 0 and rest bonus too
+    m_rest_bonus = fields[LOAD_DATA_REST_BONUS].GetFloat();
+    //speed collect rest bonus in offline, in logout, far from tavern, city (section/in hour)
+    float bubble0 = 0.031;
+    //speed collect rest bonus in offline, in logout, in tavern, city (section/in hour)
+    float bubble1 = 0.125;
+    
+    if((int32)fields[LOAD_DATA_LOGOUT_TIME].GetUInt32() > 0)
+    {
+        float bubble = fields[LOAD_DATA_IS_LOGOUT_RESTING].GetUInt32() > 0
+            ? bubble1*sWorld.getRate(RATE_REST_OFFLINE_IN_TAVERN_OR_CITY)
+            : bubble0*sWorld.getRate(RATE_REST_OFFLINE_IN_WILDERNESS);
+
+        SetRestBonus(GetRestBonus()+ time_diff*((float)GetUInt32Value(PLAYER_NEXT_LEVEL_XP)/72000)*bubble);
+    }
     // apply original stats mods before spell loading or item equipment that call before equip _RemoveStatsMods()
 
     //mails are loaded only when needed ;-) - when player in game click on mailbox.
@@ -14782,6 +14783,7 @@ bool Player::LoadFromDB( uint32 guid, SqlQueryHolder *holder )
 
     _LoadDeclinedNames(holder->GetResult(PLAYER_LOGIN_QUERY_LOADDECLINEDNAMES));
 
+    delete result;
     return true;
 }
 
@@ -15864,15 +15866,11 @@ void Player::SaveToDB()
 
     bool inworld = IsInWorld();
 
-    CharacterDatabase.BeginTransaction();
-
-    CharacterDatabase.PExecute("DELETE FROM characters WHERE guid = '%u'",GetGUIDLow());
-
     std::string sql_name = m_name;
     CharacterDatabase.escape_string(sql_name);
 
     std::ostringstream ss;
-    ss << "INSERT INTO characters (guid,account,name,race,class,gender, level, xp, money, playerBytes, playerBytes2, playerFlags,"
+    ss << "REPLACE INTO characters (guid,account,name,race,class,gender, level, xp, money, playerBytes, playerBytes2, playerFlags,"
         "map, instance_id, dungeon_difficulty, position_x, position_y, position_z, orientation, data, "
         "taximask, online, cinematic, "
         "totaltime, leveltime, rest_bonus, logout_time, is_logout_resting, resettalents_cost, resettalents_time, "
@@ -16016,6 +16014,7 @@ void Player::SaveToDB()
     ss << m_isXpBlocked;
     ss << "' )";
 
+    CharacterDatabase.BeginTransaction();
     CharacterDatabase.Execute( ss.str().c_str() );
 
     if(m_mailsUpdated)                                      //save mails only when needed
@@ -17356,7 +17355,6 @@ void Player::SetRestBonus (float rest_bonus_new)
         rest_bonus_new = 0;
 
     float rest_bonus_max = (float)GetUInt32Value(PLAYER_NEXT_LEVEL_XP)*1.5/2;
-
     if(rest_bonus_new > rest_bonus_max)
         m_rest_bonus = rest_bonus_max;
     else
