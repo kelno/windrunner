@@ -223,6 +223,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             if (SpoutTimer < diff)
             {
                 m_creature->MonsterTextEmote(EMOTE_SPOUT,0,true);
+                m_creature->SetReactState(REACT_PASSIVE);
                 if(rand()%2)
                     m_creature->StartAutoRotate(CREATURE_ROTATE_LEFT,20000);
                 else
@@ -236,6 +237,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             //Whirl directly after a Spout and at random times
             if (WhirlTimer < diff)
             {
+                m_creature->SetReactState(REACT_AGGRESSIVE);
                 WhirlTimer = 18000;
                 DoCast(m_creature,SPELL_WHIRL);                
             }else WhirlTimer -= diff;
