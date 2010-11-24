@@ -183,6 +183,13 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
             else DoStartMovement(who);
         }
     }
+    
+    void DamageTaken(Unit *pDoneBy, uint32 &damage)
+    {
+        // Enforce combat starting
+        IsIntroEvent = false;
+        IsMainEvent = true;
+    }
 
     void MoveInLineOfSight(Unit *who)
     {
