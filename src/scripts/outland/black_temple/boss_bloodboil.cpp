@@ -143,6 +143,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
 
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
         m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
+        m_creature->addFullTauntImmunity();
     }
 
     void Aggro(Unit *who)

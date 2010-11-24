@@ -94,6 +94,9 @@ struct ScriptedAI : public CreatureAI
 
     // Called when AI is temporarily replaced or put back when possess is applied or removed
     void OnPossess(bool apply) {}
+    
+    // Called when creature finishes a spell cast
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target) {}
 
     //*************
     // Variables
