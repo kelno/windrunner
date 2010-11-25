@@ -452,7 +452,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
             m_creature->CastSpell(m_creature, SPELL_EMBER_BLAST, true);
             m_creature->SetDisplayId(11686);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            if(pInstance && pInstance->GetData(DATA_ALAREVENT) == 2)
+            if(pInstance/* && pInstance->GetData(DATA_ALAREVENT) == 2*/)
             {
                 if(Unit* Alar = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_ALAR)))
                 {
@@ -463,6 +463,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
                         Alar->SetHealth(1);
                 }
             }
+            
             toDie = true;
         }
     }
