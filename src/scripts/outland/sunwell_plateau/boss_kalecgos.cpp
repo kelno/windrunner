@@ -100,6 +100,7 @@ struct boss_kalecgosAI : public ScriptedAI
         ForceFieldGUID = 0;
         Wall1GUID = 0;
         Wall2GUID = 0;
+        pulledOnce = false;
     }
 
     ScriptedInstance *pInstance;
@@ -117,6 +118,7 @@ struct boss_kalecgosAI : public ScriptedAI
     bool isFriendly;
     bool isEnraged;
     bool isBanished;
+    bool pulledOnce;
 
     uint64 SathGUID;
     uint64 ForceFieldGUID;
@@ -167,6 +169,11 @@ struct boss_kalecgosAI : public ScriptedAI
         isFriendly = false;
         isEnraged = false;
         isBanished = false;
+        
+        if (pulledOnce) {
+            TalkTimer = 1;
+            isFriendly = true;
+        }
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
@@ -187,6 +194,8 @@ struct boss_kalecgosAI : public ScriptedAI
         if(Wall2) Wall2->SetGoState(1);
         DoZoneInCombat();
         CloseDoorsTimer = 5000;
+        
+        pulledOnce = true;
 
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, IN_PROGRESS);
