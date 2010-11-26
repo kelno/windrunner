@@ -168,8 +168,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     
     void MovementInform(uint32 type, uint32 id) 
     {
-        if(type == ROTATE_MOTION_TYPE) 
-            me->SetReactState(REACT_AGGRESSIVE); 
+        //if(type == ROTATE_MOTION_TYPE) 
+            //me->SetReactState(REACT_AGGRESSIVE); 
     }
 
     void UpdateAI(const uint32 diff)
@@ -199,6 +199,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                     CanStartEvent=true;//fresh fished from pool
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    if (m_creature->getVictim())
+                        AttackStart(m_creature->getVictim());
                 }else WaitTimer -= diff;
             }
             return;
