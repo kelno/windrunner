@@ -172,7 +172,7 @@ struct boss_kalecgosAI : public ScriptedAI
         
         if (pulledOnce) {
             TalkTimer = 1;
-            isFriendly = true;
+            isFriendly = false;
         }
     }
 
