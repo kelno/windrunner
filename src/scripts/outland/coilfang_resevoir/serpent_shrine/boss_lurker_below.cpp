@@ -304,7 +304,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                     if (!target && m_creature->getVictim())
                         target = m_creature->getVictim();
                     if (target)
-                        DoCast(target,SPELL_WATERBOLT,true);
+                        DoCast(target,SPELL_WATERBOLT);
                     WaterboltTimer = 3000;
                 }else WaterboltTimer -= diff;
             }
