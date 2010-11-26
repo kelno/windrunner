@@ -268,7 +268,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                     Map::PlayerList const &PlayerList = pMap->GetPlayers();
                     for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                     {
-                        if (i->getSource() && i->getSource()->isAlive() && m_creature->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()) && m_creature->IsWithinDistInMap(i->getSource(), SPOUT_DIST) && !i->getSource()->IsInWater())
+                        if (i->getSource() && i->getSource()->isAlive() && !i->getSource()->isPet() && m_creature->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()) && m_creature->IsWithinDistInMap(i->getSource(), SPOUT_DIST) && !i->getSource()->IsInWater())
                             DoCast(i->getSource(),SPELL_SPOUT,true);//only knock back players in arc, in 100yards, not in water
                     }
                 }
