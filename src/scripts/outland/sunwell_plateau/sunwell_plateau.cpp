@@ -24,8 +24,10 @@ EndScriptData */
 /* ContentData
 npc_prophet_velen
 npc_captain_selana
+npc_sunblade_scout
 EndContentData */
 
+#include "precompiled.h"
 #include "def_sunwell_plateau.h"
 
 /*######
@@ -60,6 +62,118 @@ enum LiadrinnSpeeches
 #define CS_GOSSIP3 "Why did they stop?"
 #define CS_GOSSIP4 "Your insight is appreciated."
 
+/*######
+## npc_sunblade_scout
+######*/
+
+#define SPELL_SW_RADIANCE       45769
+#define SPELL_ACTIVATE_PROTEC   46475
+#define SPELL_SINISTER_STRIKE   46558
+
+#define NPC_SUNBLADE_PROTEC     25507
+
+struct npc_sunblade_scoutAI : public ScriptedAI
+{    
+    npc_sunblade_scoutAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 sinisterStrikeTimer;
+    //uint32 rootTimer;
+    
+    Unit* puller;
+    Creature *protector;
+    
+    bool hasActivated;
+    
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_SW_RADIANCE);
+        
+        sinisterStrikeTimer = 0;
+        puller = NULL;
+        protector = NULL;
+        hasActivated = false;
+        //rootTimer = 0;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        puller = pWho;
+        if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
+            m_creature->SetReactState(REACT_PASSIVE);
+            m_creature->SetSpeed(MOVE_WALK, 3.0f);
+            m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
+        }
+    }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == 46475) {
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+            m_creature->clearUnitState(UNIT_STAT_ROOT);
+            target->GetMotionMaster()->MoveChase(puller);
+            target->Attack(puller, true);
+            m_creature->GetMotionMaster()->MoveChase(puller);
+            AttackStart(puller);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!hasActivated) {
+            if (protector) {
+                if (m_creature->GetDistance(protector) <= 15.0f) {
+                    m_creature->GetMotionMaster()->MovementExpired(false);
+                    m_creature->StopMoving();
+                    m_creature->addUnitState(UNIT_STAT_ROOT);
+                    DoCast(protector, SPELL_ACTIVATE_PROTEC);
+                    m_creature->SetInFront(protector);
+                    hasActivated = true;
+                    m_creature->SetSpeed(MOVE_WALK, 1.0f);
+                    sinisterStrikeTimer = 5000;
+                    //rootTimer = 3000;
+                }
+            }
+        }
+        
+        /*if (rootTimer) {
+            if (rootTimer <= diff) {
+                m_creature->SetReactState(REACT_AGGRESSIVE);
+                if (puller)
+                    m_creature->GetMotionMaster()->MoveChase(puller);
+                AttackStart(puller);
+                rootTimer = 0;
+            }
+            else
+                rootTimer -= diff;
+        }*/
+        
+        if (!UpdateVictim())
+            return;
+        
+        if (sinisterStrikeTimer) {
+            if (sinisterStrikeTimer <= diff) {
+                DoCast(m_creature->getVictim(), SPELL_SINISTER_STRIKE);
+                sinisterStrikeTimer = 5000+rand()%2000;
+            }
+            else
+                sinisterStrikeTimer -= diff;
+        }
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
+{
+    return new npc_sunblade_scoutAI(pCreature);
+}
+
 void AddSC_sunwell_plateau()
 {
+    Script *newscript;
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_scout";
+    newscript->GetAI = &GetAI_npc_sunblade_scout;
+    newscript->RegisterSelf();
 }
