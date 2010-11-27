@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Eastern_Plaguelands
 SD%Complete: 100
-SDComment: Quest support: 5211, 5742. Special vendor Augustus the Touched
+SDComment: Quest support: 5211, 5742, 9446. Special vendor Augustus the Touched
 SDCategory: Eastern Plaguelands
 EndScriptData */
 
@@ -26,9 +26,11 @@ mobs_ghoul_flayer
 npc_augustus_the_touched
 npc_darrowshire_spirit
 npc_tirion_fordring
+npc_anchorite_truuen
 EndContentData */
 
 #include "precompiled.h"
+#include "EscortAI.h"
 
 //id8530 - cannibal ghoul
 //id8531 - gibbering ghoul
@@ -152,6 +154,155 @@ bool GossipSelect_npc_tirion_fordring(Player* pPlayer, Creature* pCreature, uint
     return true;
 }
 
+/*######
+##  npc_anchorite_truuen
+######*/
+
+enum eTruuen
+{
+    SAY_WP_0                    = -1000709,
+    SAY_WP_1                    = -1000710,
+    SAY_WP_2                    = -1000711,
+    SAY_WP_3                    = -1000712,
+    SAY_WP_4                    = -1000713,
+    SAY_WP_5                    = -1000714,
+    SAY_WP_6                    = -1000715,
+
+    NPC_GHOST_UTHER             = 17233,
+    NPC_THEL_DANIS              = 1854,
+    NPC_GHOUL                   = 1791,
+
+    QUEST_TOMB_LIGHTBRINGER     = 9446
+};
+
+struct npc_anchorite_truuenAI : public npc_escortAI
+{    
+    npc_anchorite_truuenAI(Creature* pCreature) : npc_escortAI(pCreature) { }
+
+    uint32 EventTimer;
+    uint64 UterGUID;
+    uint32 uiPhase;
+
+    void Reset()
+    {        
+        EventTimer = 5000;
+        UterGUID = 0;
+        uiPhase = 0;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void WaypointReached(uint32 uiPointId)
+    {
+        Player* pPlayer = GetPlayerForEscort();
+
+        if (!pPlayer)
+            return;
+
+        switch (uiPointId)
+        {
+        case 8:
+            DoScriptText(SAY_WP_0, me);
+            for (int i = 0; i < 2; i++)
+                me->SummonCreature(NPC_GHOUL, 1035.43,-1572.97,61.5412, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 90000);
+            break;
+        case 9:
+            DoScriptText(SAY_WP_1, me);
+            break;
+        case 14:
+            for (int i = 0; i < 4; i++)
+                me->SummonCreature(NPC_GHOUL, 1159.77,-1762.64,60.5699, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
+            break;
+        case 15:
+            DoScriptText(SAY_WP_2, me);
+            SetRun(false);
+            break;
+        case 22:
+            if (Creature* pTheldanis = me->FindNearestCreature(NPC_THEL_DANIS, 50))
+                DoScriptText(SAY_WP_3, pTheldanis);
+            break;
+        case 23:
+            if (Creature* pUter = me->SummonCreature(NPC_GHOST_UTHER, 971.86,-1825.42 ,81.99 , 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 10000))
+            {
+                pUter->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+                DoScriptText(SAY_WP_4, pUter, me);
+                UterGUID = pUter->GetGUID();
+                uiPhase = 1;
+                me->SetStandState(UNIT_STAND_STATE_KNEEL);
+                SetEscortPaused(true);
+            }
+            pPlayer->GroupEventHappens(QUEST_TOMB_LIGHTBRINGER, m_creature);
+            break;
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        npc_escortAI::UpdateAI(uiDiff);
+
+        if (!UpdateVictim())
+        {
+            if (HasEscortState(STATE_ESCORT_PAUSED) && uiPhase)
+            {
+                if (EventTimer <= uiDiff)
+                {
+                    EventTimer = 5000;
+
+                    if (Creature* pUter = Unit::GetCreature(*me, UterGUID))
+                    {
+                        switch(uiPhase)
+                        {
+                        case 1:
+                            DoScriptText(SAY_WP_5, pUter, me);
+                            me->SetStandState(UNIT_STAND_STATE_STAND);
+                            ++uiPhase;
+                            break;
+                        case 2:
+                            DoScriptText(SAY_WP_6, pUter, me);
+                            ++uiPhase = 0;
+                            break;
+                        case 3:
+                            me->ForcedDespawn();
+                            pUter->ForcedDespawn();
+                            break;
+                        }
+                    }
+                }
+                else
+                    EventTimer -= uiDiff;
+            }
+            return;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (pSummoned->GetEntry() == NPC_GHOUL)
+            pSummoned->AI()->AttackStart(me);
+    }
+};
+
+CreatureAI* GetAI_npc_anchorite_truuen(Creature* pCreature)
+{
+    return new npc_anchorite_truuenAI(pCreature);
+}
+
+bool QuestAccept_npc_anchorite_truuen(Player* pPlayer, Creature* pCreature, const Quest* pQuest)
+{
+    if (pQuest->GetQuestId() == QUEST_TOMB_LIGHTBRINGER)
+    {
+        if (npc_anchorite_truuenAI* pEscortAI = CAST_AI(npc_anchorite_truuenAI, pCreature->AI()))
+        {
+            pEscortAI->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
+            pEscortAI->SetDespawnAtEnd(false);
+            return true;
+        }
+    }
+    return false;
+}
+
 void AddSC_eastern_plaguelands()
 {
     Script* newscript;
@@ -177,6 +328,12 @@ void AddSC_eastern_plaguelands()
     newscript->Name="npc_tirion_fordring";
     newscript->pGossipHello =  &GossipHello_npc_tirion_fordring;
     newscript->pGossipSelect = &GossipSelect_npc_tirion_fordring;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_anchorite_truuen";
+    newscript->GetAI = &GetAI_npc_anchorite_truuen;
+    newscript->pQuestAccept =  &QuestAccept_npc_anchorite_truuen;
     newscript->RegisterSelf();
 }
 
