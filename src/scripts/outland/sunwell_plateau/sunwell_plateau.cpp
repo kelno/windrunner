@@ -77,7 +77,6 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     npc_sunblade_scoutAI(Creature *c) : ScriptedAI(c) {}
     
     uint32 sinisterStrikeTimer;
-    //uint32 rootTimer;
     
     Unit* puller;
     Creature *protector;
@@ -92,7 +91,6 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         puller = NULL;
         protector = NULL;
         hasActivated = false;
-        //rootTimer = 0;
     }
     
     void Aggro(Unit *pWho)
@@ -130,22 +128,9 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                     hasActivated = true;
                     m_creature->SetSpeed(MOVE_WALK, 1.0f);
                     sinisterStrikeTimer = 5000;
-                    //rootTimer = 3000;
                 }
             }
         }
-        
-        /*if (rootTimer) {
-            if (rootTimer <= diff) {
-                m_creature->SetReactState(REACT_AGGRESSIVE);
-                if (puller)
-                    m_creature->GetMotionMaster()->MoveChase(puller);
-                AttackStart(puller);
-                rootTimer = 0;
-            }
-            else
-                rootTimer -= diff;
-        }*/
         
         if (!UpdateVictim())
             return;
