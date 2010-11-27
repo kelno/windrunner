@@ -76,7 +76,8 @@ enum Spells
     //Other
     SPELL_BERSERK               =   45078,
     SPELL_CLOUD_VISUAL          =   45212,
-    SPELL_CLOUD_SUMMON          =   45884
+    SPELL_CLOUD_SUMMON          =   45884,
+    SPELL_SOUL_SEVER            =   45917   // Casted at reset on all players with Fog of Corruption aura
 };
 
 enum PhaseFelmyst
