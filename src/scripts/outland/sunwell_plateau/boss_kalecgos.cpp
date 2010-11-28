@@ -755,7 +755,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         {
             Unit *target = SelectUnit(1, 50.0f, true, true, false, AURA_SPECTRAL_EXHAUSTION, 0);
             
-            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow())))        // Delay selection to next loop if no valid target found
+            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f)))        // Delay selection to next loop if no valid target found
                 SpectralBlastTimer = 300;
             else if (target) {
                 m_creature->InterruptNonMeleeSpells(true);
