@@ -101,6 +101,11 @@ struct boss_kalecgosAI : public ScriptedAI
         Wall1GUID = 0;
         Wall2GUID = 0;
         pulledOnce = false;
+        hasEnded = true;
+        
+        SpellEntry *TempSpell = GET_SPELL(SPELL_SPECTRAL_BLAST);
+        if (TempSpell)
+            TempSpell->EffectImplicitTargetB[0] = TARGET_UNIT_TARGET_ENEMY;
     }
 
     ScriptedInstance *pInstance;
@@ -119,6 +124,7 @@ struct boss_kalecgosAI : public ScriptedAI
     bool isEnraged;
     bool isBanished;
     bool pulledOnce;
+    bool hasEnded;
 
     uint64 SathGUID;
     uint64 ForceFieldGUID;
@@ -136,7 +142,10 @@ struct boss_kalecgosAI : public ScriptedAI
         }
 
         Unit *Sath = Unit::GetUnit(*m_creature,SathGUID);
-        if(Sath) (Sath->ToCreature())->AI()->EnterEvadeMode();
+        if(Sath) {
+            (Sath->ToCreature())->AI()->EnterEvadeMode();
+            Sath->ToCreature()->SetReactState(REACT_PASSIVE);
+        }
 
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if (Door)
@@ -170,10 +179,21 @@ struct boss_kalecgosAI : public ScriptedAI
         isEnraged = false;
         isBanished = false;
         
-        if (pulledOnce) {
+        // Raid wipe
+        /*if (!hasEnded && pulledOnce) {
+            TalkTimer = 1;
+            isFriendly = false;
+        }*/
+    }
+    
+    void EnterEvadeMode()
+    {
+        if (!hasEnded) {
             TalkTimer = 1;
             isFriendly = false;
         }
+        
+        ScriptedAI::EnterEvadeMode();
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
@@ -196,9 +216,14 @@ struct boss_kalecgosAI : public ScriptedAI
         CloseDoorsTimer = 5000;
         
         pulledOnce = true;
+        hasEnded = false;
 
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, IN_PROGRESS);
+            
+        Unit *Sath = Unit::GetUnit(*m_creature,SathGUID);
+        if(Sath)
+            Sath->ToCreature()->SetReactState(REACT_AGGRESSIVE);
     }
 
     void KilledUnit(Unit *victim)
@@ -246,6 +271,7 @@ struct boss_kalecgosAI : public ScriptedAI
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MovePoint(1,FLY_X,FLY_Y,FLY_Z);
             TalkTimer = 600000;
+            hasEnded = true;
             break;
         default:
             break;
@@ -268,6 +294,7 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 600000;
             break;
         case 3:
+            hasEnded = true;
             EnterEvadeMode();
             break;
         default:
@@ -364,6 +391,7 @@ struct boss_sathrovarrAI : public ScriptedAI
             {
                 ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->TalkTimer = 1;
                 ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->isFriendly = false;
+                ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->TalkSequence = 0;
             }
             EnterEvadeMode();
             return;
@@ -562,10 +590,14 @@ struct boss_kalecAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
+        if (done_by->ToPlayer() && done_by->ToPlayer()->isGameMaster())
+            return;
         if(done_by->GetGUID() != SathGUID)
             damage = 0;
         else if(isEnraged)
             damage *= 3;
+        if (damage >= m_creature->GetHealth() && done_by->ToCreature() && done_by->GetGUID() == SathGUID)
+            done_by->ToCreature()->AI()->KilledUnit(m_creature);
     }
 
     void UpdateAI(const uint32 diff)
@@ -721,20 +753,18 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
 
         if(SpectralBlastTimer < diff)
         {
-            //this is a hack. we need to find a victim without aura in core
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if (( target && target != m_creature->getVictim()) && target->isAlive() && !(target->HasAura(AURA_SPECTRAL_EXHAUSTION)))
-            {
+            Unit *target = SelectUnit(1, 50.0f, true, true, false, AURA_SPECTRAL_EXHAUSTION, 0);
+            
+            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f)))        // Delay selection to next loop if no valid target found
+                SpectralBlastTimer = 300;
+            else if (target) {
+                m_creature->InterruptNonMeleeSpells(true);
                 DoCast(target, SPELL_SPECTRAL_BLAST);
                 if (target->ToPlayer() && target->ToPlayer()->GetPet())
                     DoCast(target->ToPlayer()->GetPet(), SPELL_SPECTRAL_BLAST);
                 DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
                 target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
                 SpectralBlastTimer = 20000+(rand()%5000);
-            }
-            else
-            {
-                SpectralBlastTimer = 1000;
             }
         }else SpectralBlastTimer -= diff;
 
@@ -749,7 +779,7 @@ bool GOkalecgos_teleporter(Player *player, GameObject* _GO)
     else {
         player->CastSpell(player, SPELL_TELEPORT_SPECTRAL, true);
         if (player->GetPet())
-                player->GetPet()->CastSpell(player->GetPet(), SPELL_SPECTRAL_BLAST, true);
+                player->GetPet()->CastSpell(player->GetPet(), SPELL_TELEPORT_SPECTRAL, true);
         player->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
     }
     return true;
