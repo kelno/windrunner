@@ -101,6 +101,7 @@ struct boss_kalecgosAI : public ScriptedAI
         Wall1GUID = 0;
         Wall2GUID = 0;
         pulledOnce = false;
+        hasEnded = true;
     }
 
     ScriptedInstance *pInstance;
@@ -119,6 +120,7 @@ struct boss_kalecgosAI : public ScriptedAI
     bool isEnraged;
     bool isBanished;
     bool pulledOnce;
+    bool hasEnded;
 
     uint64 SathGUID;
     uint64 ForceFieldGUID;
@@ -136,7 +138,10 @@ struct boss_kalecgosAI : public ScriptedAI
         }
 
         Unit *Sath = Unit::GetUnit(*m_creature,SathGUID);
-        if(Sath) (Sath->ToCreature())->AI()->EnterEvadeMode();
+        if(Sath) {
+            (Sath->ToCreature())->AI()->EnterEvadeMode();
+            Sath->ToCreature()->SetReactState(REACT_PASSIVE);
+        }
 
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if (Door)
@@ -170,10 +175,21 @@ struct boss_kalecgosAI : public ScriptedAI
         isEnraged = false;
         isBanished = false;
         
-        if (pulledOnce) {
+        // Raid wipe
+        /*if (!hasEnded && pulledOnce) {
+            TalkTimer = 1;
+            isFriendly = false;
+        }*/
+    }
+    
+    void EnterEvadeMode()
+    {
+        if (!hasEnded) {
             TalkTimer = 1;
             isFriendly = false;
         }
+        
+        ScriptedAI::EnterEvadeMode();
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
@@ -196,9 +212,14 @@ struct boss_kalecgosAI : public ScriptedAI
         CloseDoorsTimer = 5000;
         
         pulledOnce = true;
+        hasEnded = false;
 
         if(pInstance)
             pInstance->SetData(DATA_KALECGOS_EVENT, IN_PROGRESS);
+            
+        Unit *Sath = Unit::GetUnit(*m_creature,SathGUID);
+        if(Sath)
+            Sath->ToCreature()->SetReactState(REACT_AGGRESSIVE);
     }
 
     void KilledUnit(Unit *victim)
@@ -246,6 +267,7 @@ struct boss_kalecgosAI : public ScriptedAI
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MovePoint(1,FLY_X,FLY_Y,FLY_Z);
             TalkTimer = 600000;
+            hasEnded = true;
             break;
         default:
             break;
@@ -268,6 +290,7 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 600000;
             break;
         case 3:
+            hasEnded = true;
             EnterEvadeMode();
             break;
         default:
@@ -364,6 +387,7 @@ struct boss_sathrovarrAI : public ScriptedAI
             {
                 ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->TalkTimer = 1;
                 ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->isFriendly = false;
+                ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->TalkSequence = 0;
             }
             EnterEvadeMode();
             return;
@@ -562,10 +586,14 @@ struct boss_kalecAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
+        if (done_by->ToPlayer() && done_by->ToPlayer()->isGameMaster())
+            return;
         if(done_by->GetGUID() != SathGUID)
             damage = 0;
         else if(isEnraged)
             damage *= 3;
+        if (damage >= m_creature->GetHealth() && done_by->ToCreature() && done_by->GetGUID() == SathGUID)
+            done_by->ToCreature()->AI()->KilledUnit(m_creature);
     }
 
     void UpdateAI(const uint32 diff)
