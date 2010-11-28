@@ -24,6 +24,7 @@ EndScriptData */
 /* ContentData
 npc_prophet_velen
 npc_captain_selana
+npc_sunblade_protector
 npc_sunblade_scout
 EndContentData */
 
@@ -63,10 +64,55 @@ enum LiadrinnSpeeches
 #define CS_GOSSIP4 "Your insight is appreciated."
 
 /*######
-## npc_sunblade_scout
+## npc_sunblade_protector
 ######*/
 
 #define SPELL_SW_RADIANCE       45769
+#define SPELL_FEL_LIGHTNING     46480
+
+struct npc_sunblade_protectorAI : public ScriptedAI
+{
+    npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 felLightningTimer;
+    
+    void Reset()
+    {
+        m_creature->SetReactState(REACT_DEFENSIVE);
+        DoCast(m_creature, SPELL_SW_RADIANCE);
+        
+        felLightningTimer = 0;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (felLightningTimer) {
+            if (felLightningTimer <= diff) {
+                DoCast(m_creature->getVictim(), SPELL_FEL_LIGHTNING);
+                felLightningTimer = 5000+rand()%10000;
+            }
+            else
+                felLightningTimer -= diff;
+        }
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_protector(Creature *pCreature)
+{
+    return new npc_sunblade_protectorAI(pCreature);
+}
+
+/*######
+## npc_sunblade_scout
+######*/
+
 #define SPELL_ACTIVATE_PROTEC   46475
 #define SPELL_SINISTER_STRIKE   46558
 
@@ -108,6 +154,10 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         if (spellId == 46475) {
             m_creature->SetReactState(REACT_AGGRESSIVE);
             m_creature->clearUnitState(UNIT_STAT_ROOT);
+            if (target->ToCreature()) {
+                target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
+                ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+            }
             target->GetMotionMaster()->MoveChase(puller);
             target->Attack(puller, true);
             m_creature->GetMotionMaster()->MoveChase(puller);
@@ -153,6 +203,10 @@ CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
     return new npc_sunblade_scoutAI(pCreature);
 }
 
+/*######
+## AddSC
+######*/
+
 void AddSC_sunwell_plateau()
 {
     Script *newscript;
@@ -160,5 +214,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_scout";
     newscript->GetAI = &GetAI_npc_sunblade_scout;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_protector";
+    newscript->GetAI = &GetAI_npc_protector;
     newscript->RegisterSelf();
 }
