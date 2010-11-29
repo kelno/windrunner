@@ -78,13 +78,14 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void Reset()
     {
+        felLightningTimer = 5000;
+        
         if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE) {
             m_creature->SetReactState(REACT_DEFENSIVE);
             m_creature->SetHasChangedReactState();
+            felLightningTimer = 0;
         }
         DoCast(m_creature, SPELL_SW_RADIANCE);
-        
-        felLightningTimer = 0;
     }
     
     void Aggro(Unit *pWho) {}
