@@ -287,6 +287,7 @@ struct boss_felmystAI : public ScriptedAI
         switch(FlightCount)
         {
         case 0:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             //m_creature->AttackStop();
             error_log("prevent fly phase");
             m_creature->GetMotionMaster()->Clear(false);
@@ -297,11 +298,13 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 1:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             error_log("Move to Fly point");
             m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX()+1, m_creature->GetPositionY(), m_creature->GetPositionZ()+10);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 2:{
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             error_log("Summon Vapor case 2");
             Unit* target;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
@@ -325,6 +328,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
             break;}
         case 3: {
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             DespawnSummons(MOB_VAPOR_TRAIL);
             error_log("Summon Vapor case3");
             //m_creature->CastSpell(m_creature, SPELL_VAPOR_SELECT); need core support
@@ -351,10 +355,12 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
             break;}
         case 4:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             DespawnSummons(MOB_VAPOR_TRAIL);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             break;
         case 5:{
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             Unit* target;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
             if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
@@ -373,12 +379,14 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;}
         case 6:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->SetOrientation(m_creature->GetAngle(BreathX, BreathY));
             m_creature->StopMoving();
-            //DoTextEmote("takes a deep breath.", NULL);
+            DoTextEmote("prend une profonde respiration.", NULL);
             Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
             break;
         case 7:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
             {
                 float x, y, z;
@@ -391,6 +399,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 8:
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
             BreathCount++;
             Timer[EVENT_SUMMON_FOG] = 0;
@@ -400,6 +409,7 @@ struct boss_felmystAI : public ScriptedAI
         case 9:
             if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
             {
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                 float x, y, z;
                 target->GetContactPoint(m_creature, x, y, z);
                 m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
@@ -412,12 +422,16 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 10:
+        {
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             EnterPhase(PHASE_GROUND);
-            m_creature->AI()->AttackStart(SelectUnit(SELECT_TARGET_TOPAGGRO, 0));
+            Unit *target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
+            m_creature->AI()->AttackStart(target);
+            m_creature->GetMotionMaster()->MoveChase(target);
             break;
+        }
         default:
             break;
         }
@@ -426,29 +440,27 @@ struct boss_felmystAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim())
-        {
+        if (!UpdateVictim()) {
             if(Phase == PHASE_FLIGHT && !m_creature->IsInEvadeMode())
                 EnterEvadeMode();
             return;
         }
 
         Event = EVENT_NULL;
-        for(uint32 i = 1; i <= MaxTimer[Phase]; i++)
-        {
-            if(Timer[i])
-                if(Timer[i] <= diff)
-                {
+        for(uint32 i = 1; i <= MaxTimer[Phase]; i++) {
+            if(Timer[i]) {
+                if(Timer[i] <= diff) {
                     if(!Event)
                         Event = (EventFelmyst)i;
-                }else Timer[i] -= diff;
+                }
+                else Timer[i] -= diff;
+            }
         }
 
         if(m_creature->IsNonMeleeSpellCasted(false))
             return;
 
-        if(Phase == PHASE_GROUND)
-        {
+        if(Phase == PHASE_GROUND) {
             switch(Event)
             {
             case EVENT_BERSERK:
@@ -469,11 +481,11 @@ struct boss_felmystAI : public ScriptedAI
                 Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
                 break;
             case EVENT_ENCAPSULATE:
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
-                {
+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true)) {
                     m_creature->CastSpell(target, SPELL_ENCAPSULATE_CHANNEL, false);
                     Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
-                }break;
+                }
+                break;
             case EVENT_FLIGHT:
                 EnterPhase(PHASE_FLIGHT);
                 break;
@@ -483,10 +495,8 @@ struct boss_felmystAI : public ScriptedAI
             }
         }
 
-        if(Phase == PHASE_FLIGHT)
-        {
-            switch(Event)
-            {
+        if(Phase == PHASE_FLIGHT) {
+            switch(Event) {
             case EVENT_BERSERK:
                 DoScriptText(YELL_BERSERK, m_creature);
                 m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
