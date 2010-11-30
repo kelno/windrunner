@@ -150,12 +150,16 @@ struct npc_sunblade_scoutAI : public ScriptedAI
             m_creature->SetReactState(REACT_PASSIVE);
             m_creature->SetSpeed(MOVE_WALK, 3.0f);
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
     }
     
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
     {
         if (spellId == 46475) {
+            if (!puller)
+                puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
             m_creature->SetReactState(REACT_AGGRESSIVE);
             m_creature->clearUnitState(UNIT_STAT_ROOT);
             if (target->ToCreature()) {
