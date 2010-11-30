@@ -153,6 +153,10 @@ struct boss_felmystAI : public ScriptedAI
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
+            
+        WorldPacket data;                       //send update position to client
+        m_creature->BuildHeartBeatMsg(&data);
+        m_creature->SendMessageToSet(&data,true);
     }
 
     void Aggro(Unit *who)

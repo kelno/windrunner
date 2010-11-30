@@ -105,6 +105,19 @@ struct boss_brutallusAI : public ScriptedAI
 
         if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) != DONE)
             pInstance->SetData(DATA_BRUTALLUS_EVENT, NOT_STARTED);
+
+        /*if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE) {
+            if (Player *plr = GetPlayerInMap()) {
+                float x,y,z;
+                m_creature->GetPosition(x,y,z);
+                Creature *felmyst = plr->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+                sLog.outString("Spawning felmyst at %f %f %f %f...", x, y, (z+30), m_creature->GetOrientation());
+                if (felmyst) {
+                    sLog.outString("Done!");
+                    //felmyst->setActive(true);
+                }
+            }
+        }*/
     }
 
     void Aggro(Unit *who)
@@ -255,7 +268,7 @@ struct boss_brutallusAI : public ScriptedAI
         ScriptedAI::AttackStart(who);
     }
 
-    void MoveInLineOfSight(Unit *who){
+    void MoveInLineOfSight(Unit *who) {
         if (!who->isTargetableForAttack() || !m_creature->IsHostileTo(who))
             return;
         if(pInstance && Intro)
@@ -309,7 +322,7 @@ struct boss_brutallusAI : public ScriptedAI
 
         if (BurnTimer <= diff)
         {
-            if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true)) {
+            if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true)) {
                 if(!target->HasAura(SPELL_BURN, 0)) {
                     target->CastSpell(target, SPELL_BURN, true);
                     BurnTimer = urand(60000,180000);
