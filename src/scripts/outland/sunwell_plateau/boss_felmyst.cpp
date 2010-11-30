@@ -157,6 +157,18 @@ struct boss_felmystAI : public ScriptedAI
         WorldPacket data;                       //send update position to client
         m_creature->BuildHeartBeatMsg(&data);
         m_creature->SendMessageToSet(&data,true);
+        
+        if (pInstance) {
+             Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty()) {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource()) {
+                        if (plr->HasAura(SPELL_FOG_CHARM))
+                            DoCast(plr, SPELL_SOUL_SEVER, true);
+                    }
+                }
+            }
+        }
     }
 
     void Aggro(Unit *who)
