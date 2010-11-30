@@ -197,11 +197,7 @@ struct boss_felmystAI : public ScriptedAI
 
     void KilledUnit(Unit* victim)
     {
-        switch(rand()%2)
-        {
-        case 0: DoScriptText(YELL_KILL1, m_creature); break;
-        case 1: DoScriptText(YELL_KILL2, m_creature); break;
-        }
+        DoScriptText(RAND(YELL_KILL1, YELL_KILL2), m_creature);
     }
 
     void JustRespawned()
