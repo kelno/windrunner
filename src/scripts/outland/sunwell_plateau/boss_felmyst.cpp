@@ -500,9 +500,7 @@ struct boss_felmystAI : public ScriptedAI
                 Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
                 break;
             case EVENT_ENCAPSULATE:
-                sLog.outString("Encapsulate...");
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true)) {
-                    sLog.outString("OK!");
                     m_creature->CastSpell(target, SPELL_ENCAPSULATE_CHANNEL, false);
                     Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
                 }
