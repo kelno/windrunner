@@ -136,6 +136,8 @@ struct boss_felmystAI : public ScriptedAI
     uint32 BreathCount;
 
     float BreathX, BreathY;
+    
+    bool justPulled;
 
     void Reset()
     {
@@ -143,6 +145,8 @@ struct boss_felmystAI : public ScriptedAI
         Event = EVENT_NULL;
         Timer[EVENT_BERSERK] = 600000;
         FlightCount = 0;
+        
+        justPulled = false;
 
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
@@ -159,12 +163,12 @@ struct boss_felmystAI : public ScriptedAI
         m_creature->SendMessageToSet(&data,true);
         
         if (pInstance) {
-             Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
             if (!players.isEmpty()) {
                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                     if (Player* plr = itr->getSource()) {
                         if (plr->HasAura(SPELL_FOG_CHARM))
-                            DoCast(plr, SPELL_SOUL_SEVER, true);
+                            plr->CastSpell(plr, SPELL_SOUL_SEVER, true);
                     }
                 }
             }
@@ -178,6 +182,7 @@ struct boss_felmystAI : public ScriptedAI
         m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
         m_creature->CastSpell(m_creature, AURA_NOXIOUS_FUMES, true);
         EnterPhase(PHASE_GROUND);
+        justPulled = true;
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
@@ -459,8 +464,22 @@ struct boss_felmystAI : public ScriptedAI
 
         if(m_creature->IsNonMeleeSpellCasted(false))
             return;
+            
+        if (justPulled && m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+            justPulled = false;
+            //m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            float x, y, z;
+            m_creature->GetPosition(x, y, z);
+            m_creature->UpdateGroundPositionZ(x, y, z);
+            m_creature->Relocate(x, y, z);
+            
+            WorldPacket data;                       //send update position to client
+            m_creature->BuildHeartBeatMsg(&data);
+            m_creature->SendMessageToSet(&data,true);
+        }
 
-        if(Phase == PHASE_GROUND) {
+        if (Phase == PHASE_GROUND) {
             switch(Event)
             {
             case EVENT_BERSERK:
@@ -481,7 +500,9 @@ struct boss_felmystAI : public ScriptedAI
                 Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
                 break;
             case EVENT_ENCAPSULATE:
+                sLog.outString("Encapsulate...");
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true)) {
+                    sLog.outString("OK!");
                     m_creature->CastSpell(target, SPELL_ENCAPSULATE_CHANNEL, false);
                     Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
                 }
@@ -495,7 +516,7 @@ struct boss_felmystAI : public ScriptedAI
             }
         }
 
-        if(Phase == PHASE_FLIGHT) {
+        if (Phase == PHASE_FLIGHT) {
             switch(Event) {
             case EVENT_BERSERK:
                 DoScriptText(YELL_BERSERK, m_creature);
@@ -565,7 +586,7 @@ struct mob_felmyst_vaporAI : public ScriptedAI
     mob_felmyst_vaporAI(Creature *c) : ScriptedAI(c)
     {
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->SetSpeed(MOVE_RUN, 0.8);
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
     }
     void Reset() {}
     void Aggro(Unit* who)
