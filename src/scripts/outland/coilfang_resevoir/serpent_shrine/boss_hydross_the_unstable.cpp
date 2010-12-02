@@ -257,7 +257,7 @@ struct boss_hydross_the_unstableAI : public ScriptedAI
             //VileSludge_Timer
             if (VileSludge_Timer < diff)
             {
-                Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true);
                 if (target)
                     DoCast(target, SPELL_VILE_SLUDGE);
 
