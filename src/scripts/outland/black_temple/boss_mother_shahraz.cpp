@@ -214,8 +214,10 @@ struct boss_shahrazAI : public ScriptedAI
             return;
             
         if (TooFarAwayCheckTimer <= diff) {
-            if (m_creature->GetDistance(945.313, 149.078, 197.158) > 40.0f)
+            if (m_creature->GetDistance(945.313, 149.078, 197.158) > 40.0f) {
                 EnterEvadeMode();
+                return;
+            }
                 
             TooFarAwayCheckTimer = 1000;
         }
