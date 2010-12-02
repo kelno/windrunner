@@ -368,7 +368,7 @@ struct boss_lady_vashjAI : public ScriptedAI
                 //Static Charge
                 //Used on random people (only 1 person at any given time) in Phases 1 and 3, it's a debuff doing 2775 to 3225 Nature damage to the target and everybody in about 5 yards around it, every 1 seconds for 30 seconds. It can be removed by Cloak of Shadows, Iceblock, Divine Shield, etc, but not by Cleanse or Dispel Magic.
                 Unit *target = NULL;
-                target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                target = SelectUnit(SELECT_TARGET_RANDOM, 0, 60.0f, true);
 
                 if(target && !target->HasAura(SPELL_STATIC_CHARGE_TRIGGER, 0))
                                                             //cast Static Charge every 2 seconds for 20 seconds
