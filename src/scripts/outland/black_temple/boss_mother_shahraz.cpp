@@ -247,7 +247,7 @@ struct boss_shahrazAI : public ScriptedAI
         // Randomly cast one beam
         if(BeamTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true);
             if(!target || !target->isAlive())
                 return;
 
