@@ -119,6 +119,7 @@ struct boss_shahrazAI : public ScriptedAI
     uint32 EnrageTimer;
     uint32 LastPrismaticAura;
     uint32 CheckPlayersUndermapTimer;
+    uint32 TooFarAwayCheckTimer;
     //uint32 ExplosionCount;
 
     bool Enraged;
@@ -142,6 +143,7 @@ struct boss_shahrazAI : public ScriptedAI
         EnrageTimer = 600000;
         LastPrismaticAura = 0;
         CheckPlayersUndermapTimer = 5000;
+        TooFarAwayCheckTimer = 1000;
 
         Enraged = false;
     }
@@ -210,6 +212,15 @@ struct boss_shahrazAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
+            
+        if (TooFarAwayCheckTimer <= diff) {
+            if (m_creature->GetDistance(945.313, 149.078, 197.158) > 40.0f)
+                EnterEvadeMode();
+                
+            TooFarAwayCheckTimer = 1000;
+        }
+        else
+            TooFarAwayCheckTimer -= diff;
 
         if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 10) && !Enraged)
         {
