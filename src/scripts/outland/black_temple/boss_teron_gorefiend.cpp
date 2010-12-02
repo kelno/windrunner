@@ -375,6 +375,11 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             }else AggroTimer -= diff;
         }
 
+        if (m_creature->GetDistance(606.641, 402.173, 187.173) > 90.0f) {
+            EnterEvadeMode();
+            return;
+        }
+
         if(!UpdateVictim() || Intro)
             return;
 
