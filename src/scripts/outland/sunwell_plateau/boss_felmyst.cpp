@@ -294,7 +294,7 @@ struct boss_felmystAI : public ScriptedAI
         case 0:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             //m_creature->AttackStop();
-            error_log("prevent fly phase");
+            //error_log("prevent fly phase");
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
@@ -304,15 +304,15 @@ struct boss_felmystAI : public ScriptedAI
             break;
         case 1:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            error_log("Move to Fly point");
+            //error_log("Move to Fly point");
             m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX()+1, m_creature->GetPositionY(), m_creature->GetPositionZ()+10);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 2:{
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            error_log("Summon Vapor case 2");
+            //error_log("Summon Vapor case 2");
             Unit* target;
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
+            target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
             if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
             if(target)
             {
@@ -335,7 +335,7 @@ struct boss_felmystAI : public ScriptedAI
         case 3: {
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             DespawnSummons(MOB_VAPOR_TRAIL);
-            error_log("Summon Vapor case3");
+            //error_log("Summon Vapor case3");
             //m_creature->CastSpell(m_creature, SPELL_VAPOR_SELECT); need core support
             Unit* target;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
@@ -500,7 +500,7 @@ struct boss_felmystAI : public ScriptedAI
                 Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
                 break;
             case EVENT_ENCAPSULATE:
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true)) {
+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true)) {
                     m_creature->CastSpell(target, SPELL_ENCAPSULATE_CHANNEL, false);
                     Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
                 }

@@ -347,7 +347,7 @@ struct boss_brutallusAI : public ScriptedAI
 
         if (BurnTimer <= diff)
         {
-            if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true)) {
+            if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true)) {
                 if(!target->HasAura(SPELL_BURN, 0)) {
                     target->CastSpell(target, SPELL_BURN, true);
                     BurnTimer = urand(60000,180000);
