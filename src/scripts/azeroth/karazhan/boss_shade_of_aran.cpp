@@ -63,7 +63,7 @@ EndScriptData */
 #define SPELL_AOE_PYROBLAST 29978
 
 //Creature Spells
-#define SPELL_CIRCULAR_BLIZZARD     29951                   //29952 is the REAL circular blizzard that leaves persistant blizzards that last for 10 seconds
+#define SPELL_CIRCULAR_BLIZZARD     29952                   //29952 is the REAL circular blizzard that leaves persistant blizzards that last for 10 seconds
 #define SPELL_WATERBOLT             31012
 #define SPELL_SHADOW_PYRO           29978
 
@@ -220,6 +220,12 @@ struct boss_aranAI : public ScriptedAI
                 i++;
             }
         }
+    }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == SPELL_AEXPLOSION)
+            m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
     }
 
     void UpdateAI(const uint32 diff)
@@ -393,6 +399,8 @@ struct boss_aranAI : public ScriptedAI
                         DoScriptText(SAY_EXPLOSION1, m_creature);
                     else
                         DoScriptText(SAY_EXPLOSION2, m_creature);
+                        
+                    m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, true);
 
                     m_creature->CastSpell(m_creature, SPELL_BLINK_CENTER, true);
                     m_creature->CastSpell(m_creature, SPELL_PLAYERPULL, true);
