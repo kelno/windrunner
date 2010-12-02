@@ -587,6 +587,11 @@ struct boss_kalecAI : public ScriptedAI
     }
 
     void Aggro(Unit* who) {}
+    
+    void HealReceived(Unit* done_by, uint32& addhealth)
+    {
+        addhealth = 0;
+    }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
