@@ -450,7 +450,7 @@ struct boss_zuljinAI : public ScriptedAI
 
             if(Grievous_Throw_Timer < diff)
             {
-                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true))
+                if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true))
                     m_creature->CastSpell(target, SPELL_GRIEVOUS_THROW, false);
                 Grievous_Throw_Timer = 10000;
             }else Grievous_Throw_Timer -= diff;

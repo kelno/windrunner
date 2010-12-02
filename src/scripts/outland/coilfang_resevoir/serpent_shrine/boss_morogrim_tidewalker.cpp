@@ -226,7 +226,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
                 for(uint8 i = 0; i < 4; i++)
                 {
                     counter = 0;
-                    do{target = SelectUnit(SELECT_TARGET_RANDOM, 1, 50, true);    //target players only
+                    do{target = SelectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);    //target players only
                     if(counter < Playercount)
                         break;
                     if(target) itr = list.find(target->GetGUID());

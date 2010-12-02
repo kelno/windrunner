@@ -317,7 +317,7 @@ struct boss_akilzonAI : public ScriptedAI
         }
 
         if (ElectricalStorm_Timer < diff) {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50, true);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true);
             if(!target)
             {
                 EnterEvadeMode();
