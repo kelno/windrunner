@@ -267,7 +267,7 @@ struct boss_halazziAI : public ScriptedAI
 
             if(ShockTimer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,50.0f,true))
                 {
                     if(target->IsNonMeleeSpellCasted(false))
                         DoCast(target,SPELL_EARTHSHOCK);
