@@ -222,7 +222,6 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
     uint32 PlayerAbility_Timer;
     uint32 CheckAddState_Timer;
     uint32 ResetTimer;
-    uint32 InterruptImmunityTimer;
 
     uint32 PlayerClass;
 
@@ -239,7 +238,6 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
         PlayerAbility_Timer = 99999;
         CheckAddState_Timer = 5000;
         ResetTimer = 5000;
-        InterruptImmunityTimer = 0;
 
         SpawnAdds();
 
@@ -339,6 +337,12 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
             }
         }
     }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == 43383)
+            m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -354,13 +358,6 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
             }
             ResetTimer = 5000;
         }else ResetTimer -= diff;
-        
-        if (InterruptImmunityTimer) {
-            if (InterruptImmunityTimer <= diff)
-                m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
-
-            else InterruptImmunityTimer -= diff;
-        }
 
         if(CheckAddState_Timer < diff)
         {
