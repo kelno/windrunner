@@ -687,8 +687,10 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         if (!UpdateVictim())
             return;
             
-        if (m_creature->GetDistance(1704.22, 924.758, 53.1608) > 35.0f)
-                EnterEvadeMode();
+        if (m_creature->GetDistance(1704.22, 924.758, 53.1608) > 35.0f) {
+            EnterEvadeMode();
+            return;
+        }
             
         // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
         if (m_creature->getVictim()->GetPositionZ() <= 52.5f || !m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
