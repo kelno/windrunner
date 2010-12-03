@@ -231,7 +231,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
         SummonPortals();
         PhaseTimer = 60000;
         PortalPhase = true;
-        PortalTimer = 10000;
+        PortalTimer = 8000;
         EmpowermentTimer = 10000;
         DoScriptText(EMOTE_PHASE_PORTAL,m_creature);
     }
@@ -295,7 +295,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
             if(PortalTimer < diff)
             {
                 UpdatePortals();
-                PortalTimer = 1000;
+                PortalTimer = 200;
             }else PortalTimer -= diff;
 
             // Empowerment & Nether Burn
