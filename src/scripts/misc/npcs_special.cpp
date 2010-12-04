@@ -1225,7 +1225,7 @@ struct npc_mojoAI : public ScriptedAI
                 m_creature->SetInFront(plr);
             if (MorphTimer <= diff) {
                 m_creature->RemoveAurasDueToSpell(SPELL_HEARTS);
-                m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST/3.0f, PET_FOLLOW_ANGLE);
+                m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
                 MorphTimer = 0;
                 PlayerGUID = 0;
             }
@@ -1243,14 +1243,14 @@ bool ReceiveEmote_npc_mojo(Player *pPlayer, Creature *pCreature, uint32 emote)
     if (((npc_mojoAI*)pCreature->AI())->PlayerGUID != 0)
         return false;
     
-    if (emote == TEXTEMOTE_KISS) { // FIXME: Change this
+    if (emote == TEXTEMOTE_KISS) {
         ((npc_mojoAI*)pCreature->AI())->MorphTimer = 15000;
         ((npc_mojoAI*)pCreature->AI())->PlayerGUID = pPlayer->GetGUID();
         pCreature->AddAura(SPELL_HEARTS, pCreature);
         if (!pPlayer->isInCombat())
             pPlayer->CastSpell(pPlayer, SPELL_FEELING_FROGGY, true);
         pCreature->SetInFront(pPlayer);
-        pCreature->GetMotionMaster()->MoveFollow(pPlayer, PET_FOLLOW_DIST, 0);
+        pCreature->GetMotionMaster()->MoveFollow(pPlayer, PET_FOLLOW_DIST/3.0f, M_PI/4);
     }
     
     return true;
