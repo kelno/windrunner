@@ -576,7 +576,7 @@ struct npc_akamaAI : public ScriptedAI
         }
         summons.DespawnAll();
         DoCast(m_creature, SPELL_AKAMA_STEALTH, true);
-        m_creature->addUnitState(UNIT_STAT_ROOT);
+        //m_creature->addUnitState(UNIT_STAT_ROOT);
         // Ignore aggro
         m_creature->SetReactState(REACT_PASSIVE);
     }
@@ -861,7 +861,7 @@ bool GossipSelect_npc_akama(Player *player, Creature *_Creature, uint32 sender, 
         player->CLOSE_GOSSIP_MENU();
         ((npc_akamaAI*)_Creature->AI())->BeginEvent(player);
         _Creature->RemoveAurasDueToSpell(SPELL_AKAMA_STEALTH);
-        _Creature->clearUnitState(UNIT_STAT_ROOT);
+        //_Creature->clearUnitState(UNIT_STAT_ROOT);
     }
 
     return true;
