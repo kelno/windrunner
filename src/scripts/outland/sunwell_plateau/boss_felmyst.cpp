@@ -154,6 +154,9 @@ struct boss_felmystAI : public ScriptedAI
 
         DespawnSummons(MOB_VAPOR_TRAIL);
         m_creature->setActive(false);
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+        m_creature->addFullTauntImmunity();
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
