@@ -420,7 +420,9 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                 float x, y, z;
                 target->GetContactPoint(m_creature, x, y, z);
-                m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
+                m_creature->GetMotionMaster()->MovePoint(0, 1482.709961, 649.406006, 21.081100);
+                // Orientation: 4.852080
+                //m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
             }
             else
             {
