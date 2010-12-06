@@ -188,10 +188,10 @@ struct boss_kalecgosAI : public ScriptedAI
     
     void EnterEvadeMode()
     {
-        if (!hasEnded) {
+        /*if (!hasEnded) {
             TalkTimer = 1;
             isFriendly = false;
-        }
+        }*/
         
         ScriptedAI::EnterEvadeMode();
     }
@@ -701,8 +701,13 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
     }
     else
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim()) {
+            TalkSequence = 0;
+            TalkTimer = 1;
+            isFriendly = false;
+            
             return;
+        }
             
         if (m_creature->GetDistance(1704.22, 924.758, 53.1608) > 35.0f) {
             EnterEvadeMode();
