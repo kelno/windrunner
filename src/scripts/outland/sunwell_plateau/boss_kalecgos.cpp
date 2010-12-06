@@ -683,6 +683,9 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         {
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             m_creature->InterruptNonMeleeSpells(true);
+            if (isFriendly)
+                m_creature->RemoveAurasDueToSpell(SPELL_ENRAGE);
+            m_creature->SetHealth(m_creature->GetMaxHealth());
             m_creature->RemoveAllAuras();
             m_creature->DeleteThreatList();
             m_creature->CombatStop();
