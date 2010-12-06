@@ -790,7 +790,11 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
                 if (target->ToPlayer() && target->ToPlayer()->GetPet())
                     DoCast(target->ToPlayer()->GetPet(), SPELL_SPECTRAL_BLAST);
                 DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
-                target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
+                target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET); // FIXME: I'm not sure this is blizzlike
+                if (target->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
+                    target->RemoveAurasDueToSpell(AURA_SPECTRAL_EXHAUSTION);    // FIXME: If this happens, this is a bug.
+                    sLog.outError("Sunwell Plateau/Kalecgos: Spectral Blast target (guid %u) had Spectral exhaustion when teleported!", target->GetGUIDLow());
+                }
                 SpectralBlastTimer = 20000+(rand()%5000);
             }
         }else SpectralBlastTimer -= diff;
