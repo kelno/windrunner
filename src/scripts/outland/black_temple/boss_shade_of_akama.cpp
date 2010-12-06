@@ -685,6 +685,7 @@ struct npc_akamaAI : public ScriptedAI
             {
                 if(((boss_shade_of_akamaAI*)Shade->AI())->IsBanished)
                 {
+                    m_creature->SetReactState(REACT_PASSIVE);
                     if(CastSoulRetrieveTimer < diff)
                     {
                         DoCast(Shade, SPELL_AKAMA_SOUL_CHANNEL);
