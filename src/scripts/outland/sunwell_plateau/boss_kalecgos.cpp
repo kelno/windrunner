@@ -604,6 +604,23 @@ struct boss_kalecAI : public ScriptedAI
         if (damage >= m_creature->GetHealth() && done_by->ToCreature() && done_by->GetGUID() == SathGUID)
             done_by->ToCreature()->AI()->KilledUnit(m_creature);
     }
+    
+    void JustDied(Unit *pKiller)
+    {
+        TeleportAllPlayersBack();
+    }
+    
+    void TeleportAllPlayersBack()
+    {
+        Map *map = m_creature->GetMap();
+        if(!map->IsDungeon()) return;
+        Map::PlayerList const &PlayerList = map->GetPlayers();
+        Map::PlayerList::const_iterator i;
+        for(i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            if(Player* i_pl = i->getSource())
+                if(i_pl->HasAura(AURA_SPECTRAL_REALM))
+                    i_pl->RemoveAurasDueToSpell(AURA_SPECTRAL_REALM);
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -765,7 +782,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         {
             Unit *target = SelectUnit(1, 50.0f, true, true, false, AURA_SPECTRAL_EXHAUSTION, 0);
             
-            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f)))        // Delay selection to next loop if no valid target found
+            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f || target->HasAura(AURA_SPECTRAL_EXHAUSTION))))        // Delay selection to next loop if no valid target found
                 SpectralBlastTimer = 300;
             else if (target) {
                 m_creature->InterruptNonMeleeSpells(true);
