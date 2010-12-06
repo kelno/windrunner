@@ -435,9 +435,11 @@ struct boss_sathrovarrAI : public ScriptedAI
         Map::PlayerList const &PlayerList = map->GetPlayers();
         Map::PlayerList::const_iterator i;
         for(i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            if(Player* i_pl = i->getSource())
+            if(Player* i_pl = i->getSource()) {
+                i_pl->RemoveAurasDueToSpell(SPELL_AGONY_CURSE);
                 if(i_pl->HasAura(AURA_SPECTRAL_REALM))
                     i_pl->RemoveAurasDueToSpell(AURA_SPECTRAL_REALM);
+            }
     }
     
     void DeleteFromThreatList(uint64 TargetGUID)
@@ -617,9 +619,11 @@ struct boss_kalecAI : public ScriptedAI
         Map::PlayerList const &PlayerList = map->GetPlayers();
         Map::PlayerList::const_iterator i;
         for(i = PlayerList.begin(); i != PlayerList.end(); ++i)
-            if(Player* i_pl = i->getSource())
+            if(Player* i_pl = i->getSource()) {
+                i_pl->RemoveAurasDueToSpell(SPELL_AGONY_CURSE);
                 if(i_pl->HasAura(AURA_SPECTRAL_REALM))
                     i_pl->RemoveAurasDueToSpell(AURA_SPECTRAL_REALM);
+            }
     }
 
     void UpdateAI(const uint32 diff)
@@ -792,8 +796,11 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             else if (target) {
                 m_creature->InterruptNonMeleeSpells(true);
                 DoCast(target, SPELL_SPECTRAL_BLAST);
-                if (target->ToPlayer() && target->ToPlayer()->GetPet())
-                    DoCast(target->ToPlayer()->GetPet(), SPELL_SPECTRAL_BLAST);
+                if (target->ToPlayer() && target->ToPlayer()->GetPet()) {
+                    Pet *pet = target->ToPlayer()->GetPet();
+                    DoCast(pet, SPELL_SPECTRAL_BLAST);
+                    pet->Relocate(pet->GetPositionX(), pet->GetPositionY(), pet->GetPositionZ(), pet->GetOrientation());
+                }
                 DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
                 target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET); // FIXME: I'm not sure this is blizzlike
                 if (target->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
