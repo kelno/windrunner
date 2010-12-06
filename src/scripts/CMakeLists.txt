@@ -9,6 +9,7 @@ SET(scripts_STAT_SRCS
     include/ScriptedCreature.cpp
     include/ScriptedCreature.h
     include/ScriptedGossip.h
+    include/ScriptedInstance.cpp
     include/ScriptedInstance.h
     include/SimpleAI.cpp
     include/SimpleAI.h
