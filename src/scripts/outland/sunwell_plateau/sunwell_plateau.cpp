@@ -26,6 +26,7 @@ npc_prophet_velen
 npc_captain_selana
 npc_sunblade_protector
 npc_sunblade_scout
+npc_sunblade_slayer
 EndContentData */
 
 #include "precompiled.h"
@@ -212,6 +213,49 @@ CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_slayer
+######*/
+
+#define SPELL_SHOOT     47001
+
+struct npc_sunblade_slayerAI : public Scripted_NoMovementAI
+{
+    npc_sunblade_slayerAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    uint32 shootTimer;
+    
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_SW_RADIANCE);
+        
+        shootTimer = 1000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (shootTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_SHOOT);
+            shootTimer = 4000;
+        }
+        else
+            shootTimer -= diff;
+            
+        if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_slayer(Creature *pCreature)
+{
+    return new npc_sunblade_slayerAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -227,5 +271,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_protector";
     newscript->GetAI = &GetAI_npc_protector;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_slayer";
+    newscript->GetAI = &GetAI_npc_sunblade_slayer;
     newscript->RegisterSelf();
 }
