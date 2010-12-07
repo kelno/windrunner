@@ -164,6 +164,7 @@ struct boss_kalecgosAI : public ScriptedAI
         m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
         m_creature->SetVisibility(VISIBILITY_ON);
         m_creature->SetStandState(PLAYER_STATE_SLEEP);
+        m_creature->SetReactState(REACT_AGGRESSIVE);
 
         ArcaneBuffetTimer = 8000;
         FrostBreathTimer = 15000;
@@ -192,6 +193,15 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 1;
             isFriendly = false;
         }*/
+        
+        if (m_creature->isInCombat() && m_creature->GetVisibility() == VISIBILITY_ON) {
+            TalkSequence = 0;
+            TalkTimer = 1;
+            isFriendly = false;
+            m_creature->SetReactState(REACT_PASSIVE);
+            
+            return;
+        }
         
         ScriptedAI::EnterEvadeMode();
     }
@@ -707,14 +717,9 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         }else TalkTimer -= diff;
     }
     else
-    {
-        if (!UpdateVictim()) {
-            TalkSequence = 0;
-            TalkTimer = 1;
-            isFriendly = false;
-            
+    {        
+        if (!UpdateVictim())
             return;
-        }
             
         if (m_creature->GetDistance(1704.22, 924.758, 53.1608) > 35.0f) {
             EnterEvadeMode();
