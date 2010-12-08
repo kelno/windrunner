@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Felmyst
-SD%Complete: 0
-SDComment:
+SD%Complete: 85%
+SDComment: Encapsulate should teleport target in front of Felmyst. Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death. The green ray should do some damage (how much?)
 EndScriptData */
 
 #include "precompiled.h"
@@ -110,6 +110,20 @@ static EventFelmyst MaxTimer[]=
     EVENT_SUMMON_FOG,
 };
 
+#define ORIENTATION_LEFT    4.7984
+#define ORIENTATION_RIGHT   1.3033
+
+static float flightMobLeft[] = {1468.380005, 730.267029, 60.083302};
+static float flightMobRight[] = {1458.170044, 501.295013, 60.083302};
+
+static float lefts[3][3] = { {1494.760010, 705.000000, 50.083302},
+                             {1469.939941, 704.239014, 50.083302},
+                             {1446.540039, 702.570007, 50.083302} };
+
+static float rights[3][3] = { {1492.819946, 515.668030, 50.083302},
+                              {1467.219971, 516.318970, 50.083302},
+                              {1441.640015, 520.520020, 50.083302} };
+
 struct boss_felmystAI : public ScriptedAI
 {
     boss_felmystAI(Creature *c) : ScriptedAI(c){
@@ -134,6 +148,8 @@ struct boss_felmystAI : public ScriptedAI
 
     uint32 FlightCount;
     uint32 BreathCount;
+    
+    uint8 randomPoint;
 
     float BreathX, BreathY;
     
@@ -145,6 +161,7 @@ struct boss_felmystAI : public ScriptedAI
         Event = EVENT_NULL;
         Timer[EVENT_BERSERK] = 600000;
         FlightCount = 0;
+        randomPoint = 0;
         
         justPulled = false;
 
@@ -257,7 +274,15 @@ struct boss_felmystAI : public ScriptedAI
 
     void MovementInform(uint32, uint32)
     {
-        Timer[EVENT_FLIGHT_SEQUENCE] = 1;
+        if (FlightCount == 6) {
+            if (BreathCount == 1)
+                m_creature->SetOrientation(ORIENTATION_RIGHT);
+            else
+                m_creature->SetOrientation(ORIENTATION_LEFT);
+            Timer[EVENT_FLIGHT_SEQUENCE] = 5000;
+        }
+        else
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
     }
 
     void DamageTaken(Unit*, uint32 &damage)
@@ -367,46 +392,63 @@ struct boss_felmystAI : public ScriptedAI
             DespawnSummons(MOB_VAPOR_TRAIL);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             break;
-        case 5:{
+        case 5:
+        {
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            Unit* target;
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
-            if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
-            if(target)
-            {
-                BreathX = target->GetPositionX();
-                BreathY = target->GetPositionY();
-                float x, y, z;
-                target->GetContactPoint(m_creature, x, y, z, 70);
-                m_creature->GetMotionMaster()->MovePoint(0, x, y, z+10);
-            }else
-            {
-                EnterEvadeMode();
-                return;
-            }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
-            break;}
+            if (BreathCount == 1)     // Right
+                m_creature->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
+            else                      // Left
+                m_creature->GetMotionMaster()->MovePoint(0, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
+            Timer[EVENT_FLIGHT_SEQUENCE] = 30000;
+            break;
+        }
         case 6:
+        {
+            //sLog.outString("Fly sequence %u", BreathCount);
+            randomPoint = rand()%3;
+            //sLog.outString("RandomPoint(1) %u", randomPoint);
+            /*std::string str;
+            if (randomPoint == 0)
+                str = "North";
+            else if (randomPoint == 2)
+                str = "Center";
+            else
+                str = "South";
+            std::stringstream sst;
+            sst << "DEBUG: " << str;
+            DoWhisper(sst.str().c_str(), m_creature->getVictim());*/
+            if (BreathCount == 1)     // Right
+                m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]);
+            else
+                m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]);
+            Timer[EVENT_FLIGHT_SEQUENCE] = 30000;
+            break;
+        }
+        case 7:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            m_creature->SetOrientation(m_creature->GetAngle(BreathX, BreathY));
+            //sLog.outString("RandomPoint(2) %u", randomPoint);
+            if (BreathCount == 1)       // Right
+                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
+            else
+                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
             DoTextEmote("prend une profonde respiration.", NULL);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 5000;
             break;
-        case 7:
+        case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
             {
-                float x, y, z;
-                m_creature->GetPosition(x, y, z);
-                x = 2 * BreathX - x;
-                y = 2 * BreathY - y;
-                m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
+                //sLog.outString("RandomPoint(3) %u", randomPoint);
+                if (BreathCount == 1)   // Right
+                    m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]);
+                else
+                    m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]);
             }
             Timer[EVENT_SUMMON_FOG] = 1;
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
-        case 8:
+        case 9:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
             BreathCount++;
@@ -414,7 +456,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             if(BreathCount < 3) FlightCount = 4;
             break;
-        case 9:
+        case 10:
             if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
             {
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
@@ -431,7 +473,7 @@ struct boss_felmystAI : public ScriptedAI
             }
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
-        case 10:
+        case 11:
         {
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             m_creature->StopMoving();
