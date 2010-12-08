@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Felmyst
-SD%Complete: 85%
-SDComment: Encapsulate should teleport target in front of Felmyst. Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death. The green ray should do some damage (how much?)
+SD%Complete: 90%
+SDComment: Encapsulate should teleport target in front of Felmyst. Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death.
 EndScriptData */
 
 #include "precompiled.h"
