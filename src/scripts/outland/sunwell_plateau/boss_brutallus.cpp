@@ -132,6 +132,8 @@ struct boss_brutallusAI : public ScriptedAI
                 float x,y,z;
                 m_creature->GetPosition(x,y,z);
                 Creature *felmyst = plr->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+                if (felmyst)
+                    felmyst->AI()->JustRespawned();
             }
         }
     }
@@ -163,7 +165,9 @@ struct boss_brutallusAI : public ScriptedAI
             pInstance->SetData(DATA_BRUTALLUS_EVENT, DONE);
             float x,y,z;
             m_creature->GetPosition(x,y,z);
-            m_creature->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+            Creature *felmyst = m_creature->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+            if (felmyst)
+                    felmyst->AI()->JustRespawned();
             
             // Force removal of Burn aura on all players in map
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
