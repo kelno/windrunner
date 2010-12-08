@@ -32,7 +32,8 @@ enum Quotes
     YELL_TAKEOFF    =       -1580040,
     YELL_BERSERK    =       -1580041,
     YELL_DEATH      =       -1580042,
-    YELL_KALECGOS   =       -1580043 //after felmyst's death spawned and say this
+    YELL_KALECGOS   =       -1580043,   //after felmyst's death spawned and say this
+    EMOTE_DEEP_BREATH   =   -1580110    // "Felmyst takes a deep breath"
 };
 
 enum Spells
@@ -432,7 +433,8 @@ struct boss_felmystAI : public ScriptedAI
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
-            DoTextEmote("prend une profonde respiration.", NULL);
+            //DoTextEmote("prend une profonde respiration.", NULL);
+            DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 5000;
             break;
         case 8:
