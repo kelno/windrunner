@@ -447,14 +447,23 @@ struct boss_felmystAI : public ScriptedAI
         }
         FlightCount++;
     }
+    
+    void DeleteFromThreatList(uint64 TargetGUID)
+    {
+        for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
+        {
+            if((*itr)->getUnitGuid() == TargetGUID)
+            {
+                (*itr)->removeReference();
+                break;
+            }
+        }
+    }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim()) {
-            if(Phase == PHASE_FLIGHT && !m_creature->IsInEvadeMode())
-                EnterEvadeMode();
+        if (!UpdateVictim() && Phase != PHASE_FLIGHT)
             return;
-        }
 
         Event = EVENT_NULL;
         for(uint32 i = 1; i <= MaxTimer[Phase]; i++) {
@@ -466,6 +475,9 @@ struct boss_felmystAI : public ScriptedAI
                 else Timer[i] -= diff;
             }
         }
+        
+        if (m_creature->getVictim() && m_creature->getVictim()->HasAura(SPELL_FOG_CHARM))
+            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
 
         if(m_creature->IsNonMeleeSpellCasted(false))
             return;
