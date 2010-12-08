@@ -48,7 +48,6 @@ struct instance_shattered_halls : public ScriptedInstance
     uint64 NethekurseGUID;
     uint64 ExecutionerGUID;
     
-    Creature* Executioner;
     Creature* FirstPrisoner;
     Creature* SecondPrisoner;
     Creature* ThirdPrisoner;
@@ -67,7 +66,6 @@ struct instance_shattered_halls : public ScriptedInstance
         NethekurseGUID = 0;
         ExecutionerGUID = 0;
         
-        Executioner = NULL;
         FirstPrisoner = NULL;
         SecondPrisoner = NULL;
         ThirdPrisoner = NULL;
@@ -109,7 +107,7 @@ struct instance_shattered_halls : public ScriptedInstance
             break;
         case 17301:     // Executioner
             ExecutionerGUID = pCreature->GetGUID();
-            Executioner = pCreature;
+            pCreature->setActive(true);
             if (GetData(DATA_NETHEKURSE_EVENT) == NOT_STARTED)
                 pCreature->SetVisibility(VISIBILITY_OFF);
             if (GetData(DATA_BLADEFIST_EVENT) == NOT_STARTED)
@@ -330,8 +328,9 @@ struct instance_shattered_halls : public ScriptedInstance
         
         if (!hasCasted80min) {      // Event just started
             // TODO: Correct this [PH] yell
-            if (Executioner)
-                YellToAll(Executioner, "[PH] J'ai 3 otages ! Dans 55 minutes, je tuerai le premier d'entre eux !", LANG_UNIVERSAL);
+            if (Creature *Executioner = instance->GetCreatureInMap(ExecutionerGUID))
+                if (Executioner->IsInWorld())
+                    YellToAll(Executioner, "[PH] J'ai 3 otages ! Dans 55 minutes, je tuerai le premier d'entre eux !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(EXEC_TIMER_55);
             Player* plr = GetPlayerInMap();
             if (!plr) {
@@ -344,8 +343,9 @@ struct instance_shattered_halls : public ScriptedInstance
         
         if (TimerLeft < 1500000 && !hasCasted25min) {               // 25 min left and debuff not casted yet
             // TODO: Correct this [PH] yell
-            if (Executioner)
-                YellToAll(Executioner, "[PH] Le premier est mort ! Dans 10 minutes, un autre connaitra le meme sort !", LANG_UNIVERSAL);
+            if (Creature *Executioner = instance->GetCreatureInMap(ExecutionerGUID))
+                if (Executioner->IsInWorld())
+                    YellToAll(Executioner, "[PH] Le premier est mort ! Dans 10 minutes, un autre connaitra le meme sort !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(GetData(EXEC_TIMER_10));      // 2nd timer of 10 mins
             /*if (FirstPrisoner && Executioner)
                 Executioner->DealDamage(FirstPrisoner, FirstPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);*/
@@ -354,8 +354,9 @@ struct instance_shattered_halls : public ScriptedInstance
         
         if (TimerLeft < 900000 && !hasCasted15min) {                // 15 min left and debuff not casted yet
             // TODO: Correct this [PH] yell
-            if (Executioner)
-                YellToAll(Executioner, "[PH] Et de deux ! Dans 15 minutes, je tuerai le dernier, et il sera trop tard !", LANG_UNIVERSAL);
+            if (Creature *Executioner = instance->GetCreatureInMap(ExecutionerGUID))
+                if (Executioner->IsInWorld())
+                    YellToAll(Executioner, "[PH] Et de deux ! Dans 15 minutes, je tuerai le dernier, et il sera trop tard !", LANG_UNIVERSAL);
             CastSpellOnAllPlayersInMap(GetData(EXEC_TIMER_15));      // 3rd (and last) timer of 15 mins
             /*if (SecondPrisoner && Executioner)
                 Executioner->DealDamage(SecondPrisoner, SecondPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);*/
@@ -364,9 +365,11 @@ struct instance_shattered_halls : public ScriptedInstance
         
         if (TimerLeft < diff) {     // TIME UP ! Kill the third prisoner and stop the timer, killing executioner won't give the quest item
             // TODO: Correct this [PH] yell
-            if (Executioner) {
-                YellToAll(Executioner, "[PH] Trop tard ! Vous avez perdu, ils sont tous morts de ma main.", LANG_UNIVERSAL);
-                Executioner->loot.RemoveItem(31716);
+            if (Creature *Executioner = instance->GetCreatureInMap(ExecutionerGUID)) {
+                if (Executioner->IsInWorld()) {
+                    YellToAll(Executioner, "[PH] Trop tard ! Vous avez perdu, ils sont tous morts de ma main.", LANG_UNIVERSAL);
+                    Executioner->loot.RemoveItem(31716);
+                }
             }
             /*if (ThirdPrisoner && Executioner)
                 Executioner->DealDamage(ThirdPrisoner, ThirdPrisoner->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);*/
