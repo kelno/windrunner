@@ -280,7 +280,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(ORIENTATION_RIGHT);
             else
                 m_creature->SetOrientation(ORIENTATION_LEFT);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 5000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
         }
         else
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
@@ -435,7 +435,7 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->StopMoving();
             //DoTextEmote("prend une profonde respiration.", NULL);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 5000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
