@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Boss_Felmyst
 SD%Complete: 90%
-SDComment: Encapsulate should teleport target in front of Felmyst. Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death.
+SDComment: Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death.
 EndScriptData */
 
 #include "precompiled.h"
@@ -277,9 +277,9 @@ struct boss_felmystAI : public ScriptedAI
     {
         if (FlightCount == 6) {
             if (BreathCount == 1)
-                m_creature->SetOrientation(ORIENTATION_RIGHT);
+                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
-                m_creature->SetOrientation(ORIENTATION_LEFT);
+                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
         }
         else
@@ -419,9 +419,9 @@ struct boss_felmystAI : public ScriptedAI
             sst << "DEBUG: " << str;
             DoWhisper(sst.str().c_str(), m_creature->getVictim());*/
             if (BreathCount == 1)     // Right
-                m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]);
+                m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
-                m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]);
+                m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
             Timer[EVENT_FLIGHT_SEQUENCE] = 30000;
             break;
         }
@@ -443,9 +443,9 @@ struct boss_felmystAI : public ScriptedAI
             {
                 //sLog.outString("RandomPoint(3) %u", randomPoint);
                 if (BreathCount == 1)   // Right
-                    m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]);
+                    m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
                 else
-                    m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]);
+                    m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             }
             Timer[EVENT_SUMMON_FOG] = 1;
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
