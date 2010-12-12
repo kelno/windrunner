@@ -832,6 +832,10 @@ bool GOkalecgos_teleporter(Player *player, GameObject* _GO)
         if (player->GetPet())
                 player->GetPet()->CastSpell(player->GetPet(), SPELL_TELEPORT_SPECTRAL, true);
         player->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
+        if (player->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
+            player->RemoveAurasDueToSpell(AURA_SPECTRAL_EXHAUSTION);    // FIXME: If this happens, this is a bug.
+            sLog.outError("Sunwell Plateau/Kalecgos: Spectral Blast target (guid %u) had Spectral exhaustion when teleported VIA PORTAL!", player->GetGUIDLow());
+        }
     }
     return true;
 }
