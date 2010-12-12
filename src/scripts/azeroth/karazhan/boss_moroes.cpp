@@ -313,7 +313,7 @@ struct boss_moroesAI : public ScriptedAI
                     case 1: DoScriptText(SAY_SPECIAL_2, m_creature); break;
                 }
 
-                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true))
                    target->CastSpell(target, SPELL_GARROTE,true);
 
                 InVanish = false;

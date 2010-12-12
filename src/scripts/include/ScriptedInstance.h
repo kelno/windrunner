@@ -31,6 +31,9 @@ class ScriptedInstance : public InstanceData
         // Save and Load instance data to the database
         const char* Save() { return NULL; }
         void Load(const char* in) { }
+        
+        // Misc
+        void CastOnAllPlayers(uint32 spellId);  // TODO: Add Unit* caster as parameter?
 };
 
 #endif

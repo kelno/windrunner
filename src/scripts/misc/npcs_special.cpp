@@ -33,6 +33,7 @@ npc_rogue_trainer       80%     Scripted trainers, so they are able to offer ite
 npc_sayge               100%    Darkmoon event fortune teller, buff player based on answers given
 npc_snake_trap_serpents 80%     AI for snakes that summoned by Snake Trap
 npc_goblin_land_mine    100%    Engineering item. Should explode when an hostile creature comes in range, more than 10 seconds after it's been spawned
+npc_mojo                100%    Vanity pet that morph you in frog if you /kiss it
 EndContentData */
 
 #include "precompiled.h"
@@ -1195,6 +1196,71 @@ CreatureAI* GetAI_npc_goblin_land_mine(Creature* pCreature)
     return new npc_goblin_land_mineAI(pCreature);
 }
 
+/*######
+## npc_mojo
+######*/
+
+#define SPELL_FEELING_FROGGY    43906
+#define SPELL_HEARTS            20372
+
+struct npc_mojoAI : public ScriptedAI
+{
+    npc_mojoAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 MorphTimer;      /* new hooks OwnerGainedAura and OwnerLostAura? Useless in this case, as morphed player may not be owner, but keep the idea. */
+    uint64 PlayerGUID;
+    
+    void Aggro(Unit *pWho) {}
+    void Reset()
+    {
+        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        MorphTimer = 0;
+        PlayerGUID = 0;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (MorphTimer) {
+            if (Player *plr = Unit::GetPlayer(PlayerGUID))
+                m_creature->SetInFront(plr);
+            if (MorphTimer <= diff) {
+                m_creature->RemoveAurasDueToSpell(SPELL_HEARTS);
+                m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                MorphTimer = 0;
+                PlayerGUID = 0;
+            }
+            else
+                MorphTimer -= diff;
+        }
+    }
+};
+
+bool ReceiveEmote_npc_mojo(Player *pPlayer, Creature *pCreature, uint32 emote)
+{
+    if (pCreature->GetOwner()->GetTypeId() == TYPEID_PLAYER && pPlayer->GetTeam() != pCreature->GetOwner()->ToPlayer()->GetTeam())
+        return false;
+        
+    if (((npc_mojoAI*)pCreature->AI())->PlayerGUID != 0)
+        return false;
+    
+    if (emote == TEXTEMOTE_KISS) {
+        ((npc_mojoAI*)pCreature->AI())->MorphTimer = 15000;
+        ((npc_mojoAI*)pCreature->AI())->PlayerGUID = pPlayer->GetGUID();
+        pCreature->AddAura(SPELL_HEARTS, pCreature);
+        if (!pPlayer->isInCombat())
+            pPlayer->CastSpell(pPlayer, SPELL_FEELING_FROGGY, true);
+        pCreature->SetInFront(pPlayer);
+        pCreature->GetMotionMaster()->MoveFollow(pPlayer, PET_FOLLOW_DIST/3.0f, M_PI/4);
+    }
+    
+    return true;
+}
+
+CreatureAI* GetAI_npc_mojo(Creature *pCreature)
+{
+    return new npc_mojoAI(pCreature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1275,6 +1341,12 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name="npc_goblin_land_mine";
     newscript->GetAI = &GetAI_npc_goblin_land_mine;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_mojo";
+    newscript->GetAI = &GetAI_npc_mojo;
+    newscript->pReceiveEmote = &ReceiveEmote_npc_mojo;
     newscript->RegisterSelf();
 }
 

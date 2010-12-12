@@ -1,31 +1,53 @@
+/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License as published by
+* the Free Software Foundation; either version 2 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+* GNU General Public License for more details.
+*
+* You should have received a copy of the GNU General Public License
+* along with this program; if not, write to the Free Software
+* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
+
+/* ScriptData
+SDName: boss_azgalor
+SD%Complete: 95
+SDComment: SPELL_DOOM sometimes casted on tank
+SDCategory: Hyjal
+EndScriptData */
 
 #include "precompiled.h"
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_RAIN_OF_FIRE 31340
-#define SPELL_DOOM 31347
-#define SPELL_HOWL_OF_AZGALOR 31344
-#define SPELL_CLEAVE 31345
-#define SPELL_BERSERK 26662
+#define SPELL_RAIN_OF_FIRE          31340
+#define SPELL_DOOM                  31347
+#define SPELL_HOWL_OF_AZGALOR       31344
+#define SPELL_CLEAVE                31345
+#define SPELL_BERSERK               26662
 
-#define SAY_ONDEATH "Your time is almost... up"
-#define SOUND_ONDEATH 11002
+#define SAY_ONDEATH                 "Your time is almost... up"
+#define SOUND_ONDEATH               11002
 
-#define SAY_ONSLAY1 "Reesh, hokta!"
-#define SAY_ONSLAY2 "Don't fight it"
-#define SAY_ONSLAY3 "No one is going to save you"
-#define SOUND_ONSLAY1 11001
-#define SOUND_ONSLAY2 11048
-#define SOUND_ONSLAY3 11047
+#define SAY_ONSLAY1                 "Reesh, hokta!"
+#define SAY_ONSLAY2                 "Don't fight it"
+#define SAY_ONSLAY3                 "No one is going to save you"
+#define SOUND_ONSLAY1               11001
+#define SOUND_ONSLAY2               11048
+#define SOUND_ONSLAY3               11047
 
-#define SAY_DOOM1 "Just a taste... of what awaits you"
-#define SAY_DOOM2 "Suffer you despicable insect!"
-#define SOUND_DOOM1 11046
-#define SOUND_DOOM2 11000
+#define SAY_DOOM1                   "Just a taste... of what awaits you"
+#define SAY_DOOM2                   "Suffer you despicable insect!"
+#define SOUND_DOOM1                 11046
+#define SOUND_DOOM2                 11000
 
-#define SAY_ONAGGRO "Abandon all hope! The legion has returned to finish what was begun so many years ago. This time there will be no escape!"
-#define SOUND_ONAGGRO 10999
+#define SAY_ONAGGRO                 "Abandon all hope! The legion has returned to finish what was begun so many years ago. This time there will be no escape!"
+#define SOUND_ONAGGRO               10999
 
 struct boss_azgalorAI : public hyjal_trashAI
 {
@@ -148,7 +170,7 @@ struct boss_azgalorAI : public hyjal_trashAI
         {
             //DoCast(SelectUnit(SELECT_TARGET_RANDOM,1,100,true), SPELL_DOOM);//never on tank
             //better way to avoid casting on tank (I hope, at least...)
-            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
             if (pTarget && pTarget == m_creature->getVictim())
                 pTarget = SelectUnit(SELECT_TARGET_BOTTOMAGGRO, 0);
             DoCast(pTarget, SPELL_DOOM);

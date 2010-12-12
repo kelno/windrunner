@@ -576,6 +576,7 @@ struct npc_akamaAI : public ScriptedAI
         }
         summons.DespawnAll();
         DoCast(m_creature, SPELL_AKAMA_STEALTH, true);
+        //m_creature->addUnitState(UNIT_STAT_ROOT);
         // Ignore aggro
         m_creature->SetReactState(REACT_PASSIVE);
     }
@@ -684,6 +685,7 @@ struct npc_akamaAI : public ScriptedAI
             {
                 if(((boss_shade_of_akamaAI*)Shade->AI())->IsBanished)
                 {
+                    m_creature->SetReactState(REACT_PASSIVE);
                     if(CastSoulRetrieveTimer < diff)
                     {
                         DoCast(Shade, SPELL_AKAMA_SOUL_CHANNEL);
@@ -860,6 +862,7 @@ bool GossipSelect_npc_akama(Player *player, Creature *_Creature, uint32 sender, 
         player->CLOSE_GOSSIP_MENU();
         ((npc_akamaAI*)_Creature->AI())->BeginEvent(player);
         _Creature->RemoveAurasDueToSpell(SPELL_AKAMA_STEALTH);
+        //_Creature->clearUnitState(UNIT_STAT_ROOT);
     }
 
     return true;

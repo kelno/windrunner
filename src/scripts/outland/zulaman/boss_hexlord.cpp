@@ -246,6 +246,8 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
         m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
         
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_ATTACK_POWER, true);
+        
+        
     }
 
     void Aggro(Unit* who)
@@ -335,6 +337,12 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
             }
         }
     }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == 43383)
+            m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -390,6 +398,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
                 SpiritBolts_Timer = 13000;  // cast drain power first
             else
             {
+                m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, true);
                 m_creature->CastSpell(m_creature, SPELL_SPIRIT_BOLTS, false);
                 DoYell(YELL_SPIRIT_BOLTS, LANG_UNIVERSAL, NULL);
                 DoPlaySoundToSet(m_creature, SOUND_YELL_SPIRIT_BOLTS);

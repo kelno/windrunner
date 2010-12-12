@@ -26,6 +26,7 @@ npc_prophet_velen
 npc_captain_selana
 npc_sunblade_protector
 npc_sunblade_scout
+npc_sunblade_slayer
 EndContentData */
 
 #include "precompiled.h"
@@ -78,10 +79,14 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void Reset()
     {
-        m_creature->SetReactState(REACT_DEFENSIVE);
-        DoCast(m_creature, SPELL_SW_RADIANCE);
+        felLightningTimer = 5000;
         
-        felLightningTimer = 0;
+        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE) {
+            m_creature->SetReactState(REACT_DEFENSIVE);
+            m_creature->SetHasChangedReactState();
+            felLightningTimer = 0;
+        }
+        DoCast(m_creature, SPELL_SW_RADIANCE);
     }
     
     void Aggro(Unit *pWho) {}
@@ -146,12 +151,16 @@ struct npc_sunblade_scoutAI : public ScriptedAI
             m_creature->SetReactState(REACT_PASSIVE);
             m_creature->SetSpeed(MOVE_WALK, 3.0f);
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
     }
     
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
     {
         if (spellId == 46475) {
+            if (!puller)
+                puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
             m_creature->SetReactState(REACT_AGGRESSIVE);
             m_creature->clearUnitState(UNIT_STAT_ROOT);
             if (target->ToCreature()) {
@@ -204,6 +213,49 @@ CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_slayer
+######*/
+
+#define SPELL_SHOOT     47001
+
+struct npc_sunblade_slayerAI : public Scripted_NoMovementAI
+{
+    npc_sunblade_slayerAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    uint32 shootTimer;
+    
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_SW_RADIANCE);
+        
+        shootTimer = 1000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (shootTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_SHOOT);
+            shootTimer = 4000;
+        }
+        else
+            shootTimer -= diff;
+            
+        if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_slayer(Creature *pCreature)
+{
+    return new npc_sunblade_slayerAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -219,5 +271,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_protector";
     newscript->GetAI = &GetAI_npc_protector;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_slayer";
+    newscript->GetAI = &GetAI_npc_sunblade_slayer;
     newscript->RegisterSelf();
 }

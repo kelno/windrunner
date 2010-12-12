@@ -375,6 +375,11 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             }else AggroTimer -= diff;
         }
 
+        if (m_creature->GetDistance(606.641, 402.173, 187.173) > 90.0f) {
+            EnterEvadeMode();
+            return;
+        }
+
         if(!UpdateVictim() || Intro)
             return;
 
@@ -394,9 +399,13 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
         if(ShadowOfDeathTimer < diff)
         {
-            if (Unit* pShadowVictim = SelectUnit(1, 100, true, true, true, SPELL_SHADOW_OF_DEATH, 1)){
-                m_creature->InterruptNonMeleeSpells(false);
-                DoCast(pShadowVictim, SPELL_SHADOW_OF_DEATH, true);
+            if (Unit* pShadowVictim = SelectUnit(1, 100, true, true, true, SPELL_SHADOW_OF_DEATH, 1)) {
+                if (pShadowVictim->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow())
+                    ShadowOfDeathTimer = 100;       // Delay to next world tick
+                else {
+                    m_creature->InterruptNonMeleeSpells(false);
+                    DoCast(pShadowVictim, SPELL_SHADOW_OF_DEATH, true);
+                }
             }
             ShadowOfDeathTimer = 30000;
         }else ShadowOfDeathTimer -= diff;

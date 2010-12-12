@@ -832,7 +832,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_DARK_BARRAGE:
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_DARK_BARRAGE);
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE);
                 Timer[EVENT_DARK_BARRAGE] = 0;
                 break;
 

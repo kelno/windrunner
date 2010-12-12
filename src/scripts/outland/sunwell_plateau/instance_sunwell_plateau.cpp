@@ -48,6 +48,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
 	uint64 KilJaedenController;
 	uint64 Anveena;
 	uint64 KalecgosKJ;
+    uint64 FlightLeft;
+    uint64 FlightRight;
 	uint32 SpectralPlayers;
 
 	/** GameObjects **/
@@ -154,6 +156,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25608: KilJaedenController = pCreature->GetGUID(); break;
             case 26046: Anveena             = pCreature->GetGUID(); break;
             case 25319: KalecgosKJ          = pCreature->GetGUID(); break;
+            case 25357: FlightLeft          = pCreature->GetGUID(); pCreature->setActive(true); break;
+            case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
         }
     }
 
@@ -212,6 +216,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController;
             case DATA_ANVEENA:              return Anveena;
             case DATA_KALECGOS_KJ:          return KalecgosKJ;
+            case MOB_FLIGHT_LEFT:           return FlightLeft;
+            case MOB_FLIGHT_RIGHT:          return FlightRight;
             case DATA_PLAYER_GUID:
                 Player* Target = GetPlayerInMap();
                 return Target->GetGUID();
@@ -244,8 +250,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 break;
             case DATA_BRUTALLUS_EVENT:     Encounters[1] = data; break;
             case DATA_FELMYST_EVENT:
-                if (data == DONE)
-                    HandleGameObject(FireBarrier, true);
+                /*if (data == DONE)
+                    HandleGameObject(FireBarrier, true);*/ // FIXME: Re-add this when opening sunwell part 2
                 Encounters[2] = data; break;
             case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
             case DATA_MURU_EVENT:

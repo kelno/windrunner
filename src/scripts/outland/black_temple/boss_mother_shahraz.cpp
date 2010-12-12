@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Mother_Shahraz
-SD%Complete: 95
-SDComment: Seems to be done, only Fatal Attraction should not tick 3000 dmg from start
+SD%Complete: 80
+SDComment: Saber Lash missing, Fatal Attraction slightly incorrect; need to damage only if affected players are within range of each other
 SDCategory: Black Temple
 EndScriptData */
 
@@ -102,9 +102,6 @@ struct boss_shahrazAI : public ScriptedAI
     boss_shahrazAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        
-        SpellEntry *TempSpell1 = (SpellEntry*)GetSpellStore()->LookupEntry(40859);
-        TempSpell1->Effect[1] = 0;
     }
 
     ScriptedInstance* pInstance;
@@ -121,6 +118,9 @@ struct boss_shahrazAI : public ScriptedAI
     uint32 RandomYellTimer;
     uint32 EnrageTimer;
     uint32 LastPrismaticAura;
+    uint32 CheckPlayersUndermapTimer;
+    uint32 TooFarAwayCheckTimer;
+    //uint32 ExplosionCount;
 
     bool Enraged;
 
@@ -142,6 +142,8 @@ struct boss_shahrazAI : public ScriptedAI
         RandomYellTimer = 70000 + rand()%41 * 1000;
         EnrageTimer = 600000;
         LastPrismaticAura = 0;
+        CheckPlayersUndermapTimer = 5000;
+        TooFarAwayCheckTimer = 1000;
 
         Enraged = false;
     }
@@ -154,7 +156,7 @@ struct boss_shahrazAI : public ScriptedAI
         DoZoneInCombat();
         DoScriptText(SAY_AGGRO, m_creature);
         DoCast(m_creature,SPELL_PRISMATIC_SHIELD,true);
-        DoCast(m_creature,SPELL_SABER_LASH_TRIGGER,true);
+        //DoCast(m_creature,SPELL_SABER_LASH_TRIGGER,true);
     }
 
     void KilledUnit(Unit *victim)
@@ -163,11 +165,11 @@ struct boss_shahrazAI : public ScriptedAI
     }
     
     // Called when saber lash hits a target
-    void SpellHitTarget(Unit *target, const SpellEntry *spell)
+    /*void SpellHitTarget(Unit *target, const SpellEntry *spell)
     {
         if(target && target->isAlive() && spell->Id == 40810)
             target->AddAura(SPELL_SABER_LASH_IMM, target);
-    }
+    }*/
 
     void JustDied(Unit *victim)
     {
@@ -179,38 +181,21 @@ struct boss_shahrazAI : public ScriptedAI
 
     void TeleportPlayers()
     {
-        Unit* pTeleportToUnit = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true);
-        
-        if(pTeleportToUnit && pTeleportToUnit->isAlive() && (pTeleportToUnit->GetTypeId() == TYPEID_PLAYER)){
-            Creature *tempSpawn;
-            tempSpawn = m_creature->SummonCreature(12999, pTeleportToUnit->GetPositionX(), pTeleportToUnit->GetPositionY(), pTeleportToUnit->GetPositionZ() + 10 , 0, TEMPSUMMON_TIMED_DESPAWN, 5000);
-            if (tempSpawn){
-                //reposition
-                float xt,yt,zt;
-                tempSpawn->GetPosition(xt,yt,zt);
-                zt = tempSpawn->GetMap()->GetVmapHeight(xt, yt, zt, true);
-                tempSpawn->Relocate(xt,yt,zt,0);
-                tempSpawn->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                tempSpawn->SetVisibility(VISIBILITY_OFF);
-                tempSpawn->SetLevel(73);
-                tempSpawn->setFaction(m_creature->getFaction());
-                //root
-                tempSpawn->CastSpell(tempSpawn, 33356, true);
-            }
-
-            for(uint8 i = 0; i < 3; i++)
+        uint32 random = rand()%7;
+        float X = TeleportPoint[random].x;
+        float Y = TeleportPoint[random].y;
+        float Z = TeleportPoint[random].z;
+        for(uint8 i = 0; i < 3; i++)
+        {
+            Unit* pUnit = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            if(pUnit && pUnit->isAlive() && (pUnit->GetTypeId() == TYPEID_PLAYER) && !pUnit->HasAura(SPELL_SABER_LASH_IMM,0))
             {
-                Unit* pUnit = SelectUnit(3, 100, true, true, false, SPELL_SABER_LASH_IMM, 0);
-                if(pUnit && pUnit->isAlive() && (pUnit->GetTypeId() == TYPEID_PLAYER))
-                {
-                    pUnit->CastSpell(pUnit, SPELL_TELEPORT_VISUAL, true);
-                    if (tempSpawn && m_creature->IsWithinLOSInMap(tempSpawn))
-                        DoTeleportPlayer(pUnit, tempSpawn->GetPositionX(), tempSpawn->GetPositionY(), tempSpawn->GetPositionZ(), rand()%360);
-                    else
-                        DoTeleportPlayer(pUnit, pTeleportToUnit->GetPositionX(), pTeleportToUnit->GetPositionY(), pTeleportToUnit->GetPositionZ(), rand()%360);
-
-                    m_creature->CastSpell(pUnit,SPELL_ATTRACTION, true);
-                }
+                TargetGUID[i] = pUnit->GetGUID();
+                pUnit->CastSpell(pUnit, SPELL_TELEPORT_VISUAL, true);
+                //DoTeleportPlayer(pUnit, X, Y, Z, pUnit->GetOrientation());
+                pUnit->GetMotionMaster()->MovementExpired();
+                reinterpret_cast<Player*>(pUnit)->Relocate(X, Y, Z);
+                reinterpret_cast<Player*>(pUnit)->TeleportTo(pUnit->GetMapId(), X, Y, Z, pUnit->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT);
             }
         }
     }
@@ -227,6 +212,17 @@ struct boss_shahrazAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
+            
+        if (TooFarAwayCheckTimer <= diff) {
+            if (m_creature->GetPositionZ() < 180.0f) {
+                EnterEvadeMode();
+                return;
+            }
+                
+            TooFarAwayCheckTimer = 1000;
+        }
+        else
+            TooFarAwayCheckTimer -= diff;
 
         if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 10) && !Enraged)
         {
@@ -234,11 +230,24 @@ struct boss_shahrazAI : public ScriptedAI
             DoCast(m_creature, SPELL_ENRAGE, true);
             DoScriptText(SAY_ENRAGE, m_creature);
         }
+        
+        // Only check the last 3 teleported players
+        if (CheckPlayersUndermapTimer < diff) {
+            for (int i = 0; i < 3; i++) {
+                if (Player* plr = Unit::GetPlayer(TargetGUID[i])) {
+                    float z = plr->GetPositionZ();
+                    if (z < 189)      // Player seems to be undermap (ugly hack, isn't it ?)
+                        DoTeleportPlayer(plr, 945.6173, 198.3479, 192.00, 4.674);
+                }
+            }
+            
+            CheckPlayersUndermapTimer = 5000;
+        }else CheckPlayersUndermapTimer -= diff;
 
         // Randomly cast one beam
         if(BeamTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true);
             if(!target || !target->isAlive())
                 return;
 
@@ -285,6 +294,8 @@ struct boss_shahrazAI : public ScriptedAI
         // Select 3 random targets (can select same target more than once), teleport to a random location then make them cast explosions until they get away from each other.
         if(FatalAttractionTimer < diff)
         {
+            //ExplosionCount = 0;
+
             TeleportPlayers();
 
             DoScriptText(RAND(SAY_SPELL2,SAY_SPELL3), m_creature);
