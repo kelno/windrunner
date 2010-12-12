@@ -129,7 +129,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     
     uint32 sinisterStrikeTimer;
     
-    Unit* puller;
+    uint64 pullerGUID;
     Creature *protector;
     
     bool hasActivated;
@@ -139,14 +139,14 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         DoCast(m_creature, SPELL_SW_RADIANCE);
         
         sinisterStrikeTimer = 0;
-        puller = NULL;
+        pullerGUID = 0;
         protector = NULL;
         hasActivated = false;
     }
     
     void Aggro(Unit *pWho)
     {
-        puller = pWho;
+        pullerGUID = pWho->GetGUID();
         if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
             m_creature->SetReactState(REACT_PASSIVE);
             m_creature->SetSpeed(MOVE_WALK, 3.0f);
@@ -158,7 +158,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
     {
         if (spellId == 46475) {
-            if (puller) {
+            if (Unit* puller = Unit::GetUnit(*m_creature, pullerGUID)) {
                 //puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
                 m_creature->SetReactState(REACT_AGGRESSIVE);
