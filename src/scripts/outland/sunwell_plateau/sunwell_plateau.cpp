@@ -158,19 +158,28 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
     {
         if (spellId == 46475) {
-            if (!puller)
-                puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
-            m_creature->SetReactState(REACT_AGGRESSIVE);
-            m_creature->clearUnitState(UNIT_STAT_ROOT);
-            if (target->ToCreature()) {
-                target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
-                ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+            if (puller) {
+                //puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
+                m_creature->SetReactState(REACT_AGGRESSIVE);
+                m_creature->clearUnitState(UNIT_STAT_ROOT);
+                if (target->ToCreature()) {
+                    target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                }
+                target->GetMotionMaster()->MoveChase(puller);
+                target->Attack(puller, true);
+                m_creature->GetMotionMaster()->MoveChase(puller);
+                AttackStart(puller);
             }
-            target->GetMotionMaster()->MoveChase(puller);
-            target->Attack(puller, true);
-            m_creature->GetMotionMaster()->MoveChase(puller);
-            AttackStart(puller);
+            else {
+                AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                if (target->ToCreature()) {
+                    target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                    target->ToCreature()->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                }
+            }
         }
     }
     
