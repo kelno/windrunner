@@ -28,6 +28,7 @@ npc_sunblade_protector
 npc_sunblade_scout
 npc_sunblade_slayer
 npc_sunblade_cabalist
+npc_sunblade_dawnpriest
 EndContentData */
 
 #include "precompiled.h"
@@ -368,6 +369,79 @@ CreatureAI* GetAI_npc_sunblade_cabalist(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_dawnpriest
+######*/
+
+#define SPELL_HOLY_NOVA     46564
+#define SPELL_HOLYFORM      46565
+#define SPELL_RENEW         46563
+
+struct npc_sunblade_dawnpriest : public ScriptedAI
+{
+    npc_sunblade_dawnpriest(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 holyNovaTimer;
+    uint32 renewTimer;
+    
+    void Reset()
+    {
+        holyNovaTimer = 2000;
+        renewTimer = 1500+rand()%1500;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        DoCast(m_creature, SPELL_HOLYFORM);
+    }
+    
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 10, 0);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+        
+        /*if (m_creature->IsNonMeleeSpellCasted(false))
+            return;*/
+            
+        if (holyNovaTimer <= diff) {
+            DoCast(m_creature, SPELL_HOLY_NOVA);
+            holyNovaTimer = 2000+rand()%2000;
+        }
+        else
+            holyNovaTimer -= diff;
+            
+        if (renewTimer <= diff) {
+            // FIXME: cast on friend units sometimes
+            DoCast(m_creature, SPELL_RENEW, true);
+            renewTimer = 1500+rand()%1500;
+        }
+        else
+            renewTimer -= diff;
+    }
+        
+};
+
+CreatureAI* GetAI_npc_sunblade_dawnpriest(Creature *pCreature)
+{
+    return new npc_sunblade_dawnpriest(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -393,5 +467,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_cabalist";
     newscript->GetAI = &GetAI_npc_sunblade_cabalist;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_dawnpriest";
+    newscript->GetAI = &GetAI_npc_sunblade_dawnpriest;
     newscript->RegisterSelf();
 }
