@@ -150,7 +150,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         pullerGUID = pWho->GetGUID();
         if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
             m_creature->SetReactState(REACT_PASSIVE);
-            m_creature->SetSpeed(MOVE_WALK, 3.0f);
+            m_creature->SetSpeed(MOVE_WALK, 4.0f);
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
