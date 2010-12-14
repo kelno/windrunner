@@ -808,7 +808,8 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
                 DoCast(target, SPELL_SPECTRAL_BLAST);
                 if (target->ToPlayer() && target->ToPlayer()->GetPet()) {
                     Pet *pet = target->ToPlayer()->GetPet();
-                    DoCast(pet, SPELL_SPECTRAL_BLAST);
+                    target->CastSpell(pet, SPELL_TELEPORT_SPECTRAL, true);
+                    target->AddAura(AURA_SPECTRAL_REALM, pet);
                     pet->Relocate(pet->GetPositionX(), pet->GetPositionY(), pet->GetPositionZ(), pet->GetOrientation());
                 }
                 DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
@@ -831,8 +832,10 @@ bool GOkalecgos_teleporter(Player *player, GameObject* _GO)
         player->GetSession()->SendNotification(GO_FAILED);
     else {
         player->CastSpell(player, SPELL_TELEPORT_SPECTRAL, true);
-        if (player->GetPet())
+        if (player->GetPet()) {
                 player->GetPet()->CastSpell(player->GetPet(), SPELL_TELEPORT_SPECTRAL, true);
+                player->AddAura(AURA_SPECTRAL_REALM, player->GetPet());
+            }
         player->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET);
         if (player->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
             player->RemoveAurasDueToSpell(AURA_SPECTRAL_EXHAUSTION);    // FIXME: If this happens, this is a bug.
