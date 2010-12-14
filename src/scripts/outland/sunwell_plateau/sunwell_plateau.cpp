@@ -99,7 +99,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         if (felLightningTimer) {
             if (felLightningTimer <= diff) {
                 DoCast(m_creature->getVictim(), SPELL_FEL_LIGHTNING);
-                felLightningTimer = 5000+rand()%10000;
+                felLightningTimer = 7000+rand()%5000;
             }
             else
                 felLightningTimer -= diff;
