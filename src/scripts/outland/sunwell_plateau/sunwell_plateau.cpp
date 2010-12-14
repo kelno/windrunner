@@ -27,6 +27,7 @@ npc_captain_selana
 npc_sunblade_protector
 npc_sunblade_scout
 npc_sunblade_slayer
+npc_sunblade_cabalist
 EndContentData */
 
 #include "precompiled.h"
@@ -281,6 +282,92 @@ CreatureAI* GetAI_npc_sunblade_slayer(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_cabalist
+######*/
+
+#define SPELL_IGNITE_MANA   46543
+#define SPELL_SHADOW_BOLT   47248
+#define SPELL_SUMMON_IMP    46544
+
+struct npc_sunblade_cabalist : public ScriptedAI
+{
+    npc_sunblade_cabalist(Creature *c) : ScriptedAI(c), summons(m_creature)
+    {
+        firstReset = true;
+    }
+    
+    uint32 igniteManaTimer;
+    bool firstReset;
+    
+    SummonList summons;
+    
+    void Reset()
+    {
+        igniteManaTimer = 3000;
+        
+        summons.DespawnAll();
+        if (firstReset) {
+            DoCast(m_creature, SPELL_SUMMON_IMP);
+            firstReset = false;
+        }
+    }
+    
+    void JustReachedHome()
+    {
+        DoCast(m_creature, SPELL_SUMMON_IMP);
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 15, 0);
+        }
+    }
+    
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+        
+        if (igniteManaTimer > 400)
+            igniteManaTimer -= diff;
+            
+        if (m_creature->IsNonMeleeSpellCasted(false))
+            return;
+            
+        if (igniteManaTimer <= 400) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_IGNITE_MANA, true);
+            igniteManaTimer = 10000+rand()%3000;
+            return;
+        }
+            
+        // Continuously cast Shadow bolt when nothing else to do
+        DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_cabalist(Creature *pCreature)
+{
+    return new npc_sunblade_cabalist(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -301,5 +388,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_slayer";
     newscript->GetAI = &GetAI_npc_sunblade_slayer;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_cabalist";
+    newscript->GetAI = &GetAI_npc_sunblade_cabalist;
     newscript->RegisterSelf();
 }
