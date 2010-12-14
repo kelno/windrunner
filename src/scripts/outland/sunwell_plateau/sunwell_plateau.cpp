@@ -195,7 +195,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                     m_creature->SetInFront(protector);
                     hasActivated = true;
                     m_creature->SetSpeed(MOVE_WALK, 1.0f);
-                    sinisterStrikeTimer = 5000;
+                    sinisterStrikeTimer = 2000;
                 }
             }
         }
@@ -206,7 +206,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         if (sinisterStrikeTimer) {
             if (sinisterStrikeTimer <= diff) {
                 DoCast(m_creature->getVictim(), SPELL_SINISTER_STRIKE);
-                sinisterStrikeTimer = 5000+rand()%2000;
+                sinisterStrikeTimer = 2000+rand()%2000;
             }
             else
                 sinisterStrikeTimer -= diff;
