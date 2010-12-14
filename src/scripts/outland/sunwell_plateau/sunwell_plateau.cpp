@@ -227,9 +227,9 @@ CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
 
 #define SPELL_SHOOT     47001
 
-struct npc_sunblade_slayerAI : public Scripted_NoMovementAI
+struct npc_sunblade_slayerAI : public ScriptedAI
 {
-    npc_sunblade_slayerAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    npc_sunblade_slayerAI(Creature *c) : ScriptedAI(c) {}
     
     uint32 shootTimer;
     
@@ -241,6 +241,22 @@ struct npc_sunblade_slayerAI : public Scripted_NoMovementAI
     }
     
     void Aggro(Unit *pWho) {}
+    
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 13, 0);
+        }
+    }
     
     void UpdateAI(uint32 const diff)
     {
