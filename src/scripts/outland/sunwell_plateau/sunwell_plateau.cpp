@@ -29,6 +29,7 @@ npc_sunblade_scout
 npc_sunblade_slayer
 npc_sunblade_cabalist
 npc_sunblade_dawnpriest
+npc_sunblade_duskpriest
 EndContentData */
 
 #include "precompiled.h"
@@ -442,6 +443,82 @@ CreatureAI* GetAI_npc_sunblade_dawnpriest(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_duskpriest
+######*/
+
+#define SPELL_MINDFLAY      46562
+#define SPELL_FEAR          46561
+#define SPELL_SW_PAIN       46560
+
+struct npc_sunblade_duskpriest : public ScriptedAI
+{
+    npc_sunblade_duskpriest(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 mindFlayTimer;
+    uint32 fearTimer;
+    uint32 swPainTimer;
+    
+    void Reset()
+    {
+        fearTimer = 5000;
+        swPainTimer = 1000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 10, 0);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (fearTimer <= diff) {
+            m_creature->InterruptNonMeleeSpells(true);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FEAR);
+            fearTimer = 6000+rand()%4000;
+            return;
+        }
+        else
+            fearTimer -= diff;
+            
+        if (swPainTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SW_PAIN, true);
+            swPainTimer = 3000+rand()%2000;
+        }
+        else
+            swPainTimer -= diff;
+        
+        //if (m_creature->IsNonMeleeSpellCasted(false))
+        if (mindFlayTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_MINDFLAY);
+            mindFlayTimer = 1000+rand()%2000;
+        }
+        else
+            mindFlayTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_duskpriest(Creature *pCreature)
+{
+    return new npc_sunblade_duskpriest(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -472,5 +549,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_dawnpriest";
     newscript->GetAI = &GetAI_npc_sunblade_dawnpriest;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_duskpriest";
+    newscript->GetAI = &GetAI_npc_sunblade_duskpriest;
     newscript->RegisterSelf();
 }
