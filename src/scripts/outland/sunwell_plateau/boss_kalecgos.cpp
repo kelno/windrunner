@@ -613,6 +613,8 @@ struct boss_kalecAI : public ScriptedAI
             damage = 0;
         else if(isEnraged)
             damage *= 3;
+        if (done_by->GetGUID() == SathGUID)
+            damage *= 1.3f;
         if (damage >= m_creature->GetHealth() && done_by->ToCreature() && done_by->GetGUID() == SathGUID)
             done_by->ToCreature()->AI()->KilledUnit(m_creature);
     }
