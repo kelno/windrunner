@@ -241,21 +241,38 @@ struct boss_brutallusAI : public ScriptedAI
             ++IntroPhase;
             break;
         case 3:
+        {
+            Madrigosa->CastSpell(me, SPELL_INTRO_FROSTBOLT, true);
             DoCast(me, SPELL_INTRO_FROST_BLAST);
-            Madrigosa->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+            Madrigosa->ToCreature()->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+            Madrigosa->Relocate(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ()+8);
+            Madrigosa->SetOrientation(4.9603f);
+            //Madrigosa->SendMonsterMove(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ(), 0);
+            WorldPacket data;                       //send update position to client
+            Madrigosa->BuildHeartBeatMsg(&data);
+            Madrigosa->SendMessageToSet(&data,true);
             me->AttackStop();
             Madrigosa->AttackStop();
             IntroFrostBoltTimer = 3000;
-            IntroPhaseTimer = 28000;
+            IntroPhaseTimer = 10000;
             ++IntroPhase;
             break;
+        }
         case 4:
+        {
             DoScriptText(YELL_INTRO_BREAK_ICE, me);
+            Madrigosa->ToCreature()->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+            Madrigosa->Relocate(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ()-8);
+            WorldPacket data;                       //send update position to client
+            Madrigosa->BuildHeartBeatMsg(&data);
+            Madrigosa->SendMessageToSet(&data,true);
+            Madrigosa->SetOrientation(4.9603f);
             IntroPhaseTimer = 6000;
             ++IntroPhase;
             break;
+        }
         case 5:
-            Madrigosa->CastSpell(me, SPELL_INTRO_ENCAPSULATE_CHANELLING, false);
+            Madrigosa->CastSpell(me, SPELL_INTRO_ENCAPSULATE_CHANELLING, true);
             DoScriptText(YELL_MADR_TRAP, Madrigosa);
             DoCast(me, SPELL_INTRO_ENCAPSULATE);
             IntroPhaseTimer = 11000;
@@ -327,6 +344,7 @@ struct boss_brutallusAI : public ScriptedAI
                 {
                     if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0))
                     {
+                        Madrigosa->SetOrientation(4.9603f);
                         Madrigosa->CastSpell(me, SPELL_INTRO_FROSTBOLT, true);
                         IntroFrostBoltTimer = 2000;
                     }
