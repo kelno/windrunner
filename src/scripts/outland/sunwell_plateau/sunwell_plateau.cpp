@@ -308,7 +308,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
         igniteManaTimer = 3000;
         
         summons.DespawnAll();
-        if (firstReset) {
+        if (firstReset && m_creature->isAlive()) {
             DoCast(m_creature, SPELL_SUMMON_IMP);
             firstReset = false;
         }
