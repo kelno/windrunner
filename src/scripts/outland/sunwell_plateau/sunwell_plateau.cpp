@@ -428,9 +428,11 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
             holyNovaTimer -= diff;
             
         if (renewTimer <= diff) {
-            // FIXME: cast on friend units sometimes
-            DoCast(m_creature, SPELL_RENEW, true);
-            renewTimer = 1500+rand()%1500;
+            if (rand()%4)
+                DoCast(m_creature, SPELL_RENEW, true);
+            else
+                DoCast(DoSelectLowestHpFriendly(40.0f, 1), SPELL_RENEW, true);
+            renewTimer = 6000+rand()%2000;
         }
         else
             renewTimer -= diff;
