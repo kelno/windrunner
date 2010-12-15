@@ -30,6 +30,7 @@ npc_sunblade_slayer
 npc_sunblade_cabalist
 npc_sunblade_dawnpriest
 npc_sunblade_duskpriest
+npc_sunblade_archmage
 EndContentData */
 
 #include "precompiled.h"
@@ -519,6 +520,101 @@ CreatureAI* GetAI_npc_sunblade_duskpriest(Creature *pCreature)
 }
 
 /*######
+## npc_sunblade_archmage
+######*/
+
+#define SPELL_ARCANE_EXPLO  46553
+#define SPELL_FROST_NOVA    46555
+#define SPELL_BLINK         1953        // Just for visual, blink is bugged for creatures atm
+
+struct npc_sunblade_archmage : public ScriptedAI
+{
+    npc_sunblade_archmage(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 arcaneExploTimer;
+    uint32 frostNovaTimer;
+    uint32 blinkTimer;
+    
+    void Reset()
+    {
+        arcaneExploTimer = 1000+rand()%2000;
+        frostNovaTimer = 6000+rand()%2000;
+        blinkTimer = 8000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 8, 0);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (arcaneExploTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLO, true);
+            arcaneExploTimer = 4000+rand()%2000;
+            return;
+        }
+        else
+            arcaneExploTimer -= diff;
+            
+        if (frostNovaTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FROST_NOVA, true);
+            frostNovaTimer = 6000+rand()%2000;
+            return;
+        }
+        else
+            frostNovaTimer -= diff;
+            
+        if(blinkTimer <= diff) {
+            bool InMeleeRange = false;
+            std::list<HostilReference*>& t_list = m_creature->getThreatManager().getThreatList();
+            for(std::list<HostilReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
+                if(Unit* target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid())) {
+                    //if in melee range
+                    if (target->IsWithinDistInMap(m_creature, 5)) {
+                        InMeleeRange = true;
+                        break;
+                    }
+                }
+            }
+            //if anybody is in melee range than escape by blink
+            if (InMeleeRange) {
+                DoCast(m_creature, SPELL_BLINK);  // For visual only
+                float x,y,z;
+                m_creature->GetPosition(x,y,z);
+                x = rand()%2 ? x+10+rand()%10 : x-10-rand()%10;
+                y = rand()%2 ? y+10+rand()%10 : y-10-rand()%10;
+                DoTeleportTo(x, y, z);
+            }
+            blinkTimer = 8000;
+        }
+        else 
+            blinkTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_sunblade_archmage(Creature *pCreature)
+{
+    return new npc_sunblade_archmage(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -554,5 +650,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_duskpriest";
     newscript->GetAI = &GetAI_npc_sunblade_duskpriest;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sunblade_archmage";
+    newscript->GetAI = &GetAI_npc_sunblade_archmage;
     newscript->RegisterSelf();
 }
