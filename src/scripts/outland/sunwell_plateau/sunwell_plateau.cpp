@@ -534,12 +534,14 @@ struct npc_sunblade_archmage : public ScriptedAI
     uint32 arcaneExploTimer;
     uint32 frostNovaTimer;
     uint32 blinkTimer;
+    uint32 changeTargetTimer;
     
     void Reset()
     {
         arcaneExploTimer = 1000+rand()%2000;
         frostNovaTimer = 6000+rand()%2000;
         blinkTimer = 8000;
+        changeTargetTimer = 8000+rand()%2000;
     }
     
     void Aggro(Unit *pWho) {}
@@ -581,7 +583,7 @@ struct npc_sunblade_archmage : public ScriptedAI
         else
             frostNovaTimer -= diff;
             
-        if(blinkTimer <= diff) {
+        if (blinkTimer <= diff) {
             bool InMeleeRange = false;
             std::list<HostilReference*>& t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
@@ -603,9 +605,17 @@ struct npc_sunblade_archmage : public ScriptedAI
                 DoTeleportTo(x, y, z);
             }
             blinkTimer = 8000;
+            return;
         }
         else 
             blinkTimer -= diff;
+            
+        if (changeTargetTimer <= diff) {
+            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+            changeTargetTimer = 8000+rand()%2000;
+        }
+        else
+            changeTargetTimer -= diff;
     }
 };
 
