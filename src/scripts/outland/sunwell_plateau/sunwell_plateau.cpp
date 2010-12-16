@@ -271,7 +271,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (shootTimer <= diff) {
@@ -352,7 +352,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
         
         if (igniteManaTimer > 400)
@@ -421,7 +421,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
         
         /*if (m_creature->IsNonMeleeSpellCasted(false))
@@ -494,7 +494,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (fearTimer <= diff) {
@@ -573,7 +573,7 @@ struct npc_sunblade_archmage : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
