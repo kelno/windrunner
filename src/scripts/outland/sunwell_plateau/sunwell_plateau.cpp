@@ -595,7 +595,7 @@ struct npc_sunblade_archmage : public ScriptedAI
         else
             frostNovaTimer -= diff;
             
-        if (blinkTimer <= diff) {
+        /*if (blinkTimer <= diff) {
             bool InMeleeRange = false;
             std::list<HostilReference*>& t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
@@ -620,7 +620,7 @@ struct npc_sunblade_archmage : public ScriptedAI
             return;
         }
         else 
-            blinkTimer -= diff;
+            blinkTimer -= diff;*/
             
         if (changeTargetTimer <= diff) {
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
