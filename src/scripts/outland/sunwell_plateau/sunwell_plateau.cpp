@@ -77,15 +77,20 @@ enum LiadrinnSpeeches
 
 struct npc_sunblade_protectorAI : public ScriptedAI
 {
-    npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c) {}
+    npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c)
+    {
+        isActivated = false;
+    }
     
     uint32 felLightningTimer;
+    
+    bool isActivated;
     
     void Reset()
     {
         felLightningTimer = 5000;
         
-        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE) {
+        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE && !isActivated) {
             m_creature->SetReactState(REACT_DEFENSIVE);
             m_creature->SetHasChangedReactState();
             //felLightningTimer = 0;
@@ -170,6 +175,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 if (target->ToCreature()) {
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                 }
                 target->GetMotionMaster()->MoveChase(puller);
                 target->Attack(puller, true);
@@ -181,6 +187,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 if (target->ToCreature()) {
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                     target->ToCreature()->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
                 }
             }
