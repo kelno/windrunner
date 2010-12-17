@@ -138,6 +138,8 @@ struct boss_brutallusAI : public ScriptedAI
                     Madrigosa->SetVisibility(VISIBILITY_OFF);
             }
         }
+        
+        m_creature->SetFullTauntImmunity(false);
     }
 
     void Aggro(Unit *who)
@@ -391,6 +393,7 @@ struct boss_brutallusAI : public ScriptedAI
             DoScriptText(YELL_BERSERK, me);
             DoCast(me, SPELL_BERSERK);
             Enraged = true;
+            m_creature->SetFullTauntImmunity(true);
         } else BerserkTimer -= diff;
 
         DoMeleeAttackIfReady();
