@@ -227,6 +227,39 @@ struct instance_old_hillsbrad : public ScriptedInstance
         }
         return 0;
     }
+    
+    const char* Save()
+    {
+        OUT_SAVE_INST_DATA;
+        std::ostringstream stream;
+        stream << Encounter[0] << " " << Encounter[1] << " " << Encounter[2] << " " << Encounter[3] << " " << Encounter[4] << " " << Encounter[5];
+        char* out = new char[stream.str().length() + 1];
+        strcpy(out, stream.str().c_str());
+        if(out)
+        {
+            OUT_SAVE_INST_DATA_COMPLETE;
+            return out;
+        }
+
+        return NULL;
+    }
+
+    void Load(const char* in)
+    {
+        if(!in)
+        {
+            OUT_LOAD_INST_DATA_FAIL;
+            return;
+        }
+
+        OUT_LOAD_INST_DATA(in);
+        std::istringstream stream(in);
+        stream >> Encounter[0] >> Encounter[1] >> Encounter[2] >> Encounter[3] >> Encounter[4] >> Encounter[5];
+        //for(uint8 i = 0; i < ENCOUNTERS; ++i)
+            //if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
+            //    Encounters[i] = NOT_STARTED;
+        OUT_LOAD_INST_DATA_COMPLETE;
+    }
 };
 InstanceData* GetInstanceData_instance_old_hillsbrad(Map* map)
 {

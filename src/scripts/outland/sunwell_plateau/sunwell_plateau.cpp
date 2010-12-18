@@ -77,15 +77,20 @@ enum LiadrinnSpeeches
 
 struct npc_sunblade_protectorAI : public ScriptedAI
 {
-    npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c) {}
+    npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c)
+    {
+        isActivated = false;
+    }
     
     uint32 felLightningTimer;
+    
+    bool isActivated;
     
     void Reset()
     {
         felLightningTimer = 5000;
         
-        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE) {
+        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE && !isActivated) {
             m_creature->SetReactState(REACT_DEFENSIVE);
             m_creature->SetHasChangedReactState();
             //felLightningTimer = 0;
@@ -170,6 +175,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 if (target->ToCreature()) {
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                 }
                 target->GetMotionMaster()->MoveChase(puller);
                 target->Attack(puller, true);
@@ -181,6 +187,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 if (target->ToCreature()) {
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
+                    ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                     target->ToCreature()->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
                 }
             }
@@ -264,7 +271,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (shootTimer <= diff) {
@@ -345,7 +352,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
         
         if (igniteManaTimer > 400)
@@ -414,7 +421,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
         
         /*if (m_creature->IsNonMeleeSpellCasted(false))
@@ -487,7 +494,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (fearTimer <= diff) {
@@ -566,7 +573,7 @@ struct npc_sunblade_archmage : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
+        if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
         if (!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
@@ -588,7 +595,7 @@ struct npc_sunblade_archmage : public ScriptedAI
         else
             frostNovaTimer -= diff;
             
-        if (blinkTimer <= diff) {
+        /*if (blinkTimer <= diff) {
             bool InMeleeRange = false;
             std::list<HostilReference*>& t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference*>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
@@ -613,7 +620,7 @@ struct npc_sunblade_archmage : public ScriptedAI
             return;
         }
         else 
-            blinkTimer -= diff;
+            blinkTimer -= diff;*/
             
         if (changeTargetTimer <= diff) {
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));

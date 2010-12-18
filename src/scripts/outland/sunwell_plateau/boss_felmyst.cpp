@@ -174,7 +174,7 @@ struct boss_felmystAI : public ScriptedAI
         m_creature->setActive(false);
         
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-        m_creature->addFullTauntImmunity();
+        m_creature->SetFullTauntImmunity(true);
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
