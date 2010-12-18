@@ -32,6 +32,7 @@ npc_sunblade_dawnpriest
 npc_sunblade_duskpriest
 npc_sunblade_archmage
 npc_shadowsword_vanquisher
+npc_shadowsword_manafiend
 EndContentData */
 
 #include "precompiled.h"
@@ -654,6 +655,8 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
     uint32 cleaveTimer;
     uint32 meltArmorTimer;
     
+    ScriptedInstance *pInstance;
+    
     void Reset()
     {
         cleaveTimer = 5000;
@@ -695,6 +698,68 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
 CreatureAI* GetAI_npc_shadowsword_vanquisher(Creature *pCreature)
 {
     return new npc_shadowsword_vanquisherAI(pCreature);
+}
+
+/*######
+## npc_shadowsword_manafiend
+######*/
+
+#define SPELL_ARCANE_EXPLOSION_MANAFIEND    46457
+#define SPELL_DRAIN_MANA                    46453
+
+struct npc_shadowsword_manafiendAI : public ScriptedAI
+{
+    npc_shadowsword_manafiendAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+    }
+    
+    uint32 arcaneExploTimer;
+    uint32 drainManaTimer;
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        arcaneExploTimer = 8000+rand()%2000;
+        drainManaTimer = 15000+rand()%5000;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        if (m_creature->GetPositionZ() < 40.0f)
+            if (pInstance)
+                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (arcaneExploTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION_MANAFIEND);
+            arcaneExploTimer = 8000+rand()%2000;
+        }
+        else
+            arcaneExploTimer -= diff;
+            
+        if (drainManaTimer <= diff) {
+            if (m_creature->GetPower(POWER_MANA) <= ((m_creature->GetMaxPower(POWER_MANA) / 100.0f) * 10.0f)) {
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_DRAIN_MANA);
+                drainManaTimer = 15000+rand()%5000;
+            }
+        }
+        else
+            drainManaTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_shadowsword_manafiend(Creature *pCreature)
+{
+    return new npc_shadowsword_manafiendAI(pCreature);
 }
 
 /*######
@@ -743,5 +808,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_shadowsword_vanquisher";
     newscript->GetAI = &GetAI_npc_shadowsword_vanquisher;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_shadowsword_manafiend";
+    newscript->GetAI = &GetAI_npc_shadowsword_manafiend;
     newscript->RegisterSelf();
 }
