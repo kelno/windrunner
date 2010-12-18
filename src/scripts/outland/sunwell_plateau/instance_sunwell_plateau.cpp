@@ -179,6 +179,15 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     HandleGameObject(NULL, true, pGo);
                 MurusGate[1]= pGo->GetGUID();
                 break;
+            case 187766:    // The first gate FIXME: Always closed for now, will change later
+                HandleGameObject(NULL, false, pGo);
+                break;
+            case 187764:    // The second gate FIXME: Always closed for now, will change later
+                HandleGameObject(NULL, false, pGo);
+                break;
+            case 187765:    // The third gate FIXME: Always closed for now, will change later
+                HandleGameObject(NULL, false, pGo);
+                break;
         }
     }
 
