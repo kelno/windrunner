@@ -2495,9 +2495,6 @@ void Spell::EffectApplyAura(uint32 i)
     Unit* caster = m_originalCasterGUID ? m_originalCaster : m_caster;
     if(!caster)
         return;
-        
-    if (caster->GetMapId() == 580 && (m_spellInfo->Id == 27720 || m_spellInfo->Id == 27721 || m_spellInfo->Id == 27722 || m_spellInfo->Id == 27723))
-        return;
             
     if (m_spellInfo->Id == 40880 || m_spellInfo->Id == 40882 || m_spellInfo->Id == 40883 || m_spellInfo->Id == 40891 || m_spellInfo->Id == 40896 || m_spellInfo->Id == 40897)   // Sharaz prismatic auras
         unitTarget = caster;
@@ -6412,6 +6409,13 @@ void Spell::EffectCharge(uint32 /*i*/)
 {
     if(!m_caster)
         return;
+    
+    if (m_caster->ToPlayer()) {    
+        if (BattleGround * bg = (m_caster->ToPlayer())->GetBattleGround()) {
+            if (bg->GetStatus() == STATUS_WAIT_JOIN)
+                return;
+        }
+    }
 
     Unit *target = m_targets.getUnitTarget();
     if(!target)

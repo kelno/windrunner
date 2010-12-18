@@ -111,7 +111,7 @@ struct boss_brutallusAI : public ScriptedAI
     {
         SlashTimer = 11000;
         StompTimer = 30000;
-        BurnTimer = 60000;
+        BurnTimer = 20000;
         BerserkTimer = 360000;
 
         IntroPhase = 0;
@@ -138,6 +138,8 @@ struct boss_brutallusAI : public ScriptedAI
                     Madrigosa->SetVisibility(VISIBILITY_OFF);
             }
         }
+        
+        m_creature->SetFullTauntImmunity(false);
     }
 
     void Aggro(Unit *who)
@@ -376,7 +378,8 @@ struct boss_brutallusAI : public ScriptedAI
             if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true)) {
                 if(!target->HasAura(SPELL_BURN, 0)) {
                     target->CastSpell(target, SPELL_BURN, true);
-                    BurnTimer = urand(60000,180000);
+                    //BurnTimer = urand(60000,180000);
+                    BurnTimer = 20000;
                 }
                 else
                     BurnTimer = 1000 + diff; // if target has SPELL_BURN, wait a bit.
@@ -390,6 +393,7 @@ struct boss_brutallusAI : public ScriptedAI
             DoScriptText(YELL_BERSERK, me);
             DoCast(me, SPELL_BERSERK);
             Enraged = true;
+            m_creature->SetFullTauntImmunity(true);
         } else BerserkTimer -= diff;
 
         DoMeleeAttackIfReady();
