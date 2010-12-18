@@ -78,7 +78,7 @@ struct boss_midnightAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(Phase == 1 && (m_creature->GetHealth()*100)/m_creature->GetMaxHealth() < 95)
+        if(Phase == 1 && (m_creature->IsBelowHPPercent(95.50f)))
         {
             Phase = 2;
             Creature *pAttumen = DoSpawnCreature(SUMMON_ATTUMEN, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
@@ -95,7 +95,7 @@ struct boss_midnightAI : public ScriptedAI
                 }
             }
         }
-        else if(Phase == 2 && (m_creature->GetHealth()*100)/m_creature->GetMaxHealth() < 25)
+        else if(Phase == 2 && (m_creature->IsBelowHPPercent(25.0f)))
         {
             if (Unit *pAttumen = Unit::GetUnit(*m_creature, Attumen))
                 Mount(pAttumen);
@@ -276,7 +276,7 @@ struct boss_attumenAI : public ScriptedAI
         }
         else
         {
-            if( (m_creature->GetHealth()*100)/m_creature->GetMaxHealth() < 25)
+            if(m_creature->IsBelowHPPercent(25.0f))
             {
                 Creature *pMidnight = Unit::GetCreature(*m_creature, Midnight);
                 if(pMidnight && pMidnight->GetTypeId() == TYPEID_UNIT)
