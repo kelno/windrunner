@@ -650,7 +650,7 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
 {
     npc_shadowsword_vanquisherAI(Creature *c) : ScriptedAI(c)
     {
-        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     
     uint32 cleaveTimer;
@@ -712,7 +712,7 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
 {
     npc_shadowsword_manafiendAI(Creature *c) : ScriptedAI(c)
     {
-        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     
     uint32 arcaneExploTimer;
@@ -774,7 +774,7 @@ struct npc_shadowsword_lifeshaperAI : public ScriptedAI
 {
     npc_shadowsword_lifeshaperAI(Creature *c) : ScriptedAI(c)
     {
-        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     
     uint32 drainLifeTimer;

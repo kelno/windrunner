@@ -272,7 +272,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 /*if (data == DONE)
                     HandleGameObject(FireBarrier, true);*/ // FIXME: Re-add this when opening sunwell part 2
                 Encounters[2] = data; break;
-            DATA_GAUNTLET_EVENT:
+            case DATA_GAUNTLET_EVENT:
                 GauntletStatus = data;
                 break;
             case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
@@ -302,10 +302,11 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
     void Update(uint32 const diff)
     {
+
         Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
         if (!Commander || Commander->isInCombat() || Commander->isDead())
             GauntletStatus = NOT_STARTED;
-        
+
         if (GauntletStatus != IN_PROGRESS) {
             BringersTimer = 0;
             FiendTimer = 0;
