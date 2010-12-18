@@ -28,6 +28,16 @@ OPEN    = 0
 5 - Kil'Jaeden
 */
 
+/*
+* GAUNTLET TODO:
+* 
+* - les 4 trashs du début ont une position_z < 40, utiliser ce critère pour lancer l'event
+* - fin de l'event quand on pull le commandant
+* - check si les deux trashs sont random ou si c'est un de chaque sorte à chaque fois
+* - fiels : 12 sec
+* - autres : 40 sec
+*/
+
 struct instance_sunwell_plateau : public ScriptedInstance
 {
     instance_sunwell_plateau(Map *map) : ScriptedInstance(map) {Initialize();};
@@ -50,6 +60,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
 	uint64 KalecgosKJ;
     uint64 FlightLeft;
     uint64 FlightRight;
+    uint64 CommanderGUID;
 	uint32 SpectralPlayers;
 
 	/** GameObjects **/
@@ -61,6 +72,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
 	/*** Misc ***/
 	uint32 SpectralRealmTimer;
 	std::vector<uint64> SpectralRealmList;
+    uint32 GauntletStatus;
+    uint32 BringersTimer;
+    uint32 FiendTimer;
 
     void Initialize()
     {
@@ -80,6 +94,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         KilJaedenController     = 0;
         Anveena                 = 0;
         KalecgosKJ              = 0;
+        CommanderGUID           = 0;
         SpectralPlayers         = 0;
 
         /*** GameObjects ***/
@@ -91,11 +106,15 @@ struct instance_sunwell_plateau : public ScriptedInstance
         KalecgosWall[1] = 0;
 
         /*** Misc ***/
-        SpectralRealmTimer = 5000;
+        SpectralRealmTimer      = 5000;
+        BringersTimer           = 0;
+        FiendTimer              = 0;
 
         /*** Encounters ***/
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             Encounters[i] = NOT_STARTED;
+            
+        GauntletStatus = NOT_STARTED;
     }
 
     bool IsEncounterInProgress() const
@@ -158,6 +177,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25319: KalecgosKJ          = pCreature->GetGUID(); break;
             case 25357: FlightLeft          = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
+            case 25837: CommanderGUID       = pCreature->GetGUID(); pCreature->setActive(true); break;
         }
     }
 
@@ -198,6 +218,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_KALECGOS_EVENT:     return Encounters[0];
             case DATA_BRUTALLUS_EVENT:    return Encounters[1];
             case DATA_FELMYST_EVENT:      return Encounters[2];
+            case DATA_GAUNTLET_EVENT:     return GauntletStatus;
             case DATA_EREDAR_TWINS_EVENT: return Encounters[3];
             case DATA_MURU_EVENT:         return Encounters[4];
             case DATA_KILJAEDEN_EVENT:    return Encounters[5];
@@ -218,6 +239,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_BRUTALLUS:            return Brutallus;
             case DATA_MADRIGOSA:            return Madrigosa;
             case DATA_FELMYST:              return Felmyst;
+            case DATA_COMMANDER:            return CommanderGUID;
             case DATA_ALYTHESS:             return Alythess;
             case DATA_SACROLASH:            return Sacrolash;
             case DATA_MURU:                 return Muru;
@@ -240,18 +262,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
         {
             case DATA_KALECGOS_EVENT:
                 {
-                    /*if (data == NOT_STARTED || data == DONE)
-                    {
-                        HandleGameObject(ForceField,true);
-                        HandleGameObject(KalecgosWall[0],true);
-                        HandleGameObject(KalecgosWall[1],true);
-                    }
-                    else if (data == IN_PROGRESS)
-                    {
-                        HandleGameObject(ForceField,false);
-                        HandleGameObject(KalecgosWall[0],false);
-                        HandleGameObject(KalecgosWall[1],false);
-                    }*/
                     Encounters[0] = data;
                     if (data == DONE)
                         ((InstanceMap *)instance)->PermBindAllPlayers(GetPlayerInMap());
@@ -262,6 +272,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 /*if (data == DONE)
                     HandleGameObject(FireBarrier, true);*/ // FIXME: Re-add this when opening sunwell part 2
                 Encounters[2] = data; break;
+            DATA_GAUNTLET_EVENT:
+                GauntletStatus = data;
+                break;
             case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
             case DATA_MURU_EVENT:
                 switch(data)
@@ -287,8 +300,46 @@ struct instance_sunwell_plateau : public ScriptedInstance
             SaveToDB();
     }
 
-    void Update(uint32 diff)
+    void Update(uint32 const diff)
     {
+        Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
+        if (!Commander || Commander->isInCombat() || Commander->isDead())
+            GauntletStatus = NOT_STARTED;
+        
+        if (GauntletStatus != IN_PROGRESS) {
+            BringersTimer = 0;
+            FiendTimer = 0;
+            
+            return;
+        }
+
+        if (BringersTimer <= diff) {
+            float x, y, z;
+            
+            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            if (Creature *Bringer1 = Commander->SummonCreature(MOB_SOULBINDER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0))
+                Bringer1->MonsterSay("[DEBUG] First bringer!", LANG_UNIVERSAL, NULL);
+            
+            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            if (Creature *Bringer2 = Commander->SummonCreature(MOB_DEATHBRINGER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0))
+                Bringer2->MonsterSay("[DEBUG] Second bringer!", LANG_UNIVERSAL, NULL);
+                
+            BringersTimer = 40000;
+        }
+        else
+            BringersTimer -= diff;
+    
+        if (FiendTimer <= diff) {
+            float x, y, z;
+            
+            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            if (Creature *Fiend = Commander->SummonCreature(MOB_VOLATILE_FIEND, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0))
+                Fiend->MonsterSay("[DEBUG] Fiend!", LANG_UNIVERSAL, NULL);
+                
+            FiendTimer = 12000;
+        }
+        else
+            FiendTimer -= diff;
     }
 
     const char* Save()
