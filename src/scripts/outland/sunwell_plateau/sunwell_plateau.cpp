@@ -33,6 +33,7 @@ npc_sunblade_duskpriest
 npc_sunblade_archmage
 npc_shadowsword_vanquisher
 npc_shadowsword_manafiend
+npc_shadowsword_lifeshaper
 EndContentData */
 
 #include "precompiled.h"
@@ -763,6 +764,66 @@ CreatureAI* GetAI_npc_shadowsword_manafiend(Creature *pCreature)
 }
 
 /*######
+## npc_shadowsword_lifeshaper
+######*/
+
+#define SPELL_DRAIN_LIFE        46466
+#define SPELL_HEALTH_FUNNEL     46467
+
+struct npc_shadowsword_lifeshaperAI : public ScriptedAI
+{
+    npc_shadowsword_lifeshaperAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+    }
+    
+    uint32 drainLifeTimer;
+    uint32 healthFunnelTimer;
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        drainLifeTimer = 15000+rand()%5000;
+        healthFunnelTimer = 18000+rand()%5000;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        if (m_creature->GetPositionZ() < 40.0f)
+            if (pInstance)
+                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (drainLifeTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_DRAIN_LIFE);
+            drainLifeTimer = 15000+rand()%5000;
+        }
+        else
+            drainLifeTimer -= diff;
+            
+        if (healthFunnelTimer <= diff) {
+            DoCast(DoSelectLowestHpFriendly(40.0f, 1), SPELL_HEALTH_FUNNEL);
+            healthFunnelTimer = 15000+rand()%5000;
+        }
+        else
+            healthFunnelTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_shadowsword_lifeshaper(Creature *pCreature)
+{
+    return new npc_shadowsword_lifeshaperAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -813,5 +874,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_shadowsword_manafiend";
     newscript->GetAI = &GetAI_npc_shadowsword_manafiend;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_shadowsword_lifeshaper";
+    newscript->GetAI = &GetAI_npc_shadowsword_lifeshaper;
     newscript->RegisterSelf();
 }
