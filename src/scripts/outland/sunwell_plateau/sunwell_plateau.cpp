@@ -31,6 +31,7 @@ npc_sunblade_cabalist
 npc_sunblade_dawnpriest
 npc_sunblade_duskpriest
 npc_sunblade_archmage
+npc_shadowsword_vanquisher
 EndContentData */
 
 #include "precompiled.h"
@@ -637,6 +638,66 @@ CreatureAI* GetAI_npc_sunblade_archmage(Creature *pCreature)
 }
 
 /*######
+## npc_shadowsword_vanquisher
+######*/
+
+#define SPELL_CLEAVE        46468
+#define SPELL_MELT_ARMOR    46469
+
+struct npc_shadowsword_vanquisherAI : public ScriptedAI
+{
+    npc_shadowsword_vanquisherAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)m_creature->GetInstanceData());
+    }
+    
+    uint32 cleaveTimer;
+    uint32 meltArmorTimer;
+    
+    void Reset()
+    {
+        cleaveTimer = 5000;
+        meltArmorTimer = 2000;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        if (m_creature->GetPositionZ() < 40.0f)
+            if (pInstance)
+                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (cleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            cleaveTimer = 5000+rand()%3000;
+        }
+        else
+            cleaveTimer -= diff;
+            
+        if (meltArmorTimer <= diff) {
+            if (!m_creature->getVictim()->HasAura(SPELL_MELT_ARMOR)) {
+                DoCast(m_creature->getVictim(), SPELL_MELT_ARMOR);
+            }
+            meltArmorTimer = 10000+rand()%5000;
+        }
+        else
+            meltArmorTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_shadowsword_vanquisher(Creature *pCreature)
+{
+    return new npc_shadowsword_vanquisherAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -677,5 +738,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_archmage";
     newscript->GetAI = &GetAI_npc_sunblade_archmage;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_shadowsword_vanquisher";
+    newscript->GetAI = &GetAI_npc_shadowsword_vanquisher;
     newscript->RegisterSelf();
 }
