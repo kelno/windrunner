@@ -311,7 +311,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         if (!Commander || Commander->isInCombat() || Commander->isDead())
             GauntletStatus = NOT_STARTED;
 
-        if (GauntletStatus != IN_PROGRESS) {
+        if (GauntletStatus != IN_PROGRESS || GetData(DATA_EREDAR_TWINS_EVENT) == DONE) {
             BringersTimer = 0;
             FiendTimer = 0;
             
