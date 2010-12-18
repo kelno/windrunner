@@ -325,6 +325,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             if (Creature *Bringer1 = Commander->SummonCreature(MOB_SOULBINDER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Bringer1->MonsterSay("[DEBUG] First bringer!", LANG_UNIVERSAL, NULL);
                 Bringer1->setActive(true);
+                Bringer1->SetSpeed(MOVE_WALK, 3.5);
                 Bringer1->GetMotionMaster()->MovePath(25851, false);
             }
             
@@ -332,6 +333,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             if (Creature *Bringer2 = Commander->SummonCreature(MOB_DEATHBRINGER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Bringer2->MonsterSay("[DEBUG] Second bringer!", LANG_UNIVERSAL, NULL);
                 Bringer2->setActive(true);
+                Bringer2->SetSpeed(MOVE_WALK, 3.5);
                 Bringer2->GetMotionMaster()->MovePath(25851, false);
             }
                 
@@ -347,6 +349,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             if (Creature *Fiend = Commander->SummonCreature(MOB_VOLATILE_FIEND, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Fiend->MonsterSay("[DEBUG] Fiend!", LANG_UNIVERSAL, NULL);
                 Fiend->setActive(true);
+                Fiend->SetSpeed(MOVE_WALK, 5);
                 Fiend->GetMotionMaster()->MovePath(25851, false);
             }
                 
