@@ -274,6 +274,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 Encounters[2] = data; break;
             case DATA_GAUNTLET_EVENT:
                 GauntletStatus = data;
+                if (data == IN_PROGRESS) {
+                    BringersTimer = 5000;
+                    FiendTimer = 2000;
+                }
                 break;
             case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
             case DATA_MURU_EVENT:
