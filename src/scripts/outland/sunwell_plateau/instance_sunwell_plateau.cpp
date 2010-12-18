@@ -353,7 +353,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 Fiend->GetMotionMaster()->MovePath(25851, false);
             }
                 
-            FiendTimer = 12000;
+            FiendTimer = 15000;
         }
         else
             FiendTimer -= diff;
