@@ -36,6 +36,7 @@ npc_shadowsword_manafiend
 npc_shadowsword_lifeshaper
 npc_shadowsword_soulbinder
 npc_shadowsword_deathbringer
+npc_volatile_fiend
 EndContentData */
 
 #include "precompiled.h"
@@ -987,6 +988,78 @@ CreatureAI* GetAI_npc_shadowsword_deathbringer(Creature *pCreature)
 }
 
 /*######
+## npc_volatile_fiend
+######*/
+
+#define SPELL_BURNING_DESTRUCTION       47287
+#define SPELL_BURNING_WINDS             46308
+#define SPELL_FELFIRE_FISSION           45779
+
+struct npc_volatile_fiendAI : public ScriptedAI
+{
+    npc_volatile_fiendAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    uint32 despawnTimer;    // FIXME: Need new hook OnSpellTriggered and despawn when spell 46218 is triggered
+    uint32 damageTimer;
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_BURNING_WINDS);
+        despawnTimer = 0;
+        damageTimer = 1000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void DamageTaken(Unit *done_by, uint32 &damage)
+    {
+        DoCast(m_creature, SPELL_BURNING_DESTRUCTION);
+    }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == 47287)
+            despawnTimer = 2100;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (despawnTimer) {
+            if (despawnTimer <= diff) {
+                m_creature->DisappearAndDie();
+                return;
+            }
+            else
+                despawnTimer -= diff;
+        }
+            
+        if (m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+            if (damageTimer <= diff) {      // Should happen only one time, as creature explodes 2 sec after reaching melee
+                DoCast(m_creature, SPELL_FELFIRE_FISSION);
+                DoCast(m_creature, SPELL_BURNING_DESTRUCTION);
+                
+                damageTimer = 5000;
+            }
+            else
+                damageTimer -= diff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_volatile_fiend(Creature *pCreature)
+{
+    return new npc_volatile_fiendAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1052,5 +1125,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_shadowsword_deathbringer";
     newscript->GetAI = &GetAI_npc_shadowsword_deathbringer;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_volatile_fiend";
+    newscript->GetAI = &GetAI_npc_volatile_fiend;
     newscript->RegisterSelf();
 }
