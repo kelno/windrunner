@@ -256,7 +256,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
     
     void Aggro(Unit *pWho) {}
     
-    void AttackStart(Unit* who)
+    /*void AttackStart(Unit* who)
     {
         if (m_creature->Attack(who, true))
         {
@@ -270,7 +270,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
 
             DoStartMovement(who, 13, 0);
         }
-    }
+    }*/
     
     void UpdateAI(uint32 const diff)
     {
@@ -278,7 +278,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
             return;
             
         if (shootTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_SHOOT);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SHOOT);
             shootTimer = 4000;
         }
         else
@@ -332,7 +332,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
     
     void Aggro(Unit *pWho) {}
     
-    void AttackStart(Unit* who)
+    /*void AttackStart(Unit* who)
     {
         if (m_creature->Attack(who, true))
         {
@@ -346,7 +346,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
 
             DoStartMovement(who, 15, 0);
         }
-    }
+    }*/
     
     void JustSummoned(Creature* pSummon)
     {
@@ -406,7 +406,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
         DoCast(m_creature, SPELL_HOLYFORM);
     }
     
-    void AttackStart(Unit* who)
+    /*void AttackStart(Unit* who)
     {
         if (m_creature->Attack(who, true))
         {
@@ -420,7 +420,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
 
             DoStartMovement(who, 10, 0);
         }
-    }
+    }*/
     
     void UpdateAI(uint32 const diff)
     {
@@ -446,6 +446,8 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
         }
         else
             renewTimer -= diff;
+            
+        DoMeleeAttackIfReady();
     }
         
 };
@@ -479,7 +481,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
     
     void Aggro(Unit *pWho) {}
     
-    void AttackStart(Unit* who)
+    /*void AttackStart(Unit* who)
     {
         if (m_creature->Attack(who, true))
         {
@@ -493,7 +495,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
 
             DoStartMovement(who, 10, 0);
         }
-    }
+    }*/
     
     void UpdateAI(uint32 const diff)
     {
@@ -523,6 +525,8 @@ struct npc_sunblade_duskpriest : public ScriptedAI
         }
         else
             mindFlayTimer -= diff;
+            
+        DoMeleeAttackIfReady();
     }
 };
 
@@ -558,7 +562,7 @@ struct npc_sunblade_archmage : public ScriptedAI
     
     void Aggro(Unit *pWho) {}
     
-    void AttackStart(Unit* who)
+    /*void AttackStart(Unit* who)
     {
         if (m_creature->Attack(who, true))
         {
@@ -572,7 +576,7 @@ struct npc_sunblade_archmage : public ScriptedAI
 
             DoStartMovement(who, 8, 0);
         }
-    }
+    }*/
     
     void UpdateAI(uint32 const diff)
     {
@@ -631,6 +635,8 @@ struct npc_sunblade_archmage : public ScriptedAI
         }
         else
             changeTargetTimer -= diff;
+            
+        DoMeleeAttackIfReady();
     }
 };
 
