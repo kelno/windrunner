@@ -485,11 +485,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
 
     void KilledUnit(Unit* victim)
     {
-        switch(rand()%2)
-        {
-        case 0: DoScriptText(SAY_KJ_SLAY1, m_creature); break;
-        case 1: DoScriptText(SAY_KJ_SLAY2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_KJ_SLAY1, SAY_KJ_SLAY2), m_creature);
     }
 
     void EnterEvadeMode()
@@ -512,10 +508,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
 
     void CastSinisterReflection()
     {
-        switch(rand()%2){
-        case 0: DoScriptText(SAY_KJ_REFLECTION1, m_creature); break;
-        case 1: DoScriptText(SAY_KJ_REFLECTION2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_KJ_REFLECTION1, SAY_KJ_REFLECTION2), m_creature);
         DoCast(m_creature, SPELL_SINISTER_REFLECTION, true);
         for(uint8 i = 0; i < 4; i++){
             float x,y,z;
@@ -619,11 +612,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
                             Timer[TIMER_DARKNESS] = (Phase == PHASE_SACRIFICE) ? 20000 + rand()%15000 : 40000 + rand()%30000;
                             IsInDarkness = false;
                             DoCastAOE(SPELL_DARKNESS_OF_A_THOUSAND_SOULS_DAMAGE);
-                            switch(rand()%3){
-                                case 0: DoScriptText(SAY_KJ_DARKNESS1, m_creature); break;
-                                case 1: DoScriptText(SAY_KJ_DARKNESS2, m_creature); break;
-                                case 2: DoScriptText(SAY_KJ_DARKNESS3, m_creature); break;
-                            }
+                            DoScriptText(RAND(SAY_KJ_DARKNESS1, SAY_KJ_DARKNESS2, SAY_KJ_DARKNESS3), m_creature);
                         }
                         Timer[TIMER_SOUL_FLAY] = 9000;
                         }
