@@ -35,6 +35,7 @@ npc_shadowsword_vanquisher
 npc_shadowsword_manafiend
 npc_shadowsword_lifeshaper
 npc_shadowsword_soulbinder
+npc_shadowsword_deathbringer
 EndContentData */
 
 #include "precompiled.h"
@@ -877,6 +878,7 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
         if (despawnTimer) {
             if (despawnTimer <= diff) {
                 m_creature->DisappearAndDie();
+                return;
             }
             else
                 despawnTimer -= diff;
@@ -910,6 +912,78 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
 CreatureAI* GetAI_npc_shadowsword_soulbinder(Creature *pCreature)
 {
     return new npc_shadowsword_soulbinderAI(pCreature);
+}
+
+/*######
+## npc_shadowsword_deathbringer
+######*/
+
+#define SPELL_DISEASE_BUFFET        46481
+#define SPELL_VOLATILE_DISEASE      46483
+
+struct npc_shadowsword_deathbringerAI : public ScriptedAI
+{
+    npc_shadowsword_deathbringerAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    uint32 buffetTimer;
+    uint32 volatileTimer;
+    uint32 despawnTimer;
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        buffetTimer = 5000+rand()%5000;
+        volatileTimer = 15000+rand()%5000;
+        despawnTimer = 0;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void MovementInform(uint32 type, uint32 i)
+    {
+        if (type == WAYPOINT_MOTION_TYPE && i == 7)
+            despawnTimer = 2000;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (despawnTimer) {
+            if (despawnTimer <= diff) {
+                m_creature->DisappearAndDie();
+                return;
+            }
+            else
+                despawnTimer -= diff;
+        }
+        
+        if (buffetTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_DISEASE_BUFFET);
+            buffetTimer = 5000+rand()%5000;
+        }
+        else
+            buffetTimer -= diff;
+            
+        if (volatileTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0f, true), SPELL_VOLATILE_DISEASE);
+            volatileTimer = 15000+rand()%5000;
+        }
+        else
+            volatileTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_shadowsword_deathbringer(Creature *pCreature)
+{
+    return new npc_shadowsword_deathbringerAI(pCreature);
 }
 
 /*######
@@ -973,5 +1047,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_shadowsword_soulbinder";
     newscript->GetAI = &GetAI_npc_shadowsword_soulbinder;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_shadowsword_deathbringer";
+    newscript->GetAI = &GetAI_npc_shadowsword_deathbringer;
     newscript->RegisterSelf();
 }
