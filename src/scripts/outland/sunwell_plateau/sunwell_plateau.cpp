@@ -34,6 +34,7 @@ npc_sunblade_archmage
 npc_shadowsword_vanquisher
 npc_shadowsword_manafiend
 npc_shadowsword_lifeshaper
+npc_shadowsword_soulbinder
 EndContentData */
 
 #include "precompiled.h"
@@ -830,6 +831,88 @@ CreatureAI* GetAI_npc_shadowsword_lifeshaper(Creature *pCreature)
 }
 
 /*######
+## npc_shadowsword_soulbinder
+######*/
+
+#define SPELL_CURSE_EXHAUSTION      46434
+#define SPELL_FLASH_DARKNESS        46442
+#define SPELL_DOMINATION            46427
+
+struct npc_shadowsword_soulbinderAI : public ScriptedAI
+{
+    npc_shadowsword_soulbinderAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    uint32 curseExhaustionTimer;
+    uint32 flashDarknessTimer;
+    uint32 dominationTimer;
+    uint32 despawnTimer;
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        curseExhaustionTimer = 5000+rand()%3000;
+        flashDarknessTimer = 8000+rand()%2000;
+        dominationTimer = 15000;
+        despawnTimer = 0;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void MovementInform(uint32 type, uint32 i)
+    {
+        //sLog.outString("Reached waypoint %u (type %u)", i, type);
+        if (type == WAYPOINT_MOTION_TYPE && i == 7)
+            despawnTimer = 2000;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (despawnTimer) {
+            if (despawnTimer <= diff) {
+                m_creature->DisappearAndDie();
+            }
+            else
+                despawnTimer -= diff;
+        }
+            
+        if (curseExhaustionTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_CURSE_EXHAUSTION);
+            curseExhaustionTimer = 5000+rand()%3000;
+        }
+        else
+            curseExhaustionTimer -= diff;
+            
+        if (flashDarknessTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FLASH_DARKNESS);
+            flashDarknessTimer = 8000+rand()%2000;
+        }
+        else
+            flashDarknessTimer -= diff;
+            
+        if (dominationTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1, 40.0f, true), SPELL_DOMINATION);
+            dominationTimer = 15000;
+        }
+        else
+            dominationTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_shadowsword_soulbinder(Creature *pCreature)
+{
+    return new npc_shadowsword_soulbinderAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -885,5 +968,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_shadowsword_lifeshaper";
     newscript->GetAI = &GetAI_npc_shadowsword_lifeshaper;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_shadowsword_soulbinder";
+    newscript->GetAI = &GetAI_npc_shadowsword_soulbinder;
     newscript->RegisterSelf();
 }
