@@ -62,6 +62,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint64 FlightRight;
     uint64 CommanderGUID;
 	uint32 SpectralPlayers;
+    std::vector<uint64> northList, centerList, southList;
 
 	/** GameObjects **/
 	uint64 ForceField;                                      // Kalecgos Encounter
@@ -96,6 +97,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
         KalecgosKJ              = 0;
         CommanderGUID           = 0;
         SpectralPlayers         = 0;
+        northList.clear();
+        centerList.clear();
+        southList.clear();
 
         /*** GameObjects ***/
         ForceField  = 0;
@@ -178,6 +182,16 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25357: FlightLeft          = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25837: CommanderGUID       = pCreature->GetGUID(); pCreature->setActive(true); break;
+            case 23472:
+                sLog.outString("PositionX: %f", pCreature->GetPositionX());
+                if (pCreature->GetPositionX() > 1490.0f)
+                    northList.push_back(pCreature->GetGUID());
+                else if (pCreature->GetPositionX() > 1470.0f)
+                    centerList.push_back(pCreature->GetGUID());
+                else
+                    southList.push_back(pCreature->GetGUID());
+                sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
+                break;
         }
     }
 
@@ -298,6 +312,24 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 }
                 Encounters[4] = data; break;
             case DATA_KILJAEDEN_EVENT:     Encounters[5] = data; break;
+            case DATA_ACTIVATE_NORTH:
+                for (std::vector<uint64>::iterator itr = northList.begin(); itr != northList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
+                        trigger->CastSpell(trigger, 45582, true);
+                }
+                break;
+            case DATA_ACTIVATE_CENTER:
+                for (std::vector<uint64>::iterator itr = centerList.begin(); itr != centerList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
+                        trigger->CastSpell(trigger, 45582, true);
+                }
+                break;
+            case DATA_ACTIVATE_SOUTH:
+                for (std::vector<uint64>::iterator itr = southList.begin(); itr != southList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
+                        trigger->CastSpell(trigger, 45582, true);
+                }
+                break;
         }
 
         if (data == DONE)
