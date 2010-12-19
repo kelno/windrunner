@@ -739,10 +739,15 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
             summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
             break;
         case CREATURE_ANVEENA:
+        {
             summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            WorldPacket data;
+            summoned->BuildHeartBeatMsg(&data);
+            summoned->SendMessageToSet(&data, true);
             summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
             summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             break;
+        }
         case CREATURE_KILJAEDEN:
             summoned->CastSpell(summoned, SPELL_REBIRTH, false);
             ((boss_kiljaedenAI*)summoned->AI())->Phase=PHASE_NORMAL;
@@ -776,7 +781,7 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         if (DeceiverDeathCount > 2 && Phase == PHASE_DECEIVERS) {
             m_creature->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN) ;
             Phase = PHASE_NORMAL;
-            DoSpawnCreature(CREATURE_KILJAEDEN, 0, 0,0, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+            DoSpawnCreature(CREATURE_KILJAEDEN, 0, 0, 0, 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
         }
     }
 };
