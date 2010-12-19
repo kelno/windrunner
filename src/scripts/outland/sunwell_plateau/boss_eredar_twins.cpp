@@ -133,6 +133,15 @@ struct boss_sacrolashAI : public ScriptedAI
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
             
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        
+        // Alythess spells
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45230, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45348, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45342, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45235, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 46771, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45236, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45246, true);
     }
 
     void Aggro(Unit *who)
@@ -397,6 +406,13 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
             
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        
+        // Sacrolash spells
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45347, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45248, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45271, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45329, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
     }
 
     void Aggro(Unit *who)
