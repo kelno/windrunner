@@ -710,14 +710,16 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
     uint32 Phase;
     uint8 DeceiverDeathCount;
 
-    void InitializeAI(){
+    void InitializeAI()
+    {
         KalecKJ = Unit::GetCreature((*m_creature), pInstance->GetData64(DATA_KALECGOS_KJ));
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->addUnitState(UNIT_STAT_STUNNED);
     }
 
-    void Reset(){
+    void Reset()
+    {
         Phase = PHASE_DECEIVERS;
         if(KalecKJ)((boss_kalecgos_kjAI*)KalecKJ->AI())->ResetOrbs();
         DeceiverDeathCount = 0;
@@ -727,7 +729,8 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         Summons.DespawnAll();
     }
 
-    void JustSummoned(Creature* summoned){
+    void JustSummoned(Creature* summoned)
+    {
         switch(summoned->GetEntry()){
             case CREATURE_HAND_OF_THE_DECEIVER:
                 summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
@@ -750,18 +753,14 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(RandomSayTimer < diff && pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED){
-            switch(rand()%5){
-                case 0: DoScriptText(SAY_KJ_OFFCOMBAT1, m_creature); break;
-                case 1: DoScriptText(SAY_KJ_OFFCOMBAT2, m_creature); break;
-                case 2: DoScriptText(SAY_KJ_OFFCOMBAT3, m_creature); break;
-                case 3: DoScriptText(SAY_KJ_OFFCOMBAT4, m_creature); break;
-                case 4: DoScriptText(SAY_KJ_OFFCOMBAT5, m_creature); break;
-            }
+        if (RandomSayTimer < diff && pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED) {
+            DoScriptText(RAND(SAY_KJ_OFFCOMBAT1, SAY_KJ_OFFCOMBAT2, SAY_KJ_OFFCOMBAT3, SAY_KJ_OFFCOMBAT4, SAY_KJ_OFFCOMBAT5), m_creature);
             RandomSayTimer = 30000;
-        }else RandomSayTimer -= diff;
+        }
+        else
+            RandomSayTimer -= diff;
 
-        if(!SummonedDeceivers){
+        if (!SummonedDeceivers) {
             for(uint8 i = 0; i < 3; ++i)
                 m_creature->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
 
@@ -786,37 +785,46 @@ CreatureAI* GetAI_mob_kiljaeden_controller(Creature *_Creature)
 //AI for Hand of the Deceiver
 struct mob_hand_of_the_deceiverAI : public ScriptedAI
 {
-    mob_hand_of_the_deceiverAI(Creature* c) : ScriptedAI(c){
+    mob_hand_of_the_deceiverAI(Creature* c) : ScriptedAI(c)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
+    
     ScriptedInstance* pInstance;
 
     uint32 ShadowBoltVolleyTimer;
     uint32 FelfirePortalTimer;
 
-    void Reset(){
+    void Reset()
+    {
         // TODO: Timers!
         ShadowBoltVolleyTimer = 8000 + rand()%6000; // So they don't all cast it in the same moment.
         FelfirePortalTimer = 20000;
-        if(pInstance)pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
+        
+        if (pInstance)
+            pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
     }
 
-    void JustSummoned(Creature* summoned){
+    void JustSummoned(Creature* summoned)
+    {
         summoned->setFaction(m_creature->getFaction());
         summoned->SetLevel(m_creature->getLevel());
     }
 
-    void Aggro(Unit* who){
-        if(pInstance){
+    void Aggro(Unit* who)
+    {
+        if(pInstance) {
             pInstance->SetData(DATA_KILJAEDEN_EVENT, IN_PROGRESS);
-            Creature* Control = (Creature*)(Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)));
+            Creature* Control = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)));      // FIXME: Use pInstance->instance->GetCreatureInMap(guid)
             if(Control)
                 Control->AddThreat(who, 1.0f);
         }
+        
         m_creature->InterruptNonMeleeSpells(true);
     }
 
-    void JustDied(Unit* killer){
+    void JustDied(Unit* killer)
+    {
         if(!pInstance)
             return;
 
@@ -825,15 +833,16 @@ struct mob_hand_of_the_deceiverAI : public ScriptedAI
             ((mob_kiljaeden_controllerAI*)Control->AI())->DeceiverDeathCount++;
     }
 
-    void UpdateAI(const uint32 diff){
-        if(!InCombat)
+    void UpdateAI(const uint32 diff)
+    {
+        if (!InCombat)
             DoCast(m_creature, SPELL_SHADOW_CHANNELING);
 
-        if(!UpdateVictim())
+        if (!UpdateVictim())
             return;
 
         // Gain Shadow Infusion at 20% health
-        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 20) && !m_creature->HasAura(SPELL_SHADOW_INFUSION, 0))
+        if (((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 20) && !m_creature->HasAura(SPELL_SHADOW_INFUSION, 0))
             DoCast(m_creature, SPELL_SHADOW_INFUSION, true);
 
         // Shadow Bolt Volley - Shoots Shadow Bolts at all enemies within 30 yards, for ~2k Shadow damage.
@@ -843,20 +852,20 @@ struct mob_hand_of_the_deceiverAI : public ScriptedAI
         }else ShadowBoltVolleyTimer -= diff;
 
         // Felfire Portal - Creatres a portal, that spawns Volatile Felfire Fiends, which do suicide bombing.
-        if(FelfirePortalTimer < diff){
+        if (FelfirePortalTimer < diff) {
             Creature* Portal = DoSpawnCreature(CREATURE_FELFIRE_PORTAL, 0, 0,0, 0, TEMPSUMMON_TIMED_DESPAWN, 20000);
-            if(Portal)
-            {
+            if (Portal) {
                 std::list<HostilReference*>::iterator itr;
-                for(itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
-                {
+                for(itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr) {
                     Unit* pUnit = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
                     if(pUnit)
                         Portal->AddThreat(pUnit, 1.0f);
                 }
             }
             FelfirePortalTimer = 20000;
-        }else FelfirePortalTimer -= diff;
+        }
+        else
+            FelfirePortalTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -874,7 +883,8 @@ struct mob_felfire_portalAI : public Scripted_NoMovementAI
 
     uint32 SpawnFiendTimer;
 
-    void InitializeAI(){
+    void InitializeAI()
+    {
         SpawnFiendTimer = 5000;
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
