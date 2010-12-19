@@ -131,6 +131,8 @@ struct boss_sacrolashAI : public ScriptedAI
 
         if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
+            
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
     }
 
     void Aggro(Unit *who)
@@ -393,6 +395,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
         if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
+            
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
     }
 
     void Aggro(Unit *who)
