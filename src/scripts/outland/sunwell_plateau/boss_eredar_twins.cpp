@@ -210,6 +210,12 @@ struct boss_sacrolashAI : public ScriptedAI
             break;
         }
     }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (m_creature->getVictim())
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->getVictim()->GetGUID());
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -241,8 +247,10 @@ struct boss_sacrolashAI : public ScriptedAI
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                    if(target)
+                    if(target) {
+                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_CONFLAGRATION);
+                    }
                     ConflagrationTimer = 30000+(rand()%5000);
                 }
             }else ConflagrationTimer -= diff;
@@ -255,8 +263,10 @@ struct boss_sacrolashAI : public ScriptedAI
                 {
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                    if(target)
+                    if(target) {
+                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_SHADOW_NOVA);
+                    }
 
                     if(!SisterDeath)
                     {
@@ -275,8 +285,10 @@ struct boss_sacrolashAI : public ScriptedAI
             {
                 Unit* target = NULL;
                 target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                if(target)
+                if(target) {
+                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                     DoCast(target, SPELL_CONFOUNDING_BLOW);
+                }
                 ConfoundingblowTimer = 20000 + (rand()%5000);
             }
         }else ConfoundingblowTimer -=diff;
@@ -520,6 +532,12 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         }
         return 10000;
     }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (m_creature->getVictim())
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->getVictim()->GetGUID());
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -558,8 +576,10 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 {
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                    if(target)
+                    if(target) {
+                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_SHADOW_NOVA);
+                    }
                     ShadownovaTimer= 30000+(rand()%5000);
                 }
             }else ShadownovaTimer -=diff;
@@ -573,8 +593,10 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                    if(target)
+                    if(target) {
+                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_CONFLAGRATION);
+                    }
                     ConflagrationTimer = 30000+(rand()%5000);
 
                     if(!SisterDeath)
@@ -644,7 +666,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         ShadowfuryTimer = 5000 + (rand()%15000);
         DarkstrikeTimer = 3000;
-        KillTimer = 4000;
+        KillTimer = 15000;
     }
 
     void Aggro(Unit *who){}
