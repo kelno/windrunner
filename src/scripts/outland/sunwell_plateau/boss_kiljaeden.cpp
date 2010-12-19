@@ -715,20 +715,16 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
     uint32 Phase;
     uint8 DeceiverDeathCount;
 
-    void InitializeAI()
+    void Reset()
     {
-        KalecKJ = Unit::GetCreature((*m_creature), pInstance->GetData64(DATA_KALECGOS_KJ));
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->addUnitState(UNIT_STAT_STUNNED);
         
-        Scripted_NoMovementAI::InitializeAI();
-    }
-
-    void Reset()
-    {
         Phase = PHASE_DECEIVERS;
-        if(KalecKJ)((boss_kalecgos_kjAI*)KalecKJ->AI())->ResetOrbs();
+        if (Creature *KalecKJ = Unit::GetCreature((*m_creature), pInstance->GetData64(DATA_KALECGOS_KJ)))
+            ((boss_kalecgos_kjAI*)KalecKJ->AI())->ResetOrbs();
+
         DeceiverDeathCount = 0;
         SummonedDeceivers = false;
         KiljaedenDeath = false;
@@ -738,21 +734,22 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 
     void JustSummoned(Creature* summoned)
     {
-        switch(summoned->GetEntry()){
-            case CREATURE_HAND_OF_THE_DECEIVER:
-                summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
-                break;
-            case CREATURE_ANVEENA:
-                summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
-                summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
-                summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                break;
-            case CREATURE_KILJAEDEN:
-                summoned->CastSpell(summoned, SPELL_REBIRTH, false);
-                ((boss_kiljaedenAI*)summoned->AI())->Phase=PHASE_NORMAL;
-                summoned->AddThreat(m_creature->getVictim(), 1.0f);
-                break;
+        switch(summoned->GetEntry()) {
+        case CREATURE_HAND_OF_THE_DECEIVER:
+            summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
+            break;
+        case CREATURE_ANVEENA:
+            summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
+            summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            break;
+        case CREATURE_KILJAEDEN:
+            summoned->CastSpell(summoned, SPELL_REBIRTH, false);
+            ((boss_kiljaedenAI*)summoned->AI())->Phase=PHASE_NORMAL;
+            summoned->AddThreat(m_creature->getVictim(), 1.0f);
+            break;
         }
+        
         Summons.Summon(summoned);
     }
 
@@ -775,9 +772,8 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
             DoCast(m_creature, SPELL_ANVEENA_ENERGY_DRAIN);
             SummonedDeceivers = true;
         }
-        sLog.outString("UpdateAI: Count %u Phase %u", DeceiverDeathCount, Phase);
-        if(DeceiverDeathCount > 2 && Phase == PHASE_DECEIVERS){
-            sLog.outString("Entering PHASE_NORMAL");
+
+        if (DeceiverDeathCount > 2 && Phase == PHASE_DECEIVERS) {
             m_creature->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN) ;
             Phase = PHASE_NORMAL;
             DoSpawnCreature(CREATURE_KILJAEDEN, 0, 0,0, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
@@ -835,45 +831,42 @@ struct mob_hand_of_the_deceiverAI : public ScriptedAI
     {
         if(!pInstance)
             return;
-            
-        sLog.outString("HandOfTheDeceiver::JustDied");
 
-        Creature* Control = (Creature*)(Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)));
-        if(Control) {
-            sLog.outString("Controller found");
+        if (Creature* Control = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
             ((mob_kiljaeden_controllerAI*)Control->AI())->DeceiverDeathCount++;
-        }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!InCombat)
+        if (!m_creature->isInCombat())
             DoCast(m_creature, SPELL_SHADOW_CHANNELING);
 
         if (!UpdateVictim())
             return;
 
         // Gain Shadow Infusion at 20% health
-        if (((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 20) && !m_creature->HasAura(SPELL_SHADOW_INFUSION, 0))
+        if (m_creature->IsBelowHPPercent(20) && !m_creature->HasAura(SPELL_SHADOW_INFUSION))
             DoCast(m_creature, SPELL_SHADOW_INFUSION, true);
 
         // Shadow Bolt Volley - Shoots Shadow Bolts at all enemies within 30 yards, for ~2k Shadow damage.
-        if(ShadowBoltVolleyTimer < diff){
+        if (ShadowBoltVolleyTimer <= diff) {
             DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT_VOLLEY);
             ShadowBoltVolleyTimer = 12000;
-        }else ShadowBoltVolleyTimer -= diff;
+        }
+        else
+            ShadowBoltVolleyTimer -= diff;
 
-        // Felfire Portal - Creatres a portal, that spawns Volatile Felfire Fiends, which do suicide bombing.
-        if (FelfirePortalTimer < diff) {
-            Creature* Portal = DoSpawnCreature(CREATURE_FELFIRE_PORTAL, 0, 0,0, 0, TEMPSUMMON_TIMED_DESPAWN, 20000);
-            if (Portal) {
+        // Felfire Portal - Creates a portal, that spawns Volatile Felfire Fiends, which do suicide bombing.
+        if (FelfirePortalTimer <= diff) {
+            if (Creature *Portal = DoSpawnCreature(CREATURE_FELFIRE_PORTAL, 0, 0,0, 0, TEMPSUMMON_TIMED_DESPAWN, 20000)) {
                 std::list<HostilReference*>::iterator itr;
                 for(itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr) {
                     Unit* pUnit = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-                    if(pUnit)
+                    if (pUnit)
                         Portal->AddThreat(pUnit, 1.0f);
                 }
             }
+            
             FelfirePortalTimer = 20000;
         }
         else
