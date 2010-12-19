@@ -451,6 +451,13 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 9:
+            if (pInstance) {
+                switch (randomPoint) {
+                case 0: pInstance->SetData(DATA_ACTIVATE_NORTH, DONE); break;
+                case 1: pInstance->SetData(DATA_ACTIVATE_CENTER, DONE); break;
+                case 2: pInstance->SetData(DATA_ACTIVATE_SOUTH, DONE); break;
+                }
+            }
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
             BreathCount++;
@@ -594,6 +601,8 @@ struct boss_felmystAI : public ScriptedAI
                     {
                         Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
                         Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
+                        /*if (Creature* trigger = Fog->FindNearestCreature(23472, 10.0f))
+                            trigger->CastSpell(trigger, SPELL_FOG_TRIGGER, true);*/
                     }
                 }
                 Timer[EVENT_SUMMON_FOG] = 1000;
@@ -691,6 +700,43 @@ CreatureAI* GetAI_mob_felmyst_trail(Creature *_Creature)
     return new mob_felmyst_trailAI(_Creature);
 }
 
+struct trigger_felmyst_fogAI : public ScriptedAI
+{
+    trigger_felmyst_fogAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance *pInstance;
+    
+    void Reset()
+    {
+        
+    }
+    
+    void DamageTaken(Unit *done_by, uint32 &damage)
+    {
+        damage = 0;
+    }
+    
+    void SpellHit(Unit *caster, const SpellEntry *spell)
+    {
+        sLog.outString("Hit by spell %u", spell->Id);
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+
+    }
+};
+
+CreatureAI* GetAI_trigger_felmyst_fog(Creature *pCreature)
+{
+    return new trigger_felmyst_fogAI(pCreature);
+}
+
 void AddSC_boss_felmyst()
 {
     Script *newscript;
@@ -707,5 +753,10 @@ void AddSC_boss_felmyst()
     newscript = new Script;
     newscript->Name="mob_felmyst_trail";
     newscript->GetAI = &GetAI_mob_felmyst_trail;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="trigger_felmyst_fog";
+    newscript->GetAI = &GetAI_trigger_felmyst_fog;
     newscript->RegisterSelf();
 }

@@ -60,6 +60,9 @@ enum Data64
 
     /*** Misc ***/
     DATA_PLAYER_GUID,
+    DATA_ACTIVATE_NORTH,
+    DATA_ACTIVATE_CENTER,
+    DATA_ACTIVATE_SOUTH
 };
 
 enum Creatures
