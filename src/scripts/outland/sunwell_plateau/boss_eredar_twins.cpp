@@ -644,7 +644,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         ShadowfuryTimer = 5000 + (rand()%15000);
         DarkstrikeTimer = 3000;
-        KillTimer = 15000;
+        KillTimer = 4000;
     }
 
     void Aggro(Unit *who){}
