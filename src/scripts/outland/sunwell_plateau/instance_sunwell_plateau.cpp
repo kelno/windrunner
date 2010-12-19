@@ -183,14 +183,14 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25837: CommanderGUID       = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 23472:
-                sLog.outString("PositionX: %f", pCreature->GetPositionX());
+                //sLog.outString("PositionX: %f", pCreature->GetPositionX());
                 if (pCreature->GetPositionX() > 1490.0f)
                     northList.push_back(pCreature->GetGUID());
                 else if (pCreature->GetPositionX() > 1470.0f)
                     centerList.push_back(pCreature->GetGUID());
                 else
                     southList.push_back(pCreature->GetGUID());
-                sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
+                //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
         }
     }

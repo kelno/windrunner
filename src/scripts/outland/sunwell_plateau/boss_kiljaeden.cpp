@@ -324,7 +324,8 @@ struct boss_kalecgos_kjAI : public ScriptedAI
         }
     }
 
-    void ResetOrbs(){
+    void ResetOrbs()
+    {
         m_creature->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
         for(uint8 i = 0; i < 4; ++i)
             if(Orb[i]) Orb[i]->SetUInt32Value(GAMEOBJECT_FACTION, 0);
@@ -332,10 +333,10 @@ struct boss_kalecgos_kjAI : public ScriptedAI
 
     void EmpowerOrb(bool all)
     {
-        if(!Orb[OrbsEmpowered])
+        if (!Orb[OrbsEmpowered])
             return;
         uint8 random = rand()%3;
-        if(all){
+        if (all) {
             m_creature->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
             for(uint8 i = 0; i < 4; ++i){
                 if(!Orb[i]) return;
@@ -344,7 +345,8 @@ struct boss_kalecgos_kjAI : public ScriptedAI
                 Orb[i]->setActive(true);
                 Orb[i]->Refresh();
             }
-        }else{
+        }
+        else {
             float x,y,z, dx,dy,dz;
             Orb[random]->GetPosition(x,y,z);
             for(uint8 i = 0; i < 4; ++i){
@@ -357,11 +359,11 @@ struct boss_kalecgos_kjAI : public ScriptedAI
                      }
                  }
             }
-        Orb[random]->CastSpell(m_creature, SPELL_RING_OF_BLUE_FLAMES);
-        Orb[random]->SetUInt32Value(GAMEOBJECT_FACTION, 35);
-        Orb[random]->setActive(true);
-        Orb[random]->Refresh();
-        ++OrbsEmpowered;
+            Orb[random]->CastSpell(m_creature, SPELL_RING_OF_BLUE_FLAMES);
+            Orb[random]->SetUInt32Value(GAMEOBJECT_FACTION, 35);
+            Orb[random]->setActive(true);
+            Orb[random]->Refresh();
+            ++OrbsEmpowered;
         }
         ++EmpowerCount;
 
@@ -373,13 +375,15 @@ struct boss_kalecgos_kjAI : public ScriptedAI
         }
     }
 
-    void UpdateAI(const uint32 diff){
-        if(!Searched){
+    void UpdateAI(const uint32 diff)
+    {
+        if (!Searched) {
             FindOrbs();
             Searched = true;
-            }
+        }
 
-        if(OrbsEmpowered == 4) OrbsEmpowered = 0;
+        if(OrbsEmpowered == 4)
+            OrbsEmpowered = 0;
     }
 };
 
@@ -695,7 +699,8 @@ CreatureAI* GetAI_boss_kiljaeden(Creature *_Creature)
 //AI for Kil'jaeden Event Controller
 struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
 {
-    mob_kiljaeden_controllerAI(Creature* c) : Scripted_NoMovementAI(c), Summons(m_creature){
+    mob_kiljaeden_controllerAI(Creature* c) : Scripted_NoMovementAI(c), Summons(m_creature)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
 
@@ -716,6 +721,8 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->addUnitState(UNIT_STAT_STUNNED);
+        
+        Scripted_NoMovementAI::InitializeAI();
     }
 
     void Reset()
@@ -768,8 +775,9 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
             DoCast(m_creature, SPELL_ANVEENA_ENERGY_DRAIN);
             SummonedDeceivers = true;
         }
-
+        sLog.outString("UpdateAI: Count %u Phase %u", DeceiverDeathCount, Phase);
         if(DeceiverDeathCount > 2 && Phase == PHASE_DECEIVERS){
+            sLog.outString("Entering PHASE_NORMAL");
             m_creature->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN) ;
             Phase = PHASE_NORMAL;
             DoSpawnCreature(CREATURE_KILJAEDEN, 0, 0,0, 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
@@ -827,10 +835,14 @@ struct mob_hand_of_the_deceiverAI : public ScriptedAI
     {
         if(!pInstance)
             return;
+            
+        sLog.outString("HandOfTheDeceiver::JustDied");
 
         Creature* Control = (Creature*)(Unit::GetUnit(*m_creature, pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)));
-        if(Control)
+        if(Control) {
+            sLog.outString("Controller found");
             ((mob_kiljaeden_controllerAI*)Control->AI())->DeceiverDeathCount++;
+        }
     }
 
     void UpdateAI(const uint32 diff)
