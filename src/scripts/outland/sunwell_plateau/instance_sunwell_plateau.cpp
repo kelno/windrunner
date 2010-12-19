@@ -321,7 +321,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         if (BringersTimer <= diff) {
             float x, y, z;
             
-            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            Commander->GetRandomPoint(Commander->GetPositionX(), Commander->GetPositionY(), Commander->GetPositionZ(), 1.0f, x, y, z);
             if (Creature *Bringer1 = Commander->SummonCreature(MOB_SOULBINDER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Bringer1->MonsterSay("[DEBUG] First bringer!", LANG_UNIVERSAL, NULL);
                 Bringer1->setActive(true);
@@ -329,7 +329,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 Bringer1->GetMotionMaster()->MovePath(25851, false);
             }
             
-            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            Commander->GetRandomPoint(Commander->GetPositionX(), Commander->GetPositionY(), Commander->GetPositionZ(), 1.0f, x, y, z);
             if (Creature *Bringer2 = Commander->SummonCreature(MOB_DEATHBRINGER, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Bringer2->MonsterSay("[DEBUG] Second bringer!", LANG_UNIVERSAL, NULL);
                 Bringer2->setActive(true);
@@ -345,7 +345,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         if (FiendTimer <= diff) {
             float x, y, z;
             
-            Commander->GetNearPoint(Commander, x, y, z, 1.0f, 1.0f, 0);
+            Commander->GetRandomPoint(Commander->GetPositionX(), Commander->GetPositionY(), Commander->GetPositionZ(), 1.0f, x, y, z);
             if (Creature *Fiend = Commander->SummonCreature(MOB_VOLATILE_FIEND, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Fiend->MonsterSay("[DEBUG] Fiend!", LANG_UNIVERSAL, NULL);
                 Fiend->setActive(true);
