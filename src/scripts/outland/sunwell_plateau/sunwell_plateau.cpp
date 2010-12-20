@@ -586,8 +586,8 @@ struct npc_sunblade_archmage : public ScriptedAI
         if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
-        if (!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
-            DoStartMovement(m_creature->getVictim(), 8, 0);
+        //if (!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
+            //DoStartMovement(m_creature->getVictim(), 8, 0);
             
         if (arcaneExploTimer <= diff) {
             DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLO, true);
