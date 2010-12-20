@@ -265,7 +265,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case MOB_FLIGHT_RIGHT:          return FlightRight;
             case DATA_PLAYER_GUID:
                 Player* Target = GetPlayerInMap();
-                return Target->GetGUID();
+                if (!Target) sLog.outError("Sunwell: No target found in GetData64()!");
+                return Target ? Target->GetGUID() : 0;
         }
         return 0;
     }
