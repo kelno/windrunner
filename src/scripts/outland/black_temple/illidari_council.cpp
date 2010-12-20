@@ -676,7 +676,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         if(DampenMagicTimer < diff)
         {
                 m_creature->InterruptNonMeleeSpells(false);
-                DoCast(m_creature, SPELL_DAMPEN_MAGIC);
+                DoCast(m_creature, SPELL_DAMPEN_MAGIC, true);
                 DampenMagicTimer = 67200;                       // 1.12 minute
                 ArcaneBoltTimer += 1000;                        // Give the Mage some time to spellsteal Dampen.
         }else DampenMagicTimer -= diff;
