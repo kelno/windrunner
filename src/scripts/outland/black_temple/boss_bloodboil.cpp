@@ -326,6 +326,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             {
                 if(TargetGUID)
                     RevertThreatOnTarget(TargetGUID);
+                DoResetThreat();
                 TargetGUID = 0;
                 Phase1 = true;
                 BloodboilTimer = 10000;
