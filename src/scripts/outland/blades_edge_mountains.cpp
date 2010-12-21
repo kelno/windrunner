@@ -34,6 +34,7 @@ npc_grishna_falconwing
 go_ethereum_chamber
 npc_kolphis_darkscale
 trigger_vimgol_circle_bunny
+npc_vimgol
 EndContentData */
 
 #include "precompiled.h"
@@ -521,6 +522,7 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
     trigger_vimgol_circle_bunnyAI(Creature *c) : Scripted_NoMovementAI(c) {}
     
     uint32 checkTimer;
+    bool hasResetVisual;
     
     void Reset()
     {
@@ -529,13 +531,22 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
         vimgol3 = false;
         vimgol4 = false;
         vimgol5 = false;
+        
         checkTimer = 500;
+        
+        hasResetVisual = false;
     }
     
     void Aggro(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
+        if (!hasResetVisual) {
+            if (Creature *visualBunny = m_creature->FindCreatureInGrid(23081, 2.0f, true))
+                visualBunny->GetMotionMaster()->MoveTargetedHome();
+                
+            hasResetVisual = true;
+        }
         if (checkTimer <= diff) {
             Creature *vimgol = m_creature->FindNearestCreature(22911, 45.0f, true);
                 if (vimgol) {    // No need to continue if vimgol's already there
@@ -580,11 +591,27 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
             }
             
             // Check if 5 players are in circles
-            //sLog.outString("%d %d %d %d %d", vimgol1, vimgol2, vimgol3, vimgol4, vimgol5);
             if (vimgol1 && vimgol2 && vimgol3 && vimgol4 && vimgol5) {
                 Creature *vimgol = m_creature->FindNearestCreature(22911, 45.0f, true);
-                if (!vimgol)
+                if (!vimgol) {
                     m_creature->SummonCreature(22911, 3279.770020, 4640.019531, 216.527039, 1.5874, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
+
+                    CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+                    Cell cell(pair);
+                    cell.data.Part.reserved = ALL_DISTRICT;
+                    cell.SetNoCreate();
+                    std::list<Creature*> visualBunnies;
+
+                    Trinity::AllCreaturesOfEntryInRange check(m_creature, 23081, 50.0f);
+                    Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(visualBunnies, check);
+                    TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+                    cell.Visit(pair, visitor, *m_creature->GetMap());
+
+                    for (std::list<Creature*>::iterator itr = visualBunnies.begin(); itr != visualBunnies.end(); itr++) {
+                            (*itr)->CastSpell(*itr, 39921, false);
+                    }
+                }
             }
             
             checkTimer = 500;
@@ -597,6 +624,22 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
 CreatureAI* GetAI_trigger_vimgol_circle_bunny(Creature *pCreature)
 {
     return new trigger_vimgol_circle_bunnyAI(pCreature);
+}
+
+/*######
+## npc_vimgol
+######*/
+
+struct npc_vimgolAI : public ScriptedAI
+{
+    npc_vimgolAI(Creature *c) : ScriptedAI(c) {}
+    
+    
+};
+
+CreatureAI* GetAI_npc_vimgol(Creature *pCreature)
+{
+    return new npc_vimgolAI(pCreature);
 }
 
 /*######
