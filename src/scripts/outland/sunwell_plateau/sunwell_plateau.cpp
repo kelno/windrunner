@@ -991,9 +991,10 @@ CreatureAI* GetAI_npc_shadowsword_deathbringer(Creature *pCreature)
 ## npc_volatile_fiend
 ######*/
 
-#define SPELL_BURNING_DESTRUCTION       47287
-#define SPELL_BURNING_WINDS             46308
-#define SPELL_FELFIRE_FISSION           45779
+#define SPELL_BURNING_DESTRUCTION               47287
+#define SPELL_BURNING_DESTRUCTION_TRIGGERED     46218
+#define SPELL_BURNING_WINDS                     46308
+#define SPELL_FELFIRE_FISSION                   45779
 
 struct npc_volatile_fiendAI : public ScriptedAI
 {
@@ -1021,6 +1022,11 @@ struct npc_volatile_fiendAI : public ScriptedAI
         DoCast(m_creature, SPELL_BURNING_DESTRUCTION);
     }
     
+    void JustDied(Unit *pKilled)
+    {
+        DoCast(m_creature, SPELL_BURNING_DESTRUCTION_TRIGGERED, true);
+    }
+    
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
     {
         if (spellId == 47287)
@@ -1044,7 +1050,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
         if (m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             if (damageTimer <= diff) {      // Should happen only one time, as creature explodes 2 sec after reaching melee
                 DoCast(m_creature, SPELL_FELFIRE_FISSION);
-                DoCast(m_creature, SPELL_BURNING_DESTRUCTION);
+                DoCast(m_creature, SPELL_BURNING_DESTRUCTION_TRIGGERED, true);
                 
                 damageTimer = 5000;
             }
