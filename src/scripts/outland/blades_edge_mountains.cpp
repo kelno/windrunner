@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Blades_Edge_Mountains
 SD%Complete: 90
-SDComment: Quest support: 10503, 10504, 10556, 10609, 10682, 10821, 10980. Ogri'la->Skettis Flight. (npc_daranelle needs bit more work before consider complete)
+SDComment: Quest support: 10503, 10504, 10556, 10609, 10682, 10821, 10980, 10998 Ogri'la->Skettis Flight. (npc_daranelle needs bit more work before consider complete)
 SDCategory: Blade's Edge Mountains
 EndScriptData */
 
@@ -33,6 +33,7 @@ npc_prophecy_questcredit
 npc_grishna_falconwing
 go_ethereum_chamber
 npc_kolphis_darkscale
+trigger_vimgol_circle_bunny
 EndContentData */
 
 #include "precompiled.h"
@@ -507,6 +508,22 @@ bool GossipHello_npc_kolphis_darkscale(Player *pPlayer, Creature *pCreature)
 }
 
 /*######
+## trigger_vimgol_circle_bunny
+######*/
+
+struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
+{
+    trigger_vimgol_circle_bunnyAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    
+};
+
+CreatureAI* GetAI_trigger_vimgol_circle_bunny(Creature *pCreature)
+{
+    return new trigger_vimgol_circle_bunnyAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -570,6 +587,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_kolphis_darkscale";
     newscript->pGossipHello = &GossipHello_npc_kolphis_darkscale;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "trigger_vimgol_circle_bunny";
+    newscript->pGossipHello = &GetAI_trigger_vimgol_circle_bunny;
     newscript->RegisterSelf();
 }
 
