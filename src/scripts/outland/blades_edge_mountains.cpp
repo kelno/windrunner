@@ -37,6 +37,9 @@ trigger_vimgol_circle_bunny
 EndContentData */
 
 #include "precompiled.h"
+/*#include "CellImpl.h"
+#include "GridNotifiers.h"
+#include "GridNotifiersImpl.h"*/
 
 /*######
 ## mobs_bladespire_ogre
@@ -511,11 +514,84 @@ bool GossipHello_npc_kolphis_darkscale(Player *pPlayer, Creature *pCreature)
 ## trigger_vimgol_circle_bunny
 ######*/
 
+bool vimgol1, vimgol2, vimgol3, vimgol4, vimgol5;
+
 struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
 {
     trigger_vimgol_circle_bunnyAI(Creature *c) : Scripted_NoMovementAI(c) {}
     
+    uint32 checkTimer;
     
+    void Reset()
+    {
+        vimgol1 = false;
+        vimgol2 = false;
+        vimgol3 = false;
+        vimgol4 = false;
+        vimgol5 = false;
+        checkTimer = 500;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (checkTimer <= diff) {
+            Creature *vimgol = m_creature->FindNearestCreature(22911, 45.0f, true);
+                if (vimgol) {    // No need to continue if vimgol's already there
+                    checkTimer = 500;
+                    return;
+                }
+                
+            CellPair p(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+            Cell cell(p);
+            cell.data.Part.reserved = ALL_DISTRICT;
+                
+            Player* plr = NULL;
+            Trinity::AnyPlayerInObjectRangeCheck p_check(m_creature, 0.5f);
+            Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck>  checker(plr, p_check);
+
+            TypeContainerVisitor<Trinity::PlayerSearcher<Trinity::AnyPlayerInObjectRangeCheck>, WorldTypeMapContainer > world_object_checker(checker);
+            cell.Visit(p, world_object_checker, *(m_creature->GetMap()));
+            
+            if (plr) {
+                if (int32(m_creature->GetPositionX()) == 3304)
+                    vimgol1 = true;
+                else if (int32(m_creature->GetPositionX()) == 3292)
+                    vimgol2 = true;
+                else if (int32(m_creature->GetPositionX()) == 3261)
+                    vimgol3 = true;
+                else if (int32(m_creature->GetPositionX()) == 3257)
+                    vimgol4 = true;
+                else if (int32(m_creature->GetPositionX()) == 3279)
+                    vimgol5 = true;
+            }
+            else {
+                if (int32(m_creature->GetPositionX()) == 3304)
+                    vimgol1 = false;
+                else if (int32(m_creature->GetPositionX()) == 3292)
+                    vimgol2 = false;
+                else if (int32(m_creature->GetPositionX()) == 3261)
+                    vimgol3 = false;
+                else if (int32(m_creature->GetPositionX()) == 3257)
+                    vimgol4 = false;
+                else if (int32(m_creature->GetPositionX()) == 3279)
+                    vimgol5 = false;
+            }
+            
+            // Check if 5 players are in circles
+            //sLog.outString("%d %d %d %d %d", vimgol1, vimgol2, vimgol3, vimgol4, vimgol5);
+            if (vimgol1 && vimgol2 && vimgol3 && vimgol4 && vimgol5) {
+                Creature *vimgol = m_creature->FindNearestCreature(22911, 45.0f, true);
+                if (!vimgol)
+                    m_creature->SummonCreature(22911, 3279.770020, 4640.019531, 216.527039, 1.5874, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000);
+            }
+            
+            checkTimer = 500;
+        }
+        else
+            checkTimer -= diff;
+    }
 };
 
 CreatureAI* GetAI_trigger_vimgol_circle_bunny(Creature *pCreature)
@@ -591,7 +667,7 @@ void AddSC_blades_edge_mountains()
     
     newscript = new Script;
     newscript->Name = "trigger_vimgol_circle_bunny";
-    newscript->pGossipHello = &GetAI_trigger_vimgol_circle_bunny;
+    newscript->GetAI = &GetAI_trigger_vimgol_circle_bunny;
     newscript->RegisterSelf();
 }
 
