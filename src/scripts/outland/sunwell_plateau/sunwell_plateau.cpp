@@ -867,19 +867,14 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
     void MovementInform(uint32 type, uint32 i)
     {
         //sLog.outString("Reached waypoint %u (type %u)", i, type);
-        sLog.outString("Bouh1");
-        if (type == WAYPOINT_MOTION_TYPE && i == 11) {
-            sLog.outString("Bouh2");
+        if (type == WAYPOINT_MOTION_TYPE && i == 11)
             despawnTimer = 2000;
-        }
     }
     
     void UpdateAI(uint32 const diff)
     {
         if (despawnTimer) {
-            sLog.outString("Pom1 %u", despawnTimer);
             if (despawnTimer <= diff) {
-                sLog.outString("Pom2");
                 m_creature->DisappearAndDie();
                 return;
             }
