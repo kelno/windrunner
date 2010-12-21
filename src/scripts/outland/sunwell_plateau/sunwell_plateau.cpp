@@ -867,23 +867,28 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
     void MovementInform(uint32 type, uint32 i)
     {
         //sLog.outString("Reached waypoint %u (type %u)", i, type);
-        if (type == WAYPOINT_MOTION_TYPE && i == 7)
+        sLog.outString("Bouh1");
+        if (type == WAYPOINT_MOTION_TYPE && i == 11) {
+            sLog.outString("Bouh2");
             despawnTimer = 2000;
+        }
     }
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
-            return;
-            
         if (despawnTimer) {
+            sLog.outString("Pom1 %u", despawnTimer);
             if (despawnTimer <= diff) {
+                sLog.outString("Pom2");
                 m_creature->DisappearAndDie();
                 return;
             }
             else
                 despawnTimer -= diff;
         }
+        
+        if (!UpdateVictim())
+            return;
             
         if (curseExhaustionTimer <= diff) {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_CURSE_EXHAUSTION);
@@ -946,15 +951,12 @@ struct npc_shadowsword_deathbringerAI : public ScriptedAI
     
     void MovementInform(uint32 type, uint32 i)
     {
-        if (type == WAYPOINT_MOTION_TYPE && i == 7)
+        if (type == WAYPOINT_MOTION_TYPE && i == 11)
             despawnTimer = 2000;
     }
     
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
-            return;
-            
         if (despawnTimer) {
             if (despawnTimer <= diff) {
                 m_creature->DisappearAndDie();
@@ -963,6 +965,9 @@ struct npc_shadowsword_deathbringerAI : public ScriptedAI
             else
                 despawnTimer -= diff;
         }
+        
+        if (!UpdateVictim())
+            return;
         
         if (buffetTimer <= diff) {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_DISEASE_BUFFET);
@@ -1033,11 +1038,14 @@ struct npc_volatile_fiendAI : public ScriptedAI
             despawnTimer = 2100;
     }
     
+    void MovementInform(uint32 type, uint32 i)
+    {
+        if (type == WAYPOINT_MOTION_TYPE && i == 11)
+            despawnTimer = 2000;
+    }
+    
     void UpdateAI(uint32 const diff)
     {
-        if (!UpdateVictim())
-            return;
-            
         if (despawnTimer) {
             if (despawnTimer <= diff) {
                 m_creature->DisappearAndDie();
@@ -1046,6 +1054,9 @@ struct npc_volatile_fiendAI : public ScriptedAI
             else
                 despawnTimer -= diff;
         }
+
+        if (!UpdateVictim())
+            return;
             
         if (m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             if (damageTimer <= diff) {      // Should happen only one time, as creature explodes 2 sec after reaching melee
