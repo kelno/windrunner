@@ -1006,7 +1006,10 @@ struct Mob_EventAI : public ScriptedAI
 
                 float x,y,z;
                 m_creature->GetPosition(x,y,z);
-                pObject = m_creature->SummonGameObject(param1, x, y, z, 0, 0, 0, 0, 0, param2);
+                if (m_creature->GetLootRecipient())
+                    pObject = m_creature->GetLootRecipient()->SummonGameObject(param1, x, y, z, 0, 0, 0, 0, 0, param2);
+                else
+                    pObject = m_creature->SummonGameObject(param1, x, y, z, 0, 0, 0, 0, 0, param2);
                 if (!pObject)
                 {
                     if (EAI_ErrorLevel > 0)
