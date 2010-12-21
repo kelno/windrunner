@@ -539,6 +539,15 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
     
     void Aggro(Unit *pWho) {}
     
+    void JustDied(Unit *pKiller)
+    {
+        vimgol1 = false;
+        vimgol2 = false;
+        vimgol3 = false;
+        vimgol4 = false;
+        vimgol5 = false;
+    }
+    
     void UpdateAI(uint32 const diff)
     {
         if (!hasResetVisual) {
@@ -608,9 +617,8 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
 
                     cell.Visit(pair, visitor, *m_creature->GetMap());
 
-                    for (std::list<Creature*>::iterator itr = visualBunnies.begin(); itr != visualBunnies.end(); itr++) {
-                            (*itr)->CastSpell(*itr, 39921, false);
-                    }
+                    for (std::list<Creature*>::iterator itr = visualBunnies.begin(); itr != visualBunnies.end(); itr++)
+                        (*itr)->CastSpell(*itr, 39921, false);
                 }
             }
             
@@ -630,11 +638,47 @@ CreatureAI* GetAI_trigger_vimgol_circle_bunny(Creature *pCreature)
 ## npc_vimgol
 ######*/
 
+#define SPELL_SPAWN     7741
+#define SPELL_GROWTH    40545       // FIXME: Not handled atm: it should interrupt itself if all players get back in circles during cast. Afaik, AI interface doesn't support such check for now.
+
 struct npc_vimgolAI : public ScriptedAI
 {
     npc_vimgolAI(Creature *c) : ScriptedAI(c) {}
     
+    void Reset()
+    {
+        DoCast(m_creature, SPELL_SPAWN);
+    }
     
+    void Aggro(Unit *pWho) {}
+    
+    void JustDied(Unit *pKiller)
+    {
+        pKiller->SummonGameObject(185562, pKiller->GetPositionX(), pKiller->GetPositionY(), pKiller->GetPositionZ(), 0, 0, 0, 0, 0, 0);
+
+        CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+        Cell cell(pair);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+        std::list<Creature*> triggers;
+
+        Trinity::AllCreaturesOfEntryInRange check(m_creature, 23040, 50.0f);
+        Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(triggers, check);
+        TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+        cell.Visit(pair, visitor, *m_creature->GetMap());
+
+        for (std::list<Creature*>::iterator itr = triggers.begin(); itr != triggers.end(); itr++)
+            (*itr)->Kill(*itr);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
 };
 
 CreatureAI* GetAI_npc_vimgol(Creature *pCreature)
@@ -711,6 +755,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "trigger_vimgol_circle_bunny";
     newscript->GetAI = &GetAI_trigger_vimgol_circle_bunny;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_vimgol";
+    newscript->GetAI = &GetAI_npc_vimgol;
     newscript->RegisterSelf();
 }
 
