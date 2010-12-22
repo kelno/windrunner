@@ -35,6 +35,7 @@ go_ethereum_chamber
 npc_kolphis_darkscale
 trigger_vimgol_circle_bunny
 npc_vimgol
+npc_soulgrinder
 EndContentData */
 
 #include "precompiled.h"
@@ -687,6 +688,59 @@ CreatureAI* GetAI_npc_vimgol(Creature *pCreature)
 }
 
 /*######
+## npc_soulgrinder
+######*/
+
+float[][] ogresSpawns = {{ 3524.897705, 5613.239258, -4.257625, 4.999918 },
+                         { 3541.113037, 5606.105469, -3.300353, 4.327529 },
+                         { 3543.969238, 5573.780273, -2.774169, 2.004281 },
+                         { 3558.977295, 5590.019531, -4.172577, 3.183468 },
+                         { 3528.284424, 5567.758789, -1.199220, 1.256619 },
+                         { 3516.486328, 5582.583984, -3.198729, 0.579210 }};
+                         
+#define SPELL_VISUAL_INPROGRESS     39918       // At spawn
+#define SPELL_VISUAL_BEAM           39920       // Blue/Black beam
+#define SPELL_VISUAL_BUNNY          39936       // On bunny?
+
+struct npc_soulgrinderAI : public Scripted_NoMovementAI
+{
+    npc_soulgrinderAI(Creature *c) : Scripted_NoMovementAI(c), summons(m_creature) {}
+    
+    uint32 summonTimer;
+    uint8 step;
+    
+    SummonList summons;
+    
+    void Reset()
+    {
+        step = 0;
+        summonTimer = 8000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+    
+    void SummonedCreatureDespawn(Creature* pSummon)
+    { 
+        summons.Despawn(pSummon);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        
+    }
+};
+
+CreatureAI* GetAI_npc_soulgrinder(Creature *pCreature)
+{
+    return new npc_soulgrinderAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -760,6 +814,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_vimgol";
     newscript->GetAI = &GetAI_npc_vimgol;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_soulgrinder";
+    newscript->GetAI = &GetAI_npc_soulgrinder;
     newscript->RegisterSelf();
 }
 
