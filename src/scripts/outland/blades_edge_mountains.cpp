@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Blades_Edge_Mountains
 SD%Complete: 90
-SDComment: Quest support: 10503, 10504, 10556, 10609, 10682, 10821, 10980, 10998 Ogri'la->Skettis Flight. (npc_daranelle needs bit more work before consider complete)
+SDComment: Quest support: 10503, 10504, 10556, 10609, 10682, 10821, 10980, 10998, 11000 Ogri'la->Skettis Flight. (npc_daranelle needs bit more work before consider complete)
 SDCategory: Blade's Edge Mountains
 EndScriptData */
 
@@ -36,6 +36,8 @@ npc_kolphis_darkscale
 trigger_vimgol_circle_bunny
 npc_vimgol
 npc_soulgrinder
+npc_skulloc
+npc_sundered_ghost
 EndContentData */
 
 #include "precompiled.h"
@@ -688,56 +690,281 @@ CreatureAI* GetAI_npc_vimgol(Creature *pCreature)
 }
 
 /*######
-## npc_soulgrinder
+## npc_skulloc
 ######*/
 
-float[][] ogresSpawns = {{ 3524.897705, 5613.239258, -4.257625, 4.999918 },
-                         { 3541.113037, 5606.105469, -3.300353, 4.327529 },
-                         { 3543.969238, 5573.780273, -2.774169, 2.004281 },
-                         { 3558.977295, 5590.019531, -4.172577, 3.183468 },
-                         { 3528.284424, 5567.758789, -1.199220, 1.256619 },
-                         { 3516.486328, 5582.583984, -3.198729, 0.579210 }};
-                         
+#define SPELL_SHADOWFORM_1      39943
+#define SPELL_SHADOWFORM_2      39944
+#define SPELL_SHADOWFORM_3      39946
+#define SPELL_SHADOWFORM_4      39947
+
 #define SPELL_VISUAL_INPROGRESS     39918       // At spawn
 #define SPELL_VISUAL_BEAM           39920       // Blue/Black beam
-#define SPELL_VISUAL_BUNNY          39936       // On bunny?
+#define SPELL_VISUAL_SMASHED        39974       // Step 5
 
-struct npc_soulgrinderAI : public Scripted_NoMovementAI
+struct npc_skullocAI : public ScriptedAI
 {
-    npc_soulgrinderAI(Creature *c) : Scripted_NoMovementAI(c), summons(m_creature) {}
+    npc_skullocAI(Creature *c) : ScriptedAI(c) {}
     
-    uint32 summonTimer;
     uint8 step;
     
-    SummonList summons;
+    uint32 step5Timer;
     
     void Reset()
     {
         step = 0;
-        summonTimer = 8000;
+        
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        m_creature->SetReactState(REACT_PASSIVE);
+        m_creature->SetHasChangedReactState();
+        
+        step5Timer = 0;
     }
     
     void Aggro(Unit *pWho) {}
     
-    void JustSummoned(Creature* pSummon)
+    void ChangePhase(uint8 phase)
     {
-        summons.Summon(pSummon);
-    }
-    
-    void SummonedCreatureDespawn(Creature* pSummon)
-    { 
-        summons.Despawn(pSummon);
+        switch (phase) {
+        case 0:
+            DoCast(m_creature, SPELL_SHADOWFORM_1, true);
+            break;
+        case 1:
+            m_creature->RemoveAurasDueToSpell(SPELL_SHADOWFORM_1);
+            DoCast(m_creature, SPELL_SHADOWFORM_2, true);
+            break;
+        case 2:
+            m_creature->RemoveAurasDueToSpell(SPELL_SHADOWFORM_2);
+            DoCast(m_creature, SPELL_SHADOWFORM_3, true);
+            break;
+        case 3:
+            m_creature->RemoveAurasDueToSpell(SPELL_SHADOWFORM_3);
+            DoCast(m_creature, SPELL_SHADOWFORM_4, true);
+            break;
+        case 5:
+        {
+            // Remove all beams and cast one on the Soulgrinder
+            CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+            Cell cell(pair);
+            cell.data.Part.reserved = ALL_DISTRICT;
+            cell.SetNoCreate();
+            std::list<Creature*> triggers;
+
+            Trinity::AllCreaturesOfEntryInRange check(m_creature, 23037, 100.0f);
+            Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(triggers, check);
+            TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+            cell.Visit(pair, visitor, *m_creature->GetMap());
+
+            for (std::list<Creature*>::iterator itr = triggers.begin(); itr != triggers.end(); itr++)
+                (*itr)->Kill(*itr);
+                
+            if (Creature *soulgrinder = m_creature->FindNearestCreature(23019, 100.0f, true)) {
+                DoCast(soulgrinder, SPELL_VISUAL_SMASHED, true);
+                DoCast(soulgrinder, SPELL_VISUAL_BEAM, true);
+                step5Timer = 5000;
+            }
+            break;
+        }
+        case 6:
+            if (Creature *soulgrinder = m_creature->FindNearestCreature(23019, 100.0f, true))
+                m_creature->Kill(soulgrinder);
+            m_creature->RemoveAurasDueToSpell(SPELL_SHADOWFORM_4);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+        }
     }
     
     void UpdateAI(uint32 const diff)
     {
+        if (step5Timer) {
+            if (step5Timer <= diff) {
+                ChangePhase(6);
+                
+                step5Timer = 0;
+            }
+            else
+                step5Timer -= diff;
+        }
         
+        if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+            return;
+            
+        // Spells etc.
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_skulloc(Creature *pCreature)
+{
+    return new npc_skullocAI(pCreature);
+}
+
+/*######
+## npc_soulgrinder
+######*/
+
+float ogresSpawns[6][4] = { { 3524.897705, 5613.239258, -4.257625, 4.999918 },
+                            { 3541.113037, 5606.105469, -3.300353, 4.327529 },
+                            { 3543.969238, 5573.780273, -2.774169, 2.004281 },
+                            { 3558.977295, 5590.019531, -4.172577, 3.183468 },
+                            { 3528.284424, 5567.758789, -1.199220, 1.256619 },
+                            { 3516.486328, 5582.583984, -3.198729, 0.579210 }};
+
+#define SPELL_VISUAL_BUNNY          39936       // On bunny?
+
+#define NPC_SKULLOC                 22910
+#define NPC_SUNDERED_GHOST          24039       // Seems to have no visible displayID, probably need to cast spell 3991 on them and FIXME: Change faction!
+
+struct npc_soulgrinderAI : public Scripted_NoMovementAI
+{
+    npc_soulgrinderAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    uint64 skullocGUID;
+    uint32 summonTimer;
+    uint32 ogresKilled;
+    
+    uint8 step;
+    
+    void Reset()
+    {
+        ogresKilled = 0;
+        summonTimer = 2000;     // TODO CHANGE ME
+        
+        step = 0;
+        
+        DoCast(m_creature, SPELL_VISUAL_INPROGRESS, true);
+        if (Creature *skulloc = m_creature->SummonCreature(NPC_SKULLOC, 3486.548340, 5554.811523, 7.519224, 3.755524, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000)) {
+            skullocGUID = skulloc->GetGUID();
+            ((npc_skullocAI*)skulloc->AI())->ChangePhase(step);
+        }
+    }
+    
+    void Aggro(Unit *pWho) {}       // FIXME: Put summoner and his group in combat and stop it when entering phase 5 -> Maybe not needed if ogres have enough hp
+    
+    void IncrementOgresCounter()
+    {
+        ogresKilled++;
+        if (ogresKilled%6 == 0) {    // Increment step (and add a beam) every 6 ogres
+            step++;
+                
+            AddBeam();
+            if (Creature *skulloc = Unit::GetCreature(*m_creature, skullocGUID))
+                ((npc_skullocAI*)skulloc->AI())->ChangePhase(step);
+        }
+    }
+    
+    void AddBeam()
+    {
+        CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+        Cell cell(pair);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+        std::list<Creature*> triggers;
+
+        Trinity::AllCreaturesOfEntryInRange check(m_creature, 23037, 100.0f);
+        Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(triggers, check);
+        TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+        cell.Visit(pair, visitor, *m_creature->GetMap());
+
+        for (std::list<Creature*>::iterator itr = triggers.begin(); itr != triggers.end(); itr++) {
+            (*itr)->GetMotionMaster()->MoveTargetedHome();
+            if (step == 1 && int32((*itr)->GetPositionX()) == 3493)
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+            else if (step == 2 && int32((*itr)->GetPositionX()) == 3465)
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+            else if (step == 3 && int32((*itr)->GetPositionX()) == 3515)
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+            else if (step == 4 && int32((*itr)->GetPositionX()) == 3472)
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (step >= 5)
+            return;
+
+        if (summonTimer <= diff) {
+            uint8 randomPoint = rand()%6;
+            m_creature->SummonCreature(NPC_SUNDERED_GHOST, ogresSpawns[randomPoint][0], ogresSpawns[randomPoint][1], ogresSpawns[randomPoint][2], ogresSpawns[randomPoint][3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+            
+            summonTimer = 2000;
+        }
+        else
+            summonTimer -= diff;
     }
 };
 
 CreatureAI* GetAI_npc_soulgrinder(Creature *pCreature)
 {
     return new npc_soulgrinderAI(pCreature);
+}
+
+/*######
+## npc_sundered_ghost
+######*/
+
+#define SPELL_TRANSFORM_GHOST       39916
+#define SPELL_CRIPPLE               11443
+#define SPELL_SHADOW_BOLT           20816
+
+struct npc_sundered_ghostAI : public ScriptedAI
+{
+    npc_sundered_ghostAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 crippleTimer;
+    uint32 shadowBoltTimer;
+    
+    void Reset()
+    {
+        m_creature->setFaction(14);
+        DoCast(m_creature, SPELL_TRANSFORM_GHOST);
+        
+        crippleTimer = 4000;
+        shadowBoltTimer = 3000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void JustDied(Unit *pKiller)
+    {
+        if (Creature *pSoulgrinder = m_creature->FindCreatureInGrid(23019, 40.0f, true))
+            ((npc_soulgrinderAI*)pSoulgrinder->AI())->IncrementOgresCounter();
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (crippleTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CRIPPLE);
+            
+            crippleTimer = 20000+rand()%4000;
+        }
+        else
+            crippleTimer -= diff;
+            
+        if (shadowBoltTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+            
+            shadowBoltTimer = 5000+rand()%3000;
+        }
+        else
+            shadowBoltTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
+{
+    return new npc_sundered_ghostAI(pCreature);
 }
 
 /*######
@@ -819,6 +1046,16 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_soulgrinder";
     newscript->GetAI = &GetAI_npc_soulgrinder;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_skulloc";
+    newscript->GetAI = &GetAI_npc_skulloc;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sundered_ghost";
+    newscript->GetAI = &GetAI_npc_sundered_ghost;
     newscript->RegisterSelf();
 }
 
