@@ -38,7 +38,6 @@ npc_vimgol
 npc_soulgrinder
 npc_skulloc
 npc_sundered_ghost
-npc_mogdorg
 EndContentData */
 
 #include "precompiled.h"
@@ -974,19 +973,6 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 }
 
 /*######
-## npc_mogdorg
-######*/
-
-bool QuestComplete_npc_mogdorg(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
-{
-    if (pQuest->GetQuestId() == 11000) {
-        sLog.outString("Pom");
-    }
-    
-    return true;
-}
-
-/*######
 ## AddSC
 ######*/
 
@@ -1075,11 +1061,6 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_sundered_ghost";
     newscript->GetAI = &GetAI_npc_sundered_ghost;
-    newscript->RegisterSelf();
-    
-    newscript = new Script;
-    newscript->Name = "npc_mogdorg";
-    newscript->pQuestComplete = &QuestComplete_npc_mogdorg;
     newscript->RegisterSelf();
 }
 
