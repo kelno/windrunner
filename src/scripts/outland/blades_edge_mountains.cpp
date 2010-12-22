@@ -700,7 +700,8 @@ CreatureAI* GetAI_npc_vimgol(Creature *pCreature)
 
 #define SPELL_VISUAL_INPROGRESS     39918       // At spawn
 #define SPELL_VISUAL_BEAM           39920       // Blue/Black beam
-#define SPELL_VISUAL_SMASHED        39974       // Step 5
+
+#define GOB_SOUL                    185577
 
 struct npc_skullocAI : public ScriptedAI
 {
@@ -723,6 +724,11 @@ struct npc_skullocAI : public ScriptedAI
     }
     
     void Aggro(Unit *pWho) {}
+    
+    void JustDied(Unit *pKiller)
+    {
+        pKiller->SummonGameObject(GOB_SOUL, pKiller->GetPositionX(), pKiller->GetPositionY(), pKiller->GetPositionZ()+3, 0, 0, 0, 0, 0, 0);
+    }
     
     void ChangePhase(uint8 phase)
     {
@@ -761,9 +767,8 @@ struct npc_skullocAI : public ScriptedAI
                 (*itr)->Kill(*itr);
                 
             if (Creature *soulgrinder = m_creature->FindNearestCreature(23019, 100.0f, true)) {
-                DoCast(soulgrinder, SPELL_VISUAL_SMASHED, true);
                 DoCast(soulgrinder, SPELL_VISUAL_BEAM, true);
-                step5Timer = 5000;
+                step5Timer = 10000;
             }
             break;
         }
@@ -832,7 +837,7 @@ struct npc_soulgrinderAI : public Scripted_NoMovementAI
     void Reset()
     {
         ogresKilled = 0;
-        summonTimer = 2000;     // TODO CHANGE ME
+        summonTimer = 8000;
         
         step = 0;
         
@@ -874,13 +879,13 @@ struct npc_soulgrinderAI : public Scripted_NoMovementAI
         for (std::list<Creature*>::iterator itr = triggers.begin(); itr != triggers.end(); itr++) {
             (*itr)->GetMotionMaster()->MoveTargetedHome();
             if (step == 1 && int32((*itr)->GetPositionX()) == 3493)
-                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, false);
             else if (step == 2 && int32((*itr)->GetPositionX()) == 3465)
-                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, false);
             else if (step == 3 && int32((*itr)->GetPositionX()) == 3515)
-                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, false);
             else if (step == 4 && int32((*itr)->GetPositionX()) == 3472)
-                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, true);
+                (*itr)->CastSpell(m_creature, SPELL_VISUAL_BEAM, false);
         }
     }
     
@@ -893,7 +898,7 @@ struct npc_soulgrinderAI : public Scripted_NoMovementAI
             uint8 randomPoint = rand()%6;
             m_creature->SummonCreature(NPC_SUNDERED_GHOST, ogresSpawns[randomPoint][0], ogresSpawns[randomPoint][1], ogresSpawns[randomPoint][2], ogresSpawns[randomPoint][3], TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
             
-            summonTimer = 2000;
+            summonTimer = 8000;
         }
         else
             summonTimer -= diff;
