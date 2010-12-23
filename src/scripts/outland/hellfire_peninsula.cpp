@@ -445,10 +445,10 @@ struct npc_demoniac_scryerAI : public Scripted_NoMovementAI
     void UpdateAI(const uint32 diff)
     {
         //player is gone ?
-        if (!m_creature->GetSummoner())
+        if (!((TemporarySummon*)m_creature)->GetSummoner())
             return;
             
-        Player* player = (m_creature->GetSummoner())->ToPlayer();
+        Player* player = (((TemporarySummon*)m_creature)->GetSummoner())->ToPlayer();
         if (!player)
             return;
             

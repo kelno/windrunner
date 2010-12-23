@@ -39,9 +39,11 @@ npc_soulgrinder
 npc_skulloc
 npc_sundered_ghost
 go_apexis_relic
+npc_simon_bunny
 EndContentData */
 
 #include "precompiled.h"
+#include "ObjectMgr.h"
 /*#include "CellImpl.h"
 #include "GridNotifiers.h"
 #include "GridNotifiersImpl.h"*/
@@ -979,6 +981,8 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 
 #define GOSSIP_START_GAME       "[PH] Démarrer le jeu !"
 #define ITEM_APEXIS_SHARD       32569
+#define GO_RELIC_DECHARGER      185894
+#define NPC_SIMON_BUNNY         22923
 
 bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
 {
@@ -995,15 +999,73 @@ bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
 bool GOSelect_go_apexis_relic(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction)
 {
     if (uiAction == GOSSIP_ACTION_INFO_DEF) {
-        // Take reagent
-        pPlayer->DestroyItemCount(ITEM_APEXIS_SHARD, 1, true);
-        // Start game
-        sLog.outString("[SIMON] Game started!");
+        // Summon trigger that will handle the event
+        if (GameObject *gDecharger = pPlayer->FindNearestGameObject(GO_RELIC_DECHARGER, 5.0f))
+            pPlayer->SummonCreature(NPC_SIMON_BUNNY, gDecharger->GetPositionX(), gDecharger->GetPositionY(), gDecharger->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
     }
     
     pPlayer->CLOSE_GOSSIP_MENU();
     
     return true;
+}
+
+/*######
+## npc_simon_bunny
+######*/
+
+enum eSimonSpells
+{
+    SPELL_START_SOLO        = 41145,
+    SPELL_START_GROUP       = 41146,
+    SPELL_START_VISUAL      = 40387,
+    
+    
+};
+
+struct npc_simon_bunnyAI : public Scripted_NoMovementAI
+{
+    npc_simon_bunnyAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    uint64 playerGUID;
+    
+    void Reset()
+    {
+        if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner())
+            playerGUID = summoner->GetGUID();
+            
+        if (!playerGUID) {
+            sLog.outError("Simon Game: no player found to start event, aborting.");
+            m_creature->DisappearAndDie();
+        }
+        
+        AnimAndTakeReagents();
+    }
+    
+    void AnimAndTakeReagents()
+    {
+        if (Player *plr = objmgr.GetPlayer(playerGUID)) {
+            if (Group *group = plr->GetGroup())
+                DoCast(plr, SPELL_START_GROUP, false);
+            else
+                DoCast(plr, SPELL_START_SOLO, false);
+                
+            plr->DestroyItemCount(ITEM_APEXIS_SHARD, 1, true);
+        }
+        
+        DoCast(m_creature, SPELL_START_VISUAL);
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        
+    }
+};
+
+CreatureAI* GetAI_npc_simon_bunny(Creature *pCreature)
+{
+    return new npc_simon_bunnyAI(pCreature);
 }
 
 /*######
@@ -1101,6 +1163,11 @@ void AddSC_blades_edge_mountains()
     newscript->Name = "go_apexis_relic";
     newscript->pGOHello = &GOHello_go_apexis_relic;
     newscript->pGOSelect = &GOSelect_go_apexis_relic;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_simon_bunny";
+    newscript->GetAI = &GetAI_npc_simon_bunny;
     newscript->RegisterSelf();
 }
 
