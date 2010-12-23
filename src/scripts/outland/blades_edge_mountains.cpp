@@ -983,6 +983,7 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 #define ITEM_APEXIS_SHARD       32569
 #define GO_RELIC_DECHARGER      185894
 #define NPC_SIMON_BUNNY         22923
+//#define NPC_SIMON_SUMMONTARGET  23382     // Not used
 
 bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
 {
@@ -1001,7 +1002,7 @@ bool GOSelect_go_apexis_relic(Player* pPlayer, GameObject* pGO, uint32 uiSender,
     if (uiAction == GOSSIP_ACTION_INFO_DEF) {
         // Summon trigger that will handle the event
         if (GameObject *gDecharger = pPlayer->FindNearestGameObject(GO_RELIC_DECHARGER, 5.0f))
-            pPlayer->SummonCreature(NPC_SIMON_BUNNY, gDecharger->GetPositionX(), gDecharger->GetPositionY(), gDecharger->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+            pPlayer->SummonCreature(NPC_SIMON_BUNNY, gDecharger->GetPositionX(), gDecharger->GetPositionY(), gDecharger->GetPositionZ()+5, pPlayer->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
     }
     
     pPlayer->CLOSE_GOSSIP_MENU();
@@ -1017,42 +1018,36 @@ enum eSimonSpells
 {
     SPELL_START_SOLO        = 41145,
     SPELL_START_GROUP       = 41146,
-    SPELL_START_VISUAL      = 40387,
+    //SPELL_START_VISUAL      = 40387,  // Not used
+    SPELL_START_VISUAL_HIGH = 39993,
     
     
 };
 
-struct npc_simon_bunnyAI : public Scripted_NoMovementAI
+struct npc_simon_bunnyAI : public ScriptedAI
 {
-    npc_simon_bunnyAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    npc_simon_bunnyAI(Creature *c) : ScriptedAI(c) {}
     
     uint64 playerGUID;
     
     void Reset()
     {
-        if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner())
+        m_creature->GetMotionMaster()->MoveTargetedHome();
+        
+        if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner()) {
+            summoner->ToPlayer()->DestroyItemCount(ITEM_APEXIS_SHARD, 1, true);
             playerGUID = summoner->GetGUID();
+        }
             
         if (!playerGUID) {
             sLog.outError("Simon Game: no player found to start event, aborting.");
             m_creature->DisappearAndDie();
         }
-        
-        AnimAndTakeReagents();
     }
     
-    void AnimAndTakeReagents()
+    void JustReachedHome()
     {
-        if (Player *plr = objmgr.GetPlayer(playerGUID)) {
-            if (Group *group = plr->GetGroup())
-                DoCast(plr, SPELL_START_GROUP, false);
-            else
-                DoCast(plr, SPELL_START_SOLO, false);
-                
-            plr->DestroyItemCount(ITEM_APEXIS_SHARD, 1, true);
-        }
-        
-        DoCast(m_creature, SPELL_START_VISUAL);
+        DoCast(m_creature, SPELL_START_VISUAL_HIGH, true);
     }
     
     void Aggro(Unit *pWho) {}
