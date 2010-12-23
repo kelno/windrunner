@@ -1018,13 +1018,20 @@ enum eSimonSpells
 {
     SPELL_START_SOLO        = 41145,
     SPELL_START_GROUP       = 41146,
-    //SPELL_START_VISUAL      = 40387,  // Not used
-    SPELL_START_VISUAL_HIGH = 39993,
+    SPELL_START_VISUAL      = 40387,
+    //SPELL_START_VISUAL_HIGH = 39993,  // Not used
     
     SPELL_WHITEAURA_BLUE    = 40281,
     SPELL_WHITEAURA_GREEN   = 40287,
     SPELL_WHITEAURA_RED     = 40288,
     SPELL_WHITEAURA_YELLOW  = 40289,
+    
+    SPELL_BEAM_BLUE         = 40244,
+    SPELL_BEAM_GREEN        = 40245,
+    SPELL_BEAM_RED          = 40246,
+    SPELL_BEAM_YELLOW       = 40247,
+    
+    SPELL_LEVELSTART        = 40436,
 };
 
 enum eSimonSteps
@@ -1064,31 +1071,70 @@ struct npc_simon_bunnyAI : public ScriptedAI
     
     void JustReachedHome()
     {
-        DoCast(m_creature, SPELL_START_VISUAL_HIGH, true);
-        stepTimer = 3000;
+        DoCast(m_creature, SPELL_START_VISUAL, true);
+        stepTimer = 1;
     }
     
     void Aggro(Unit *pWho) {}
     
+    uint32 SelectRandomBeam()
+    {
+        switch (rand()%4) {
+        case 0:
+            return SPELL_BEAM_BLUE;
+        case 1:
+            return SPELL_BEAM_GREEN;
+        case 2:
+            return SPELL_BEAM_RED;
+        case 3:
+            return SPELL_BEAM_YELLOW;
+        }
+    }
+    
     void UpdateAI(uint32 const diff)
     {
-        if (stepTimer <= diff) {
-            switch (step) {
-            case STEP_BEGIN:
-                DoCast(m_creature, SPELL_WHITEAURA_BLUE, true);
-                DoCast(m_creature, SPELL_WHITEAURA_GREEN, true);
-                DoCast(m_creature, SPELL_WHITEAURA_RED, true);
-                DoCast(m_creature, SPELL_WHITEAURA_YELLOW, true);
-                
-                step = STEP_SHOWSEQUENCE;
-                stepTimer = 5000;
-                break;
-            default:
-                sLog.outError("Phase not handled for now.");
-                break;
+        if (stepTimer) {
+            if (stepTimer <= diff) {
+                switch (step) {
+                case STEP_BEGIN:
+                    step = STEP_WHITEAURA;
+                    stepTimer = 2500;
+                    break;
+                case STEP_WHITEAURA:
+                    DoCast(m_creature, SPELL_WHITEAURA_BLUE, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_GREEN, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_RED, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_YELLOW, true);
+                    
+                    step = STEP_SHOWSEQUENCE;
+                    stepTimer = 5000;
+                    break;
+                case STEP_SHOWSEQUENCE:
+                    // Only play with blue beams for now
+                    DoCast(m_creature, SelectRandomBeam(), true);
+                    /* 
+                    for (int i = 0; i < maxbeamforthatphase; i++) {
+                        cast one ray
+                        add a timer
+                        break
+                    }
+                    */
+                    step = STEP_REPRODSEQUENCE;
+                    stepTimer = 2000;
+                    break;
+                case STEP_REPRODSEQUENCE:
+                    DoCast(m_creature, SPELL_LEVELSTART, true);
+                    
+                    step = STEP_SHOWSEQUENCE;
+                    stepTimer = 3000;
+                    break;
+                default:
+                    sLog.outError("Phase not handled for now.");
+                    break;
+                }
             }
+            else stepTimer -= diff;
         }
-        else stepTimer -= diff;
     }
 };
 
