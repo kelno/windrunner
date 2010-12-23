@@ -1333,6 +1333,359 @@ bool GOHello_go_yellow_cluster(Player *pPlayer, GameObject *pGo)
 }
 
 /*######
+## go_apexis_monument
+######*/
+
+//#define GOSSIP_START_GAME       "[PH] Démarrer le jeu !"
+#define ITEM_APEXIS_SHARD       32569
+#define GO_APEXIS_DECHARGER     185945
+#define NPC_SIMON_BUNNY_LARGE   23378
+
+bool GOHello_go_apexis_monument(Player* pPlayer, GameObject* pGo)
+{
+    if (pPlayer->GetQuestStatus(11059) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
+        return false;
+
+    if (Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 5.0f, true))        // Event is running, don't launch it twice
+        return false;
+
+    if (pPlayer->HasItemCount(ITEM_APEXIS_SHARD, 35, false)) {
+        pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_START_GAME, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->SEND_GOSSIP_MENU(31000, pGo->GetGUID());
+        
+        return true;
+    }
+    
+    return false;
+}
+
+bool GOSelect_go_apexis_monument(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF) {
+        // Summon trigger that will handle the event
+        if (GameObject *gDecharger = pPlayer->FindNearestGameObject(GO_APEXIS_DECHARGER, 5.0f))
+            pPlayer->SummonCreature(NPC_SIMON_BUNNY_LARGE, gDecharger->GetPositionX(), gDecharger->GetPositionY(), gDecharger->GetPositionZ()+8, pPlayer->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+    }
+    
+    pPlayer->CLOSE_GOSSIP_MENU();
+    
+    return true;
+}
+
+/*######
+## npc_simon_bunny_large
+######*/
+
+/*enum eSimonSpells
+{
+    //SPELL_START_SOLO        = 41145,  // Not used
+    //SPELL_START_GROUP       = 41146,  // Not used
+    SPELL_START_VISUAL      = 40387,
+    //SPELL_START_VISUAL_HIGH = 39993,  // Not used
+    
+    SPELL_WHITEAURA_BLUE    = 40281,
+    SPELL_WHITEAURA_GREEN   = 40287,
+    SPELL_WHITEAURA_RED     = 40288,
+    SPELL_WHITEAURA_YELLOW  = 40289,
+    
+    SPELL_BEAM_BLUE         = 40244,
+    SPELL_BEAM_GREEN        = 40245,
+    SPELL_BEAM_RED          = 40246,
+    SPELL_BEAM_YELLOW       = 40247,
+    
+    SPELL_LEVELSTART        = 40436,
+    //SPELL_SOUND             = 41398,  // Not used
+    
+    SPELL_BAD_PRESS         = 41241,
+    SPELL_GAME_FAILED       = 40437,
+    
+    SPELL_INTROSPECTION     = 40165,
+    
+    SPELL_APEXIS_VIBRATIONS = 40310
+};*/
+
+/*enum eSimonSteps
+{
+    STEP_BEGIN              = 0,
+    STEP_WHITEAURA          = 1,
+    STEP_SHOWSEQUENCE       = 2,
+    STEP_REPRODSEQUENCE     = 3
+};
+
+enum eSimonBeams
+{
+    BEAM_BLUE               = 0,
+    BEAM_GREEN              = 1,
+    BEAM_RED                = 2,
+    BEAM_YELLOW             = 3
+};
+
+enum eSimonSounds
+{
+    SOUND_BLUE              = 11588,
+    SOUND_GREEN             = 11589,
+    SOUND_RED               = 11590,
+    SOUND_YELLOW            = 11591
+};*/
+
+struct npc_simon_bunny_largeAI : public ScriptedAI
+{
+    npc_simon_bunny_largeAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint64 playerGUID;
+    
+    uint8 step;
+    uint8 level;
+    uint8 levelCounter;
+    
+    uint32 stepTimer;
+    
+    std::list<uint8> beamList;
+    
+    void Reset()
+    {
+        m_creature->GetMotionMaster()->MoveTargetedHome();
+        
+        if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner()) {
+            summoner->ToPlayer()->DestroyItemCount(ITEM_APEXIS_SHARD, 35, true);
+            playerGUID = summoner->GetGUID();
+        }
+            
+        if (!playerGUID) {
+            sLog.outError("Simon Game: no player found to start event, aborting.");
+            m_creature->DisappearAndDie();
+        }
+        
+        step = STEP_BEGIN;
+        stepTimer = 0;
+        level = 0;
+        
+        beamList.clear();
+    }
+    
+    // This is hacky. I need to move npc to get him back in the air, or visual effect is fucked up.
+    void JustReachedHome()
+    {
+        stepTimer = 1;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    uint32 SelectRandomBeam()
+    {
+        Player *plr = objmgr.GetPlayer(playerGUID);
+        if (!plr)
+            return 0;
+
+        switch (rand()%4) {
+        case BEAM_BLUE:
+            beamList.push_back(BEAM_BLUE);
+            plr->PlaySound(GetSoundForButton(BEAM_BLUE), false);
+            return SPELL_BEAM_BLUE;
+        case BEAM_GREEN:
+            beamList.push_back(BEAM_GREEN);
+            plr->PlaySound(GetSoundForButton(BEAM_GREEN), false);
+            return SPELL_BEAM_GREEN;
+        case BEAM_RED:
+            beamList.push_back(BEAM_RED);
+            plr->PlaySound(GetSoundForButton(BEAM_RED), false);
+            return SPELL_BEAM_RED;
+        case BEAM_YELLOW:
+            beamList.push_back(BEAM_YELLOW);
+            plr->PlaySound(GetSoundForButton(BEAM_YELLOW), false);
+            return SPELL_BEAM_YELLOW;
+        }
+    }
+    
+    uint32 GetSpellForBeam(uint8 beam)
+    {
+        switch (beam) {
+        case BEAM_BLUE:
+            return SPELL_BEAM_BLUE;
+        case BEAM_GREEN:
+            return SPELL_BEAM_GREEN;
+        case BEAM_RED:
+            return SPELL_BEAM_RED;
+        case BEAM_YELLOW:
+            return SPELL_BEAM_YELLOW;
+        }
+    }
+
+    uint32 GetSoundForButton(uint8 button)
+    {
+        switch (button) {
+        case BEAM_BLUE:
+            return SOUND_BLUE;
+        case BEAM_GREEN:
+            return SOUND_GREEN;
+        case BEAM_RED:
+            return SOUND_RED;
+        case BEAM_YELLOW:
+            return SOUND_YELLOW;
+        }
+    }
+
+    void PlayerProposal(uint8 prop)
+    {
+        if (step != STEP_REPRODSEQUENCE)
+            return;
+
+        uint8 next = beamList.front();
+        if (next == prop) {     // Good
+            DoCast(m_creature, GetSpellForBeam(next), true);
+            if (Player *plr = objmgr.GetPlayer(playerGUID))
+                plr->PlaySound(GetSoundForButton(next), false);
+            
+            beamList.pop_front();
+            if (beamList.empty()) {     // All beams processed. Level up!
+                step = STEP_BEGIN;
+                stepTimer = 500;
+            }
+        }
+        else {                  // Wrong, hurt player and restart level
+            if (Player *plr = objmgr.GetPlayer(playerGUID)) {
+                plr->CastSpell(plr, SPELL_GAME_FAILED, true);
+                plr->CastSpell(plr, SPELL_BAD_PRESS, true);
+            }
+            
+            beamList.clear();
+            level--;
+            
+            step = STEP_BEGIN;
+            stepTimer = 500;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        Player *summoner = objmgr.GetPlayer(playerGUID);
+        if (!summoner || !summoner->IsInWorld()) {
+            m_creature->DisappearAndDie();
+            return;
+        }
+        
+        if (level > 6) {        // Complete quest and stop event
+            //DoCast(summoner, SPELL_APEXIS_VIBRATIONS, true);
+            //summoner->ToPlayer()->GroupEventHappens(11059, m_creature);
+            m_creature->SummonCreature(22275, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ()-8, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+            m_creature->DisappearAndDie();
+            return;
+        }
+        
+        if (stepTimer) {
+            if (stepTimer <= diff) {
+                switch (step) {
+                case STEP_BEGIN:
+                    DoCast(m_creature, SPELL_START_VISUAL, true);
+                    step = STEP_WHITEAURA;
+                    stepTimer = 1800;
+                    break;
+                case STEP_WHITEAURA:
+                    DoCast(m_creature, SPELL_WHITEAURA_BLUE, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_GREEN, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_RED, true);
+                    DoCast(m_creature, SPELL_WHITEAURA_YELLOW, true);
+                    
+                    beamList.clear();
+                    step = STEP_SHOWSEQUENCE;
+                    stepTimer = 5000;
+                    level++;
+                    levelCounter = 0;
+                    break;
+                case STEP_SHOWSEQUENCE:
+                    if (levelCounter < level) {
+                        DoCast(m_creature, SelectRandomBeam(), true);
+                        levelCounter++;
+                        stepTimer = 800;
+                        break;
+                    }
+                    step = STEP_REPRODSEQUENCE;
+                    stepTimer = 500;
+                    break;
+                case STEP_REPRODSEQUENCE:
+                    DoCast(m_creature, SPELL_LEVELSTART, true);
+                    stepTimer = 0;      // Stop event, we are waiting for player
+                    break;
+                default:
+                    sLog.outError("Phase not handled for now.");
+                    break;
+                }
+            }
+            else stepTimer -= diff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_simon_bunny_large(Creature *pCreature)
+{
+    return new npc_simon_bunny_largeAI(pCreature);
+}
+
+/*######
+## go_blue_cluster_large
+######*/
+
+bool GOHello_go_blue_cluster_large(Player *pPlayer, GameObject *pGo)
+{
+    Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 10.0f, true);
+    if (!bunny)
+        return false;
+        
+    pPlayer->CastSpell(pPlayer, SPELL_INTROSPECTION, true);
+    ((npc_simon_bunny_largeAI*)bunny->AI())->PlayerProposal(BEAM_BLUE);
+    
+    return true;
+}
+
+/*######
+## go_green_cluster_large
+######*/
+
+bool GOHello_go_green_cluster_large(Player *pPlayer, GameObject *pGo)
+{
+    Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 10.0f, true);
+    if (!bunny)
+        return false;
+        
+    pPlayer->CastSpell(pPlayer, SPELL_INTROSPECTION, true);
+    ((npc_simon_bunny_largeAI*)bunny->AI())->PlayerProposal(BEAM_GREEN);
+    
+    return true;
+}
+
+/*######
+## go_red_cluster_large
+######*/
+
+bool GOHello_go_red_cluster_large(Player *pPlayer, GameObject *pGo)
+{
+    Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 10.0f, true);
+    if (!bunny)
+        return false;
+        
+    pPlayer->CastSpell(pPlayer, SPELL_INTROSPECTION, true);
+    ((npc_simon_bunny_largeAI*)bunny->AI())->PlayerProposal(BEAM_RED);
+    
+    return true;
+}
+
+/*######
+## go_yellow_cluster_large
+######*/
+
+bool GOHello_go_yellow_cluster_large(Player *pPlayer, GameObject *pGo)
+{
+    Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 10.0f, true);
+    if (!bunny)
+        return false;
+        
+    pPlayer->CastSpell(pPlayer, SPELL_INTROSPECTION, true);
+    ((npc_simon_bunny_largeAI*)bunny->AI())->PlayerProposal(BEAM_YELLOW);
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1452,6 +1805,37 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "go_yellow_cluster";
     newscript->pGOHello = &GOHello_go_yellow_cluster;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_apexis_monument";
+    newscript->pGOHello = &GOHello_go_apexis_monument;
+    newscript->pGOSelect = &GOSelect_go_apexis_monument;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_simon_bunny_large";
+    newscript->GetAI = &GetAI_npc_simon_bunny_large;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_blue_cluster_large";
+    newscript->pGOHello = &GOHello_go_blue_cluster_large;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_green_cluster_large";
+    newscript->pGOHello = &GOHello_go_green_cluster_large;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_red_cluster_large";
+    newscript->pGOHello = &GOHello_go_red_cluster_large;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_yellow_cluster_large";
+    newscript->pGOHello = &GOHello_go_yellow_cluster_large;
     newscript->RegisterSelf();
 }
 
