@@ -561,10 +561,10 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
         }
         if (checkTimer <= diff) {
             Creature *vimgol = m_creature->FindNearestCreature(22911, 45.0f, true);
-                if (vimgol) {    // No need to continue if vimgol's already there
-                    checkTimer = 500;
-                    return;
-                }
+            if (vimgol) {    // No need to continue if vimgol's already there
+                checkTimer = 500;
+                return;
+            }
                 
             CellPair p(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
             Cell cell(p);
