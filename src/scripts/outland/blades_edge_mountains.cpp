@@ -38,6 +38,7 @@ npc_vimgol
 npc_soulgrinder
 npc_skulloc
 npc_sundered_ghost
+go_apexis_relic
 EndContentData */
 
 #include "precompiled.h"
@@ -973,6 +974,39 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 }
 
 /*######
+## go_apexis_relic
+######*/
+
+#define GOSSIP_START_GAME       "[PH] Démarrer le jeu !"
+#define ITEM_APEXIS_SHARD       32569
+
+bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
+{
+    if (pPlayer->HasItemCount(ITEM_APEXIS_SHARD, 1, false)) {
+        pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_START_GAME, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        pPlayer->SEND_GOSSIP_MENU(31000, pGo->GetGUID());
+        
+        return true;
+    }
+    
+    return false;
+}
+
+bool GOSelect_go_apexis_relic(Player* pPlayer, GameObject* pGO, uint32 uiSender, uint32 uiAction)
+{
+    if (uiAction == GOSSIP_ACTION_INFO_DEF) {
+        // Take reagent
+        pPlayer->DestroyItemCount(ITEM_APEXIS_SHARD, 1, true);
+        // Start game
+        sLog.outString("[SIMON] Game started!");
+    }
+    
+    pPlayer->CLOSE_GOSSIP_MENU();
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1061,6 +1095,12 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_sundered_ghost";
     newscript->GetAI = &GetAI_npc_sundered_ghost;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_apexis_relic";
+    newscript->pGOHello = &GOHello_go_apexis_relic;
+    newscript->pGOSelect = &GOSelect_go_apexis_relic;
     newscript->RegisterSelf();
 }
 
