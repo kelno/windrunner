@@ -1021,7 +1021,18 @@ enum eSimonSpells
     //SPELL_START_VISUAL      = 40387,  // Not used
     SPELL_START_VISUAL_HIGH = 39993,
     
-    
+    SPELL_WHITEAURA_BLUE    = 40281,
+    SPELL_WHITEAURA_GREEN   = 40287,
+    SPELL_WHITEAURA_RED     = 40288,
+    SPELL_WHITEAURA_YELLOW  = 40289,
+};
+
+enum eSimonSteps
+{
+    STEP_BEGIN          = 0,
+    STEP_WHITEAURA      = 1,
+    STEP_SHOWSEQUENCE   = 2,
+    STEP_REPRODSEQUENCE = 3
 };
 
 struct npc_simon_bunnyAI : public ScriptedAI
@@ -1029,6 +1040,9 @@ struct npc_simon_bunnyAI : public ScriptedAI
     npc_simon_bunnyAI(Creature *c) : ScriptedAI(c) {}
     
     uint64 playerGUID;
+    
+    uint8 step;
+    uint32 stepTimer;
     
     void Reset()
     {
@@ -1043,18 +1057,38 @@ struct npc_simon_bunnyAI : public ScriptedAI
             sLog.outError("Simon Game: no player found to start event, aborting.");
             m_creature->DisappearAndDie();
         }
+        
+        step = STEP_BEGIN;
+        stepTimer = 60000;
     }
     
     void JustReachedHome()
     {
         DoCast(m_creature, SPELL_START_VISUAL_HIGH, true);
+        stepTimer = 3000;
     }
     
     void Aggro(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
-        
+        if (stepTimer <= diff) {
+            switch (step) {
+            case STEP_BEGIN:
+                DoCast(m_creature, SPELL_WHITEAURA_BLUE, true);
+                DoCast(m_creature, SPELL_WHITEAURA_GREEN, true);
+                DoCast(m_creature, SPELL_WHITEAURA_RED, true);
+                DoCast(m_creature, SPELL_WHITEAURA_YELLOW, true);
+                
+                step = STEP_SHOWSEQUENCE;
+                stepTimer = 5000;
+                break;
+            default:
+                sLog.outError("Phase not handled for now.");
+                break;
+            }
+        }
+        else stepTimer -= diff;
     }
 };
 
