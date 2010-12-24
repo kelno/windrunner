@@ -44,6 +44,11 @@ go_blue_cluster
 go_green_cluster
 go_red_cluster
 go_yellow_cluster
+go_fel_crystal_prism
+npc_braxxus
+npc_moarg_incinerator
+npc_galvanoth
+npc_zarcsin
 EndContentData */
 
 #include "precompiled.h"
@@ -1686,6 +1691,262 @@ bool GOHello_go_yellow_cluster_large(Player *pPlayer, GameObject *pGo)
 }
 
 /*######
+## go_fel_crystal_prism
+######*/
+
+bool GOHello_go_fel_crystal_prism(Player* pPlayer, GameObject *pGo)
+{
+    if (!pPlayer->HasItemCount(ITEM_APEXIS_SHARD, 35, false))
+        return false;
+        
+    pPlayer->DestroyItemCount(ITEM_APEXIS_SHARD, 35, true);
+        
+    switch (rand()%4) {
+    case 0:
+        pGo->SummonCreature(23353, pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+        break;
+    case 1:
+        pGo->SummonCreature(23354, pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+        break;
+    case 2:
+        pGo->SummonCreature(22281, pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+        break;
+    case 3:
+        pGo->SummonCreature(23355, pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+        break;
+    }
+    
+    return true;
+}
+
+/*######
+## npc_braxxus
+######*/
+
+#define SPELL_DOUBLE_BREATH         41437
+#define SPELL_MANGLE                41439
+#define SPELL_PANIC                 41436
+
+struct npc_braxxusAI : public ScriptedAI
+{
+    npc_braxxusAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 doubleBreathTimer;
+    uint32 mangleTimer;
+    uint32 panicTimer;
+    
+    void Reset()
+    {
+        doubleBreathTimer = 2000;
+        mangleTimer = 5000;
+        panicTimer = 15000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (doubleBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_DOUBLE_BREATH);
+            doubleBreathTimer = 10000+rand()%3000;
+        }
+        else
+            doubleBreathTimer -= diff;
+            
+        if (mangleTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_MANGLE);
+            mangleTimer = 10000+rand()%4000;
+        }
+        else
+            mangleTimer -= diff;
+            
+        if (panicTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_PANIC);
+            panicTimer = 15000+rand()%3000;
+        }
+        else
+            panicTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_braxxus(Creature *pCreature)
+{
+    return new npc_braxxusAI(pCreature);
+}
+
+/*######
+## npc_moarg_incinerator
+######*/
+
+#define SPELL_ACID_GEYSER       44431
+#define SPELL_MIGHTY_CHARGE     36606
+#define SPELL_SUNDERING_CLEAVE  25174
+
+struct npc_moarg_incineratorAI : public ScriptedAI
+{
+    npc_moarg_incineratorAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 acidGeyserTimer;
+    uint32 mightyChargeTimer;
+    uint32 sunderingCleaveTimer;
+    
+    void Reset()
+    {
+        acidGeyserTimer = 2000;
+        sunderingCleaveTimer = 5000;
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        DoCast(pWho, SPELL_MIGHTY_CHARGE);
+        mightyChargeTimer = 10000;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (acidGeyserTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_ACID_GEYSER);
+            acidGeyserTimer = 10000+rand()%3000;
+        }
+        else
+            acidGeyserTimer -= diff;
+            
+        if (sunderingCleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_SUNDERING_CLEAVE);
+            sunderingCleaveTimer = 5000+rand()%2000;
+        }
+        else
+            sunderingCleaveTimer -= diff;
+            
+        if (mightyChargeTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_MIGHTY_CHARGE);
+            mightyChargeTimer = 10000+rand()%3000;
+        }
+        else
+            mightyChargeTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_moarg_incinerator(Creature *pCreature)
+{
+    return new npc_moarg_incineratorAI(pCreature);
+}
+
+/*######
+## npc_galvanoth
+######*/
+
+#define SPELL_FEL_FLAMESTRIKE       39139
+#define SPELL_MORTAL_STRIKE         15708
+#define SPELL_WAR_STOMP             38750
+
+struct npc_galvanothAI : public ScriptedAI
+{
+    npc_galvanothAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 felFlamestrikeTimer;
+    uint32 mortalStrikeTimer;
+    uint32 warStompTimer;
+    
+    void Reset()
+    {
+        felFlamestrikeTimer = 2000;
+        mortalStrikeTimer = 5000;
+        warStompTimer = 8000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (felFlamestrikeTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FEL_FLAMESTRIKE);
+            felFlamestrikeTimer = 10000+rand()%3000;
+        }
+        else
+            felFlamestrikeTimer -= diff;
+            
+        if (mortalStrikeTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
+            mortalStrikeTimer = 6000+rand()%2000;
+        }
+        else
+            mortalStrikeTimer -= diff;
+            
+        if (warStompTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_WAR_STOMP);
+            warStompTimer = 10000+rand()%3000;
+        }
+        else
+            warStompTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_galvanoth(Creature *pCreature)
+{
+    return new npc_galvanothAI(pCreature);
+}
+
+/*######
+## npc_zarcsin
+######*/
+
+#define SPELL_FEL_FLAMES        41444
+#define SPELL_ENRAGE            41447
+
+struct npc_zarcsinAI : public ScriptedAI
+{
+    npc_zarcsinAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 felFlamesTimer;
+    
+    void Reset()
+    {
+        felFlamesTimer = 2000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (felFlamesTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FEL_FLAMES);
+            felFlamesTimer = 10000+rand()%3000;
+        }
+        else
+            felFlamesTimer -= diff;
+            
+        if (m_creature->IsBelowHPPercent(50) && !m_creature->HasAura(SPELL_ENRAGE))
+            DoCast(m_creature, SPELL_ENRAGE);
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_zarcsin(Creature *pCreature)
+{
+    return new npc_zarcsinAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1836,6 +2097,31 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "go_yellow_cluster_large";
     newscript->pGOHello = &GOHello_go_yellow_cluster_large;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_fel_crystal_prism";
+    newscript->pGOHello = &GOHello_go_fel_crystal_prism;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_braxxus";
+    newscript->GetAI = &GetAI_npc_braxxus;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_moarg_incinerator";
+    newscript->GetAI = &GetAI_npc_moarg_incinerator;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_galvanoth";
+    newscript->GetAI = &GetAI_npc_galvanoth;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_zarcsin";
+    newscript->GetAI = &GetAI_npc_zarcsin;
     newscript->RegisterSelf();
 }
 
