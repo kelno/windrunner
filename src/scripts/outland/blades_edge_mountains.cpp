@@ -49,6 +49,8 @@ npc_braxxus
 npc_moarg_incinerator
 npc_galvanoth
 npc_zarcsin
+npc_aether_ray
+npc_wrangled_aether_ray
 EndContentData */
 
 #include "precompiled.h"
@@ -1947,6 +1949,98 @@ CreatureAI *GetAI_npc_zarcsin(Creature *pCreature)
 }
 
 /*######
+## npc_aether_ray
+######*/
+
+#define SPELL_TAIL_SWIPE        35333
+
+struct npc_aether_rayAI : public ScriptedAI
+{
+    npc_aether_rayAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 tailSwipeTimer;
+    
+    bool hasEmoted;
+    
+    void Reset()
+    {
+        m_creature->GetMotionMaster()->MoveTargetedHome();
+        
+        tailSwipeTimer = 2000;
+        hasEmoted = false;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void SpellHit(Unit *pCaster, SpellEntry const *pSpell)
+    {
+        if (pSpell->Id == 40856 && m_creature->IsBelowHPPercent(30)) {
+            m_creature->DisappearAndDie();
+            pCaster->CastSpell(pCaster, 40917, false);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (m_creature->IsBelowHPPercent(30) && !hasEmoted) {
+            DoTextEmote("est prête à être capturée.", NULL);
+            hasEmoted = true;
+        }
+            
+        if (tailSwipeTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_TAIL_SWIPE);
+            tailSwipeTimer = 10000+rand()%5000;
+        }
+        else
+            tailSwipeTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_aether_ray(Creature *pCreature)
+{
+    return new npc_aether_rayAI(pCreature);
+}
+
+/*######
+## npc_wrangled_aether_ray
+######*/
+
+struct npc_wrangled_aether_rayAI : public ScriptedAI
+{
+    npc_wrangled_aether_rayAI(Creature *c) : ScriptedAI(c) {}
+    
+    void Reset()
+    {
+        if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner()) {
+            m_creature->GetMotionMaster()->MoveFollow(summoner, PET_FOLLOW_DIST*2, M_PI);
+            DoCast(summoner, 40926, true);
+        }
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void MoveInLineOfSight(Unit *pWho)
+    {
+        if (pWho->ToCreature() && pWho->ToCreature()->GetEntry() == 23335 && pWho->IsWithinDistInMap(m_creature, 10.0f)) {
+            if (Unit *summoner = ((TemporarySummon*)m_creature)->GetSummoner()) {
+                summoner->ToPlayer()->KilledMonster(m_creature->GetEntry(), m_creature->GetGUID());
+                m_creature->DisappearAndDie();
+            }
+        }
+    }
+};
+
+CreatureAI *GetAI_npc_wrangled_aether_ray(Creature *pCreature)
+{
+    return new npc_wrangled_aether_rayAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2122,6 +2216,16 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_zarcsin";
     newscript->GetAI = &GetAI_npc_zarcsin;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_aether_ray";
+    newscript->GetAI = &GetAI_npc_aether_ray;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_wrangled_aether_ray";
+    newscript->GetAI = &GetAI_npc_wrangled_aether_ray;
     newscript->RegisterSelf();
 }
 
