@@ -1003,8 +1003,8 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 
 bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
 {
-    if (pPlayer->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE && pPlayer->GetQuestStatus(11080) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
-        return false;
+    //if (pPlayer->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE && pPlayer->GetQuestStatus(11080) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
+        //return false;
 
     if (Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY, 5.0f, true))        // Event is running, don't launch it twice
         return false;
@@ -1226,8 +1226,10 @@ struct npc_simon_bunnyAI : public ScriptedAI
         
         if (level > 8) {        // Complete quest and stop event
             DoCast(summoner, SPELL_APEXIS_VIBRATIONS, true);
-            summoner->ToPlayer()->GroupEventHappens(11058, m_creature);
-            summoner->ToPlayer()->GroupEventHappens(11080, m_creature);
+            if (summoner->ToPlayer()->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE)
+                summoner->ToPlayer()->GroupEventHappens(11058, m_creature);
+            if (summoner->ToPlayer()->GetQuestStatus(11080) != QUEST_STATUS_INCOMPLETE)
+                summoner->ToPlayer()->GroupEventHappens(11080, m_creature);
             m_creature->DisappearAndDie();
             return;
         }
@@ -1356,8 +1358,8 @@ bool GOHello_go_yellow_cluster(Player *pPlayer, GameObject *pGo)
 
 bool GOHello_go_apexis_monument(Player* pPlayer, GameObject* pGo)
 {
-    if (pPlayer->GetQuestStatus(11059) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
-        return false;
+    //if (pPlayer->GetQuestStatus(11059) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
+        //return false;
 
     if (Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY_LARGE, 5.0f, true))        // Event is running, don't launch it twice
         return false;
@@ -2052,8 +2054,8 @@ CreatureAI *GetAI_npc_wrangled_aether_ray(Creature *pCreature)
 
 bool GOHello_go_drake_egg(Player *pPlayer, GameObject *pGo)
 {
-    if (pPlayer->GetQuestStatus(11078) != QUEST_STATUS_INCOMPLETE)
-        return false;
+    //if (pPlayer->GetQuestStatus(11078) != QUEST_STATUS_INCOMPLETE)
+        //return false;
         
     if (!pPlayer->HasItemCount(ITEM_APEXIS_SHARD, 35, false))
         return false;
