@@ -1003,7 +1003,7 @@ CreatureAI* GetAI_npc_sundered_ghost(Creature *pCreature)
 
 bool GOHello_go_apexis_relic(Player* pPlayer, GameObject* pGo)
 {
-    if (pPlayer->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
+    if (pPlayer->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE && pPlayer->GetQuestStatus(11080) != QUEST_STATUS_INCOMPLETE)                      // Only with quest
         return false;
 
     if (Creature *bunny = pGo->FindNearestCreature(NPC_SIMON_BUNNY, 5.0f, true))        // Event is running, don't launch it twice
