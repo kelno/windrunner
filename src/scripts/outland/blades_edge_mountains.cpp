@@ -51,6 +51,11 @@ npc_galvanoth
 npc_zarcsin
 npc_aether_ray
 npc_wrangled_aether_ray
+go_drake_egg
+npc_rivendark
+npc_obsidia
+npc_insidion
+npc_furywing
 EndContentData */
 
 #include "precompiled.h"
@@ -2041,6 +2046,398 @@ CreatureAI *GetAI_npc_wrangled_aether_ray(Creature *pCreature)
 }
 
 /*######
+## go_drake_egg
+######*/
+
+bool GOHello_go_drake_egg(Player *pPlayer, GameObject *pGo)
+{
+    if (pPlayer->GetQuestStatus(11078) != QUEST_STATUS_INCOMPLETE)
+        return false;
+        
+    if (!pPlayer->HasItemCount(ITEM_APEXIS_SHARD, 35, false))
+        return false;
+        
+    pPlayer->DestroyItemCount(ITEM_APEXIS_SHARD, 35, true);
+        
+    uint32 bossEntry;
+    switch (pGo->GetEntry()) {
+    case 185936:        // Rivendark
+        bossEntry = 23061;
+        break;
+    case 185932:        // Obsidia
+        bossEntry = 23282;
+        break;
+    case 185938:        // Insidion
+        bossEntry = 23281;
+        break;
+    case 185937:        // Furywing
+        bossEntry = 23261;
+        break;
+    default:
+        bossEntry = 0;
+        break;
+    }
+    
+    if (Creature *boss = pPlayer->FindCreatureInGrid(bossEntry, 150.0f, true))
+        boss->AI()->AttackStart(pPlayer);
+        
+    return true;
+}
+
+/*######
+## npc_rivendark
+######*/
+
+#define SPELL_CORRUPTION        41988
+#define SPELL_TAIL_SWEEP        15847
+#define SPELL_BELLOWING_ROAR    36922
+#define SPELL_CLEAVE            40505
+#define SPELL_FIERY_BREATH      40032
+#define SPELL_FLAME_BREATH      9573
+
+struct npc_rivendarkAI : public ScriptedAI
+{
+    npc_rivendarkAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 corruptionTimer;
+    uint32 tailSweepTimer;
+    uint32 bellowingRoarTimer;
+    uint32 cleaveTimer;
+    uint32 fieryBreathTimer;
+    uint32 flameBreathTimer;
+    
+    void Reset()
+    {
+        corruptionTimer = 2000;
+        tailSweepTimer = 10000;
+        bellowingRoarTimer = 15000;
+        cleaveTimer = 5000;
+        fieryBreathTimer = 8000;
+        flameBreathTimer = 12000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!m_creature->isInCombat())
+            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        else if (m_creature->isInCombat())
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            
+        if (!UpdateVictim())
+            return;
+            
+        if (corruptionTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_CORRUPTION);
+            corruptionTimer = 5000+rand()%3000;
+        }
+        else
+            corruptionTimer -= diff;
+            
+        if (tailSweepTimer <= diff) {
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            if (target && !m_creature->HasInArc(M_PI, target))
+                DoCast(target, SPELL_TAIL_SWEEP);
+            tailSweepTimer = 4000+rand()%3000;
+        }
+        else
+            tailSweepTimer -= diff;
+            
+        if (bellowingRoarTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            bellowingRoarTimer = 15000+rand()%3000;
+        }
+        else
+            bellowingRoarTimer -= diff;
+            
+        if (cleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            cleaveTimer = 5000+rand()%3000;
+        }
+        else
+            cleaveTimer -= diff;
+            
+        if (fieryBreathTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FIERY_BREATH);
+            fieryBreathTimer = 5000+rand()%2000;
+        }
+        else
+            fieryBreathTimer -= diff;
+            
+        if (flameBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            flameBreathTimer = 12000+rand()%3000;
+        }
+        else
+            flameBreathTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_rivendark(Creature *pCreature)
+{
+    return new npc_rivendarkAI(pCreature);
+}
+
+/*######
+## npc_obsidia
+######*/
+
+#define SPELL_HELLFIRE      40717
+
+struct npc_obsidiaAI : public ScriptedAI
+{
+    npc_obsidiaAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 bellowingRoarTimer;
+    uint32 cleaveTimer;
+    uint32 fieryBreathTimer;
+    uint32 flameBreathTimer;
+    uint32 hellfireTimer;
+    
+    void Reset()
+    {
+        bellowingRoarTimer = 15000;
+        cleaveTimer = 5000;
+        fieryBreathTimer = 8000;
+        flameBreathTimer = 12000;
+        hellfireTimer = 15000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!m_creature->isInCombat())
+            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        else if (m_creature->isInCombat())
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            
+        if (!UpdateVictim())
+            return;
+            
+        if (bellowingRoarTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            bellowingRoarTimer = 15000+rand()%3000;
+        }
+        else
+            bellowingRoarTimer -= diff;
+            
+        if (cleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            cleaveTimer = 5000+rand()%3000;
+        }
+        else
+            cleaveTimer -= diff;
+            
+        if (fieryBreathTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FIERY_BREATH);
+            fieryBreathTimer = 5000+rand()%2000;
+        }
+        else
+            fieryBreathTimer -= diff;
+            
+        if (flameBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            flameBreathTimer = 12000+rand()%3000;
+        }
+        else
+            flameBreathTimer -= diff;
+            
+        if (hellfireTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_HELLFIRE);
+            hellfireTimer = 20000+rand()%8000;
+        }
+        else
+            hellfireTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_obsidia(Creature *pCreature)
+{
+    return new npc_obsidiaAI(pCreature);
+}
+
+/*######
+## npc_insidion
+######*/
+
+#define SPELL_FLAME_BUFFET      40719
+
+struct npc_insidionAI : public ScriptedAI
+{
+    npc_insidionAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 bellowingRoarTimer;
+    uint32 cleaveTimer;
+    uint32 fieryBreathTimer;
+    uint32 flameBreathTimer;
+    uint32 flameBuffetTimer;
+    
+    void Reset()
+    {
+        bellowingRoarTimer = 15000;
+        cleaveTimer = 5000;
+        fieryBreathTimer = 8000;
+        flameBreathTimer = 12000;
+        flameBuffetTimer = 15000;
+        
+        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!m_creature->isInCombat())
+            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        else /*if (m_creature->isInCombat())*/
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            
+        if (!UpdateVictim())
+            return;
+            
+        if (bellowingRoarTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            bellowingRoarTimer = 15000+rand()%3000;
+        }
+        else
+            bellowingRoarTimer -= diff;
+            
+        if (cleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            cleaveTimer = 5000+rand()%3000;
+        }
+        else
+            cleaveTimer -= diff;
+            
+        if (fieryBreathTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FIERY_BREATH);
+            fieryBreathTimer = 5000+rand()%2000;
+        }
+        else
+            fieryBreathTimer -= diff;
+            
+        if (flameBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            flameBreathTimer = 12000+rand()%3000;
+        }
+        else
+            flameBreathTimer -= diff;
+            
+        if (flameBuffetTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FLAME_BUFFET);
+            flameBuffetTimer = 15000+rand()%8000;
+        }
+        else
+            flameBuffetTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_insidion(Creature *pCreature)
+{
+    return new npc_insidionAI(pCreature);
+}
+
+/*######
+## npc_furywing
+######*/
+
+#define SPELL_WING_BUFFET       41572
+
+struct npc_furywingAI : public ScriptedAI
+{
+    npc_furywingAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 tailSweepTimer;
+    uint32 bellowingRoarTimer;
+    uint32 cleaveTimer;
+    uint32 fieryBreathTimer;
+    uint32 flameBreathTimer;
+    uint32 wingBuffetTimer;
+    
+    void Reset()
+    {
+        tailSweepTimer = 10000;
+        bellowingRoarTimer = 15000;
+        cleaveTimer = 5000;
+        fieryBreathTimer = 8000;
+        flameBreathTimer = 12000;
+        wingBuffetTimer = 2000;
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!m_creature->isInCombat())
+            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        else if (m_creature->isInCombat())
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            
+        if (!UpdateVictim())
+            return;
+            
+        if (tailSweepTimer <= diff) {
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            if (target && !m_creature->HasInArc(M_PI, target))
+                DoCast(target, SPELL_TAIL_SWEEP);
+            tailSweepTimer = 4000+rand()%3000;
+        }
+        else
+            tailSweepTimer -= diff;
+            
+        if (bellowingRoarTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            bellowingRoarTimer = 15000+rand()%3000;
+        }
+        else
+            bellowingRoarTimer -= diff;
+            
+        if (cleaveTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            cleaveTimer = 5000+rand()%3000;
+        }
+        else
+            cleaveTimer -= diff;
+            
+        if (fieryBreathTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FIERY_BREATH);
+            fieryBreathTimer = 5000+rand()%2000;
+        }
+        else
+            fieryBreathTimer -= diff;
+            
+        if (flameBreathTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            flameBreathTimer = 12000+rand()%3000;
+        }
+        else
+            flameBreathTimer -= diff;
+            
+        if (wingBuffetTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_WING_BUFFET);
+            wingBuffetTimer = 15000+rand()%3000;
+        }
+        else
+            wingBuffetTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI *GetAI_npc_furywing(Creature *pCreature)
+{
+    return new npc_furywingAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2226,6 +2623,31 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_wrangled_aether_ray";
     newscript->GetAI = &GetAI_npc_wrangled_aether_ray;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_drake_egg";
+    newscript->pGOHello = &GOHello_go_drake_egg;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_rivendark";
+    newscript->GetAI = &GetAI_npc_rivendark;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_obsidia";
+    newscript->GetAI = &GetAI_npc_obsidia;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_insidion";
+    newscript->GetAI = &GetAI_npc_insidion;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_furywing";
+    newscript->GetAI = &GetAI_npc_furywing;
     newscript->RegisterSelf();
 }
 
