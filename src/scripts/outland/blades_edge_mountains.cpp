@@ -1227,6 +1227,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
         if (level > 8) {        // Complete quest and stop event
             DoCast(summoner, SPELL_APEXIS_VIBRATIONS, true);
             summoner->ToPlayer()->GroupEventHappens(11058, m_creature);
+            summoner->ToPlayer()->GroupEventHappens(11080, m_creature);
             m_creature->DisappearAndDie();
             return;
         }
