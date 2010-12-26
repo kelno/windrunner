@@ -1099,6 +1099,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
     uint8 levelCounter;
     
     uint32 stepTimer;
+    uint32 inactiveTimer;
     
     std::list<uint8> beamList;
     
@@ -1119,6 +1120,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
         step = STEP_BEGIN;
         stepTimer = 0;
         level = 0;
+        inactiveTimer = 0;
         
         beamList.clear();
     }
@@ -1267,6 +1269,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
                 case STEP_REPRODSEQUENCE:
                     DoCast(m_creature, SPELL_LEVELSTART, true);
                     stepTimer = 0;      // Stop event, we are waiting for player
+                    inactiveTimer = 0;
                     break;
                 default:
                     sLog.outError("Phase not handled for now.");
@@ -1275,6 +1278,11 @@ struct npc_simon_bunnyAI : public ScriptedAI
             }
             else stepTimer -= diff;
         }
+        else
+            inactiveTimer += diff;
+            
+        if (inactiveTimer >= 300000)    // 5 min
+            m_creature->DisappearAndDie();
     }
 };
 
@@ -1454,6 +1462,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
     uint8 levelCounter;
     
     uint32 stepTimer;
+    uint32 inactiveTimer;
     
     std::list<uint8> beamList;
     
@@ -1474,6 +1483,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
         step = STEP_BEGIN;
         stepTimer = 0;
         level = 0;
+        inactiveTimer = 0;
         
         beamList.clear();
     }
@@ -1620,6 +1630,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
                 case STEP_REPRODSEQUENCE:
                     DoCast(m_creature, SPELL_LEVELSTART, true);
                     stepTimer = 0;      // Stop event, we are waiting for player
+                    inactiveTimer = 0;
                     break;
                 default:
                     sLog.outError("Phase not handled for now.");
@@ -1628,6 +1639,11 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             }
             else stepTimer -= diff;
         }
+        else
+            inactiveTimer += diff;
+            
+        if (inactiveTimer >= 300000)        // 5 min
+            m_creature->DisappearAndDie();
     }
 };
 
