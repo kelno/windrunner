@@ -228,6 +228,7 @@ extern void AddSC_boss_victor_nefarius();
 
 //Blade's Edge Mountains
 extern void AddSC_blades_edge_mountains();
+extern void AddSC_shartuul_event();
 
 //Blasted lands
 extern void AddSC_boss_kruul();
@@ -1617,6 +1618,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     //Blade's Edge Mountains
     AddSC_blades_edge_mountains();
+    AddSC_shartuul_event();
 
     //Blasted lands
     AddSC_boss_kruul();

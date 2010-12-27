@@ -380,6 +380,7 @@ SET(scripts_STAT_SRCS
     outland/nagrand.cpp
     outland/netherstorm.cpp
     outland/shadowmoon_valley.cpp
+    outland/shartuul_event.cpp
     outland/shattrath_city.cpp
     outland/silvermoon_city.cpp
     outland/sunwell_plateau/boss_kiljaeden.cpp
