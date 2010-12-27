@@ -56,6 +56,7 @@ npc_rivendark
 npc_obsidia
 npc_insidion
 npc_furywing
+trigger_banishing_crystal_bunny01
 EndContentData */
 
 #include "precompiled.h"
@@ -2457,6 +2458,28 @@ CreatureAI *GetAI_npc_furywing(Creature *pCreature)
 }
 
 /*######
+## trigger_banishing_crystal_bunny01
+######*/
+
+struct trigger_banishing_crystal_bunny01AI : public Scripted_NoMovementAI
+{
+    trigger_banishing_crystal_bunny01AI(Creature *c) : Scripted_NoMovementAI(c) {}
+    
+    void Reset()
+    {
+        m_creature->AddAura(40849, m_creature);
+        m_creature->AddAura(40857, m_creature);
+    }
+    
+    void Aggro(Unit *pWho) {}
+};
+
+CreatureAI *GetAI_trigger_banishing_crystal_bunny01(Creature *pCreature)
+{
+    return new trigger_banishing_crystal_bunny01AI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2667,6 +2690,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_furywing";
     newscript->GetAI = &GetAI_npc_furywing;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "trigger_banishing_crystal_bunny01";
+    newscript->GetAI = &GetAI_trigger_banishing_crystal_bunny01;
     newscript->RegisterSelf();
 }
 
