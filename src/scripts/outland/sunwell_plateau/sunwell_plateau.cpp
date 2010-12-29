@@ -368,7 +368,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
             return;
             
         if (igniteManaTimer <= 400) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_IGNITE_MANA, true);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_IGNITE_MANA);
             igniteManaTimer = 10000+rand()%3000;
             return;
         }
@@ -444,7 +444,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
             if (rand()%4)
                 DoCast(m_creature, SPELL_RENEW, true);
             else
-                DoCast(DoSelectLowestHpFriendly(40.0f, 1), SPELL_RENEW, true);
+                DoCast(DoSelectLowestHpFriendly(40.0f, 1), SPELL_RENEW);
             renewTimer = 6000+rand()%2000;
         }
         else
@@ -515,7 +515,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
             fearTimer -= diff;
             
         if (swPainTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SW_PAIN, true);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SW_PAIN);
             swPainTimer = 3000+rand()%2000;
         }
         else
@@ -590,7 +590,7 @@ struct npc_sunblade_archmage : public ScriptedAI
             //DoStartMovement(m_creature->getVictim(), 8, 0);
             
         if (arcaneExploTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLO, true);
+            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLO);
             arcaneExploTimer = 4000+rand()%2000;
             return;
         }
@@ -598,7 +598,7 @@ struct npc_sunblade_archmage : public ScriptedAI
             arcaneExploTimer -= diff;
             
         if (frostNovaTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FROST_NOVA, true);
+            DoCast(m_creature->getVictim(), SPELL_FROST_NOVA);
             frostNovaTimer = 6000+rand()%2000;
             return;
         }
