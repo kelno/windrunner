@@ -1044,7 +1044,7 @@ struct npc_maxx_a_million_escortAI : public npc_escortAI
     void JustDied(Unit* pKiller)
     {
         Player* pPlayer = GetPlayerForEscort();
-        if (pPlayer)
+        if (pPlayer && pPlayer->GetQuestStatus(QUEST_MARK_V_IS_ALIVE) == QUEST_STATUS_INCOMPLETE)
             pPlayer->FailQuest(QUEST_MARK_V_IS_ALIVE);
     }
 
@@ -1079,7 +1079,7 @@ bool QuestAccept_npc_max_a_million_escort(Player* pPlayer, Creature* pCreature, 
 {
     if (pQuest->GetQuestId() == QUEST_MARK_V_IS_ALIVE) {
         pCreature->setFaction(113);
-        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID(), pCreature->GetEntry());
+        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
     }
     return true;
 }
