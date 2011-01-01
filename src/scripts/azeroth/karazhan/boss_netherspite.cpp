@@ -273,6 +273,11 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
+        
+        float x, y, z, o;
+        m_creature->GetHomePosition(x, y, z, o);
+        if (m_creature->GetDistance2d(x, y) > 65.0f)
+            EnterEvadeMode();
 
         // Void Zone
         if(VoidZoneTimer < diff)
