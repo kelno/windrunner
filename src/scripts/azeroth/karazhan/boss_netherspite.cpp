@@ -259,6 +259,11 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+        if (who->GetPositionZ() <= 250.0f) {
+            EnterEvadeMode();
+            return;
+        }
+        
         HandleDoors(false);
         SwitchToPortalPhase();
     }
