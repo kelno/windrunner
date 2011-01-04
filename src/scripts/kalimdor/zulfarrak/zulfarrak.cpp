@@ -24,6 +24,7 @@ EndScriptData */
 /* ContentData
 npc_sergeant_bly
 npc_weegli_blastfuse
+at_zumrah
 EndContentData */
 
 #include "precompiled.h"
@@ -202,6 +203,21 @@ bool GossipSelect_npc_weegli_blastfuse(Player *player, Creature *_Creature, uint
     return true;
 }
 
+/*######
+## at_zumrah
+######*/
+
+bool AreaTrigger_at_zumrah(Player *pPlayer, AreaTriggerEntry const *pAt)
+{
+    if (Creature *pZumrah = pPlayer->FindNearestCreature(7271, 15.0f, true)) {
+        pZumrah->setFaction(14);
+        pZumrah->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        pZumrah->AI()->AttackStart(pPlayer);
+    }
+    
+    return true;
+}
+
 void AddSC_zulfarrak()
 {
     Script *newscript;
@@ -218,6 +234,11 @@ void AddSC_zulfarrak()
     newscript->GetAI = &GetAI_npc_weegli_blastfuse;
     newscript->pGossipHello =  &GossipHello_npc_weegli_blastfuse;
     newscript->pGossipSelect = &GossipSelect_npc_weegli_blastfuse;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_zumrah";
+    newscript->pAreaTrigger = &AreaTrigger_at_zumrah;
     newscript->RegisterSelf();
 }
 
