@@ -239,7 +239,8 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
         CheckAddState_Timer = 5000;
         ResetTimer = 5000;
 
-        SpawnAdds();
+        if (m_creature->isAlive())
+            SpawnAdds();
 
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 46916);
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_INFO, 50268674);
