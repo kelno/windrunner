@@ -375,6 +375,7 @@ struct TRINITY_DLL_DECL npc_amanishi_lookoutAI : public ScriptedAI
                 pInstance->SetData(DATA_GAUNTLET, IN_PROGRESS);
                 m_creature->SetSpeed(MOVE_WALK, 5);
                 m_creature->GetMotionMaster()->MovePoint(1, 227.822556, 1402.593384, 37.555401);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 //m_creature->GetMotionMaster()->MovePoint(0, 228.332535, 1435.903687, 26.650408);
             }
         }
