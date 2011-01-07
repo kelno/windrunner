@@ -792,11 +792,13 @@ struct boss_bigbadwolfAI : public ScriptedAI
                     m_creature->AddThreat(target, 1000000.0f);
                     ChaseTimer = 20000;
                     IsChasing = true;
+                    m_creature->SetFullTauntImmunity(true);
                 }
             }
             else
             {
                 IsChasing = false;
+                m_creature->SetFullTauntImmunity(false);
                 Unit* target = Unit::GetUnit((*m_creature), HoodGUID);
                 if(target)
                 {
