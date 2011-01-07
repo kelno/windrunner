@@ -68,6 +68,7 @@ struct boss_void_reaverAI : public ScriptedAI
             pInstance->SetData(DATA_VOIDREAVEREVENT, NOT_STARTED);
             
          m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+         m_creature->SetFullTauntImmunity(true);
     }
 
     void KilledUnit(Unit *victim)
