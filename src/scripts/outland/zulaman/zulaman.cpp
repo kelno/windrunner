@@ -30,6 +30,7 @@ npc_amanishi_lookout
 npc_amanishi_tempest
 npc_amanishi_berserker
 npc_amanishi_scout
+at_quest_X_marks
 EndContentData */
 
 #include "precompiled.h"
@@ -555,6 +556,35 @@ CreatureAI* GetAI_npc_amanishi_scout(Creature *pCreature)
     return new npc_amanishi_scoutAI(pCreature);
 }
 
+/*######
+## at_quest_X_marks
+######*/
+
+bool AreaTrigger_at_quest_X_marks(Player *pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(11166) != QUEST_STATUS_INCOMPLETE)
+        return false;
+        
+    uint32 cEntry = 0;
+    switch (pAt->id) {
+    case 4726:
+        cEntry = 23815;
+        break;
+    case 4724:
+        cEntry = 23813;
+        break;
+    case 4725:
+        cEntry = 23814;
+        break;
+    default:
+        sLog.outError("Scriptname at_quest_X_marks assigned to wrong AreaTrigger!");
+        break;
+    }
+
+    pPlayer->KilledMonster(cEntry, 0);
+    
+    return true;
+}
+
 void AddSC_zulaman()
 {
     Script *newscript;
@@ -601,6 +631,11 @@ void AddSC_zulaman()
     newscript = new Script;
     newscript->Name = "npc_amanishi_scout";
     newscript->GetAI = &GetAI_npc_amanishi_scout;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_quest_X_marks";
+    newscript->pAreaTrigger = &AreaTrigger_at_quest_X_marks;
     newscript->RegisterSelf();
 }
 
