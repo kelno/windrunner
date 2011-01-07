@@ -449,7 +449,7 @@ struct instance_dark_portal : public ScriptedInstance
         if (Encounter[1] != IN_PROGRESS)
             return;
             
-        if (mRiftPortalCount > 18)  // Event is done, stop here
+        if (mRiftPortalCount >= 18)  // Event is done, stop here
             return;
 
         //add delay timer?
