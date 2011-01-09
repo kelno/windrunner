@@ -124,6 +124,8 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
 
         HandleDoors(true);
         DestroyPortals();
+        
+        m_creature->RemoveAurasDueToSpell(SPELL_NETHERBURN_AURA);
     }
 
     void SummonPortals()
@@ -259,10 +261,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
-        if (who->GetPositionZ() <= 250.0f) {
-            EnterEvadeMode();
-            return;
-        }
+        m_creature->AddAura(SPELL_NETHERBURN_AURA, m_creature);
         
         HandleDoors(false);
         SwitchToPortalPhase();
