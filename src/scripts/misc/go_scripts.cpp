@@ -544,6 +544,21 @@ bool GOHello_go_blood_filled_orb(Player *pPlayer, GameObject *pGo)
 }
 
 /*######
+## go_corruption_plans
+######*/
+
+#define NPC_BLACKGUARD_SWORDSMITH   11121
+
+bool GOHello_corruption_plans(Player* pPlayer, GameObject* pGo)
+{
+    pPlayer->SendLoot(pGo->GetGUID(), LOOT_CORPSE);
+    if (Creature* swordsmith = pGo->SummonCreature(NPC_BLACKGUARD_SWORDSMITH, pPlayer->GetPositionX(), pPlayer->GetPositionY(), pPlayer->GetPositionZ(), pPlayer->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 45000))
+        swordsmith->AI()->AttackStart(pPlayer);
+        
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -685,5 +700,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_blood_filled_orb";
     newscript->pGOHello = &GOHello_go_blood_filled_orb;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_corruption_plans";
+    newscript->pGOHello = &GOHello_corruption_plans;
     newscript->RegisterSelf();
 }
