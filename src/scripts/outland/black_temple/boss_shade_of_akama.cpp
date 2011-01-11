@@ -240,6 +240,10 @@ struct boss_shade_of_akamaAI : public ScriptedAI
     void JustDied(Unit* killer)
     {
         summons.DespawnAll();
+        
+        WorldPacket data;
+        m_creature->BuildHeartBeatMsg(&data);
+        m_creature->SendMessageToSet(&data,true);
     }
     void JustSummoned(Creature *summon) 
     {
