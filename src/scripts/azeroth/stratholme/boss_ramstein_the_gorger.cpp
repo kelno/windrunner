@@ -22,12 +22,14 @@ SDCategory: Stratholme
 EndScriptData */
 
 #include "precompiled.h"
- #include "def_stratholme.h"
+#include "def_stratholme.h"
 
 #define SPELL_TRAMPLE       5568
-#define SPELL_KNOCKOUT    17307
+#define SPELL_KNOCKOUT      17307
 
- #define C_MINDLESS_UNDEAD   11030
+#define C_MINDLESS_UNDEAD   11030
+
+#define SAY_DUHAST          -1043900
 
 struct boss_ramstein_the_gorgerAI : public ScriptedAI
 {
@@ -49,6 +51,7 @@ struct boss_ramstein_the_gorgerAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+        DoScriptText(SAY_DUHAST, m_creature);
     }
 
     void JustDied(Unit* Killer)
