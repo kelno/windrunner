@@ -1230,11 +1230,11 @@ struct npc_simon_bunnyAI : public ScriptedAI
         if (level > 8) {        // Complete quest and stop event
             //DoCast(summoner, SPELL_APEXIS_VIBRATIONS, true);
             summoner->CastSpell(summoner, SPELL_APEXIS_VIBRATIONS, false);
-            if (summoner->ToPlayer()->GetQuestStatus(11058) != QUEST_STATUS_INCOMPLETE) {
+            if (summoner->ToPlayer()->GetQuestStatus(11058) == QUEST_STATUS_INCOMPLETE) {
                 summoner->ToPlayer()->CompleteQuest(11058);
                 summoner->ToPlayer()->GroupEventHappens(11058, m_creature);
             }
-            if (summoner->ToPlayer()->GetQuestStatus(11080) != QUEST_STATUS_INCOMPLETE) {
+            if (summoner->ToPlayer()->GetQuestStatus(11080) == QUEST_STATUS_INCOMPLETE) {
                 summoner->ToPlayer()->CompleteQuest(11080);
                 summoner->ToPlayer()->GroupEventHappens(11080, m_creature);
             }
