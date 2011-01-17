@@ -187,6 +187,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
     uint32 SummonTimer;
     uint32 ResetTimer;
     uint32 DefenderTimer;                                   // They are on a flat 15 second timer, independant of the other summon creature timer.
+    uint32 RemoveFlagTimer;
 
     bool IsBanished;
     bool HasKilledAkama;
@@ -221,6 +222,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         ReduceHealthTimer = 0;
         ResetTimer = 60000;
         DefenderTimer = 15000;
+        RemoveFlagTimer = 0;
 
         IsBanished = true;
         HasKilledAkama = false;
@@ -452,7 +454,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                         Akama->GetMotionMaster()->Clear();
                         // Shade should move to Akama, not the other way around
                         Akama->GetMotionMaster()->MoveIdle();
-                        //m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        RemoveFlagTimer = 8000;
                         // Crazy amount of threat
                         m_creature->AddThreat(Akama, 10000000.0f);
                         Akama->AddThreat(m_creature, 10000000.0f);
@@ -465,11 +468,19 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         else                                                // No longer banished, let's fight Akama now
         {
             // Remove NOT_SELECTABLE flag only when reaching Akama melee
-            if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
+            /*if (m_creature->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
                 Creature* Akama = Unit::GetCreature((*m_creature), AkamaGUID);
-                if (Akama && m_creature->IsWithinDistInMap(Akama, 8.0f))
+                if (Akama && m_creature->IsWithinDistInMap(Akama, 12.0f))
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            }
+            }*/
+            /*if (RemoveFlagTimer) {
+                if (RemoveFlagTimer <= diff) {
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    RemoveFlagTimer = 0;
+                }
+                else
+                    RemoveFlagTimer -= diff;
+            }*/
             if(ReduceHealthTimer < diff)
             {
                 if(AkamaGUID)
@@ -879,6 +890,8 @@ bool GossipHello_npc_akama(Player *player, Creature *_Creature)
         player->ADD_GOSSIP_ITEM( 0, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
         player->SEND_GOSSIP_MENU(907, _Creature->GetGUID());
     }
+    
+    _Creature->SetReactState(REACT_PASSIVE);
 
     return true;
 }
