@@ -149,7 +149,7 @@ bool GossipSelect_npc_witch_doctor_mauari(Player *player, Creature *_Creature, u
 ######*/
 
 #define GOSSIP_ZAP                  "[PH] J'aimerais recevoir le déchiqueteur dimensionnel."
-#define SPELL_GOBLIN_ENGINEER       20221
+#define SPELL_GOBLIN_ENGINEER       20222
 #define SPELL_DIMENS_RIPPER         23486
 
 bool GossipHello_npc_zap_farflinger(Player *pPlayer, Creature *pCreature)
