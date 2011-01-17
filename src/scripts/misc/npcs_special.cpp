@@ -34,6 +34,7 @@ npc_sayge               100%    Darkmoon event fortune teller, buff player based
 npc_snake_trap_serpents 80%     AI for snakes that summoned by Snake Trap
 npc_goblin_land_mine    100%    Engineering item. Should explode when an hostile creature comes in range, more than 10 seconds after it's been spawned
 npc_mojo                100%    Vanity pet that morph you in frog if you /kiss it
+npc_explosive_sheep
 EndContentData */
 
 #include "precompiled.h"
@@ -1261,6 +1262,42 @@ CreatureAI* GetAI_npc_mojo(Creature *pCreature)
     return new npc_mojoAI(pCreature);
 }
 
+/*######
+## npc_explosive_sheep
+######*/
+
+#define SPELL_EXPLODE       4050
+
+struct npc_explosive_sheepAI : public ScriptedAI
+{
+    npc_explosive_sheepAI(Creature *c) : ScriptedAI(c) {}
+    
+    void Reset()
+    {
+        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        m_creature->GetMotionMaster()->MoveChase(pWho);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {            
+        if (m_creature->getVictim()) {
+            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
+                DoCast(m_creature->getVictim(), SPELL_EXPLODE);
+                m_creature->DisappearAndDie();
+            }
+        }
+    }
+};
+
+CreatureAI *GetAI_npc_explosive_sheep(Creature *pCreature)
+{
+    return new npc_explosive_sheepAI(pCreature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1347,6 +1384,11 @@ void AddSC_npcs_special()
     newscript->Name = "npc_mojo";
     newscript->GetAI = &GetAI_npc_mojo;
     newscript->pReceiveEmote = &ReceiveEmote_npc_mojo;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_explosive_sheep";
+    newscript->GetAI = &GetAI_npc_explosive_sheep;
     newscript->RegisterSelf();
 }
 
