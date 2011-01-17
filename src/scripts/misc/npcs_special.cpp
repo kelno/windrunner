@@ -35,6 +35,7 @@ npc_snake_trap_serpents 80%     AI for snakes that summoned by Snake Trap
 npc_goblin_land_mine    100%    Engineering item. Should explode when an hostile creature comes in range, more than 10 seconds after it's been spawned
 npc_mojo                100%    Vanity pet that morph you in frog if you /kiss it
 npc_explosive_sheep
+npc_pet_bomb
 EndContentData */
 
 #include "precompiled.h"
@@ -1298,6 +1299,42 @@ CreatureAI *GetAI_npc_explosive_sheep(Creature *pCreature)
     return new npc_explosive_sheepAI(pCreature);
 }
 
+/*######
+## npc_pet_bomb
+######*/
+
+#define SPELL_MALFUNCTION_EXPLOSION       13261
+
+struct npc_pet_bombAI : public ScriptedAI
+{
+    npc_pet_bombAI(Creature *c) : ScriptedAI(c) {}
+    
+    void Reset()
+    {
+        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void Aggro(Unit *pWho)
+    {
+        m_creature->GetMotionMaster()->MoveChase(pWho);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {            
+        if (m_creature->getVictim()) {
+            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
+                DoCast(m_creature->getVictim(), SPELL_MALFUNCTION_EXPLOSION);
+                m_creature->DisappearAndDie();
+            }
+        }
+    }
+};
+
+CreatureAI *GetAI_npc_pet_bomb(Creature *pCreature)
+{
+    return new npc_pet_bombAI(pCreature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1389,6 +1426,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name="npc_explosive_sheep";
     newscript->GetAI = &GetAI_npc_explosive_sheep;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_pet_bomb";
+    newscript->GetAI = &GetAI_npc_pet_bomb;
     newscript->RegisterSelf();
 }
 
