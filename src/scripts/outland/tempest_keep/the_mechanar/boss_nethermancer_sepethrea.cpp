@@ -77,7 +77,7 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
             pInstance->SetData(DATA_NETHERMANCER, IN_PROGRESS);
 
         DoScriptText(SAY_AGGRO, m_creature);
-        DoCast(who, HeroicMode ? H_SPELL_SUMMON_RAGIN_FLAMES : SPELL_SUMMON_RAGIN_FLAMES);
+        DoCast(who, HeroicMode ? H_SPELL_SUMMON_RAGIN_FLAMES : SPELL_SUMMON_RAGIN_FLAMES, true);
         DoScriptText(SAY_SUMMON, m_creature);
     }
 
