@@ -437,6 +437,39 @@ struct npc_dirty_larryAI : public ScriptedAI
     }
 
     void Aggro(Unit* who){}
+    
+    void DamageTaken(Unit *pSource, uint32 &damage)
+    {
+        if (damage > m_creature->GetHealth()) {
+            damage = 0;
+            Unit* Creepjack = FindCreature(NPC_CREEPJACK, 20, m_creature);
+            if(Creepjack)
+            {
+                (Creepjack->ToCreature())->AI()->EnterEvadeMode();
+                Creepjack->setFaction(1194);
+                Creepjack->GetMotionMaster()->MoveTargetedHome();
+                Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            }
+            Unit* Malone = FindCreature(NPC_MALONE, 20, m_creature);
+            if(Malone)
+            {
+                (Malone->ToCreature())->AI()->EnterEvadeMode();
+                Malone->setFaction(1194);
+                Malone->GetMotionMaster()->MoveTargetedHome();
+                Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            }
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            m_creature->setFaction(1194);
+            Done = true;
+            DoScriptText(SAY_GIVEUP, m_creature, NULL);
+            m_creature->DeleteThreatList();
+            m_creature->CombatStop();
+            m_creature->GetMotionMaster()->MoveTargetedHome();
+            Player* player = Unit::GetPlayer(PlayerGUID);
+            if(player)
+                player->GroupEventHappens(QUEST_WBI, m_creature);
+        }
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -444,9 +477,10 @@ struct npc_dirty_larryAI : public ScriptedAI
         {
             if(Event)
                 SayTimer = NextStep(++Step);
-        }else SayTimer -= diff;
+        }
+            else SayTimer -= diff;
 
-        if(Attack)
+        if (Attack)
         {
             Player* player = Unit::GetPlayer(PlayerGUID);
             m_creature->setFaction(14);
@@ -475,35 +509,6 @@ struct npc_dirty_larryAI : public ScriptedAI
             Attack = false;
         }
 
-        if((m_creature->GetHealth()*100)/m_creature->GetMaxHealth() < 1 && !Done)
-        {
-            Unit* Creepjack = FindCreature(NPC_CREEPJACK, 20, m_creature);
-            if(Creepjack)
-            {
-                (Creepjack->ToCreature())->AI()->EnterEvadeMode();
-                Creepjack->setFaction(1194);
-                Creepjack->GetMotionMaster()->MoveTargetedHome();
-                Creepjack->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            }
-            Unit* Malone = FindCreature(NPC_MALONE, 20, m_creature);
-            if(Malone)
-            {
-                (Malone->ToCreature())->AI()->EnterEvadeMode();
-                Malone->setFaction(1194);
-                Malone->GetMotionMaster()->MoveTargetedHome();
-                Malone->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            }
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            m_creature->setFaction(1194);
-            Done = true;
-            DoScriptText(SAY_GIVEUP, m_creature, NULL);
-            m_creature->DeleteThreatList();
-            m_creature->CombatStop();
-            m_creature->GetMotionMaster()->MoveTargetedHome();
-            Player* player = Unit::GetPlayer(PlayerGUID);
-            if(player)
-                player->GroupEventHappens(QUEST_WBI, m_creature);
-        }
         DoMeleeAttackIfReady();
     }
 };
