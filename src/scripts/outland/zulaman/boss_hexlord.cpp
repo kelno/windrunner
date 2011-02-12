@@ -380,7 +380,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* i_pl = i->getSource()) {
-                    if(i_pl->isAlive()) {
+                    if(i_pl->isAlive() && !i_pl->isGameMaster()) {
                         m_creature->AddAura(SPELL_DRAIN_POWER_LESS, i_pl);          // -1% damage on each active player on boss
                         m_creature->AddAura(SPELL_DRAIN_POWER_MORE, m_creature);    // +1% damage for each active player on boss
                     }
