@@ -261,7 +261,7 @@ struct boss_halazziAI : public ScriptedAI
                 //DoCast(m_creature, SPELL_SUMMON_TOTEM);
                 float totemX, totemY, totemZ;
                 m_creature->GetRandomPoint(m_creature->GetPositionX(),m_creature->GetPositionY(),m_creature->GetPositionZ(), 1.0f, totemX, totemY, totemZ);
-                m_creature->SummonCreature(MOB_TOTEM, totemX, totemY, totemZ, 0, TEMPSUMMON_DEAD_DESPAWN, 45000);
+                m_creature->SummonCreature(MOB_TOTEM, totemX, totemY, totemZ, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
                 TotemTimer = 20000;
             }else TotemTimer -= diff;
 
