@@ -391,7 +391,7 @@ struct boss_brutallusAI : public ScriptedAI
         if (BerserkTimer < diff && !Enraged)
         {
             DoScriptText(YELL_BERSERK, me);
-            DoCast(me, SPELL_BERSERK);
+            DoCast(me, SPELL_BERSERK, true);
             Enraged = true;
             m_creature->SetFullTauntImmunity(true);
         } else BerserkTimer -= diff;
