@@ -127,7 +127,7 @@ struct boss_brutallusAI : public ScriptedAI
         if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) != DONE)
             pInstance->SetData(DATA_BRUTALLUS_EVENT, NOT_STARTED);
 
-        if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE) {
+        if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE && pInstance->GetData(DATA_FELMYST_EVENT) != DONE) {
             if (Player *plr = GetPlayerInMap()) {
                 float x,y,z;
                 m_creature->GetPosition(x,y,z);
