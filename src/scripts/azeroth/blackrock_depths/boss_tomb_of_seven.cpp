@@ -435,6 +435,8 @@ bool GossipHello_boss_gloomrel(Player *player, Creature *_Creature)
 
     if (player->GetQuestRewardStatus(4083) == 0 && player->GetSkillValue(SKILL_MINING) >= 230)
         player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_TRIBUTE, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+        
+    player->SEND_GOSSIP_MENU(2601, _Creature->GetGUID());
 
     return true;
 }
