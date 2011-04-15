@@ -27,6 +27,7 @@ at_test                 script test only
 at_coilfang_waterfall   4591
 at_mechanar             4614
 at_botanica             4612
+at_orb_of_command
 EndContentData */
 
 #include "precompiled.h"
@@ -133,6 +134,17 @@ bool AreaTrigger_at_botanica(Player *pPlayer, AreaTriggerEntry const *pAt) {
     return true;
 }
 
+/*######
+## at_orb_of_command
+######*/
+
+bool AreaTrigger_at_orb_of_command(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->isDead() && pPlayer->GetQuestRewardStatus(7761))       // TODO: Check that player's corpse is in instance
+        pPlayer->TeleportTo(469, -7673.03, -1106.08, 396.65, 0.7);
+
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -165,6 +177,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_botanica";
     newscript->pAreaTrigger = &AreaTrigger_at_botanica;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "at_orb_of_command";
+    newscript->pAreaTrigger = &AreaTrigger_at_orb_of_command;
     newscript->RegisterSelf();
 }
 
