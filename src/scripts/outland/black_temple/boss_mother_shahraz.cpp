@@ -192,10 +192,10 @@ struct boss_shahrazAI : public ScriptedAI
             {
                 TargetGUID[i] = pUnit->GetGUID();
                 pUnit->CastSpell(pUnit, SPELL_TELEPORT_VISUAL, true);
-                //DoTeleportPlayer(pUnit, X, Y, Z, pUnit->GetOrientation());
-                pUnit->GetMotionMaster()->MovementExpired();
-                reinterpret_cast<Player*>(pUnit)->Relocate(X, Y, Z);
-                reinterpret_cast<Player*>(pUnit)->TeleportTo(pUnit->GetMapId(), X, Y, Z, pUnit->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT);
+                DoTeleportPlayer(pUnit, X, Y, Z, pUnit->GetOrientation());
+                //pUnit->GetMotionMaster()->MovementExpired();
+                //reinterpret_cast<Player*>(pUnit)->Relocate(X, Y, Z);
+                //reinterpret_cast<Player*>(pUnit)->TeleportTo(pUnit->GetMapId(), X, Y, Z, pUnit->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT);
             }
         }
     }
