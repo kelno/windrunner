@@ -202,11 +202,11 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 188421: ForceField     = pGo->GetGUID(); break;
             case 188523: KalecgosWall[0] = pGo->GetGUID(); break;
             case 188524: KalecgosWall[1] = pGo->GetGUID(); break;
-            case 188075:
+            /*case 188075:
                 if (Encounters[2] == DONE)
                     HandleGameObject(NULL, true, pGo);
                 FireBarrier = pGo->GetGUID();
-                break;
+                break;*/
             case 187990: MurusGate[0]   = pGo->GetGUID(); break;
             case 188118:
                 if (Encounters[4] == DONE)
