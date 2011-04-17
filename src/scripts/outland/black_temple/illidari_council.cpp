@@ -861,7 +861,8 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         {
             if(DeadlyPoisonTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_DEADLY_POISON);
+				if (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER)
+					DoCast(m_creature->getVictim(), SPELL_DEADLY_POISON);
                 DeadlyPoisonTimer = 15000 + rand()%31 * 1000;
             }else DeadlyPoisonTimer -= diff;
 
@@ -894,7 +895,8 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
             if(VanishTimer < diff)                          // Become attackable and poison current target
             {
                 Unit* target = m_creature->getVictim();
-                DoCast(target, SPELL_DEADLY_POISON);
+                if (target->GetTypeId() == TYPEID_PLAYER)
+					DoCast(target, SPELL_DEADLY_POISON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 DoResetThreat();
                 m_creature->AddThreat(target, 3000.0f);     // Make Veras attack his target for a while, he will cast Envenom 4 seconds after.
