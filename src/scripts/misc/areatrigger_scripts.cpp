@@ -206,6 +206,21 @@ bool AreaTrigger_at_childweek_quest1479(Player* pPlayer, AreaTriggerEntry const 
     return true;
 }
 
+/*######
+## at_childweek_quest1558
+######*/
+
+bool AreaTrigger_at_childweek_quest1558(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(1558) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 14305)
+                pPlayer->AreaExploredOrEventHappens(1558);
+        }
+    }
+    
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -263,6 +278,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_childweek_quest1479";
     newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest1479;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest1558";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest1558;
     newscript->RegisterSelf();
 }
 
