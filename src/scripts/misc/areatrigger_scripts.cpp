@@ -28,6 +28,7 @@ at_coilfang_waterfall   4591
 at_mechanar             4614
 at_botanica             4612
 at_orb_of_command
+at_childweek_quest911   3549
 EndContentData */
 
 #include "precompiled.h"
@@ -145,6 +146,21 @@ bool AreaTrigger_at_orb_of_command(Player* pPlayer, AreaTriggerEntry const *pAt)
     return true;
 }
 
+/*######
+## at_childweek_quest911
+######*/
+
+bool AreaTrigger_at_childweek_quest911(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(911) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 14444)
+                pPlayer->AreaExploredOrEventHappens(911);
+        }
+    }
+    
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -182,6 +198,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_orb_of_command";
     newscript->pAreaTrigger = &AreaTrigger_at_orb_of_command;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest911";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest911;
     newscript->RegisterSelf();
 }
 
