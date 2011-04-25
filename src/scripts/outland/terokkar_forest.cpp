@@ -31,6 +31,7 @@ npc_skyguard_handler_deesak
 npc_isla_starmane
 npc_hungry_nether_ray
 npc_kaliri_trigger
+npc_trigger_quest10950
 EndContentData */
 
 #include "precompiled.h"
@@ -652,6 +653,32 @@ CreatureAI* GetAI_npc_kaliri_egg_trigger(Creature *_Creature)
 }
 
 /*######
+## npc_trigger_quest10950
+######*/
+
+struct npc_trigger_quest10950AI : public ScriptedAI
+{
+    npc_trigger_quest10950AI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 10.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10950) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22818)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10950);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_trigger_quest10950AI(Creature* pCreature)
+{
+    return new npc_trigger_quest10950AI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -716,6 +743,11 @@ void AddSC_terokkar_forest()
     newscript = new Script;
     newscript->Name="npc_kaliri_egg_trigger";
     newscript->GetAI =  &GetAI_npc_kaliri_egg_trigger;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_trigger_quest10950";
+    newscript->GetAI = &GetAI_npc_trigger_quest10950AI;
     newscript->RegisterSelf();
 }
 

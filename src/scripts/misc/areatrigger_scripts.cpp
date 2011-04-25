@@ -241,10 +241,12 @@ bool AreaTrigger_at_childweek_quest1687(Player* pPlayer, AreaTriggerEntry const 
 ######*/
 
 bool AreaTrigger_at_childweek_quest10951(Player* pPlayer, AreaTriggerEntry const *pAt) {
-    if (pPlayer->GetQuestStatus(10951) == QUEST_STATUS_INCOMPLETE) {
+    if (pPlayer->GetQuestStatus(10951) == QUEST_STATUS_INCOMPLETE || pPlayer->GetQuestStatus(10952) == QUEST_STATUS_INCOMPLETE) {
         if (Pet* pet = pPlayer->GetMiniPet()) {
             if (pet->GetEntry() == 22817)
-                pPlayer->AreaExploredOrEventHappens(10951);
+                pPlayer->AreaExploredOrEventHappens(10951); // Horde
+            else if (pet->GetEntry() == 22818)
+                pPlayer->AreaExploredOrEventHappens(10952); // Alliance
         }
     }
     

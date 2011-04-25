@@ -886,6 +886,32 @@ CreatureAI* GetAI_npc_sharvakAI(Creature* pCreature)
 }
 
 /*######
+## npc_jheel
+######*/
+
+struct npc_jheelAI : public ScriptedAI
+{
+    npc_jheelAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 5.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10954) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22818)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10954);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_jheelAI(Creature* pCreature)
+{
+    return new npc_jheelAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -948,6 +974,11 @@ void AddSC_nagrand()
     newscript = new Script;
     newscript->Name="npc_sharvak";
     newscript->GetAI = &GetAI_npc_sharvakAI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_jheel";
+    newscript->GetAI = &GetAI_npc_jheelAI;
     newscript->RegisterSelf();
 }
 
