@@ -31,6 +31,7 @@ npc_OOX17
 go_landmark_treasure
 npc_jhordy_lapforge
 npc_tooga
+npc_trigger_quest10963
 EndContentData */
 
 #include "precompiled.h"
@@ -682,6 +683,32 @@ bool QuestAccept_npc_tooga(Player* pPlayer, Creature* pCreature, const Quest* pQ
 }
 
 /*######
+## npc_trigger_quest10963
+######*/
+
+struct npc_trigger_quest10963AI : public ScriptedAI
+{
+    npc_trigger_quest10963AI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 10.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10963) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22817)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10963);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_trigger_quest10963AI(Creature* pCreature)
+{
+    return new npc_trigger_quest10963AI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -740,6 +767,10 @@ void AddSC_tanaris()
     newscript->GetAI = &GetAI_npc_tooga;
     newscript->pQuestAccept = &QuestAccept_npc_tooga;
     newscript->RegisterSelf();
-
+    
+    newscript = new Script;
+    newscript->Name="npc_trigger_quest10963";
+    newscript->GetAI = &GetAI_npc_trigger_quest10963AI;
+    newscript->RegisterSelf();
 }
 

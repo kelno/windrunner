@@ -27,6 +27,7 @@ npc_cooshcoosh
 npc_elder_kuruti
 npc_mortog_steamhead
 npc_kayra_longmane
+npc_hchuu
 EndContentData */
 
 #include "precompiled.h"
@@ -343,6 +344,33 @@ CreatureAI* GetAI_npc_kayra_longmaneAI(Creature* pCreature)
 {
     return new npc_kayra_longmaneAI(pCreature);
 }
+
+/*######
+## npc_hchuu
+######*/
+
+struct npc_hchuuAI : public Scripted_NoMovementAI
+{
+    npc_hchuuAI(Creature* c) : Scripted_NoMovementAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 5.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10945) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22817)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10945);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_hchuuAI(Creature* pCreature)
+{
+    return new npc_hchuuAI(pCreature);
+}
+
 /*######
 ## AddSC
 ######*/
@@ -379,6 +407,11 @@ void AddSC_zangarmarsh()
     newscript->Name="npc_kayra_longmane";
     newscript->GetAI = &GetAI_npc_kayra_longmaneAI;
     newscript->pQuestAccept = &QuestAccept_npc_kayra_longmane;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_hchuu";
+    newscript->GetAI = &GetAI_npc_hchuuAI;
     newscript->RegisterSelf();
 }
 

@@ -191,6 +191,65 @@ bool AreaTrigger_at_childweek_quest910(Player* pPlayer, AreaTriggerEntry const *
     return true;
 }
 
+/*######
+## at_childweek_quest1479
+######*/
+
+bool AreaTrigger_at_childweek_quest1479(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(1479) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 14305)
+                pPlayer->AreaExploredOrEventHappens(1479);
+        }
+    }
+    
+    return true;
+}
+
+/*######
+## at_childweek_quest1558
+######*/
+
+bool AreaTrigger_at_childweek_quest1558(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(1558) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 14305)
+                pPlayer->AreaExploredOrEventHappens(1558);
+        }
+    }
+    
+    return true;
+}
+
+/*######
+## at_childweek_quest1687
+######*/
+
+bool AreaTrigger_at_childweek_quest1687(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(1687) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 14305)
+                pPlayer->AreaExploredOrEventHappens(1687);
+        }
+    }
+    
+    return true;
+}
+
+/*######
+## at_childweek_quest10951
+######*/
+
+bool AreaTrigger_at_childweek_quest10951(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestStatus(10951) == QUEST_STATUS_INCOMPLETE) {
+        if (Pet* pet = pPlayer->GetMiniPet()) {
+            if (pet->GetEntry() == 22817)
+                pPlayer->AreaExploredOrEventHappens(10951);
+        }
+    }
+    
+    return true;
+}
 
 void AddSC_areatrigger_scripts()
 {
@@ -244,6 +303,26 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_childweek_quest910";
     newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest910;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest1479";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest1479;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest1558";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest1558;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest1687";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest1687;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_childweek_quest10951";
+    newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest10951;
     newscript->RegisterSelf();
 }
 
