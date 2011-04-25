@@ -23,6 +23,7 @@ EndScriptData */
 
 /* ContentData
 npc_blood_knight_stillblade
+npc_schweitzer
 EndContentData */
 
 #include "precompiled.h"
@@ -93,12 +94,43 @@ CreatureAI* GetAI_npc_blood_knight_stillblade(Creature *_Creature)
     return new npc_blood_knight_stillbladeAI (_Creature);
 }
 
+/*######
+## npc_schweitzer
+######*/
+
+struct npc_schweitzerAI : public ScriptedAI
+{
+    npc_schweitzerAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 5.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(11975) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22817)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(11975);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_schweitzerAI(Creature* pCreature)
+{
+    return new npc_schweitzerAI(pCreature);
+}
+
 void AddSC_silvermoon_city()
 {
     Script *newscript;
     newscript = new Script;
     newscript->Name="npc_blood_knight_stillblade";
     newscript->GetAI = &GetAI_npc_blood_knight_stillblade;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_schweitzer";
+    newscript->GetAI = &GetAI_npc_schweitzerAI;
     newscript->RegisterSelf();
 }
 

@@ -31,6 +31,7 @@ npc_lantresor_of_the_blade
 npc_creditmarker_visit_with_ancestors
 mob_sparrowhawk
 npc_maghar_captive
+npc_sharvak
 EndContentData */
 
 #include "precompiled.h"
@@ -859,6 +860,32 @@ CreatureAI* GetAI_npc_maghar_captive(Creature* pCreature)
 }
 
 /*######
+## npc_sharvak
+######*/
+
+struct npc_sharvakAI : public ScriptedAI
+{
+    npc_sharvakAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 5.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10953) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22817)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10953);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_sharvakAI(Creature* pCreature)
+{
+    return new npc_sharvakAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -916,6 +943,11 @@ void AddSC_nagrand()
     newscript->Name = "npc_maghar_captive";
     newscript->GetAI = &GetAI_npc_maghar_captive;
     newscript->pQuestAccept = &QuestAccept_npc_maghar_captive;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_sharvak";
+    newscript->GetAI = &GetAI_npc_sharvakAI;
     newscript->RegisterSelf();
 }
 
