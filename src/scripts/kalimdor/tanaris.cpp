@@ -698,6 +698,8 @@ struct npc_trigger_quest10963AI : public ScriptedAI
             if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
                 if (pWho->ToPlayer()->GetQuestStatus(10963) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22817)
                     pWho->ToPlayer()->AreaExploredOrEventHappens(10963);
+                else if (pWho->ToPlayer()->GetQuestStatus(10962) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22818)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10962);
             }
         }
     }

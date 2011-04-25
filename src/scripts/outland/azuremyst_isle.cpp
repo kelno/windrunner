@@ -791,6 +791,32 @@ bool go_bristlelimb_cage(Player* pPlayer, GameObject* pGo)
 }
 
 /*######
+## npc_trigger_quest10956
+######*/
+
+struct npc_trigger_quest10956AI : public ScriptedAI
+{
+    npc_trigger_quest10956AI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MoveInLineOfSight(Unit* pWho)
+    {
+        if (m_creature->GetDistance(pWho) <= 15.0f && pWho->GetTypeId() == TYPEID_PLAYER) {
+            if (Pet* pet = pWho->ToPlayer()->GetMiniPet()) {
+                if (pWho->ToPlayer()->GetQuestStatus(10956) == QUEST_STATUS_INCOMPLETE && pet->GetEntry() == 22818)
+                    pWho->ToPlayer()->AreaExploredOrEventHappens(10956);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_trigger_quest10956AI(Creature* pCreature)
+{
+    return new npc_trigger_quest10956AI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -855,6 +881,11 @@ void AddSC_azuremyst_isle()
     newscript = new Script;
     newscript->Name="go_bristlelimb_cage";
     newscript->pGOHello = &go_bristlelimb_cage;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_trigger_quest10956";
+    newscript->GetAI = &GetAI_npc_trigger_quest10956AI;
     newscript->RegisterSelf();
 }
 
