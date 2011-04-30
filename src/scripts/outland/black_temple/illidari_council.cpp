@@ -374,6 +374,11 @@ struct boss_illidari_councilAI : public ScriptedAI
             Creature* Controller = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_ILLIDARICOUNCIL)));
             if(Controller)
                 ((mob_illidari_councilAI*)Controller->AI())->StartEvent(who);
+                
+            if (pInstance->GetData(DATA_RELIQUARYOFSOULSEVENT) == IN_PROGRESS) {
+                EnterEvadeMode();
+                return;
+            }
         }
         else
         {
