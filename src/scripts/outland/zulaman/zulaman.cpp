@@ -158,6 +158,7 @@ bool GossipSelect_npc_zulaman_hostage(Player* player, Creature* _Creature, uint3
         {
             if(HostageEntry[i] == entry)
             {
+                sLog.outError("ZUL'AMAN CHEST: Data 7 was %u when spawning gameobject.", pInstance->GetData(DATA_CHESTLOOTED));
                 _Creature->SummonGameObject(ChestEntry[i], x-2, y, z, 0, 0, 0, 0, 0, 0);
                 break;
             }
