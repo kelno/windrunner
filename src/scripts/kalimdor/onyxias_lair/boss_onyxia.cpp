@@ -149,7 +149,7 @@ struct boss_onyxiaAI : public ScriptedAI
         {
             if(FlameBreathTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_FLAMEBREATH);
+                DoCast(m_creature->getVictim(), SPELL_FLAMEBREATH);                
                 FlameBreathTimer = 15000;
             }else FlameBreathTimer -= diff;
 
@@ -289,6 +289,22 @@ struct boss_onyxiaAI : public ScriptedAI
                     Creature* Whelp = m_creature->SummonCreature(CREATURE_WHELP, SpawnLocations[random][0], SpawnLocations[random][1], SpawnLocations[random][2], 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000);
                     if(Whelp)
                         Whelp->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                }
+            }
+        }
+    }
+    
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    {
+        if (spellId == SPELL_FLAMEBREATH) {
+            if (GameObject* blade = m_creature->FindGOInGrid(179561, 50.0f)) {
+                if (m_creature->HasInArc(M_PI, blade)) {
+                    float x, y, z;
+                    blade->GetPosition(x, y, z);
+                    if (Player* pPlayer = blade->GetOwner()->ToPlayer()) {
+                        pPlayer->SummonGameObject(uint32(179562), blade->GetPositionX(), blade->GetPositionY(), blade->GetPositionZ(), blade->GetOrientation(), 0, 0, 0, 0, 0);
+                        blade->Delete();
+                    }
                 }
             }
         }
