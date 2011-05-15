@@ -1080,9 +1080,9 @@ bool GossipHello_npc_moorba(Player* pPlayer, Creature* pCreature)
 {
     if (ScriptedInstance *pInstance = ((ScriptedInstance*)pCreature->GetInstanceData())) {
         if (pInstance->GetData(DATA_KALECGOS_EVENT) == DONE)
-            pPlayer->ADD_GOSSIP_ITEM(0, "Tééportez-moi dans la salle de Kalecgos.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        if (pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE)
-            pPlayer->ADD_GOSSIP_ITEM(0, "Tééportez-moi dans la salle de Brutallus.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+            pPlayer->ADD_GOSSIP_ITEM(0, "Téléportez-moi dans la salle de Kalecgos.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        /*if (pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE)
+            pPlayer->ADD_GOSSIP_ITEM(0, "Tééportez-moi dans la salle de Brutallus.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);*/
     }
     
     pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
