@@ -912,6 +912,53 @@ CreatureAI* GetAI_npc_jheelAI(Creature* pCreature)
 }
 
 /*######
+## npc_rethhedron
+######*/
+
+struct npc_rethhedronAI : public ScriptedAI
+{
+    npc_rethhedronAI(Creature* c) : ScriptedAI(c) {}
+    
+    bool quest;
+    
+    void Reset()
+    {
+        quest = false;
+    }
+    
+    void Aggro(Unit* pWho) {}
+    
+    void SpellHit(Unit* pHitter, const SpellEntry* spell)
+    {
+        if (pHitter->ToPlayer()) {
+            if (spell->Id == 41291) {
+                me->addUnitState(UNIT_STAT_ROOT);
+                quest = true;
+            }
+        }
+    }
+    
+    void JustDied(Unit* pKiller)
+    {
+        if (!pKiller->ToPlayer())
+            return;
+
+        if (quest)
+            pKiller->ToPlayer()->AreaExploredOrEventHappens(11090);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        ScriptedAI::UpdateAI(diff);
+    }
+};
+
+CreatureAI* GetAI_npc_rethhedronAI(Creature* pCreature)
+{
+    return new npc_rethhedronAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -979,6 +1026,11 @@ void AddSC_nagrand()
     newscript = new Script;
     newscript->Name="npc_jheel";
     newscript->GetAI = &GetAI_npc_jheelAI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_rethhedron";
+    newscript->GetAI = &GetAI_npc_rethhedronAI;
     newscript->RegisterSelf();
 }
 
