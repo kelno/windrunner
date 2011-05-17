@@ -308,7 +308,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_CLEAVE] = 5000 + rand()%5 * 1000;
             Timer[EVENT_CORROSION] = 10000 + rand()%10 * 1000;
             Timer[EVENT_GAS_NOVA] = 15000 + rand()%5 * 1000;
-            Timer[EVENT_ENCAPSULATE] = 20000 + rand()%5 * 1000;
+            Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
             Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
             Timer[EVENT_FLIGHT] = 60000;
             break;
