@@ -676,9 +676,8 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
     
     void Aggro(Unit *pWho)
     {
-        if (m_creature->GetPositionZ() < 40.0f)
-            if (pInstance)
-                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+        if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
+            pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
     }
     
     void UpdateAI(uint32 const diff)
@@ -738,9 +737,8 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
     
     void Aggro(Unit *pWho)
     {
-        if (m_creature->GetPositionZ() < 40.0f)
-            if (pInstance)
-                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+        if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
+            pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
     }
     
     void UpdateAI(uint32 const diff)
@@ -800,9 +798,8 @@ struct npc_shadowsword_lifeshaperAI : public ScriptedAI
     
     void Aggro(Unit *pWho)
     {
-        if (m_creature->GetPositionZ() < 40.0f)
-            if (pInstance)
-                pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
+        if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
+            pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
     }
     
     void UpdateAI(uint32 const diff)
