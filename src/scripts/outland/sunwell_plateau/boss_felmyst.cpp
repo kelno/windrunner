@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Felmyst
-SD%Complete: 90%
-SDComment: Flying movements may not be 100% correct. Check 1000 damage aura on players rez during fight. Flight phase always begin on the left, that should be random. Kalecgos event on death.
+SD%Complete: 95%
+SDComment: Flying movements may not be 100% correct. Kalecgos event on death. Flying path on spawn. Autoshoot & mind flay decast.
 EndScriptData */
 
 #include "precompiled.h"
@@ -602,6 +602,10 @@ struct boss_felmystAI : public ScriptedAI
             case EVENT_ENCAPS_WARN:
                 if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
+                while (encapsTarget->isDead()) {
+                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
+                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
+                }
                 Timer[EVENT_ENCAPS_WARN] = 20000;
                 break;
             case EVENT_FLIGHT:
