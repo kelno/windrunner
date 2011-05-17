@@ -202,11 +202,11 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 188421: ForceField     = pGo->GetGUID(); break;
             case 188523: KalecgosWall[0] = pGo->GetGUID(); break;
             case 188524: KalecgosWall[1] = pGo->GetGUID(); break;
-            /*case 188075:
+            case 188075:
                 if (Encounters[2] == DONE)
                     HandleGameObject(NULL, true, pGo);
                 FireBarrier = pGo->GetGUID();
-                break;*/
+                break;
             case 187990: MurusGate[0]   = pGo->GetGUID(); break;
             case 188118:
                 if (Encounters[4] == DONE)
@@ -284,8 +284,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 break;
             case DATA_BRUTALLUS_EVENT:     Encounters[1] = data; break;
             case DATA_FELMYST_EVENT:
-                /*if (data == DONE)
-                    HandleGameObject(FireBarrier, true);*/ // FIXME: Re-add this when opening sunwell part 2
+                if (data == DONE)
+                    HandleGameObject(FireBarrier, true);
                 Encounters[2] = data; break;
             case DATA_GAUNTLET_EVENT:
                 GauntletStatus = data;
