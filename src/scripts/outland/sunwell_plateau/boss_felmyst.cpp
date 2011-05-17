@@ -600,10 +600,10 @@ struct boss_felmystAI : public ScriptedAI
                 }
                 break;
             case EVENT_ENCAPS_WARN:
-                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
+                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true))
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
                 while (encapsTarget->isDead()) {
-                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
+                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true);
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
                 }
                 Timer[EVENT_ENCAPS_WARN] = 20000;

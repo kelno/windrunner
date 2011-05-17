@@ -129,7 +129,7 @@ struct boss_sacrolashAI : public ScriptedAI
             SisterDeath = false;
         }
 
-        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != IN_PROGRESS)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
             
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
@@ -402,7 +402,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             SisterDeath = false;
         }
 
-        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != IN_PROGRESS)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
             
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
@@ -482,7 +482,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
 
         case SPELL_BLAZE:
-            target->CastSpell(target, SPELL_BLAZE_SUMMON, true);
+            m_creature->CastSpell(target, SPELL_BLAZE_SUMMON, true);
         case SPELL_CONFLAGRATION:
         case SPELL_FLAME_SEAR:
             HandleTouchedSpells(target, SPELL_FLAME_TOUCHED);
