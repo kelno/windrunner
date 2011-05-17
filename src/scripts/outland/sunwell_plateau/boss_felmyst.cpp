@@ -155,6 +155,7 @@ struct boss_felmystAI : public ScriptedAI
     float BreathX, BreathY;
     
     bool justPulled;
+    bool goingLeft;
 
     void Reset()
     {
@@ -182,6 +183,8 @@ struct boss_felmystAI : public ScriptedAI
         WorldPacket data;                       //send update position to client
         m_creature->BuildHeartBeatMsg(&data);
         m_creature->SendMessageToSet(&data,true);
+        
+        goingLeft = false;
         
         if (pInstance) {
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
@@ -396,7 +399,17 @@ struct boss_felmystAI : public ScriptedAI
         case 5:
         {
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            if (BreathCount == 1)     // Right
+            if (BreathCount == 0) {
+                switch (rand()%2) {
+                    case 0:
+                        goingLeft = true;
+                        break;
+                    case 1:
+                        goingLeft = false;
+                        break;
+                }
+            }
+            if (!goingLeft)     // Right
                 m_creature->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
             else                      // Left
                 m_creature->GetMotionMaster()->MovePoint(0, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
@@ -418,7 +431,7 @@ struct boss_felmystAI : public ScriptedAI
             std::stringstream sst;
             sst << "DEBUG: " << str;
             DoWhisper(sst.str().c_str(), m_creature->getVictim());*/
-            if (BreathCount == 1)     // Right
+            if (!goingLeft)     // Right
                 m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
                 m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
@@ -442,7 +455,7 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
             {
                 //sLog.outString("RandomPoint(3) %u", randomPoint);
-                if (BreathCount == 1)   // Right
+                if (!goingLeft)   // Right
                     m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
                 else
                     m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
@@ -463,6 +476,7 @@ struct boss_felmystAI : public ScriptedAI
             BreathCount++;
             Timer[EVENT_SUMMON_FOG] = 0;
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
+            goingLeft = !goingLeft;
             if(BreathCount < 3) FlightCount = 4;
             break;
         case 10:
@@ -471,7 +485,10 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                 float x, y, z;
                 target->GetContactPoint(m_creature, x, y, z);
-                m_creature->GetMotionMaster()->MovePoint(0, 1482.709961, 649.406006, 21.081100);
+                if (goingLeft)
+                    m_creature->GetMotionMaster()->MovePoint(0, 1482.709961, 649.406006, 21.081100);    // Left landing point
+                else
+                    m_creature->GetMotionMaster()->MovePoint(0, 1491.119995, 553.672974, 24.921900);    // Right landing point
                 // Orientation: 4.852080
                 //m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
             }
