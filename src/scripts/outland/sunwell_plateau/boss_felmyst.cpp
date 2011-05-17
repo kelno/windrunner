@@ -654,6 +654,14 @@ struct boss_felmystAI : public ScriptedAI
             if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, topTarget->GetGUID());
         }
+        
+        Map::PlayerList const& players = pInstance->instance->GetPlayers();
+        if (!players.isEmpty()) {
+            for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                if (Player* plr = itr->getSource())
+                    plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
+            }
+        }
     }
 
     void DespawnSummons(uint32 entry)
