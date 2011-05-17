@@ -96,8 +96,9 @@ enum EventFelmyst
     EVENT_CLEAVE        =   2,
     EVENT_CORROSION     =   3,
     EVENT_GAS_NOVA      =   4,
-    EVENT_ENCAPSULATE   =   5,
-    EVENT_FLIGHT        =   6,
+    EVENT_ENCAPS_WARN   =   5,
+    EVENT_ENCAPSULATE   =   6,
+    EVENT_FLIGHT        =   7,
 
     EVENT_FLIGHT_SEQUENCE   =   2,
     EVENT_SUMMON_DEAD       =   3,
@@ -156,6 +157,8 @@ struct boss_felmystAI : public ScriptedAI
     
     bool justPulled;
     bool goingLeft;
+    
+    Unit* encapsTarget;
 
     void Reset()
     {
@@ -185,6 +188,8 @@ struct boss_felmystAI : public ScriptedAI
         m_creature->SendMessageToSet(&data,true);
         
         goingLeft = false;
+        
+        encapsTarget = NULL;
         
         if (pInstance) {
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
@@ -304,6 +309,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_CORROSION] = 10000 + rand()%10 * 1000;
             Timer[EVENT_GAS_NOVA] = 15000 + rand()%5 * 1000;
             Timer[EVENT_ENCAPSULATE] = 20000 + rand()%5 * 1000;
+            Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
             Timer[EVENT_FLIGHT] = 60000;
             break;
         case PHASE_FLIGHT:
@@ -585,10 +591,18 @@ struct boss_felmystAI : public ScriptedAI
                 Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
                 break;
             case EVENT_ENCAPSULATE:
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true)) {
-                    m_creature->CastSpell(target, SPELL_ENCAPSULATE_CHANNEL, false);
+                if(encapsTarget) {
+                    m_creature->CastSpell(encapsTarget, SPELL_ENCAPSULATE_CHANNEL, false);
                     Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
+                    Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
+                    /*if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
+                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, topTarget->GetGUID());*/
                 }
+                break;
+            case EVENT_ENCAPS_WARN:
+                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
+                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
+                Timer[EVENT_ENCAPS_WARN] = 20000;
                 break;
             case EVENT_FLIGHT:
                 EnterPhase(PHASE_FLIGHT);
@@ -627,6 +641,14 @@ struct boss_felmystAI : public ScriptedAI
             default:
                 break;
             }
+        }
+    }
+    
+    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target)
+    {
+        if (spellId == SPELL_ENCAPSULATE_CHANNEL) {
+            if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, topTarget->GetGUID());
         }
     }
 
