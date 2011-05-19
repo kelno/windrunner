@@ -313,6 +313,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT] = 60000;
             break;
         case PHASE_FLIGHT:
+            m_creature->SetSpeed(MOVE_FLIGHT, 1.2f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
             Timer[EVENT_SUMMON_DEAD] = 0;
             Timer[EVENT_SUMMON_FOG] = 0;
