@@ -331,8 +331,6 @@ struct boss_felmystAI : public ScriptedAI
         {
         case 0:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            //m_creature->AttackStop();
-            //error_log("prevent fly phase");
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
@@ -342,13 +340,11 @@ struct boss_felmystAI : public ScriptedAI
             break;
         case 1:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            //error_log("Move to Fly point");
             m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX()+1, m_creature->GetPositionY(), m_creature->GetPositionZ()+10);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 2:{
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            //error_log("Summon Vapor case 2");
             Unit* target;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
             if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
@@ -373,14 +369,11 @@ struct boss_felmystAI : public ScriptedAI
         case 3: {
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             DespawnSummons(MOB_VAPOR_TRAIL);
-            //error_log("Summon Vapor case3");
-            //m_creature->CastSpell(m_creature, SPELL_VAPOR_SELECT); need core support
             Unit* target;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
             if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
             if(target)
             {
-                //target->CastSpell(target, SPELL_VAPOR_SUMMON, true); need core support
                 Creature* Vapor = m_creature->SummonCreature(MOB_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
                 if(Vapor)
                 {
@@ -419,40 +412,26 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
             else                      // Left
                 m_creature->GetMotionMaster()->MovePoint(0, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 30000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
             break;
         }
         case 6:
         {
-            //sLog.outString("Fly sequence %u", BreathCount);
             randomPoint = rand()%3;
-            //sLog.outString("RandomPoint(1) %u", randomPoint);
-            /*std::string str;
-            if (randomPoint == 0)
-                str = "North";
-            else if (randomPoint == 2)
-                str = "Center";
-            else
-                str = "South";
-            std::stringstream sst;
-            sst << "DEBUG: " << str;
-            DoWhisper(sst.str().c_str(), m_creature->getVictim());*/
             if (!goingLeft)     // Right
                 m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
                 m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 30000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
             break;
         }
         case 7:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            //sLog.outString("RandomPoint(2) %u", randomPoint);
             if (BreathCount == 1)       // Right
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
-            //DoTextEmote("prend une profonde respiration.", NULL);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
@@ -460,7 +439,6 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
             {
-                //sLog.outString("RandomPoint(3) %u", randomPoint);
                 if (!goingLeft)   // Right
                     m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
                 else
@@ -495,8 +473,6 @@ struct boss_felmystAI : public ScriptedAI
                     m_creature->GetMotionMaster()->MovePoint(0, 1482.709961, 649.406006, 21.081100);    // Left landing point
                 else
                     m_creature->GetMotionMaster()->MovePoint(0, 1491.119995, 553.672974, 24.921900);    // Right landing point
-                // Orientation: 4.852080
-                //m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
             }
             else
             {
