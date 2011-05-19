@@ -309,7 +309,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_CORROSION] = 10000 + rand()%10 * 1000;
             Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
             if (pull)
-                Timer[EVENT_ENCAPSULATE] = 17000 + rand()%5 * 1000;
+                Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
             else
                 Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
             Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
@@ -437,7 +437,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             break;
         case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
@@ -580,6 +580,11 @@ struct boss_felmystAI : public ScriptedAI
                 }
                 break;
             case EVENT_ENCAPS_WARN:
+                if (Timer[EVENT_FLIGHT] < 5000) {
+                    Timer[EVENT_ENCAPS_WARN] = 30000;
+                    Timer[EVENT_ENCAPSULATE] = 30000;
+                    break;
+                }
                 if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true))
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
                 if (!encapsTarget)
