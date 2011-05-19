@@ -210,7 +210,7 @@ struct boss_felmystAI : public ScriptedAI
         DoZoneInCombat();
         m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
         m_creature->CastSpell(m_creature, AURA_NOXIOUS_FUMES, true);
-        EnterPhase(PHASE_GROUND);
+        EnterPhase(PHASE_GROUND, true);
         justPulled = true;
 
         if(pInstance)
@@ -300,7 +300,7 @@ struct boss_felmystAI : public ScriptedAI
             damage = 0;
     }
 
-    void EnterPhase(PhaseFelmyst NextPhase)
+    void EnterPhase(PhaseFelmyst NextPhase, bool pull = false)
     {
         switch(NextPhase)
         {
@@ -308,7 +308,10 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_CLEAVE] = 5000 + rand()%5 * 1000;
             Timer[EVENT_CORROSION] = 10000 + rand()%10 * 1000;
             Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
-            Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
+            if (pull)
+                Timer[EVENT_ENCAPSULATE] = 17000 + rand()%5 * 1000;
+            else
+                Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
             Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
             Timer[EVENT_FLIGHT] = 60000;
             break;
