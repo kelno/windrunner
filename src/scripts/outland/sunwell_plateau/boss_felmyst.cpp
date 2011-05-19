@@ -288,7 +288,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
         }
         else
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
@@ -313,7 +313,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT] = 60000;
             break;
         case PHASE_FLIGHT:
-            m_creature->SetSpeed(MOVE_FLIGHT, 1.2f);
+            //m_creature->SetSpeed(MOVE_FLIGHT, 1.2f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
             Timer[EVENT_SUMMON_DEAD] = 0;
             Timer[EVENT_SUMMON_FOG] = 0;
@@ -420,9 +420,9 @@ struct boss_felmystAI : public ScriptedAI
         {
             randomPoint = rand()%3;
             if (!goingLeft)     // Right
-                m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
+                m_creature->GetMotionMaster()->MovePoint(1, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
-                m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
+                m_creature->GetMotionMaster()->MovePoint(1, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
             Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
             break;
         }
@@ -441,9 +441,9 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
             {
                 if (!goingLeft)   // Right
-                    m_creature->GetMotionMaster()->MovePoint(0, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
+                    m_creature->GetMotionMaster()->MovePoint(2, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
                 else
-                    m_creature->GetMotionMaster()->MovePoint(0, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
+                    m_creature->GetMotionMaster()->MovePoint(2, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             }
             Timer[EVENT_SUMMON_FOG] = 1;
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
@@ -471,9 +471,9 @@ struct boss_felmystAI : public ScriptedAI
                 float x, y, z;
                 target->GetContactPoint(m_creature, x, y, z);
                 if (goingLeft)
-                    m_creature->GetMotionMaster()->MovePoint(0, 1482.709961, 649.406006, 21.081100);    // Left landing point
+                    m_creature->GetMotionMaster()->MovePoint(4, 1482.709961, 649.406006, 21.081100);    // Left landing point
                 else
-                    m_creature->GetMotionMaster()->MovePoint(0, 1491.119995, 553.672974, 24.921900);    // Right landing point
+                    m_creature->GetMotionMaster()->MovePoint(4, 1491.119995, 553.672974, 24.921900);    // Right landing point
             }
             else
             {
