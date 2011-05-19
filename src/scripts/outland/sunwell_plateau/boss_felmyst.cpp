@@ -437,7 +437,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
@@ -465,7 +465,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_SUMMON_FOG] = 0;
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             goingLeft = !goingLeft;
-            if(BreathCount < 3) FlightCount = 4;
+            if(BreathCount < 3) FlightCount = 5;
             break;
         case 10:
             if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
