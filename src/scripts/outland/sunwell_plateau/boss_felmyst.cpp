@@ -580,7 +580,7 @@ struct boss_felmystAI : public ScriptedAI
                 }
                 break;
             case EVENT_ENCAPS_WARN:
-                if (Timer[EVENT_FLIGHT] < 6500) {
+                if (Timer[EVENT_FLIGHT] < 9000) {
                     Timer[EVENT_ENCAPS_WARN] = 30000;
                     Timer[EVENT_ENCAPSULATE] = 30000;
                     break;
