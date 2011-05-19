@@ -316,7 +316,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT] = 60000;
             break;
         case PHASE_FLIGHT:
-            m_creature->SetSpeed(MOVE_FLIGHT, 1.25f);
+            m_creature->SetSpeed(MOVE_FLIGHT, 1.3f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
             Timer[EVENT_SUMMON_DEAD] = 0;
             Timer[EVENT_SUMMON_FOG] = 0;
@@ -437,7 +437,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
             break;
         case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
@@ -580,7 +580,7 @@ struct boss_felmystAI : public ScriptedAI
                 }
                 break;
             case EVENT_ENCAPS_WARN:
-                if (Timer[EVENT_FLIGHT] < 9000) {
+                if (Timer[EVENT_FLIGHT] < 8000) {
                     Timer[EVENT_ENCAPS_WARN] = 30000;
                     Timer[EVENT_ENCAPSULATE] = 30000;
                     break;
