@@ -412,6 +412,7 @@ struct boss_felmystAI : public ScriptedAI
                         break;
                 }
             }
+            m_creature->RemoveAurasDueToSpell(AURA_NOXIOUS_FUMES);
             if (!goingLeft)     // Right
                 m_creature->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
             else                      // Left
@@ -465,9 +466,10 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_SUMMON_FOG] = 0;
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
             goingLeft = !goingLeft;
-            if(BreathCount < 3) FlightCount = 5;
+            if(BreathCount < 3) FlightCount = 4;
             break;
         case 10:
+            m_creature->CastSpell(m_creature, AURA_NOXIOUS_FUMES, true);
             if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
             {
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
