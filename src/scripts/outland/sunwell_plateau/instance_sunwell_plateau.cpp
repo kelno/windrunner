@@ -140,11 +140,28 @@ struct instance_sunwell_plateau : public ScriptedInstance
             {
                 Player* plr = itr->getSource();
                 if (plr && !plr->HasAura(45839))
-                        return plr;
+                    return plr;
             }
         }
 
         debug_log("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
+        return NULL;
+    }
+    
+    Player* GetAlivePlayerInMap()
+    {
+        Map::PlayerList const& players = instance->GetPlayers();
+
+        if (!players.isEmpty())
+        {
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+            {
+                Player* plr = itr->getSource();
+                if (plr && plr->isAlive())
+                    return plr;
+            }
+        }
+
         return NULL;
     }
 
@@ -341,7 +358,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     {
 
         Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
-        if (!Commander || Commander->isInCombat() || Commander->isDead())
+        if (!Commander || Commander->isInCombat() || Commander->isDead() || !GetAlivePlayerInMap())
             GauntletStatus = NOT_STARTED;
 
         if (GauntletStatus != IN_PROGRESS || GetData(DATA_EREDAR_TWINS_EVENT) == DONE) {
