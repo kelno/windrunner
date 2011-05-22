@@ -438,7 +438,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             m_creature->StopMoving();
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1500;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 2500;
             break;
         case 8:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
@@ -453,13 +453,6 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
         case 9:
-            if (pInstance) {
-                switch (randomPoint) {
-                case 0: pInstance->SetData(DATA_ACTIVATE_NORTH, DONE); break;
-                case 1: pInstance->SetData(DATA_ACTIVATE_CENTER, DONE); break;
-                case 2: pInstance->SetData(DATA_ACTIVATE_SOUTH, DONE); break;
-                }
-            }
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
             BreathCount++;
@@ -620,6 +613,13 @@ struct boss_felmystAI : public ScriptedAI
                 break;
             case EVENT_SUMMON_FOG:
                 {
+                    if (pInstance) {
+                        switch (randomPoint) {
+                        case 0: pInstance->SetData(DATA_ACTIVATE_NORTH, DONE); break;
+                        case 1: pInstance->SetData(DATA_ACTIVATE_CENTER, DONE); break;
+                        case 2: pInstance->SetData(DATA_ACTIVATE_SOUTH, DONE); break;
+                        }
+                    }
                     float x, y, z;
                     m_creature->GetPosition(x, y, z);
                     m_creature->UpdateGroundPositionZ(x, y, z);
