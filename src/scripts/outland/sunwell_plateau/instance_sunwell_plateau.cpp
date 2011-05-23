@@ -111,7 +111,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
         /*** Misc ***/
         SpectralRealmTimer      = 5000;
-        BringersTimer           = 0;
+        BringersTimer           = 40000;
         FiendTimer              = 0;
 
         /*** Encounters ***/
@@ -362,7 +362,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             GauntletStatus = NOT_STARTED;
 
         if (GauntletStatus != IN_PROGRESS || GetData(DATA_EREDAR_TWINS_EVENT) == DONE) {
-            BringersTimer = 0;
+            BringersTimer = 40000;
             FiendTimer = 0;
             
             return;
