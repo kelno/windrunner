@@ -1065,7 +1065,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
                 DoCast(m_creature, SPELL_FELFIRE_FISSION);
                 DoCast(m_creature, SPELL_BURNING_DESTRUCTION_TRIGGERED, true);
                 
-                damageTimer = 5000;
+                damageTimer = 2000;
             }
             else
                 damageTimer -= diff;
