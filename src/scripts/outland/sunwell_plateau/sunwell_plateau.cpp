@@ -1013,6 +1013,10 @@ struct npc_volatile_fiendAI : public ScriptedAI
         despawnTimer = 0;
         damageTimer = 1000;
         fissionTimer = 2000;
+        
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1499, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 14310, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 14311, true);
     }
     
     void Aggro(Unit *pWho) {}
