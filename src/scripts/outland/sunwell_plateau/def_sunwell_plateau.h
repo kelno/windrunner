@@ -91,6 +91,7 @@ enum Creatures
     MOB_GRAND_WARLOCK_ALYTHESS                      = 25166,
     MOB_SHADOW_IMAGE                                = 25214,
     MOB_LADY_SACROLASH                              = 25165,
+    MOB_TRIGGER_TINY                                = 21987,
 
     /* Kil'Jaeden */
     CREATURE_ANVEENA                                = 26046, // Embodiment of the Sunwell
