@@ -89,7 +89,7 @@ enum SpellIds
 #define DRAGON_REALM_Z  53.079
 #define DEMON_REALM_Z   -74.558
 
-uint32 WildMagic[]= { 44978, 45001, 45002, 45004, 45006, 45010 };
+uint32 WildMagic[]= { 44978, 45001, 45002, 45004, /*45006, */45010 };
 
 struct boss_kalecgosAI : public ScriptedAI
 {
