@@ -69,7 +69,7 @@ EndScriptData */
 
 //Priest
 #define SPELL_PR_HEAL           41372
-#define SPELL_PR_MIND_CONTROL   43550
+#define SPELL_PR_MIND_CONTROL   41374//43550 // Buggued
 #define SPELL_PR_MIND_BLAST     41374
 #define SPELL_PR_SW_DEATH       41375
 #define SPELL_PR_PSYCHIC_SCREAM 43432
