@@ -580,12 +580,12 @@ struct boss_felmystAI : public ScriptedAI
                     Timer[EVENT_ENCAPSULATE] = 30000;
                     break;
                 }
-                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true))
+                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
                 if (!encapsTarget)
                     break;
                 while (encapsTarget->isDead()) {
-                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true);
+                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
                     if (!encapsTarget)
                         break;
                     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
