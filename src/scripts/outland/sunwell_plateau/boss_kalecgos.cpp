@@ -793,7 +793,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
 
         if(WildMagicTimer < diff)
         {
-            DoCastAOE(WildMagic[rand()%6]);
+            DoCastAOE(WildMagic[rand()%5]);
             WildMagicTimer = 20000;
         }else WildMagicTimer -= diff;
 
