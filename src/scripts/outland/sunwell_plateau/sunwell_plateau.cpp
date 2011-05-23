@@ -1003,6 +1003,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
     
     uint32 despawnTimer;    // FIXME: Need new hook OnSpellTriggered and despawn when spell 46218 is triggered
     uint32 damageTimer;
+    uint32 fissionTimer;
     
     ScriptedInstance *pInstance;
     
@@ -1011,6 +1012,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
         DoCast(m_creature, SPELL_BURNING_WINDS);
         despawnTimer = 0;
         damageTimer = 1000;
+        fissionTimer = 2000;
     }
     
     void Aggro(Unit *pWho) {}
@@ -1047,6 +1049,13 @@ struct npc_volatile_fiendAI : public ScriptedAI
             else
                 despawnTimer -= diff;
         }
+        
+        if (fissionTimer <= diff) {
+            DoCast(m_creature, SPELL_FELFIRE_FISSION);
+            fissionTimer = 2000;
+        }
+        else
+            fissionTimer -= diff;
 
         if (!UpdateVictim())
             return;
