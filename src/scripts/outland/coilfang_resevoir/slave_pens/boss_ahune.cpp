@@ -12,9 +12,9 @@
 
 #define SPELL_HAILSTONE_CHILL       46458
 
-#define NPC_AHUNITE_HAILSTONE       (heroicMode ? 26342 : 25755)
-#define NPC_AHUNITE_FROSTWIND       (heroicMode ? 26341 : 25757)
-#define NPC_AHUNITE_COLDWAVE        (heroicMode ? 26340 : 25756)
+#define NPC_AHUNITE_HAILSTONE       /*(heroicMode ? 26342 : */25755//)
+#define NPC_AHUNITE_FROSTWIND       /*(heroicMode ? 26341 : */25757//)
+#define NPC_AHUNITE_COLDWAVE        /*(heroicMode ? 26340 : */25756//)
 #define NPC_AHUNE                   25740
 #define NPC_AHUNE_FROZEN_CORE       25865
 #define NPC_AHUNE_GHOST             26239
@@ -50,6 +50,11 @@ struct boss_ahuneAI : public Scripted_NoMovementAI
         summonTimer = 8000;
         slipperyFloorTimer = 55000;
         iceSpearTimer = 8000;
+        
+        if (heroicMode) {
+            me->SetMaxHealth(230000);
+            me->SetHealth(me->GetMaxHealth());
+        }
         
         DoCast(me, SPELL_AHUNE_SHIELD, true);
         me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
