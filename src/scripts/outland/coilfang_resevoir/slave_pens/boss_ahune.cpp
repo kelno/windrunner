@@ -8,7 +8,7 @@
 #define SPELL_AHUNE_GHOST_DISGUISE  46786
 #define SPELL_SUBMERGE              37550
 
-#define SPELL_ICESPEAR_KNOCKBACK    46360   // Player must cast it on itself
+#define SPELL_ICE_SPEAR             46360
 
 #define SPELL_HAILSTONE_CHILL       46458
 
@@ -123,8 +123,10 @@ struct boss_ahuneAI : public Scripted_NoMovementAI
         if (!players.isEmpty()) {
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                 if (Player* plr = itr->getSource()) {
-                    if (plr->IsWithinMeleeRange(me))
+                    if (plr->IsWithinMeleeRange(me)) {
                         DoCast(plr, SPELL_COLD_SLAP);
+                        plr->CastSpell(plr, SPELL_ICE_SPEAR, true);
+                    }
                 }
             }
         }
@@ -306,7 +308,6 @@ CreatureAI* GetAI_mob_ahunite_hailstoneAI(Creature* pCreature)
 }
 
 #define SPELL_KNOCKBACK_DELAYER     46878
-#define SPELL_ICE_SPEAR             46360
 
 #define GO_ICE_SPEAR                188077
 
