@@ -348,6 +348,8 @@ SET(scripts_STAT_SRCS
     outland/coilfang_resevoir/steam_vault/instance_steam_vault.cpp
     outland/coilfang_resevoir/underbog/boss_hungarfen.cpp
     outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
+    outland/coilfang_resevoir/slave_pens/boss_ahune.cpp
+    outland/coilfang_resevoir/slave_pens/instance_slave_pens.cpp
     outland//eversong_woods.cpp
     outland//ghostlands.cpp
     outland/gruuls_lair/boss_gruul.cpp

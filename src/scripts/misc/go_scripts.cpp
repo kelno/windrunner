@@ -45,6 +45,7 @@ go_blacksmithing_plans
 go_testing_equipment
 go_forged_illidari_blade
 go_blood_filled_orb
+go_ice_stone_ahune
 EndContentData */
 
 #include "precompiled.h"
@@ -559,6 +560,22 @@ bool GOHello_corruption_plans(Player* pPlayer, GameObject* pGo)
 }
 
 /*######
+## go_ice_stone_ahune
+######*/
+
+bool GOHello_go_ice_stone_ahune(Player* pPlayer, GameObject* pGo)
+{
+    if (pPlayer->HasItemCount(34953, 1, false)) {
+        pGo->SummonCreature(25740, -90.151627, -243.480011, -1.102788, 1.621057, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 600000);
+        pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+        pGo->SetLootState(GO_JUST_DEACTIVATED);
+        pGo->SetRespawnTime(86400);     // One day
+    }
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -705,5 +722,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_corruption_plans";
     newscript->pGOHello = &GOHello_corruption_plans;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_ice_stone_ahune";
+    newscript->pGOHello = &GOHello_go_ice_stone_ahune;
     newscript->RegisterSelf();
 }

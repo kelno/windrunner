@@ -16,3 +16,17 @@ void ScriptedInstance::CastOnAllPlayers(uint32 spellId)
         }
     }
 }
+
+void ScriptedInstance::RemoveAuraOnAllPlayers(uint32 spellId)
+{
+    Map::PlayerList const& players = instance->GetPlayers();
+
+    if (!players.isEmpty())
+    {
+        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+        {
+            if (Player* plr = itr->getSource())
+                plr->RemoveAurasDueToSpell(spellId);
+        }
+    }
+}
