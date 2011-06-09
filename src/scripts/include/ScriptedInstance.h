@@ -34,6 +34,7 @@ class ScriptedInstance : public InstanceData
         
         // Misc
         void CastOnAllPlayers(uint32 spellId);  // TODO: Add Unit* caster as parameter?
+        void RemoveAuraOnAllPlayers(uint32 spellId);
 };
 
 #endif
