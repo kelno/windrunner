@@ -168,6 +168,9 @@ struct boss_aranAI : public ScriptedAI
             if(GameObject* Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
                 Door->SetGoState(0);
         }
+        
+        if (victim->GetTypeId() != TYPEID_PLAYER)
+            sLog.outError("Aran has been killed by NON-PLAYER unit with entry %u", victim->GetEntry());
     }
 
     void Aggro(Unit *who)
