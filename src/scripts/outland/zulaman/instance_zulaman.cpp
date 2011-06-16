@@ -325,11 +325,11 @@ struct instance_zulaman : public ScriptedInstance
             }
             else if (data == FAIL) {
                 // Despawn mobs if wiped, not if tempest is pulled
-                for (std::vector<Creature*>::iterator itr = warriorsList.begin(); itr != warriorsList.end(); itr++)
-                    (*itr)->DisappearAndDie();
+                /*for (std::vector<Creature*>::iterator itr = warriorsList.begin(); itr != warriorsList.end(); itr++)
+                    (*itr)->DisappearAndDie();*/
                 warriorsList.clear();
-                for (std::vector<Creature*>::iterator itr = eaglesList.begin(); itr != eaglesList.end(); itr++)
-                    (*itr)->DisappearAndDie();
+                /*for (std::vector<Creature*>::iterator itr = eaglesList.begin(); itr != eaglesList.end(); itr++)
+                    (*itr)->DisappearAndDie();*/
                 eaglesList.clear();
                 
             }

@@ -31,6 +31,7 @@ npc_amanishi_tempest
 npc_amanishi_berserker
 npc_amanishi_scout
 at_quest_X_marks
+mob_akilzon_gauntlet
 EndContentData */
 
 #include "precompiled.h"
@@ -586,6 +587,43 @@ bool AreaTrigger_at_quest_X_marks(Player *pPlayer, AreaTriggerEntry const *pAt) 
     return true;
 }
 
+/*######
+## mob_akilzon_gauntlet
+######*/
+
+struct mob_akilzon_gauntletAI : public ScriptedAI
+{
+    mob_akilzon_gauntletAI(Creature* c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance* pInstance;
+    
+    void Aggro(Unit* pWho) {}
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (me->GetEntry() == 24225 && id == 6)
+            me->DisappearAndDie();
+        else if (me->GetEntry() == 24159 && id == 7)
+            me->DisappearAndDie();
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_akilzon_gauntlet(Creature* pCreature)
+{
+    return new mob_akilzon_gauntletAI(pCreature);
+}
+
 void AddSC_zulaman()
 {
     Script *newscript;
@@ -637,6 +675,11 @@ void AddSC_zulaman()
     newscript = new Script;
     newscript->Name = "at_quest_X_marks";
     newscript->pAreaTrigger = &AreaTrigger_at_quest_X_marks;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "mob_akilzon_gauntlet";
+    newscript->GetAI = &GetAI_mob_akilzon_gauntlet;
     newscript->RegisterSelf();
 }
 
