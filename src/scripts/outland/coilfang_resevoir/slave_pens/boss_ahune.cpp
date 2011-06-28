@@ -338,13 +338,15 @@ struct npc_ice_spear_bunnyAI : public Scripted_NoMovementAI
     
     void HandleIceSpear()
     {
-        Map::PlayerList const& players = pInstance->instance->GetPlayers();
+        if (pInstance) {
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
 
-        if (!players.isEmpty()) {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
-                if (Player* plr = itr->getSource()) {
-                    if (plr->IsWithinMeleeRange(me))
-                        plr->CastSpell(plr, SPELL_ICE_SPEAR, true);
+            if (!players.isEmpty()) {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource()) {
+                        if (plr->IsWithinMeleeRange(me))
+                            plr->CastSpell(plr, SPELL_ICE_SPEAR, true);
+                    }
                 }
             }
         }
