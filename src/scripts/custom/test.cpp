@@ -188,6 +188,30 @@ bool GossipSelect_npc_test(Player *player, Creature *_Creature, uint32 sender, u
     return false;
 }
 
+bool GossipHello_npc_crevette (Player * player,Creature* creature)
+{
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Tue le gros lard !", GOSSIP_SENDER_MAIN, 1);
+    
+    player->PlayerTalkClass->SendGossipMenu(907,creature->GetGUID());
+    
+    return true;
+}
+
+bool GossipSelect_npc_crevette(Player *player, Creature *creature, uint32 sender, uint32 action )
+{
+    switch (action) {
+    case 1:
+        creature->Say("Meurs !", LANG_UNIVERSAL, 0);
+        
+        if (Creature* gros = creature->FindCreatureInGrid(18940, 15.0f, true)) {
+            creature->CastSpell(gros, 40380, false);
+        }
+        break;
+    }
+    
+    return true;
+}
+
 void AddSC_test()
 {
     Script *newscript;
@@ -196,6 +220,12 @@ void AddSC_test()
     newscript->GetAI = &GetAI_test;
     newscript->pGossipHello          = &GossipHello_npc_test;
     newscript->pGossipSelect         = &GossipSelect_npc_test;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_crevette";
+    newscript->pGossipHello = &GossipHello_npc_crevette;
+    newscript->pGossipSelect = &GossipSelect_npc_crevette;
     newscript->RegisterSelf();
 }
 

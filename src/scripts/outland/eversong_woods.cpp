@@ -563,6 +563,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
     uint32 KillCount;
     uint64 PlayerGUID;
     bool Summon;
+    bool Validated;
     SummonList Summons;
 
     void Reset()
@@ -571,6 +572,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
         PlayerGUID = 0;
         Summons.DespawnAll();
         Summon = false;
+        Validated = false;
     }
 
     void Aggro(Unit* pWho){}
@@ -599,7 +601,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (KillCount >= 3)
+        if (KillCount >= 3 && !Validated)
         {
             if (PlayerGUID)
             {
@@ -607,6 +609,8 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
                 if (player)
                     player->CompleteQuest(QUEST_UNEXPECTED_RESULT);
             }
+            
+            Validated = true;
         }
 
         if (Summon)
