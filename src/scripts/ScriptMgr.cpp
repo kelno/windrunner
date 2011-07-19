@@ -91,6 +91,7 @@ extern void AddSC_custom_example();
 extern void AddSC_custom_gossip_codebox();
 extern void AddSC_test();
 extern void AddSC_onevents();
+extern void AddSC_npc_lottery();
 
 extern void AddSC_npc_teleporter();
 
@@ -1484,6 +1485,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_custom_gossip_codebox();
     AddSC_test();
     AddSC_onevents();
+    AddSC_npc_lottery();
 
     AddSC_npc_teleporter();
 

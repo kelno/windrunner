@@ -190,6 +190,7 @@ SET(scripts_STAT_SRCS
     azeroth/zulgurub/instance_zulgurub.cpp
     custom/custom_example.cpp
     custom/custom_gossip_codebox.cpp
+    custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
     custom/custom_npc_teleporter.cpp
     custom/custom_training_dummy.cpp
