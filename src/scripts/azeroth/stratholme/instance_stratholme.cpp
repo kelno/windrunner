@@ -82,7 +82,7 @@ struct instance_stratholme : public ScriptedInstance
 
     uint64 baronGUID;
     uint64 ysidaTriggerGUID;
-    std::set<uint64> crystalsGUID;
+    //std::set<uint64> crystalsGUID;
     std::set<uint64> abomnationGUID;
 
     void Initialize()
@@ -116,7 +116,7 @@ struct instance_stratholme : public ScriptedInstance
 
         baronGUID = 0;
         ysidaTriggerGUID = 0;
-        crystalsGUID.clear();
+        //crystalsGUID.clear();
         abomnationGUID.clear();
     }
 
@@ -174,7 +174,7 @@ struct instance_stratholme : public ScriptedInstance
         {
         case C_BARON:           baronGUID = creature->GetGUID(); break;
         case C_YSIDA_TRIGGER:   ysidaTriggerGUID = creature->GetGUID(); break;
-        case C_CRYSTAL:         crystalsGUID.insert(creature->GetGUID()); break;
+        //case C_CRYSTAL:         crystalsGUID.insert(creature->GetGUID()); break;
         case C_ABOM_BILE:
         case C_ABOM_VENOM:      abomnationGUID.insert(creature->GetGUID()); break;
         }
