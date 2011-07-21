@@ -888,9 +888,17 @@ Unit* FindCreature(uint32 entry, float range, Unit* Finder)
     if(!Finder)
         return NULL;
     Creature* target = NULL;
+
+    CellPair pair(Trinity::ComputeCellPair(Finder->GetPositionX(), Finder->GetPositionY()));
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
+
     Trinity::AllCreaturesOfEntryInRange check(Finder, entry, range);
     Trinity::CreatureSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(target, check);
-    Finder->VisitNearbyObject(range, searcher);
+    TypeContainerVisitor<Trinity::CreatureSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+    cell.Visit(pair, visitor, *Finder->GetMap(), *Finder, range);
+    
     return target;
 }
 
@@ -899,9 +907,16 @@ GameObject* FindGameObject(uint32 entry, float range, Unit* Finder)
     if(!Finder)
         return NULL;
     GameObject* target = NULL;
+
+    CellPair pair(Trinity::ComputeCellPair(Finder->GetPositionX(), Finder->GetPositionY()));
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
+
     Trinity::AllGameObjectsWithEntryInGrid go_check(entry);
     Trinity::GameObjectSearcher<Trinity::AllGameObjectsWithEntryInGrid> searcher(target, go_check);
-    Finder->VisitNearbyGridObject(range, searcher);
+    TypeContainerVisitor<Trinity::GameObjectSearcher<Trinity::AllGameObjectsWithEntryInGrid>, GridTypeMapContainer> visitor(searcher);
+    cell.Visit(pair, visitor, *Finder->GetMap(), *Finder, range);
     return target;
 }
 

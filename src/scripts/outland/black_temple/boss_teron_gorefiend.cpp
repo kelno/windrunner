@@ -571,7 +571,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
     {
         float x,y,z;
         m_creature->GetPosition(x,y,z);
-        z = m_creature->GetMap()->GetVmapHeight(x, y, z, true);
+        z = m_creature->GetMap()->GetHeight(x, y, z);
         m_creature->Relocate(x,y,z,0);
         
         if (ResetCheckTimer <= diff) {
