@@ -1084,6 +1084,25 @@ bool QuestAccept_npc_max_a_million_escort(Player* pPlayer, Creature* pCreature, 
     return true;
 }
 
+enum
+{
+    QUEST_A_NOT_SO_MODEST_PROPOSAL = 10270,
+	NPC_IMAGE_OF_WIND_TRADER_MARID = 20518
+};
+
+bool GOHello_go_ethereal_teleport_pad(Player *player, GameObject* go)
+{
+	if (player->GetQuestStatus(QUEST_A_NOT_SO_MODEST_PROPOSAL) == QUEST_STATUS_COMPLETE)
+	{
+		Creature *npc = go->FindNearestCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 1.0f); // prevents double spawn
+		if (npc)
+			npc->DisappearAndDie();
+		go->SummonCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 4007.11f, 1517.15f, -115.535f, 4.97726f, TEMPSUMMON_TIMED_DESPAWN, 60000);
+
+	}
+    return true;
+}
+
 /*######
 ## AddSC
 ######*/
@@ -1146,6 +1165,11 @@ void AddSC_netherstorm()
     newscript->Name = "npc_maxx_a_million_escort";
     newscript->GetAI = &GetAI_npc_max_a_million_escort;
     newscript->pQuestAccept = &QuestAccept_npc_max_a_million_escort;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_ethereal_teleport_pad";
+    newscript->pGOHello = &GOHello_go_ethereal_teleport_pad;
     newscript->RegisterSelf();
 }
 
