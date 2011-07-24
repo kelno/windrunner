@@ -1422,7 +1422,7 @@ struct mob_phoenix_tkAI : public ScriptedAI
         {
             float x,y,z;
             m_creature->GetPosition(x,y,z);
-            z = m_creature->GetMap()->GetVmapHeight(x,y,z,true);
+            z = m_creature->GetMap()->GetHeight(x,y,z);
             if(z == INVALID_HEIGHT)
                 z = ROOM_BASE_Z;
             m_creature->SummonCreature(PHOENIX_EGG,x,y,z,m_creature->GetOrientation(),TEMPSUMMON_TIMED_DESPAWN,16000);

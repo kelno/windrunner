@@ -148,7 +148,7 @@ struct mob_doomfireAI : public ScriptedAI
         TargetGUID = 0;
         float x,y,z;
         m_creature->GetPosition(x,y,z);
-        z = m_creature->GetMap()->GetVmapHeight(x, y, z, true);
+        z = m_creature->GetMap()->GetHeight(x, y, z);
         m_creature->Relocate(x,y,z,0);
     }
 
@@ -483,7 +483,7 @@ struct boss_archimondeAI : public hyjal_trashAI
         if(victim && victim->isAlive()){
             float x,y,z,zHeightMap;
             m_creature->GetPosition(x,y,z);
-            zHeightMap = m_creature->GetMap()->GetVmapHeight(x, y, z, true);
+            zHeightMap = m_creature->GetMap()->GetHeight(x, y, z);
 
             // victim flying...
             if ((z - zHeightMap) > 10)
