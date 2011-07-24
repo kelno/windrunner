@@ -200,6 +200,7 @@ struct instance_blackrock_depths : public ScriptedInstance
         case GO_GOLEM_ROOM_N: GoGolemNGUID = pGo->GetGUID(); break;
         case GO_GOLEM_ROOM_S: GoGolemSGUID = pGo->GetGUID(); break;
         case GO_THONE_ROOM: GoThoneGUID = pGo->GetGUID(); break;
+        case GO_CHEST_SEVEN: GoChestGUID = pGo->GetGUID(); break;
         }
     }
 
@@ -419,7 +420,10 @@ struct instance_blackrock_depths : public ScriptedInstance
 
     void TombOfSevenEnd()
     {
-        DoRespawnGameObject(GoChestGUID,DAY);
+        //DoRespawnGameObject(GoChestGUID,DAY);
+        Player* player = GetPlayerInMap();
+        if (player)
+            player->SummonGameObject(GO_CHEST_SEVEN, 1265.3, -286.888, -78.2192, 2.23695, 0, 0, 0, 0, 86400);
         HandleGameObject(GoTombExitGUID,true);//event done, open exit door
         HandleGameObject(GoTombEnterGUID,true);//event done, open entrance door
         TombEventStarterGUID = 0;

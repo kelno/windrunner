@@ -394,6 +394,7 @@ extern void AddSC_boss_nightbane();
 extern void AddSC_loch_modan();
 
 //Lower Blackrock Spire
+extern void AddSC_instance_blackrock_spire();
 
 // Magister's Terrace
 extern void AddSC_boss_felblood_kaelthas();
@@ -1609,6 +1610,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_pyroguard_emberseer();
     AddSC_boss_gyth();
     AddSC_boss_rend_blackhand();
+    AddSC_instance_blackrock_spire();
 
     //Blackwing lair
     AddSC_boss_razorgore();

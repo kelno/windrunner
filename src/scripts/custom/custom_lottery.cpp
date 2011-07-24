@@ -46,7 +46,7 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
     switch (action) {
     case GOSSIP_ACTION_INFO_DEF:
         // Check not already registered and check 30d played
-        if (pPlayer->GetTotalPlayedTime() > 2592000 || pPlayer->GetSession()->GetSecurity() > 0) {
+        if (pPlayer->GetTotalAccountPlayedTime() > 2592000 || pPlayer->GetSession()->GetSecurity() > 0) {
             uint32 playerAccountId = pPlayer->GetSession()->GetAccountId();
             QueryResult* result = CharacterDatabase.PQuery("SELECT * FROM lottery WHERE accountid = %u", playerAccountId);
             if (!result) {
@@ -64,26 +64,56 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
     case GOSSIP_ACTION_INFO_DEF+1:
     {
         uint32 hordeWin = 0, allianceWin = 0;
-        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 1", HORDE);
+        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 3", HORDE);
         if (!result)
             break;
             
-        Field* fields = result->Fetch();
-        hordeWin = fields[0].GetUInt32();
-        
-        result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 1", ALLIANCE);
-        if (!result)
-            break;
-            
-        fields = result->Fetch();
-        allianceWin = fields[0].GetUInt32();
-        
         std::ostringstream hsst, asst;
         std::string hWinName, aWinName;
-        objmgr.GetPlayerNameByGUID(hordeWin, hWinName);
-        hsst << "Le gagnant de la Horde est " << hWinName << " !";
-        objmgr.GetPlayerNameByGUID(allianceWin, aWinName);
-        asst << "Le gagnant de l'Alliance est " << aWinName << " !";
+        //objmgr.GetPlayerNameByGUID(hordeWin, hWinName);
+        hsst << "Pour la Horde, le gagnant de la peluche est ";
+        //objmgr.GetPlayerNameByGUID(allianceWin, aWinName);
+        asst << "Pour l'Alliance, le gagnant de la peluche est " << aWinName;
+        
+        uint8 i = 0;
+            
+        do {
+            Field* fields = result->Fetch();
+            
+            hordeWin = fields[0].GetUInt32();
+            objmgr.GetPlayerNameByGUID(hordeWin, hWinName);
+            
+            if (i == 0)
+                hsst << hWinName << " et les gagnants de la monture sont ";
+            else if (i == 1)
+                hsst << hWinName << " et ";
+            else
+                hsst << hWinName << " !";
+            
+            i++;
+        } while (result->NextRow());
+        
+        i = 0;
+        
+        result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 3", ALLIANCE);
+        if (!result)
+            break;
+            
+        do {
+            Field* fields = result->Fetch();
+            
+            allianceWin = fields[0].GetUInt32();
+            objmgr.GetPlayerNameByGUID(allianceWin, aWinName);
+            
+            if (i == 0)
+                asst << aWinName << " et les gagnants de la monture sont ";
+            else if (i == 1)
+                asst << aWinName << " et ";
+            else
+                asst << aWinName << " !";
+            
+            i++;
+        } while (result->NextRow());
         
         pCreature->Yell(hsst.str().c_str(), LANG_UNIVERSAL, NULL);
         pCreature->Yell(asst.str().c_str(), LANG_UNIVERSAL, NULL);

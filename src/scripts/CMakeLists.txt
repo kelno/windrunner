@@ -48,6 +48,8 @@ SET(scripts_STAT_SRCS
     azeroth/blackrock_spire/boss_shadow_hunter_voshgajin.cpp
     azeroth/blackrock_spire/boss_the_beast.cpp
     azeroth/blackrock_spire/boss_warmaster_voone.cpp
+    azeroth/blackrock_spire/def_blackrock_spire.h
+    azeroth/blackrock_spire/instance_blackrock_spire.cpp
     azeroth/blackwing_lair/boss_broodlord_lashlayer.cpp
     azeroth/blackwing_lair/boss_chromaggus.cpp
     azeroth/blackwing_lair/boss_ebonroc.cpp

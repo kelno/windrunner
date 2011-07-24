@@ -53,6 +53,8 @@ enum eStratholme {
 struct instance_stratholme : public ScriptedInstance
 {
     instance_stratholme(Map *map) : ScriptedInstance(map) { Initialize(); };
+    
+    ~instance_stratholme() {}
 
     uint32 Encounter[ENCOUNTERS];
 

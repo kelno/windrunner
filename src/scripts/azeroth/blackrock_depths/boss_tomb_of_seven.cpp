@@ -33,7 +33,12 @@ EndScriptData */
 
 struct boss_angerrelAI : public ScriptedAI
 {
-    boss_angerrelAI(Creature *c) : ScriptedAI(c) {}
+    boss_angerrelAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance* pInstance;
 
     uint32 SunderArmor_Timer;
     uint32 ShieldBlock_Timer;
@@ -48,6 +53,12 @@ struct boss_angerrelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -91,11 +102,16 @@ CreatureAI* GetAI_boss_angerrel(Creature *_Creature)
 
 struct boss_doperelAI : public ScriptedAI
 {
-    boss_doperelAI(Creature *c) : ScriptedAI(c) {}
+    boss_doperelAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint32 SinisterStrike_Timer;
     uint32 BackStab_Timer;
     uint32 Gouge_Timer;
+    
+    ScriptedInstance* pInstance;
 
     void Reset()
     {
@@ -106,6 +122,12 @@ struct boss_doperelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -149,12 +171,17 @@ CreatureAI* GetAI_boss_doperel(Creature *_Creature)
 
 struct boss_haterelAI : public ScriptedAI
 {
-    boss_haterelAI(Creature *c) : ScriptedAI(c) {}
+    boss_haterelAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint32 ShadowBolt_Timer;
     uint32 ManaBurn_Timer;
     uint32 ShadowShield_Timer;
     uint32 Strike_Timer;
+
+    ScriptedInstance* pInstance;
 
     void Reset()
     {
@@ -166,6 +193,12 @@ struct boss_haterelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -221,12 +254,17 @@ CreatureAI* GetAI_boss_haterel(Creature *_Creature)
 
 struct boss_vilerelAI : public ScriptedAI
 {
-    boss_vilerelAI(Creature *c) : ScriptedAI(c) {}
+    boss_vilerelAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint32 MindBlast_Timer;
     uint32 Heal_Timer;
     uint32 PrayerOfHealing_Timer;
     uint32 Shield_Timer;
+    
+    ScriptedInstance* pInstance;
 
     void Reset()
     {
@@ -238,6 +276,12 @@ struct boss_vilerelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -290,13 +334,18 @@ CreatureAI* GetAI_boss_vilerel(Creature *_Creature)
 
 struct boss_seethrelAI : public ScriptedAI
 {
-    boss_seethrelAI(Creature *c) : ScriptedAI(c) {}
+    boss_seethrelAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint32 FrostArmor_Timer;
     uint32 Frostbolt_Timer;
     uint32 Blizzard_Timer;
     uint32 FrostNova_Timer;
     uint32 FrostWard_Timer;
+    
+    ScriptedInstance* pInstance;
 
     void Reset()
     {
@@ -311,6 +360,12 @@ struct boss_seethrelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -370,11 +425,16 @@ CreatureAI* GetAI_boss_seethrel(Creature *_Creature)
 
 struct boss_gloomrelAI : public ScriptedAI
 {
-    boss_gloomrelAI(Creature *c) : ScriptedAI(c) {}
+    boss_gloomrelAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint32 Hamstring_Timer;
     uint32 Cleave_Timer;
     uint32 MortalStrike_Timer;
+    
+    ScriptedInstance* pInstance;
 
     void Reset()
     {
@@ -387,6 +447,12 @@ struct boss_gloomrelAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_GHOSTKILL, 1);
     }
 
     void UpdateAI(const uint32 diff)
