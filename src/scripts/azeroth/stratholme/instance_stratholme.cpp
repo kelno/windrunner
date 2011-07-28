@@ -52,9 +52,9 @@ enum eStratholme {
 
 struct instance_stratholme : public ScriptedInstance
 {
-    instance_stratholme(Map *map) : ScriptedInstance(map) { Initialize(); };
+    instance_stratholme(Map *map) : ScriptedInstance(map) { sLog.outString("STRATHOLME: initializing for instance id %ld", map ? map->GetInstanceId() : -1); Initialize(); };
     
-    ~instance_stratholme() {}
+    ~instance_stratholme() { sLog.outString("STRATHOLME: destroying instance id %ld", instance ? instance->GetInstanceId() : -1); }
 
     uint32 Encounter[ENCOUNTERS];
 
