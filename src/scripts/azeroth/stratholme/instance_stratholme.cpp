@@ -85,7 +85,7 @@ struct instance_stratholme : public ScriptedInstance
     uint64 baronGUID;
     uint64 ysidaTriggerGUID;
     //std::set<uint64> crystalsGUID;
-    std::set<uint64> abomnationGUID;
+    std::list<uint64> abomnationGUID;
 
     void Initialize()
     {
@@ -178,7 +178,7 @@ struct instance_stratholme : public ScriptedInstance
         case C_YSIDA_TRIGGER:   ysidaTriggerGUID = creature->GetGUID(); break;
         //case C_CRYSTAL:         crystalsGUID.insert(creature->GetGUID()); break;
         case C_ABOM_BILE:
-        case C_ABOM_VENOM:      abomnationGUID.insert(creature->GetGUID()); break;
+        case C_ABOM_VENOM:      abomnationGUID.push_back(creature->GetGUID()); break;
         }
     }
 
@@ -292,7 +292,7 @@ struct instance_stratholme : public ScriptedInstance
                     UpdateGoState(portGauntletGUID,1,false);
 
                 uint32 count = abomnationGUID.size();
-                for(std::set<uint64>::iterator i = abomnationGUID.begin(); i != abomnationGUID.end(); ++i)
+                for(std::list<uint64>::iterator i = abomnationGUID.begin(); i != abomnationGUID.end(); ++i)
                 {
                     if (Unit* abom = Unit::GetUnit(*player, *i))
                     {
@@ -491,7 +491,7 @@ struct instance_stratholme : public ScriptedInstance
         if (abominationTimer) {
             if (abominationTimer <= diff) {
                 if (Player *player = GetPlayerInMap()) {
-                    for(std::set<uint64>::iterator i = abomnationGUID.begin(); i != abomnationGUID.end(); ++i)
+                    for(std::list<uint64>::iterator i = abomnationGUID.begin(); i != abomnationGUID.end(); ++i)
                     {
                         if (Unit* abom = Unit::GetUnit(*player, *i))
                         {
