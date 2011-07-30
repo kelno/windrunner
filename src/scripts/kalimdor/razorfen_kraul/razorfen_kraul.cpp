@@ -48,6 +48,8 @@ EndContentData */
 struct npc_willixAI : public npc_escortAI
 {
     npc_willixAI(Creature *c) : npc_escortAI(c) {}
+    
+    bool complete;
 
     void WaypointReached(uint32 i)
     {
@@ -92,6 +94,7 @@ struct npc_willixAI : public npc_escortAI
         case 45:
             DoScriptText(SAY_WIN, m_creature, player);
             player->GroupEventHappens(QUEST_WILLIX_THE_IMPORTER,m_creature);
+            complete = true;
             break;
         case 46:
             DoScriptText(SAY_END, m_creature, player);
@@ -99,7 +102,10 @@ struct npc_willixAI : public npc_escortAI
         }
     }
 
-    void Reset() {}
+    void Reset()
+    {
+        complete = false;
+    }
 
     void Aggro(Unit* who)
     {
@@ -113,7 +119,7 @@ struct npc_willixAI : public npc_escortAI
 
     void JustDied(Unit* killer)
     {
-        if (PlayerGUID)
+        if (PlayerGUID && !complete)
         {
             if (Player* player = GetPlayerForEscort())
                 player->FailQuest(QUEST_WILLIX_THE_IMPORTER);

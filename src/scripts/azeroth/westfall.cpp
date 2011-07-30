@@ -46,6 +46,7 @@ struct npc_defias_traitorAI : public npc_escortAI
     npc_defias_traitorAI(Creature *c) : npc_escortAI(c) {}
 
     bool IsWalking;
+    bool complete;
 
     void WaypointReached(uint32 i)
     {
@@ -70,6 +71,8 @@ struct npc_defias_traitorAI : public npc_escortAI
                 {
                     if (player && player->GetTypeId() == TYPEID_PLAYER)
                         (player->ToPlayer())->GroupEventHappens(QUEST_DEFIAS_BROTHERHOOD,m_creature);
+                        
+                    complete = true;
                 }
                 break;
         }
@@ -91,11 +94,12 @@ struct npc_defias_traitorAI : public npc_escortAI
             return;
         }
         IsWalking = false;
+        complete = false;
     }
 
     void JustDied(Unit* killer)
     {
-        if (PlayerGUID)
+        if (PlayerGUID && !complete)
         {
             if (Player* player = GetPlayerForEscort())
                 player->FailQuest(QUEST_DEFIAS_BROTHERHOOD);
