@@ -17,7 +17,7 @@
 /* ScriptData
 SDName: Terokkar_Forest
 SD%Complete: 80
-SDComment: Quest support: 9889, 10009, 10873, 10896, 11096, 10052, 10051, 11093. Skettis->Ogri'la Flight
+SDComment: Quest support: 9889, 10009, 10873, 10896, 11096, 10052, 10051, 11093. Skettis->Ogri'la Flight, 10040, 10041
 SDCategory: Terokkar Forest
 EndScriptData */
 
@@ -32,6 +32,7 @@ npc_isla_starmane
 npc_hungry_nether_ray
 npc_kaliri_trigger
 npc_trigger_quest10950
+npc_scout_neftis
 EndContentData */
 
 #include "precompiled.h"
@@ -679,6 +680,49 @@ CreatureAI* GetAI_npc_trigger_quest10950AI(Creature* pCreature)
 }
 
 /*######
+## npc_scout_neftis
+######*/
+
+bool QuestAccept_npc_scout_neftis(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == 10040 || quest->GetQuestId() == 10041) {
+        player->CastSpell(player, 32756, true);
+        if (player->getGender() == GENDER_MALE)
+            player->CastSpell(player, 38080, true);
+        else
+            player->CastSpell(player, 38081, true);
+    }
+        
+    return true;
+}
+
+bool GossipHello_npc_scout_neftis(Player* player, Creature* creature)
+{
+    player->PrepareQuestMenu(creature->GetGUID());
+    if (player->GetQuestStatus(10040) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(10041) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "J'ai perdu mon déguisement", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+    
+    return true;
+}
+
+bool GossipSelect_npc_scout_neftis(Player* player, Creature *creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF + 1) {
+        player->CastSpell(player, 32756, true);
+        if (player->getGender() == GENDER_MALE)
+            player->CastSpell(player, 38080, true);
+        else
+            player->CastSpell(player, 38081, true);
+    }
+    
+    player->CLOSE_GOSSIP_MENU();
+
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -748,6 +792,13 @@ void AddSC_terokkar_forest()
     newscript = new Script;
     newscript->Name="npc_trigger_quest10950";
     newscript->GetAI = &GetAI_npc_trigger_quest10950AI;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_scout_neftis";
+    newscript->pQuestAccept = &QuestAccept_npc_scout_neftis;
+    newscript->pGossipHello = &GossipHello_npc_scout_neftis;
+    newscript->pGossipSelect = &GossipSelect_npc_scout_neftis;
     newscript->RegisterSelf();
 }
 
