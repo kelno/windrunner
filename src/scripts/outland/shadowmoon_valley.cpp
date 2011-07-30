@@ -1743,6 +1743,54 @@ return new npc_enraged_spiritAI(_Creature);
 }
 
 /*######
+## npc_spirits_totem
+######*/
+
+struct npc_spirits_totemAI : public ScriptedAI
+{
+    npc_spirits_totemAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint32 checkTimer;
+    
+    void Reset()
+    {
+        checkTimer = 1000;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        uint32 souls[] = {21073, 21097, 21116, 21109}, credits[] = {21092, 21094, 21096, 21095};
+    
+        if (!me->GetOwner())
+            return;
+            
+        if (!me->GetOwner()->ToPlayer())
+            return;
+
+        if (checkTimer <= diff) {
+            for (uint8 i = 0; i < 4; i++) {
+                if (Creature* soul = me->FindNearestCreature(souls[i], 30.0f, true)) {
+                    me->GetOwner()->ToPlayer()->KilledMonster(credits[i], soul->GetGUID());
+                    DoCast(me, SPELL_SOUL_CAPTURED);
+                    soul->DisappearAndDie();
+                }
+            }
+            
+            checkTimer = 1000;
+        }
+        else
+            checkTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_spirits_totem(Creature* creature)
+{
+    return new npc_spirits_totemAI(creature);
+}
+
+/*######
 ## npc_deathbringer_jovaan
 ######*/
 
@@ -2045,6 +2093,11 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "npc_enraged_spirit";
     newscript->GetAI = &GetAI_npc_enraged_spirit;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_spirits_totem";
+    newscript->GetAI = &GetAI_npc_spirits_totem;
     newscript->RegisterSelf();
     
     newscript = new Script;
