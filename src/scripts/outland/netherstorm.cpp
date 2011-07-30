@@ -958,6 +958,7 @@ struct npc_bessyAI : public npc_escortAI
     void JustSummoned(Creature* summoned)
     {
         summoned->AI()->AttackStart(m_creature);
+        AttackStart(summoned);
     }
 
     void Aggro(Unit* who){}
