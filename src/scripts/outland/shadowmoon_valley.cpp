@@ -359,7 +359,7 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
         if(id)
         {
             m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_EAT);
-            PoisonTimer = 15000;
+            PoisonTimer = 5000;
         }
     }
 
