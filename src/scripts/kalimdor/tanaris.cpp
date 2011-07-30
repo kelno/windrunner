@@ -357,7 +357,12 @@ bool GossipSelect_npc_stone_watcher_of_norgannon(Player *player, Creature *_Crea
 
 struct npc_OOX17AI : public npc_escortAI
 {
-    npc_OOX17AI(Creature *c) : npc_escortAI(c) {}
+    npc_OOX17AI(Creature *c) : npc_escortAI(c)
+    {
+        complete = false;
+    }
+    
+    bool complete;
 
     void WaypointReached(uint32 i)
     {
@@ -387,6 +392,7 @@ struct npc_OOX17AI : public npc_escortAI
             case 86:
                 DoScriptText(SAY_CHICKEN_COMP, m_creature);
                 player->GroupEventHappens(Q_OOX17, m_creature);
+                complete = true;
                 break;
         }
     }
@@ -409,7 +415,7 @@ struct npc_OOX17AI : public npc_escortAI
 
     void JustDied(Unit* killer)
     {
-        if (PlayerGUID)
+        if (PlayerGUID && !complete)
         {
             if (Player* player = GetPlayerForEscort())
                 player->FailQuest(Q_OOX17);
