@@ -418,6 +418,7 @@ struct npc_isla_starmaneAI : public npc_escortAI
     {
         Completed = false;
         m_creature->setFaction(1660);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
     void Aggro(Unit* who){}
@@ -449,6 +450,7 @@ bool QuestAccept_npc_isla_starmane(Player* player, Creature* creature, Quest con
     {
         ((npc_escortAI*)(creature->AI()))->Start(true, true, false, player->GetGUID(), creature->GetEntry());
         creature->setFaction(113);
+        creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
     return true;
 }
