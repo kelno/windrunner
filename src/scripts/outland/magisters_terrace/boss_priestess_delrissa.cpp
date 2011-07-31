@@ -118,6 +118,7 @@ struct boss_priestess_delrissaAI : public ScriptedAI
 
     void Reset()
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
         m_creature->SetCorpseDelay(60*60*1000);
         LackeysKilled = 0;
         PlayersKilled = 0;
@@ -408,6 +409,7 @@ struct boss_priestess_guestAI : public ScriptedAI
 
     void Reset()
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
         UsedPotion = false;
         if(pInstance)
         {
