@@ -613,6 +613,7 @@ struct mob_arcane_sphereAI : public ScriptedAI
 
     void Reset()
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
         m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
         DespawnTimer = 30000;
         ChangeTargetTimer = 5000;
