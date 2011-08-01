@@ -13,6 +13,8 @@ SET(scripts_STAT_SRCS
     include/ScriptedInstance.h
     include/SimpleAI.cpp
     include/SimpleAI.h
+    include/SmartAI.cpp
+    include/SmartAI.h
     include/precompiled.cpp
     include/precompiled.h
     azeroth/arathi_highlands.cpp
