@@ -35,17 +35,6 @@ struct StringTextData
     uint32 Emote;
 };
 
-// Enums used by StringTextData::Type
-enum ChatType
-{
-    CHAT_TYPE_SAY               = 0,
-    CHAT_TYPE_YELL              = 1,
-    CHAT_TYPE_TEXT_EMOTE        = 2,
-    CHAT_TYPE_BOSS_EMOTE        = 3,
-    CHAT_TYPE_WHISPER           = 4,
-    CHAT_TYPE_BOSS_WHISPER      = 5,
-};
-
 #define TEXT_SOURCE_RANGE   -1000000                        //the amount of entries each text source has available
 
 // Text Maps
