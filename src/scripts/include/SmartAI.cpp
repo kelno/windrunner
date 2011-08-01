@@ -24,6 +24,7 @@
 #include "ProgressBar.h"
 #include "ObjectDefines.h"
 #include "GridDefines.h"
+#include "CreatureTextMgr.h"
 
 void SmartAIMgr::LoadSmartAIFromDB()
 {
