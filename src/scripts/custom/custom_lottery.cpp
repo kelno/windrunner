@@ -31,7 +31,7 @@ EndScriptData */
 
 bool GossipHello_npc_lottery(Player *pPlayer, Creature *pCreature)
 {
-    pPlayer->ADD_GOSSIP_ITEM(0, "Je m'inscris à la lotterie.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    pPlayer->ADD_GOSSIP_ITEM(0, "Je m'inscris à la loterie.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     
     if (pPlayer->isGameMaster())
         pPlayer->ADD_GOSSIP_ITEM(0, "Lancer le tirage au sort", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
