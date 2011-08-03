@@ -201,6 +201,8 @@ struct instance_stratholme : public ScriptedInstance
         case GO_PORT_SLAUGTHER:     portSlaugtherGUID = go->GetGUID(); break;
         case GO_PORT_ELDERS:        portElderGUID = go->GetGUID(); break;
         case GO_CANNONBALL_STACK:
+            if (currentCannonStack >= 5)
+                sLog.outString("STRATHOLME: currentCannonStack overflow: %d", currentCannonStack);
             cannonballStacksGUIDs[currentCannonStack] = go->GetGUID();
             currentCannonStack++;
             break;
