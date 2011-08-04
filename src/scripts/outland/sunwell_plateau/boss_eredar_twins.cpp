@@ -480,7 +480,6 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     {
         switch(spell->Id)
         {
-
         case SPELL_BLAZE:
             m_creature->CastSpell(target, SPELL_BLAZE_SUMMON, true);
         case SPELL_CONFLAGRATION:
