@@ -239,7 +239,7 @@ struct boss_sacrolashAI : public ScriptedAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_ALYTHESS_DEAD, m_creature);
-                    DoCast(m_creature,SPELL_EMPOWER);
+                    DoCast(m_creature,SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     SisterDeath = true;
                 }
@@ -310,7 +310,7 @@ struct boss_sacrolashAI : public ScriptedAI
             Creature* temp = NULL;
             for(int i = 0;i<3;i++)
             {
-                target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                target = SelectUnit(SELECT_TARGET_RANDOM, 1);
                 temp = DoSpawnCreature(MOB_SHADOW_IMAGE,0,0,0,0,TEMPSUMMON_CORPSE_DESPAWN,10000);
                 if(temp && target)
                     temp->AI()->AttackStart(target);
@@ -331,7 +331,7 @@ struct boss_sacrolashAI : public ScriptedAI
         {
             m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
             DoScriptText(YELL_ENRAGE, m_creature);
-            DoCast(m_creature,SPELL_ENRAGE);
+            DoCast(m_creature,SPELL_ENRAGE, true);
             Enraged = true;
         }else EnrageTimer -= diff;
 
@@ -577,7 +577,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_SACROLASH_DEAD, m_creature);
-                    DoCast(m_creature, SPELL_EMPOWER);
+                    DoCast(m_creature, SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     SisterDeath = true;
                 }
@@ -661,7 +661,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
             DoScriptText(YELL_BERSERK, m_creature);
-            DoCast(m_creature, SPELL_ENRAGE);
+            DoCast(m_creature, SPELL_ENRAGE, true);
             Enraged = true;
         }else EnrageTimer -= diff;
     }
@@ -685,7 +685,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         ShadowfuryTimer = 5000 + (rand()%15000);
         DarkstrikeTimer = 3000;
-        KillTimer = 15000;
+        KillTimer = 10000;
     }
 
     void Aggro(Unit *who){}
