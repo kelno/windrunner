@@ -516,11 +516,11 @@ struct boss_zuljinAI : public ScriptedAI
                                     Claw_Loop_Timer = 500;
                             }
                         }
-                        else
+                        /*else
                         {
                             EnterEvadeMode(); // if(target)
                             return;
-                        }
+                        }*/
                     }else Claw_Loop_Timer -= diff;
                 } //if(TankGUID)
             }else Claw_Rage_Timer -= diff;
@@ -563,11 +563,11 @@ struct boss_zuljinAI : public ScriptedAI
                                 AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
                         }
                     }
-                    else
+                    /*else
                     {
                         EnterEvadeMode(); // if(target)
                         return;
-                    }
+                    }*/
                 } //if(TankGUID)
             }else Lynx_Rush_Timer -= diff;
 
