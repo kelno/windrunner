@@ -102,6 +102,7 @@ extern void AddSC_npcs_special();
 extern void AddSC_npc_xp_blocker();
 
 // -- Servers --
+extern void AddSC_SmartSCripts();
 
 //--------------------
 //------ ZONE --------
@@ -1497,6 +1498,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_npc_xp_blocker();
 
     // -- Servers --
+    AddSC_SmartSCripts();
 
     //--------------------
     //------ ZONE --------
