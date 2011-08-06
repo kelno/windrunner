@@ -371,6 +371,7 @@ struct boss_akilzonAI : public ScriptedAI
                     Creature *pCreature = m_creature->SummonCreature(MOB_SOARING_EAGLE, x, y, z, 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
                     if (pCreature)
                     {
+                        pCreature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
                         pCreature->AddThreat(m_creature->getVictim(), 1.0f);
                         pCreature->AI()->AttackStart(m_creature->getVictim());
                         BirdGUIDs[i] = pCreature->GetGUID();
