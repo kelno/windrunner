@@ -173,6 +173,8 @@ struct boss_felmystAI : public ScriptedAI
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
         m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
+        
+        m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
         DespawnSummons(MOB_VAPOR_TRAIL);
         m_creature->setActive(false);
