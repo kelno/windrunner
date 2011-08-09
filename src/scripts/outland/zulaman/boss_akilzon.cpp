@@ -429,6 +429,8 @@ struct mob_soaring_eagleAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if(EagleSwoop_Timer < diff) EagleSwoop_Timer = 0;
         else EagleSwoop_Timer -= diff;
 
