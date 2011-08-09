@@ -515,6 +515,8 @@ struct boss_felmystAI : public ScriptedAI
     {
         if (!UpdateVictim() && Phase != PHASE_FLIGHT)
             return;
+            
+        m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
         Event = EVENT_NULL;
         for(uint32 i = 1; i <= MaxTimer[Phase]; i++) {
