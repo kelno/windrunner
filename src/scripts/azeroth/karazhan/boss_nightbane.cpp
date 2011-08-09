@@ -254,6 +254,8 @@ struct boss_nightbaneAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if(WaitTimer)
         if(WaitTimer < diff)
         {
