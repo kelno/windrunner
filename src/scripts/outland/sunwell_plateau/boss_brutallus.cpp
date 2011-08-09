@@ -334,6 +334,8 @@ struct boss_brutallusAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if (IsIntro)
         {
             if (IntroPhaseTimer <= diff)
