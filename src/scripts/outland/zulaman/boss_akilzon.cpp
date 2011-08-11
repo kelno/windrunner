@@ -280,17 +280,17 @@ struct boss_akilzonAI : public ScriptedAI
         }else Enrage_Timer -= diff;
 
         if (StaticDisruption_Timer < diff) {
-            /*Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
             if(!target) target = m_creature->getVictim();
             TargetGUID = target->GetGUID();
-            m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);*/
-            Unit *target = NULL;
+            m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);
+            /*Unit *target = NULL;
             std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
                 target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
                 if (target && (target->GetTypeId() == TYPEID_PLAYER || ((Creature*)target)->isPet()) && !((Creature*)target)->isTotem() && target->GetDistance2d(m_creature) <= 12 && target != m_creature->getVictim())
                     DoCast(target, SPELL_STATIC_DISRUPTION);
-            }
+            }*/
             m_creature->SetInFront(m_creature->getVictim());
             StaticDisruption_Timer = (10+rand()%8)*1000; // < 20s
 
