@@ -201,6 +201,8 @@ struct boss_alarAI : public ScriptedAI
     {
         if(!m_creature->isInCombat()) // sometimes isincombat but !incombat, faction bug?
             return;
+            
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
         if(Berserk_Timer < diff)
         {
