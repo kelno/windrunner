@@ -580,7 +580,7 @@ struct npc_akamaAI : public ScriptedAI
 
     void Reset()
     {
-        DestructivePoisonTimer = 15000;
+        DestructivePoisonTimer = 7000;
         LightningBoltTimer = 10000;
         CheckTimer = 2000;
 
@@ -832,12 +832,12 @@ struct npc_akamaAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if(DestructivePoisonTimer < diff)
+        if(DestructivePoisonTimer <= diff)
         {
             Creature* Shade = Unit::GetCreature((*m_creature), ShadeGUID);
             if (Shade && Shade->isAlive())
                 DoCast(Shade, SPELL_DESTRUCTIVE_POISON);
-            DestructivePoisonTimer = 15000;
+            DestructivePoisonTimer = 6000 + rand()%1000;
         }else DestructivePoisonTimer -= diff;
 
         if(LightningBoltTimer < diff)
