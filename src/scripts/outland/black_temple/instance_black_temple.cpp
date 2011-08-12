@@ -71,6 +71,8 @@ struct instance_black_temple : public ScriptedInstance
     uint64 SimpleDoor;//council
     uint64 IllidanGate;
     uint64 IllidanDoor[2];
+    
+    std::list<uint64> ashtongues;
 
     void Initialize()
     {
@@ -106,6 +108,8 @@ struct instance_black_temple : public ScriptedInstance
 
         for(uint8 i = 0; i < MAX_ENCOUNTER; ++i)
             m_auiEncounter[i] = NOT_STARTED;
+            
+        ashtongues.clear();
     }
 
     bool IsEncounterInProgress() const
@@ -150,6 +154,18 @@ struct instance_black_temple : public ScriptedInstance
         case 23426:    IllidariCouncil = creature->GetGUID();           break;
         case 23499:    BloodElfCouncilVoice = creature->GetGUID();      break;
         case 22871:    TeronGorefiend = creature->GetGUID();            break;
+        case 22844:
+        case 22845:
+        case 22846:
+        case 22847:
+        case 22848:
+        case 22849:
+        case 23374:
+            if (m_auiEncounter[2] == DONE)
+                creature->setFaction(1820);
+            else
+                ashtongues.push_back(creature->GetGUID());
+            break;
         }
     }
 
@@ -230,7 +246,14 @@ struct instance_black_temple : public ScriptedInstance
             {
                 HandleGameObject(ShadeOfAkamaDoor, false);
             }else HandleGameObject(ShadeOfAkamaDoor, true);
-            m_auiEncounter[2] = data; break;
+            m_auiEncounter[2] = data;
+            
+            if (data == DONE) {
+                for (std::list<uint64>::const_iterator itr = ashtongues.begin(); itr != ashtongues.end(); itr++) {
+                    if (Creature* tmp = instance->GetCreatureInMap(*itr))
+                        tmp->setFaction(1820);
+                }
+            }
         case DATA_TERONGOREFIENDEVENT:
             if(data == IN_PROGRESS)
             {
