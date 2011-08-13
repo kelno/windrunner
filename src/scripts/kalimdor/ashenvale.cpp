@@ -168,6 +168,8 @@ CreatureAI* GetAI_npc_torek(Creature *pCreature)
 struct npc_ruul_snowhoofAI : public npc_escortAI
 {
     npc_ruul_snowhoofAI(Creature *c) : npc_escortAI(c) {}
+    
+    bool completed;
 
     void WaypointReached(uint32 i)
     {
@@ -197,6 +199,7 @@ struct npc_ruul_snowhoofAI : public npc_escortAI
 
         case 21:
                 player->GroupEventHappens(QUEST_FREEDOM_TO_RUUL,m_creature);
+                completed = true;
                 break;
         }
     }
@@ -211,6 +214,8 @@ struct npc_ruul_snowhoofAI : public npc_escortAI
         GameObject* Cage = FindGameObject(GO_CAGE, 20, m_creature);
         if(Cage)
             Cage->SetGoState(1);
+            
+        completed = false;
     }
 
     void JustSummoned(Creature* summoned)
@@ -223,7 +228,7 @@ struct npc_ruul_snowhoofAI : public npc_escortAI
         if (PlayerGUID)
         {
             Player* player = GetPlayerForEscort();
-            if (player)
+            if (player && !completed)
                 player->FailQuest(QUEST_FREEDOM_TO_RUUL);
         }
     }
