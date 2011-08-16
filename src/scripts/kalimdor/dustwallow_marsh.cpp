@@ -136,6 +136,7 @@ bool GossipHello_npc_deserter_agitator(Player* pPlayer, Creature* pCreature)
     if (pPlayer->GetQuestStatus(11126) == QUEST_STATUS_INCOMPLETE)
     {
         pCreature->setFaction(1883);
+        pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
     }
     else
