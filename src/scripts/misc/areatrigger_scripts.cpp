@@ -253,6 +253,17 @@ bool AreaTrigger_at_childweek_quest10951(Player* pPlayer, AreaTriggerEntry const
     return true;
 }
 
+/*######
+## at_shade_of_eranikus
+######*/
+
+bool AreaTrigger_at_shade_of_eranikus(Player* pPlayer, AreaTriggerEntry const *pAt) {
+    if (pPlayer->GetQuestRewardStatus(8555) && pPlayer->GetReputationRank(910) >= REP_NEUTRAL) {
+        if (!pPlayer->FindCreatureInGrid(15362, 15, true))
+            pPlayer->SummonCreature(15362, -672.965149, 6.674169, -90.835663, 1.539716, TEMPSUMMON_TIMED_DESPAWN, 3600000);
+    }
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -325,6 +336,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_childweek_quest10951";
     newscript->pAreaTrigger = &AreaTrigger_at_childweek_quest10951;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "at_shade_of_eranikus";
+    newscript->pAreaTrigger = &AreaTrigger_at_shade_of_eranikus;
     newscript->RegisterSelf();
 }
 
