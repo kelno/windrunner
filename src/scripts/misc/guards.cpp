@@ -322,7 +322,7 @@ void SendDefaultMenu_guard_bluffwatcher(Player *player, Creature *_Creature, uin
             player->SEND_GOSSIP_MENU(3154,_Creature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF + 6:                    //Auction House
-            player->SEND_POI(1381.77, -4371.16, 6, 6, 0, GOSSIP_TEXT_AUCTIONHOUSE);
+            player->SEND_POI(-1205.61, 106.06, 6, 6, 0, GOSSIP_TEXT_AUCTIONHOUSE);
             player->SEND_GOSSIP_MENU(3155,_Creature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF + 7:                    //Weapon master
