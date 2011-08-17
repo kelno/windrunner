@@ -270,6 +270,8 @@ struct boss_kalecgosAI : public ScriptedAI
         {
         case 1:
             m_creature->setFaction(35);
+            if (pInstance)
+                pInstance->SetData(DATA_KALECGOS_EVENT, DONE);
             TalkTimer = 1000;
             break;
         case 2:
