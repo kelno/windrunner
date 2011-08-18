@@ -40,9 +40,9 @@ EndScriptData */
 
 #define SPELL_WARLORDS_RAGE_PROC    36453
 
-struct mob_naga_distillerAI : public ScriptedAI
+struct mob_naga_distillerAI : public Scripted_NoMovementAI
 {
-    mob_naga_distillerAI(Creature *c) : ScriptedAI(c)
+    mob_naga_distillerAI(Creature *c) : Scripted_NoMovementAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
