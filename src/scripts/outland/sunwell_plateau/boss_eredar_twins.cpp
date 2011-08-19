@@ -88,6 +88,7 @@ struct boss_sacrolashAI : public ScriptedAI
 {
     boss_sacrolashAI(Creature *c) : ScriptedAI(c){
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        RespawnTimer = 0;
     }
 
     ScriptedInstance *pInstance;
@@ -101,6 +102,7 @@ struct boss_sacrolashAI : public ScriptedAI
     uint32 ShadowimageTimer;
     uint32 ConflagrationTimer;
     uint32 EnrageTimer;
+    uint32 RespawnTimer;
 
     void Reset()
     {
@@ -163,6 +165,14 @@ struct boss_sacrolashAI : public ScriptedAI
     {
         if (rand()%4 == 0)
             DoScriptText(RAND(YELL_SAC_KILL_1,YELL_SAC_KILL_2), me);
+    }
+
+    void EnterEvadeMode()
+    {
+        me->SetVisibility(VISIBILITY_OFF);
+        RespawnTimer = 30000;
+        me->SetReactState(REACT_PASSIVE);
+        ScriptedAI::EnterEvadeMode();
     }
 
     void JustDied(Unit* Killer)
@@ -230,6 +240,16 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (RespawnTimer) {
+            if (RespawnTimer <= diff) {
+                me->SetVisibility(VISIBILITY_ON);
+                me->SetReactState(REACT_AGGRESSIVE);
+                RespawnTimer = 0;
+            }
+            else
+                RespawnTimer -= diff;
+        }
+        
         if(!SisterDeath)
         {
             if (pInstance)
@@ -358,6 +378,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     boss_alythessAI(Creature *c) : Scripted_NoMovementAI(c){
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         IntroStepCounter = 10;
+        RespawnTimer = 0;
     }
 
     ScriptedInstance *pInstance;
@@ -374,6 +395,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     uint32 ShadownovaTimer;
     uint32 FlamesearTimer;
     uint32 EnrageTimer;
+    uint32 RespawnTimer;
 
     void Reset()
     {
@@ -434,6 +456,14 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     {
         if (!m_creature->isInCombat())
             Scripted_NoMovementAI::AttackStart(who);
+    }
+    
+    void EnterEvadeMode()
+    {
+        me->SetVisibility(VISIBILITY_OFF);
+        RespawnTimer = 30000;
+        me->SetReactState(REACT_PASSIVE);
+        ScriptedAI::EnterEvadeMode();
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -566,6 +596,16 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             {
                 IntroYellTimer = IntroStep(++IntroStepCounter);
             }else IntroYellTimer -= diff;
+        }
+        
+        if (RespawnTimer) {
+            if (RespawnTimer <= diff) {
+                me->SetVisibility(VISIBILITY_ON);
+                me->SetReactState(REACT_AGGRESSIVE);
+                RespawnTimer = 0;
+            }
+            else
+                RespawnTimer -= diff;
         }
 
         if(!SisterDeath)
