@@ -86,7 +86,8 @@ enum Spells
 
 struct boss_sacrolashAI : public ScriptedAI
 {
-    boss_sacrolashAI(Creature *c) : ScriptedAI(c){
+    boss_sacrolashAI(Creature *c) : ScriptedAI(c), summons(m_creature)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         RespawnTimer = 0;
     }
@@ -103,6 +104,8 @@ struct boss_sacrolashAI : public ScriptedAI
     uint32 ConflagrationTimer;
     uint32 EnrageTimer;
     uint32 RespawnTimer;
+    
+    SummonList summons;
 
     void Reset()
     {
@@ -144,6 +147,23 @@ struct boss_sacrolashAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 46771, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45236, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45246, true);
+        
+        summons.DespawnAll();
+        
+        if (pInstance) {
+            pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+            pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+        }
+    }
+    
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+    
+    void SummonedCreatureDespawn(Creature* pSummon)
+    {
+        summons.Despawn(pSummon);
     }
 
     void Aggro(Unit *who)
@@ -181,9 +201,14 @@ struct boss_sacrolashAI : public ScriptedAI
         if (SisterDeath)
         {
             DoScriptText(SAY_SAC_DEAD, m_creature);
+            
+            summons.DespawnAll();
 
-            if(pInstance)
+            if(pInstance) {
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, DONE);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+            }
         }
         else
             m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -473,8 +498,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
         if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
 
-            float attackRadius = m_creature->GetAttackDistance(who);
-            if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
+            //float attackRadius = m_creature->GetAttackDistance(who);
+            if (m_creature->IsWithinDistInMap(who, 45.0f) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
             {
                 if (!m_creature->isInCombat())
                 {
@@ -499,8 +524,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             DoScriptText(YELL_ALY_DEAD, m_creature);
 
-            if(pInstance)
+            if(pInstance) {
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, DONE);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+            }
         }
         else
             m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
