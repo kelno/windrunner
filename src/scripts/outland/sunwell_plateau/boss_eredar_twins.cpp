@@ -284,8 +284,8 @@ struct boss_sacrolashAI : public ScriptedAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_ALYTHESS_DEAD, m_creature);
-                    DoCast(m_creature,SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
+                    DoCast(m_creature,SPELL_EMPOWER, true);
                     SisterDeath = true;
                 }
             }
@@ -645,15 +645,31 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_SACROLASH_DEAD, m_creature);
-                    DoCast(m_creature, SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
+                    DoCast(m_creature, SPELL_EMPOWER, true);
                     SisterDeath = true;
                 }
             }
         }
 
         if (!UpdateVictim())
-            return;
+        {
+            if (Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0)) {
+                me->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                AttackStart(target);
+            }
+            else if (pInstance) {
+                Unit* sister =  Unit::GetUnit((*me),pInstance->GetData64(DATA_SACROLASH));
+                if (sister && sister->getVictim()) {
+                    me->getThreatManager().addThreat(sister->getVictim(),0.0f);
+                    AttackStart(sister->getVictim());
+                }
+                else
+                    return;
+            }
+            else
+                return;
+        }
 
         if(SisterDeath)
         {
