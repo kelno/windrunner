@@ -515,6 +515,9 @@ struct boss_aranAI : public ScriptedAI
     {
         if (!DrinkInturrupted && Drinking && damage)
             DrinkInturrupted = true;
+
+        if (pAttacker->ToCreature() && pAttacker->GetEntry() == 16524)
+            damage = 0;
     }
 
     void SpellHit(Unit* pAttacker, const SpellEntry* Spell)
