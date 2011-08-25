@@ -1288,7 +1288,11 @@ struct npc_explosive_sheepAI : public ScriptedAI
         if (m_creature->getVictim()) {
             if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
                 DoCast(m_creature->getVictim(), SPELL_EXPLODE);
-                m_creature->DisappearAndDie();
+                //m_creature->DisappearAndDie();
+                if (m_creature->GetOwner() && m_creature->GetOwner()->ToPlayer()) {
+                    m_creature->GetOwner()->ToPlayer()->RemoveGuardians();
+                    m_creature->GetOwner()->ToPlayer()->SendCooldownEvent(sSpellStore.LookupEntry(4074));
+                }
             }
         }
     }

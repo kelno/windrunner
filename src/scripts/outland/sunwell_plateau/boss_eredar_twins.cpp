@@ -86,8 +86,10 @@ enum Spells
 
 struct boss_sacrolashAI : public ScriptedAI
 {
-    boss_sacrolashAI(Creature *c) : ScriptedAI(c){
+    boss_sacrolashAI(Creature *c) : ScriptedAI(c), summons(m_creature)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        RespawnTimer = 0;
     }
 
     ScriptedInstance *pInstance;
@@ -101,6 +103,9 @@ struct boss_sacrolashAI : public ScriptedAI
     uint32 ShadowimageTimer;
     uint32 ConflagrationTimer;
     uint32 EnrageTimer;
+    uint32 RespawnTimer;
+    
+    SummonList summons;
 
     void Reset()
     {
@@ -142,6 +147,23 @@ struct boss_sacrolashAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 46771, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45236, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45246, true);
+        
+        summons.DespawnAll();
+        
+        if (pInstance) {
+            pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+            pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+        }
+    }
+    
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+    
+    void SummonedCreatureDespawn(Creature* pSummon)
+    {
+        summons.Despawn(pSummon);
     }
 
     void Aggro(Unit *who)
@@ -165,15 +187,28 @@ struct boss_sacrolashAI : public ScriptedAI
             DoScriptText(RAND(YELL_SAC_KILL_1,YELL_SAC_KILL_2), me);
     }
 
+    void EnterEvadeMode()
+    {
+        me->SetVisibility(VISIBILITY_OFF);
+        RespawnTimer = 30000;
+        me->SetReactState(REACT_PASSIVE);
+        ScriptedAI::EnterEvadeMode();
+    }
+
     void JustDied(Unit* Killer)
     {
         // only if ALY death
         if (SisterDeath)
         {
             DoScriptText(SAY_SAC_DEAD, m_creature);
+            
+            summons.DespawnAll();
 
-            if(pInstance)
+            if(pInstance) {
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, DONE);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+            }
         }
         else
             m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -230,6 +265,16 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (RespawnTimer) {
+            if (RespawnTimer <= diff) {
+                me->SetVisibility(VISIBILITY_ON);
+                me->SetReactState(REACT_AGGRESSIVE);
+                RespawnTimer = 0;
+            }
+            else
+                RespawnTimer -= diff;
+        }
+        
         if(!SisterDeath)
         {
             if (pInstance)
@@ -239,8 +284,8 @@ struct boss_sacrolashAI : public ScriptedAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_ALYTHESS_DEAD, m_creature);
-                    DoCast(m_creature,SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
+                    DoCast(m_creature,SPELL_EMPOWER, true);
                     SisterDeath = true;
                 }
             }
@@ -358,6 +403,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     boss_alythessAI(Creature *c) : Scripted_NoMovementAI(c){
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         IntroStepCounter = 10;
+        RespawnTimer = 0;
     }
 
     ScriptedInstance *pInstance;
@@ -374,6 +420,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     uint32 ShadownovaTimer;
     uint32 FlamesearTimer;
     uint32 EnrageTimer;
+    uint32 RespawnTimer;
 
     void Reset()
     {
@@ -435,6 +482,14 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         if (!m_creature->isInCombat())
             Scripted_NoMovementAI::AttackStart(who);
     }
+    
+    void EnterEvadeMode()
+    {
+        me->SetVisibility(VISIBILITY_OFF);
+        RespawnTimer = 30000;
+        me->SetReactState(REACT_PASSIVE);
+        ScriptedAI::EnterEvadeMode();
+    }
 
     void MoveInLineOfSight(Unit *who)
     {
@@ -443,8 +498,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
         if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
 
-            float attackRadius = m_creature->GetAttackDistance(who);
-            if (m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
+            //float attackRadius = m_creature->GetAttackDistance(who);
+            if (m_creature->IsWithinDistInMap(who, 45.0f) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
             {
                 if (!m_creature->isInCombat())
                 {
@@ -469,8 +524,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             DoScriptText(YELL_ALY_DEAD, m_creature);
 
-            if(pInstance)
+            if(pInstance) {
                 pInstance->SetData(DATA_EREDAR_TWINS_EVENT, DONE);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
+                pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
+            }
         }
         else
             m_creature->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
@@ -567,6 +625,16 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 IntroYellTimer = IntroStep(++IntroStepCounter);
             }else IntroYellTimer -= diff;
         }
+        
+        if (RespawnTimer) {
+            if (RespawnTimer <= diff) {
+                me->SetVisibility(VISIBILITY_ON);
+                me->SetReactState(REACT_AGGRESSIVE);
+                RespawnTimer = 0;
+            }
+            else
+                RespawnTimer -= diff;
+        }
 
         if(!SisterDeath)
         {
@@ -577,15 +645,31 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (Temp && Temp->isDead())
                 {
                     DoScriptText(YELL_SISTER_SACROLASH_DEAD, m_creature);
-                    DoCast(m_creature, SPELL_EMPOWER, true);
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
+                    DoCast(m_creature, SPELL_EMPOWER, true);
                     SisterDeath = true;
                 }
             }
         }
 
         if (!UpdateVictim())
-            return;
+        {
+            if (Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0)) {
+                me->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                AttackStart(target);
+            }
+            else if (pInstance) {
+                Unit* sister =  Unit::GetUnit((*me),pInstance->GetData64(DATA_SACROLASH));
+                if (sister && sister->getVictim()) {
+                    me->getThreatManager().addThreat(sister->getVictim(),0.0f);
+                    AttackStart(sister->getVictim());
+                }
+                else
+                    return;
+            }
+            else
+                return;
+        }
 
         if(SisterDeath)
         {
