@@ -638,6 +638,8 @@ struct mob_arcane_sphereAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if(DespawnTimer < diff)
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         else DespawnTimer -= diff;
