@@ -827,7 +827,6 @@ struct npc_keeper_remulosAI : public ScriptedAI
 
     void EnterEvadeMode()
     {
-       sLog.outString("REMULOS: evading");
         me->InterruptNonMeleeSpells(true);
         me->RemoveAllAuras();
         me->DeleteThreatList();
@@ -1442,7 +1441,6 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
 
     void EnterEvadeMode()
     {
-        sLog.outString("ERANIKUS: evading");
         combatPhase = false;
         me->InterruptNonMeleeSpells(true);
         me->RemoveAllAuras();
