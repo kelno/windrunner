@@ -31,6 +31,7 @@ EndContentData */
 
 #include "precompiled.h"
 #include "EscortAI.h"
+#include "World.h"
 
 /*######
 ## npc_bunthen_plainswind
@@ -548,6 +549,1140 @@ bool QuestAccept_npc_clintar_dreamwalker(Player* pPlayer, Creature* pCreature, Q
 }
 
 /*####
+# npc_keeper_remulos
+####*/
+
+#define REMULOS     11832
+#define ERANIKUS    15491
+#define REDEEMED    15628
+#define NIGHTMARE   15629
+#define TYRANDE     15633
+#define PRIESTESS   15634
+
+#define CONJURE_DREAM_RIFT  25813
+#define PRAYER_OF_ELUNE     25841    
+
+struct Conversation {
+    int id;
+    const char* text;
+    uint32 creature;
+    ChatType type;
+    uint32 timer;
+    uint32 emote;
+};
+
+static Conversation Convs[] =
+{
+    { 0, "Nous localiserons l'origine du Cauchemar grâce aux fragments que vous avez collecté, $n. D'ici, nous attirerons Eranikus à travers une faille dans le Rêve. Préparez-vous, $c. Nous invitons la personnification du Cauchemar dans notre monde.", REMULOS, CHAT_TYPE_SAY, 15000, 1 },
+    { 1, "Allons à Havrenuit ! Gardez votre armée proche, champion.", REMULOS, CHAT_TYPE_SAY, 3000, 1 },
+// goto nighthaven
+    { 2, "La faille s'ouvrira ici, au dessus du Lac Elune'ara. Soyez prêt, $n. L'arrivée d'Eranikus dans notre monde se fera dans le chaos et les combats.", REMULOS, CHAT_TYPE_SAY, 10000, 0 },
+    { 3, "Il ne s'arrêtera devant rien pour détruire la manifestation physique de Malfurion. Ceci ne doit pas arriver... Nous devons tenir la bête occupée jusqu'à ce que Tyrande arrive.", REMULOS, CHAT_TYPE_SAY, 10000, 0 },
+    { 4, "Défendez Havrenuit, héros...", REMULOS, CHAT_TYPE_SAY, 5000, 0 },
+// invoc
+    { 5, "est entré dans notre monde.", ERANIKUS, CHAT_TYPE_SERVER_EMOTE, 5000, 0 },
+    { 6, "Mortels pitoyables et prévisibles... Vous ne savez pas ce que vous avez fait ! La volonté du maître sera accomplie. Reflet-de-Lune sera détruit, emportant Malfurion avec lui !", ERANIKUS, CHAT_TYPE_YELL, 10000, 0 },
+    { 7, "Démon ! Affronte la puissance de Cénarius !", REMULOS, CHAT_TYPE_YELL, 5000, 0 },
+    { 8, "laisse échapper un rire sinistre.", ERANIKUS, CHAT_TYPE_TEXT_EMOTE, 5000, 0 },
+    { 9, "Tu n'es certainement pas ton père, insecte. Si je le voulais, je t'écraserais d'un coup de griffe. Amène-moi Shan'do Hurlorage et ta misérable existence sera épargnée, ainsi que celles de ton peuple.", ERANIKUS, CHAT_TYPE_YELL, 15000, 0 },
+    { 10, "Qui est prévisible, monstre ? Tu ne pensais tout de même pas que nous t'invoquerions devant Malfurion ? Ta rédemption est proche, Eranikus. Tu seras purgé de cette folie, cette corruption.", REMULOS, CHAT_TYPE_YELL, 15000, 0 },
+    { 11, "Ma rédemption ? Tu oses, petite chose. Ma rédemption viendra par la volonté de mon dieu.", ERANIKUS, CHAT_TYPE_YELL, 5000, 0 },
+    { 12, "rugit furieusement.", ERANIKUS, CHAT_TYPE_TEXT_EMOTE, 3000, 0 },
+    { 13, "Dépêchons-nous, $n ! Il faut trouver un abri !", REMULOS, CHAT_TYPE_SAY, 3000, 0 },
+// goto house
+    { 14, "Je vous en prie champion, protégez notre peuple.", REMULOS, CHAT_TYPE_SAY, 5000, 0 },
+    { 15, "Levez-vous, serviteurs du Cauchemar ! Levez-vous et détruisez ce monde ! Qu'il ne reste aucun survivant...", ERANIKUS, CHAT_TYPE_YELL, 3000, 0 },
+// spawn adds
+    { 16, "Nous combattrons ces démons, ensemble ! Les Gardiens de Reflet-de-Lune sont également parmi nous. Ils se battrons jusqu'à la mort s'il le faut. À présent, nous devons rapidement renvoyer ces aberrations dans le Cauchemar. Détruisez-les tous !", REMULOS, CHAT_TYPE_SAY, 5000, 0 },
+// remulos engages
+    { 17, "Où est votre sauveur ? Combien de temps tiendrez-vous contre mes attaques ?", ERANIKUS, CHAT_TYPE_YELL, 0, 0 }, // timed ?
+    { 18, "Mes serviteurs sont vaincus ? Alors affrontez-moi, mortels !", ERANIKUS, CHAT_TYPE_YELL, 3000, 0 },
+// eranikus engages
+    { 19, "Remulos, regarde comment ils tombent facilement devant moi. Tu peux arrêter ceci, sot. Amène-moi le druide et cela s'arrêtera...", ERANIKUS, CHAT_TYPE_YELL, 0, 0 }, // timed ?
+    { 20, "Elune, entend mes prières. Accorde-nous la sérénité ! Veille sur nos disparus...", TYRANDE, CHAT_TYPE_YELL, 0, 0 },
+// tyrande comes
+    { 21, "Soignez les blessés, mes soeurs !", TYRANDE, CHAT_TYPE_SAY, 10000, 0 },
+    { 22, "Cherche l'absolution, Eranikus. Tout sera pardonné...", TYRANDE, CHAT_TYPE_YELL, 20000, 0 },
+    { 23, "Tu seras pardonné, Eranikus. Elune t'aimera toujours. Libère toi des chaînes qui te commandent !", TYRANDE, CHAT_TYPE_YELL, 30000, 0 },
+    { 24, "L'emprise des Anciens Dieux est tenace... Il est consumé par leurs noires pensées... Je... Je... Je ne peux pas... peux pas canaliser plus longtemps. Elune vienne à mon secours.", TYRANDE, CHAT_TYPE_SAY, 1000, 0 },
+    { 25, "tombe à genoux.", TYRANDE, CHAT_TYPE_TEXT_EMOTE, 0, 0 },
+// if eranikus is at 20% before #24, then force to say 24 and 25
+    { 26, "ÇA BRÛLE ! LA DOULEUR.. BRÛLANTE...", ERANIKUS, CHAT_TYPE_YELL, 10000, 0 },
+    { 27, "POURQUOI? Pourquoi est-ce arrivé à... à moi ? Où étais-tu Tyrande ? Où étais-tu quand j'ai perdu la grâce d'Elune ?", ERANIKUS, CHAT_TYPE_YELL, 10000, 0 },
+    { 28, "Je... Je sens... Je sens le touché d'Elune sur mon être une fois de plus... Elle me sourit... Oui... Je...", ERANIKUS, CHAT_TYPE_YELL, 10000, 0 },
+    { 29, "est entièrement consumé par la Lumière d'Elune. La tranquilité revient à Reflet-de-Lune.", ERANIKUS, CHAT_TYPE_SERVER_EMOTE, 5000, 0 },
+    { 30, "Elune soit louée... Eranikus est racheté.", TYRANDE, CHAT_TYPE_SAY, 5000, 0 },
+// despawn eranikus and spawn redeemed
+    { 31, "Depuis si longtemps, j'étais perdu... La corruption du Cauchemar m'avait consumé... Et maintenant, vous tous, vous m'avez sauvé. Libéré de son emprise.", REDEEMED, CHAT_TYPE_SAY, 15000, 0 },
+    { 32, "Mais... Malfurion, Cénarius, Ysera... Ils se battent encore. Ils ont besoin de moi. Je dois retourner au Rêve incessamment.", REDEEMED, CHAT_TYPE_SAY, 12000, 0 },
+    { 33, "Ma dame, je ne suis pas digne de votre prière. Vraiment, vous êtes un ange de lumière. S'il-vous-plaît, aidez moi à retourner au Refuge des saisons, que je puisse retourner dans le Rêve. Comme Malfurion, j'ai aussi un amour qui m'attend... Je dois retourner auprès d'elle... pour la protéger...", REDEEMED, CHAT_TYPE_SAY, 20000, 0 },
+    { 34, "Et héros... Je détiens ce que vous cherchez. Qu'il puisse une fois de plus voir le mal disparaître. Remulos, veillez à ce que notre champion reçoive le fragment du Vol Vert.", REDEEMED, CHAT_TYPE_SAY, 15000, 0 },
+    { 35, "acquiesce.", TYRANDE, CHAT_TYPE_TEXT_EMOTE, 10000, 0 },
+    { 36, "Ce sera fait, Eranikus. Portez-vous bien, vénérable.", REMULOS, CHAT_TYPE_SAY, 8000, 0 },
+// despawn redeemed and tyrande
+    { 37, "Quittons Havrenuit, héros. Trouvez-moi au bosquet.", REMULOS, CHAT_TYPE_SAY, 5000, 0 },
+// despawn remulos (gobackhome)
+    { 38, NULL, 0, CHAT_TYPE_SAY, 90000, 0 }, // timer before #17
+    { 39, NULL, 0, CHAT_TYPE_SAY, 80000, 0 }, // timer before #19
+    { 40, NULL, 0, CHAT_TYPE_SAY, 5000, 0 }, // timer before #31
+    { 41, NULL, 0, CHAT_TYPE_SAY, 8000, 0 }, // timer before #37
+    { 42, NULL, 0, CHAT_TYPE_SAY, 3000, 0 }, // timer before #5
+    { 43, NULL, 0, CHAT_TYPE_SAY, 5000, 0 }, // timer before #0
+};
+    
+
+struct Locations {
+    float x, y, z, o;
+};
+
+static Locations RemulosWP[] =
+{
+    { 7817.186523, -2304.227539, 455.941071, 4.804095 }, // walk wp 1 (cross)
+    { 7925.188477, -2312.769043, 471.415039, 6.254246 }, // walk wp 2 (before turn)
+    { 7942.157227, -2321.153076, 476.773834, 5.792509 }, // walk wp 3 (after turn)
+    { 7957.152344, -2373.932373, 486.453094, 4.794063 }, // walk wp 4 (before house)
+    { 7965.914551, -2491.798340, 487.759705, 4.844883 }, // walk wp 5 (after house)
+    { 7972.112305, -2517.210449, 487.689850, 4.824812 }, // walk wp 6 (before bridge)
+    { 7975.595703, -2551.107422, 490.081543, 4.839223 }, // walk wp 7 (after bridge)
+    { 7945.702637, -2573.971191, 489.783569, 4.252142 }, // walk wp 8 (after bridge 2)
+    { 7951.856934, -2595.572998, 489.919556, 4.447841 }, // walk wp 9 (before platform)
+    { 7948.349609, -2610.257080, 492.345001, 4.477947 }, // walk wp 10 (on platform)
+    { 7926.278320, -2633.262451, 492.530151, 3.842072 }, // invocation of eranikus
+    { 7948.349609, -2610.257080, 492.345001, 1.395251 }, // walk wp 12 (on platform)
+    { 7951.856934, -2595.572998, 489.919556, 1.395251 }, // walk wp 13 (before platform)
+    { 7945.702637, -2573.971191, 489.783569, 2.750073 }, // walk wp 14 (after bridge 2)
+    { 7898.774414, -2566.517334, 487.833344, 3.216603 }, // walk wp 15 (after bridge 3)
+    { 7836.721680, -2571.058350, 489.286804, 3.216603 }, // house
+    { 7844.209961, -2570.704346, 489.285278, 0.129769 }, // house, waiting for combat
+    { 7877.886719, -2565.909424, 486.946411, 0.043205 }, // in front of house
+};
+
+static Locations EranikusWP[] =
+{
+    { 7863.083984, -2682.686035, 469.532166, 0.642453 }, // spawn
+    { 7930.495605, -2574.283447, 498.286224, 2.835252 }, // hover
+    { 7919.830566, -2570.955811, 489.375031, 2.918945 }, // landing
+};
+
+/*static Locations TyrandeWP[] =
+{
+    { 7884.979004, -2566.499023, 486.958527, 6.255793 }, // casting
+};*/
+
+static Locations PriestessSP[] =
+{
+    { 7814.898926, -2301.132812, 456.282923, 0 },
+    { 7813.714355, -2305.572510, 455.794922, 0 },
+    { 7812.495605, -2298.683594, 456.128387, 0 },
+    { 7811.326172, -2302.086670, 455.870941, 0 },
+    { 7810.257812, -2306.418213, 455.531525, 0 },
+    { 7809.302246, -2299.352539, 455.838287, 0 },
+    { 7808.051270, -2303.647461, 455.473450, 0 },
+    { 7806.024902, -2300.486084, 455.584351, 0 },
+};
+
+static Locations AddsSP[] =
+{
+    { 7884.774414, -2550.940918, 483.867340, 0 },
+    { 7898.257812, -2552.235596, 483.919922, 0 },
+    { 7906.317871, -2584.823730, 484.623108, 0 },
+    { 7944.910645, -2562.068604, 485.228790, 0 },
+    { 7955.473633, -2551.123291, 484.568634, 0 },
+    { 7959.822754, -2552.863770, 484.098755, 0 },
+    { 7939.934570, -2597.583252, 482.697784, 0 },
+    { 7983.933105, -2471.372803, 487.516327, 0 },
+    { 7946.840820, -2469.763672, 485.254822, 0 },
+    { 7928.883301, -2554.717773, 485.188904, 0 },
+};
+
+enum PhaseRemulos
+{
+    PHASE_NULL = 0,
+    PHASE_TALK,
+    PHASE_WALK,
+    PHASE_INVOCATION,
+    PHASE_COMBAT1,
+    PHASE_COMBAT2,
+    PHASE_REDEMPTION,
+    PHASE_EVENT_FAILED,
+    PHASE_MAX,
+};
+
+enum EventRemulos
+{
+    EVENT_NULL = 0,
+    EVENT_TALK_OVER,
+    EVENT_WAYPOINT,
+    EVENT_INVOCATION,
+    EVENT_WAVE,
+    EVENT_NIGHTMARES_KILLED,
+    EVENT_TYRANDE_SPAWN,
+    EVENT_ERANIKUS_REDEEMED,
+    EVENT_FAILURE,
+    EVENT_MAX,
+};
+
+struct npc_keeper_remulosAI : public ScriptedAI
+{
+    npc_keeper_remulosAI(Creature *c) : ScriptedAI(c) {}
+
+    bool EventRunning;
+    uint64 HolderGUID;
+    PhaseRemulos Phase;
+    EventRemulos Event;
+
+    bool newWP;
+    uint32 WPId;
+    uint32 TalkId;
+    uint32 Timer[EVENT_MAX];
+
+    uint32 WaveId;
+    uint32 KilledNightmares;
+
+    uint64 EranikusGUID;
+    uint64 RedeemedGUID;
+    uint64 TyrandeGUID;
+
+    uint64 PriestessGUIDs[8];
+
+    bool canBeRedeemed;
+
+    void Reset()
+    {
+        EventRunning = false;
+        HolderGUID = 0;
+        Phase = PHASE_NULL;
+        Event = EVENT_NULL;
+
+        WPId = 0;
+        newWP = false;
+        TalkId = 0;
+
+        WaveId = 0;
+        KilledNightmares = 0;
+
+        EranikusGUID = 0;
+        RedeemedGUID = 0;
+        TyrandeGUID = 0;
+
+        for (int i = 0; i < EVENT_MAX; i++)
+            Timer[i] = 0;
+        for (int i = 0; i < 8; i ++)
+            PriestessGUIDs[i] = 0;
+
+        canBeRedeemed = false;
+
+        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        me->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        me->SetReactState(REACT_DEFENSIVE);
+    }
+
+    void Aggro(Unit*) {}
+
+    void DespawnAll()
+    {
+        Creature* c;
+        c = Unit::GetCreature(*me, EranikusGUID);
+        if (c)
+        {
+            c->DisappearAndDie();
+            ((TemporarySummon*)c)->UnSummon();
+        }
+        c = Unit::GetCreature(*me, RedeemedGUID);
+        if (c)
+            c->DisappearAndDie();
+        c = Unit::GetCreature(*me, TyrandeGUID);
+        if (c)
+            c->DisappearAndDie();
+        for (int i = 0; i < 8; i++)
+        {
+            c = Unit::GetCreature(*me, PriestessGUIDs[i]);
+            if (c)
+                c->DisappearAndDie();
+        }
+
+        float x, y, z, o;
+        if (me->isAlive())
+        {
+            me->GetHomePosition(x, y, z, o);
+            me->DestroyForNearbyPlayers();
+            me->GetMap()->CreatureRelocation(me, x, y, z, o);
+            me->SetHealth(me->GetMaxHealth());
+        } else
+            me->Respawn();
+
+        Reset();
+    }
+
+    void JustDied(Unit*)
+    {
+        EventFailed();
+        DespawnAll();
+    }
+
+    void NightKilled()
+    {
+        KilledNightmares++;
+    }
+
+    void EnterEvadeMode()
+    {
+       sLog.outString("REMULOS: evading");
+        me->InterruptNonMeleeSpells(true);
+        me->RemoveAllAuras();
+        me->DeleteThreatList();
+        me->CombatStop(true);
+        InCombat = false;
+    }
+
+    void Talk(uint32 id)
+    {
+        Timer[EVENT_TALK_OVER] = Convs[id].timer;
+        TalkId = id;
+
+        Creature* creature = NULL;
+        if (Convs[id].creature == REMULOS)
+            creature = me;
+        else if (Convs[id].creature == ERANIKUS)
+            creature = Unit::GetCreature(*me, EranikusGUID);
+        else if (Convs[id].creature == REDEEMED)
+            creature = Unit::GetCreature(*me, RedeemedGUID);
+        else if (Convs[id].creature == TYRANDE)
+            creature = Unit::GetCreature(*me, TyrandeGUID);
+
+        if (creature)
+        {
+            if (Convs[id].emote)
+                creature->HandleEmoteCommand(Convs[id].emote);
+            if (Convs[id].text)
+            {
+                if (Convs[id].type == CHAT_TYPE_SAY)
+                    creature->Say(Convs[id].text, LANG_UNIVERSAL, HolderGUID); // XXX a bit ugly, we should add a field in the struct for that
+                else if (Convs[id].type == CHAT_TYPE_YELL)
+                    creature->Yell(Convs[id].text, LANG_UNIVERSAL, 0);
+                else if (Convs[id].type == CHAT_TYPE_TEXT_EMOTE)
+                    creature->TextEmote(Convs[id].text, 0, false, sWorld.getConfig(CONFIG_LISTEN_RANGE_YELL));
+                else if (Convs[id].type == CHAT_TYPE_SERVER_EMOTE)
+                    creature->TextEmote(Convs[id].text, 0, false, 0, true);
+            }
+        }
+    }
+
+    void StartEvent(uint64 guid)
+    {
+        if (me->GetZoneId() != 493)
+            return;
+
+        HolderGUID = guid;
+        EventRunning = true;
+
+        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
+        Talk(43);
+    }
+
+    void EventFailed()
+    {
+        if (Phase == PHASE_EVENT_FAILED)
+            return;
+        EnterPhase(PHASE_EVENT_FAILED);
+    }
+
+    void NextWave()
+    {
+        WaveId++;
+        Timer[EVENT_WAVE] = 0;
+
+        for (int i = 0; i < 10; i++)
+        {
+            Creature* cre = me->SummonCreature(NIGHTMARE, AddsSP[i].x, AddsSP[i].y, AddsSP[i].z, AddsSP[i].o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 120000);
+            if (cre)
+                cre->setActive(true);
+//            cre->AddThreat(me, 0.1f);
+//            cre->AI()->AttackStart(me);
+        }
+
+        if (WaveId < 3)
+            Timer[EVENT_WAVE] = 30000;
+    }
+
+    void TyrandeComes(bool ready)
+    {
+        if (!ready)
+        {
+            Talk(20);
+            return;
+        }
+
+        Creature* c, *tyr, *era;
+
+        tyr = Unit::GetCreature(*me, TyrandeGUID);
+        era = Unit::GetCreature(*me, EranikusGUID);
+
+        if (!tyr || !era)
+            return;
+
+        tyr->SetInFront(era);
+        tyr->SendMovementFlagUpdate();
+
+        for (int i = 0; i < 8; i++)
+        {
+            c = Unit::GetCreature(*me, PriestessGUIDs[i]);
+            if (!c)
+                continue;
+            c->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 0);
+            c->SetInFront(era);
+            c->SendMovementFlagUpdate();
+            c->AI()->Aggro(era);
+        }
+        canBeRedeemed = true;
+        Talk(21);
+    }
+
+    void EnterPhase(PhaseRemulos phase)
+    {
+        Phase = phase;
+
+        switch (phase)
+        {
+        case PHASE_INVOCATION:
+            DoCast(me, CONJURE_DREAM_RIFT);
+            Timer[EVENT_INVOCATION] = 8000;
+            break;
+        case PHASE_COMBAT1:
+            me->SetReactState(REACT_AGGRESSIVE);
+            NextWave();
+            Talk(16);
+            break;
+        case PHASE_COMBAT2:
+            Talk(18);
+            break;
+        case PHASE_EVENT_FAILED:
+        {
+            Timer[EVENT_FAILURE] = 300000;
+            Player* player = Unit::GetPlayer(HolderGUID);
+            if (player)
+                player->FailQuest(8736);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    PhaseRemulos GetPhase()
+    {
+        return Phase;
+    }
+
+    void HandleTalkSequence()
+    {
+        switch(TalkId)
+        {
+        case 0:
+            EnterPhase(PHASE_TALK);
+            break;
+        case 1:
+            // goto nighthaven
+            me->GetMotionMaster()->MovePoint(1, RemulosWP[0].x, RemulosWP[0].y, RemulosWP[0].z);
+            EnterPhase(PHASE_WALK);
+            break;
+        case 4:
+            // start invocation
+            EnterPhase(PHASE_INVOCATION);
+            break;
+        case 5:
+            EnterPhase(PHASE_TALK);
+            break;
+        case 13:
+        {
+            // goto house
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
+                eranikus->GetMotionMaster()->MovePoint(1, EranikusWP[1].x, EranikusWP[1].y, EranikusWP[1].z);
+            me->GetMotionMaster()->MovePoint(12, RemulosWP[11].x, RemulosWP[11].y, RemulosWP[11].z);
+            EnterPhase(PHASE_WALK);
+            break;
+        }
+        case 15:
+            // spawn adds
+            EnterPhase(PHASE_COMBAT1);
+            break;
+        case 16:
+            // remulos engages
+            me->GetMotionMaster()->MovePoint(0, RemulosWP[17].x, RemulosWP[17].y, RemulosWP[17].z);
+            Talk(38);
+            break;
+        case 18:
+        {
+            // eranikus engages
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
+                eranikus->GetMotionMaster()->MovePoint(2, EranikusWP[2].x, EranikusWP[2].y, EranikusWP[2].z);
+            Timer[EVENT_TYRANDE_SPAWN] = 40000;
+            break;
+        }
+        case 20:
+            // tyrande comes
+            break;
+        case 21:
+        case 22:
+        case 23:
+        case 24:
+        {
+            Talk(TalkId+1);
+            if (TalkId == 24)
+            {
+                Creature *tyrande = Unit::GetCreature(*me, TyrandeGUID);
+                if (tyrande)
+                    tyrande->SetStandState(UNIT_STAND_STATE_KNEEL);
+            }
+            break;
+        }
+        case 30:
+        {
+            // despawn eranikus and spawn redeemed
+            float x, y, z, o;
+
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
+            {
+                eranikus->GetPosition(x, y, z, o);
+                eranikus->DisappearAndDie();
+                ((TemporarySummon*)eranikus)->UnSummon();
+            }
+
+            Creature* redeemed = me->SummonCreature(REDEEMED, x, y, z, o, TEMPSUMMON_DEAD_DESPAWN, 0);
+            if (redeemed)
+            {
+                RedeemedGUID = redeemed->GetGUID();
+                redeemed->SetHealth((redeemed->GetMaxHealth() / 100.0f) * 20.0f);
+                Creature* tyrande = Unit::GetCreature(*me, TyrandeGUID);
+                if (tyrande)
+                    redeemed->GetMotionMaster()->MoveChase(tyrande, CONTACT_DISTANCE, 0);
+            }
+
+            EnterPhase(PHASE_REDEMPTION);
+            Talk(40);
+            break;
+        }
+        case 31:
+            EnterPhase(PHASE_TALK);
+            break;
+        case 34:
+        {
+            Creature* tyrande = Unit::GetCreature(*me, TyrandeGUID);
+            if (tyrande)
+                tyrande->SetStandState(UNIT_STAND_STATE_STAND);
+            break;
+        }
+        case 36:
+        {
+            // despawn redeemed and tyrande and mark quest as completed
+            Creature *redeemed, *tyrande, *cre;
+            Player *player;
+
+            redeemed = Unit::GetCreature(*me, RedeemedGUID);
+            tyrande = Unit::GetCreature(*me, TyrandeGUID);
+            if (redeemed)
+                redeemed->DisappearAndDie();
+
+            for (int i = 0; i < 8; i++)
+            {
+                cre = Unit::GetCreature(*me, PriestessGUIDs[i]);
+                if (cre)
+                    cre->DisappearAndDie();
+            }
+            if (tyrande)
+                tyrande->DisappearAndDie();
+
+            player = Unit::GetPlayer(HolderGUID);
+            if (player)
+                player->GroupEventHappens(8736, me);
+
+            EnterPhase(PHASE_REDEMPTION);
+            Talk(41);
+            break;
+        }
+        case 37:
+        {
+            // despawn remulos and stop event
+            float x, y, z, o;
+            Reset();
+            me->DestroyForNearbyPlayers();
+            me->GetHomePosition(x, y, z, o);
+            me->GetMap()->CreatureRelocation(me, x, y, z, o);
+            me->SetHealth(me->GetMaxHealth());
+            break;
+        }
+        case 38:
+            Talk(17);
+            break;
+        case 39:
+            Talk(19);
+            break;
+        case 40:
+        {
+            Creature* redeemed = Unit::GetCreature(*me, RedeemedGUID);
+            Creature* tyrande = Unit::GetCreature(*me, TyrandeGUID);
+            if (redeemed && tyrande)
+            {
+                redeemed->SetInFront(tyrande);
+                redeemed->SendMovementFlagUpdate();
+            }
+            Talk(31);
+            break;
+        }
+        case 41:
+            Talk(37);
+            break;
+        case 42:
+            Talk(5);
+            break;
+        case 43:
+            Talk(0);
+            break;
+        default:
+            break;
+        }
+
+        if (Phase == PHASE_TALK)
+            Talk(++TalkId);
+    }
+
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type != POINT_MOTION_TYPE)
+            return;
+
+        if (id == 0)
+            return;
+
+        switch(id)
+        {
+        case 6:
+            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            break;
+        case 7:
+            me->clearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            break;
+        case 11:
+            EnterPhase(PHASE_TALK);
+            Talk(2);
+            break;
+        case 17:
+            EnterPhase(PHASE_TALK);
+            Talk(14);
+            break;
+        default:
+            break;
+        }
+
+        if (id <= 10 || (id >= 12 && id <= 16))
+        {
+            WPId = id;
+            newWP = true;
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!EventRunning)
+            return;
+
+        Event = EVENT_NULL;
+
+        if (Phase == PHASE_COMBAT1 && KilledNightmares >= 25)
+            Event = EVENT_NIGHTMARES_KILLED;
+
+        if (Phase == PHASE_COMBAT2 && canBeRedeemed)
+        {
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus && eranikus->IsBelowHPPercent(20))
+                Event = EVENT_ERANIKUS_REDEEMED;
+        }
+
+        if (newWP)
+        {
+            Event = EVENT_WAYPOINT;
+            newWP = false;
+        }
+
+        for (uint32 i = 1; i <= EVENT_MAX; i++)
+        {
+            if (Timer[i])
+                if (Timer[i] <= diff)
+                {
+                    if (!Event)
+                        Event = (EventRemulos)i;
+                }
+                else Timer[i] -= diff;
+        }
+
+        if (Phase == PHASE_EVENT_FAILED && Event != EVENT_FAILURE)
+            return;
+
+        switch (Event)
+        {
+        case EVENT_TALK_OVER:
+            Timer[EVENT_TALK_OVER] = 0;
+            HandleTalkSequence();
+            break;
+        case EVENT_WAYPOINT:
+            me->GetMotionMaster()->MovePoint(WPId+1, RemulosWP[WPId].x, RemulosWP[WPId].y, RemulosWP[WPId].z);
+            break;
+        case EVENT_INVOCATION:
+        {
+            Timer[EVENT_INVOCATION] = 0;
+            Creature* cre = me->SummonCreature(ERANIKUS, EranikusWP[0].x, EranikusWP[0].y, EranikusWP[0].z, EranikusWP[0].o, TEMPSUMMON_DEAD_DESPAWN, 0);
+            if (cre)
+            {
+                cre->setActive(true);
+                EranikusGUID = cre->GetGUID();
+            }
+            Talk(42);
+            break;
+        }
+        case EVENT_WAVE:
+            Timer[EVENT_WAVE] = 0;
+            NextWave();
+            break;
+        case EVENT_NIGHTMARES_KILLED:
+            EnterPhase(PHASE_COMBAT2);
+            break;
+        case EVENT_TYRANDE_SPAWN:
+        {
+            Timer[EVENT_TYRANDE_SPAWN] = 0;
+            Creature *cre, *tyr;
+            tyr = me->SummonCreature(TYRANDE, RemulosWP[0].x, RemulosWP[0].y, RemulosWP[0].z, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
+            if (tyr)
+            {
+                tyr->setActive(true);
+                TyrandeGUID = tyr->GetGUID();
+            }
+            for (int i = 0; i < 8; i++)
+            {
+                cre = me->SummonCreature(PRIESTESS, PriestessSP[i].x, PriestessSP[i].y, PriestessSP[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 120000);
+                if (cre)
+                {
+                    cre->setActive(true);
+                    PriestessGUIDs[i] = cre->GetGUID();
+                    cre->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+                    cre->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 9695);
+                    cre->GetMotionMaster()->MoveFollow(tyr, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                }
+            }
+            if (tyr)
+            {
+                tyr->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                tyr->GetMotionMaster()->MovePoint(2, RemulosWP[1].x, RemulosWP[1].y, RemulosWP[1].z);
+            }
+            break;
+        }
+        case EVENT_ERANIKUS_REDEEMED:
+        {
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
+            {
+                uint32 health = eranikus->GetHealth();
+                eranikus->AI()->EnterEvadeMode();
+                eranikus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                eranikus->setFaction(35);
+                eranikus->SetHealth(health);
+            }
+            EnterPhase(PHASE_TALK);
+            if (Timer[EVENT_TALK_OVER])
+            {
+                if (TalkId < 24)
+                    Talk(24);
+            } else
+                Talk(26);
+            break;
+        }
+        case EVENT_FAILURE:
+            DespawnAll();
+            break;
+        default:
+            break;
+        }
+
+        if (Phase == PHASE_COMBAT1 || Phase == PHASE_COMBAT2)
+        {
+            if (!UpdateVictim(false))
+                return;
+            DoMeleeAttackIfReady();
+        }
+    }
+};
+
+bool QuestAccept_npc_keeper_remulos(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
+{
+    if (pQuest->GetQuestId() == 8736)
+    {
+        CAST_AI(npc_keeper_remulosAI, (pCreature->AI()))->StartEvent(pPlayer->GetGUID());
+    }
+
+    return true;
+}
+
+CreatureAI* GetAI_npc_keeper_remulos(Creature* pCreature)
+{
+    return new npc_keeper_remulosAI(pCreature);
+}
+
+/*####
+# npc_nightmare_phantasm
+####*/
+
+#define SWELL_OF_SOULS 21307
+#define NIGHT_SHADOW_BOLT_VOLLEY 17228
+
+struct npc_nightmare_phantasmAI : public ScriptedAI
+{
+    npc_nightmare_phantasmAI(Creature *c) : ScriptedAI(c) {}
+
+    uint32 Bolt_Timer;
+
+    void Reset()
+    {
+        Bolt_Timer = 3000 + urand(0, 3)*1000;
+    }
+
+    void Aggro(Unit*) {}
+
+    void MoveInLineOfSight(Unit*) {}
+
+    void KilledUnit(Unit*)
+    {
+        DoCast(me, SWELL_OF_SOULS);
+    }
+
+    void JustDied(Unit*)
+    {
+        Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
+        if (c)
+            CAST_AI(npc_keeper_remulosAI, (c->AI()))->NightKilled();
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!me->isInCombat()) {
+            Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
+            if (c)
+                AttackStart(c);
+            else
+                UpdateVictim(false);
+            return;
+        }
+
+        Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, 500, false);
+        if (!me->getVictim())
+        {
+            AttackStart(target);
+            return;
+        }
+
+        if (!UpdateVictim(false))
+            return;
+
+        if (Bolt_Timer <= diff)
+        {
+            DoCast(me->getVictim(), NIGHT_SHADOW_BOLT_VOLLEY);
+            Bolt_Timer = 5000 + urand(0, 3)*1000;
+        } else
+            Bolt_Timer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_nightmare_phantasm(Creature* pCreature)
+{
+    return new npc_nightmare_phantasmAI(pCreature);
+}
+
+/*####
+# npc_eranikus_tyrant_of_the_dream
+####*/
+
+#define ACID_BREATH             24839
+#define NOXIOUS_BREATH          24818
+#define ERA_SHADOW_BOLT_VOLLEY  25586
+
+struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
+{
+    npc_eranikus_tyrant_of_the_dreamAI(Creature* c) : ScriptedAI(c) {}
+
+    bool combatPhase;
+
+    uint32 Acid_Timer;
+    uint32 Noxious_Timer;
+    uint32 Bolt_Timer;
+
+    void Reset()
+    {
+        combatPhase = false;
+
+        Acid_Timer = 15000;
+        Noxious_Timer = 10000;
+        Bolt_Timer = 25000;
+    }
+
+    void Aggro(Unit*) {}
+
+    void JustDied(Unit*)
+    {
+        Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
+        if (c)
+            CAST_AI(npc_keeper_remulosAI, (c->AI()))->EventFailed();
+    }
+
+    void MoveInLineOfSight(Unit*) {}
+
+    void EnterEvadeMode()
+    {
+        sLog.outString("ERANIKUS: evading");
+        combatPhase = false;
+        me->InterruptNonMeleeSpells(true);
+        me->RemoveAllAuras();
+        me->DeleteThreatList();
+        me->CombatStop(true);
+        InCombat = false;
+    }
+
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type != POINT_MOTION_TYPE)
+            return;
+
+        if (id == 0)
+            return;
+
+        switch(id)
+        {
+        case 1:
+        {
+            me->SetOrientation(EranikusWP[1].o);
+            me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
+            me->SendMovementFlagUpdate();
+            break;
+        }
+        case 2:
+        {
+            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
+            me->SetOrientation(EranikusWP[2].o);
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            combatPhase = true;
+            me->SendMovementFlagUpdate();
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!combatPhase)
+            return;
+
+        if (!me->isInCombat())
+        {
+            Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
+            if (c)
+                AttackStart(c);
+            else
+                UpdateVictim(false);
+            return;
+        }
+
+        if (!UpdateVictim(false))
+            return;
+
+        if (Bolt_Timer <= diff)
+        {
+            DoCast(me->getVictim(), ERA_SHADOW_BOLT_VOLLEY);
+            Bolt_Timer = 25000;
+        } else
+            Bolt_Timer -= diff;
+
+        if (Acid_Timer <= diff)
+        {
+            DoCast(me->getVictim(), ACID_BREATH);
+            Acid_Timer = 15000;
+        } else
+            Acid_Timer -= diff;
+
+        if (Noxious_Timer <= diff)
+        {
+            DoCast(me->getVictim(), NOXIOUS_BREATH);
+            Noxious_Timer = 10000;
+        } else
+            Noxious_Timer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_eranikus_tyrant_of_the_dream(Creature* pCreature)
+{
+    return new npc_eranikus_tyrant_of_the_dreamAI(pCreature);
+}
+
+#define MASS_HEALING    25839
+
+struct npc_tyrandeAI : public ScriptedAI
+{
+    npc_tyrandeAI(Creature* c) : ScriptedAI(c) {}
+
+    bool newWP;
+    uint32 WPId;
+
+    uint32 Heal_Timer;
+
+    void Reset()
+    {
+        newWP = false;
+        WPId = 0;
+
+        Heal_Timer = 3000;
+    }
+
+    void Aggro(Unit*) {}
+
+    void JustDied(Unit*)
+    {
+        Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
+        if (c)
+            CAST_AI(npc_keeper_remulosAI, (c->AI()))->EventFailed();
+    }
+
+    void MoveInLineOfSight(Unit*) {}
+
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (type != POINT_MOTION_TYPE)
+            return;
+
+        if (id == 0)
+            return;
+
+        if (id >= 2 && id <= 7)
+        {
+            newWP = true;
+            WPId = id;
+        }
+
+        switch(id)
+        {
+        case 6:
+            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            break;
+        case 7:
+            me->clearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            break;
+        case 8:
+            newWP = true;
+            WPId = 14;
+            break;
+        case 15:
+        {
+            newWP = true;
+            WPId = 17;
+            Creature* remulos = FindCreature(REMULOS, 500, me)->ToCreature();
+            if (remulos)
+                CAST_AI(npc_keeper_remulosAI, (remulos->AI()))->TyrandeComes(false);
+            break;
+        }
+        case 18:
+        {
+            Creature* remulos = FindCreature(REMULOS, 500, me)->ToCreature();
+            if (remulos)
+                CAST_AI(npc_keeper_remulosAI, (remulos->AI()))->TyrandeComes(true);
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (newWP)
+        {
+            newWP = false;
+            me->GetMotionMaster()->MovePoint(WPId+1, RemulosWP[WPId].x, RemulosWP[WPId].y, RemulosWP[WPId].z);
+        }
+
+        if (!me->IsStandState())
+            return;
+
+        Creature* remulos = FindCreature(REMULOS, 500, me)->ToCreature();
+        if (remulos && CAST_AI(npc_keeper_remulosAI, (remulos->AI()))->GetPhase() != PHASE_COMBAT2)
+            return;
+
+        if (Heal_Timer <= diff)
+        {
+            DoCast(me, MASS_HEALING);
+            Heal_Timer = 20000;
+        } else
+            Heal_Timer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_tyrande(Creature* pCreature)
+{
+    return new npc_tyrandeAI(pCreature);
+}
+
+struct npc_priestess_of_the_moonAI : public ScriptedAI
+{
+    npc_priestess_of_the_moonAI(Creature* c) : ScriptedAI(c) {}
+
+    uint32 Shoot_Timer;
+
+    void Reset()
+    {
+        Shoot_Timer = 3000;
+        SpellEntry* TempSpell = GET_SPELL(37770);
+        if (TempSpell)
+            TempSpell->Effect[0] = 2;
+    }
+
+    void MoveInLineOfSight(Unit*) {}
+
+    void Aggro(Unit* unit)
+    {
+        if (unit->GetGUIDMid() == ERANIKUS)
+        {
+            me->SetReactState(REACT_AGGRESSIVE);
+            AttackStart(unit, false);
+        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim(false))
+            return;
+
+        if (Shoot_Timer <= diff)
+        {
+            int bp0 = 1100;
+            me->CastCustomSpell(me->getVictim(), 37770, &bp0, NULL, NULL, false);
+            Shoot_Timer = 3000;
+        } else
+            Shoot_Timer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_priestess_of_the_moon(Creature* pCreature)
+{
+    return new npc_priestess_of_the_moonAI(pCreature);
+}
+
+/*####
 # AddSC
 ####*/
 
@@ -581,6 +1716,32 @@ void AddSC_moonglade()
     newscript = new Script;
     newscript->Name="npc_clintar_spirit";
     newscript->GetAI = &GetAI_npc_clintar_spirit;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_keeper_remulos";
+    newscript->pQuestAccept = &QuestAccept_npc_keeper_remulos;
+    newscript->GetAI = &GetAI_npc_keeper_remulos;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_nightmare_phantasm";
+    newscript->GetAI = &GetAI_npc_nightmare_phantasm;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_eranikus_tyrant_of_the_dream";
+    newscript->GetAI = &GetAI_npc_eranikus_tyrant_of_the_dream;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_tyrande";
+    newscript->GetAI = &GetAI_npc_tyrande;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_priestess_of_the_moon";
+    newscript->GetAI = &GetAI_npc_priestess_of_the_moon;
     newscript->RegisterSelf();
 }
 
