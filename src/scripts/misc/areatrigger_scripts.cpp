@@ -259,7 +259,7 @@ bool AreaTrigger_at_childweek_quest10951(Player* pPlayer, AreaTriggerEntry const
 
 bool AreaTrigger_at_shade_of_eranikus(Player* pPlayer, AreaTriggerEntry const *pAt) {
     if (pPlayer->GetQuestRewardStatus(8555) && pPlayer->GetReputationRank(910) >= REP_NEUTRAL) {
-        if (!pPlayer->FindCreatureInGrid(15362, 15, true))
+        if (!pPlayer->FindCreatureInGrid(15362, 100, true))
             pPlayer->SummonCreature(15362, -672.965149, 6.674169, -90.835663, 1.539716, TEMPSUMMON_TIMED_DESPAWN, 3600000);
     }
 }
