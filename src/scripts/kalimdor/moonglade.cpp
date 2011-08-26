@@ -660,7 +660,8 @@ static Locations RemulosWP[] =
 static Locations EranikusWP[] =
 {
     { 7863.083984, -2682.686035, 469.532166, 0.642453 }, // spawn
-    { 7930.495605, -2574.283447, 498.286224, 2.835252 }, // hover
+    { 7941.503906, -2576.785889, 501.884308, 2.918067 }, // hover 1
+    { 7930.495605, -2574.283447, 501.884308, 2.835252 }, // hover 2
     { 7919.830566, -2570.955811, 489.375031, 2.918945 }, // landing
 };
 
@@ -802,13 +803,13 @@ struct npc_keeper_remulosAI : public ScriptedAI
         }
 
         float x, y, z, o;
+        me->GetHomePosition(x, y, z, o);
+        me->DestroyForNearbyPlayers();
+        me->GetMap()->CreatureRelocation(me, x, y, z, o);
+
         if (me->isAlive())
-        {
-            me->GetHomePosition(x, y, z, o);
-            me->DestroyForNearbyPlayers();
-            me->GetMap()->CreatureRelocation(me, x, y, z, o);
             me->SetHealth(me->GetMaxHealth());
-        } else
+        else
             me->Respawn();
 
         Reset();
@@ -1018,7 +1019,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
             // eranikus engages
             Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
             if (eranikus)
-                eranikus->GetMotionMaster()->MovePoint(2, EranikusWP[2].x, EranikusWP[2].y, EranikusWP[2].z);
+                eranikus->GetMotionMaster()->MovePoint(3, EranikusWP[3].x, EranikusWP[3].y, EranikusWP[3].z);
             Timer[EVENT_TYRANDE_SPAWN] = 40000;
             break;
         }
@@ -1031,11 +1032,33 @@ struct npc_keeper_remulosAI : public ScriptedAI
         case 24:
         {
             Talk(TalkId+1);
-            if (TalkId == 24)
+            Creature *tyrande = Unit::GetCreature(*me, TyrandeGUID);
+            if (TalkId == 24 && tyrande)
+                tyrande->SetStandState(UNIT_STAND_STATE_KNEEL);
+/*            if (TalkId == 21 && tyrande)
+                tyrande->CastSpell(tyrande, 14751, true);*/
+            break;
+        }
+        case 27:
+        {
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
             {
-                Creature *tyrande = Unit::GetCreature(*me, TyrandeGUID);
-                if (tyrande)
-                    tyrande->SetStandState(UNIT_STAND_STATE_KNEEL);
+                uint32 health = eranikus->GetHealth();
+                eranikus->AI()->EnterEvadeMode();
+                eranikus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                eranikus->setFaction(35);
+                eranikus->SetHealth(health);
+            }
+            break;
+        }
+        case 28:
+        {
+            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
+            if (eranikus)
+            {
+                eranikus->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
+                eranikus->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
             }
             break;
         }
@@ -1123,13 +1146,13 @@ struct npc_keeper_remulosAI : public ScriptedAI
             break;
         case 40:
         {
-            Creature* redeemed = Unit::GetCreature(*me, RedeemedGUID);
+/*            Creature* redeemed = Unit::GetCreature(*me, RedeemedGUID);
             Creature* tyrande = Unit::GetCreature(*me, TyrandeGUID);
             if (redeemed && tyrande)
             {
                 redeemed->SetInFront(tyrande);
                 redeemed->SendMovementFlagUpdate();
-            }
+            }*/
             Talk(31);
             break;
         }
@@ -1238,6 +1261,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
             if (cre)
             {
                 cre->setActive(true);
+                cre->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
                 EranikusGUID = cre->GetGUID();
             }
             Talk(42);
@@ -1281,15 +1305,6 @@ struct npc_keeper_remulosAI : public ScriptedAI
         }
         case EVENT_ERANIKUS_REDEEMED:
         {
-            Creature* eranikus = Unit::GetCreature(*me, EranikusGUID);
-            if (eranikus)
-            {
-                uint32 health = eranikus->GetHealth();
-                eranikus->AI()->EnterEvadeMode();
-                eranikus->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                eranikus->setFaction(35);
-                eranikus->SetHealth(health);
-            }
             EnterPhase(PHASE_TALK);
             if (Timer[EVENT_TALK_OVER])
             {
@@ -1336,16 +1351,19 @@ CreatureAI* GetAI_npc_keeper_remulos(Creature* pCreature)
 
 #define SWELL_OF_SOULS 21307
 #define NIGHT_SHADOW_BOLT_VOLLEY 17228
+#define AURA_OF_FEAR 26641
 
 struct npc_nightmare_phantasmAI : public ScriptedAI
 {
     npc_nightmare_phantasmAI(Creature *c) : ScriptedAI(c) {}
 
     uint32 Bolt_Timer;
+    uint32 Fear_Timer;
 
     void Reset()
     {
         Bolt_Timer = 3000 + urand(0, 3)*1000;
+        Fear_Timer = 15000 + urand(0, 3)*1000;
     }
 
     void Aggro(Unit*) {}
@@ -1392,6 +1410,13 @@ struct npc_nightmare_phantasmAI : public ScriptedAI
         } else
             Bolt_Timer -= diff;
 
+        if (Fear_Timer <= diff)
+        {
+            DoCast(me->getVictim(), AURA_OF_FEAR);
+            Fear_Timer = 15000 + urand(0, 3)*1000;
+        } else
+            Fear_Timer -= diff;
+
         DoMeleeAttackIfReady();
     }
 };
@@ -1414,6 +1439,7 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
     npc_eranikus_tyrant_of_the_dreamAI(Creature* c) : ScriptedAI(c) {}
 
     bool combatPhase;
+    bool newWP;
 
     uint32 Acid_Timer;
     uint32 Noxious_Timer;
@@ -1422,6 +1448,7 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
     void Reset()
     {
         combatPhase = false;
+        newWP = false;
 
         Acid_Timer = 15000;
         Noxious_Timer = 10000;
@@ -1460,18 +1487,16 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
         switch(id)
         {
         case 1:
-        {
-            me->SetOrientation(EranikusWP[1].o);
-            me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-            me->SendMovementFlagUpdate();
+//            newWP = true;
             break;
-        }
         case 2:
+            me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+            break;
+        case 3:
         {
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-            me->SetOrientation(EranikusWP[2].o);
+            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+//            me->SetOrientation(EranikusWP[3].o);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
             combatPhase = true;
             me->SendMovementFlagUpdate();
             break;
@@ -1483,6 +1508,12 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (newWP)
+        {
+            newWP = false;
+            me->GetMotionMaster()->MovePoint(2, EranikusWP[2].x, EranikusWP[2].y, EranikusWP[2].z);
+        }
+
         if (!combatPhase)
             return;
 
