@@ -92,7 +92,7 @@ struct mob_unkor_the_ruthlessAI : public ScriptedAI
                 {
                     Player *pGroupie = itr->getSource();
                     if( pGroupie &&
-                        pGroupie->GetQuestStatus(QUEST_DONTKILLTHEFATONE) == QUEST_STATUS_INCOMPLETE &&
+                        pGroupie->GetQuestStatus(QUEST_DONTKILLTHEFATONE) == QUEST_STATUS_INCOMPLETE ||
                         pGroupie->GetReqKillOrCastCurrentCount(QUEST_DONTKILLTHEFATONE, 18260) == 10 )
                     {
                         pGroupie->AreaExploredOrEventHappens(QUEST_DONTKILLTHEFATONE);
@@ -101,7 +101,7 @@ struct mob_unkor_the_ruthlessAI : public ScriptedAI
                     }
                 }
             } else
-            if( (done_by->ToPlayer())->GetQuestStatus(QUEST_DONTKILLTHEFATONE) == QUEST_STATUS_INCOMPLETE &&
+            if( (done_by->ToPlayer())->GetQuestStatus(QUEST_DONTKILLTHEFATONE) == QUEST_STATUS_INCOMPLETE ||
                 (done_by->ToPlayer())->GetReqKillOrCastCurrentCount(QUEST_DONTKILLTHEFATONE, 18260) == 10 )
             {
                 (done_by->ToPlayer())->AreaExploredOrEventHappens(QUEST_DONTKILLTHEFATONE);
