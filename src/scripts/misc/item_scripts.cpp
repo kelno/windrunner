@@ -47,6 +47,7 @@ item_bloodmaul_keg                  Quests 10512 && 10545
 item_purification_mixture           Quest 9361
 item_staff_elders                   Quest 10369
 item_attuned_crystal_cores
+item_orwins_shovel
 EndContentData */
 
 #include "precompiled.h"
@@ -635,6 +636,18 @@ bool ItemUse_item_attuned_crystal_cores(Player *player, Item* _Item, SpellCastTa
 }
 
 /*######
+## item_orwins_shovel
+######*/
+
+bool ItemUse_item_orwins_shovel(Player* player, Item* item, SpellCastTargets const& targets)
+{
+    if (GameObject* cobalt = player->FindGOInGrid(144050, 2.0f))
+        player->SummonGameObject(144064, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), 0, 0, 0, 0, 86400);
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -765,6 +778,11 @@ void AddSC_item_scripts()
     newscript = new Script;
     newscript->Name = "item_attuned_crystal_cores";
     newscript->pItemUse = &ItemUse_item_attuned_crystal_cores;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "item_orwins_shovel";
+    newscript->pItemUse = &ItemUse_item_orwins_shovel;
     newscript->RegisterSelf();
 }
 
