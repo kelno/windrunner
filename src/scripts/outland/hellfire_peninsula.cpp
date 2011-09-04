@@ -33,6 +33,7 @@ npc_fel_guard_hound
 npc_anchorite_relic
 npc_living_flare
 npc_ancestral_spirit_wolf
+npc_anchorite_barada
 EndContentData */
 
 #include "precompiled.h"
@@ -761,6 +762,28 @@ CreatureAI* GetAI_npc_ancestral_wolf(Creature* pCreature)
 }
 
 /*######
+## npc_anchorite_barada
+######*/
+
+#define QUEST_COLONEL_JULES     10935
+
+#define GOSSIP_START_EVENT      "It is time... The rite of exorcism will now commence..."
+
+bool GossipHello_npc_anchorite_barada(Player* player, Creature* creature)
+{
+    sLog.outString("Pom1");
+    if (player->GetQuestStatus(QUEST_COLONEL_JULES) == QUEST_STATUS_INCOMPLETE) {
+        sLog.outString("Pom2");
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_START_EVENT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    }
+        
+    sLog.outString("Pom3");
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -832,5 +855,10 @@ void AddSC_hellfire_peninsula()
     newscript = new Script;
     newscript->Name = "npc_ancestral_wolf";
     newscript->GetAI = &GetAI_npc_ancestral_wolf;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_anchorite_barada";
+    newscript->pGossipHello = &GossipHello_npc_anchorite_barada;
     newscript->RegisterSelf();
 }
