@@ -1139,7 +1139,10 @@ static SpawnSpells SpawnCast[]=
 
 struct mob_illidari_spawnAI : public ScriptedAI
 {
-    mob_illidari_spawnAI(Creature* c) : ScriptedAI(c) {}
+    mob_illidari_spawnAI(Creature* c) : ScriptedAI(c)
+    {
+        LordIllidanGUID = 0;
+    }
 
     uint64 LordIllidanGUID;
     uint32 SpellTimer1, SpellTimer2, SpellTimer3;
@@ -1147,7 +1150,6 @@ struct mob_illidari_spawnAI : public ScriptedAI
 
     void Reset()
     {
-        LordIllidanGUID = 0;
         Timers = false;
     }
 
@@ -1490,13 +1492,23 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
         WaveTimer = WavesInfo[WaveCount].SpawnTimer;
         AnnounceTimer = WavesInfo[WaveCount].YellTimer;
     }
+    
+    void SummonedCreatureDespawn(Creature* creature)
+    {
+        LiveCounter();
+    }
 
     void CheckEventFail()
     {
         Player* pPlayer = Unit::GetPlayer(PlayerGUID);
 
-        if(!pPlayer)
+        if (!pPlayer) {
+            Failed = true;
+            EventStarted = false;
+            EnterEvadeMode();
+            
             return;
+        }
 
         if(Group *EventGroup = pPlayer->GetGroup())
         {
@@ -1550,6 +1562,7 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
         {
             pPlayer->FailQuest(QUEST_BATTLE_OF_THE_CRIMSON_WATCH);
             Failed = true;
+            EventStarted = false;
         }
     }
 
@@ -1580,7 +1593,7 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
         }
         CheckEventFail();
 
-        if(Failed)
+        if (Failed)
             EnterEvadeMode();
     }
 };
@@ -1588,9 +1601,6 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
 void mob_illidari_spawnAI::JustDied(Unit *slayer)
 {
     m_creature->RemoveCorpse();
-    if(Creature* LordIllidan = (Unit::GetCreature(*m_creature, LordIllidanGUID)))
-        if(LordIllidan)
-            ((npc_lord_illidan_stormrageAI*)LordIllidan->AI())->LiveCounter();
 }
 
 /*#####
