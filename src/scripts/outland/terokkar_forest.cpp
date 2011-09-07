@@ -525,6 +525,10 @@ bool GossipHello_go_ancient_skull_pile(Player* pPlayer, GameObject* pGo)
 {
     if (pPlayer->GetQuestStatus(QUEST_TEROKK_DOWNFALL) == QUEST_STATUS_INCOMPLETE)
         pPlayer->SummonCreature(ENTRY_TEROKK, -3793.01, 3503.55, 287.01, 0.9485, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+    else if (pPlayer->HasItemCount(32720, 1, false)) {
+        pPlayer->SummonCreature(ENTRY_TEROKK, -3793.01, 3503.55, 287.01, 0.9485, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
+        pPlayer->DestroyItemCount(32720, 1, true);
+    }
         
     return false;
 }
