@@ -615,26 +615,6 @@ bool ItemUse_item_staff_elders(Player* pPlayer, Item* pItem, SpellCastTargets co
     return true;
 }
 
-/*#####
-# item_attuned_crystal_cores
-#####*/
-
-bool ItemUse_item_attuned_crystal_cores(Player *player, Item* _Item, SpellCastTargets const& targets)
-{
-    if( targets.getUnitTarget() && targets.getUnitTarget()->GetTypeId()==TYPEID_UNIT &&
-        targets.getUnitTarget()->GetEntry() == 24972 && targets.getUnitTarget()->isDead() &&
-        (player->GetQuestStatus(11524) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(11525) == QUEST_STATUS_INCOMPLETE) )
-    {
-        player->CastSpell((targets.getUnitTarget()->ToCreature()), 44997, true);
-        //player->CastSpell(player, 45009, true);
-        (targets.getUnitTarget()->ToCreature())->RemoveCorpse();
-        return false;
-    }
-
-    player->SendEquipError(EQUIP_ERR_CANT_DO_RIGHT_NOW,_Item,NULL);
-    return true;
-}
-
 /*######
 ## item_orwins_shovel
 ######*/
@@ -773,11 +753,6 @@ void AddSC_item_scripts()
     newscript = new Script;
     newscript->Name = "item_staff_elders";
     newscript->pItemUse = &ItemUse_item_staff_elders;
-    newscript->RegisterSelf();
-    
-    newscript = new Script;
-    newscript->Name = "item_attuned_crystal_cores";
-    newscript->pItemUse = &ItemUse_item_attuned_crystal_cores;
     newscript->RegisterSelf();
     
     newscript = new Script;

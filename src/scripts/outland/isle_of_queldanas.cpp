@@ -78,7 +78,11 @@ SPELL_CONVERT_CREDIT    = 45009
 
 struct npc_converted_sentryAI : public ScriptedAI
 {
-    npc_converted_sentryAI(Creature *c) : ScriptedAI(c) {}
+    npc_converted_sentryAI(Creature *c) : ScriptedAI(c)
+    {
+        if (Creature* sentry = me->FindCreatureInGrid(24972, 10.0f, false))
+            sentry->DisappearAndDie();
+    }
 
     bool Credit;
     uint32 Timer;
