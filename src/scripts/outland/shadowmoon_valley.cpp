@@ -2011,6 +2011,39 @@ bool GOHello_go_arcano_control_unit(Player *pPlayer, GameObject* pGo)
 }
 
 /*######
+## npc_quest_spectrecles
+######*/
+
+bool GossipHello_npc_quest_spectrecles(Player* player, Creature* creature)
+{
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+
+    if (player->GetQuestStatus(10625) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    if (player->GetQuestStatus(10643) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_quest_spectrecles(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF) {
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 30719, 1, false);
+        if (msg == EQUIP_ERR_OK)
+            player->StoreNewItem(dest, 30719, 1, true);
+    }
+    
+    player->CLOSE_GOSSIP_MENU();
+    
+    return true;
+}
+
+/*######
 ## AddSC
 #######*/
 
@@ -2134,6 +2167,12 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "go_arcano_control_unit";
     newscript->pGOHello = &GOHello_go_arcano_control_unit;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_quest_spectrecles";
+    newscript->pGossipHello = &GossipHello_npc_quest_spectrecles;
+    newscript->pGossipSelect = &GossipSelect_npc_quest_spectrecles;
     newscript->RegisterSelf();
 }
 
