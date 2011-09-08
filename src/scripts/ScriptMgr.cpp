@@ -7,7 +7,6 @@
 #include "Database/DatabaseEnv.h"
 #include "Database/DBCStores.h"
 #include "ObjectMgr.h"
-#include "ProgressBar.h"
 #include "EventAI.h"
 #include "Policies/SingletonImp.h"
 
@@ -729,12 +728,10 @@ void ScriptMgr::LoadDatabase()
     outstring_log("TSCR: Loading EventAI Texts additional data...");
     if (result)
     {
-        barGoLink bar(result->GetRowCount());
         uint32 count = 0;
 
         do
         {
-            bar.step();
             Field* fields = result->Fetch();
             StringTextData temp;
 
@@ -778,8 +775,6 @@ void ScriptMgr::LoadDatabase()
         outstring_log(">> TSCR: Loaded %u additional EventAI Texts data.", count);
     }else
     {
-        barGoLink bar(1);
-        bar.step();
         outstring_log("");
         outstring_log(">> Loaded 0 additional EventAI Texts data. DB table `eventai_texts` is empty.");
     }
@@ -794,12 +789,10 @@ void ScriptMgr::LoadDatabase()
     outstring_log("TSCR: Loading Script Texts additional data...");
     if (result)
     {
-        barGoLink bar(result->GetRowCount());
         uint32 count = 0;
 
         do
         {
-            bar.step();
             Field* fields = result->Fetch();
             StringTextData temp;
 
@@ -843,8 +836,6 @@ void ScriptMgr::LoadDatabase()
         outstring_log(">> TSCR: Loaded %u additional Script Texts data.", count);
     }else
     {
-        barGoLink bar(1);
-        bar.step();
         outstring_log("");
         outstring_log(">> Loaded 0 additional Script Texts data. DB table `script_texts` is empty.");
     }
@@ -859,12 +850,10 @@ void ScriptMgr::LoadDatabase()
     outstring_log("TSCR: Loading Custom Texts additional data...");
     if (result)
     {
-        barGoLink bar(result->GetRowCount());
         uint32 count = 0;
 
         do
         {
-            bar.step();
             Field* fields = result->Fetch();
             StringTextData temp;
 
@@ -908,8 +897,6 @@ void ScriptMgr::LoadDatabase()
         outstring_log(">> Loaded %u additional Custom Texts data.", count);
     }else
     {
-        barGoLink bar(1);
-        bar.step();
         outstring_log("");
         outstring_log(">> Loaded 0 additional Custom Texts data. DB table `custom_texts` is empty.");
     }
@@ -923,12 +910,10 @@ void ScriptMgr::LoadDatabase()
     outstring_log("TSCR: Loading EventAI Summons...");
     if (result)
     {
-        barGoLink bar(result->GetRowCount());
         uint32 Count = 0;
 
         do
         {
-            bar.step();
             Field *fields = result->Fetch();
 
             EventAI_Summon temp;
@@ -951,8 +936,6 @@ void ScriptMgr::LoadDatabase()
         outstring_log(">> Loaded %u EventAI summon definitions", Count);
     }else
     {
-        barGoLink bar(1);
-        bar.step();
         outstring_log("");
         outstring_log(">> Loaded 0 EventAI Summon definitions. DB table `eventai_summons` is empty.");
     }
@@ -971,12 +954,10 @@ void ScriptMgr::LoadDatabase()
     outstring_log("TSCR: Loading EventAI scripts...");
     if (result)
     {
-        barGoLink bar(result->GetRowCount());
         uint32 Count = 0;
 
         do
         {
-            bar.step();
             Field *fields = result->Fetch();
 
             EventAI_Event temp;
@@ -1359,8 +1340,6 @@ void ScriptMgr::LoadDatabase()
         outstring_log(">> Loaded %u EventAI scripts", Count);
     }else
     {
-        barGoLink bar(1);
-        bar.step();
         outstring_log("");
         outstring_log(">> Loaded 0 EventAI scripts. DB table `eventai_scripts` is empty.");
     }
@@ -1446,8 +1425,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
         LoadDatabase();
 
     outstring_log("TSCR: Loading C++ scripts");
-    barGoLink bar(1);
-    bar.step();
     outstring_log("");
 
     for(int i=0;i<MAX_SCRIPTS;i++)
