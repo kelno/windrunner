@@ -31,6 +31,8 @@ bool GossipHello_npc_henry_stern(Player *pPlayer, Creature *pCreature)
 {
     if (pPlayer->HasSkill(SKILL_COOKING) && pPlayer->GetBaseSkillValue(SKILL_COOKING) >= 175)
         pPlayer->ADD_GOSSIP_ITEM(0, "Je voudrais apprendre à confectionner du Thé de dorépine.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    if (pPlayer->HasSkill(SKILL_ALCHEMY) && pPlayer->GetBaseSkillValue(SKILL_ALCHEMY) >= 175)
+        pPlayer->ADD_GOSSIP_ITEM(0, "Je voudrais apprendre à faire de la potion de sang de troll hargneux.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
     
     pPlayer->SEND_GOSSIP_MENU(3377, pCreature->GetGUID());
     
@@ -41,6 +43,8 @@ bool GossipSelect_npc_henry_stern(Player *pPlayer, Creature *pCreature, uint32 s
 {
     if (action == GOSSIP_ACTION_INFO_DEF+1)
         pPlayer->learnSpell(13028);
+    else if (action == GOSSIP_ACTION_INFO_DEF+2)
+        pPlayer->learnSpell(3451);
         
     pPlayer->CLOSE_GOSSIP_MENU();
     
