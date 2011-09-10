@@ -165,7 +165,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         }else FrostArmorTimer -= diff;
         if(DecayTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_DEATH_AND_DECAY);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_DEATH_AND_DECAY);
             DecayTimer = 60000+rand()%20000;
             switch(rand()%2)
             {
