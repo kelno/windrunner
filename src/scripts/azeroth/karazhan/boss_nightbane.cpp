@@ -43,7 +43,7 @@ EndScriptData */
 #define YELL_FLY_PHASE              "Misérable vermine. Je vais vous exterminer depuis les airs !"
 #define YELL_LAND_PHASE_1           "Assez ! Je vais atterrir et vous écraser moi-même !"
 #define YELL_LAND_PHASE_2           "Insectes ! Laissez-moi vous montrer ma force !"
-#define EMOTE_BREATH                "prend une profonde respiration."
+#define EMOTE_BREATH                "Plaie-de-nuit prend une profonde respiration."
 
 float IntroWay[8][3] =
 {
