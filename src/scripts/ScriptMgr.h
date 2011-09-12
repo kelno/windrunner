@@ -9,6 +9,7 @@
 #define SCRIPTMGR_H
 
 #include "Common.h"
+#include "ObjectScript.h"
 #include "Platform/CompilerDefs.h"
 #include "Database/DBCStructure.h"
 
@@ -129,6 +130,13 @@ class ScriptMgr
         InstanceData* CreateInstanceData(Map *map);
         bool ReceiveEmote(Player *player, Creature *_Creature, uint32 emote);
         bool EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget);
+        
+        void addScript(std::string name, ObjectScript* script) { m_newScripts[name] = script; }
+        ObjectScript* getScript(std::string name) { return m_newScripts[name]; }
+        
+    private:
+        typedef std::map<std::string, ObjectScript*> ObjectScriptRepository;
+        ObjectScriptRepository m_newScripts;
 };
 
 //Generic scripting text function
