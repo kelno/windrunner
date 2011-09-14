@@ -2416,4 +2416,3 @@ InstanceData* ScriptMgr::CreateInstanceData(Map *map)
 
     return tmpscript->GetInstanceData(map);
 }
-

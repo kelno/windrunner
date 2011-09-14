@@ -156,6 +156,11 @@ class Boss_azuregos : public CreatureScript
                 sLog.outString("onUpdate, diff %u", diff);
             }
         }
+        
+        CreatureAINew* getAI(Creature* creature)
+        {
+            return new boss_azuregos_newAI(creature);
+        }
 }
 
 void AddSC_boss_azuregos()
@@ -165,5 +170,6 @@ void AddSC_boss_azuregos()
     newscript->Name="boss_azuregos";
     newscript->GetAI = &GetAI_boss_azuregos;
     newscript->RegisterSelf();
+    
+    sScriptMgr.addScript(new Boss_azuregos);
 }
-

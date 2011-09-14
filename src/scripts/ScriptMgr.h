@@ -134,6 +134,8 @@ class ScriptMgr
         
         CreatureAINew* getAINew(Creature* creature);
         
+        void addScript(CreatureScript*) { m_creatureScripts[cscript.getName()] = cscript; }
+        
     private:
         typedef std::map<std::string, CreatureScript*> CreatureScriptMap;
         CreatureScriptMap m_creatureScripts;
