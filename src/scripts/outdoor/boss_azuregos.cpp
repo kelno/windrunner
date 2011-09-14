@@ -144,6 +144,20 @@ CreatureAI* GetAI_boss_azuregos(Creature *_Creature)
     return new boss_azuregosAI (_Creature);
 }
 
+class Boss_azuregos : public CreatureScript
+{
+    public:
+        Boss_azuregos() : CreatureScript("boss_azuregos_new") {}
+
+        class boss_azuregos_newAI(Creature* c) : public CreatureAINew(c)
+        {
+            void onUpdate(uint32 const diff)
+            {
+                sLog.outString("onUpdate, diff %u", diff);
+            }
+        }
+}
+
 void AddSC_boss_azuregos()
 {
     Script *newscript;

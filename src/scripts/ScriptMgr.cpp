@@ -10,6 +10,8 @@
 #include "EventAI.h"
 #include "Policies/SingletonImp.h"
 
+class CreatureScript;
+
 #define _FULLVERSION "TrinityScript"
 
 INSTANTIATE_SINGLETON_1(ScriptMgr);
@@ -2362,15 +2364,22 @@ bool ScriptMgr::AreaTrigger( Player *player, AreaTriggerEntry const* atEntry)
     return tmpscript->pAreaTrigger(player, atEntry);
 }
 
-
 CreatureAI* ScriptMgr::GetAI(Creature *_Creature)
 {
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->GetAI) return NULL;
-
+    
     return tmpscript->GetAI(_Creature);
 }
 
+CreatureAINew* ScriptMgr::getAINew(Creature* creature)
+{
+    CreatureScriptMap::const_iterator iter = m_creatureScripts.find(creature->getScriptName());
+    if (iter == m_creatureScripts.end())
+        return NULL;
+    
+    return iter->second->getAI(creature);
+}
 
 bool ScriptMgr::ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
 {
