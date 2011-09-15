@@ -2374,7 +2374,7 @@ CreatureAI* ScriptMgr::GetAI(Creature *_Creature)
 
 CreatureAINew* ScriptMgr::getAINew(Creature* creature)
 {
-    CreatureScriptMap::const_iterator iter = m_creatureScripts.find(creature->getScriptName());
+    CreatureScriptMap::const_iterator iter = m_creatureScripts.find(creature->getScriptName().c_str());
     if (iter == m_creatureScripts.end())
         return NULL;
     
