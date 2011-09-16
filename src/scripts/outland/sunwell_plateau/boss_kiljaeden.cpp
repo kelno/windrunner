@@ -544,7 +544,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
             Unit* target;
             for (uint8 z = 0; z < 6; ++z) {
                 target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true);
-                if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                if (target && !target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
                     break;
             }
             
@@ -591,7 +591,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
                         
                         for(uint8 z = 0; z < 6; ++z){
                             randomPlayer = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true);
-                            if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                            if (randomPlayer && !randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
                                 break;
                         }
                         
@@ -674,7 +674,7 @@ struct boss_kiljaedenAI : public Scripted_NoMovementAI
                     Unit* target;
                     for (uint8 z = 0; z < 6; ++z) {
                         target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100, true);
-                        if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                        if (target && !target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
                             break;
                     }
 
