@@ -168,6 +168,24 @@ struct instance_black_temple : public ScriptedInstance
             break;
         }
     }
+    
+    void OnCreatureRespawn(Creature* creature, uint32 creature_entry)
+    {
+        switch (creature_entry) {
+        case 22844:
+        case 22845:
+        case 22846:
+        case 22847:
+        case 22848:
+        case 22849:
+        case 23374:
+            if (m_auiEncounter[2] == DONE)
+                creature->setFaction(1820);
+            break;
+        default:
+            break;
+        }
+    }
 
     void OnObjectCreate(GameObject* go)
     {
