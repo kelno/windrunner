@@ -102,7 +102,14 @@ struct npc_sunblade_protectorAI : public ScriptedAI
             m_creature->SetHasChangedReactState();
             //felLightningTimer = 0;
         }
+
         DoCast(m_creature, SPELL_SW_RADIANCE);
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (m_creature->GetDefaultMovementType() == WAYPOINT_MOTION_TYPE)
+            me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
     }
     
     void Aggro(Unit *pWho) {}
