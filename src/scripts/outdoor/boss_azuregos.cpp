@@ -154,10 +154,15 @@ class Boss_azuregos : public CreatureScript
         {
             public:
                 boss_azuregos_newAI(Creature* creature) : CreatureAINew(creature) {}
+                
+                void onCombatStart(Unit* victim)
+                {
+                    sLog.outString("AGGRO");
+                }
 
                 void update(uint32 const diff)
                 {
-                    sLog.outString("onUpdate, diff %u", diff);
+                    
                 }
         };
         
