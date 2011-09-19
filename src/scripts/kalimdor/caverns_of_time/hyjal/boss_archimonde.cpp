@@ -164,7 +164,7 @@ struct mob_doomfireAI : public ScriptedAI
             who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !who->isTargetableForAttack())
             return;
 
-        if(m_creature->IsWithinDistInMap(who, 3))
+        if(m_creature->IsWithinDistInMap(who, 1))
         {
             TargetSelected = true;
             TargetGUID = who->GetGUID();
