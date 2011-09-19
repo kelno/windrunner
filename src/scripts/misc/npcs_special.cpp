@@ -1339,6 +1339,32 @@ CreatureAI *GetAI_npc_pet_bomb(Creature *pCreature)
     return new npc_pet_bombAI(pCreature);
 }
 
+bool GossipHello_npc_morph(Player* player, Creature* creature)
+{
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Illusion de gnome mâle", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Illusion de gnome femelle", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    
+    player->SEND_GOSSIP_MENU(7339, creature->GetGUID());
+    
+    return true;
+}
+
+bool GossipSelect_npc_morph(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    switch (action) {
+    case GOSSIP_ACTION_INFO_DEF:
+        player->CastSpell(player, 37808, true);
+        break;
+    case GOSSIP_ACTION_INFO_DEF+1:
+        player->CastSpell(player, 37809, true);
+        break;
+    }
+    
+    player->CLOSE_GOSSIP_MENU();
+    
+    return true;
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1435,6 +1461,12 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name="npc_pet_bomb";
     newscript->GetAI = &GetAI_npc_pet_bomb;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_morph";
+    newscript->pGossipHello = &GossipHello_npc_morph;
+    newscript->pGossipSelect = &GossipSelect_npc_morph;
     newscript->RegisterSelf();
 }
 
