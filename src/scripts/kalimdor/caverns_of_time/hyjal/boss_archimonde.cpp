@@ -191,6 +191,8 @@ struct mob_doomfireAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if(RefreshTimer < diff)
             RefreshTimer = 0;
         else RefreshTimer -= diff;
@@ -565,11 +567,11 @@ struct boss_archimondeAI : public hyjal_trashAI
                 break;
         }
 
-        if(m_creature->HasAura(chargeSpell, 0)) //should always be correct
+        if(m_creature->HasAura(chargeSpell)) //should always be correct
         {
             m_creature->RemoveSingleAuraFromStack(chargeSpell, 0);
             //DoCast(m_creature->getVictim(), unleashSpell); //has to be casted on ALL the raid members
-            Unit *target = NULL;
+            /*Unit *target = NULL;
             std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
             {
@@ -577,7 +579,10 @@ struct boss_archimondeAI : public hyjal_trashAI
                 
                 if (target && target->GetTypeId() == TYPEID_PLAYER && !target->isDead())
                     DoCast(target, unleashSpell);
-            }
+            }*/
+            
+            me->InterruptNonMeleeSpells(false);
+            DoCast(me, unleashSpell);
             
             HasCast = true;
             SoulChargeCount--;
