@@ -149,7 +149,7 @@ struct mob_doomfireAI : public ScriptedAI
         float x,y,z;
         m_creature->GetPosition(x,y,z);
         z = m_creature->GetMap()->GetHeight(x, y, z);
-        m_creature->Relocate(x,y,z+1,0);
+        m_creature->Relocate(x,y,z,0);
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage) { damage = 0; }
@@ -164,7 +164,7 @@ struct mob_doomfireAI : public ScriptedAI
             who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !who->isTargetableForAttack())
             return;
 
-        if(m_creature->IsWithinDistInMap(who, 1))
+        if(m_creature->GetDistance2d(who) <= 1.5f)
         {
             TargetSelected = true;
             TargetGUID = who->GetGUID();
