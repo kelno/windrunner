@@ -149,7 +149,7 @@ struct mob_doomfireAI : public ScriptedAI
         float x,y,z;
         m_creature->GetPosition(x,y,z);
         z = m_creature->GetMap()->GetHeight(x, y, z);
-        m_creature->Relocate(x,y,z,0);
+        m_creature->Relocate(x,y,z+1,0);
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage) { damage = 0; }
@@ -416,6 +416,10 @@ struct boss_archimondeAI : public hyjal_trashAI
         BelowTenPercent = false;
         HasProtected = false;
         IsChanneling = false;
+        
+        me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_YELLOW);
+        me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_RED);
+        me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_GREEN);
     }
 
     void Aggro(Unit *who)
