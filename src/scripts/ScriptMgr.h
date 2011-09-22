@@ -10,6 +10,7 @@
 
 #include "Common.h"
 #include "CreatureScript.h"
+#include "SpellScript.h"
 #include "Platform/CompilerDefs.h"
 #include "Database/DBCStructure.h"
 
@@ -21,6 +22,7 @@ class Player;
 class Creature;
 class CreatureAI;
 class CreatureAINew;
+class SpellScriptWrapper;
 class InstanceData;
 class Quest;
 class Item;
@@ -133,12 +135,16 @@ class ScriptMgr
         bool EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget);
         
         CreatureAINew* getAINew(Creature* creature);
+        SpellScript* getSpellScript(uint32 spellId);
         
         void addScript(CreatureScript* cscript) { m_creatureScripts[cscript->getName()] = cscript; }
+        void addScript(SpellScriptWrapper* sscript) { m_spellScripts[sscript->getName()] = sscript; }
         
     private:
         typedef std::map<std::string, CreatureScript*> CreatureScriptMap;
         CreatureScriptMap m_creatureScripts;
+        typedef std::map<std::string, SpellScriptWrapper*> SpellScriptMap;
+        SpellScriptMap m_spellScripts;
 };
 
 //Generic scripting text function

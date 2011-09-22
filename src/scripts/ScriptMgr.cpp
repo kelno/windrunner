@@ -2381,6 +2381,15 @@ CreatureAINew* ScriptMgr::getAINew(Creature* creature)
     return iter->second->getAI(creature);
 }
 
+SpellScript* ScriptMgr::getSpellScript(uint32 spellId)
+{
+    SpellScriptMap::const_iterator iter = m_spellScripts.find(objmgr.getSpellScriptName(spellId));
+    if (iter == m_spellScripts.end())
+        return NULL;
+        
+    return iter->second->getSpellScript();
+}
+
 bool ScriptMgr::ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
 {
     Script *tmpscript = m_scripts[_Item->GetProto()->ScriptId];
