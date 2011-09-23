@@ -465,6 +465,14 @@ struct boss_sathrovarrAI : public ScriptedAI
             }
         }
     }
+    
+    void DoMeleeAttackIfReady(bool withCorruptionStrike)
+    {
+        if (withCorruptionStrike)
+            DoCast(m_creature->getVictim(), SPELL_CORRUPTION_STRIKE, true);
+            
+        UnitAI::DoMeleeAttackIfReady();
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -561,11 +569,11 @@ struct boss_sathrovarrAI : public ScriptedAI
         if(CorruptionStrikeTimer < diff)
         {
             DoScriptText(SAY_SATH_SPELL2, m_creature);
-            DoCast(m_creature->getVictim(), SPELL_CORRUPTION_STRIKE);
+            DoMeleeAttackIfReady(true);
             CorruptionStrikeTimer = 13000;
         }else CorruptionStrikeTimer -= diff;
 
-        DoMeleeAttackIfReady();
+        DoMeleeAttackIfReady(false);
     }
 };
 
