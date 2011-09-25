@@ -301,16 +301,22 @@ static Locations HoverPosition[]=
 
 static Locations GlaivePosition[]=
 {
-    {695.105, 305.303, 354.256},
+    /*{695.105, 305.303, 354.256},
     {659.338, 305.303, 354.256},//the distance between two glaives is 36
     {700.105, 305.303, 354.256},
-    {664.338, 305.303, 354.256}
+    {664.338, 305.303, 354.256}*/
+    {678.059998, 285.220001, 354.325012},
+    {676.226013, 325.230988, 354.319000},
+    {677.792297, 288.365387, 354.143616},
+    {676.655762, 321.935272, 354.135986}
 };
 
 static Locations EyeBlast[]=
 {
-    {677, 350, 354},//start point, pass through glaive point
-    {677, 260, 354}
+    /*{677, 350, 354},//start point, pass through glaive point
+    {677, 260, 354}*/
+    {640.187500, 304.764313, 354},
+    {713.145081, 305.173889, 354}
 };
 
 static Locations AkamaWP[]=
@@ -721,8 +727,10 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             break;
 
         case PHASE_NORMAL_2:
-            if(HPPCT(m_creature) < 30)
+            if(HPPCT(m_creature) < 30) {
                 EnterPhase(PHASE_TALK_SEQUENCE);
+                Summons.DespawnEntry(PARASITIC_SHADOWFIEND);
+            }
             break;
 
         case PHASE_NORMAL_MAIEV:
@@ -838,7 +846,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_EYE_BLAST:
                 CastEyeBlast();
-                Timer[EVENT_EYE_BLAST] = 0;
+                Timer[EVENT_EYE_BLAST] = 30000 + rand()%10000;
                 break;
 
             case EVENT_MOVE_POINT:
