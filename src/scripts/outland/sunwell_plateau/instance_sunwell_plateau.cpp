@@ -69,6 +69,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
 	uint64 KalecgosWall[2];
 	uint64 FireBarrier;                                     // Felmysts Encounter
 	uint64 MurusGate[2];                                    // Murus Encounter
+    uint64 IceBarrier;
 
 	/*** Misc ***/
 	uint32 SpectralRealmTimer;
@@ -76,6 +77,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 GauntletStatus;
     uint32 BringersTimer;
     uint32 FiendTimer;
+    uint32 IceBarrierTimer;
 
     void Initialize()
     {
@@ -108,11 +110,13 @@ struct instance_sunwell_plateau : public ScriptedInstance
         MurusGate[1] = 0;
         KalecgosWall[0] = 0;
         KalecgosWall[1] = 0;
+        IceBarrier = 0;
 
         /*** Misc ***/
         SpectralRealmTimer      = 5000;
         BringersTimer           = 40000;
         FiendTimer              = 0;
+        IceBarrierTimer         = 1000;
 
         /*** Encounters ***/
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
@@ -239,6 +243,28 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 187765:    // The third gate FIXME: Always closed for now, will change later
                 HandleGameObject(NULL, false, pGo);
                 break;
+            case 188119:
+                IceBarrier = pGo->GetGUID(); break;
+                pGo->setActive(true);
+                break;
+        }
+    }
+    
+    void ShowIceBarrier()
+    {
+        Map::PlayerList const& players = instance->GetPlayers();
+
+        if (players.isEmpty())
+            return;
+            
+        Player* tmp = GetPlayerInMap();
+        GameObject* barrier = GameObject::GetGameObject(*tmp, IceBarrier);
+        if (!barrier)
+            return;
+
+        for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+            if (Player* plr = itr->getSource())
+                barrier->SendUpdateToPlayer(plr);
         }
     }
 
@@ -356,6 +382,14 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
     void Update(uint32 const diff)
     {
+        if (GetData(DATA_KALECGOS_EVENT) == DONE && GetData(DATA_BRUTALLUS_EVENT) != DONE) {
+            if (IceBarrierTimer <= diff) {
+                ShowIceBarrier();
+                IceBarrierTimer = 1000;
+            }
+            else
+                IceBarrierTimer -= diff;
+        }
 
         Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
         if (!Commander || Commander->isInCombat() || Commander->isDead() || !GetAlivePlayerInMap())

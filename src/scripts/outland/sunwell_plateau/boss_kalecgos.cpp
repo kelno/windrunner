@@ -503,10 +503,12 @@ struct boss_sathrovarrAI : public ScriptedAI
                 Unit* Kalecgos = Unit::GetUnit(*m_creature, KalecgosGUID);
                 if(Kalecgos)
                 {
-                    Kalecgos->CastSpell(Kalecgos, SPELL_ENRAGE, true);
+                    //Kalecgos->CastSpell(Kalecgos, SPELL_ENRAGE, true);
+                    Kalecgos->AddAura(SPELL_ENRAGE, Kalecgos);
                     ((boss_kalecgosAI*)(Kalecgos->ToCreature())->AI())->isEnraged = true;
                 }
-                DoCast(m_creature, SPELL_ENRAGE, true);
+                //DoCast(m_creature, SPELL_ENRAGE, true);
+                me->AddAura(SPELL_ENRAGE, me);
                 isEnraged = true;
             }
 
@@ -683,6 +685,7 @@ struct boss_kalecAI : public ScriptedAI
 
         if(RevitalizeTimer < diff)
         {
+            me->InterruptNonMeleeSpells(false);
             DoCast(m_creature, SPELL_REVITALIZE);
             RevitalizeTimer = 5000;
         }else RevitalizeTimer -= diff;
@@ -751,10 +754,12 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
                  Unit* Sath = Unit::GetUnit(*m_creature, SathGUID);
                  if(Sath)
                  {
-                     Sath->CastSpell(Sath, SPELL_ENRAGE, true);
+                     //Sath->CastSpell(Sath, SPELL_ENRAGE, true);
+                     Sath->AddAura(SPELL_ENRAGE, Sath);
                      ((boss_sathrovarrAI*)(Sath->ToCreature())->AI())->isEnraged = true;
                  }
-                 DoCast(m_creature, SPELL_ENRAGE, true);
+                 //DoCast(m_creature, SPELL_ENRAGE, true);
+                 me->AddAura(SPELL_ENRAGE, me);
                  isEnraged = true;
              }
 

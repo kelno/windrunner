@@ -148,6 +148,8 @@ struct boss_sacrolashAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45236, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45246, true);
         
+        m_creature->SetFullTauntImmunity(true);
+        
         summons.DespawnAll();
         
         if (pInstance) {
@@ -302,35 +304,39 @@ struct boss_sacrolashAI : public ScriptedAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    Unit* Temp = NULL;
+                    Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
                     if(target) {
                         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_CONFLAGRATION);
                     }
-                    ConflagrationTimer = 30000+(rand()%5000);
+                    ConflagrationTimer = 30000;
                 }
             }else ConflagrationTimer -= diff;
         }
-        else
-        {
-            if(ShadownovaTimer < diff)
-            {
-                if (!m_creature->IsNonMeleeSpellCasted(false))
-                {
+        else {
+            if(ShadownovaTimer < diff) {
+                if (!m_creature->IsNonMeleeSpellCasted(false)) {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                    if(target) {
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    Unit* Temp = NULL;
+                    Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    if (target) {
                         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_SHADOW_NOVA);
                     }
 
-                    if(!SisterDeath)
-                    {
+                    if (!SisterDeath) {
                         if(target)
                             DoScriptText(EMOTE_SHADOW_NOVA, m_creature, target);
                         DoScriptText(YELL_SHADOW_NOVA, m_creature);
                     }
-                    ShadownovaTimer = 30000+(rand()%5000);
+                    ShadownovaTimer = 30000;
                 }
             }else ShadownovaTimer -=diff;
         }
@@ -358,9 +364,11 @@ struct boss_sacrolashAI : public ScriptedAI
                 target = SelectUnit(SELECT_TARGET_RANDOM, 1, 10.0f, 50.0f, true);
                 if (!target)
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-                temp = DoSpawnCreature(MOB_SHADOW_IMAGE,0,0,0,0,TEMPSUMMON_CORPSE_DESPAWN,10000);
-                if(temp && target)
+                temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
+                if(temp && target) {
                     temp->AI()->AttackStart(target);
+                    temp->AddThreat(target, 50000.0f);
+                }
             }
             ShadowimageTimer = 20000;
         }else ShadowimageTimer -=diff;
@@ -443,7 +451,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             ConflagrationTimer = 45000;
             BlazeTimer = 100;
             PyrogenicsTimer = 15000;
-            ShadownovaTimer = 40000;
+            ShadownovaTimer = 30000;
             EnrageTimer = 360000;
             FlamesearTimer = 15000;
             IntroYellTimer = 10000;
@@ -462,6 +470,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45271, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45329, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
+        
+        m_creature->SetFullTauntImmunity(true);
     }
 
     void Aggro(Unit *who)
@@ -680,12 +690,16 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    Unit* Temp = NULL;
+                    Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
                     if(target) {
                         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_SHADOW_NOVA);
                     }
-                    ShadownovaTimer= 30000+(rand()%5000);
+                    ShadownovaTimer= 30000;
                 }
             }else ShadownovaTimer -=diff;
         }
@@ -697,12 +711,16 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 0);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    Unit* Temp = NULL;
+                    Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
                     if(target) {
                         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
                         DoCast(target, SPELL_CONFLAGRATION);
                     }
-                    ConflagrationTimer = 30000+(rand()%5000);
+                    ConflagrationTimer = 30000;
 
                     if(!SisterDeath)
                     {
@@ -824,14 +842,21 @@ struct mob_shadow_imageAI : public ScriptedAI
             {
                 DoCast(m_creature, SPELL_SHADOW_FURY);
                 ShadowfuryTimer = 10000;
+                KillTimer = 500;
             }else ShadowfuryTimer -=diff;
         }
 
         if (type == SHADOW_IMAGE_DARKSTRIKE) {
             if (ChangeTargetTimer) {
                 if (ChangeTargetTimer <= diff) {
-                    if (Creature* sacrolash = me->FindCreatureInGrid(25165, 100.0f, true))
-                        AttackStart(((ScriptedAI*)sacrolash->AI())->SelectUnit(SELECT_TARGET_RANDOM, 0));
+                    if (Creature* sacrolash = me->FindCreatureInGrid(25165, 100.0f, true)) {
+                        DoResetThreat();
+                        Unit* target = ((ScriptedAI*)sacrolash->AI())->SelectUnit(SELECT_TARGET_RANDOM, 0);
+                        if (target) {
+                            AttackStart(target);
+                            me->AddThreat(target, 50000.0f);
+                        }
+                    }
                         
                     ChangeTargetTimer = 0;
                 }
@@ -849,7 +874,7 @@ struct mob_shadow_imageAI : public ScriptedAI
                         ChangeTargetTimer = 1000 + rand()%9000; // 1-10 sec
                     }
                 }
-                DarkstrikeTimer = 3000;
+                DarkstrikeTimer = 800;
             }
             else DarkstrikeTimer -= diff;
         }
