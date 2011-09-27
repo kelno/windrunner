@@ -258,12 +258,6 @@ struct boss_sacrolashAI : public ScriptedAI
             break;
         }
     }
-    
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
-    {
-        if (m_creature->getVictim())
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->getVictim()->GetGUID());
-    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -309,10 +303,9 @@ struct boss_sacrolashAI : public ScriptedAI
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
-                    if(target) {
-                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                    if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
-                    }
+
                     ConflagrationTimer = 30000;
                 }
             }else ConflagrationTimer -= diff;
@@ -326,10 +319,8 @@ struct boss_sacrolashAI : public ScriptedAI
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
-                    if (target) {
-                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                    if (target) 
                         DoCast(target, SPELL_SHADOW_NOVA);
-                    }
 
                     if (!SisterDeath) {
                         if(target)
@@ -347,10 +338,9 @@ struct boss_sacrolashAI : public ScriptedAI
             {
                 Unit* target = NULL;
                 target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                if(target) {
-                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                if(target)
                     DoCast(target, SPELL_CONFOUNDING_BLOW);
-                }
+
                 ConfoundingblowTimer = 20000 + (rand()%5000);
             }
         }else ConfoundingblowTimer -=diff;
@@ -489,11 +479,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, IN_PROGRESS);
     }
 
-    void AttackStart(Unit *who)
+    /*void AttackStart(Unit *who)
     {
         if (!m_creature->isInCombat())
             Scripted_NoMovementAI::AttackStart(who);
-    }
+    }*/
     
     void EnterEvadeMode()
     {
@@ -621,12 +611,6 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         }
         return 10000;
     }
-    
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
-    {
-        if (m_creature->getVictim())
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->getVictim()->GetGUID());
-    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -666,10 +650,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
         if (!UpdateVictim())
         {
-            if (Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0)) {
-                me->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+            if (Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
                 AttackStart(target);
-            }
             else if (pInstance) {
                 Unit* sister =  Unit::GetUnit((*me),pInstance->GetData64(DATA_SACROLASH));
                 if (sister && sister->getVictim()) {
@@ -695,10 +677,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
-                    if(target) {
-                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                    if(target)
                         DoCast(target, SPELL_SHADOW_NOVA);
-                    }
                     ShadownovaTimer= 30000;
                 }
             }else ShadownovaTimer -=diff;
@@ -716,10 +696,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
-                    if(target) {
-                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
+                    if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
-                    }
+
                     ConflagrationTimer = 30000;
 
                     if(!SisterDeath)

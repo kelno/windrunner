@@ -640,6 +640,12 @@ struct npc_akamaAI : public ScriptedAI
             EventBegun = true;
         }
     }
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (me->HasReactState(REACT_PASSIVE))
+            return;
+    }
 
     void MovementInform(uint32 type, uint32 id)
     {
