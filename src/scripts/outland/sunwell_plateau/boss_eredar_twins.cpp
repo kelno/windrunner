@@ -73,6 +73,7 @@ enum Spells
     SPELL_ENRAGE            =   46587,
     SPELL_EMPOWER           =   45366,
     SPELL_DARK_FLAME        =   45345,
+    SPELL_FIREBLAST         =   45232, // if a player escapes from the room
 
     //Grand Warlock Alythess spells
     SPELL_PYROGENICS        =   45230, //15secs
@@ -104,6 +105,7 @@ struct boss_sacrolashAI : public ScriptedAI
     uint32 ConflagrationTimer;
     uint32 EnrageTimer;
     uint32 RespawnTimer;
+    uint32 CheckFBTimer;
     
     SummonList summons;
 
@@ -130,6 +132,7 @@ struct boss_sacrolashAI : public ScriptedAI
             ShadowimageTimer = 20000;
             ConflagrationTimer = 30000;
             EnrageTimer = 360000;
+            CheckFBTimer = 200;
 
             SisterDeath = false;
         }
@@ -161,6 +164,26 @@ struct boss_sacrolashAI : public ScriptedAI
     void JustSummoned(Creature* pSummon)
     {
         summons.Summon(pSummon);
+    }
+    
+    bool CheckPlayersForFireblast()
+    {
+        if (!pInstance)
+            return false;
+            
+        Map::PlayerList const& players = pInstance->instance->GetPlayers();
+
+        if (players.isEmpty())
+            return false;
+
+        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+        {
+            Player* plr = itr->getSource();
+            if (plr && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
+                return true;
+        }
+        
+        return false;
     }
     
     void SummonedCreatureDespawn(Creature* pSummon)
@@ -289,6 +312,15 @@ struct boss_sacrolashAI : public ScriptedAI
 
         if (!UpdateVictim())
             return;
+            
+        if (CheckFBTimer <= diff) {
+            if (CheckPlayersForFireblast())
+                DoCast(me, SPELL_FIREBLAST);
+                
+            CheckFBTimer = 200;
+        }
+        else
+            CheckFBTimer -= diff;
 
         if(SisterDeath)
         {
@@ -421,6 +453,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     uint32 FlamesearTimer;
     uint32 EnrageTimer;
     uint32 RespawnTimer;
+    uint32 CheckFBTimer;
 
     void Reset()
     {
@@ -445,6 +478,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             EnrageTimer = 360000;
             FlamesearTimer = 15000;
             IntroYellTimer = 10000;
+            CheckFBTimer = 200;
 
             SisterDeath = false;
         }
@@ -484,6 +518,26 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         if (!m_creature->isInCombat())
             Scripted_NoMovementAI::AttackStart(who);
     }*/
+    
+    bool CheckPlayersForFireblast()
+    {
+        if (!pInstance)
+            return false;
+            
+        Map::PlayerList const& players = pInstance->instance->GetPlayers();
+
+        if (players.isEmpty())
+            return false;
+
+        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+        {
+            Player* plr = itr->getSource();
+            if (plr && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
+                return true;
+        }
+        
+        return false;
+    }
     
     void EnterEvadeMode()
     {
@@ -664,6 +718,15 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             else
                 return;
         }
+
+        if (CheckFBTimer <= diff) {
+            if (CheckPlayersForFireblast())
+                DoCast(me, SPELL_FIREBLAST);
+                
+            CheckFBTimer = 200;
+        }
+        else
+            CheckFBTimer -= diff;
 
         if(SisterDeath)
         {
