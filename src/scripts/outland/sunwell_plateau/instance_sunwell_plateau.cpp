@@ -62,6 +62,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint64 FlightRight;
     uint64 CommanderGUID;
 	uint32 SpectralPlayers;
+    uint64 BarrierTriggerGUID;
     std::vector<uint64> northList, centerList, southList;
 
 	/** GameObjects **/
@@ -78,6 +79,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 BringersTimer;
     uint32 FiendTimer;
     uint32 IceBarrierTimer;
+    bool IceBarrierDone;
 
     void Initialize()
     {
@@ -99,6 +101,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         KalecgosKJ              = 0;
         CommanderGUID           = 0;
         SpectralPlayers         = 0;
+        BarrierTriggerGUID      = 0;
         northList.clear();
         centerList.clear();
         southList.clear();
@@ -117,6 +120,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
         BringersTimer           = 40000;
         FiendTimer              = 0;
         IceBarrierTimer         = 1000;
+
+        IceBarrierDone = false;
 
         /*** Encounters ***/
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
@@ -169,20 +174,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
         return NULL;
     }
 
-    /*void HandleGameObject(uint64 guid, uint32 state)
-    {
-        Player *player = GetPlayerInMap();
-
-        if (!player || !guid)
-        {
-            debug_log("TSCR: Sunwell Plateau: HandleGameObject fail");
-            return;
-        }
-
-        if (GameObject *go = GameObject::GetGameObject(*player,guid))
-            go->SetGoState(state);
-    }*/
-
     void OnCreatureCreate(Creature* pCreature, uint32 creature_entry)
     {
         switch(pCreature->GetEntry())
@@ -203,6 +194,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25357: FlightLeft          = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25837: CommanderGUID       = pCreature->GetGUID(); pCreature->setActive(true); break;
+            case 19871: BarrierTriggerGUID  = pCreature->GetGUID(); break;
             case 23472:
                 //sLog.outString("PositionX: %f", pCreature->GetPositionX());
                 if (pCreature->GetPositionX() > 1490.0f)
@@ -307,9 +299,13 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case MOB_FLIGHT_LEFT:           return FlightLeft;
             case MOB_FLIGHT_RIGHT:          return FlightRight;
             case DATA_PLAYER_GUID:
+            {
                 Player* Target = GetPlayerInMap();
                 if (!Target) sLog.outError("Sunwell: No target found in GetData64()!");
                 return Target ? Target->GetGUID() : 0;
+            }
+            case DATA_GO_ICE_BARRIER:
+                return IceBarrier;
         }
         return 0;
     }
@@ -374,6 +370,13 @@ struct instance_sunwell_plateau : public ScriptedInstance
                         trigger->CastSpell(trigger, 45582, true);
                 }
                 break;
+            case DATA_ICEBARRIER_EVENT:
+                IceBarrierDone = true;
+                IceBarrierTimer = 3600000;
+                if (Creature* trigger = instance->GetCreatureInMap(BarrierTriggerGUID))
+                    trigger->CastSpell(trigger, 47030, true);
+                ShowIceBarrier();
+                break;
         }
 
         if (data == DONE)
@@ -382,7 +385,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
     void Update(uint32 const diff)
     {
-        if (GetData(DATA_KALECGOS_EVENT) == DONE && GetData(DATA_BRUTALLUS_EVENT) != DONE) {
+        if (!IceBarrierDone) {
             if (IceBarrierTimer <= diff) {
                 ShowIceBarrier();
                 IceBarrierTimer = 1000;

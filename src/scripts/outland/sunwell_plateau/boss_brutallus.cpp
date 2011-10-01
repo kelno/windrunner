@@ -25,27 +25,27 @@ EndScriptData */
 
 enum Quotes
 {
- YELL_INTRO                 =   -1580017,
- YELL_INTRO_BREAK_ICE       =   -1580018,
- YELL_INTRO_CHARGE          =   -1580019,
- YELL_INTRO_KILL_MADRIGOSA  =   -1580020,
- YELL_INTRO_TAUNT           =   -1580021,
+    YELL_INTRO                 =   -1580017,
+    YELL_INTRO_BREAK_ICE       =   -1580018,
+    YELL_INTRO_CHARGE          =   -1580019,
+    YELL_INTRO_KILL_MADRIGOSA  =   -1580020,
+    YELL_INTRO_TAUNT           =   -1580021,
 
- YELL_MADR_ICE_BARRIER      =   -1580031,
- YELL_MADR_INTRO            =   -1580032,
- YELL_MADR_ICE_BLOCK        =   -1580033,
- YELL_MADR_TRAP             =   -1580034,
- YELL_MADR_DEATH            =   -1580035,
+    YELL_MADR_ICE_BARRIER      =   -1580031,
+    YELL_MADR_INTRO            =   -1580032,
+    YELL_MADR_ICE_BLOCK        =   -1580033,
+    YELL_MADR_TRAP             =   -1580034,
+    YELL_MADR_DEATH            =   -1580035,
 
- YELL_AGGRO                 =   -1580022,
- YELL_KILL1                 =   -1580023,
- YELL_KILL2                 =   -1580024,
- YELL_KILL3                 =   -1580025,
- YELL_LOVE1                 =   -1580026,
- YELL_LOVE2                 =   -1580027,
- YELL_LOVE3                 =   -1580028,
- YELL_BERSERK               =   -1580029,
- YELL_DEATH                 =   -1580030
+    YELL_AGGRO                 =   -1580022,
+    YELL_KILL1                 =   -1580023,
+    YELL_KILL2                 =   -1580024,
+    YELL_KILL3                 =   -1580025,
+    YELL_LOVE1                 =   -1580026,
+    YELL_LOVE2                 =   -1580027,
+    YELL_LOVE3                 =   -1580028,
+    YELL_BERSERK               =   -1580029,
+    YELL_DEATH                 =   -1580030
 };
 
 enum Spells
@@ -144,10 +144,18 @@ struct boss_brutallusAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+        if (Intro || IsIntro)
+            return;
+
         DoScriptText(YELL_AGGRO, m_creature);
 
         if(pInstance)
             pInstance->SetData(DATA_BRUTALLUS_EVENT, IN_PROGRESS);
+            
+        if (who->ToPlayer() && !Intro && !IsIntro) {
+            if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0))
+                Madrigosa->SetVisibility(VISIBILITY_OFF);
+        }
     }
 
     void KilledUnit(Unit* victim)
@@ -163,6 +171,9 @@ struct boss_brutallusAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
+        if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0))
+            Madrigosa->SetVisibility(VISIBILITY_ON);
+
         DoScriptText(YELL_DEATH, m_creature);
 
         if(pInstance){
@@ -190,19 +201,20 @@ struct boss_brutallusAI : public ScriptedAI
     {
         if(!Intro || IsIntro)
             return;
-        //error_log("Start Intro");
+            
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+
         Creature *Madrigosa = Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_MADRIGOSA));
-        if(Madrigosa){
+        if (Madrigosa) {
             (Madrigosa->ToCreature())->Respawn();
             Madrigosa->setActive(true);
             IsIntro = true;
-            Madrigosa->SetMaxHealth(m_creature->GetMaxHealth());
+            Madrigosa->SetMaxHealth(10000000);
             Madrigosa->SetHealth(m_creature->GetMaxHealth());
-            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            m_creature->Attack(Madrigosa, true);
-            Madrigosa->Attack(m_creature, true);
-        }else
-        {
+            IntroPhaseTimer = 1000;
+        }
+        else {
             //Madrigosa not found, end intro
             error_log("Madrigosa was not found");
             EndIntro();
@@ -214,6 +226,7 @@ struct boss_brutallusAI : public ScriptedAI
         //error_log("Brutallus: Ending intro");
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        me->SetReactState(REACT_AGGRESSIVE);
         Intro = false;
         IsIntro = false;
     }
@@ -223,10 +236,21 @@ struct boss_brutallusAI : public ScriptedAI
         Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0);
         if (!Madrigosa)
             return;
+            
+        //sLog.outString("IntroPhase %u", IntroPhase);
 
         switch (IntroPhase) {
         case 0:
             DoScriptText(YELL_MADR_ICE_BARRIER, Madrigosa);
+            if (GameObject *IceBarrier = GameObject::GetGameObject(*me, pInstance ? pInstance->GetData64(DATA_GO_ICE_BARRIER) : 0)) {
+                IceBarrier->SetLootState(GO_READY);
+                IceBarrier->UseDoorOrButton();
+            }
+            else
+                sLog.outError("Sunwell/Brutallus Intro: Ice Barrier not found!");
+            me->AttackStop();
+            me->SetReactState(REACT_DEFENSIVE);
+            Madrigosa->SetReactState(REACT_DEFENSIVE);
             IntroPhaseTimer = 7000;
             ++IntroPhase;
             break;
@@ -239,121 +263,175 @@ struct boss_brutallusAI : public ScriptedAI
             break;
         case 2:
             DoScriptText(YELL_INTRO, me, Madrigosa);
+            AttackStart(Madrigosa);
+            Madrigosa->AI()->AttackStart(me);
             IntroPhaseTimer = 13000;
             ++IntroPhase;
             break;
         case 3:
         {
-            Madrigosa->CastSpell(me, SPELL_INTRO_FROSTBOLT, true);
-            DoCast(me, SPELL_INTRO_FROST_BLAST);
-            Madrigosa->ToCreature()->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
-            Madrigosa->Relocate(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ()+8);
-            Madrigosa->SetOrientation(4.9603f);
-            //Madrigosa->SendMonsterMove(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ(), 0);
-            WorldPacket data;                       //send update position to client
-            Madrigosa->BuildHeartBeatMsg(&data);
-            Madrigosa->SendMessageToSet(&data,true);
-            me->AttackStop();
-            Madrigosa->AttackStop();
-            IntroFrostBoltTimer = 3000;
-            IntroPhaseTimer = 10000;
+            Madrigosa->GetMotionMaster()->Clear(false);
+            Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
+            Madrigosa->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            IntroPhaseTimer = 500;
             ++IntroPhase;
             break;
         }
         case 4:
         {
-            DoScriptText(YELL_INTRO_BREAK_ICE, me);
-            Madrigosa->ToCreature()->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
-            Madrigosa->Relocate(Madrigosa->GetPositionX(), Madrigosa->GetPositionY(), Madrigosa->GetPositionZ()-8);
-            WorldPacket data;                       //send update position to client
-            Madrigosa->BuildHeartBeatMsg(&data);
-            Madrigosa->SendMessageToSet(&data,true);
-            Madrigosa->SetOrientation(4.9603f);
-            IntroPhaseTimer = 6000;
+            Madrigosa->GetMotionMaster()->MovePoint(0, Madrigosa->GetPositionX(), Madrigosa->GetPositionY()+2, Madrigosa->GetPositionZ()+8);
+            me->AttackStop();
+            me->SetReactState(REACT_PASSIVE);
+            Madrigosa->AttackStop();
+            Madrigosa->SetReactState(REACT_PASSIVE);
+            IntroPhaseTimer = 3000;
             ++IntroPhase;
             break;
         }
         case 5:
+        {
+            //((ScriptedAI*)Madrigosa->AI())->AttackStart(me, false);
+            Madrigosa->CastSpell(me, 45203, true);
+            IntroPhaseTimer = 800;
+            ++IntroPhase;
+            break;
+        }
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        {
+            Madrigosa->CastSpell(me, 44843, true);
+            IntroPhaseTimer = 1100;
+            ++IntroPhase;
+            break;
+        }
+        case 12:
+        {
+            float x, y, z, ori;
+            Madrigosa->GetHomePosition(x, y, z, ori);
+            Madrigosa->GetMotionMaster()->MovePoint(1, x, y, z);
+            IntroPhaseTimer = 1000;
+            ++IntroPhase;
+            break;
+        }
+        case 13:
+        {
+            Madrigosa->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            Madrigosa->StopMoving();
+            Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+            IntroPhaseTimer = 1000;
+            ++IntroPhase;
+            break;
+        }
+        case 14:
+        {
+            //Madrigosa->AI()->AttackStart(me);
+            AttackStart(Madrigosa);
+            IntroPhaseTimer = 6000;
+            ++IntroPhase;
+            break;
+        }
+        case 15:
             Madrigosa->CastSpell(me, SPELL_INTRO_ENCAPSULATE_CHANELLING, true);
             DoScriptText(YELL_MADR_TRAP, Madrigosa);
             DoCast(me, SPELL_INTRO_ENCAPSULATE);
             IntroPhaseTimer = 11000;
             ++IntroPhase;
             break;
-        case 6:
+        case 16:
             DoScriptText(YELL_INTRO_CHARGE, me);
             IntroPhaseTimer = 5000;
             ++IntroPhase;
             break;
-        case 7:
+        case 17:
+            DoCast(Madrigosa, SPELL_STOMP);
             me->Kill(Madrigosa);
             DoScriptText(YELL_MADR_DEATH, Madrigosa);
             me->SetHealth(me->GetMaxHealth());
             me->AttackStop();
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
             IntroPhaseTimer = 4000;
             ++IntroPhase;
             break;
-        case 8:
+        case 18:
             DoScriptText(YELL_INTRO_KILL_MADRIGOSA, me);
             me->SetOrientation(0.14f);
             me->StopMoving();
             Madrigosa->setDeathState(CORPSE);
+            Madrigosa->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             IntroPhaseTimer = 8000;
             ++IntroPhase;
             break;
-        case 9:
+        case 19:
             DoScriptText(YELL_INTRO_TAUNT, me);
             IntroPhaseTimer = 5000;
             ++IntroPhase;
             break;
-        case 10:
+        case 20:
+            DoCast(me, 46637);
+            IntroPhaseTimer = 2000;
+            ++IntroPhase;
+            break;
+        case 21:
+        {
+            if (GameObject *IceBarrier = GameObject::GetGameObject(*me, pInstance ? pInstance->GetData64(DATA_GO_ICE_BARRIER) : 0)) {
+                IceBarrier->SetLootState(GO_READY);
+                IceBarrier->UseDoorOrButton();
+            }
+            else
+                sLog.outError("Sunwell/Brutallus Intro: Ice Barrier not found!");
+            
+            IntroPhaseTimer = 200;
+            ++IntroPhase;
+            break;
+        }
+        case 22:
+        {
+            if (pInstance)
+                pInstance->SetData(DATA_ICEBARRIER_EVENT, DONE);
+            
+            IntroPhaseTimer = 500;
+            ++IntroPhase;
+            break;
+        }
+        case 23:
             EndIntro();
             break;
         }
     }
     
-    void AttackStart(Unit* who)
+    void DamageTaken(Unit* doneBy, uint32& damage)
     {
-        if (!who || Intro || IsIntro)
-            return;
-        
-        ScriptedAI::AttackStart(who);
+        if ((Intro || IsIntro) && doneBy->ToPlayer())
+            damage = 0;
+            
+        if ((Intro || IsIntro) && damage >= me->GetHealth())
+            damage = 0;
     }
 
     void MoveInLineOfSight(Unit *who) {
         if (!who->isTargetableForAttack() || !m_creature->IsHostileTo(who))
             return;
-        if(pInstance && Intro)
+
+        if (pInstance && Intro)
             pInstance->SetData(DATA_BRUTALLUS_EVENT, SPECIAL);
         
-        if (Intro && !IsIntro)
-            StartIntro();
-        if(!Intro)
+        if (!Intro && !IsIntro)
             ScriptedAI::MoveInLineOfSight(who);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-
         if (IsIntro)
         {
             if (IntroPhaseTimer <= diff)
                 DoIntro();
             else IntroPhaseTimer -= diff;
 
-            if (IntroPhase == 3 + 1)
-            {
-                if (IntroFrostBoltTimer <= diff)
-                {
-                    if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0))
-                    {
-                        Madrigosa->SetOrientation(4.9603f);
-                        Madrigosa->CastSpell(me, SPELL_INTRO_FROSTBOLT, true);
-                        IntroFrostBoltTimer = 2000;
-                    }
-                } else IntroFrostBoltTimer -= diff;
-            }
             if (!UpdateVictim())
                 return;
             DoMeleeAttackIfReady();
@@ -361,6 +439,8 @@ struct boss_brutallusAI : public ScriptedAI
 
         if (!UpdateVictim() || IsIntro)
             return;
+
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
         if (SlashTimer <= diff)
         {
@@ -407,15 +487,15 @@ CreatureAI* GetAI_boss_brutallus(Creature *_Creature)
     return new boss_brutallusAI (_Creature);
 }
 
-/*bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt) {
+bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt)
+{
     if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
         if (Creature *Brutallus = Unit::GetCreature(*pPlayer, pInstance ? pInstance->GetData64(DATA_BRUTALLUS) : 0))
             ((boss_brutallusAI*)Brutallus->AI())->StartIntro();
-        if (GameObject *IceBarrier = GameObject::GetGameObject(*pPlayer, pInstance ? pInstance->GetData64(DATA_ICE_BARRIER) : 0))
-            IceBarrier->UseDoorOrButton();
     }
-    return false;
-}*/
+
+    return true;
+}
 
 void AddSC_boss_brutallus()
 {
@@ -426,8 +506,8 @@ void AddSC_boss_brutallus()
     newscript->GetAI = &GetAI_boss_brutallus;
     newscript->RegisterSelf();
     
-    /*newscript = new Script;
+    newscript = new Script;
     newscript->Name = "at_brutallus_intro";
     newscript->pAreaTrigger = &AreaTrigger_at_brutallus_intro;
-    newscript->RegisterSelf();*/
+    newscript->RegisterSelf();
 }
