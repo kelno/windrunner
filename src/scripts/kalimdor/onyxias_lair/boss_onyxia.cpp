@@ -294,7 +294,7 @@ struct boss_onyxiaAI : public ScriptedAI
         }
     }
     
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
         if (spellId == SPELL_FLAMEBREATH) {
             if (GameObject* blade = m_creature->FindGOInGrid(179561, 50.0f)) {

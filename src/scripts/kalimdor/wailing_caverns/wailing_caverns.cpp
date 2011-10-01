@@ -148,7 +148,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
          summoned->AI()->AttackStart(m_creature);
     }
     
-    /*void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    /*void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
         sLog.outString("Pom %u", spellId);
     }*/

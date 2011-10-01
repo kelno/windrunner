@@ -96,7 +96,7 @@ struct ScriptedAI : public CreatureAI
     void OnPossess(bool apply) {}
     
     // Called when creature finishes a spell cast
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target) {}
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok) {}
 
     //*************
     // Variables
