@@ -68,7 +68,7 @@ struct boss_brutallusAI : public ScriptedAI
 {
     boss_brutallusAI(Creature *c) : ScriptedAI(c){
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        Intro = true;
+        Intro = false;
     }
 
     ScriptedInstance* pInstance;
@@ -132,8 +132,6 @@ struct boss_brutallusAI : public ScriptedAI
                 float x,y,z;
                 m_creature->GetPosition(x,y,z);
                 Creature *felmyst = plr->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
-                if (felmyst)
-                    felmyst->AI()->JustRespawned();
                 if (Creature *Madrigosa = Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_MADRIGOSA)))
                     Madrigosa->SetVisibility(VISIBILITY_OFF);
             }
@@ -149,7 +147,7 @@ struct boss_brutallusAI : public ScriptedAI
 
         DoScriptText(YELL_AGGRO, m_creature);
 
-        if(pInstance)
+        if (pInstance)
             pInstance->SetData(DATA_BRUTALLUS_EVENT, IN_PROGRESS);
             
         if (who->ToPlayer() && !Intro && !IsIntro) {
@@ -171,20 +169,19 @@ struct boss_brutallusAI : public ScriptedAI
 
     void JustDied(Unit* Killer)
     {
-        if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0))
+        if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0)) {
+            Madrigosa->SetVisibility(VISIBILITY_OFF);
+            Madrigosa->Respawn();
+            Madrigosa->Kill(Madrigosa);
+            Madrigosa->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             Madrigosa->SetVisibility(VISIBILITY_ON);
+            Madrigosa->SummonCreature(25703, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+        }
 
         DoScriptText(YELL_DEATH, m_creature);
 
-        if(pInstance){
+        if (pInstance){
             pInstance->SetData(DATA_BRUTALLUS_EVENT, DONE);
-            float x,y,z;
-            m_creature->GetPosition(x,y,z);
-            Creature *felmyst = m_creature->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
-            if (felmyst)
-                felmyst->AI()->JustRespawned();
-            if (Creature *Madrigosa = Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_MADRIGOSA)))
-                    Madrigosa->SetVisibility(VISIBILITY_OFF);
             
             // Force removal of Burn aura on all players in map
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
@@ -199,7 +196,7 @@ struct boss_brutallusAI : public ScriptedAI
 
     void StartIntro()
     {
-        if(!Intro || IsIntro)
+        if (!Intro || IsIntro)
             return;
             
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -497,6 +494,71 @@ bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt
     return true;
 }
 
+struct trigger_death_cloudAI : public ScriptedAI
+{
+    trigger_death_cloudAI(Creature* c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance* pInstance;
+    
+    uint32 bornTimer;
+    
+    void Reset()
+    {
+        DoCast(me, 45212, true);
+        
+        me->SetSpeed(MOVE_WALK, 2.0f);
+        me->SetSpeed(MOVE_RUN, 2.0f);
+
+        Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0);
+        if (!Madrigosa)
+            return;
+
+        float x, y, z;
+        Madrigosa->GetPosition(x, y, z);
+        me->GetMotionMaster()->MovePoint(0, x, y, z);
+        
+        bornTimer = 0;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0)) {
+            me->AddAura(44885, Madrigosa);
+            bornTimer = 10000;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!bornTimer)
+            return;
+            
+        if (bornTimer <= diff) {
+            if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0)) {
+                Madrigosa->RemoveAurasDueToSpell(44885);
+                Madrigosa->SetVisibility(VISIBILITY_OFF);
+                float x, y, z;
+                Madrigosa->GetPosition(x, y, z);
+                me->SummonCreature(FELMYST, x, y, z, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+                bornTimer = 0;
+                me->DisappearAndDie();
+            }
+        }
+        else
+            bornTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_trigger_death_cloud(Creature* creature)
+{
+    return new trigger_death_cloudAI(creature);
+}
+
 void AddSC_boss_brutallus()
 {
     Script *newscript;
@@ -509,5 +571,10 @@ void AddSC_boss_brutallus()
     newscript = new Script;
     newscript->Name = "at_brutallus_intro";
     newscript->pAreaTrigger = &AreaTrigger_at_brutallus_intro;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "trigger_death_cloud";
+    newscript->GetAI = &GetAI_trigger_death_cloud;
     newscript->RegisterSelf();
 }

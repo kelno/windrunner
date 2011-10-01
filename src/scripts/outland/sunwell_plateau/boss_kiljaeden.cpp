@@ -783,7 +783,7 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
         DeceiverDeathCount = 0;
         SummonedDeceivers = false;
         KiljaedenDeath = false;
-        RandomSayTimer = 30000;
+        RandomSayTimer = 45000 + rand()%30000;
         Summons.DespawnAll();
     }
 
@@ -819,7 +819,7 @@ struct mob_kiljaeden_controllerAI : public Scripted_NoMovementAI
     {
         if (RandomSayTimer < diff && pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED) {
             DoScriptText(RAND(SAY_KJ_OFFCOMBAT1, SAY_KJ_OFFCOMBAT2, SAY_KJ_OFFCOMBAT3, SAY_KJ_OFFCOMBAT4, SAY_KJ_OFFCOMBAT5), m_creature);
-            RandomSayTimer = 30000;
+            RandomSayTimer = 45000 + rand()%30000;
         }
         else
             RandomSayTimer -= diff;
