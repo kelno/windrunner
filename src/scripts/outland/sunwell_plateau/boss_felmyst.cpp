@@ -128,25 +128,21 @@ static float rights[3][3] = { {1492.819946, 515.668030, 50.083302},
 
 struct boss_felmystAI : public ScriptedAI
 {
-    boss_felmystAI(Creature *c) : ScriptedAI(c){
+    boss_felmystAI(Creature *c) : ScriptedAI(c)
+    {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-
-        // wait for core patch be accepted
-        /*SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_ENCAPSULATE_EFFECT);
-        if(TempSpell->SpellIconID == 2294)
-            TempSpell->SpellIconID = 2295;
-        TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_VAPOR_TRIGGER);
-        if((TempSpell->Attributes & SPELL_ATTR_PASSIVE) == 0)
-            TempSpell->Attributes |= SPELL_ATTR_PASSIVE;
-        TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_FOG_CHARM2);
-        if((TempSpell->Attributes & SPELL_ATTR_PASSIVE) == 0)
-            TempSpell->Attributes |= SPELL_ATTR_PASSIVE;*/
+        justBorn = true;
+        IntroTimer = 5000;
+        IntroPhase = 1;
     }
 
     ScriptedInstance *pInstance;
     PhaseFelmyst Phase;
     EventFelmyst Event;
     uint32 Timer[EVENT_FLIGHT + 1];
+    
+    uint32 IntroTimer;
+    uint8 IntroPhase;
 
     uint32 FlightCount;
     uint32 BreathCount;
@@ -157,6 +153,7 @@ struct boss_felmystAI : public ScriptedAI
     
     bool justPulled;
     bool goingLeft;
+    bool justBorn;
     
     Unit* encapsTarget;
 
@@ -170,7 +167,15 @@ struct boss_felmystAI : public ScriptedAI
         
         justPulled = false;
 
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        if (justBorn) {
+            me->SetStandState(PLAYER_STATE_SLEEP);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+        else
+            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            
+        me->SetReactState(REACT_PASSIVE);
+
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
         m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
         
@@ -208,6 +213,9 @@ struct boss_felmystAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+        if (justBorn)
+            return;
+
         m_creature->setActive(true);
         DoZoneInCombat();
         m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
@@ -227,18 +235,13 @@ struct boss_felmystAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if(Phase != PHASE_FLIGHT)
+        if(Phase != PHASE_FLIGHT && !justBorn)
             ScriptedAI::MoveInLineOfSight(who);
     }
 
     void KilledUnit(Unit* victim)
     {
         DoScriptText(RAND(YELL_KILL1, YELL_KILL2), m_creature);
-    }
-
-    void JustRespawned()
-    {
-        DoScriptText(YELL_BIRTH, m_creature);
     }
 
     void JustDied(Unit* Killer)
@@ -251,13 +254,7 @@ struct boss_felmystAI : public ScriptedAI
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
-        // workaround for linked aura
-        /*if(spell->Id == SPELL_VAPOR_FORCE)
-        {
-            caster->CastSpell(caster, SPELL_VAPOR_TRIGGER, true);
-        }*/
-        // workaround for mind control
-        if(spell->Id == SPELL_FOG_INFORM)
+        if (spell->Id == SPELL_FOG_INFORM)
         {
             float x, y, z;
             caster->GetPosition(x, y, z);
@@ -513,6 +510,44 @@ struct boss_felmystAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (justBorn) {
+            if (IntroTimer <= diff) {
+                switch (IntroPhase) {
+                case 1:
+                    me->SetStandState(UNIT_STAND_STATE_STAND);
+                    DoScriptText(YELL_BIRTH, me);
+                    IntroTimer = 4000;
+                    IntroPhase++;
+                    break;
+                case 2:
+                    me->GetMotionMaster()->Clear(false);
+                    me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
+                    me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    IntroTimer = 500;
+                    IntroPhase++;
+                    break;
+                case 3:
+                    me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344, false);
+                    me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
+                    m_creature->SetSpeed(MOVE_FLIGHT, 2.0f);
+                    IntroTimer = 10000;
+                    IntroPhase++;
+                    break;
+                case 4:
+                    me->GetMotionMaster()->MovePath(25038, true);
+                    IntroTimer = 0;
+                    IntroPhase++;
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetReactState(REACT_AGGRESSIVE);
+                    justBorn = false;
+                }
+            }
+            else
+                IntroTimer -= diff;
+
+            return;
+        }
+
         if (!UpdateVictim() && Phase != PHASE_FLIGHT)
             return;
             
