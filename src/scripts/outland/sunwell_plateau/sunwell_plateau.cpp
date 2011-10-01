@@ -178,9 +178,9 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         }
     }
     
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
-        if (spellId == 46475) {
+        if (spellId == 46475 && ok) {
             if (Unit* puller = Unit::GetUnit(*m_creature, pullerGUID)) {
                 //puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
                 m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
@@ -1038,7 +1038,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
         DoCast(m_creature, SPELL_BURNING_DESTRUCTION_TRIGGERED, true);
     }
     
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
         if (spellId == 47287)
             despawnTimer = 2100;

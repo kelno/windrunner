@@ -339,7 +339,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
         }
     }
     
-    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target)
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
         if (spellId == 43383)
             m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_INTERRUPT, false);

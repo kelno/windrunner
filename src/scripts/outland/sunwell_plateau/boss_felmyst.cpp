@@ -678,7 +678,7 @@ struct boss_felmystAI : public ScriptedAI
         }
     }
     
-    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target)
+    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
     {
         if (spellId == SPELL_ENCAPSULATE_CHANNEL) {
             if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
