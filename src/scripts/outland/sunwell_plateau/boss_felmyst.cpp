@@ -317,7 +317,7 @@ struct boss_felmystAI : public ScriptedAI
             Timer[EVENT_FLIGHT] = 60000;
             break;
         case PHASE_FLIGHT:
-            m_creature->SetSpeed(MOVE_FLIGHT, 1.3f);
+            m_creature->SetSpeed(MOVE_FLIGHT, 1.3f, true);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
             Timer[EVENT_SUMMON_DEAD] = 0;
             Timer[EVENT_SUMMON_FOG] = 0;
@@ -531,7 +531,7 @@ struct boss_felmystAI : public ScriptedAI
                 case 3:
                     me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344, false);
                     me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
-                    m_creature->SetSpeed(MOVE_FLIGHT, 2.0f);
+                    m_creature->SetSpeed(MOVE_FLIGHT, 1.3f, true);
                     IntroTimer = 10000;
                     IntroPhase++;
                     break;
