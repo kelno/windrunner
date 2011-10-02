@@ -306,6 +306,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             }
             case DATA_GO_ICE_BARRIER:
                 return IceBarrier;
+            case DATA_GO_FIRE_BARRIER:
+                return FireBarrier;
         }
         return 0;
     }
@@ -323,8 +325,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 break;
             case DATA_BRUTALLUS_EVENT:     Encounters[1] = data; break;
             case DATA_FELMYST_EVENT:
-                if (data == DONE)
-                    HandleGameObject(FireBarrier, true);
+                /*if (data == DONE)
+                    HandleGameObject(FireBarrier, true);*/
                 Encounters[2] = data; break;
             case DATA_GAUNTLET_EVENT:
                 GauntletStatus = data;

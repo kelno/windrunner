@@ -59,6 +59,7 @@ enum Data64
     DATA_GO_KALEC_WALL_1,
     DATA_GO_KALEC_WALL_2,
     DATA_GO_ICE_BARRIER,
+    DATA_GO_FIRE_BARRIER,
 
     /*** Misc ***/
     DATA_PLAYER_GUID,
