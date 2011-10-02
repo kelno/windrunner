@@ -159,6 +159,9 @@ struct boss_sacrolashAI : public ScriptedAI
             pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
             pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
         }
+        
+        me->RemoveAurasDueToSpell(45769);
+        me->CastSpell(me, 45769, true);
     }
     
     void JustSummoned(Creature* pSummon)
@@ -326,6 +329,9 @@ struct boss_sacrolashAI : public ScriptedAI
         {
             if (ConflagrationTimer < diff)
             {
+                if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
@@ -344,6 +350,9 @@ struct boss_sacrolashAI : public ScriptedAI
         }
         else {
             if(ShadownovaTimer < diff) {
+                if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
                 if (!m_creature->IsNonMeleeSpellCasted(false)) {
                     Unit* target = NULL;
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1);
@@ -496,6 +505,8 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
         
         m_creature->SetFullTauntImmunity(true);
+        me->RemoveAurasDueToSpell(45769);
+        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)
@@ -732,6 +743,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             if(ShadownovaTimer < diff)
             {
+                if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     Unit* target = NULL;
@@ -750,6 +764,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             if(ConflagrationTimer < diff)
             {
+                if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);

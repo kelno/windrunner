@@ -488,6 +488,9 @@ CreatureAI* GetAI_boss_brutallus(Creature *_Creature)
 
 bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt)
 {
+    if (pPlayer->isGameMaster())
+        return false;
+
     if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
         if (Creature *Brutallus = Unit::GetCreature(*pPlayer, pInstance ? pInstance->GetData64(DATA_BRUTALLUS) : 0))
             ((boss_brutallusAI*)Brutallus->AI())->StartIntro();
