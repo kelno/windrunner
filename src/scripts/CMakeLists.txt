@@ -291,6 +291,7 @@ SET(scripts_STAT_SRCS
     misc/areatrigger_scripts.cpp
     misc/go_scripts.cpp
     misc/guards.cpp
+    misc/hallowsend.cpp
     misc/item_scripts.cpp
     misc/item_test.cpp
     misc/npc_innkeeper.cpp
