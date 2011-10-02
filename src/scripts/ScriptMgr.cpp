@@ -105,6 +105,9 @@ extern void AddSC_npc_xp_blocker();
 // -- Servers --
 extern void AddSC_SmartSCripts();
 
+// -- Misc --
+extern void AddSC_hallows_end();
+
 //--------------------
 //------ ZONE --------
 
@@ -1478,6 +1481,9 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     // -- Servers --
     AddSC_SmartSCripts();
+    
+    // -- Misc --
+    AddSC_hallows_end();
 
     //--------------------
     //------ ZONE --------
