@@ -170,11 +170,10 @@ struct boss_felmystAI : public ScriptedAI
         if (justBorn) {
             me->SetStandState(PLAYER_STATE_SLEEP);
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetReactState(REACT_PASSIVE);
         }
         else
             m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-            
-        me->SetReactState(REACT_PASSIVE);
 
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
         m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
