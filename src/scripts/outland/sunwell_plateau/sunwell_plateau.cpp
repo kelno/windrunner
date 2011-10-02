@@ -38,6 +38,7 @@ npc_shadowsword_soulbinder
 npc_shadowsword_deathbringer
 npc_volatile_fiend
 npc_moorba
+npc_kalec_felmyst
 EndContentData */
 
 #include "precompiled.h"
@@ -1121,6 +1122,114 @@ bool GossipSelect_npc_moorba(Player* pPlayer, Creature* pCreature, uint32 sender
     return true;
 }
 
+struct npc_kalec_felmystAI : public ScriptedAI
+{
+    npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
+    {
+        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    uint32 waitTimer;
+    uint8 phase;
+    
+    ScriptedInstance* pInstance;
+    
+    void Reset()
+    {
+        waitTimer = 0;
+        phase = 0;
+        
+        me->GetMotionMaster()->MovePoint(0, 1483.408203, 717.707275, 93.492821, false);
+        me->SetSpeed(MOVE_FLIGHT, 5.0f, true);
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (!pInstance)
+            return;
+
+        switch (id) {
+        case 0:
+        {
+            waitTimer = 300;
+            break;
+        }
+        case 1:
+        {
+            waitTimer = 2000;
+            break;
+        }
+        case 2:
+        {
+            waitTimer = 500;
+            break;
+        }
+        case 3:
+            me->DisappearAndDie();
+            break;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
+        if (waitTimer) {
+            if (waitTimer <= diff) {
+                switch (phase) {
+                case 0: // Go to Felyst corpse
+                {
+                    if (!pInstance)
+                        break;
+
+                    if (Creature* felmyst = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_FELMYST) : 0)) {
+                        float x, y, z;
+                        felmyst->GetPosition(x, y, z);
+                        me->GetMotionMaster()->MovePoint(1, x, y, z+8, false);
+                    }
+                    waitTimer = 0;
+                    phase++;
+                    break;
+                }
+                case 1: // Yell on Felmyst corpse
+                    DoScriptText(-1580043, me);
+                    waitTimer = 8000;
+                    phase++;
+                    break;
+                case 2: // Takeoff
+                    me->GetMotionMaster()->MovePoint(2, 1534.859009, 535.921204, 45.530205, false);
+                    waitTimer = 0;
+                    phase++;
+                    break;
+                case 3: // Breathe on fire wall
+                    DoCast(me, 46650);
+                    if (pInstance)
+                        pInstance->HandleGameObject(pInstance->GetData64(DATA_GO_FIRE_BARRIER), true);
+                    waitTimer = 4000;
+                    phase++;
+                    break;
+                case 4:
+                    me->GetMotionMaster()->MovePoint(3, 1601.979736, 519.187988, 119.142479, false);
+                    waitTimer = 0;
+                    phase++;
+                    break;
+                }
+            }
+            else
+                waitTimer -= diff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_kalec_felmyst(Creature* creature)
+{
+    return new npc_kalec_felmystAI(creature);
+}
+
 /*######
 ## AddSC
 ######*/
@@ -1198,5 +1307,10 @@ void AddSC_sunwell_plateau()
     newscript->Name = "npc_moorba";
     newscript->pGossipHello = &GossipHello_npc_moorba;
     newscript->pGossipSelect = &GossipSelect_npc_moorba;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_kalec_felmyst";
+    newscript->GetAI = &GetAI_npc_kalec_felmyst;
     newscript->RegisterSelf();
 }
