@@ -1260,6 +1260,8 @@ struct mob_gargoyleAI : public hyjal_trashAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         hyjal_trashAI::UpdateAI(diff);
         if(IsEvent || IsOverrun)
         {
