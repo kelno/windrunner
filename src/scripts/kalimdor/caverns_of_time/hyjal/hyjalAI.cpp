@@ -326,6 +326,7 @@ hyjalAI::hyjalAI(Creature *c) : npc_escortAI(c), Summons(m_creature)
     DoHide = false;
     MassTeleportTimer = 0;
     DoMassTeleport = false;
+    Wipe = false;
 }
 
 void hyjalAI::JustSummoned(Creature *summoned)
@@ -353,7 +354,17 @@ void hyjalAI::Reset()
     RetreatTimer = 1000;
 
     // Misc
-    WaveCount = 0;
+    if (Wipe) {
+        WaveCount = 0;
+        sLog.outString("Wipe");
+    }
+    else if (pInstance) {
+        WaveCount = pInstance->GetData(DATA_CURRENT_WAVE);
+        sLog.outString("Not wipe");
+    }
+
+    if (pInstance)
+        pInstance->SetData(DATA_CURRENT_WAVE, WaveCount);
 
     // Set faction properly based on creature entry
     switch(m_creature->GetEntry())
@@ -531,6 +542,9 @@ void hyjalAI::SummonCreature(uint32 entry, float Base[4][3])
 
 void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count, float Base[4][3])
 {
+    if (pInstance)
+        pInstance->SetData(DATA_CURRENT_WAVE, WaveCount);
+
     // 1 in 4 chance we give a rally yell. Not sure if the chance is offilike.
     if (rand()%4 == 0)
         Talk(RALLY);
@@ -581,6 +595,8 @@ void hyjalAI::StartEvent(Player* player)
 {
     if(!player || IsDummy)
         return;
+        
+    Wipe = true;
 
     Talk(BEGIN);
 

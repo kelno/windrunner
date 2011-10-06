@@ -233,6 +233,7 @@ struct hyjalAI : public npc_escortAI
         uint32 MassTeleportTimer;
         bool DoMassTeleport;
         uint64 DummyGuid;
+        bool Wipe;
 
         struct Spell
         {
