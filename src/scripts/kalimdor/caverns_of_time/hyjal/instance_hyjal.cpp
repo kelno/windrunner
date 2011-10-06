@@ -58,6 +58,7 @@ struct instance_mount_hyjal : public ScriptedInstance
     bool ArchiYell;
 
     uint32 RaidDamage;
+    uint32 currentWave;
 
     void Initialize()
     {
@@ -81,6 +82,7 @@ struct instance_mount_hyjal : public ScriptedInstance
         hordeRetreat = 0;
         allianceRetreat = 0;
 
+        currentWave = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -224,6 +226,10 @@ struct instance_mount_hyjal : public ScriptedInstance
             case DATA_RESET_RAIDDAMAGE:
                 RaidDamage = 0;
                 break;
+            case DATA_CURRENT_WAVE:
+                currentWave = data;
+                SaveToDB();
+                break;
         }
 
          debug_log("TSCR: Instance Hyjal: Instance data updated for event %u (Data=%u)",type,data);
@@ -237,14 +243,15 @@ struct instance_mount_hyjal : public ScriptedInstance
         switch(type)
         {
             case DATA_RAGEWINTERCHILLEVENT: return Encounters[0];
-            case DATA_ANETHERONEVENT:      return Encounters[1];
-            case DATA_KAZROGALEVENT:       return Encounters[2];
-            case DATA_AZGALOREVENT:        return Encounters[3];
-            case DATA_ARCHIMONDEEVENT:     return Encounters[4];
-            case DATA_TRASH:               return Trash;
-            case DATA_ALLIANCE_RETREAT:    return allianceRetreat;
-            case DATA_HORDE_RETREAT:       return hordeRetreat;
-            case DATA_RAIDDAMAGE:          return RaidDamage;
+            case DATA_ANETHERONEVENT:       return Encounters[1];
+            case DATA_KAZROGALEVENT:        return Encounters[2];
+            case DATA_AZGALOREVENT:         return Encounters[3];
+            case DATA_ARCHIMONDEEVENT:      return Encounters[4];
+            case DATA_TRASH:                return Trash;
+            case DATA_ALLIANCE_RETREAT:     return allianceRetreat;
+            case DATA_HORDE_RETREAT:        return hordeRetreat;
+            case DATA_RAIDDAMAGE:           return RaidDamage;
+            case DATA_CURRENT_WAVE:         return currentWave;
         }
         return 0;
     }
@@ -268,7 +275,7 @@ struct instance_mount_hyjal : public ScriptedInstance
         OUT_SAVE_INST_DATA;
         std::ostringstream stream;
         stream << Encounters[0] << " " << Encounters[1] << " " << Encounters[2] << " "
-            << Encounters[3] << " " << Encounters[4] << " " << allianceRetreat << " " << hordeRetreat << " " << RaidDamage;
+            << Encounters[3] << " " << Encounters[4] << " " << allianceRetreat << " " << hordeRetreat << " " << RaidDamage << " " << currentWave;
         char* out = new char[stream.str().length() + 1];
         strcpy(out, stream.str().c_str());
         if(out)
@@ -291,7 +298,7 @@ struct instance_mount_hyjal : public ScriptedInstance
         OUT_LOAD_INST_DATA(in);
         std::istringstream loadStream;
         loadStream.str(in);
-        loadStream >> Encounters[0] >> Encounters[1] >> Encounters[2] >> Encounters[3] >> Encounters[4] >> allianceRetreat >> hordeRetreat >> RaidDamage;
+        loadStream >> Encounters[0] >> Encounters[1] >> Encounters[2] >> Encounters[3] >> Encounters[4] >> allianceRetreat >> hordeRetreat >> RaidDamage >> currentWave;
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as IN_PROGRESS - reset it instead.
                 Encounters[i] = NOT_STARTED;
