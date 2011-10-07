@@ -336,7 +336,7 @@ struct boss_sacrolashAI : public ScriptedAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
@@ -355,7 +355,7 @@ struct boss_sacrolashAI : public ScriptedAI
 
                 if (!m_creature->IsNonMeleeSpellCasted(false)) {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
@@ -749,7 +749,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
@@ -771,7 +771,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
