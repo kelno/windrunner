@@ -858,7 +858,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         DarkstrikeTimer = 3000;
         KillTimer = 10000;
         ChangeTargetTimer = 0;
-        type = (rand() % 2) ? SHADOW_IMAGE_DARKSTRIKE : SHADOW_IMAGE_SHADOWFURY;
+        type = (rand() % 2) ? SHADOW_IMAGE_SHADOWFURY : SHADOW_IMAGE_DARKSTRIKE;
     }
 
     void Aggro(Unit *who){}
