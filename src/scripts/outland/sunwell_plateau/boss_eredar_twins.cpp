@@ -854,7 +854,7 @@ struct mob_shadow_imageAI : public ScriptedAI
     void Reset()
     {
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        ShadowfuryTimer = 5000 + (rand()%15000);
+        ShadowfuryTimer = 500;
         DarkstrikeTimer = 3000;
         KillTimer = 10000;
         ChangeTargetTimer = 0;
@@ -899,9 +899,12 @@ struct mob_shadow_imageAI : public ScriptedAI
         if (type == SHADOW_IMAGE_SHADOWFURY) {
             if(ShadowfuryTimer <= diff)
             {
-                DoCast(m_creature, SPELL_SHADOW_FURY);
-                ShadowfuryTimer = 10000;
-                KillTimer = 500;
+                if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+                    DoCast(m_creature, SPELL_SHADOW_FURY);
+                    KillTimer = 500;
+                }
+                    
+                ShadowfuryTimer = 500 + rand()%500;
             }else ShadowfuryTimer -=diff;
         }
 
