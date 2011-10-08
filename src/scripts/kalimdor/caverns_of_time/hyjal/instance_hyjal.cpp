@@ -159,6 +159,8 @@ struct instance_mount_hyjal : public ScriptedInstance
             case DATA_RAGEWINTERCHILLEVENT: Encounters[0] = data; break;
             case DATA_ANETHERONEVENT:
                 Encounters[1] = data;
+                if (data == DONE)
+                    currentWave = 0;
                 break;
             case DATA_KAZROGALEVENT:        Encounters[2] = data; break;
             case DATA_AZGALOREVENT:
