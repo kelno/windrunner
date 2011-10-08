@@ -2077,7 +2077,7 @@ void boss_illidan_stormrageAI::CastEyeBlast()
 
     //Trigger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, Trigger->GetGUID());
-    DoCast(Trigger, SPELL_EYE_BLAST);
+    DoCast(Trigger, SPELL_EYE_BLAST, true);
 }
 
 void boss_illidan_stormrageAI::SummonFlamesOfAzzinoth()
