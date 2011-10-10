@@ -118,13 +118,13 @@ static EventFelmyst MaxTimer[]=
 static float flightMobLeft[] = {1468.380005, 730.267029, 60.083302};
 static float flightMobRight[] = {1458.170044, 501.295013, 60.083302};
 
-static float lefts[3][3] = { {1494.760010, 705.000000, 50.083302},
-                             {1469.939941, 704.239014, 50.083302},
-                             {1446.540039, 702.570007, 50.083302} };
+static float lefts[3][3] = { {1494.760010, 705.000000, 60.083302},
+                             {1469.939941, 704.239014, 60.083302},
+                             {1446.540039, 702.570007, 60.083302} };
 
-static float rights[3][3] = { {1492.819946, 515.668030, 50.083302},
-                              {1467.219971, 516.318970, 50.083302},
-                              {1441.640015, 520.520020, 50.083302} };
+static float rights[3][3] = { {1492.819946, 515.668030, 60.083302},
+                              {1467.219971, 516.318970, 60.083302},
+                              {1441.640015, 520.520020, 60.083302} };
 
 struct boss_felmystAI : public ScriptedAI
 {
@@ -172,8 +172,10 @@ struct boss_felmystAI : public ScriptedAI
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_PASSIVE);
         }
-        else
+        else {
             m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            me->GetMotionMaster()->MovePath(25038, true);
+        }
 
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
         m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
@@ -208,12 +210,18 @@ struct boss_felmystAI : public ScriptedAI
                 }
             }
         }
+        
+        me->RemoveAurasDueToSpell(45769);
+        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)
     {
         if (justBorn)
             return;
+            
+        m_creature->GetMotionMaster()->Initialize();
+        //m_creature->GetMotionMaster()->MoveChase(who);
 
         m_creature->setActive(true);
         DoZoneInCombat();
@@ -234,6 +242,9 @@ struct boss_felmystAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
+        if (!me->isInCombat())
+            return;
+
         if(Phase != PHASE_FLIGHT && !justBorn)
             ScriptedAI::MoveInLineOfSight(who);
     }
@@ -284,11 +295,14 @@ struct boss_felmystAI : public ScriptedAI
 
     void MovementInform(uint32, uint32)
     {
-        if (FlightCount == 6) {
+        if (FlightCount == 6 || FlightCount == 7) {
             if (BreathCount == 1)
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
+            WorldPacket data;
+            m_creature->BuildHeartBeatMsg(&data);
+            m_creature->SendMessageToSet(&data,true);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
         }
         else
@@ -434,9 +448,11 @@ struct boss_felmystAI : public ScriptedAI
         case 7:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             if (BreathCount == 1)       // Right
-                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
+                //m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
+                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
             else
-                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
+                //m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
+                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
             m_creature->StopMoving();
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2500;

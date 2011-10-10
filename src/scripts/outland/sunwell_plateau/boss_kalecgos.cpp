@@ -179,6 +179,20 @@ struct boss_kalecgosAI : public ScriptedAI
         isFriendly = false;
         isEnraged = false;
         isBanished = false;
+            
+        if (pInstance && pInstance->GetData(DATA_KALECGOS_EVENT) == DONE) {
+            me->setFaction(35);
+            me->SetVisibility(VISIBILITY_OFF);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetReactState(REACT_PASSIVE);
+            
+            GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
+            if(Door) Door->SetGoState(0);
+            GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
+            if(Wall1) Wall1->SetGoState(0);
+            GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
+            if(Wall2) Wall2->SetGoState(0);
+        }
         
         // Raid wipe
         /*if (!hasEnded && pulledOnce) {
@@ -242,7 +256,7 @@ struct boss_kalecgosAI : public ScriptedAI
     }
     
     void MoveInLineOfSight(Unit *pWho) {
-		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->isInCombat())
+		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->isInCombat() && me->getFaction() != 35)
 			AttackStart(pWho);
 	}
 
