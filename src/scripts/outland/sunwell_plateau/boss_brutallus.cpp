@@ -201,6 +201,9 @@ struct boss_brutallusAI : public ScriptedAI
         if (!Intro || IsIntro)
             return;
             
+        if (me->isDead())
+            return;
+            
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
 
@@ -492,6 +495,8 @@ bool AreaTrigger_at_brutallus_intro(Player* pPlayer, AreaTriggerEntry const *pAt
         return false;
 
     if (ScriptedInstance* pInstance = ((ScriptedInstance*)pPlayer->GetInstanceData())) {
+        if (pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE)
+            return true;
         if (Creature *Brutallus = Unit::GetCreature(*pPlayer, pInstance ? pInstance->GetData64(DATA_BRUTALLUS) : 0))
             ((boss_brutallusAI*)Brutallus->AI())->StartIntro();
     }
