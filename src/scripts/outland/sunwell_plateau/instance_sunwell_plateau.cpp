@@ -171,7 +171,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr && plr->isAlive())
+                if (plr && plr->isAlive() && !plr->isGameMaster())
                     return plr;
             }
         }
