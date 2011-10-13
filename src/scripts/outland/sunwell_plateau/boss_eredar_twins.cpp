@@ -114,7 +114,7 @@ struct boss_sacrolashAI : public ScriptedAI
     {
         Enraged = false;
 
-        if (pInstance) {
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE) {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
             if (Temp) {
                 if (Temp->isDead())
@@ -475,7 +475,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
     {
         Enraged = false;
 
-        if (pInstance) {
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE) {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
             if (Temp)
                 if (Temp->isDead())
