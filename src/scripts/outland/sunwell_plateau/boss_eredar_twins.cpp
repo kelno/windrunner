@@ -64,6 +64,7 @@ enum Spells
     SPELL_DARK_STRIKE       =   45271,
     SPELL_SHADOW_NOVA       =   45329, //30-35 secs
     SPELL_CONFOUNDING_BLOW  =   45256, //25 secs
+    SPELL_DUAL_WIELD        =   42459,
 
     //Shadow Image spells
     SPELL_SHADOW_FURY       =   45270,
@@ -129,7 +130,7 @@ struct boss_sacrolashAI : public ScriptedAI
             ShadowbladesTimer = 10000;
             ShadownovaTimer = 30000;
             ConfoundingblowTimer = 25000;
-            ShadowimageTimer = 20000;
+            ShadowimageTimer = 10000 + rand()%2000;
             ConflagrationTimer = 30000;
             EnrageTimer = 360000;
             CheckFBTimer = 200;
@@ -260,6 +261,9 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void HandleTouchedSpells(Unit* target, uint32 TouchedType)
     {
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+            return;
+
         switch(TouchedType)
         {
         case SPELL_FLAME_TOUCHED:
@@ -375,6 +379,9 @@ struct boss_sacrolashAI : public ScriptedAI
 
         if(ConfoundingblowTimer < diff)
         {
+            if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
             if (!m_creature->IsNonMeleeSpellCasted(false))
             {
                 Unit* target = NULL;
@@ -390,18 +397,18 @@ struct boss_sacrolashAI : public ScriptedAI
         {
             Unit* target = NULL;
             Creature* temp = NULL;
-            for(int i = 0;i<3;i++)
+            for(int i = 0; i < 4; i++)
             {
                 target = SelectUnit(SELECT_TARGET_RANDOM, 1, 10.0f, 50.0f, true);
                 if (!target)
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-                temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
+                temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 12000);
                 if(temp && target) {
                     temp->AI()->AttackStart(target);
                     temp->AddThreat(target, 50000.0f);
                 }
             }
-            ShadowimageTimer = 20000;
+            ShadowimageTimer = 10000;
         }else ShadowimageTimer -=diff;
 
         if(ShadowbladesTimer < diff)
@@ -426,7 +433,7 @@ struct boss_sacrolashAI : public ScriptedAI
             //If we are within range melee the target
             if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
             {
-                HandleTouchedSpells(m_creature->getVictim(), SPELL_DARK_TOUCHED);
+                //HandleTouchedSpells(m_creature->getVictim(), SPELL_DARK_TOUCHED);
                 m_creature->AttackerStateUpdate(m_creature->getVictim());
                 m_creature->resetAttackTimer();
             }
@@ -480,7 +487,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         }
 
         if (!m_creature->isInCombat()) {
-            ConflagrationTimer = 45000;
+            ConflagrationTimer = 40000;
             BlazeTimer = 100;
             PyrogenicsTimer = 15000;
             ShadownovaTimer = 30000;
@@ -503,6 +510,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45271, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45329, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45348, true);
         
         m_creature->SetFullTauntImmunity(true);
         me->RemoveAurasDueToSpell(45769);
@@ -619,6 +627,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     void HandleTouchedSpells(Unit* target, uint32 TouchedType)
     {
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+            return;
+
         switch(TouchedType)
         {
         case SPELL_FLAME_TOUCHED:
@@ -795,20 +806,20 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
         if(FlamesearTimer < diff)
         {
+            if (m_creature->IsNonMeleeSpellCasted(false))
+                    m_creature->InterruptNonMeleeSpells(false);
+
             if(!m_creature->IsNonMeleeSpellCasted(false))
             {
                 DoCast(m_creature, SPELL_FLAME_SEAR);
-                FlamesearTimer = 15000;
+                FlamesearTimer = 10000 + rand()%3000;
             }
         }else FlamesearTimer -=diff;
 
         if (PyrogenicsTimer < diff)
         {
-            if(!m_creature->IsNonMeleeSpellCasted(false))
-            {
-                DoCast(m_creature, SPELL_PYROGENICS,true);
-                PyrogenicsTimer = 15000;
-            }
+            DoCast(m_creature, SPELL_PYROGENICS,true);
+            PyrogenicsTimer = 15000;
         }else PyrogenicsTimer -= diff;
 
         if (BlazeTimer < diff)
@@ -835,11 +846,11 @@ CreatureAI* GetAI_boss_alythess(Creature *_Creature)
     return new boss_alythessAI (_Creature);
 };
 
-enum ShadowImageType
+/*enum ShadowImageType
 {
     SHADOW_IMAGE_SHADOWFURY = 0,
     SHADOW_IMAGE_DARKSTRIKE = 1
-};
+};*/
 
 struct mob_shadow_imageAI : public ScriptedAI
 {
@@ -849,22 +860,25 @@ struct mob_shadow_imageAI : public ScriptedAI
     uint32 KillTimer;
     uint32 DarkstrikeTimer;
     uint32 ChangeTargetTimer;
-    ShadowImageType type;
+    //ShadowImageType type;
 
     void Reset()
     {
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        ShadowfuryTimer = 500;
+        ShadowfuryTimer = 9000 + rand()%4000;
         DarkstrikeTimer = 3000;
-        KillTimer = 10000;
+        KillTimer = 12000;
         ChangeTargetTimer = 0;
-        type = (rand() % 2) ? SHADOW_IMAGE_SHADOWFURY : SHADOW_IMAGE_DARKSTRIKE;
+        //type = (rand() % 2) ? SHADOW_IMAGE_SHADOWFURY : SHADOW_IMAGE_DARKSTRIKE;
     }
 
     void Aggro(Unit *who){}
 
     void SpellHitTarget(Unit* target,const SpellEntry* spell)
-    {
+    {        
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+            return;
+
         switch(spell->Id)
         {
 
@@ -896,19 +910,19 @@ struct mob_shadow_imageAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if (type == SHADOW_IMAGE_SHADOWFURY) {
+        //if (type == SHADOW_IMAGE_SHADOWFURY) {
             if(ShadowfuryTimer <= diff)
             {
-                if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+                //if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
                     DoCast(m_creature, SPELL_SHADOW_FURY);
                     KillTimer = 500;
-                }
+                //}
                     
-                ShadowfuryTimer = 500 + rand()%500;
+                ShadowfuryTimer = 10000;
             }else ShadowfuryTimer -=diff;
-        }
+        //}
 
-        if (type == SHADOW_IMAGE_DARKSTRIKE) {
+        /*if (type == SHADOW_IMAGE_DARKSTRIKE) {
             if (ChangeTargetTimer) {
                 if (ChangeTargetTimer <= diff) {
                     if (Creature* sacrolash = me->FindCreatureInGrid(25165, 100.0f, true)) {
@@ -924,7 +938,7 @@ struct mob_shadow_imageAI : public ScriptedAI
                 }
                 else
                     ChangeTargetTimer -= diff;
-            }
+            }*/
 
             if(DarkstrikeTimer <= diff)
             {
@@ -939,7 +953,7 @@ struct mob_shadow_imageAI : public ScriptedAI
                 DarkstrikeTimer = 800;
             }
             else DarkstrikeTimer -= diff;
-        }
+        //}
     }
 };
 

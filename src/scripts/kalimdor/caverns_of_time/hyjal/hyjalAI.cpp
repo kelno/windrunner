@@ -354,14 +354,10 @@ void hyjalAI::Reset()
     RetreatTimer = 1000;
 
     // Misc
-    if (Wipe) {
+    if (Wipe)
         WaveCount = 0;
-        sLog.outString("Wipe");
-    }
-    else if (pInstance) {
+    else if (pInstance)
         WaveCount = pInstance->GetData(DATA_CURRENT_WAVE);
-        sLog.outString("Not wipe");
-    }
 
     if (pInstance)
         pInstance->SetData(DATA_CURRENT_WAVE, WaveCount);
