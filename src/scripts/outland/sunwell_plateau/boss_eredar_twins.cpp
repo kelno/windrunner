@@ -222,6 +222,9 @@ struct boss_sacrolashAI : public ScriptedAI
         RespawnTimer = 30000;
         me->SetReactState(REACT_PASSIVE);
         ScriptedAI::EnterEvadeMode();
+
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+            pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
     }
 
     void JustDied(Unit* Killer)
@@ -564,6 +567,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         RespawnTimer = 30000;
         me->SetReactState(REACT_PASSIVE);
         ScriptedAI::EnterEvadeMode();
+        
+        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+            pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
     }
 
     void MoveInLineOfSight(Unit *who)
