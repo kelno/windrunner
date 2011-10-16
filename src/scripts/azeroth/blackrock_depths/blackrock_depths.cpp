@@ -1318,6 +1318,15 @@ bool ChooseReward_npc_rocknot(Player *pPlayer, Creature *pCreature, const Quest 
     return true;
 }
 
+bool GOHello_go_dark_keeper_portrait(Player* player, GameObject* go)
+{
+    uint32 keepers[6] = { 9437, 9438, 9439, 9441, 9442, 9443 };
+    if (Creature* keeper = player->SummonCreature(keepers[rand()%6], player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), TEMPSUMMON_CORPSE_TIMED_DESPAWN, 40000))
+        keeper->AI()->AttackStart(player);
+    
+    return true;
+}
+
 /*######
 ## AddSC
 ######*/
@@ -1382,6 +1391,11 @@ void AddSC_blackrock_depths()
      newscript->Name = "npc_rocknot";
      newscript->GetAI = &GetAI_npc_rocknot;
      newscript->pChooseReward = &ChooseReward_npc_rocknot;
+     newscript->RegisterSelf();
+     
+     newscript = new Script;
+     newscript->Name = "go_dark_keeper_portrait";
+     newscript->pGOHello = &GOHello_go_dark_keeper_portrait;
      newscript->RegisterSelf();
 }
 
