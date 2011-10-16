@@ -115,6 +115,8 @@ struct boss_silver_hand_bossesAI : public ScriptedAI
                             pGroupie->KilledMonster(SH_QUEST_CREDIT,m_creature->GetGUID());
                     }
                 }
+                else if (Killer->ToPlayer()) // Solo
+                    Killer->ToPlayer()->KilledMonster(SH_QUEST_CREDIT,m_creature->GetGUID());
             }
         }
     }
