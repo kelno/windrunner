@@ -871,7 +871,7 @@ struct mob_shadow_imageAI : public ScriptedAI
     void Reset()
     {
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        ShadowfuryTimer = 9000 + rand()%4000;
+        ShadowfuryTimer = 8500 + rand()%4000;
         DarkstrikeTimer = 3000;
         KillTimer = 12000;
         ChangeTargetTimer = 0;
