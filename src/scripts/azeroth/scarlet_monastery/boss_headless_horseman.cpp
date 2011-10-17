@@ -122,10 +122,10 @@ struct Summon
 
 static Summon Text[]=
 {
-    {"Horseman rise..."},
-    {"Your time is nigh..."},
-    {"You felt death once..."},
-    {"Now, know demise!"}
+    {"Lève-toi, cavalier..."},
+    {"Ton heure va sonner..."},
+    {"La mort, tu connais bien..."},
+    {"Voici l'heure de ta fin !"}
 };
 
 struct mob_wisp_invisAI : public ScriptedAI
@@ -538,7 +538,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             else Phase = 3;
             withhead = true;
             m_creature->RemoveAllAuras();
-            m_creature->SetName("Headless Horseman");
+            m_creature->SetName("Cavalier sans Tête");
             m_creature->SetHealth(m_creature->GetMaxHealth());
             SaySound(SAY_REJOINED);
             DoCast(m_creature,SPELL_HEAD);
@@ -563,7 +563,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             returned = false;
             damage = m_creature->GetHealth() - m_creature->GetMaxHealth()/100;
             m_creature->RemoveAllAuras();
-            m_creature->SetName("Headless Horseman, Unhorsed");
+            m_creature->SetName("Cavalier sans Tête, à pied");
 
             if (!headGUID)
                 headGUID = DoSpawnCreature(HEAD,rand()%6,rand()%6,0,0,TEMPSUMMON_DEAD_DESPAWN,0)->GetGUID();
@@ -654,7 +654,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
 
             if (laugh < diff) {
                 laugh = 11000 + rand()%12 * 1000;
-                DoTextEmote("laughs",NULL);
+                DoTextEmote("rit.", NULL);
                 DoPlaySoundToSet(m_creature, RandomLaugh[rand()%3]);
             } else laugh -= diff;
 
@@ -794,23 +794,15 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
     }
 };
 
-bool GOHello_go_loosely_turned_soil(Player *plr, GameObject* soil)
+bool GOChooseReward_go_loosely_turned_soil(Player* player, GameObject* go, Quest const* quest, uint32 opt)
 {
-/*  if (soil->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER && plr->getLevel() > 64)
-    {
-        plr->PrepareQuestMenu(soil->GetGUID());
-        plr->SendPreparedQuest(soil->GetGUID());
-    }
-    if (plr->GetQuestStatus(11405) == QUEST_STATUS_INCOMPLETE && plr->getLevel() > 64)
-    { */
-        plr->AreaExploredOrEventHappens(11405);
-        Creature *horseman = soil->SummonCreature(HH_MOUNTED,FlightPoint[20].x,FlightPoint[20].y,FlightPoint[20].z,0,TEMPSUMMON_MANUAL_DESPAWN,0);
-        if(horseman)
-        {
-            ((boss_headless_horsemanAI*)horseman->AI())->playerGUID = plr->GetGUID();
-            ((boss_headless_horsemanAI*)horseman->AI())->FlyMode();
+    if (quest->GetQuestId() == 11405) {
+        if (Creature *horseman = go->SummonCreature(HH_MOUNTED,FlightPoint[20].x,FlightPoint[20].y,FlightPoint[20].z,0,TEMPSUMMON_MANUAL_DESPAWN,0)) {
+            ((boss_headless_horsemanAI*)horseman->AI())->playerGUID = player->GetGUID();
+            //((boss_headless_horsemanAI*)horseman->AI())->FlyMode();
         }
-    //}
+    }
+    
     return true;
 }
 
@@ -860,7 +852,7 @@ void AddSC_boss_headless_horseman()
 
     newscript = new Script;
     newscript->Name = "go_loosely_turned_soil";
-    newscript->pGOHello = &GOHello_go_loosely_turned_soil;
+    newscript->pGOChooseReward = &GOChooseReward_go_loosely_turned_soil;
     newscript->RegisterSelf();
 }
 
