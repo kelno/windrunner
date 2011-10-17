@@ -183,7 +183,7 @@ struct boss_sacrolashAI : public ScriptedAI
         for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
         {
             Player* plr = itr->getSource();
-            if (plr && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
+            if (plr && !plr->isGameMaster() && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
                 return true;
         }
         
@@ -405,7 +405,7 @@ struct boss_sacrolashAI : public ScriptedAI
                 target = SelectUnit(SELECT_TARGET_RANDOM, 1, 10.0f, 50.0f, true);
                 if (!target)
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-                temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 12000);
+                temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
                 if(temp && target) {
                     temp->AI()->AttackStart(target);
                     temp->AddThreat(target, 50000.0f);
@@ -554,7 +554,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
         {
             Player* plr = itr->getSource();
-            if (plr && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
+            if (plr && !plr->isGameMaster() && plr->GetDistance(1816.406250, 625.544495, 33.403782) >= 48.5f)
                 return true;
         }
         
@@ -873,7 +873,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         ShadowfuryTimer = 8500 + rand()%4000;
         DarkstrikeTimer = 3000;
-        KillTimer = 12000;
+        KillTimer = 10000;
         ChangeTargetTimer = 0;
         //type = (rand() % 2) ? SHADOW_IMAGE_SHADOWFURY : SHADOW_IMAGE_DARKSTRIKE;
     }
