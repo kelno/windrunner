@@ -29,23 +29,74 @@ struct npc_fire_effigy_fire : public Scripted_NoMovementAI
         me->SetReactState(REACT_PASSIVE);
     }
     
-    void Reset() {}
+    uint32 addAuraTimer;
+    
+    void Reset()
+    {
+        addAuraTimer = 0;
+    }
     
     void Aggro(Unit* who) {}
     
+    void DamageTaken(Unit* doneBy, uint32& damage)
+    {
+        damage = 0;
+    }
+    
     bool sOnDummyEffect(Unit* caster, uint32 spellId, uint32 effIndex)
     {
-        sLog.outString("Pom1");
         if (!caster->ToPlayer())
             return false;
-        sLog.outString("Pom2");
+            
+        if (!me->HasAura(42074))
+            return false;
+
         if (spellId == 42339) {
-            sLog.outString("Pom3");
-            caster->ToPlayer()->KilledMonster(me->GetEntry(), me->GetGUID());
-            me->DisappearAndDie();
+            uint32 questId = 0;
+
+            switch (me->GetZoneId()) {
+            case 85: // Tirisfal
+                questId = 11449;
+                break;
+            case 14: // Durotar
+                questId = 11361;
+                break;
+            case 3430: // Eversong Woods
+                questId = 11450;
+                break;
+            case 12: // Elwynn
+                questId = 11360;
+                break;
+            case 3524: // Azure Watch
+                questId = 11440;
+                break;
+            case 1: // Dun Morogh
+                questId = 11439;
+                break;
+            default:
+                break;
+            }
+            
+            if (questId)
+                caster->ToPlayer()->KilledMonster(me->GetEntry(), me->GetGUID(), questId);
+            
+            me->RemoveAurasDueToSpell(42074);
+            addAuraTimer = 10000;
         }
         
         return true;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (addAuraTimer) {
+            if (addAuraTimer <= diff) {
+                DoCast(me, 42074, true);
+                addAuraTimer = 0;
+            }
+            else
+                addAuraTimer -= diff;
+        }
     }
 };
 
