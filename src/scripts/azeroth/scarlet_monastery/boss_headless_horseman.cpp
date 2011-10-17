@@ -649,7 +649,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             if (Phase < 3)
                 damage = 0;
             me->RemoveAllAuras();
-            me->SetName("Cavalier sans tête, à pied");
+            //me->SetName("Cavalier sans tête, à pied");
 
             if (!headGUID)
                 headGUID = DoSpawnCreature(HEAD, rand()%6, rand()%6, 0, 0, TEMPSUMMON_DEAD_DESPAWN, 0)->GetGUID();
@@ -802,6 +802,9 @@ struct boss_headless_horsemanAI : public ScriptedAI
             }
             else
                 whirlwind -= diff;
+                
+            if (!UpdateVictim())
+                return;
         }
     }
 };
