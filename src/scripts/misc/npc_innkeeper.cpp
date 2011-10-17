@@ -22,6 +22,7 @@ SDCategory: NPCs
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define HALLOWEEN_EVENTID       12
 #define SPELL_TRICK_OR_TREATED  24755
@@ -34,17 +35,10 @@ EndScriptData */
 
 bool isEventActive()
 {
-    /*
-     const GameEvent::ActiveEvents *ActiveEventsList = gameeventmgr.GetActiveEventList();
-     GameEvent::ActiveEvents::const_iterator itr;
-     for (itr = ActiveEventsList->begin(); itr != ActiveEventsList->end(); ++itr)
-     {
-         if (*itr==HALLOWEEN_EVENTID)
-         {
-             return true;
-         }
-     }*/
-    return false;
+    const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+    bool active = activeEvents.find(HALLOWEEN_EVENTID) != activeEvents.end();
+
+    return active;
 }
 
 bool GossipHello_npc_innkeeper(Player *player, Creature *_Creature)
@@ -58,19 +52,19 @@ bool GossipHello_npc_innkeeper(Player *player, Creature *_Creature)
         switch (player->GetSession()->GetSessionDbLocaleIndex())
         {
             case 0:
-                localizedEntry=LOCALE_TRICK_OR_TREAT_0;
+                localizedEntry = LOCALE_TRICK_OR_TREAT_0;
                 break;
             case 2:
-                localizedEntry=LOCALE_TRICK_OR_TREAT_2;
+                localizedEntry = LOCALE_TRICK_OR_TREAT_2;
                 break;
             case 3:
-                localizedEntry=LOCALE_TRICK_OR_TREAT_3;
+                localizedEntry = LOCALE_TRICK_OR_TREAT_3;
                 break;
             case 6:
-                localizedEntry=LOCALE_TRICK_OR_TREAT_6;
+                localizedEntry = LOCALE_TRICK_OR_TREAT_6;
                 break;
             default:
-                localizedEntry=LOCALE_TRICK_OR_TREAT_0;
+                localizedEntry = LOCALE_TRICK_OR_TREAT_0;
         }
 
         player->ADD_GOSSIP_ITEM(0, localizedEntry, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+HALLOWEEN_EVENTID);
