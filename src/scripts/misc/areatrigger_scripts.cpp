@@ -264,6 +264,18 @@ bool AreaTrigger_at_shade_of_eranikus(Player* pPlayer, AreaTriggerEntry const *p
     }
 }
 
+/*######
+## at_crashing_wickerman
+######*/
+
+bool AreaTrigger_at_crashing_wickerman(Player* player, AreaTriggerEntry const* pAt)
+{
+    if (player->GetQuestStatus(1658) == QUEST_STATUS_INCOMPLETE)
+        player->AreaExploredOrEventHappens(1658);
+        
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -341,6 +353,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_shade_of_eranikus";
     newscript->pAreaTrigger = &AreaTrigger_at_shade_of_eranikus;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_crashing_wickerman";
+    newscript->pAreaTrigger = &AreaTrigger_at_crashing_wickerman;
     newscript->RegisterSelf();
 }
 
