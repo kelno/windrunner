@@ -105,6 +105,13 @@ CreatureAI* GetAI_fire_effigy_fire(Creature* creature)
     return new npc_fire_effigy_fire(creature);
 }
 
+bool GOHello_go_wickerman_ember(Player* player, GameObject* go)
+{
+    player->CastSpell(player, 24705, true);
+    
+    return true;
+}
+
 void AddSC_hallows_end()
 {
     Script* newscript;
@@ -112,6 +119,11 @@ void AddSC_hallows_end()
     newscript = new Script;
     newscript->Name = "npc_fire_effigy_fire";
     newscript->GetAI = &GetAI_fire_effigy_fire;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_wickerman_ember";
+    newscript->pGOHello = &GOHello_go_wickerman_ember;
     newscript->RegisterSelf();
 }    
 
