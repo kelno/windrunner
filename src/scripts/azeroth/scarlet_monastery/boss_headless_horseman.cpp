@@ -610,6 +610,8 @@ struct boss_headless_horsemanAI : public ScriptedAI
             if (Player* plr = i->getSource())
                 plr->CombatStop();
         }
+        
+        me->SummonCreature(23904, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 600000);
     }
 
     void SpellHit(Unit *caster, const SpellEntry* spell)
