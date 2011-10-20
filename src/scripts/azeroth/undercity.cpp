@@ -28,6 +28,7 @@ npc_parqual_fintallas
 EndContentData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 /*######
 ## npc_lady_sylvanas_windrunner
@@ -56,12 +57,12 @@ float HighborneLoc[4][3]=
 #define HIGHBORNE_LOC_Y_NEW         -55.50
 
 enum WickermanYells {
-    YELL_WICKERMAN_1    = -2100023,
-    YELL_WICKERMAN_2    = -2100024,
-    YELL_WICKERMAN_3    = -2100025,
-    YELL_WICKERMAN_4    = -2100026,
-    YELL_WICKERMAN_5    = -2100027,
-    YELL_WICKERMAN_6    = -2100028
+    YELL_WICKERMAN_1    = -1000716,
+    YELL_WICKERMAN_2    = -1000717,
+    YELL_WICKERMAN_3    = -1000718,
+    YELL_WICKERMAN_4    = -1000719,
+    YELL_WICKERMAN_5    = -1000720,
+    YELL_WICKERMAN_6    = -1000721
 };
 
 struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
@@ -94,6 +95,8 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
             if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f)) {
                 WickermanEvent = true;
                 TalkTimer = 1000;
+                me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+                me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             }
         }
     }
@@ -114,6 +117,15 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
             summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
             targetGUID = summoned->GetGUID();
         }
+    }
+    
+    void DespawnDueToGameEventEnd(uint32 eventId)
+    {
+        if (eventId != 50)
+            return;
+            
+        if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f))
+            wickerman->SetGoState(1);
     }
 
     void UpdateAI(const uint32 diff)
@@ -144,27 +156,41 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
                     uint32 talkId = 0;
                     switch (TalkPhase) {
                     case 0:
-                        talkId = -2100023;
+                        talkId = YELL_WICKERMAN_1;
+                        TalkTimer = 8000;
                         break;
                     case 1:
-                        talkId = -2100024;
+                        talkId = YELL_WICKERMAN_2;
+                        TalkTimer = 8000;
                         break;
                     case 2:
-                        talkId = -2100025;
+                        talkId = YELL_WICKERMAN_3;
+                        TalkTimer = 8000;
                         break;
                     case 3:
-                        talkId = -2100026;
+                        talkId = YELL_WICKERMAN_4;
+                        TalkTimer = 8000;
                         break;
                     case 4:
-                        talkId = -2100027;
+                        talkId = YELL_WICKERMAN_5;
+                        TalkTimer = 8000;
                         break;
                     case 5:
-                        talkId = -2100028;
+                        talkId = YELL_WICKERMAN_6;
+                        TalkTimer = 10000;
                         break;
-                    // TODO: Add TalkTimer = 4000, and 0 in case 6
+                    case 6:
+                        if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f))
+                            wickerman->SetGoState(0);
+                        talkId = 0;
+                        TalkTimer = 0;
                     default:
                         break;
                     }
+                    
+                    if (talkId)
+                        DoScriptText(talkId, me, NULL);
+                    TalkPhase++;
                 }
                 else
                     TalkTimer -= diff;
