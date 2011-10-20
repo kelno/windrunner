@@ -55,13 +55,25 @@ float HighborneLoc[4][3]=
 #define HIGHBORNE_LOC_Y             -61.00
 #define HIGHBORNE_LOC_Y_NEW         -55.50
 
+enum WickermanYells {
+    YELL_WICKERMAN_1    = -2100023,
+    YELL_WICKERMAN_2    = -2100024,
+    YELL_WICKERMAN_3    = -2100025,
+    YELL_WICKERMAN_4    = -2100026,
+    YELL_WICKERMAN_5    = -2100027,
+    YELL_WICKERMAN_6    = -2100028
+};
+
 struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
 {
     npc_lady_sylvanas_windrunnerAI(Creature *c) : ScriptedAI(c) {}
 
     uint32 LamentEvent_Timer;
-    bool LamentEvent;
+    bool LamentEvent, WickermanEvent;
     uint64 targetGUID;
+    
+    uint8 TalkPhase;
+    uint32 TalkTimer;
 
     float myX;
     float myY;
@@ -76,6 +88,14 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
         LamentEvent_Timer = 5000;
         LamentEvent = false;
         targetGUID = 0;
+        TalkPhase = 0;
+        
+        if (gameeventmgr.IsActiveEvent(50)) {
+            if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f)) {
+                WickermanEvent = true;
+                TalkTimer = 1000;
+            }
+        }
     }
 
     void Aggro(Unit *who) {}
@@ -117,6 +137,38 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
                     LamentEvent = false;
                 }
             }else LamentEvent_Timer -= diff;
+        }
+        else if (WickermanEvent) {
+            if (TalkTimer) {
+                if (TalkTimer <= diff) {
+                    uint32 talkId = 0;
+                    switch (TalkPhase) {
+                    case 0:
+                        talkId = -2100023;
+                        break;
+                    case 1:
+                        talkId = -2100024;
+                        break;
+                    case 2:
+                        talkId = -2100025;
+                        break;
+                    case 3:
+                        talkId = -2100026;
+                        break;
+                    case 4:
+                        talkId = -2100027;
+                        break;
+                    case 5:
+                        talkId = -2100028;
+                        break;
+                    // TODO: Add TalkTimer = 4000, and 0 in case 6
+                    default:
+                        break;
+                    }
+                }
+                else
+                    TalkTimer -= diff;
+            }
         }
 
         if (!UpdateVictim())
