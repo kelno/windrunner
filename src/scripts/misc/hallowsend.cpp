@@ -156,6 +156,8 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
         yelledManyFlames = false;
         
         DoScriptText(YELL_BEGIN, me, NULL);
+        
+        me->setActive(true);
     }
     
     uint32 cleaveTimer;
