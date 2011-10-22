@@ -93,6 +93,9 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
         
         if (gameeventmgr.IsActiveEvent(50)) {
             if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f)) {
+                if (wickerman->GetGoState() == 0) // Already burning
+                    return;
+
                 WickermanEvent = true;
                 TalkTimer = 1000;
                 me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
