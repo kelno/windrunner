@@ -403,12 +403,15 @@ struct npc_shade_of_horseman_bunnyAI : public Scripted_NoMovementAI
     uint64 shadeGUID;
     
     uint32 growTimer;
+    uint32 checkEventTimer;
     
     uint8 stackCount;
     
     void Reset()
     {
         growTimer = 30000;
+        checkEventTimer = 10000 + rand() % 15000;
+        shadeGUID = 0;
         me->SetReactState(REACT_PASSIVE);
     }
 
@@ -449,6 +452,20 @@ struct npc_shade_of_horseman_bunnyAI : public Scripted_NoMovementAI
     {
         if (!me->HasAura(SPELL_FIRE))
             return;
+        
+        if (checkEventTimer <= diff) {
+            if (shadeGUID) { // Actually it should be != 0, as we don't reach this code if we don't have fire aura
+                Creature* shade = Creature::GetCreature(*me, shadeGUID);
+                if (!shade) {
+                    me->RemoveAurasDueToSpell(SPELL_FIRE);
+                    me->RemoveAurasDueToSpell(SPELL_FIRE_GROW);
+                    DoCast(me, SPELL_FIRE_SMOKE);
+                    return;
+                }
+            }
+        }
+        else
+            checkEventTimer <= diff;
             
         if (growTimer <= diff) {
             DoCast(me, SPELL_FIRE_GROW, true);
