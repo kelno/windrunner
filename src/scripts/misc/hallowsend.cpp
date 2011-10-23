@@ -463,9 +463,10 @@ struct npc_shade_of_horseman_bunnyAI : public Scripted_NoMovementAI
                     return;
                 }
             }
+            checkEventTimer = 10000 + rand() % 15000;
         }
         else
-            checkEventTimer <= diff;
+            checkEventTimer -= diff;
             
         if (growTimer <= diff) {
             DoCast(me, SPELL_FIRE_GROW, true);
