@@ -230,8 +230,13 @@ struct boss_felmystAI : public ScriptedAI
         EnterPhase(PHASE_GROUND, true);
         justPulled = true;
 
-        if(pInstance)
+        if (pInstance) {
             pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
+            if (Creature* brutallus = Creature::GetCreature(*me, pInstance->GetData64(DATA_BRUTALLUS))) {
+                if (!brutallus->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
+                    brutallus->SetVisibility(VISIBILITY_OFF);
+            }
+        }
     }
 
     void AttackStart(Unit *who)
