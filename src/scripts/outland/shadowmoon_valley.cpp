@@ -42,6 +42,7 @@ npc_grand_commander_ruusk
 npc_skartax
 npc_invis_deathforge_caster
 go_arcano_control_unit
+npc_akama_prelude - quest 10944
 EndContentData */
 
 #include "precompiled.h"
@@ -2044,6 +2045,256 @@ bool GossipSelect_npc_quest_spectrecles(Player* player, Creature* creature, uint
 }
 
 /*######
+## npc_akama_prelude
+######*/
+
+/*
+TODO
+* change olum modelid
+*/
+
+enum akamaPreludeData {
+    QUEST_SECRET_COMPROMISED    = 10944,
+    
+    NPC_SEER_OLUM               = 22820,
+    NPC_OLUM_SPIRIT             = 22870,
+    NPC_ILLIDAN_PRESENCE        = 22865,
+    
+    SPELL_OLUM_SACRIFICE        = 39552,
+    SPELL_SHADOWFORM            = 40973,
+    SPELL_KNEEL                 = 39656,
+   
+    SAY_OLUM_1          = -1000729,
+    SAY_AKAMA_1         = -1000730,
+    SAY_OLUM_2          = -1000731,
+    SAY_AKAMA_2         = -1000732,
+    SAY_OLUM_3          = -1000733,
+    SAY_AKAMA_3         = -1000734,
+    SAY_OLUM_4          = -1000735,
+    SAY_AKAMA_4         = -1000736,
+    SAY_OLUM_5          = -1000737,
+    SAY_AKAMA_5         = -1000738,
+    SAY_AKAMA_6         = -1000739,
+    SAY_ILLIDAN_1       = -1000740,
+    SAY_AKAMA_7         = -1000741,
+    SAY_ILLIDAN_2       = -1000742,
+    SAY_ILLIDAN_3       = -1000743,
+    SAY_AKAMA_8         = -1000744
+};
+
+struct npc_akama_preludeAI : public ScriptedAI
+{
+    npc_akama_preludeAI(Creature* c) : ScriptedAI(c)
+    {
+        eventTimer = 0;
+        step = 0;
+        talkId = 0;
+        olumGUID = 0;
+        presenceGUID = 0;
+    }
+    
+    uint64 olumGUID;
+    uint64 presenceGUID;
+    
+    uint32 eventTimer;
+    int32 talkId;
+
+    uint8 step;
+    
+    void Reset() {}
+    
+    void Aggro(Unit* who) {}
+    
+    void StartEvent()
+    {
+        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER | UNIT_NPC_FLAG_GOSSIP);
+        eventTimer = 500;
+        step = 0;
+        talkId = 0;
+        olumGUID = 0;
+        presenceGUID = 0;
+    }
+    
+    void EndEvent()
+    {
+        if (Creature* presence = Creature::GetCreature(*me, presenceGUID))
+            presence->DisappearAndDie();
+
+        me->RemoveAurasDueToSpell(SPELL_KNEEL);
+        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER | UNIT_NPC_FLAG_GOSSIP);
+        eventTimer = 0;
+        step = 0;
+        talkId = 0;
+        olumGUID = 0;
+        presenceGUID = 0;
+    }
+    
+    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
+    {
+        if (spellId == SPELL_OLUM_SACRIFICE) {
+            me->Kill(target);
+            if (Creature* spirit = me->SummonCreature(NPC_OLUM_SPIRIT, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), target->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 16000)) {
+                spirit->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                spirit->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+                spirit->GetMotionMaster()->MovePoint(0, spirit->GetPositionX(), spirit->GetPositionY(), spirit->GetPositionZ() + 4.0f, false);
+            }
+        }
+    }
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (id == 0) {
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                DoCast(olum, SPELL_OLUM_SACRIFICE);
+        }
+    }
+    
+    uint32 NextStep()
+    {
+        uint32 timer = 0;
+
+        switch (step) {
+        case 0:
+            if (olumGUID)
+                break;
+
+            if (Creature* olum = me->SummonCreature(NPC_SEER_OLUM, -3729.779541, 1037.054443, 55.956562, 5.667850, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+                olumGUID = olum->GetGUID();
+                DoScriptText(SAY_OLUM_1, olum, NULL);
+                olum->GetMotionMaster()->MovePoint(0, -3722.463867, 1032.153564, 55.956562);
+                olum->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            }
+
+            timer = 11000;
+            break;
+        case 1:
+            DoScriptText(SAY_AKAMA_1, me, NULL);
+            timer = 4500;
+            break;
+        case 2:
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                DoScriptText(SAY_OLUM_2, olum, NULL);
+                
+            timer = 7000;
+            break;
+        case 3:
+            DoScriptText(SAY_AKAMA_2, me, NULL);
+            timer = 6500;
+            break;
+        case 4:
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                DoScriptText(SAY_OLUM_3, olum, NULL);
+                
+            timer = 26000;
+            break;
+        case 5:
+            DoScriptText(SAY_AKAMA_3, me, NULL);
+            timer = 6500;
+            break;
+        case 6:
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                DoScriptText(SAY_OLUM_4, olum, NULL);
+                
+            timer = 14000;
+            break;
+        case 7:
+            DoScriptText(SAY_AKAMA_4, me, NULL);
+            timer = 9500;
+            break;
+        case 8:
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                DoScriptText(SAY_OLUM_5, olum, NULL);
+                
+            timer = 15000;
+            break;
+        case 9: // Akama moves to kill Olum
+            me->GetMotionMaster()->MovePoint(0, -3718.926514, 1030.366211, 55.956562);
+            timer = 14000;
+            break;
+        case 10:
+            DoScriptText(SAY_AKAMA_5, me, NULL);
+            timer = 13000;
+            break;
+        case 11:
+            me->GetMotionMaster()->MoveTargetedHome();
+            timer = 5000;
+            break;
+        case 12:
+            DoScriptText(SAY_AKAMA_6, me, NULL);
+            DoCast(me, SPELL_KNEEL, true);
+            if (Creature* presence = me->SummonCreature(NPC_ILLIDAN_PRESENCE, -3724.522705, 1029.824463, 55.955868, 6.259977, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+                presenceGUID = presence->GetGUID();
+                presence->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
+                presence->CastSpell(presence, SPELL_SHADOWFORM, true);
+                presence->SetReactState(REACT_PASSIVE);
+            }
+                
+            timer = 9000;
+            break;
+        case 13:
+            if (Creature* presence = Creature::GetCreature(*me, presenceGUID))
+                DoScriptText(SAY_ILLIDAN_1, presence, NULL);
+            
+            timer = 13000;
+            break;
+        case 14:
+            if (Creature* olum = Creature::GetCreature(*me, olumGUID))
+                olum->DisappearAndDie();
+
+            DoScriptText(SAY_AKAMA_7, me, NULL);
+            timer = 18000;
+            break;
+        case 15:
+            if (Creature* presence = Creature::GetCreature(*me, presenceGUID))
+                DoScriptText(SAY_ILLIDAN_2, presence, NULL);
+            
+            timer = 20000;
+            break;
+        case 16:
+            if (Creature* presence = Creature::GetCreature(*me, presenceGUID))
+                DoScriptText(SAY_ILLIDAN_3, presence, NULL);
+            
+            timer = 21500;
+            break;
+        case 17:
+            DoScriptText(SAY_AKAMA_8, me, NULL);
+            timer = 2500;
+            break;
+        case 18:
+            EndEvent();
+            return 0;
+        }
+        
+        step++;
+        return timer;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!eventTimer)
+            return;
+            
+        if (eventTimer <= diff)
+            eventTimer = NextStep();
+        else
+            eventTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_akama_prelude(Creature* creature)
+{
+    return new npc_akama_preludeAI(creature);
+}
+
+bool ChooseReward_npc_akama_prelude(Player* player, Creature* creature, Quest const* quest, uint32 opt)
+{
+    if (quest->GetQuestId() == QUEST_SECRET_COMPROMISED)
+        ((npc_akama_preludeAI*)creature->AI())->StartEvent();
+    
+    return true;
+}
+
+/*######
 ## AddSC
 #######*/
 
@@ -2174,5 +2425,10 @@ void AddSC_shadowmoon_valley()
     newscript->pGossipHello = &GossipHello_npc_quest_spectrecles;
     newscript->pGossipSelect = &GossipSelect_npc_quest_spectrecles;
     newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_akama_prelude";
+    newscript->GetAI = &GetAI_npc_akama_prelude;
+    newscript->pChooseReward = &ChooseReward_npc_akama_prelude;
+    newscript->RegisterSelf();
 }
-
