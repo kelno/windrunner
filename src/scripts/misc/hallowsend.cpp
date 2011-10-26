@@ -345,7 +345,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
             else
                 yellTimer -= diff;
             
-            if (flamesCount == 0 && throwCount >= 15) {
+            if ((flamesCount == 0 || despawnTimer <= 120000) && throwCount >= 15) {
                 float x, y, z;
                 GetLandingCoordsFromZone(x, y, z);
                 flightPhase = false;
