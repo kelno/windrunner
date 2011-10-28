@@ -173,6 +173,8 @@ struct hyjalAI : public npc_escortAI
     }
 
     void Retreat();                                         // "Teleport" (teleport visual + set invisible) all friendly creatures away from the base.
+    
+    void SetData(uint32 type, uint32 data);
 
     void SpawnVeins();
     void DeSpawnVeins();
