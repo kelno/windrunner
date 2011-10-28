@@ -936,6 +936,12 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
     DoMeleeAttackIfReady();
 }
+
+void hyjalAI::SetData(uint32 type, uint32 data)
+{
+    Wipe = true;
+}
+
 void hyjalAI::JustDied(Unit* killer)
 {
     if(IsDummy)return;
