@@ -103,7 +103,7 @@ struct mob_voidtravelerAI : public ScriptedAI
         {
             if(sacrificed)
             {
-                SpellEntry *spell = (SpellEntry *)GetSpellStore()->LookupEntry(HeroicMode?H_SPELL_EMPOWERING_SHADOWS:SPELL_EMPOWERING_SHADOWS);
+                SpellEntry *spell = (SpellEntry *)spellmgr.LookupSpell(HeroicMode?H_SPELL_EMPOWERING_SHADOWS:SPELL_EMPOWERING_SHADOWS);
                 if( spell )
                     Vorpil->AddAura(new EmpoweringShadowsAura(spell, 0, NULL, Vorpil, m_creature));
                 Vorpil->SetHealth(Vorpil->GetHealth()+Vorpil->GetMaxHealth()/25);

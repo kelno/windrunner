@@ -219,7 +219,7 @@ int32 DoLowUnlearnCost(Player *player)                      //blacksmith
 
 bool EquippedOk(Player* player, uint32 spellId)
 {
-    SpellEntry const* spell = GetSpellStore()->LookupEntry(spellId);
+    SpellEntry const* spell = spellmgr.LookupSpell(spellId);
 
     if( !spell )
         return false;

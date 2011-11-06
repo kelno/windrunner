@@ -26,6 +26,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_uldaman.h"
+#include "SpellMgr.h"
 
 #define SAY_AGGRO           "Who dares awaken Archaedas? Who dares the wrath of the makers!"
 #define SOUND_AGGRO         5855
@@ -104,7 +105,7 @@ struct boss_archaedasAI : public ScriptedAI
     void SpellHit (Unit* caster, const SpellEntry *spell)
     {
         // Being woken up from the altar, start the awaken sequence
-        if (spell == GetSpellStore()->LookupEntry(SPELL_ARCHAEDAS_AWAKEN)) {
+        if (spell == spellmgr.LookupSpell(SPELL_ARCHAEDAS_AWAKEN)) {
             DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
             DoPlaySoundToSet(m_creature,SOUND_AGGRO);
             Awaken_Timer = 4000;
@@ -247,7 +248,7 @@ struct mob_archaedas_minionsAI : public ScriptedAI
 
     void SpellHit (Unit* caster, const SpellEntry *spell) {
         // time to wake up, start animation
-        if (spell == GetSpellStore()->LookupEntry(SPELL_ARCHAEDAS_AWAKEN)){
+        if (spell == spellmgr.LookupSpell(SPELL_ARCHAEDAS_AWAKEN)){
             Awaken_Timer = 5000;
             wakingUp = true;
         }

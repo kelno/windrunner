@@ -26,15 +26,15 @@ EndScriptData */
 
 #define YELL_AGGRO              "L'ombre, elle va vous tomber dessus."
 #define SOUND_YELL_AGGRO        12041
-#define YELL_SPIRIT_BOLTS       "Your soul gonna bleed!"
+#define YELL_SPIRIT_BOLTS       "Ton âme, elle va saigner !"
 #define SOUND_YELL_SPIRIT_BOLTS 12047
-#define YELL_DRAIN_POWER        "Darkness comin\' for you"
+#define YELL_DRAIN_POWER        "L'ombre, elle vient vous chercher..."
 #define SOUND_YELL_DRAIN_POWER  12046
-#define YELL_KILL_ONE           "Dis a nightmare ya don\' wake up from!"
+#define YELL_KILL_ONE           "Ce cauchemard-là, vous allez pas vous en réveiller !"
 #define SOUND_YELL_KILL_ONE     12043
-#define YELL_KILL_TWO           "Azzaga choogo zinn!"
+#define YELL_KILL_TWO           "Azzaga choogo zinn !"
 #define SOUND_YELL_KILL_TWO     12044
-#define YELL_DEATH              "Dis not... da end of me..."
+#define YELL_DEATH              "Ce n'est pas... la fin... pour moi..."
 #define SOUND_YELL_DEATH        12051
 
 #define SPELL_SPIRIT_BOLTS      43383

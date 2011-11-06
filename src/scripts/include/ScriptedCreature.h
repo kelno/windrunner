@@ -20,7 +20,7 @@
 #define CAST_PET(a)     (SCRIPT_CAST_TYPE<Pet*>(a))
 #define CAST_AI(a,b)    (SCRIPT_CAST_TYPE<a*>(b))
 
-#define GET_SPELL(a)    (const_cast<SpellEntry*>(GetSpellStore()->LookupEntry(a)))
+#define GET_SPELL(a)    (const_cast<SpellEntry*>(spellmgr.LookupSpell(a)))
 
 float GetSpellMaxRange(uint32 id);
 

@@ -38,13 +38,13 @@ float NalorakkWay[8][3] =
     {-80.072, 1295.775, 48.60} // waypoint 4
 };
 
-#define YELL_NALORAKK_WAVE1     "Get da move on, guards! It be killin' time!"
+#define YELL_NALORAKK_WAVE1     "Gardes ! Bougez-vous, c'est l'heure du massacre !"
 #define SOUND_NALORAKK_WAVE1    12066
-#define YELL_NALORAKK_WAVE2     "Guards, go already! Who you more afraid of, dem... or me?"
+#define YELL_NALORAKK_WAVE2     "Gardes ! Allez ! C'est quoi qui vous fait le plus peur hein ? Eux... Ou moi ?"
 #define SOUND_NALORAKK_WAVE2    12067
-#define YELL_NALORAKK_WAVE3     "Ride now! Ride out dere and bring me back some heads!"
+#define YELL_NALORAKK_WAVE3     "Au galop ! Et rapportez-moi des têtes."
 #define SOUND_NALORAKK_WAVE3    12068
-#define YELL_NALORAKK_WAVE4     "I be losin' me patience! Go on: make dem wish dey was never born!"
+#define YELL_NALORAKK_WAVE4     "Je vais perdre ma patience ! Allez-y, et faites-leur regretter d'être nés !"
 #define SOUND_NALORAKK_WAVE4    12069
 
 //Unimplemented SoundIDs
@@ -56,13 +56,13 @@ float NalorakkWay[8][3] =
 //General defines
 #define YELL_AGGRO              "Vous s'rez mort bien vite !"
 #define SOUND_YELL_AGGRO        12070
-#define YELL_KILL_ONE           "Mua-ha-ha! Now whatchoo got to say?"
+#define YELL_KILL_ONE           "Mua-ha-ha ! Allons, qu'est-ce que t'as à dire, hein ?"
 #define SOUND_YELL_KILL_ONE     12075
-#define YELL_KILL_TWO           "Da Amani gonna rule again!"
+#define YELL_KILL_TWO           "Les Amanis, ils vont régner à nouveau !"
 #define SOUND_YELL_KILL_TWO     12076
-#define YELL_DEATH              "I... be waitin' on da udda side...."
+#define YELL_DEATH              "Je vous... attendrai de l'autre côté..."
 #define SOUND_YELL_DEATH        12077
-#define YELL_BERSERK            "You had your chance, now it be too late!" //Never seen this being used, so just guessing from what I hear.
+#define YELL_BERSERK            "C'était votre chance ! Maintenant, c'est trop tard !" //Never seen this being used, so just guessing from what I hear.
 #define SOUND_YELL_BERSERK      12074
 
 #define SPELL_BERSERK           45078
@@ -74,10 +74,10 @@ float NalorakkWay[8][3] =
 #define SPELL_SURGE             42402
 #define SPELL_BEARFORM          42377
 
-#define YELL_SURGE              "I bring da pain!"
+#define YELL_SURGE              "Ca va faire mal !"
 #define SOUND_YELL_SURGE        12071
 
-#define YELL_SHIFTEDTOTROLL     "Make way for Nalorakk!"
+#define YELL_SHIFTEDTOTROLL     "Place ! Voilà le Nalorakk !"
 #define SOUND_YELL_TOTROLL      12073
 
 //Defines for Bear form
@@ -85,7 +85,7 @@ float NalorakkWay[8][3] =
 #define SPELL_RENDFLESH         42397
 #define SPELL_DEAFENINGROAR     42398
 
-#define YELL_SHIFTEDTOBEAR      "You call on da beast, you gonna get more dan you bargain for!"
+#define YELL_SHIFTEDTOBEAR      "Vous demandez la bête, je vais vous donner la bête !"
 #define SOUND_YELL_TOBEAR       12072
 
 

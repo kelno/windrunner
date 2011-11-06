@@ -36,26 +36,26 @@ EndScriptData */
 #define YELL_TRANSFORM_TO_EAGLE "L'aigle, il vous trouvera partout !"
 #define SOUND_TRANSFORM_TO_EAGLE 12093
 
-#define YELL_KILL_ONE "Da Amani de chuka!"
+#define YELL_KILL_ONE "Da Amani de chuka !"
 #define SOUND_KILL_ONE 12098
 
-#define YELL_KILL_TWO "Lot more gonna fall like you!"
+#define YELL_KILL_TWO "Plein d'autres y vont tomber comme vous !"
 #define SOUND_KILL_TWO 12099
 
-#define YELL_FIRE_BREATH "Fire kill you just as quick!"
+#define YELL_FIRE_BREATH "Le feu, il va vous tuer aussi vite !"
 #define SOUND_FIRE_BRETH 12096
 
 #define YELL_AGGRO "Y'a personne plus balèze que moi !"
 #define SOUND_AGGRO 12091
 
-#define YELL_BERSERK "You too slow! Me too strong!"
+#define YELL_BERSERK "Vous trop lents et moi trop fort !"
 #define SOUND_BERSERK 12097
 
-#define YELL_DEATH "Mebbe me fall...but da Amani empire...never gonna die..."
+#define YELL_DEATH "J'suis peut-être vaincu... Mais l'empire Amani, il mourra jamais !"
 #define SOUND_DEATH 12100
 
 //Still not used, need more info
-#define YELL_INTRO "Everybody always wanna take from us. Now we gonna start takin' back. Anybody who get in our way...gonna drown in their own blood! De Amani empire be back now...seekin' vengeance. And we gonna start...with you!"
+#define YELL_INTRO "Depuis toujours tout le monde il veut nous dépouiller. Mais on va commencer à prendre ce qui nous a été pris. Ceux qui se mettront sur notre chemin, on les noiera dans leur propre sang. L'empire Amani est de retour pour se venger. Et on va commencer par vous !"
 #define SOUND_INTRO 12090
 
 //Spells:
