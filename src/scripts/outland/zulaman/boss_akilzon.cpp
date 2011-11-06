@@ -39,11 +39,11 @@ EndScriptData */
 
 //"Your death gonna be quick, strangers. You shoulda never have come to this place..."
 #define SAY_ONAGGRO "Moi, chuis le prédateur ! Vous, z'êtes la proie…"
-#define SAY_ONDEATH "You can't... kill... me spirit!"
-#define SAY_ONSLAY1 "Ya got nothin'!"
-#define SAY_ONSLAY2 "Stop your cryin'!"
-#define SAY_ONSUMMON "Feed, me bruddahs!"
-#define SAY_ONENRAGE "All you be doing is wasting my time!"
+#define SAY_ONDEATH "Mon esprit, vous ne pouvez pas... le tuer !"
+#define SAY_ONSLAY1 "Vous êtes nuls !"
+#define SAY_ONSLAY2 "Arrêtez de pleurnicher !"
+#define SAY_ONSUMMON "Mangez, mes frères !"
+#define SAY_ONENRAGE "Vous m'faites perdre mon temps, rien d'autre !"
 #define SOUND_ONAGGRO 12013
 #define SOUND_ONDEATH 12019
 #define SOUND_ONSLAY1 12017
@@ -61,7 +61,7 @@ struct boss_akilzonAI : public ScriptedAI
 {
     boss_akilzonAI(Creature *c) : ScriptedAI(c)
     {
-        SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_ELECTRICAL_DAMAGE);
+        SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_ELECTRICAL_DAMAGE);
         if(TempSpell)
             TempSpell->EffectBasePoints[1] = 49;//disable bugged lightning until fixed in core
         pInstance = ((ScriptedInstance*)c->GetInstanceData());

@@ -27,21 +27,21 @@ EndScriptData */
 
 #define YELL_AGGRO "À genoux, les idiots… devant la griffe et le croc !"
 #define SOUND_AGGRO                     12020
-#define YELL_SABER_ONE "You gonna leave in pieces!"
+#define YELL_SABER_ONE "Vous partirez pas en un seul morceau !"
 #define SOUND_SABER_ONE                 12024
-#define YELL_SABER_TWO "Me gonna carve ya now!"
+#define YELL_SABER_TWO "J'vais te couper en deux !"
 #define SOUND_SABER_TWO                 12023
-#define YELL_SPLIT "Me gonna carve ya now!"
+#define YELL_SPLIT "L'esprit en moi, il est indompté !"
 #define SOUND_SPLIT                    12021
-#define YELL_MERGE "Spirit, come back to me!"
+#define YELL_MERGE "Esprit, reviens à moi !"
 #define SOUND_MERGE                    12022
-#define YELL_KILL_ONE "You cant fight the power!"
+#define YELL_KILL_ONE "J'ai trop la puissance pour vous !"
 #define SOUND_KILL_ONE                12026
-#define YELL_KILL_TWO "You gonna fail!"
+#define YELL_KILL_TWO "Vous allez tous échouer !"
 #define SOUND_KILL_TWO                12027
 #define YELL_DEATH "Chaga... choka'jinn."
 #define SOUND_DEATH                    12028
-#define YELL_BERSERK "Whatch you be doing? Pissin' yourselves..."
+#define YELL_BERSERK "Alors les gars, on retient ses coups ?"
 #define SOUND_BERSERK                12025
 
 #define SPELL_DUAL_WIELD                29651
@@ -79,7 +79,7 @@ struct boss_halazziAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         // need to find out what controls totem's spell cooldown
-        /*SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_LIGHTNING);
+        /*SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_LIGHTNING);
         if(TempSpell && TempSpell->CastingTimeIndex != 5)
             TempSpell->CastingTimeIndex = 5; // 2000 ms casting time*/
     }

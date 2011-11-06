@@ -1024,7 +1024,7 @@ void ScriptMgr::LoadDatabase()
                     {
                         if (temp.event_param1)
                         {
-                            SpellEntry const* pSpell = GetSpellStore()->LookupEntry(temp.event_param1);
+                            SpellEntry const* pSpell = spellmgr.LookupSpell(temp.event_param1);
                             if (!pSpell)
                             {
                                 error_db_log("TSCR: Creature %u has non-existant SpellID(%u) defined in event %u.", temp.creature_id, temp.event_param1, i);
@@ -1166,7 +1166,7 @@ void ScriptMgr::LoadDatabase()
 
                     case ACTION_T_CAST:
                         {
-                            const SpellEntry *spell = GetSpellStore()->LookupEntry(temp.action[j].param1);
+                            const SpellEntry *spell = spellmgr.LookupSpell(temp.action[j].param1);
                             if (!spell)
                                 error_db_log("TSCR: Event %u Action %u uses non-existant SpellID %u.", i, j+1, temp.action[j].param1);
                             else
@@ -1186,7 +1186,7 @@ void ScriptMgr::LoadDatabase()
 
                     case ACTION_T_REMOVEAURASFROMSPELL:
                         {
-                            if (!GetSpellStore()->LookupEntry(temp.action[j].param2))
+                            if (!spellmgr.LookupSpell(temp.action[j].param2))
                                 error_db_log("TSCR: Event %u Action %u uses non-existant SpellID %u.", i, j+1, temp.action[j].param2);
 
                             if (temp.action[j].param1 >= TARGET_T_END)
@@ -1223,7 +1223,7 @@ void ScriptMgr::LoadDatabase()
                             if (!GetCreatureTemplateStore(temp.action[j].param1))
                                 error_db_log("TSCR: Event %u Action %u uses non-existant creature entry %u.", i, j+1, temp.action[j].param1);
 
-                            if (!GetSpellStore()->LookupEntry(temp.action[j].param2))
+                            if (!spellmgr.LookupSpell(temp.action[j].param2))
                                 error_db_log("TSCR: Event %u Action %u uses non-existant SpellID %u.", i, j+1, temp.action[j].param2);
 
                             if (temp.action[j].param3 >= TARGET_T_END)
@@ -1235,7 +1235,7 @@ void ScriptMgr::LoadDatabase()
                             if (!GetQuestTemplateStore(temp.action[j].param1))
                                 error_db_log("TSCR: Event %u Action %u uses non-existant Quest entry %u.", i, j+1, temp.action[j].param1);
 
-                            if (!GetSpellStore()->LookupEntry(temp.action[j].param2))
+                            if (!spellmgr.LookupSpell(temp.action[j].param2))
                                 error_db_log("TSCR: Event %u Action %u uses non-existant SpellID %u.", i, j+1, temp.action[j].param2);
                         }
                         break;

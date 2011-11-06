@@ -56,7 +56,7 @@ struct boss_azgalorAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         go = false;
         pos = 0;
-        SpellEntry *TempSpell = (SpellEntry*)GetSpellStore()->LookupEntry(SPELL_HOWL_OF_AZGALOR);
+        SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_HOWL_OF_AZGALOR);
         if(TempSpell)
             TempSpell->EffectRadiusIndex[0] = 12;//100yards instead of 50000?!
     }

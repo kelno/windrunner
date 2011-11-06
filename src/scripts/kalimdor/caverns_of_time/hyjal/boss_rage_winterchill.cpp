@@ -32,25 +32,25 @@ EndScriptData */
 
 #define SPELL_BERSERK 26662
 
-#define SAY_ONDEATH "You have won this battle, but not... the... war"
+#define SAY_ONDEATH "Vous avez gagné cette bataille, mais... pas... la guerre !"
 #define SOUND_ONDEATH 11026
 
-#define SAY_ONSLAY1 "All life must perish!"
-#define SAY_ONSLAY2 "Victory to the Legion!"
+#define SAY_ONSLAY1 "Toute vie doit périr !"
+#define SAY_ONSLAY2 "Victoire à la Légion !"
 #define SOUND_ONSLAY1 11025
 #define SOUND_ONSLAY2 11057
 
-#define SAY_DECAY1 "Crumble and rot!"
-#define SAY_DECAY2 "Ashes to ashes, dust to dust"
+#define SAY_DECAY1 "Tombez et pourrissez !"
+#define SAY_DECAY2 "Des cendres aux cendres, de poussière à poussière !"
 #define SOUND_DECAY1 11023
 #define SOUND_DECAY2 11055
 
-#define SAY_NOVA1 "Succumb to the icy chill... of death!"
-#define SAY_NOVA2 "It will be much colder in your grave"
+#define SAY_NOVA1 "Succombez au frisson glacé... de la mort !"
+#define SAY_NOVA2 "Il fera bien plus froid dans vos tombes !"
 #define SOUND_NOVA1 11024
 #define SOUND_NOVA2 11058
 
-#define SAY_ONAGGRO "The Legion's final conquest has begun! Once again the subjugation of this world is within our grasp. Let none survive!"
+#define SAY_ONAGGRO "L'ultime invasion de la Légion a commencé ! Une fois de plus, l'asservissement de ce monde est à notre portée. Ne faites pas de quartier !"
 #define SOUND_ONAGGRO 11022
 
 struct boss_rage_winterchillAI : public hyjal_trashAI
