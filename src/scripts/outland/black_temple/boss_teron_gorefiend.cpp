@@ -568,12 +568,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
     }
 
     void UpdateAI(const uint32 diff)
-    {
-        float x,y,z;
-        m_creature->GetPosition(x,y,z);
-        z = m_creature->GetMap()->GetHeight(x, y, z);
-        m_creature->Relocate(x,y,z,0);
-        
+    {        
         if (ResetCheckTimer <= diff) {
             if (Creature *pTeron = pInstance->instance->GetCreatureInMap(TeronGUID)) {
                 if (!pTeron->isInCombat())
