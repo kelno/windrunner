@@ -89,6 +89,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
     uint64 PortalGUID[3]; // guid's of portals
     uint64 BeamerGUID[3]; // guid's of auxiliary beaming portals
     uint64 BeamTarget[3]; // guid's of portals' current targets
+    uint32 BuffTimer[3]; // independant buff timer for each portal
 
     bool IsBetween(WorldObject* u1, WorldObject* target, WorldObject* u2) // the in-line checker
     {
@@ -121,6 +122,9 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
         NetherInfusionTimer = 540000;
         VoidZoneTimer = 15000;
         NetherbreathTimer = 3000;
+        
+        for (uint8 i = 0; i < 3; i++)
+            BuffTimer[i] = 1000;
 
         HandleDoors(true);
         DestroyPortals();
@@ -165,7 +169,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
         }
     }
 
-    void UpdatePortals() // Here we handle the beams' behavior
+    void UpdatePortals(uint32 const diff) // Here we handle the beams' behavior
     {
         for(int j=0; j<3; ++j) // j = color
             if(Creature *portal = Unit::GetCreature(*m_creature, PortalGUID[j]))
@@ -193,10 +197,16 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
                     }
                 }
                 // buff the target
-                if(target->GetTypeId() == TYPEID_PLAYER)
-                    target->AddAura(PlayerBuff[j], target);
-                else
+                if(target->GetTypeId() == TYPEID_PLAYER) {
+                    if (BuffTimer[j] <= diff) {
+                        target->AddAura(PlayerBuff[j], target);
+                        BuffTimer[j] = 1000;
+                    }
+                }
+                else if (BuffTimer[j] <= diff) {
                     target->AddAura(NetherBuff[j], target);
+                    BuffTimer[j] = 1000;
+                }
                 // cast visual beam on the chosen target if switched
                 // simple target switching isn't working -> using BeamerGUID to cast (workaround)
                 if(!current || target != current)
@@ -277,6 +287,11 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
     {
         if(!UpdateVictim())
             return;
+            
+        for (uint8 i = 0; i < 3; i++) {
+            if (BuffTimer[i] >= diff)
+                BuffTimer[i] -= diff;
+        }
         
         float x, y, z, o;
         m_creature->GetHomePosition(x, y, z, o);
@@ -303,7 +318,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
             // Distribute beams and buffs
             if(PortalTimer < diff)
             {
-                UpdatePortals();
+                UpdatePortals(diff);
                 PortalTimer = 200;
             }else PortalTimer -= diff;
 
