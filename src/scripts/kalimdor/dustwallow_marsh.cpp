@@ -380,7 +380,12 @@ enum eStinky
 
 struct npc_stinkyAI : public npc_escortAI
 {
-    npc_stinkyAI(Creature* pCreature) : npc_escortAI(pCreature) { }
+    npc_stinkyAI(Creature* pCreature) : npc_escortAI(pCreature)
+    {
+        completed = false;
+    }
+
+    bool completed;
 
     void WaypointReached(uint32 i)
     {
@@ -419,6 +424,7 @@ struct npc_stinkyAI : public npc_escortAI
                 pPlayer->GroupEventHappens(QUEST_STINKYS_ESCAPE_H, me);
             if (pPlayer && pPlayer->GetQuestStatus(QUEST_STINKYS_ESCAPE_A))
                 pPlayer->GroupEventHappens(QUEST_STINKYS_ESCAPE_A, me);
+            completed = true;
             break;
         case 39:
             DoScriptText(EMOTE_DISAPPEAR, me);
@@ -435,6 +441,9 @@ struct npc_stinkyAI : public npc_escortAI
 
     void JustDied(Unit* /*pKiller*/)
     {
+        if (completed)
+            return;
+
         Player* pPlayer = GetPlayerForEscort();
         if (HasEscortState(STATE_ESCORT_ESCORTING) && pPlayer)
         {
