@@ -397,15 +397,11 @@ struct npc_OOX17AI : public npc_escortAI
         }
     }
 
-    void Reset(){}
+    void Reset() {}
 
     void Aggro(Unit* who)
     {
-        switch (rand()%2)
-        {
-        case 0: DoScriptText(SAY_CHICKEN_AGGRO_1, m_creature); break;
-        case 1: DoScriptText(SAY_CHICKEN_AGGRO_2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_CHICKEN_AGGRO_1, SAY_CHICKEN_AGGRO_2), m_creature);
     }
 
     void JustSummoned(Creature* summoned)
@@ -429,13 +425,12 @@ struct npc_OOX17AI : public npc_escortAI
         if (!UpdateVictim())
             return;
     }
-    };
+};
 
 bool QuestAccept_npc_OOX17(Player* player, Creature* creature, Quest const* quest)
 {
-    if (quest->GetQuestId() == Q_OOX17)
-    {
-        creature->setFaction(113);
+    if (quest->GetQuestId() == Q_OOX17) {
+        creature->setFaction(player->getFaction());
         creature->SetHealth(creature->GetMaxHealth());
         creature->SetUInt32Value(UNIT_FIELD_BYTES_1,0);
         creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
@@ -443,6 +438,7 @@ bool QuestAccept_npc_OOX17(Player* player, Creature* creature, Quest const* ques
         ((npc_escortAI*)(creature->AI()))->Start(true, true, false, player->GetGUID(), creature->GetEntry());
 
     }
+
     return true;
 }
 

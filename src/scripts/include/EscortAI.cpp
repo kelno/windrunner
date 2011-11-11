@@ -30,10 +30,9 @@ void npc_escortAI::AttackStart(Unit *who)
     if (IsBeingEscorted && !Defend)
         return;
 
-
-        if ( m_creature->Attack(who, true) )
-        {
-            m_creature->AddThreat(who, 0.0f);
+    if ( m_creature->Attack(who, true) )
+    {
+        m_creature->AddThreat(who, 0.0f);
 
         if (!InCombat)
         {
@@ -41,10 +40,10 @@ void npc_escortAI::AttackStart(Unit *who)
 
             if (IsBeingEscorted)
             {
-            //Store last position
-            m_creature->GetPosition(LastPos.x, LastPos.y, LastPos.z);
+                //Store last position
+                m_creature->GetPosition(LastPos.x, LastPos.y, LastPos.z);
 
-             debug_log("TSCR: EscortAI has entered combat and stored last location.");
+                debug_log("TSCR: EscortAI has entered combat and stored last location.");
             }
 
             Aggro(who);
@@ -105,35 +104,81 @@ void npc_escortAI::EnterEvadeMode()
 
 void npc_escortAI::UpdateAI(const uint32 diff)
 {
+    me->SetEscorted(IsBeingEscorted);
+
     //Waypoint Updating
     if (IsBeingEscorted && !InCombat && WaitTimer && !Returning)
     {
         if (WaitTimer <= diff)
-    {
-        if (ReconnectWP)
         {
-            //Correct movement speed
-            if (Run)
-                m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-            else m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            if (ReconnectWP)
+            {
+                //Correct movement speed
+                if (Run)
+                    m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                else m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
 
-            //Continue with waypoints
+                //Continue with waypoints
+                if( !IsOnHold )
+                {
+                    m_creature->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z );
+                    debug_log("TSCR: EscortAI Reconnect WP is: %u, %f, %f, %f", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
+                    WaitTimer = 0;
+                    ReconnectWP = false;
+                    return;
+                }
+            }
+
+            //End of the line, Despawn self then immediatly respawn
+            if (CurrentWP == WaypointList.end())
+            {
+                if(DespawnAtEnd)
+                {
+                    debug_log("TSCR: EscortAI reached end of waypoints");
+
+                    m_creature->setDeathState(JUST_DIED);
+                    m_creature->SetHealth(0);
+                    m_creature->CombatStop();
+                    m_creature->DeleteThreatList();
+                    m_creature->Respawn();
+                    m_creature->GetMotionMaster()->Clear(true);
+
+                    //Re-Enable gossip
+                    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+
+                    IsBeingEscorted = false;
+                    WaitTimer = 0;
+                    return;
+                }else{
+                    debug_log("TSCR: EscortAI reached end of waypoints with Despawn off");
+                    IsBeingEscorted = false;
+                    WaitTimer = 0;
+                    return;
+                }
+            }
+
             if( !IsOnHold )
             {
                 m_creature->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z );
-                debug_log("TSCR: EscortAI Reconnect WP is: %u, %f, %f, %f", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
+                debug_log("TSCR: EscortAI Next WP is: %u, %f, %f, %f", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
                 WaitTimer = 0;
-                ReconnectWP = false;
-                return;
             }
-        }
+        }else WaitTimer -= diff;
+    }
 
-        //End of the line, Despawn self then immediatly respawn
-        if (CurrentWP == WaypointList.end())
+    //Check if player is within range
+    if (IsBeingEscorted && !InCombat && PlayerGUID)
+    {
+        if (PlayerTimer < diff)
         {
-            if(DespawnAtEnd)
+            Unit* p = Unit::GetUnit(*m_creature, PlayerGUID);
+
+            if (DespawnAtFar && (!p || m_creature->GetDistance(p) > GetMaxPlayerDistance()))
             {
-                debug_log("TSCR: EscortAI reached end of waypoints");
+                JustDied(m_creature);
+                IsBeingEscorted = false;
+
+                debug_log("TSCR: EscortAI Evaded back to spawn point because player was to far away or not found");
 
                 m_creature->setDeathState(JUST_DIED);
                 m_creature->SetHealth(0);
@@ -144,71 +189,17 @@ void npc_escortAI::UpdateAI(const uint32 diff)
 
                 //Re-Enable gossip
                 m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-
-                IsBeingEscorted = false;
-                WaitTimer = 0;
-                return;
-            }else{
-                debug_log("TSCR: EscortAI reached end of waypoints with Despawn off");
-                IsBeingEscorted = false;
-                WaitTimer = 0;
-                return;
             }
-        }
 
-        if( !IsOnHold )
-        {
-            m_creature->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z );
-            debug_log("TSCR: EscortAI Next WP is: %u, %f, %f, %f", CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z);
-            WaitTimer = 0;
-        }
-    }else WaitTimer -= diff;
-    }
-
-    //Check if player is within range
-    if (IsBeingEscorted && !InCombat && PlayerGUID)
-    {
-        if (PlayerTimer < diff)
-    {
-        Unit* p = Unit::GetUnit(*m_creature, PlayerGUID);
-
-        if (DespawnAtFar && (!p || m_creature->GetDistance(p) > GetMaxPlayerDistance()))
-        {
-            JustDied(m_creature);
-            IsBeingEscorted = false;
-
-            debug_log("TSCR: EscortAI Evaded back to spawn point because player was to far away or not found");
-
-            m_creature->setDeathState(JUST_DIED);
-            m_creature->SetHealth(0);
-            m_creature->CombatStop();
-            m_creature->DeleteThreatList();
-            m_creature->Respawn();
-            m_creature->GetMotionMaster()->Clear(true);
-
-            //Re-Enable gossip
-            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        }
-
-        PlayerTimer = 1000;
-    }else PlayerTimer -= diff;
+            PlayerTimer = 1000;
+        }else PlayerTimer -= diff;
     }
 
     if(CanMelee)
     {
         //Check if we have a current target
         if( m_creature->isAlive() && UpdateVictim())
-        {
-            //If we are within range melee the target
-            if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
-            {
-                if( m_creature->isAttackReady() )
-                {
-                    m_creature->AttackerStateUpdate(m_creature->getVictim());
-                    m_creature->resetAttackTimer();
-                }
-            }
-        }
+            DoMeleeAttackIfReady();
     }
 }
 
@@ -319,16 +310,14 @@ void npc_escortAI::GetWaypointListFromDB(uint32 entry)
 
 void npc_escortAI::Start(bool bAttack, bool bDefend, bool bRun, uint64 pGUID, uint32 entry)
 {
-    if (InCombat)
-    {
+    if (InCombat) {
         debug_log("SD2 ERROR: EscortAI attempt to Start while in combat");
         return;
     }
 
     GetWaypointListFromDB(entry);
 
-    if (WaypointList.empty())
-    {
+    if (WaypointList.empty()) {
         debug_log("SD2 ERROR: Call to escortAI::Start with 0 waypoints");
         return;
     }
