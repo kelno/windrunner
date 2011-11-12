@@ -671,10 +671,8 @@ bool QuestAccept_npc_karynaku(Player* player, Creature* creature, Quest const* q
 #define C_ILLIDAN 22083
 #define C_YARZILL 23141
 
-#define SPELL_ONE 39990 // Red Lightning Bolt
-#define SPELL_TWO 41528 // Mark of Stormrage
-#define SPELL_THREE 40216 // Dragonaw Faction
-#define SPELL_FOUR 42016 // Dragonaw Trasform
+#define SPELL_RED_BOLT 39990 // Red Lightning Bolt
+#define SPELL_MARK_OF_STORMRAGE 41528 // Mark of Stormrage
 
 #define OVERLORD_SAY_1 -1000206
 #define OVERLORD_SAY_2 -1000207
@@ -726,18 +724,25 @@ struct npc_overlord_morghorAI : public ScriptedAI
     {
         m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 0);
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1,0);
+        
         Unit* Illidan = m_creature->SummonCreature(C_ILLIDAN, -5107.83, 602.584, 85.2393, 4.92598, TEMPSUMMON_CORPSE_DESPAWN, 0);
-        if(Illidan)
-        {
+        if (Illidan) {
             IllidanGUID = Illidan->GetGUID();
             Illidan->SetVisibility(VISIBILITY_OFF);
+            Illidan->ToCreature()->SetReactState(REACT_PASSIVE);
+            Illidan->setFaction(14);
+            Illidan->SetMaxHealth(4200000);
+            Illidan->SetHealth(Illidan->GetMaxHealth());
+            Illidan->SetMaxPower(POWER_MANA, 1400000);
+            Illidan->SetPower(POWER_MANA, Illidan->GetMaxPower(POWER_MANA));
         }
-        if(PlayerGUID)
-        {
+        
+        if(PlayerGUID) {
             Player* player = Unit::GetPlayer(PlayerGUID);
             if(player)
                 DoScriptText(OVERLORD_SAY_1, m_creature, player);
         }
+
         ConversationTimer = 4200;
         Step = 0;
         Event = true;
@@ -747,120 +752,172 @@ struct npc_overlord_morghorAI : public ScriptedAI
     {
         Player* plr = Unit::GetPlayer(PlayerGUID);
 
-        Unit* Illi = Unit::GetUnit((*m_creature), IllidanGUID);
+        Unit* Illi = Unit::GetUnit((*me), IllidanGUID);
 
-        if(!plr || !Illi)
-        {
+        if (!plr || (!Illi && Step < 23)) {
             EnterEvadeMode();
             return 0;
         }
 
         switch(Step)
         {
-        case 0: return 0; break;
-        case 1: m_creature->GetMotionMaster()->MovePoint(0, -5104.41, 595.297, 85.6838); return 9000; break;
-        case 2: DoScriptText(OVERLORD_YELL_1, m_creature, plr); return 4500; break;
-        case 3: m_creature->SetInFront(plr); return 3200;  break;
-        case 4: DoScriptText(OVERLORD_SAY_2, m_creature, plr); return 2000; break;
-        case 5: Illi->SetVisibility(VISIBILITY_ON);
-             Illi->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE); return 350; break;
+        case 0:
+            return 0;
+        case 1:
+            m_creature->GetMotionMaster()->MovePoint(0, -5104.41, 595.297, 85.6838);
+            return 9000;
+        case 2:
+            DoScriptText(OVERLORD_YELL_1, m_creature, plr);
+            return 4500;
+        case 3:
+            m_creature->SetInFront(plr);
+            return 3200;
+        case 4:
+            DoScriptText(OVERLORD_SAY_2, m_creature, plr);
+            return 2000;
+        case 5:
+            Illi->SetVisibility(VISIBILITY_ON);
+            Illi->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            return 350;
         case 6:
-            Illi->CastSpell(Illi, SPELL_ONE, true);
+            Illi->CastSpell(Illi, SPELL_RED_BOLT, true);
             Illi->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, IllidanGUID);
-            return 2000; break;
-        case 7: DoScriptText(OVERLORD_YELL_2, m_creature); return 4500; break;
-        case 8: m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 8); return 2500; break;
-        case 9: DoScriptText(OVERLORD_SAY_3, m_creature); return 6500; break;
-        case 10: DoScriptText(LORD_ILLIDAN_SAY_1, Illi); return 5000;  break;
-        case 11: DoScriptText(OVERLORD_SAY_4, m_creature, plr); return 6000; break;
-        case 12: DoScriptText(LORD_ILLIDAN_SAY_2, Illi); return 5500; break;
-        case 13: DoScriptText(LORD_ILLIDAN_SAY_3, Illi); return 4000; break;
-        case 14: Illi->SetUInt64Value(UNIT_FIELD_TARGET, PlayerGUID); return 1500; break;
-        case 15: DoScriptText(LORD_ILLIDAN_SAY_4, Illi); return 1500; break;
+            return 2000;
+        case 7:
+            DoScriptText(OVERLORD_YELL_2, m_creature);
+            return 4500;
+        case 8:
+            m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 8);
+            return 2500;
+        case 9:
+            DoScriptText(OVERLORD_SAY_3, m_creature);
+            return 6500;
+        case 10:
+            DoScriptText(LORD_ILLIDAN_SAY_1, Illi);
+            return 5000;
+        case 11:
+            DoScriptText(OVERLORD_SAY_4, m_creature, plr);
+            return 6000;
+        case 12:
+            DoScriptText(LORD_ILLIDAN_SAY_2, Illi);
+            return 5500;
+        case 13:
+            DoScriptText(LORD_ILLIDAN_SAY_3, Illi);
+            return 4000;
+        case 14:
+            Illi->SetUInt64Value(UNIT_FIELD_TARGET, PlayerGUID);
+            return 1500;
+        case 15:
+            DoScriptText(LORD_ILLIDAN_SAY_4, Illi);
+            return 1500;
         case 16:
-            if (plr)
-            {
-                Illi->CastSpell(plr, SPELL_TWO, true);
-                plr->RemoveAurasDueToSpell(SPELL_THREE);
-                plr->RemoveAurasDueToSpell(SPELL_FOUR);
+            if (plr) {
+                plr->CastSpell(plr, SPELL_MARK_OF_STORMRAGE, true);
                 return 5000;
             }
-            else
-            {
-             // if !plr we can't do that!
-             //   plr->FailQuest(QUEST_LORD_ILLIDAN_STORMRAGE);
-                Step = 30; return 100;
+            else {
+                Step = 30;
+                return 100;
             }
+
             break;
-        case 17: DoScriptText(LORD_ILLIDAN_SAY_5, Illi); return 5000; break;
-        case 18: DoScriptText(LORD_ILLIDAN_SAY_6, Illi); return 5000; break;
-        case 19: DoScriptText(LORD_ILLIDAN_SAY_7, Illi); return 5000; break;
+        case 17:
+            DoScriptText(LORD_ILLIDAN_SAY_5, Illi);
+            return 5000;
+        case 18: 
+            DoScriptText(LORD_ILLIDAN_SAY_6, Illi);
+            return 5000;
+        case 19: 
+            DoScriptText(LORD_ILLIDAN_SAY_7, Illi);
+            return 5000;
         case 20:
             Illi->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
             Illi->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
-            return 500; break;
-        case 21: DoScriptText(OVERLORD_SAY_5, m_creature); return 500; break;
+            return 500;
+        case 21:
+            DoScriptText(OVERLORD_SAY_5, m_creature);
+            return 500;
         case 22:
             Illi->SetVisibility(VISIBILITY_OFF);
             Illi->setDeathState(JUST_DIED);
-            return 1000; break;
-        case 23: m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1,0); return 2000; break;
-        case 24: m_creature->SetUInt64Value(UNIT_FIELD_TARGET, PlayerGUID); return 5000; break;
-        case 25: DoScriptText(OVERLORD_SAY_6, m_creature); return 2000; break;
+            return 1000;
+        case 23: 
+            m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
+            return 2000;
+        case 24: 
+            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, PlayerGUID);
+            return 5000;
+        case 25: 
+            DoScriptText(OVERLORD_SAY_6, m_creature);
+            return 2000;
         case 26:
-            if(plr)
+            if (plr)
                 plr->GroupEventHappens(QUEST_LORD_ILLIDAN_STORMRAGE, m_creature);
-            return 6000; break;
+
+            return 6000;
         case 27:
-            {
+        {
             Unit* Yarzill = FindCreature(C_YARZILL, 50, m_creature);
             if (Yarzill)
                 Yarzill->SetUInt64Value(UNIT_FIELD_TARGET, PlayerGUID);
-            return 500; }break;
+
+            return 500;
+        }
         case 28:
-            plr->RemoveAurasDueToSpell(SPELL_TWO);
+            plr->RemoveAurasDueToSpell(SPELL_MARK_OF_STORMRAGE);
             plr->RemoveAurasDueToSpell(41519);
-            plr->CastSpell(plr, SPELL_THREE, true);
-            plr->CastSpell(plr, SPELL_FOUR, true);
-            return 1000; break;
+
+            return 1000;
         case 29:
-            {
+        {
             Unit* Yarzill = FindCreature(C_YARZILL, 50, m_creature);
             if(Yarzill)
                 DoScriptText(YARZILL_THE_MERC_SAY, Yarzill, plr);
-            return 5000; }break;
+    
+            return 5000;
+        }
         case 30:
-            {
+        {
             Unit* Yarzill = FindCreature(C_YARZILL, 50, m_creature);
             if (Yarzill)
                 Yarzill->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            return 5000; }break;
-        case 31:
-            {
-            Unit* Yarzill = FindCreature(C_YARZILL, 50, m_creature);
-            if (Yarzill)
-                Yarzill->CastSpell(plr, 41540, true);
-            return 1000;}break;
-        case 32: m_creature->GetMotionMaster()->MovePoint(0, -5085.77, 577.231, 86.6719); return 5000; break;
-        case 33: Reset(); return 100; break;
 
-        default : return 0;
+            return 5000;
+        }
+        case 31:
+        {
+            std::vector<uint32> nodes;
+
+            nodes.resize(2);
+            nodes[0] = 173;                                     //from
+            nodes[1] = 174;                                     //end at
+            plr->ActivateTaxiPathTo(nodes);
+
+            return 1000;
+        }
+        case 32:
+            m_creature->GetMotionMaster()->MovePoint(0, -5085.77, 577.231, 86.6719);
+            return 5000;
+        case 33:
+            Reset();
+            return 100;
+        default:
+            return 0;
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(!ConversationTimer)
+        if (!ConversationTimer)
             return;
 
-        if(ConversationTimer <= diff)
-        {
+        if(ConversationTimer <= diff) {
             if(Event && IllidanGUID && PlayerGUID)
-            {
                 ConversationTimer = NextStep(++Step);
-            }
-        }else ConversationTimer -= diff;
+        }
+        else
+            ConversationTimer -= diff;
     }
 };
 
