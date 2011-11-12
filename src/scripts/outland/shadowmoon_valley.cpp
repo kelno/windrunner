@@ -43,6 +43,7 @@ npc_skartax
 npc_invis_deathforge_caster
 go_arcano_control_unit
 npc_akama_prelude - quest 10944
+npc_commander_arcus
 EndContentData */
 
 #include "precompiled.h"
@@ -896,6 +897,7 @@ struct npc_overlord_morghorAI : public ScriptedAI
 
             return 1000;
         }
+
         case 32:
             m_creature->GetMotionMaster()->MovePoint(0, -5085.77, 577.231, 86.6719);
             return 5000;
@@ -2352,6 +2354,490 @@ bool ChooseReward_npc_akama_prelude(Player* player, Creature* creature, Quest co
 }
 
 /*######
+## Quests 11101 && 11097
+######*/
+
+#define QUEST_DEADLIEST_TRAP_ALDOR  11101
+#define QUEST_DEADLIEST_TRAP_SCYER  11097
+
+#define COMMANDER_HOBB_SAY1         -1000745
+#define COMMANDER_HOBB_SAY2         -1000746
+#define COMMANDER_HOBB_SAY3         -1000756
+#define SKYBREAKER_SAY1             -1000747
+#define SKYBREAKER_SAY2             -1000748
+#define SKYBREAKER_SAY3             -1000749
+#define SKYBREAKER_SAYALDOR1        -1000750
+#define SKYBREAKER_SAYALDOR2        -1000751
+#define SKYBREAKER_SAYSCYER1        -1000752
+#define SKYBREAKER_SAYSCYER2        -1000753
+#define COMMANDER_ARCUS_SAY1        -1000754
+#define COMMANDER_ARCUS_SAY2        -1000755
+#define COMMANDER_ARCUS_SAY3         -1000757
+
+#define SPELL_AIMED_SHOT            38370
+#define SPELL_MULTI_SHOT            41448
+#define SPELL_SHOOT                 41440
+
+#define NPC_DRAGONMAW_SKYBREAKER_SCYER  23440
+#define NPC_DRAGONMAW_SKYBREAKER_ALDOR  23441
+
+#define NPC_DEFENDER_SCYER              23435
+#define NPC_DEFENDER_ALDOR              23453
+
+float skybreakerPosAldor[10][3] = {
+    { -3150.351807, 756.830444, 37.261200 },
+    { -3158.962646, 745.880676, 37.261200 },
+    { -3170.083252, 731.739441, 37.261200 },
+    { -3176.036865, 716.404663, 37.261200 },
+    { -3179.811768, 706.681763, 37.261200 },
+    { -3183.206543, 697.937683, 37.261200 },
+    { -3185.165039, 684.075378, 37.261200 },
+    { -3186.469482, 674.786499, 37.261200 },
+    { -3187.608398, 666.676086, 37.261200 },
+    { -3128.346436, 763.912537, 37.261200 }};
+
+float skybreakerPosScyer[10][3] = {
+    { -4080.790527, 970.862976, 79.887848 },
+    { -4067.590820, 974.339661, 79.887848 },
+    { -4053.443359, 978.065979, 79.887848 },
+    { -4041.665039, 981.168274, 79.887848 },
+    { -4027.382080, 984.930298, 79.887848 },
+    { -4016.010010, 987.925659, 79.887848 },
+    { -4007.221436, 1001.788818, 77.243546 },
+    { -3996.254883, 1010.603210, 77.243546 },
+    { -3985.991211, 1031.524292, 74.557518 },
+    { -4114.185059, 975.281982, 74.557518 }};
+    
+// Orientation 2.337
+float defendersPosAldor[10][3] = {
+    { -3081.971924, 700.679260, -16.377661 },
+    { -3083.283691, 697.540344, -16.844158 },
+    { -3084.743896, 694.046204, -17.461650 },
+    { -3085.826416, 691.456299, -17.954538 },
+    { -3086.954834, 688.756592, -18.279066 },
+    { -3088.004883, 686.244202, -18.166872 },
+    { -3089.394043, 682.920410, -17.503175 },
+    { -3093.030029, 677.387085, -16.527822 },
+    { -3095.304199, 675.197266, -16.083666 },
+    { -3097.482422, 673.099731, -15.411659 }};
+    
+// Orientation 5.109
+float defendersPosScyer[10][3] = {
+    { -4059.349121, 1075.253418, 31.234081 },
+    { -4062.739014, 1074.006592, 30.966137 },
+    { -4064.821533, 1073.240601, 30.761585 },
+    { -4064.855469, 1068.144043, 30.224163 },
+    { -4067.918457, 1069.042358, 30.359905 },
+    { -4069.360596, 1063.678589, 30.409506 },
+    { -4074.669922, 1065.100098, 30.804943 },
+    { -4079.707275, 1065.286499, 31.153090 },
+    { -4082.981689, 1062.328369, 31.237562 },
+    { -4085.491699, 1058.670410, 30.850157 }};
+    // -4072.696777, 1071.352295, 30.769413
+
+struct npc_commander_arcusAI : public ScriptedAI
+{
+    npc_commander_arcusAI(Creature* c) : ScriptedAI(c), summons(me)
+    {
+        playerGUID = 0;
+        isEvent = false;
+    }
+    
+    float homeX, homeY, homeZ, homeOri;
+    
+    bool isEvent;
+    
+    uint64 playerGUID;
+    
+    uint32 aimedShotTimer;
+    uint32 multiShotTimer;
+    uint32 shootTimer;
+    uint32 killCounter;
+    uint32 summonTimer;
+    
+    SummonList summons;
+    
+    void Reset()
+    {
+        aimedShotTimer = 5000;
+        multiShotTimer = 10000;
+        shootTimer = 1000;
+        killCounter = 0;
+        summonTimer = 0;
+    }
+
+    void Aggro(Unit* who) {}
+    
+    void JustSummoned(Creature* summon)
+    {
+        summons.Summon(summon);
+        
+        if (Unit *target = me->FindCreatureInGrid(0, 150.0f, true))
+            summon->AI()->AttackStart(target);
+    }
+    
+    void SummonedCreatureDespawn(Creature* summon)
+    {
+        summons.Despawn(summon);
+        if (summon->GetEntry() == NPC_DRAGONMAW_SKYBREAKER_ALDOR)
+            killCounter++;
+    }
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (id == 0) {
+            DoScriptText(COMMANDER_ARCUS_SAY2, me);
+            Player* player = Unit::GetPlayer(playerGUID);
+            summonTimer = 15000 + rand() % 10000;
+            for (uint8 i = 0; i < 10; i++) {
+                if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[i][0], skybreakerPosAldor[i][1], skybreakerPosAldor[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
+                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    if (player)
+                        skybreaker->AI()->AttackStart(player);
+                }
+            }
+        }
+    }
+    
+    void StartEvent()
+    {
+        isEvent = true;
+        DoScriptText(COMMANDER_ARCUS_SAY1, me, NULL);
+        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        me->RemoveUnitMovementFlag(MOVEFLAG_WALK);
+        me->GetMotionMaster()->MovePoint(0, -3098.666748, 682.178040, -18.633110, true);
+        
+        for (uint8 i = 0; i < 10; i++)
+            me->SummonCreature(NPC_DEFENDER_ALDOR, defendersPosAldor[i][0], defendersPosAldor[i][1], defendersPosAldor[i][2], 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+        
+        me->GetHomePosition(homeX, homeY, homeZ, homeOri);
+        me->SetHomePosition(-3098.666748, 682.178040, -18.633110, me->GetOrientation());
+    }
+    
+    void EndEvent(bool success)
+    {
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (success) {
+            DoScriptText(COMMANDER_ARCUS_SAY3, me);
+            if (player)
+                player->GroupEventHappens(QUEST_DEADLIEST_TRAP_ALDOR, me);
+        }
+        else {
+            if (player)
+                player->FailQuest(QUEST_DEADLIEST_TRAP_ALDOR);
+        }
+
+        playerGUID = 0;
+        me->SetHomePosition(homeX, homeY, homeZ, homeOri);
+        EnterEvadeMode();
+        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        summons.DespawnAll();
+        isEvent = false;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!isEvent)
+            return;
+
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (!player || player->GetDistance(me) > 110.0f) {
+            EndEvent(false);
+            return;
+        }
+            
+        if (killCounter >= 15) {
+            EndEvent(true);
+            return;
+        }
+
+        if (summonTimer) {
+            if (summonTimer <= diff) {
+                if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[rand()%10][0], skybreakerPosAldor[rand()%10][1], skybreakerPosAldor[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
+                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->AI()->AttackStart(player);
+                }
+                
+                summonTimer = 15000 + rand() % 10000;
+            }
+            else
+                summonTimer -= diff;
+        }
+
+        if (!UpdateVictim(false))
+            return;
+
+        if (aimedShotTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_AIMED_SHOT);
+            aimedShotTimer = 5000 + rand() % 3000;
+        }
+        else
+            aimedShotTimer -= diff;
+            
+        if (multiShotTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_MULTI_SHOT);
+            multiShotTimer = 5000 + rand() % 3000;
+        }
+        else
+            multiShotTimer -= diff;
+            
+        if (shootTimer <= diff) {
+            DoCast(me->getVictim(), SPELL_SHOOT);
+            shootTimer = 5000 + rand() % 3000;
+        }
+        else
+            shootTimer -= diff;
+        
+        if (me->getVictim()->IsWithinMeleeRange(me))
+            DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_commander_arcus(Creature* creature)
+{
+    return new npc_commander_arcusAI(creature);
+}
+
+bool QuestAccept_npc_commander_arcus(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == QUEST_DEADLIEST_TRAP_ALDOR) {
+        ((npc_commander_arcusAI*)creature->AI())->playerGUID = player->GetGUID();
+        ((npc_commander_arcusAI*)creature->AI())->StartEvent();
+    }
+    
+    return true;
+}
+
+struct npc_commander_hobbAI : public ScriptedAI
+{
+    npc_commander_hobbAI(Creature* c) : ScriptedAI(c), summons(me)
+    {
+        playerGUID = 0;
+        isEvent = false;
+    }
+    
+    float homeX, homeY, homeZ, homeOri;
+    
+    bool isEvent;
+    
+    uint64 playerGUID;
+    
+    uint32 aimedShotTimer;
+    uint32 multiShotTimer;
+    uint32 shootTimer;
+    uint32 killCounter;
+    uint32 summonTimer;
+    
+    SummonList summons;
+    
+    void Reset()
+    {
+        aimedShotTimer = 5000;
+        multiShotTimer = 10000;
+        shootTimer = 1000;
+        killCounter = 0;
+        summonTimer = 0;
+    }
+
+    void Aggro(Unit* who) {}
+    
+    void JustSummoned(Creature* summon)
+    {
+        summons.Summon(summon);
+        
+        if (Unit *target = me->FindCreatureInGrid(0, 150.0f, true))
+            summon->AI()->AttackStart(target);
+    }
+    
+    void SummonedCreatureDespawn(Creature* summon)
+    {
+        summons.Despawn(summon);
+        if (summon->GetEntry() == NPC_DRAGONMAW_SKYBREAKER_SCYER)
+            killCounter++;
+    }
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (id == 0) {
+            DoScriptText(COMMANDER_HOBB_SAY2, me);
+            Player* player = Unit::GetPlayer(playerGUID);
+            summonTimer = 15000 + rand() % 10000;
+            for (uint8 i = 0; i < 10; i++) {
+                if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[i][0], skybreakerPosScyer[i][1], skybreakerPosScyer[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
+                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    if (player)
+                        skybreaker->AI()->AttackStart(player);
+                }
+            }
+        }
+    }
+    
+    void StartEvent()
+    {
+        isEvent = true;
+        DoScriptText(COMMANDER_HOBB_SAY1, me, NULL);
+        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        me->RemoveUnitMovementFlag(MOVEFLAG_WALK);
+        me->GetMotionMaster()->MovePoint(0, -4072.696777, 1071.352295, 30.769413, true);
+        
+        for (uint8 i = 0; i < 10; i++)
+            me->SummonCreature(NPC_DEFENDER_SCYER, defendersPosScyer[i][0], defendersPosScyer[i][1], defendersPosScyer[i][2], 0, TEMPSUMMON_MANUAL_DESPAWN, 0);
+        
+        me->GetHomePosition(homeX, homeY, homeZ, homeOri);
+        me->SetHomePosition(-4072.696777, 1071.352295, 30.769413, me->GetOrientation());
+    }
+    
+    void EndEvent(bool success)
+    {
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (success) {
+            DoScriptText(COMMANDER_HOBB_SAY3, me);
+            if (player)
+                player->GroupEventHappens(QUEST_DEADLIEST_TRAP_SCYER, me);
+        }
+        else {
+            if (player)
+                player->FailQuest(QUEST_DEADLIEST_TRAP_SCYER);
+        }
+
+        playerGUID = 0;
+        me->SetHomePosition(homeX, homeY, homeZ, homeOri);
+        EnterEvadeMode();
+        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+        summons.DespawnAll();
+        isEvent = false;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!isEvent)
+            return;
+
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (!player || player->GetDistance(me) > 110.0f) {
+            EndEvent(false);
+            return;
+        }
+            
+        if (killCounter >= 15) {
+            EndEvent(true);
+            return;
+        }
+
+        if (summonTimer) {
+            if (summonTimer <= diff) {
+                if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[rand()%10][0], skybreakerPosScyer[rand()%10][1], skybreakerPosScyer[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
+                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->AI()->AttackStart(player);
+                }
+                
+                summonTimer = 15000 + rand() % 10000;
+            }
+            else
+                summonTimer -= diff;
+        }
+
+        if (!UpdateVictim(false))
+            return;
+
+        if (aimedShotTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_AIMED_SHOT);
+            aimedShotTimer = 5000 + rand() % 3000;
+        }
+        else
+            aimedShotTimer -= diff;
+            
+        if (multiShotTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_MULTI_SHOT);
+            multiShotTimer = 5000 + rand() % 3000;
+        }
+        else
+            multiShotTimer -= diff;
+            
+        if (shootTimer <= diff) {
+            DoCast(me->getVictim(), SPELL_SHOOT);
+            shootTimer = 5000 + rand() % 3000;
+        }
+        else
+            shootTimer -= diff;
+        
+        if (me->getVictim()->IsWithinMeleeRange(me))
+            DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_commander_hobb(Creature* creature)
+{
+    return new npc_commander_hobbAI(creature);
+}
+
+bool QuestAccept_npc_commander_hobb(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == QUEST_DEADLIEST_TRAP_SCYER) {
+        ((npc_commander_hobbAI*)creature->AI())->playerGUID = player->GetGUID();
+        ((npc_commander_hobbAI*)creature->AI())->StartEvent();
+    }
+    
+    return true;
+}
+
+struct npc_dragonmaw_skybreakerAI : public ScriptedAI
+{
+    npc_dragonmaw_skybreakerAI(Creature* c) : ScriptedAI(c)
+    {
+        aldor = (me->GetEntry() == NPC_DRAGONMAW_SKYBREAKER_ALDOR) ? true : false;
+    }
+    
+    bool aldor;
+    
+    uint32 aimedShotTimer;
+    uint32 multiShotTimer;
+    uint32 scatterShotTimer;
+    uint32 shootTimer;
+    
+    uint32 randomTauntTimer;
+    
+    void Reset()
+    {
+        randomTauntTimer = 1000 + rand() % 5000;
+    }
+    
+    void Aggro(Unit* who)
+    {
+        if (rand()%10 < 6)
+            return;
+
+        DoScriptText(RAND(SKYBREAKER_SAY1, SKYBREAKER_SAY2), me, NULL);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
+        if (!UpdateVictim(false))
+            return;
+            
+        if (randomTauntTimer <= diff) {
+            if (aldor)
+                DoScriptText(RAND(SKYBREAKER_SAYALDOR1, SKYBREAKER_SAYALDOR2, SKYBREAKER_SAY3), me);
+            else
+                DoScriptText(RAND(SKYBREAKER_SAYSCYER1, SKYBREAKER_SAYSCYER2, SKYBREAKER_SAY3), me);
+                
+            randomTauntTimer = 8000 + rand() % 4000;
+        }
+        else
+            randomTauntTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_dragonmaw_skybreaker(Creature* creature)
+{
+    return new npc_dragonmaw_skybreakerAI(creature);
+}
+
+/*######
 ## AddSC
 #######*/
 
@@ -2487,5 +2973,22 @@ void AddSC_shadowmoon_valley()
     newscript->Name = "npc_akama_prelude";
     newscript->GetAI = &GetAI_npc_akama_prelude;
     newscript->pChooseReward = &ChooseReward_npc_akama_prelude;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_commander_arcus";
+    newscript->GetAI = &GetAI_npc_commander_arcus;
+    newscript->pQuestAccept = &QuestAccept_npc_commander_arcus;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_commander_hobb";
+    newscript->GetAI = &GetAI_npc_commander_hobb;
+    newscript->pQuestAccept = &QuestAccept_npc_commander_hobb;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_dragonmaw_skybreaker";
+    newscript->GetAI = &GetAI_npc_dragonmaw_skybreaker;
     newscript->RegisterSelf();
 }
