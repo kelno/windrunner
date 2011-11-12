@@ -30,6 +30,7 @@ npc_nat_pagle
 npc_overlord_mokmorokk
 npc_private_hendel
 npc_stinky
+npc_cassa_crimsonwing
 EndContentData */
 
 #include "precompiled.h"
@@ -482,6 +483,40 @@ CreatureAI* GetAI_npc_stinky(Creature* pCreature)
 }
 
 /*######
+## npc_cassa_crimsonwing
+######*/
+
+bool GossipHello_npc_cassa_crimsonwing(Player* player, Creature* creature)
+{
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+
+    if (player->GetQuestStatus(11142) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "Je dois survoler l'île d'Alcaz.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+        
+    return true;
+}
+
+bool GossipSelect_npc_cassa_crimsonwing(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    player->CLOSE_GOSSIP_MENU();
+
+    if (action == GOSSIP_ACTION_INFO_DEF) {
+        player->CastSpell(player, 42316, true);
+        std::vector<uint32> nodes;
+
+        nodes.resize(2);
+        nodes[0] = 180;                                     //from
+        nodes[1] = 181;                                     //end at
+        player->ActivateTaxiPathTo(nodes);
+    }
+        
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -534,5 +569,11 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_stinky";
     newscript->GetAI = &GetAI_npc_stinky;
     newscript->pQuestAccept = &QuestAccept_npc_stinky;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_cassa_crimsonwing";
+    newscript->pGossipHello = &GossipHello_npc_cassa_crimsonwing;
+    newscript->pGossipSelect = &GossipSelect_npc_cassa_crimsonwing;
     newscript->RegisterSelf();
 }
