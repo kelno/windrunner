@@ -594,7 +594,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
         if (PlayerGUID)
         {
             Player* player = Unit::GetPlayer(PlayerGUID);
-            if (player)
+            if (player && !Validated)
                 player->FailQuest(QUEST_UNEXPECTED_RESULT);
         }
     }
@@ -607,10 +607,11 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
             {
                 Player* player = Unit::GetPlayer(PlayerGUID);
                 if (player)
-                    player->CompleteQuest(QUEST_UNEXPECTED_RESULT);
+                    player->AreaExploredOrEventHappens(QUEST_UNEXPECTED_RESULT);
             }
             
             Validated = true;
+            Reset();
         }
 
         if (Summon)
