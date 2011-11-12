@@ -57,6 +57,8 @@ npc_obsidia
 npc_insidion
 npc_furywing
 trigger_banishing_crystal_bunny01
+npc_rally_zapnabber
+npc_grulloc
 EndContentData */
 
 #include "precompiled.h"
@@ -2620,6 +2622,132 @@ bool GossipSelect_npc_rally_zapnabber(Player* player, Creature* creature, uint32
 }
 
 /*######
+## npc_grulloc
+######*/
+
+enum grullocSpells {
+    SPELL_BURNING_RAGE      = 38771,
+    SPELL_CRUSH_ARMOR       = 21055,
+    SPELL_GRIEVOUS_WOUND    = 38772
+};
+
+struct npc_grullocAI : public ScriptedAI
+{
+    npc_grullocAI(Creature* c) : ScriptedAI(c)
+    {
+        isEvent = false;
+    }
+    
+    bool isEvent;
+    
+    uint32 burningRageTimer;
+    uint32 crushArmorTimer;
+    uint32 grievousWoundTimer;
+    uint32 killHufferTimer;
+    
+    uint64 hufferGUID;
+    
+    void Reset()
+    {
+        burningRageTimer = 20000;
+        crushArmorTimer = 7000;
+        grievousWoundTimer = 10000;
+        killHufferTimer = 0;
+        hufferGUID = 0;
+    }
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (isEvent)
+            return;
+            
+        if (who->ToCreature() && who->GetEntry() == 22114) {
+            isEvent = true;
+            me->GetMotionMaster()->MoveFollow(who, 1.0f, M_PI);
+            hufferGUID = who->GetGUID();
+            killHufferTimer = 18000;
+        }
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+            
+        if (killHufferTimer) {
+            if (killHufferTimer <= diff) {
+                if (Creature* huffer = Creature::GetCreature(*me, hufferGUID)) {
+                    me->Kill(huffer);
+                    EnterEvadeMode();
+                }
+                killHufferTimer = 0;
+            }
+            else
+                killHufferTimer -= diff;
+        }
+
+        if (!UpdateVictim())
+            return;
+        
+        if (me->getVictim()->GetEntry() == 22114)
+            return;
+            
+        if (burningRageTimer <= diff) {
+            DoCast(me, SPELL_BURNING_RAGE, true);
+            burningRageTimer = 20000 + rand() % 5000;
+        }
+        else
+            burningRageTimer -= diff;
+            
+        if (crushArmorTimer <= diff) {
+            DoCast(me, SPELL_CRUSH_ARMOR, true);
+            crushArmorTimer = 12000 + rand() % 4000;
+        }
+        else
+            crushArmorTimer -= diff;
+            
+        if (grievousWoundTimer <= diff) {
+            DoCast(me, SPELL_GRIEVOUS_WOUND, true);
+            grievousWoundTimer = 45000;
+        }
+        else
+            grievousWoundTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
+    
+};
+
+CreatureAI* GetAI_npc_grulloc(Creature* creature)
+{
+    return new npc_grullocAI(creature);
+}
+
+/*######
+## npc_huffler
+######*/
+
+struct npc_hufferAI : public ScriptedAI
+{
+    npc_hufferAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Reset()
+    {
+        if (Creature* grulloc = me->FindCreatureInGrid(20216, 30.0f, true))
+            me->GetMotionMaster()->MovePath(22114, true);
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void UpdateAI(uint32 const diff) {}
+};
+
+CreatureAI* GetAI_npc_huffer(Creature* creature)
+{
+    return new npc_hufferAI(creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2842,6 +2970,16 @@ void AddSC_blades_edge_mountains()
     newscript->GetAI = &GetAI_npc_rally_zapnabber;
     newscript->pGossipHello = &GossipHello_npc_rally_zapnabber;
     newscript->pGossipSelect = &GossipSelect_npc_rally_zapnabber;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_grulloc";
+    newscript->GetAI = &GetAI_npc_grulloc;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_huffer";
+    newscript->GetAI = &GetAI_npc_huffer;
     newscript->RegisterSelf();
 }
 
