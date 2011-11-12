@@ -2485,6 +2485,141 @@ CreatureAI *GetAI_trigger_banishing_crystal_bunny01(Creature *pCreature)
 }
 
 /*######
+## npc_rally_zapnabber
+######*/
+
+#define QUEST_ZEPHYRIUM_CAPACITORIUM    10557
+#define QUEST_SINGING_RIDGE             10710
+#define GO_ZEPHYRIUM                    184628
+#define SPELL_COSMETIC_LIGHTNING        37071
+#define SPELL_SOARING_ZEPHYR            37910
+#define SPELL_SOARING_SINGING           37962
+
+struct npc_rally_zapnabberAI : public ScriptedAI
+{
+    npc_rally_zapnabberAI(Creature* c) : ScriptedAI(c)
+    {
+        isEvent = false;
+        playerGUID = 0;
+        lightningCount = 0;
+        triggerGUID = 0;
+        quest= 0;
+    }
+    
+    bool isEvent;
+    
+    uint8 lightningCount;
+    
+    uint32 blueRayTimer;
+    uint32 quest;
+    
+    uint64 playerGUID;
+    uint64 triggerGUID;
+    
+    void Reset()
+    {
+        blueRayTimer = 0;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void StartEvent()
+    {
+        isEvent = true;
+        if (Player* player = Unit::GetPlayer(playerGUID))
+            DoTeleportPlayer(player, 1920.138916, 5581.740723, 269.222229, 5.243360);
+            
+        if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, 1925.056152, 5574.165527, 269.162231, 0, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+            triggerGUID = trigger->GetGUID();
+            trigger->setFaction(14);
+        }
+            
+        blueRayTimer = 2000;
+    }
+    
+    void EndEvent()
+    {
+        isEvent = false;
+        playerGUID = 0;
+        blueRayTimer = 0;
+        lightningCount = 0;
+        if (Creature* trigger = Creature::GetCreature(*me, triggerGUID))
+            trigger->ForcedDespawn();
+        triggerGUID = 0;
+        quest = 0;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!isEvent)
+            return;
+            
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (!player || player->GetDistance(me) > 50.0f) {
+            EndEvent();
+            return;
+        }
+        
+        if (lightningCount >= 5) {
+            if (Creature* trigger = Creature::GetCreature(*me, triggerGUID))
+                player->CastSpell(player, (quest == QUEST_ZEPHYRIUM_CAPACITORIUM) ? SPELL_SOARING_ZEPHYR : SPELL_SOARING_SINGING, true);
+                
+            EndEvent();
+        }
+            
+        if (blueRayTimer <= diff) {
+            if (Creature* trigger = Creature::GetCreature(*me, triggerGUID)) {
+                trigger->CastSpell(player, SPELL_COSMETIC_LIGHTNING, true);
+                lightningCount++;
+            }
+            
+            blueRayTimer = 500;
+        }
+        else
+            blueRayTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_rally_zapnabber(Creature* creature)
+{
+    return new npc_rally_zapnabberAI(creature);
+}
+
+bool GossipHello_npc_rally_zapnabber(Player* player, Creature* creature)
+{
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+
+    if (player->GetQuestStatus(QUEST_SINGING_RIDGE) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "Emmenez-moi à la Crête chantante.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    else if (player->GetQuestStatus(QUEST_SINGING_RIDGE) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "Je viens tester le Zephyrium Capacitorium", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_rally_zapnabber(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    player->CLOSE_GOSSIP_MENU();
+    if (action == GOSSIP_ACTION_INFO_DEF) {
+        player->CastSpell(player, 37958, true);
+        ((npc_rally_zapnabberAI*)creature->AI())->quest = QUEST_SINGING_RIDGE;
+        ((npc_rally_zapnabberAI*)creature->AI())->playerGUID = player->GetGUID();
+        ((npc_rally_zapnabberAI*)creature->AI())->StartEvent();
+    }
+    else if (action == GOSSIP_ACTION_INFO_DEF+1) {
+        player->CastSpell(player, 37958, true);
+        ((npc_rally_zapnabberAI*)creature->AI())->quest = QUEST_ZEPHYRIUM_CAPACITORIUM;
+        ((npc_rally_zapnabberAI*)creature->AI())->playerGUID = player->GetGUID();
+        ((npc_rally_zapnabberAI*)creature->AI())->StartEvent();
+    }
+
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2700,6 +2835,13 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "trigger_banishing_crystal_bunny01";
     newscript->GetAI = &GetAI_trigger_banishing_crystal_bunny01;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_rally_zapnabber";
+    newscript->GetAI = &GetAI_npc_rally_zapnabber;
+    newscript->pGossipHello = &GossipHello_npc_rally_zapnabber;
+    newscript->pGossipSelect = &GossipSelect_npc_rally_zapnabber;
     newscript->RegisterSelf();
 }
 
