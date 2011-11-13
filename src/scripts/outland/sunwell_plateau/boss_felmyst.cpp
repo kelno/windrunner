@@ -141,6 +141,8 @@ struct boss_felmystAI : public ScriptedAI
     EventFelmyst Event;
     uint32 Timer[EVENT_FLIGHT + 1];
     
+    uint32 jumpFlagTimer;
+    
     uint32 IntroTimer;
     uint8 IntroPhase;
 
@@ -164,6 +166,8 @@ struct boss_felmystAI : public ScriptedAI
         Timer[EVENT_BERSERK] = 600000;
         FlightCount = 0;
         randomPoint = 0;
+        
+        jumpFlagTimer = 1000;
         
         justPulled = false;
 
@@ -575,6 +579,20 @@ struct boss_felmystAI : public ScriptedAI
             return;
             
         m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+        
+        if (jumpFlagTimer <= diff) {
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty()) {
+                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+                    if (Player* plr = itr->getSource())
+                        plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
+                }
+            }
+
+            jumpFlagTimer = 1000;
+        }
+        else
+            jumpFlagTimer -= diff;
 
         Event = EVENT_NULL;
         for(uint32 i = 1; i <= MaxTimer[Phase]; i++) {
