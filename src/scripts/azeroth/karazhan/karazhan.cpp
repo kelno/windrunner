@@ -26,6 +26,7 @@ npc_barnes
 npc_berthold
 npc_image_of_medivh
 npc_archmage_leryda
+go_sealed_tome
 EndContentData */
 
 #include "precompiled.h"
@@ -696,6 +697,18 @@ bool GossipSelect_npc_archmage_leryda(Player* pPlayer, Creature* pCreature, uint
     return true;
 }
 
+/*######
+## go_sealed_tome
+######*/
+
+bool GOHello_go_sealed_tome(Player* player, GameObject* go)
+{
+    if (rand()%3 == 1)
+        player->CastSpell(player, RAND(30762, 30763, 30764, 30765, 30766), true);
+    
+    return false;
+}
+
 void AddSC_karazhan()
 {
     Script* newscript;
@@ -722,6 +735,11 @@ void AddSC_karazhan()
     newscript->Name = "npc_archmage_leryda";
     newscript->pGossipHello = &GossipHello_npc_archmage_leryda;
     newscript->pGossipSelect = &GossipSelect_npc_archmage_leryda;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_sealed_tome";
+    newscript->pGOHello = &GOHello_go_sealed_tome;
     newscript->RegisterSelf();
 }
 
