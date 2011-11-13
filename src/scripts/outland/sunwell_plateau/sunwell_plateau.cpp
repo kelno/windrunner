@@ -198,15 +198,19 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 AttackStart(puller);
             }
             else {
-                AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                AttackStart(me->SelectNearestTarget(50.0f));
                 if (target->ToCreature()) {
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
-                    target->ToCreature()->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                    target->ToCreature()->AI()->AttackStart(me->SelectNearestTarget(50.0f));
                 }
             }
         }
+        
+        
+        m_creature->clearUnitState(UNIT_STAT_ROOT);
+        m_creature->SetReactState(REACT_AGGRESSIVE);
     }
     
     void UpdateAI(uint32 const diff)
