@@ -90,10 +90,6 @@ bool GossipSelect_npc_mountaineer_pebblebitty(Player* pPlayer, Creature* pCreatu
     return true;
 }
 
-/*######
-## npc_miran
-######*/
-
 /*#########
 ##npc_miran
 #########*/
@@ -154,7 +150,7 @@ bool QuestAccept_npc_miran(Player* pPlayer, Creature* pCreature, const Quest* pQ
     {        
         pCreature->setFaction(231);
 
-        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID(), pCreature->GetEntry());
+        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
     }
     return true;
 }
