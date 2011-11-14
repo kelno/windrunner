@@ -27,6 +27,7 @@ npc_berthold
 npc_image_of_medivh
 npc_archmage_leryda
 go_sealed_tome
+woefulhealer
 EndContentData */
 
 #include "precompiled.h"
@@ -709,6 +710,103 @@ bool GOHello_go_sealed_tome(Player* player, GameObject* go)
     return false;
 }
 
+/*######
+## woefulhealer
+######*/
+
+#define TIMER_GLOBALWAIT             2000 + rand() % 3000
+#define MAXMANA                      10000
+#define SPELL_FLASHHEAL              25235
+#define VALUE_FLASHHEAL              1200   //estimation du heal
+#define SPELL_PRAYEROFHEALING        25308
+#define VALUE_PRAYEROFHEALING        1300
+
+ 
+struct woefulhealerAI : public ScriptedAI
+{
+    woefulhealerAI(Creature *c) : ScriptedAI(c) {}
+	
+    bool flagsset;
+    Unit* owner;
+	Unit* healtarget;
+    uint16 waittimer;
+	uint8 tohealingroup;
+	uint32 mostlowhp;
+    
+    void Reset()
+    {
+        owner = m_creature->GetCharmerOrOwner();
+        m_creature->GetMotionMaster()->MoveFollow(owner, 0.8,210);
+        m_creature->SetReactState(REACT_PASSIVE);
+        waittimer = TIMER_GLOBALWAIT;
+        flagsset = false;
+    }
+    
+    void Aggro(Unit* who) {}
+  
+    void UpdateAI(const uint32 diff)
+    {                
+        if (!flagsset) 
+        {        
+            m_creature->SetMaxPower(POWER_MANA, MAXMANA);
+            m_creature->SetPower(POWER_MANA, MAXMANA);
+            m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            flagsset = true;
+        } //Fonctionnent pas dans le reset, une autre maniere de faire plus propre?
+            
+        if ( !m_creature->isAlive() || m_creature->IsNonMeleeSpellCasted(false))
+            return;
+    
+        if (waittimer > diff)
+        {
+            waittimer -= diff;
+            return;    
+        }
+
+		healtarget = NULL;
+        tohealingroup = 0;
+        mostlowhp = -1;
+        
+        //Selection de la/les cibles du heal
+        Map *map = m_creature->GetMap();
+        Map::PlayerList const &PlayerList = map->GetPlayers();
+        
+        for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+        {
+            if (Player* i_pl = i->getSource())
+            {
+                if (i_pl->isAlive() && i_pl->GetDistance(m_creature) < 40 
+                && i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING)
+                {
+                    if (mostlowhp > i_pl->GetHealth())
+                    {
+                        healtarget = i_pl;
+                        mostlowhp = i_pl->GetHealth();
+                    }
+                    if (((Player*) i_pl)->IsInSameGroupWith((Player*) owner))
+                        tohealingroup++;
+                }
+            }
+        }
+            
+        if (!healtarget)
+            return;
+            
+        // Cast
+        if (tohealingroup >= 3)
+            DoCast(me, SPELL_PRAYEROFHEALING);
+        else
+            DoCast(healtarget, SPELL_FLASHHEAL);        
+            
+        waittimer = TIMER_GLOBALWAIT;
+    }
+};
+ 
+CreatureAI* GetAI_woefulhealer(Creature *_Creature)
+{
+    return new woefulhealerAI (_Creature);
+}
+
 void AddSC_karazhan()
 {
     Script* newscript;
@@ -740,6 +838,11 @@ void AddSC_karazhan()
     newscript = new Script;
     newscript->Name = "go_sealed_tome";
     newscript->pGOHello = &GOHello_go_sealed_tome;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="woefulhealer";
+    newscript->GetAI = &GetAI_woefulhealer;
     newscript->RegisterSelf();
 }
 
