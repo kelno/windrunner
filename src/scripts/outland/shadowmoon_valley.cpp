@@ -44,6 +44,7 @@ npc_invis_deathforge_caster
 go_arcano_control_unit
 npc_akama_prelude - quest 10944
 npc_commander_arcus
+npc_xiri
 EndContentData */
 
 #include "precompiled.h"
@@ -2600,6 +2601,9 @@ CreatureAI* GetAI_npc_commander_arcus(Creature* creature)
 
 bool QuestAccept_npc_commander_arcus(Player* player, Creature* creature, Quest const* quest)
 {
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+
     if (quest->GetQuestId() == QUEST_DEADLIEST_TRAP_ALDOR) {
         ((npc_commander_arcusAI*)creature->AI())->playerGUID = player->GetGUID();
         ((npc_commander_arcusAI*)creature->AI())->StartEvent();
@@ -2773,6 +2777,9 @@ CreatureAI* GetAI_npc_commander_hobb(Creature* creature)
 
 bool QuestAccept_npc_commander_hobb(Player* player, Creature* creature, Quest const* quest)
 {
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+
     if (quest->GetQuestId() == QUEST_DEADLIEST_TRAP_SCYER) {
         ((npc_commander_hobbAI*)creature->AI())->playerGUID = player->GetGUID();
         ((npc_commander_hobbAI*)creature->AI())->StartEvent();
@@ -2835,6 +2842,99 @@ struct npc_dragonmaw_skybreakerAI : public ScriptedAI
 CreatureAI* GetAI_npc_dragonmaw_skybreaker(Creature* creature)
 {
     return new npc_dragonmaw_skybreakerAI(creature);
+}
+
+/*######
+## npc_xiri
+######*/
+
+/*
+
+SPELLS
+
+39828 - self cast - effet de traits blancs qui montent
+39829 - idem mais une seule fois
+39831 - grosse explosion blanche
+
+NPCS
+
+22863 - défenseur clairvoyant
+22864 - chef clairvoyant
+22861 - défenseur aldor
+22862 - chef aldor
+18528 - xi'ri
+21166 - seigneur de l'effroi illidari
+
+VIDEO
+
+http://www.youtube.com/watch?v=zET3VQusn9o (lien privé)
+
+*/
+
+struct npc_xiriAI : public Scripted_NoMovementAI
+{
+    npc_xiriAI(Creature* c) : Scripted_NoMovementAI(c)
+    {
+        isEvent = false;
+    }
+    
+    bool isEvent;
+    
+    uint32 summonTimer;
+    
+    void Reset()
+    {
+        isEvent = false;
+        summonTimer = 15000;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void StartEvent()
+    {
+        isEvent = true;
+    }
+    
+    void StopEvent()
+    {
+        isEvent = false;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!isEvent)
+            return;
+
+        
+    }
+};
+
+CreatureAI* GetAI_npc_xiri(Creature* creature)
+{
+    return new npc_xiriAI(creature);
+}
+
+bool GossipHello_npc_xiri(Player* player, Creature* creature)
+{
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+        
+    if (player->GetQuestStatus(10985) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "Je suis prêt à rejoindre vos forces dans la bataille, Xi'ri.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+    
+    return true;
+}
+
+bool GossipSelect_npc_xiri(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF) {
+        player->CLOSE_GOSSIP_MENU();
+        ((npc_xiriAI*)creature->AI())->StartEvent();
+    }
+    
+    return true;
 }
 
 /*######
@@ -2990,5 +3090,12 @@ void AddSC_shadowmoon_valley()
     newscript = new Script;
     newscript->Name = "npc_dragonmaw_skybreaker";
     newscript->GetAI = &GetAI_npc_dragonmaw_skybreaker;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_xiri";
+    newscript->GetAI = &GetAI_npc_xiri;
+    newscript->pGossipHello = &GossipHello_npc_xiri;
+    newscript->pGossipSelect = &GossipSelect_npc_xiri;
     newscript->RegisterSelf();
 }
