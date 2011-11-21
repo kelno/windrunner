@@ -126,7 +126,7 @@ bool QuestAccept_npc_chicken_cluck(Player *player, Creature *_Creature, const Qu
     return true;
 }
 
-bool QuestComplete_npc_chicken_cluck(Player *player, Creature *_Creature, const Quest *_Quest)
+bool ChooseReward_npc_chicken_cluck(Player *player, Creature *_Creature, const Quest *_Quest, uint32 opt)
 {
     if(_Quest->GetQuestId() == QUEST_CLUCK)
         ((npc_chicken_cluckAI*)_Creature->AI())->Reset();
@@ -1374,7 +1374,7 @@ void AddSC_npcs_special()
     newscript->GetAI = &GetAI_npc_chicken_cluck;
     newscript->pReceiveEmote =  &ReceiveEmote_npc_chicken_cluck;
     newscript->pQuestAccept =   &QuestAccept_npc_chicken_cluck;
-    newscript->pQuestComplete = &QuestComplete_npc_chicken_cluck;
+    newscript->pChooseReward = &ChooseReward_npc_chicken_cluck;
     newscript->RegisterSelf();
 
     newscript = new Script;
