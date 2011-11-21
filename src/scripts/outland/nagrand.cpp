@@ -705,11 +705,13 @@ static float m_afAmbushB[]= {-1491.554321, 8506.483398, 1.248};
 
 struct npc_maghar_captiveAI : public npc_escortAI
 {
-    npc_maghar_captiveAI(Creature* pCreature) : npc_escortAI(pCreature) { Reset(); }
+    npc_maghar_captiveAI(Creature* pCreature) : npc_escortAI(pCreature), summons(me) {}
 
     uint32 m_uiChainLightningTimer;
     uint32 m_uiHealTimer;
     uint32 m_uiFrostShockTimer;
+    
+    SummonList summons;
 
     void Reset()
     {
@@ -744,7 +746,8 @@ struct npc_maghar_captiveAI : public npc_escortAI
                 if (Player* pPlayer = GetPlayerForEscort())
                     pPlayer->GroupEventHappens(QUEST_TOTEM_KARDASH_H, m_creature);
 
-                //SetRun(); //Not Implemented yet !
+                SetRun();
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                 break;
         }
     }
@@ -760,7 +763,6 @@ struct npc_maghar_captiveAI : public npc_escortAI
         pSummoned->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
         pSummoned->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
         pSummoned->AI()->AttackStart(m_creature);
-
     }
 
     void SpellHitTarget(Unit* pTarget, const SpellEntry* pSpell)
@@ -818,6 +820,7 @@ bool QuestAccept_npc_maghar_captive(Player* pPlayer, Creature* pCreature, const 
         {
             pCreature->SetStandState(UNIT_STAND_STATE_STAND);
             pCreature->setFaction(232);
+            pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 
             pEscortAI->Start(true, true, false, pPlayer->GetGUID());
 
