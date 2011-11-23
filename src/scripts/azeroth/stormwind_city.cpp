@@ -28,6 +28,7 @@ npc_dashel_stonefist
 npc_general_marcus_jonathan
 npc_lady_katrana_prestor
 npc_innkeeper_allison
+npc_monty
 EndContentData */
 
 #include "precompiled.h"
@@ -255,6 +256,25 @@ bool ReceiveEmote_npc_innkeeper_allison(Player *player, Creature *_Creature, uin
 }
 
 /*######
+## npc_monty
+######*/
+
+bool ChooseReward_npc_monty(Player* player, Creature* creature, const Quest* quest, uint32 option)
+{
+    if (quest->GetQuestId() == 6661) {
+        DoScriptText(-1000765, creature, NULL);
+        Creature* rat = creature->FindCreatureInGrid(13017, 15.0f, true);
+        while (rat) {
+            rat->DisappearAndDie();
+            rat->Respawn();
+            rat = creature->FindCreatureInGrid(13017, 15.0f, true);
+        }
+    }
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -294,6 +314,11 @@ void AddSC_stormwind_city()
     newscript = new Script;
     newscript->Name="npc_innkeeper_allison";
     newscript->pReceiveEmote = &ReceiveEmote_npc_innkeeper_allison;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_monty";
+    newscript->pChooseReward = &ChooseReward_npc_monty;
     newscript->RegisterSelf();
 }
 
