@@ -36,6 +36,7 @@ npc_goblin_land_mine    100%    Engineering item. Should explode when an hostile
 npc_mojo                100%    Vanity pet that morph you in frog if you /kiss it
 npc_explosive_sheep
 npc_pet_bomb
+npc_metzen
 EndContentData */
 
 #include "precompiled.h"
@@ -1365,6 +1366,32 @@ bool GossipSelect_npc_morph(Player* player, Creature* creature, uint32 sender, u
     return true;
 }
 
+/*######
+## npc_metzen
+######*/
+
+bool GossipHello_npc_metzen(Player* player, Creature* creature)
+{
+    if (player->GetQuestStatus(8746) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(8762) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "Secouer un peu de la poudre de renne sur Metzen.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_metzen(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    player->CLOSE_GOSSIP_MENU();
+
+    if (action == GOSSIP_ACTION_INFO_DEF) {
+        player->KilledMonster(creature->GetEntry(), creature->GetGUID());
+        creature->CastSpell(creature, 25952, false);
+    }
+    
+    return true;
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1467,6 +1494,12 @@ void AddSC_npcs_special()
     newscript->Name = "npc_morph";
     newscript->pGossipHello = &GossipHello_npc_morph;
     newscript->pGossipSelect = &GossipSelect_npc_morph;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_metzen";
+    newscript->pGossipHello = &GossipHello_npc_metzen;
+    newscript->pGossipSelect = &GossipSelect_npc_metzen;
     newscript->RegisterSelf();
 }
 
