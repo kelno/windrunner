@@ -37,6 +37,7 @@ npc_mojo                100%    Vanity pet that morph you in frog if you /kiss i
 npc_explosive_sheep
 npc_pet_bomb
 npc_metzen
+npc_clockwork_rocket_bot
 EndContentData */
 
 #include "precompiled.h"
@@ -1391,6 +1392,37 @@ bool GossipSelect_npc_metzen(Player* player, Creature* creature, uint32 sender, 
     return true;
 }
 
+/*######
+## npc_clockwork_rocket_bot
+######*/
+
+struct npc_clockwork_rocket_botAI : public ScriptedAI
+{
+    npc_clockwork_rocket_botAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Reset()
+    {
+        if (Unit* owner = me->GetOwner())
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+
+    void Aggro(Unit* who) {}
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (me->hasUnitState(UNIT_STAT_CASTING))
+            return;
+            
+        if (who->ToCreature() && who->GetEntry() == me->GetEntry() && who->IsWithinDistInMap(me, 15.0f))
+            DoCast(who, 45269, false);
+    }
+};
+
+CreatureAI* GetAI_npc_clockwork_rocket_bot(Creature* creature)
+{
+    return new npc_clockwork_rocket_botAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1499,6 +1531,11 @@ void AddSC_npcs_special()
     newscript->Name = "npc_metzen";
     newscript->pGossipHello = &GossipHello_npc_metzen;
     newscript->pGossipSelect = &GossipSelect_npc_metzen;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_clockwork_rocket_bot";
+    newscript->GetAI = &GetAI_npc_clockwork_rocket_bot;
     newscript->RegisterSelf();
 }
 
