@@ -29,6 +29,7 @@ EndContentData */
 
 #include "precompiled.h"
 #include "def_shattered_halls.h"
+#include "GameEvent.h"
 
 struct Say
 {
@@ -98,6 +99,14 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
     uint32 DeathCoil_Timer;
     uint32 ShadowFissure_Timer;
     uint32 Cleave_Timer;
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
 
     void Reset()
     {
@@ -120,6 +129,9 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
         
         if (pInstance && pInstance->GetData(DATA_NETHEKURSE_EVENT) != DONE)
             pInstance->SetData(DATA_NETHEKURSE_EVENT, NOT_STARTED);
+            
+        if (isEventActive())
+            me->SetDisplayId(22800);
     }
 
     void DoYellForPeonAggro()

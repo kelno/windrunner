@@ -23,6 +23,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_old_hillsbrad.h"
+#include "GameEvent.h"
 
 #define SAY_ENTER                   -1560000
 #define SAY_TAUNT1                  -1560001
@@ -54,6 +55,14 @@ struct boss_captain_skarlocAI : public ScriptedAI
     uint32 DevotionAura_Timer;
     uint32 Consecration_Timer;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         Holy_Light_Timer = 30000;
@@ -62,6 +71,9 @@ struct boss_captain_skarlocAI : public ScriptedAI
         HolyShield_Timer = 240000;
         DevotionAura_Timer = 3000;
         Consecration_Timer = 8000;
+        
+        if (isEventActive())
+            me->SetDisplayId(22803);
     }
 
     void Aggro(Unit *who)

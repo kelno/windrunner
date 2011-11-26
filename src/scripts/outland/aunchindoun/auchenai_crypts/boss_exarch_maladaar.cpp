@@ -28,6 +28,7 @@ mob_avatar_of_martyred
 EndContentData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define SPELL_MOONFIRE          37328
 #define SPELL_FIREBALL          37329
@@ -158,6 +159,14 @@ struct boss_exarch_maladaarAI : public ScriptedAI
 
     bool HasTaunted;
     bool Avatar_summoned;
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
 
     void Reset()
     {
@@ -170,6 +179,9 @@ struct boss_exarch_maladaarAI : public ScriptedAI
         StolenSoul_Timer = 25000 + rand()% 10000;
 
         Avatar_summoned = false;
+        
+        if (isEventActive())
+            me->SetDisplayId(22802);
     }
 
     void MoveInLineOfSight(Unit *who)

@@ -22,6 +22,7 @@ SDCategory: Blackrock Spire
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define SPELL_WHIRLWIND                 26038
 #define SPELL_CLEAVE                    20691
@@ -35,11 +36,22 @@ struct boss_rend_blackhandAI : public ScriptedAI
     uint32 Cleave_Timer;
     uint32 Thunderclap_Timer;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         WhirlWind_Timer = 20000;
         Cleave_Timer = 5000;
         Thunderclap_Timer = 9000;
+        
+        if (isEventActive())
+            me->SetDisplayId(15736);
     }
 
     void Aggro(Unit *who)

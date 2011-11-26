@@ -23,6 +23,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_shadow_labyrinth.h"
+#include "GameEvent.h"
 
 #define SAY_INTRO                       -1555028
 #define SAY_AGGRO1                      -1555029
@@ -152,6 +153,14 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
     uint32 summonTraveler_Timer;
     uint32 banish_Timer;
     uint64 PortalsGuid[5];
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
 
     void Reset()
     {
@@ -164,6 +173,9 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
 
         if(pInstance)
             pInstance->SetData(DATA_GRANDMASTERVORPILEVENT, NOT_STARTED);
+            
+        if (isEventActive())
+            me->SetDisplayId(22801);
     }
 
     void summonPortals()

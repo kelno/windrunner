@@ -22,6 +22,7 @@ SDCategory: Tempest Keep, The Botanica
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define SAY_AGGRO                   -1553000
 #define SAY_KILL_1                  -1553001
@@ -53,6 +54,14 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
     uint32 DeadAddsCount;
     bool MoveFree;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         Adds_List.clear();
@@ -62,6 +71,9 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
         MoveCheck_Timer = 1000;
         DeadAddsCount = 0;
         MoveFree = true;
+        
+        if (isEventActive())
+            me->SetDisplayId(22805);
     }
 
     void Aggro(Unit *who)

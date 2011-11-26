@@ -22,6 +22,7 @@ SDCategory: Blackrock Depths
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 enum Spells
 {
@@ -40,11 +41,22 @@ struct boss_draganthaurissanAI : public ScriptedAI
     uint32 AvatarOfFlame_Timer;
     //uint32 Counter;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         HandOfThaurissan_Timer = 4000;
         AvatarOfFlame_Timer = 25000;
         //Counter= 0;
+        
+        if (isEventActive())
+            me->SetDisplayId(15735);
     }
 
     void Aggro(Unit *who)

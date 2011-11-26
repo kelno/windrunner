@@ -22,6 +22,7 @@ SDCategory: Scholomance
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define SPELL_ARCANEMISSILES           22272
 #define SPELL_SHADOWSHIELD             22417                //Not right ID. But 12040 is wrong either.
@@ -57,12 +58,23 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
     uint32 Teleport_Timer;
     Creature *Summoned;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         ArcaneMissiles_Timer = 4500;
         ShadowShield_Timer = 12000;
         Curse_Timer = 2000;
         Teleport_Timer = 16000;
+        
+        if (isEventActive())
+            me->SetDisplayId(15732);
     }
 
     void Aggro(Unit *who)

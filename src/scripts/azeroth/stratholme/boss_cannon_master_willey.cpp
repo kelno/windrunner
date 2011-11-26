@@ -23,6 +23,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_stratholme.h"
+#include "GameEvent.h"
 
 struct Location
 {
@@ -60,6 +61,14 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
     
     SummonList summons;
 
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
+
     void Reset()
     {
         Shoot_Timer = 1000;
@@ -71,6 +80,9 @@ struct boss_cannon_master_willeyAI : public ScriptedAI
             pInstance->SetData(TYPE_CANNONMASTER, FAIL);
             
         summons.DespawnAll();
+        
+        if (isEventActive())
+            me->SetDisplayId(15733);
     }
 
     void JustDied(Unit* Victim)

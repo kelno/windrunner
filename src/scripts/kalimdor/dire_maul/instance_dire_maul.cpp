@@ -24,6 +24,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_dire_maul.h"
+#include "GameEvent.h"
 
 #define ENCOUNTERS 1
 
@@ -46,6 +47,14 @@ struct instance_dire_maul : public ScriptedInstance
         pusillinGUID = 0;
         ironbarkGUID = 0;
         ironbarkDoorGUID = 0;
+    }
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
     }
     
     bool IsEncounterInProgress() const
@@ -79,6 +88,12 @@ struct instance_dire_maul : public ScriptedInstance
         switch (entry) {
         case 14354: pusillinGUID = creature->GetGUID(); break;
         case 11491: ironbarkGUID = creature->GetGUID(); break;
+        case 11486:
+            sLog.outString("Pom");
+            if (isEventActive())
+                creature->SetDisplayId(15734);
+                
+            break;
         }
     }
     
