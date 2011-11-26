@@ -411,30 +411,80 @@ bool GossipSelect_npc_barnes(Player *player, Creature *_Creature, uint32 sender,
 }
 
 /*###
+# npc_hastings
+####*/
+
+#define TEXT_HELLO                       30020
+#define TEXT_MENU1                       30021
+#define TEXT_MENU2                       30022
+
+bool GossipHello_npc_hastings(Player* player, Creature* _Creature)
+{
+	player->ADD_GOSSIP_ITEM(0, "Vous aider avec quoi ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+    return true;
+
+    return true;
+}
+
+void SendSecondMenu_npc_hastings(Player *player, Creature *_Creature)
+{
+	player->ADD_GOSSIP_ITEM(0, "Les gros ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+
+    player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+}
+
+bool GossipSelect_npc_hastings(Player* player, Creature* _Creature, uint32 sender, uint32 action)
+{
+	switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:     SendSecondMenu_npc_hastings(player, _Creature); break;
+		case GOSSIP_ACTION_INFO_DEF+2:     player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); break;
+    }
+
+    return true;
+}
+
+/*###
 # npc_berthold
 ####*/
 
 #define SPELL_TELEPORT           39567
 
-#define GOSSIP_ITEM_TELEPORT     "Teleport me to the Guardian's Library"
+#define TEXT_HELLO                       30010
+#define TEXT_MENU1                       30011
+#define TEXT_MENU2                       30012
+#define TEXT_MENU3                       30013
+
+#define GOSSIP_ITEM_TELEPORT     "Teleportez moi a la Bibliotheque du Gardien"
 
 bool GossipHello_npc_berthold(Player* player, Creature* _Creature)
 {
     ScriptedInstance* pInstance = ((ScriptedInstance*)_Creature->GetInstanceData());
-                                                            // Check if Shade of Aran is dead or not
-    if(pInstance && (pInstance->GetData(DATA_SHADEOFARAN_EVENT) >= DONE))
-        player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_TELEPORT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+     
+	player->ADD_GOSSIP_ITEM(0, "Quel est cet endroit ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	player->ADD_GOSSIP_ITEM(0, "Ou est Medivh ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+	player->ADD_GOSSIP_ITEM(0, "Comment fait-on pour se reperer dans la tour ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+	if(pInstance && (pInstance->GetData(DATA_SHADEOFARAN_EVENT) == DONE)) // Check if Shade of Aran is dead or not
+		player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_TELEPORT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
+	
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+    return true;
 
-    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
     return true;
 }
 
 bool GossipSelect_npc_berthold(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
-    if(action == GOSSIP_ACTION_INFO_DEF + 1)
-        player->CastSpell(player, SPELL_TELEPORT, true);
+	    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:     player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID()); break;
+		case GOSSIP_ACTION_INFO_DEF + 2:     player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); break;
+		case GOSSIP_ACTION_INFO_DEF + 3:     player->SEND_GOSSIP_MENU(TEXT_MENU3,_Creature->GetGUID()); break;
+		case GOSSIP_ACTION_INFO_DEF + 4:     player->CastSpell(player, SPELL_TELEPORT, true);player->CLOSE_GOSSIP_MENU(); break;
+    }
 
-    player->CLOSE_GOSSIP_MENU();
     return true;
 }
 
@@ -843,6 +893,12 @@ void AddSC_karazhan()
     newscript = new Script;
     newscript->Name="woefulhealer";
     newscript->GetAI = &GetAI_woefulhealer;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_hastings";
+    newscript->pGossipHello = &GossipHello_npc_hastings;
+    newscript->pGossipSelect = &GossipSelect_npc_hastings;
     newscript->RegisterSelf();
 }
 
