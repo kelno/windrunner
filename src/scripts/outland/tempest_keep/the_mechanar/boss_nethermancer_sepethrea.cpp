@@ -23,6 +23,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_mechanar.h"
+#include "GameEvent.h"
 
 #define SAY_AGGRO                       -1554013
 #define SAY_SUMMON                      -1554014
@@ -58,6 +59,14 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
     uint32 dragons_breath_Timer;
     uint32 knockback_Timer;
     uint32 solarburn_Timer;
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
 
     void Reset()
     {
@@ -69,6 +78,9 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
 
         if(pInstance && pInstance->GetData(DATA_NETHERMANCER) != DONE)
             pInstance->SetData(DATA_NETHERMANCER, NOT_STARTED);
+            
+        if (isEventActive())
+            me->SetDisplayId(22804);
     }
 
     void Aggro(Unit *who)

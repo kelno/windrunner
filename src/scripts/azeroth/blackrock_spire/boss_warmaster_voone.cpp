@@ -22,6 +22,7 @@ SDCategory: Blackrock Spire
 EndScriptData */
 
 #include "precompiled.h"
+#include "GameEvent.h"
 
 #define SPELL_SNAPKICK          15618
 #define SPELL_CLEAVE            15579
@@ -29,6 +30,14 @@ EndScriptData */
 #define SPELL_MORTALSTRIKE      16856
 #define SPELL_PUMMEL            15615
 #define SPELL_THROWAXE          16075
+
+bool isEventActive()
+{
+    const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+    bool active = activeEvents.find(57) != activeEvents.end();
+
+    return active;
+}
 
 struct boss_warmastervooneAI : public ScriptedAI
 {
@@ -49,6 +58,9 @@ struct boss_warmastervooneAI : public ScriptedAI
         MortalStrike_Timer = 12000;
         Pummel_Timer = 32000;
         ThrowAxe_Timer = 1000;
+        
+        if (isEventActive())
+            me->SetDisplayId(15737);
     }
 
     void Aggro(Unit *who)

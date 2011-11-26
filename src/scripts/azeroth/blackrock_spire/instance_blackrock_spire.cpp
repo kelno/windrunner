@@ -7,6 +7,7 @@ EndScriptData */
 
 #include "precompiled.h"
 #include "def_blackrock_spire.h"
+#include "GameEvent.h"
 
 enum BlackrockSpireData
 {
@@ -22,6 +23,14 @@ struct instance_blackrock_spire : public ScriptedInstance
     uint64 firstDoorGUID;
     
     uint64 runesGUID[7];
+    
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end();
+
+        return active;
+    }
     
     void Initialize()
     {        
@@ -48,7 +57,13 @@ struct instance_blackrock_spire : public ScriptedInstance
     
     void OnCreatureCreate(Creature *creature, uint32 entry)
     {
-        
+        switch (entry) {
+        case 10899:
+            if (isEventActive())
+                creature->SetDisplayId(15760);
+
+            break;
+        }
     }
     
     void OnObjectCreate(GameObject* go)
