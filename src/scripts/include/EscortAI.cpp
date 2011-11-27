@@ -116,7 +116,8 @@ void npc_escortAI::UpdateAI(const uint32 diff)
                 //Correct movement speed
                 if (Run)
                     m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-                else m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                else
+                    m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
 
                 //Continue with waypoints
                 if( !IsOnHold )
@@ -352,6 +353,8 @@ void npc_escortAI::SetEscortPaused(bool bPaused)
 {
     if (!HasEscortState(STATE_ESCORT_ESCORTING))
         return;
+        
+    IsOnHold = bPaused;
 
     if (bPaused)
         AddEscortState(STATE_ESCORT_PAUSED);

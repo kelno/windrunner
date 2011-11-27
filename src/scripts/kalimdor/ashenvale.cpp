@@ -632,12 +632,11 @@ CreatureAI* GetAI_npc_feero_ironhand(Creature* creature)
 bool QuestAccept_npc_feero_ironhand(Player* player, Creature* creature, const Quest* quest)
 {
     if (quest->GetQuestId() == QUEST_SUPPLIES_TO_AUBERDINE) {
-        if (npc_feero_ironhandAI* escortAI = CAST_AI(npc_feero_ironhandAI, creature->AI()))
-        {
+        if (npc_feero_ironhandAI* escortAI = CAST_AI(npc_feero_ironhandAI, creature->AI())) {
             DoScriptText(FEERO_SAY_START, creature);
             creature->setFaction(player->getFaction());
 
-            escortAI->Start(true, true, true, player->GetGUID(), creature->GetEntry());
+            escortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
         }
     }
 }
