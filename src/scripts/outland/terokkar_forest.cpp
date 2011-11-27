@@ -33,6 +33,7 @@ npc_hungry_nether_ray
 npc_kaliri_trigger
 npc_trigger_quest10950
 npc_scout_neftis
+npc_cenarion_sparrowhawk
 EndContentData */
 
 #include "precompiled.h"
@@ -729,6 +730,55 @@ bool GossipSelect_npc_scout_neftis(Player* player, Creature *creature, uint32 se
 }
 
 /*######
+## npc_cenarion_sparrowhawk
+######*/
+
+struct npc_cenarion_sparrowhawkAI : public ScriptedAI
+{
+    npc_cenarion_sparrowhawkAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint32 despawnTimer;
+    
+    void Reset()
+    {
+        despawnTimer = 0;
+        me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
+        if (GameObject* ravenStone = me->FindGOInGrid(185541, 100.0f)) {
+            float x, y, z;
+            ravenStone->GetPosition(x, y, z);
+            me->GetMotionMaster()->MovePoint(0, x, y, z);
+        }
+        else
+            despawnTimer = 10000;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (id == 0)
+            despawnTimer = 15000;
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!despawnTimer)
+            return;
+            
+        if (despawnTimer <= diff)
+            me->DisappearAndDie();
+        else
+            despawnTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_cenarion_sparrowhawk(Creature* creature)
+{
+    return new npc_cenarion_sparrowhawkAI(creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -805,6 +855,11 @@ void AddSC_terokkar_forest()
     newscript->pQuestAccept = &QuestAccept_npc_scout_neftis;
     newscript->pGossipHello = &GossipHello_npc_scout_neftis;
     newscript->pGossipSelect = &GossipSelect_npc_scout_neftis;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_cenarion_sparrowhawk";
+    newscript->GetAI = &GetAI_npc_cenarion_sparrowhawk;
     newscript->RegisterSelf();
 }
 
