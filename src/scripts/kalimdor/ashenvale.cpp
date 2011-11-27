@@ -17,13 +17,14 @@
 /* ScriptData
 SDName: Ashenvale
 SD%Complete: 70
-SDComment: Quest support: 6544, 6482
+SDComment: Quest support: 6544, 6482, 976
 SDCategory: Ashenvale Forest
 EndScriptData */
 
 /* ContentData
 npc_torek
 npc_ruul_snowhoof
+npc_feero_ironhand
 EndContentData */
 
 #include "precompiled.h"
@@ -463,6 +464,184 @@ bool GOHello_go_naga_brazier(Player* pPlayer, GameObject* pGo)
     return true;
 }
 
+/*######
+## npc_feero_ironhand
+######*/
+
+enum FeeroIronhandData
+{
+    QUEST_SUPPLIES_TO_AUBERDINE = 976,
+    
+    FEERO_SAY_START             = -1000766, // Start
+    FEERO_SAY_AMBUSH1           = -1000767, // Ambush 1
+    FEERO_SAY_AMBUSH1_AFTER     = -1000768,
+    FEERO_SAY_AMBUSH2           = -1000769,
+    FEERO_SAY_AMBUSH2_ENEMY     = -1000770, // Said by one of the Forsaken Scouts
+    FEERO_SAY_AMBUSH2_AFTER     = -1000771,
+    FEERO_SAY_AMBUSH3           = -1000772,
+    FEERO_SAY_AMBUSH3_ENEMY     = -1000773,
+    FEERO_SAY_AMBUSH3_GO        = -1000774,
+    FEERO_SAY_END               = -1000775,
+    
+    NPC_FEERO                   = 4484,
+    NPC_DARK_STRAND_ASSASSIN    = 3879,
+    NPC_FORSAKEN_SCOUT          = 3893,
+    NPC_CAEDAKAR_THE_VICIOUS    = 3900, // West
+    NPC_ALIGAR_THE_TORMENTOR    = 3898, // Center
+    NPC_BALIZAR_THE_UMBRAGE     = 3899, // East
+};
+
+struct npc_feero_ironhandAI : public npc_escortAI
+{
+    npc_feero_ironhandAI(Creature* c) : npc_escortAI(c), summons(me) {}
+    
+    SummonList summons;
+    
+    bool tauntedSatyr;
+    
+    void Reset()
+    {
+        tauntedSatyr = false;
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        Player* player = GetPlayerForEscort();
+        if (HasEscortState(STATE_ESCORT_ESCORTING)) {
+            if (player)
+                player->FailQuest(QUEST_SUPPLIES_TO_AUBERDINE);
+        }
+
+        summons.DespawnAll();
+    }
+    
+    void Aggro(Unit* who) {}
+
+    void SummonedCreatureDespawn(Creature* summon)
+    {
+        summons.Despawn(summon);
+        
+        switch (summon->GetEntry()) {
+            case NPC_CAEDAKAR_THE_VICIOUS:
+            case NPC_ALIGAR_THE_TORMENTOR:
+            case NPC_BALIZAR_THE_UMBRAGE:
+            {
+                if (summons.IsEmpty()) {
+                    if (Player* player = GetPlayerForEscort()) {
+                        DoScriptText(FEERO_SAY_END, me, NULL);
+                        if (player->GetGroup())
+                            player->GroupEventHappens(QUEST_SUPPLIES_TO_AUBERDINE, me);
+                        else
+                            player->AreaExploredOrEventHappens(QUEST_SUPPLIES_TO_AUBERDINE);
+                    }
+                }
+                break;
+            }
+            case NPC_DARK_STRAND_ASSASSIN:
+                if (summons.IsEmpty())
+                    DoScriptText(FEERO_SAY_AMBUSH1_AFTER, me, NULL);
+                break;
+            case NPC_FORSAKEN_SCOUT:
+                if (summons.IsEmpty())
+                    DoScriptText(FEERO_SAY_AMBUSH2_AFTER, me, NULL);
+                break;
+        }
+    }
+    
+    void AttackStart(Unit* who)
+    {
+        if (who->GetEntry() == NPC_BALIZAR_THE_UMBRAGE && !tauntedSatyr) {
+            tauntedSatyr = true;
+            DoScriptText(FEERO_SAY_AMBUSH3_GO, me, NULL);
+        }
+            
+        npc_escortAI::AttackStart(who);
+    }
+    
+    void JustSummoned(Creature* summon)
+    {
+        summons.Summon(summon);
+        
+        switch (summon->GetEntry()) {
+            case NPC_FORSAKEN_SCOUT:
+                if (rand()%3 == 0)
+                    DoScriptText(FEERO_SAY_AMBUSH2_ENEMY, summon, NULL);
+                break;
+            case NPC_BALIZAR_THE_UMBRAGE:
+                DoScriptText(FEERO_SAY_AMBUSH3_ENEMY, summon, NULL);
+                summon->AI()->AttackStart(me); // Force him to attack me
+                return;
+        }
+        
+        Player* player = GetPlayerForEscort();
+        if (player) {
+            if (rand()%2)
+                summon->AI()->AttackStart(player);
+            else
+                summon->AI()->AttackStart(me);
+        }
+        else
+            summon->AI()->AttackStart(me);
+    }
+    
+    void WaypointReached(uint32 i)
+    {
+        Player* player = GetPlayerForEscort();
+
+        switch(i)
+        {
+            case 8:
+                DoScriptText(FEERO_SAY_AMBUSH1, me, NULL);
+                me->SummonCreature(NPC_DARK_STRAND_ASSASSIN, 3568.471924, 218.518387, 5.006559, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_DARK_STRAND_ASSASSIN, 3569.471924, 218.518387, 5.006559, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_DARK_STRAND_ASSASSIN, 3567.471924, 218.518387, 5.006559, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_DARK_STRAND_ASSASSIN, 3568.471924, 219.518387, 5.006559, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                break;
+            case 11:
+                DoScriptText(FEERO_SAY_AMBUSH2, me, NULL);
+                me->SummonCreature(NPC_FORSAKEN_SCOUT, 3796.817627, 133.361282, 9.080805, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_FORSAKEN_SCOUT, 3796.817627, 133.361282, 9.080805, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_FORSAKEN_SCOUT, 3796.817627, 133.361282, 9.080805, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                break;
+            case 19:
+                DoScriptText(FEERO_SAY_AMBUSH3, me, NULL);
+                me->SummonCreature(NPC_CAEDAKAR_THE_VICIOUS, 4305.477051, 158.758896, 47.088223, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_ALIGAR_THE_TORMENTOR, 4307.477051, 158.758896, 47.088223, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                me->SummonCreature(NPC_BALIZAR_THE_UMBRAGE, 4306.477051, 158.758896, 47.088223, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000);
+                SetRun();
+                break;
+            case 20:
+                me->DisappearAndDie();
+                break;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        npc_escortAI::UpdateAI(diff);
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_feero_ironhand(Creature* creature)
+{
+    return new npc_feero_ironhandAI(creature);
+}
+
+bool QuestAccept_npc_feero_ironhand(Player* player, Creature* creature, const Quest* quest)
+{
+    if (quest->GetQuestId() == QUEST_SUPPLIES_TO_AUBERDINE) {
+        if (npc_feero_ironhandAI* escortAI = CAST_AI(npc_feero_ironhandAI, creature->AI()))
+        {
+            DoScriptText(FEERO_SAY_START, creature);
+            creature->setFaction(player->getFaction());
+
+            escortAI->Start(true, true, true, player->GetGUID(), creature->GetEntry());
+        }
+    }
+}
+
 void AddSC_ashenvale()
 {
     Script *newscript;
@@ -488,6 +667,12 @@ void AddSC_ashenvale()
     newscript = new Script;
     newscript->Name = "go_naga_brazier";
     newscript->pGOHello = &GOHello_go_naga_brazier;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_feero_ironhand";
+    newscript->GetAI = &GetAI_npc_feero_ironhand;
+    newscript->pQuestAccept = &QuestAccept_npc_feero_ironhand;
     newscript->RegisterSelf();
 }
 
