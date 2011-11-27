@@ -34,6 +34,7 @@ npc_marshal_windsor
 npc_marshal_reginald_windsor
 npc_tobias_seecher
 npc_rocknot
+npc_windsor_brd
 EndContentData */
 
 #include "precompiled.h"
@@ -1328,6 +1329,231 @@ bool GOHello_go_dark_keeper_portrait(Player* player, GameObject* go)
 }
 
 /*######
+## npc_windsor_brd
+######*/
+
+enum WindsorBrdData
+{
+    QUEST_JAILBREAK = 4322,
+    
+    WINDSOR_SAY_START           = -1000776,
+    WINDSOR_SAY_OPENDOOR        = -1000777,
+    WINDSOR_SAY_DUGHAL          = -1000778,
+    WINDSOR_SAY_FREEPRISONER    = -1000779,
+    WINDSOR_SAY_ALMOST_THERE    = -1000780,
+    WINDSOR_SAY_ENTER           = -1000781,
+    WINDSOR_SAY_ROCK            = -1000782,
+    WINDSOR_SAY_FIND_TOBIAS     = -1000783,
+    WINDSOR_SAY_OPEN_IT         = -1000784,
+    WINDSOR_SAY_LEAVE_MARK      = -1000785,
+    WINDSOR_SAY_NEVER_LIKED     = -1000786,
+    WINDSOR_OPEN_CAREFUL        = -1000787,
+    WINDSOR_SAY_DINGER          = -1000788,
+    WINDSOR_SAY_ATTACK_DINGER   = -1000789,
+    WINDSOR_KILLED_DINGER       = -1000790,
+    WINDSOR_SAY_OPEN_HURRY      = -1000791,
+    WINDSOR_SAY_CREST           = -1000792,
+    WINDSOR_ATTACK_CREST        = -1000793,
+    WINDSOR_SAY_KILLED_CREST    = -1000794,
+    WINDSOR_SAY_OPEN_TOBIAS     = -1000795,
+    WINDSOR_SAY_TOBIAS_FREE     = -1000796,
+    WINDSOR_SAY_CONGRATS        = -1000797,
+    WINDSOR_SAY_MADE_IT         = -1000798,
+    WINDSOR_SAY_END             = -1000799
+};
+
+struct npc_windsor_brdAI : public npc_escortAI
+{
+    npc_windsor_brdAI(Creature* c) : npc_escortAI(c) {}
+    
+    void Reset() {}
+    
+    void Aggro(Unit* who) {}
+    
+    void KilledUnit(Unit* who)
+    {
+        switch (who->GetEntry()) {
+            case 9677:
+                DoScriptText(WINDSOR_KILLED_DINGER, me, NULL);
+                break;
+            case 9680:
+                DoScriptText(WINDSOR_SAY_KILLED_CREST, me, NULL);
+                break;
+        }
+    }
+    
+    void WaypointReached(uint32 i)
+    {
+        Player* player = GetPlayerForEscort();
+        if (!player)
+            return;
+
+        switch(i)
+        {
+            case 5:
+                DoScriptText(WINDSOR_SAY_OPENDOOR, me, player);
+                SetEscortPaused(true);
+                break;
+            case 6:
+                DoScriptText(WINDSOR_SAY_ALMOST_THERE, me, player);
+                break;
+            case 9:
+            {
+                if (GameObject* door = me->FindGOInGrid(170561, 10.0f))
+                    door->UseDoorOrButton();
+                DoScriptText(WINDSOR_SAY_ENTER, me, player);
+                break;
+            }
+            case 10:
+                me->UpdateEntry(9682);
+                DoScriptText(WINDSOR_SAY_ROCK, me, player);
+                break;
+            case 11:
+                DoScriptText(WINDSOR_SAY_FIND_TOBIAS, me, NULL);
+                break;
+            case 16:
+                DoScriptText(WINDSOR_SAY_OPEN_IT, me, NULL);
+                SetEscortPaused(true);
+                break;
+            case 18:
+                DoScriptText(WINDSOR_OPEN_CAREFUL, me, NULL);
+                SetEscortPaused(true);
+                break;
+            case 24:
+                DoScriptText(WINDSOR_SAY_OPEN_HURRY, me, NULL);
+                SetEscortPaused(true);
+                break;
+            case 25:
+                DoScriptText(WINDSOR_SAY_OPEN_TOBIAS, me, NULL);
+                SetEscortPaused(true);
+                break;
+            case 30:
+                DoScriptText(WINDSOR_SAY_MADE_IT, me, NULL);
+                DoScriptText(WINDSOR_SAY_END, me, NULL);
+                SetRun();
+                break;
+            case 31:
+                if (player->GetGroup())
+                    player->GroupEventHappens(QUEST_JAILBREAK, me);
+                else
+                    player->AreaExploredOrEventHappens(QUEST_JAILBREAK);
+
+                me->DisappearAndDie();
+                break;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        npc_escortAI::UpdateAI(diff);
+        
+        if (!UpdateVictim())
+            return;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_windsor_brd(Creature* creature)
+{
+    return new npc_windsor_brdAI(creature);
+}
+
+bool QuestAccept_npc_windsor_brd(Player* player, Creature* creature, const Quest* quest)
+{
+    if (quest->GetQuestId() == QUEST_JAILBREAK) {
+        if (npc_windsor_brdAI* escortAI = CAST_AI(npc_windsor_brdAI, creature->AI())) {
+            DoScriptText(WINDSOR_SAY_START, creature, NULL);
+            creature->setFaction(11);
+
+            escortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+        }
+    }
+
+    return true;
+}
+
+bool GOHello_windsor_jailbreak_door(Player* player, GameObject* go)
+{
+    Creature* windsor = player->FindCreatureInGrid(9023, 30.0f, true);
+    if (!windsor)
+        windsor = player->FindCreatureInGrid(9682, 30.0f, true);
+    if (!windsor)
+        return false;
+
+    switch (go->GetEntry()) {
+        case 170562:
+        {
+            if (Creature* dughal = player->FindCreatureInGrid(9022, 50.0f, true)) {
+                DoScriptText(WINDSOR_SAY_DUGHAL, dughal, player);
+                DoScriptText(WINDSOR_SAY_FREEPRISONER, windsor, NULL);
+                dughal->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                dughal->GetMotionMaster()->MovePoint(0, 324.853241, -197.296951, -77.042488);
+            }
+            
+            ((npc_escortAI*)windsor->AI())->SetEscortPaused(false);
+            break;
+        }
+        case 170568:
+        {
+            if (Creature* jaz = player->FindCreatureInGrid(9681, 50.0f, true)) {
+                DoScriptText(WINDSOR_SAY_LEAVE_MARK, windsor, NULL);
+                jaz->setFaction(14);
+                jaz->AI()->AttackStart(windsor);
+                windsor->AI()->AttackStart(jaz);
+            }
+            if (Creature* ograbisi = player->FindCreatureInGrid(9677, 50.0f, true)) {
+                ograbisi->setFaction(14);
+                ograbisi->AI()->AttackStart(windsor);
+            }
+                
+            ((npc_escortAI*)windsor->AI())->SetEscortPaused(false);
+            break;
+        }
+        case 170569:
+        {
+            if (Creature* dinger = player->FindCreatureInGrid(9678, 50.0f, true)) {
+                DoScriptText(WINDSOR_SAY_DINGER, dinger, NULL);
+                dinger->setFaction(14);
+                dinger->AI()->AttackStart(windsor);
+                windsor->AI()->AttackStart(dinger);
+                DoScriptText(WINDSOR_SAY_ATTACK_DINGER, windsor, NULL);
+            }
+            
+            ((npc_escortAI*)windsor->AI())->SetEscortPaused(false);
+            break;
+        }
+        case 170567:
+        {
+            if (Creature* crestKiller = player->FindCreatureInGrid(9680, 50.0f, true)) {
+                DoScriptText(WINDSOR_SAY_CREST, crestKiller, NULL);
+                crestKiller->setFaction(14);
+                crestKiller->AI()->AttackStart(windsor);
+                windsor->AI()->AttackStart(crestKiller);
+                DoScriptText(WINDSOR_ATTACK_CREST, windsor, NULL);
+            }
+            
+            ((npc_escortAI*)windsor->AI())->SetEscortPaused(false);
+            break;
+        }
+        case 170566:
+        {
+            if (Creature* tobias = player->FindCreatureInGrid(9679, 50.0f, true)) {
+                DoScriptText(WINDSOR_SAY_TOBIAS_FREE, tobias, NULL);
+                tobias->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                tobias->GetMotionMaster()->MovePoint(0, 625.452820, -241.325729, -82.321175);
+                DoScriptText(WINDSOR_SAY_CONGRATS, windsor, player);
+            }
+            
+            ((npc_escortAI*)windsor->AI())->SetEscortPaused(false);
+            break;
+        }
+    }
+
+    return false;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1387,15 +1613,32 @@ void AddSC_blackrock_depths()
     newscript->GetAI = &GetAI_npc_marshal_reginald_windsor;
     newscript->RegisterSelf();*/
 
-     newscript = new Script;
-     newscript->Name = "npc_rocknot";
-     newscript->GetAI = &GetAI_npc_rocknot;
-     newscript->pChooseReward = &ChooseReward_npc_rocknot;
-     newscript->RegisterSelf();
-     
-     newscript = new Script;
-     newscript->Name = "go_dark_keeper_portrait";
-     newscript->pGOHello = &GOHello_go_dark_keeper_portrait;
-     newscript->RegisterSelf();
+    newscript = new Script;
+    newscript->Name = "npc_rocknot";
+    newscript->GetAI = &GetAI_npc_rocknot;
+    newscript->pChooseReward = &ChooseReward_npc_rocknot;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "go_dark_keeper_portrait";
+    newscript->pGOHello = &GOHello_go_dark_keeper_portrait;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_windsor_brd";
+    newscript->GetAI = &GetAI_npc_windsor_brd;
+    newscript->pQuestAccept = &QuestAccept_npc_windsor_brd;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_windsor_brd";
+    newscript->GetAI = &GetAI_npc_windsor_brd;
+    newscript->pQuestAccept = &QuestAccept_npc_windsor_brd;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "windsor_jailbreak_door";
+    newscript->pGOHello = &GOHello_windsor_jailbreak_door;
+    newscript->RegisterSelf();
 }
 
