@@ -98,6 +98,8 @@ struct mob_doom_blossomAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
         if (ShadowBoltTimer <= diff)
         {
             DoCast(SelectUnit(0, 100, true, false, true, 0, 0), SPELL_SHADOWBOLT, true);
