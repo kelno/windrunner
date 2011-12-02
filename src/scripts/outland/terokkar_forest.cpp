@@ -34,6 +34,7 @@ npc_kaliri_trigger
 npc_trigger_quest10950
 npc_scout_neftis
 npc_cenarion_sparrowhawk
+npc_chief_letoll
 EndContentData */
 
 #include "precompiled.h"
@@ -779,6 +780,343 @@ CreatureAI* GetAI_npc_cenarion_sparrowhawk(Creature* creature)
 }
 
 /*######
+## npc_chief_letoll
+######*/
+
+enum ChiefLetollData {
+    QUEST_DIGGING_THROUGH_BONES = 10922,
+    
+    NPC_BONE_SIFTER             = 22466,
+    NPC_RESEARCHER              = 22464,
+    
+    SAY_LETOLL_CIRCLE           = -1000804,
+    SAY_LETOLL_ASK_PLAYER       = -1000805,
+    SAY_LETOLL_DIGSITE_NORTH    = -1000806,
+    SAY_LETOLL_START_DIGGING    = -1000807,
+    SAY_LETOLL_FOUND_SOMETHING  = -1000808,
+    SAY_LETOLL_ALMOST_GOT_IT    = -1000809,
+    SAY_LETOLL_LOOKS_LIKE_DRUM  = -1000810,
+    SAY_LETOLL_WOW_A_DRUM       = -1000811,
+    SAY_LETOLL_DISCOVERY_ROCK   = -1000812,
+    SAY_LETOLL_HIVES            = -1000813,
+    SAY_LETOLL_YE_MAD           = -1000814,
+    SAY_LETOLL_SILITHUS         = -1000815,
+    SAY_LETOLL_PLAGUE           = -1000816,
+    SAY_LETOLL_ARTHAS_COUSIN    = -1000817,
+    SAY_LETOLL_FIGMENT_IMAGIN   = -1000818,
+    SAY_LETOLL_SHUT_UP          = -1000819,
+    EMOTE_LETOLL_BANG           = -1000820,
+    SAY_LETOLL_TOLD_YA          = -1000821,
+    SAY_LETOLL_HELP_HIM         = -1000822,
+    EMOTE_LETOLL_PICKS_DRUM     = -1000823,
+    SAY_LETOLL_THANKS_PLAYER    = -1000824,
+};
+
+struct npc_chief_letollAI : public npc_escortAI
+{
+    npc_chief_letollAI(Creature* c) : npc_escortAI(c), summons(me)
+    {
+        timer = 0;
+    }
+    
+    SummonList summons;
+    
+    uint32 timer;
+    uint32 step;
+    
+    uint64 playerGUID;
+    
+    std::vector<uint64> researchers;
+    
+    void Reset() {}
+    
+    void Aggro(Unit* who) {}
+    
+    void SummonedCreatureDespawn(Creature* summon)
+    {
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (player) {
+            if (player->GetGroup())
+                player->GroupEventHappens(QUEST_DIGGING_THROUGH_BONES, me);
+            else
+                player->AreaExploredOrEventHappens(QUEST_DIGGING_THROUGH_BONES);
+        }
+        
+        DoScriptText(EMOTE_LETOLL_PICKS_DRUM, me);
+        if (player)
+            DoScriptText(SAY_LETOLL_THANKS_PLAYER, me, player);
+        timer = 3000;
+    }
+    
+    class AnyResearcherCheck
+    {
+        public:
+            AnyResearcherCheck(WorldObject const* obj, float range) : i_obj(obj), i_range(range) {}
+            bool operator()(Unit* u)
+            {
+                Creature *c = u->ToCreature();
+                if (!i_obj->IsWithinDistInMap(c, i_range))
+                    return false;
+                return (c->GetEntry() == NPC_RESEARCHER);
+            }
+
+        private:
+            WorldObject const* i_obj;
+            float i_range;
+    };
+
+    void AssignSearchersGUIDs()
+    {
+        researchers.clear();
+
+        CellPair p(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
+        Cell cell(p);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+
+        std::list<Creature*> unitList;
+
+        AnyResearcherCheck u_check(m_creature, 30.0f);
+        Trinity::CreatureListSearcher<AnyResearcherCheck> searcher(unitList, u_check);
+        TypeContainerVisitor<Trinity::CreatureListSearcher<AnyResearcherCheck>, GridTypeMapContainer >  grid_creature_searcher(searcher);
+        cell.Visit(p, grid_creature_searcher, *(m_creature->GetMap()));
+
+        for(std::list<Creature*>::iterator iter = unitList.begin(); iter != unitList.end(); ++iter)
+        {
+            Creature* c = (*iter);
+            if (c)
+                researchers.push_back(c->GetGUID());
+        }
+    }
+    
+    void WaypointReached(uint32 id)
+    {
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (!player)
+            return;
+
+        switch (id) {
+        case 0:
+            SetEscortPaused(true);
+            DoScriptText(SAY_LETOLL_CIRCLE, me);
+            AssignSearchersGUIDs();
+            if (researchers.size() >= 4) {
+                for (uint8 i = 0; i < 4; i++) {
+                    if (Creature* researcher = Creature::GetCreature(*me, researchers[i]))
+                        researcher->GetMotionMaster()->MoveFollow(me, PET_FOLLOW_DIST, i * (M_PI/4.0f));
+                }
+            }
+            timer = 3000;
+            break;
+        case 5:
+            DoScriptText(SAY_LETOLL_START_DIGGING, me);
+            SetEscortPaused(true);
+            timer = 1000;
+            break;
+        }
+    }
+    
+    void StartEvent(uint64 pGUID)
+    {
+        playerGUID = pGUID;
+        step = 0;
+        me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+    }
+    
+    void DoResearcherScriptText(uint32 researcherId, int32 textId)
+    {
+        if (researchers.size() >= 4) {
+            if (Creature* researcher = Creature::GetCreature(*me, researchers[researcherId]))
+                DoScriptText(textId, researcher);
+        }
+    }
+    
+    void EnterEvadeMode()
+    {
+        if (researchers.size() >= 4) {
+            for (uint8 i = 0; i < 4; i++) {
+                if (Creature* researcher = Creature::GetCreature(*me, researchers[i]))
+                    researcher->GetMotionMaster()->MoveFollow(me, PET_FOLLOW_DIST, i * (M_PI/2.0f));
+            }
+        }
+        
+        npc_escortAI::EnterEvadeMode();
+    }
+    
+    void ResearchersSetRun(bool run)
+    {
+        if (researchers.size() >= 4) {
+            for (uint8 i = 0; i < 4; i++) {
+                if (Creature* researcher = Creature::GetCreature(*me, researchers[i])) {
+                    if (run)
+                        researcher->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    else
+                        researcher->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                }
+            }
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        npc_escortAI::UpdateAI(diff);
+        
+        Player* player = Unit::GetPlayer(playerGUID);
+        if (!player) {
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            EnterEvadeMode();
+        }
+            
+        if (timer) {
+            if (timer <= diff) {
+                switch (step) {
+                case 0:
+                    DoScriptText(SAY_LETOLL_ASK_PLAYER, me, player);
+                    ResearchersSetRun(false);
+                    step++;
+                    timer = 3000;
+                    break;
+                case 1:
+                    DoScriptText(SAY_LETOLL_DIGSITE_NORTH, me);
+                    step++;
+                    timer = 3000;
+                    break;
+                case 2:
+                    SetEscortPaused(false);
+                    timer = 0;
+                    step++;
+                    break;
+                case 3:
+                    for (uint8 i = 0; i < 4; i++) {
+                        if (Creature* researcher = Creature::GetCreature(*me, researchers[i]))
+                            researcher->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_WORK);
+                    }
+                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_WORK);
+                    timer = 15000;
+                    step++;
+                    break;
+                case 4:
+                    DoScriptText(SAY_LETOLL_FOUND_SOMETHING, me);
+                    for (uint8 i = 0; i < 4; i++) {
+                        if (Creature* researcher = Creature::GetCreature(*me, researchers[i]))
+                            researcher->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
+                    }
+                    timer = 6000;
+                    step++;
+                    break;
+                case 5:
+                    DoScriptText(SAY_LETOLL_ALMOST_GOT_IT, me);
+                    timer = 6000;
+                    step++;
+                    break;
+                case 6:
+                    me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
+                    DoScriptText(SAY_LETOLL_LOOKS_LIKE_DRUM, me);
+                    timer = 6000;
+                    step++;
+                    break;
+                case 7:
+                    DoResearcherScriptText(0, SAY_LETOLL_WOW_A_DRUM);
+                    timer = 4000;
+                    step++;
+                    break;
+                case 8:
+                    DoResearcherScriptText(1, SAY_LETOLL_DISCOVERY_ROCK);
+                    timer = 5000;
+                    step++;
+                    break;
+                case 9:
+                    DoResearcherScriptText(2, SAY_LETOLL_HIVES);
+                    timer = 4000;
+                    step++;
+                    break;
+                case 10:
+                    DoScriptText(SAY_LETOLL_YE_MAD, me);
+                    timer = 10000;
+                    step++;
+                    break;
+                case 11:
+                    DoResearcherScriptText(3, SAY_LETOLL_SILITHUS);
+                    timer = 8000;
+                    step++;
+                    break;
+                case 12:
+                    DoResearcherScriptText(0, SAY_LETOLL_PLAGUE);
+                    timer = 8000;
+                    step++;
+                    break;
+                case 13:
+                    DoResearcherScriptText(1, SAY_LETOLL_ARTHAS_COUSIN);
+                    timer = 12000;
+                    step++;
+                    break;
+                case 14:
+                    DoResearcherScriptText(2, SAY_LETOLL_FIGMENT_IMAGIN);
+                    timer = 12000;
+                    step++;
+                    break;
+                case 15:
+                    DoScriptText(SAY_LETOLL_SHUT_UP, me);
+                    timer = 3000;
+                    step++;
+                    break;
+                case 16:
+                    DoScriptText(EMOTE_LETOLL_BANG, me);
+                    timer = 2000;
+                    step++;
+                    break;
+                case 17:
+                {
+                    if (Creature* sifter = me->SummonCreature(NPC_BONE_SIFTER, -3559.654785, 5442.702148, -12.548286, 1.220623, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000))
+                        sifter->AI()->AttackStart(me);
+                    
+                    timer = 500;
+                    step++;
+                    break;
+                }
+                case 18:
+                    DoScriptText(SAY_LETOLL_TOLD_YA, me);
+                    timer = 2000;
+                    step++;
+                    break;
+                case 19:
+                    DoScriptText(SAY_LETOLL_HELP_HIM, me);
+                    timer = 0;
+                    step++;
+                    break;
+                case 20:
+                    SetRun();
+                    ResearchersSetRun(true);
+                    me->GetMotionMaster()->MoveTargetedHome();
+                    timer = 0;
+                    step++;
+                    break;
+                }
+            }
+            else
+                timer -= diff;
+        }
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_chief_letoll(Creature* creature)
+{
+    return new npc_chief_letollAI(creature);
+}
+
+bool QuestAccept_npc_chief_letoll(Player* player, Creature* creature, const Quest* quest)
+{
+    if (quest->GetQuestId() == QUEST_DIGGING_THROUGH_BONES) {
+        ((npc_escortAI*)creature->AI())->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+        ((npc_chief_letollAI*)creature->AI())->StartEvent(player->GetGUID());
+    }
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -860,6 +1198,12 @@ void AddSC_terokkar_forest()
     newscript = new Script;
     newscript->Name = "npc_cenarion_sparrowhawk";
     newscript->GetAI = &GetAI_npc_cenarion_sparrowhawk;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name= "npc_chief_letoll";
+    newscript->GetAI = &GetAI_npc_chief_letoll;
+    newscript->pQuestAccept = &QuestAccept_npc_chief_letoll;
     newscript->RegisterSelf();
 }
 
