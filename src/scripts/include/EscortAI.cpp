@@ -56,6 +56,9 @@ void npc_escortAI::AttackStart(Unit *who)
 
 void npc_escortAI::MoveInLineOfSight(Unit *who)
 {
+    if (IsBeingEscorted && AssistPlayerInCombat(who))
+        return;
+
     if (IsBeingEscorted && !Attack)
         return;
 
@@ -360,4 +363,42 @@ void npc_escortAI::SetEscortPaused(bool bPaused)
         AddEscortState(STATE_ESCORT_PAUSED);
     else
         RemoveEscortState(STATE_ESCORT_PAUSED);
+}
+
+bool npc_escortAI::AssistPlayerInCombat(Unit* who)
+{
+    if (!who || !who->getVictim())
+        return false;
+
+    //experimental (unknown) flag not present
+    if (!(me->GetCreatureInfo()->type_flags & 0x001000/*CREATURE_TYPEFLAGS_AID_PLAYERS*/))
+        return false;
+
+    //not a player
+    if (!who->getVictim()->GetCharmerOrOwnerPlayerOrPlayerItself())
+        return false;
+
+    //never attack friendly
+    if (me->IsFriendlyTo(who))
+        return false;
+
+    //too far away and no free sight?
+    if (me->IsWithinDistInMap(who, 25.0f) && me->IsWithinLOSInMap(who))
+    {
+        //already fighting someone?
+        if (!me->getVictim())
+        {
+            Aggro(who);
+            AttackStart(who);
+            return true;
+        }
+        else
+        {
+            who->SetInCombatWith(me);
+            me->AddThreat(who, 0.0f);
+            return true;
+        }
+    }
+
+    return false;
 }
