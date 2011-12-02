@@ -86,6 +86,8 @@ struct npc_escortAI : public ScriptedAI
         bool GetAttack() { return Attack; }//used in EnterEvadeMode override
         
         Player* GetPlayerForEscort() { return Unit::GetPlayer(PlayerGUID); }
+        
+        bool AssistPlayerInCombat(Unit* who);
 
     // EscortAI variables
     protected:
