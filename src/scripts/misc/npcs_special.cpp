@@ -38,6 +38,7 @@ npc_explosive_sheep
 npc_pet_bomb
 npc_metzen
 npc_clockwork_rocket_bot
+npc_halaa_bomb_target
 EndContentData */
 
 #include "precompiled.h"
@@ -1423,6 +1424,57 @@ CreatureAI* GetAI_npc_clockwork_rocket_bot(Creature* creature)
     return new npc_clockwork_rocket_botAI(creature);
 }
 
+/*######
+## npc_halaa_bomb_target
+######*/
+
+struct npc_halaa_bomb_targetAI : public Scripted_NoMovementAI
+{
+    npc_halaa_bomb_targetAI(Creature* c) : Scripted_NoMovementAI(c) {}
+    
+    uint32 despawnTimer;
+    
+    void Reset()
+    {
+        despawnTimer = 300000; // 5 min
+        DoCast(me, 31963, true);
+        HandleAOE();
+    }
+    
+    void HandleAOE()
+    {
+        std::list<WorldObject*> targets;
+        float dist = 10.0f;
+        Trinity::AllWorldObjectsInRange u_check(me, dist);
+        Trinity::WorldObjectListSearcher<Trinity::AllWorldObjectsInRange> searcher(targets, u_check);
+        me->VisitNearbyObject(dist, searcher);
+
+        for (std::list<WorldObject*>::const_iterator itr = targets.begin(); itr != targets.end(); itr++) {
+            if ((*itr)->ToPlayer())
+                ((Unit*)(*itr))->CastSpell((Unit*)(*itr), 31961, true);
+            else if ((*itr)->ToCreature())
+                ((Unit*)(*itr))->AddAura(31961, (Unit*)(*itr));
+        }
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (despawnTimer <= diff) {
+            me->DisappearAndDie();
+            despawnTimer = 999999;
+        }
+        else
+            despawnTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_halaa_bomb_target(Creature* creature)
+{
+    return new npc_halaa_bomb_targetAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1536,6 +1588,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_clockwork_rocket_bot";
     newscript->GetAI = &GetAI_npc_clockwork_rocket_bot;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_halaa_bomb_target";
+    newscript->GetAI = &GetAI_npc_halaa_bomb_target;
     newscript->RegisterSelf();
 }
 
