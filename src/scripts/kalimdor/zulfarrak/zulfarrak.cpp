@@ -25,6 +25,7 @@ EndScriptData */
 npc_sergeant_bly
 npc_weegli_blastfuse
 at_zumrah
+at_antusul
 EndContentData */
 
 #include "precompiled.h"
@@ -218,6 +219,20 @@ bool AreaTrigger_at_zumrah(Player *pPlayer, AreaTriggerEntry const *pAt)
     return true;
 }
 
+/*######
+## at_antusul
+######*/
+
+bool AreaTrigger_at_antusul(Player* player, const AreaTriggerEntry* at)
+{
+    if (Creature* antusul = player->FindCreatureInGrid(8127, 70.0f, true)) {
+        antusul->AI()->Aggro(player);
+        antusul->AI()->AttackStart(player);
+    }
+        
+    return true;
+}
+
 void AddSC_zulfarrak()
 {
     Script *newscript;
@@ -239,6 +254,11 @@ void AddSC_zulfarrak()
     newscript = new Script;
     newscript->Name = "at_zumrah";
     newscript->pAreaTrigger = &AreaTrigger_at_zumrah;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_antusul";
+    newscript->pAreaTrigger = &AreaTrigger_at_antusul;
     newscript->RegisterSelf();
 }
 
