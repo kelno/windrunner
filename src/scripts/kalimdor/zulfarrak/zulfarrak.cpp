@@ -26,6 +26,7 @@ npc_sergeant_bly
 npc_weegli_blastfuse
 at_zumrah
 at_antusul
+go_shallow_grave
 EndContentData */
 
 #include "precompiled.h"
@@ -233,6 +234,30 @@ bool AreaTrigger_at_antusul(Player* player, const AreaTriggerEntry* at)
     return true;
 }
 
+/*######
+## go_shallow_grave
+######*/
+
+enum {
+    ZOMBIE = 7286,
+    DEAD_HERO = 7276,
+    ZOMBIE_CHANCE = 65,
+    DEAD_HERO_CHANCE = 10
+};
+
+bool GOHello_go_shallow_grave(Player* pPlayer, GameObject* pGo)
+{
+    if (pGo->GetUseCount() == 0) {
+        uint32 randomchance = urand(0,100);
+        if (randomchance < ZOMBIE_CHANCE)
+            pGo->SummonCreature(ZOMBIE, pGo->GetPositionX(), pGo->GetPositionY(), pGo->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+        else if ((randomchance-ZOMBIE_CHANCE) < DEAD_HERO_CHANCE)
+            pGo->SummonCreature(DEAD_HERO, pGo->GetPositionX(), pGo->GetPositionY(), pGo->GetPositionZ(), 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
+    }
+    pGo->AddUse();
+    return false;
+}
+
 void AddSC_zulfarrak()
 {
     Script *newscript;
@@ -259,6 +284,11 @@ void AddSC_zulfarrak()
     newscript = new Script;
     newscript->Name = "at_antusul";
     newscript->pAreaTrigger = &AreaTrigger_at_antusul;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_shallow_grave";
+    newscript->pGOHello = &GOHello_go_shallow_grave;
     newscript->RegisterSelf();
 }
 
