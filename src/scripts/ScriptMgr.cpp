@@ -652,6 +652,7 @@ extern void AddSC_zangarmarsh();
 
 //Zul'Farrak
 extern void AddSC_zulfarrak();
+extern void AddSC_instance_zulfarrak();
 
 //Zul'Gurub
 extern void AddSC_boss_jeklik();
@@ -2029,6 +2030,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     //Zul'Farrak
     AddSC_zulfarrak();
+    AddSC_instance_zulfarrak();
 
     //Zul'Gurub
     AddSC_boss_jeklik();

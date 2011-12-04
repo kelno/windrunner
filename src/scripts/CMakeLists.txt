@@ -285,6 +285,8 @@ SET(scripts_STAT_SRCS
     kalimdor/wailing_caverns/wailing_caverns.cpp
     kalimdor/wailing_caverns/def_wailing_caverns.h
     kalimdor/winterspring.cpp
+    kalimdor/zulfarrak/def_zulfarrak.h
+    kalimdor/zulfarrak/instance_zulfarrak.cpp
     kalimdor/zulfarrak/zulfarrak.cpp
     misc/GuardAI.cpp
     misc/GuardAI.h
