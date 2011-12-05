@@ -35,6 +35,7 @@ npc_trigger_quest10950
 npc_scout_neftis
 npc_cenarion_sparrowhawk
 npc_chief_letoll
+npc_skyguard_prisoner
 EndContentData */
 
 #include "precompiled.h"
@@ -1117,6 +1118,85 @@ bool QuestAccept_npc_chief_letoll(Player* player, Creature* creature, const Ques
 }
 
 /*######
+## npc_skyguard_prisoner
+######*/
+
+enum SkyguardPrisonerData {
+    QUEST_ESCAPE_FROM_SKETTIS       = 11085,
+    
+    GO_SKYGUARD_CAGE                = 185952,
+    
+    SAY_SKYGUARD_PRISONER_START     = -1000825,
+    SAY_SKYGUARD_PRISONER_CONTINUE  = -1000826,
+    SAY_SKYGUARD_PRISONER_THANKS    = -1000827,
+    
+    NPC_SKETTIS_WING_GUARD          = 21644
+};
+
+struct npc_skyguard_prisonerAI : npc_escortAI
+{
+    npc_skyguard_prisonerAI(Creature* c) : npc_escortAI(c) {}
+    
+    void Reset() {}
+    
+    void Aggro(Unit* who) {}
+    
+    void KilledUnit(Unit* victim)
+    {
+        if (rand()%2)
+            DoScriptText(SAY_SKYGUARD_PRISONER_CONTINUE, me);
+    }
+    
+    void WaypointReached(uint32 id)
+    {
+        Player* player = GetPlayerForEscort();
+        if (!player)
+            return;
+            
+        switch (id) {
+        case 11:
+            if (Creature* add = me->SummonCreature(NPC_SKETTIS_WING_GUARD, -4182.494141, 3079.858643, 329.511017, 4.607359, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000))
+                add->AI()->AttackStart(me);
+            if (Creature* add = me->SummonCreature(NPC_SKETTIS_WING_GUARD, -4179.783691, 3079.299072, 329.644470, 4.384305, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000))
+                add->AI()->AttackStart(me);
+            break;
+        case 14:
+            DoScriptText(SAY_SKYGUARD_PRISONER_THANKS, me);
+            if (player->GetGroup())
+                player->GroupEventHappens(QUEST_ESCAPE_FROM_SKETTIS, me);
+            else
+                player->AreaExploredOrEventHappens(QUEST_ESCAPE_FROM_SKETTIS);
+            SetRun();
+            break;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        npc_escortAI::UpdateAI(diff);
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_skyguard_prisoner(Creature* creature)
+{
+    return new npc_skyguard_prisonerAI(creature);
+}
+
+bool QuestAccept_npc_skyguard_prisoner(Player* player, Creature* creature, const Quest* quest)
+{
+    if (quest->GetQuestId() == QUEST_ESCAPE_FROM_SKETTIS) {
+        if (GameObject* cage = creature->FindGOInGrid(GO_SKYGUARD_CAGE, 5.0f))
+            cage->UseDoorOrButton(30);
+        DoScriptText(SAY_SKYGUARD_PRISONER_START, creature);
+        ((npc_escortAI*)creature->AI())->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+    }
+
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1204,6 +1284,12 @@ void AddSC_terokkar_forest()
     newscript->Name= "npc_chief_letoll";
     newscript->GetAI = &GetAI_npc_chief_letoll;
     newscript->pQuestAccept = &QuestAccept_npc_chief_letoll;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_skyguard_prisoner";
+    newscript->GetAI = &GetAI_npc_skyguard_prisoner;
+    newscript->pQuestAccept = &QuestAccept_npc_skyguard_prisoner;
     newscript->RegisterSelf();
 }
 
