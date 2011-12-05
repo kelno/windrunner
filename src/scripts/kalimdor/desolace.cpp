@@ -157,26 +157,33 @@ CreatureAI* GetAI_npc_aged_dying_ancient_kodo(Creature* pCreature)
 }
 
 /*######
-## npc_dalinda_malem. Quest 1440
+## npc_dalinda_malem.
 ######*/
 
 #define QUEST_RETURN_TO_VAHLARRIEL     1440
 
 struct npc_dalindaAI : public npc_escortAI
 {
-    npc_dalindaAI(Creature* pCreature) : npc_escortAI(pCreature) { }   
+    npc_dalindaAI(Creature* pCreature) : npc_escortAI(pCreature)
+    {
+        completed = false;
+    }   
         
+    bool completed;    
+    
     void WaypointReached(uint32 i)
     {
-        Player* pPlayer = GetPlayerForEscort();
+        Player* player = GetPlayerForEscort();
         switch (i)
         {
             case 1:
-                me->IsStandState();
+                me->SetStandState(UNIT_STAND_STATE_STAND);
                 break;            
             case 15:                
-                if (pPlayer)
-                pPlayer->GroupEventHappens(QUEST_RETURN_TO_VAHLARRIEL, me);
+                if (player)
+                    player->GroupEventHappens(QUEST_RETURN_TO_VAHLARRIEL, me);
+                    
+                completed = true;
                 break;            
         }
     }
@@ -187,34 +194,41 @@ struct npc_dalindaAI : public npc_escortAI
 
     void JustDied(Unit* /*pKiller*/)
     {
-        Player* pPlayer = GetPlayerForEscort();
-        if (pPlayer)
-            pPlayer->FailQuest(QUEST_RETURN_TO_VAHLARRIEL);
+        if (completed)
+            return;
+
+        Player* player = GetPlayerForEscort();
+        if (player)
+            player->FailQuest(QUEST_RETURN_TO_VAHLARRIEL);
+
         return;
     }
 
     void UpdateAI(const uint32 uiDiff)
     {        
         npc_escortAI::UpdateAI(uiDiff);
+
         if (!UpdateVictim())
             return;
+
         DoMeleeAttackIfReady();
     }
 };
 
-CreatureAI* GetAI_npc_dalinda(Creature* pCreature)
+CreatureAI* GetAI_npc_dalinda(Creature* creature)
 {
-    return new npc_dalindaAI(pCreature);
+    return new npc_dalindaAI(creature);
 }
 
-bool QuestAccept_npc_dalinda(Player* pPlayer, Creature* pCreature, Quest const* quest)
+bool QuestAccept_npc_dalinda(Player* player, Creature* creature, Quest const* quest)
 {
     if (quest->GetQuestId() == QUEST_RETURN_TO_VAHLARRIEL)
    {        
-        if (npc_escortAI* pEscortAI = CAST_AI(npc_dalindaAI, pCreature->AI()))
+        if (npc_escortAI* pEscortAI = CAST_AI(npc_dalindaAI, creature->AI()))
         {
-            pEscortAI->Start(true, false, pPlayer->GetGUID());
-            pCreature->setFaction(113);
+            pEscortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+            creature->setFaction(113);
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
     }
     return true;
