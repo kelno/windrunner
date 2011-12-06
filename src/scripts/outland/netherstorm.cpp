@@ -808,7 +808,7 @@ struct mob_phase_hunterAI : public ScriptedAI
         Materialize = false;
         Drained = false;
 
-        WeakPercent = 25 + (rand()%16); // 25-40
+        WeakPercent = 20;
         PlayerGUID = 0;
         ManaBurnTimer = 5000 + (rand()%3 * 1000); // 5-8 sec cd
     }
