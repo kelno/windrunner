@@ -33,6 +33,8 @@
 #define DATA_IMAGE_OF_MEDIVH            26
 #define DATA_MASTERS_TERRACE_DOOR_1     27
 #define DATA_MASTERS_TERRACE_DOOR_2     28
+#define DATA_CHESS_ECHO_OF_MEDIVH       29
+#define CHESS_EVENT_TEAM                30
 
 // Opera Performances
 #define EVENT_OZ        1

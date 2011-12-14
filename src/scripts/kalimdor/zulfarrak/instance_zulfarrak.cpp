@@ -316,12 +316,14 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
         //pop a add from list, send him up the stairs...
         for (uint32 addCount = 0; addCount<count && !addsAtBase.empty(); addCount++) {
             Creature* add = instance->GetCreature(*addsAtBase.begin());
-            add->GetMotionMaster()->MovePoint(1,1887.786865, 1228.898560, 10.198944);
-            add->GetMotionMaster()->MovePoint(2,1887.199341, 1231.333862, 11.570065);
-            add->GetMotionMaster()->MovePoint(3,1887.309570, 1243.335449, 22.842709);
-            add->GetMotionMaster()->MovePoint(4,1887.265259, 1252.211182, 31.544107);
-            add->GetMotionMaster()->MovePoint(5,1887.163208, 1261.078857, 40.592354);
-            movedadds.push_back(add->GetGUID());
+            if (add) {
+                add->GetMotionMaster()->MovePoint(1,1887.786865, 1228.898560, 10.198944);
+                add->GetMotionMaster()->MovePoint(2,1887.199341, 1231.333862, 11.570065);
+                add->GetMotionMaster()->MovePoint(3,1887.309570, 1243.335449, 22.842709);
+                add->GetMotionMaster()->MovePoint(4,1887.265259, 1252.211182, 31.544107);
+                add->GetMotionMaster()->MovePoint(5,1887.163208, 1261.078857, 40.592354);
+                movedadds.push_back(add->GetGUID());
+            }
             addsAtBase.erase(addsAtBase.begin());
         }
     }
