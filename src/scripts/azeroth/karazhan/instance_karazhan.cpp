@@ -49,6 +49,7 @@ struct instance_karazhan : public ScriptedInstance
 
     uint32 OperaEvent;
     uint32 OzDeathCount;
+    uint32 ChessTeam;
 
     uint64 CurtainGUID;
     uint64 StageDoorLeftGUID;
@@ -88,6 +89,7 @@ struct instance_karazhan : public ScriptedInstance
         MastersTerraceDoor[0]= 0;
         MastersTerraceDoor[1]= 0;
         ImageGUID = 0;
+        ChessTeam = 0;
     }
 
     bool IsEncounterInProgress() const
@@ -117,7 +119,7 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_NIGHTBANE_EVENT:        return Encounters[11];
             case DATA_OPERA_PERFORMANCE:      return OperaEvent;
             case DATA_OPERA_OZ_DEATHCOUNT:    return OzDeathCount;
-            case DATA_IMAGE_OF_MEDIVH:             return ImageGUID;
+            case CHESS_EVENT_TEAM:            return ChessTeam;
         }
 
         return 0;
@@ -130,6 +132,7 @@ struct instance_karazhan : public ScriptedInstance
             case 17229:   KilrekGUID = creature->GetGUID();      break;
             case 15688:   TerestianGUID = creature->GetGUID();   break;
             case 15687:   MoroesGUID = creature->GetGUID();      break;
+            case 16816:   ImageGUID = creature->GetGUID();       break;
         }
     }
 
@@ -150,6 +153,7 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_GAMEOBJECT_NETHER_DOOR:      return NetherspaceDoor;
             case DATA_MASTERS_TERRACE_DOOR_1:      return MastersTerraceDoor[0];
             case DATA_MASTERS_TERRACE_DOOR_2:      return MastersTerraceDoor[1];
+            case DATA_IMAGE_OF_MEDIVH:             return ImageGUID;
         }
 
         return 0;
@@ -172,7 +176,13 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_SHADEOFARAN_EVENT:       Encounters[6]  = data; break;
             case DATA_TERESTIAN_EVENT:         Encounters[7]  = data; break;
             case DATA_NETHERSPITE_EVENT:       Encounters[8]  = data; break;
-            case DATA_CHESS_EVENT:             Encounters[9]  = data; break;
+            case DATA_CHESS_EVENT: 
+                Encounters[9]  = data;
+                if (data == FAIL || data == DONE)
+                    RemoveAuraOnAllPlayers(39331);
+                else if (data == IN_PROGRESS)
+                    CastOnAllPlayers(39331);
+                break;
             case DATA_MALCHEZZAR_EVENT:        Encounters[10] = data; break;
             case DATA_NIGHTBANE_EVENT:
                 if (Encounters[11] == DONE)
@@ -180,9 +190,10 @@ struct instance_karazhan : public ScriptedInstance
                 Encounters[11] = data;
                 break;
             case DATA_OPERA_OZ_DEATHCOUNT:     ++OzDeathCount;        break;
+            case CHESS_EVENT_TEAM:             ChessTeam = data;      break;
         }
 
-        if(data == DONE)
+        if (data == DONE)
             SaveToDB();
     }
 

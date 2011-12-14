@@ -79,6 +79,7 @@ SET(scripts_STAT_SRCS
     azeroth/karazhan/boss_shade_of_aran.cpp
     azeroth/karazhan/boss_terestian_illhoof.cpp
     azeroth/karazhan/bosses_opera.cpp
+    azeroth/karazhan/chess_event.cpp
     azeroth/karazhan/def_karazhan.h
     azeroth/karazhan/instance_karazhan.cpp
     azeroth/karazhan/karazhan.cpp
