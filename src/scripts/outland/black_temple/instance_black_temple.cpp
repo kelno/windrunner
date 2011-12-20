@@ -287,10 +287,12 @@ struct instance_black_temple : public ScriptedInstance
             if(data == DONE)
             {
                 HandleGameObject(GuurtogDoor, true);
+                if (m_auiEncounter[5] == DONE)
+                    HandleGameObject(TempleDoor, true);
             }
             m_auiEncounter[4] = data; break;
         case DATA_RELIQUARYOFSOULSEVENT:
-            if(data == DONE)
+            if(data == DONE && m_auiEncounter[4] == DONE) // RoS and Gurtogg required for this to open
             {
                 HandleGameObject(TempleDoor, true);
             }
