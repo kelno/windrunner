@@ -633,57 +633,62 @@ CreatureAI* GetAI_npc_anchorite_relic(Creature* pCreature)
 /*######
 ## npc_living_flare
 ######*/
-
-enum eFelSpark
+enum
 {
-    NPC_FEL_SPARK           = 22323,
-    NPC_UNST_LIVING_FLARE   = 24958,
-    
-    QUEST_BLAST_GATEWAY     = 11516,
-    
-    SPELL_FEL_FLAREUP       = 44944
+    SPELL_COSMETIC             = 44880,
+    SPELL_UNSTABLE_COSMETIC    = 46196,
+    SPELL_ABSORBED             = 44944,
+    NPC_FEL_SPARK              = 22323,
+    NPC_TRIGGER                = 24959,
+    GO_FIRE                    = 185319
 };
 
 struct npc_living_flareAI : public ScriptedAI
 {
-    npc_living_flareAI(Creature* c) : ScriptedAI(c) {}
-    
-    uint32 checkTimer;
-    uint8 sparkCount;
-    
+    npc_living_flareAI(Creature* pCreature) : ScriptedAI(pCreature) {}
+    uint32 uiCheckTimer;
+    uint64 uiSparkGUID;
+    uint32 Count;
+
     void Reset()
     {
-        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
-        
-        checkTimer = 5000;
-        sparkCount = 0;
+        DoCast(me, SPELL_COSMETIC);
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        uiCheckTimer = 8000;
+        uiSparkGUID = 0;
+        Count = 0;
     }
-    
-    void Aggro(Unit* pWho) {}
-    
-    void UpdateAI(const uint32 diff)
+
+    void AttackedBy(Unit* pWho) {}
+    void AttackStart(Unit* pWho) {}
+    void Aggro(Unit* who) {}
+
+    void UpdateAI(const uint32 uiDiff)
     {
-        if (checkTimer <= diff)
+        if (uiCheckTimer <= uiDiff)
         {
-            Creature* felSpark = m_creature->FindCreatureInGrid(NPC_FEL_SPARK, 5.0f, false);
-            if (felSpark)
+            if (Creature* pSpark = me->FindNearestCreature(NPC_FEL_SPARK, 10.0f, false))
             {
-                sparkCount++;
-                felSpark->RemoveCorpse();
-                DoCast(m_creature, SPELL_FEL_FLAREUP);
-                
-                if (sparkCount >= 8) //spawn unstable flare, complete quest, despawn all
+                if (pSpark->GetGUID() != uiSparkGUID && CAST_PLR(me->GetOwner())->GetQuestStatus(11516) == QUEST_STATUS_INCOMPLETE)
                 {
-                    if (Player* player = CAST_PLR(m_creature->GetOwner()))
-                        player->CompleteQuest(QUEST_BLAST_GATEWAY);
-                    m_creature->SummonCreature(NPC_UNST_LIVING_FLARE, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ(), m_creature->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN, 8000);
-                    m_creature->Kill(m_creature);
-                    m_creature->RemoveCorpse();
+                    if (Count <= 7)
+                    {
+                        ++Count;
+                        DoCast(me, SPELL_ABSORBED);
+                        uiSparkGUID = pSpark->GetGUID();
+                    }
+                    else DoCast(me, SPELL_UNSTABLE_COSMETIC);
                 }
             }
-            
-            checkTimer = 5000;
-        } else checkTimer -= diff;
+
+            if (Creature* pTrigger = me->FindNearestCreature(NPC_TRIGGER, 8.0f, true))
+            {
+                pTrigger->SummonGameObject(GO_FIRE, pTrigger->GetPositionX(), pTrigger->GetPositionY(), pTrigger->GetPositionZ(), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 60);
+                CAST_PLR(me->GetOwner())->AreaExploredOrEventHappens(11516);
+                me->setDeathState(CORPSE);
+            }
+        }
+        else uiCheckTimer -= uiDiff;
     }
 };
 
@@ -848,7 +853,7 @@ void AddSC_hellfire_peninsula()
     newscript->RegisterSelf();
     
     newscript = new Script;
-    newscript->Name="npc_living_flare";
+    newscript->Name = "npc_living_flare";
     newscript->GetAI = &GetAI_npc_living_flare;
     newscript->RegisterSelf();
     
