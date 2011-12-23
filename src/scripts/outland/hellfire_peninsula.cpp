@@ -36,6 +36,8 @@ npc_anchorite_barada
 npc_pathaleon_image
 npc_demoniac_scryer
 npc_magic_sucker_device_spawner
+npc_sedai_quest_credit_marker
+npc_vindicator_sedai
 EndContentData */
 
 #include "precompiled.h"
@@ -1100,6 +1102,254 @@ CreatureAI* GetAI_npc_magic_sucker_device_spawner(Creature* pCreature)
 }
 
 /*######
+## npc_sedai_quest_credit_marker
+######*/
+
+enum
+{
+    NPC_ESCORT1    = 17417,
+    NPC_SEDAI      = 17404
+};
+
+struct npc_sedai_quest_credit_markerAI : public ScriptedAI
+{
+    npc_sedai_quest_credit_markerAI(Creature* pCreature) : ScriptedAI(pCreature) {}
+
+    void Reset() 
+    {
+        DoSpawn();
+    }
+
+    void Aggro(Unit* who) {}
+
+    void DoSpawn()
+    {
+        me->SummonCreature(NPC_SEDAI, 225.908, 4124.034, 82.505, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 100000);
+        me->SummonCreature(NPC_ESCORT1, 229.257, 4125.271, 83.388, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 40000);
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (pSummoned->GetEntry() == NPC_ESCORT1)
+        {
+            pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            pSummoned->GetMotionMaster()->MovePoint(0, 208.029f, 4134.618f, 77.763f);
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_sedai_quest_credit_marker(Creature* pCreature)
+{
+    return new npc_sedai_quest_credit_markerAI(pCreature);
+}
+
+/*######
+## npc_vindicator_sedai
+######*/
+
+#define SAY_MAG_ESSCORT    -1900125
+#define SAY_SEDAI1         -1900126
+#define SAY_SEDAI2         -1900127
+#define SAY_KRUN           -1900128
+
+enum
+{
+    NPC_ESCORT        = 17417,
+    NPC_AMBUSHER      = 17418,
+    NPC_KRUN          = 17405,
+    SPELL_STUN        = 13005,
+    SPELL_HOLYFIRE    = 17141
+};
+
+struct npc_vindicator_sedaiAI : public ScriptedAI
+{
+    npc_vindicator_sedaiAI(Creature* pCreature) : ScriptedAI(pCreature) {}
+
+    bool Vision;
+
+    uint32 uiStepsTimer;
+    uint32 uiSteps;
+
+    void Reset()
+    {
+        Vision = true;
+        uiStepsTimer =0;
+        uiSteps = 0;
+    }
+    
+    void Aggro(Unit* who) {}
+
+    void DoSpawnEscort()
+    {
+        me->SummonCreature(NPC_ESCORT, 227.188f, 4121.116f, 82.745f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 40000);
+    }
+
+    void DoSpawnAmbusher()
+    {
+        me->SummonCreature(NPC_AMBUSHER, 223.408f, 4120.086f, 81.843f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 30000);
+    }
+
+    void DoSpawnKrun()
+    {
+        me->SummonCreature(NPC_KRUN, 192.872f, 4129.417f, 73.655f, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 6000);
+    }
+
+    void JustSummoned(Creature* pSummoned)
+    {
+        if (pSummoned->GetEntry() == NPC_ESCORT)
+        {
+            pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            pSummoned->GetMotionMaster()->MovePoint(0, 205.660f, 4130.663f, 77.175f);
+        }
+
+        if (pSummoned->GetEntry() == NPC_AMBUSHER)
+        {
+            Creature* pEscort = pSummoned->FindNearestCreature(NPC_ESCORT, 15);
+            pSummoned->AI()->AttackStart(pEscort);
+        }
+        else
+        {
+            if (pSummoned->GetEntry() == NPC_KRUN)
+            {
+                pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+                pSummoned->GetMotionMaster()->MovePoint(0, 194.739868f, 4143.145996f, 73.798088f);
+                DoScriptText(SAY_KRUN, pSummoned,0);
+                pSummoned->AI()->AttackStart(me);
+            }
+        }
+    }
+
+    void MoveInLineOfSight(Unit *who)
+    {
+        if (who->GetTypeId() == TYPEID_PLAYER)
+        {
+            if (CAST_PLR(who)->GetQuestStatus(9545) == QUEST_STATUS_INCOMPLETE)
+            {
+                if (Creature * pCr = me->FindNearestCreature(17413, 6.0f))
+                {
+                    float Radius = 10.0;
+                    if (me->IsWithinDistInMap(who, Radius))
+                    {
+                        CAST_PLR(who)->KilledMonster(17413, pCr->GetGUID());
+                    }
+                }
+                else return;
+            }
+        }
+    }
+
+    uint32 NextStep(uint32 uiSteps)
+    {
+        Creature* pEsc = me->FindNearestCreature(NPC_ESCORT, 20);
+        Creature* pAmb = me->FindNearestCreature(NPC_AMBUSHER, 35);
+        Creature* pKrun = me->FindNearestCreature(NPC_KRUN, 20);
+
+        switch(uiSteps)
+        {
+            case 1:
+                DoSpawnEscort();
+            case 2:
+                me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            case 3:
+                me->GetMotionMaster()->MovePoint(0, 204.877f, 4133.172f, 76.897f);
+                return 2900;
+            case 4:
+                DoScriptText(SAY_MAG_ESSCORT, pEsc,0);
+                return 1000;
+            case 5:
+                if (pEsc)
+                    pEsc->GetMotionMaster()->MovePoint(0, 229.257f, 4125.271f, 83.388f);
+                return 1500;
+            case 6:
+                if (pEsc)
+                    pEsc->GetMotionMaster()->MovePoint(0, 227.188f, 4121.116f, 82.745f);
+                return 1000;
+            case 7:
+                DoScriptText(SAY_SEDAI1, me,0);
+                return 1000;
+            case 8:
+                DoSpawnAmbusher();
+                return 3000;
+            case 9:
+                DoSpawnAmbusher();
+                return 1000;
+            case 10:
+                if (pAmb)
+                    me->AI()->AttackStart(pAmb);
+                return 2000;
+            case 11:
+                if (pAmb)
+                    me->CastSpell(pAmb, SPELL_STUN , false);
+                return 2000;
+            case 12:
+                if (pAmb)
+                    pAmb->DealDamage(pAmb, pAmb->GetHealth(), 0, DIRECT_DAMAGE);
+                return 1500;
+            case 13:
+                if (pEsc)
+                    pEsc->DealDamage(pEsc, pEsc->GetHealth(), 0, DIRECT_DAMAGE);
+            case 14:
+                me->AI()->AttackStart(pAmb);
+            case 15:
+                if (pEsc && pAmb)
+                    pEsc->AI()->AttackStart(pAmb);
+                return 1000;
+            case 16:
+                if (pAmb)
+                    me->CastSpell(pAmb, SPELL_HOLYFIRE , false);
+                return 6000;
+            case 17:
+                if (pAmb)
+                    pAmb->DealDamage(pAmb, pAmb->GetHealth(), 0, DIRECT_DAMAGE);
+                return 1000;
+            case 18:
+                if (pEsc)
+                    pEsc->GetMotionMaster()->MovePoint(0, 235.063f, 4117.826f, 84.471f);
+                return 1000;
+            case 19:
+                me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+                me->GetMotionMaster()->MovePoint(0, 199.706f, 4134.302f, 75.404f);
+                return 6000;       
+            case 20:
+                me->GetMotionMaster()->MovePoint(0, 193.524f, 4147.451f, 73.605f);
+                return 7000;              
+            case 21:
+                me->SetStandState(UNIT_STAND_STATE_KNEEL);
+                DoScriptText(SAY_SEDAI2, me,0);
+                return 5000;
+            case 22:
+                DoSpawnKrun();
+                return 1000;
+            case 23:
+                if (pKrun)
+                    me->CastSpell(pKrun, SPELL_HOLYFIRE, false);
+                return 3000;
+            case 24:
+                me->DealDamage(me, me->GetHealth(), 0, DIRECT_DAMAGE);
+            default:
+                return 0;
+        }
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {
+        if (uiStepsTimer <= uiDiff)
+        {
+            if (Vision)
+                uiStepsTimer = NextStep(++uiSteps);
+        }
+        else uiStepsTimer -= uiDiff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_vindicator_sedai(Creature* pCreature)
+{
+    return new npc_vindicator_sedaiAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1193,5 +1443,15 @@ void AddSC_hellfire_peninsula()
     newscript = new Script;
     newscript->Name = "npc_magic_sucker_device_spawner";
     newscript->GetAI = &GetAI_npc_magic_sucker_device_spawner;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sedai_quest_credit_marker";
+    newscript->GetAI = &GetAI_npc_sedai_quest_credit_marker;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_vindicator_sedai";
+    newscript->GetAI = &GetAI_npc_vindicator_sedai;
     newscript->RegisterSelf();
 }
