@@ -98,6 +98,9 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         Firenova = false;
         addYell = false;
         SummonChannelers();
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        if (pInstance)
+            pInstance->SetData(DATA_KELIDANEVENT, NOT_STARTED);
     }
 
     void Aggro(Unit *who)
@@ -106,6 +109,8 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         if (m_creature->IsNonMeleeSpellCasted(false))
             m_creature->InterruptNonMeleeSpells(true);
         DoStartMovement(who);
+        if (pInstance)
+            pInstance->SetData(DATA_KELIDANEVENT, IN_PROGRESS);
     }
 
     void KilledUnit(Unit* victim)
@@ -113,16 +118,12 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         if (rand()%2)
             return;
 
-        switch(rand()%2)
-        {
-            case 0: DoScriptText(SAY_KILL_1, m_creature); break;
-            case 1: DoScriptText(SAY_KILL_2, m_creature); break;
-        }
+        DoScriptText(RAND(SAY_KILL_1, SAY_KILL_2), me);
     }
 
     void ChannelerEngaged(Unit* who)
     {
-        if(who && !addYell)
+        if (who && !addYell)
         {
             addYell = true;
             switch(rand()%3)
@@ -149,8 +150,11 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
                 return;
         }
 
-        if(killer)
-            m_creature->AI()->AttackStart(killer);
+        if (killer)
+        {
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->AI()->AttackStart(killer);
+        }
     }
 
     uint64 GetChanneled(Creature *channeler1)
@@ -184,8 +188,8 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
     void JustDied(Unit* Killer)
     {
         DoScriptText(SAY_DIE, m_creature);
-       if(pInstance)
-           pInstance->SetData(DATA_KELIDANEVENT, DONE);
+        if(pInstance)
+            pInstance->SetData(DATA_KELIDANEVENT, DONE);
     }
 
     void UpdateAI(const uint32 diff)
