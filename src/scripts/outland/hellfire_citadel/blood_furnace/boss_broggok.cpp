@@ -193,11 +193,6 @@ struct mob_nascent_orcAI : public ScriptedAI
         Reset();
     }
 
-    void JustDied(Unit* Killer)
-    {
-        me->ForcedDespawn();
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
