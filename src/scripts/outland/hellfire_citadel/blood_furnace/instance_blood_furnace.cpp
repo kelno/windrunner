@@ -115,12 +115,28 @@ struct instance_blood_furnace : public ScriptedInstance
     {
         switch(pGo->GetEntry())
         {
-            case ENTRY_SEWER1: Sewer1GUID = pGo->GetGUID(); break;
-            case ENTRY_SEWER2: Sewer2GUID = pGo->GetGUID(); break;
+            case ENTRY_SEWER1:
+                Sewer1GUID = pGo->GetGUID();
+                if (Encounter[2] == DONE)
+                    HandleGameObject(Sewer1GUID, true);
+                break;
+            case ENTRY_SEWER2:
+                Sewer2GUID = pGo->GetGUID();
+                if (Encounter[2] == DONE)
+                    HandleGameObject(Sewer2GUID, true);
+                break;
             case ENTRY_MAKER1: Maker1GUID = pGo->GetGUID(); break;
-            case ENTRY_MAKER2: Maker2GUID = pGo->GetGUID(); break;
+            case ENTRY_MAKER2:
+                Maker2GUID = pGo->GetGUID();
+                if (Encounter[0] == DONE)
+                    HandleGameObject(Maker2GUID, true);
+                break;
             case ENTRY_BROG1: Brog1GUID = pGo->GetGUID(); break;
-            case ENTRY_BROG2: Brog2GUID = pGo->GetGUID(); break;
+            case ENTRY_BROG2:
+                Brog2GUID = pGo->GetGUID();
+                if (Encounter[1] == DONE)
+                    HandleGameObject(Brog2GUID, true);
+                break;
             case ENTRY_CELL_LEVER: LeverGUID = pGo->GetGUID(); break;
             case ENTRY_CELL_DOOR1: BroggokEvent[0].CellGuid = pGo->GetGUID(); return;
             case ENTRY_CELL_DOOR2: BroggokEvent[1].CellGuid = pGo->GetGUID(); return;
