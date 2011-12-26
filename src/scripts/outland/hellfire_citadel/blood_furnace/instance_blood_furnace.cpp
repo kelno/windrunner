@@ -175,8 +175,9 @@ struct instance_blood_furnace : public ScriptedInstance
                 if (data == DONE)
                 {
                     HandleGameObject(Maker2GUID, true);
+                    DoFixNascentOrcsFlags();
                 }
-                if (Encounter[0] != DONE)
+                //if (Encounter[0] != DONE)
                     Encounter[0] = data;
                 break;
             case DATA_BROGGOKEVENT:
@@ -232,7 +233,7 @@ struct instance_blood_furnace : public ScriptedInstance
                 {
                     HandleGameObject(Brog2GUID, true);
                 }
-                if (Encounter[1] != DONE)
+                //if (Encounter[1] != DONE)
                     Encounter[1] = data;
                 break;
             case DATA_KELIDANEVENT:
@@ -241,7 +242,7 @@ struct instance_blood_furnace : public ScriptedInstance
                     HandleGameObject(Sewer1GUID, true);
                     HandleGameObject(Sewer2GUID, true);
                 }
-                if (Encounter[2] != DONE)
+                //if (Encounter[2] != DONE)
                     Encounter[2] = data;
                 break;
         }
@@ -408,10 +409,34 @@ struct instance_blood_furnace : public ScriptedInstance
                         {
                             BroggokEvent[i].SortedOrcGuids.insert(pOrc->GetGUID());
                             if (!pOrc->isAlive())
-                            pOrc->Respawn();
+                                pOrc->Respawn();
                             break;
                         }
                     }
+                }
+            }
+        }
+    }
+    
+    void DoFixNascentOrcsFlags()
+    {
+        for (std::vector<uint64>::const_iterator itr = NascentOrcGuids.begin(); itr != NascentOrcGuids.end(); ++itr)
+        {
+            if (Creature* pOrc = instance->GetCreature(*itr))
+            {
+                bool updateFlag = true;
+                for (uint8 i = 0; i < MAX_ORC_WAVES; ++i)
+                {
+                    if (GameObject* pDoor = instance->GetGameObject(BroggokEvent[i].CellGuid))
+                    {
+                        if (pOrc->IsWithinDistInMap(pDoor, 8.0f))
+                            updateFlag = false;
+                    }
+                }
+                
+                if (updateFlag) {
+                    pOrc->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    pOrc->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 }
             }
         }
