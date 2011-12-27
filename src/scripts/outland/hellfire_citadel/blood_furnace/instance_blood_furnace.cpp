@@ -32,16 +32,17 @@ EndScriptData */
 #define ENTRY_BROG2                  181819
 
 #define ENTRY_CELL_LEVER             181982
-#define ENTRY_CELL_DOOR1             181821
-#define ENTRY_CELL_DOOR2             181820
-#define ENTRY_CELL_DOOR3             181818
-#define ENTRY_CELL_DOOR4             181817
+#define ENTRY_CELL_DOOR1             181817
+#define ENTRY_CELL_DOOR2             181818
+#define ENTRY_CELL_DOOR3             181820
+#define ENTRY_CELL_DOOR4             181821
 
 #define  MAX_ORC_WAVES               4
 #define  MAX_BROGGOK_WAVES           5
 
 #define NPC_BROGGOK                  17380
 #define NPC_NASCENT_FEL_ORC          17398
+#define NPC_FEL_ORC_NEOPHYTE         17429
 
 #define SAY_BROGGOK_INTRO            -1542015
 
@@ -76,6 +77,7 @@ struct instance_blood_furnace : public ScriptedInstance
     uint64 Brog1GUID;
     uint64 Brog2GUID;
     uint64 LeverGUID;
+    bool OrcsFlagFixed;
 
     void Initialize()
     {
@@ -89,6 +91,7 @@ struct instance_blood_furnace : public ScriptedInstance
         DoorTimer = 0;
         BroggokEventTimer = 0;
         BroggokEventPhase = 0;
+        OrcsFlagFixed = false;
 
         for (uint8 i = 0; i < ENCOUNTERS; i++)
             Encounter[i] = NOT_STARTED;
@@ -107,7 +110,9 @@ struct instance_blood_furnace : public ScriptedInstance
         switch(pCreature->GetEntry())
         {
             case NPC_BROGGOK: BroggokGUID = pCreature->GetGUID(); break;
-            case NPC_NASCENT_FEL_ORC: NascentOrcGuids.push_back(pCreature->GetGUID()); break;
+            case NPC_NASCENT_FEL_ORC:
+            case NPC_FEL_ORC_NEOPHYTE:
+                NascentOrcGuids.push_back(pCreature->GetGUID()); break;
         }
     }
 
@@ -118,24 +123,24 @@ struct instance_blood_furnace : public ScriptedInstance
             case ENTRY_SEWER1:
                 Sewer1GUID = pGo->GetGUID();
                 if (Encounter[2] == DONE)
-                    HandleGameObject(Sewer1GUID, true);
+                    HandleGameObject(0, true, pGo);
                 break;
             case ENTRY_SEWER2:
                 Sewer2GUID = pGo->GetGUID();
                 if (Encounter[2] == DONE)
-                    HandleGameObject(Sewer2GUID, true);
+                    HandleGameObject(0, true, pGo);
                 break;
             case ENTRY_MAKER1: Maker1GUID = pGo->GetGUID(); break;
             case ENTRY_MAKER2:
                 Maker2GUID = pGo->GetGUID();
                 if (Encounter[0] == DONE)
-                    HandleGameObject(Maker2GUID, true);
+                    HandleGameObject(0, true, pGo);
                 break;
             case ENTRY_BROG1: Brog1GUID = pGo->GetGUID(); break;
             case ENTRY_BROG2:
                 Brog2GUID = pGo->GetGUID();
                 if (Encounter[1] == DONE)
-                    HandleGameObject(Brog2GUID, true);
+                    HandleGameObject(0, true, pGo);
                 break;
             case ENTRY_CELL_LEVER: LeverGUID = pGo->GetGUID(); break;
             case ENTRY_CELL_DOOR1: BroggokEvent[0].CellGuid = pGo->GetGUID(); return;
@@ -305,6 +310,8 @@ struct instance_blood_furnace : public ScriptedInstance
             if (Encounter[i] == IN_PROGRESS)
                 Encounter[i] = NOT_STARTED;
 
+        DoFixNascentOrcsFlags();
+
         OUT_LOAD_INST_DATA_COMPLETE;
     }
 
@@ -372,8 +379,12 @@ struct instance_blood_furnace : public ScriptedInstance
 
     void OnCreatureDeath(Creature* pCreature)
     {
-        if (pCreature->GetEntry() == NPC_NASCENT_FEL_ORC)
+        DoFixNascentOrcsFlags();
+        if (pCreature->GetEntry() == NPC_NASCENT_FEL_ORC || pCreature->GetEntry() == NPC_FEL_ORC_NEOPHYTE)
         {
+            if (GetData(DATA_BROGGOKEVENT) != IN_PROGRESS)
+                return;
+
             uint8 uiClearedCells = 0;
             for (uint8 i = 0; i < std::min<uint32>(BroggokEventPhase, MAX_ORC_WAVES); ++i)
             {
@@ -440,6 +451,8 @@ struct instance_blood_furnace : public ScriptedInstance
                 }
             }
         }
+        
+        OrcsFlagFixed = true;
     }
 
     void GetMovementDistanceForIndex(uint32 uiIndex, float& dx, float& dy)

@@ -54,7 +54,7 @@ struct boss_broggokAI : public ScriptedAI
         AcidSpray_Timer = 10000;
         PoisonSpawn_Timer = 5000;
         PoisonBolt_Timer = 7000;
-        if (pInstance)
+        if (pInstance && me->isAlive())
             pInstance->SetData(DATA_BROGGOKEVENT, NOT_STARTED);
     }
 
@@ -220,6 +220,85 @@ CreatureAI* GetAI_mob_nascent_orc(Creature* pCreature)
 }
 
 /*######
+## mob_fel_orc_neophyte
+######*/
+
+#define SPELL_CHARGE    22120
+#define SPELL_FRENZY    8269
+
+struct mob_fel_orc_neophyteAI : public ScriptedAI
+{
+    mob_fel_orc_neophyteAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        HeroicMode = me->GetMap()->IsHeroic();
+    }
+
+    ScriptedInstance* pInstance;
+
+    uint32 ChargeTimer;
+    
+    bool HeroicMode;
+    bool Frenzy;
+
+    void Reset()
+    {
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetUnitMovementFlags(MOVEMENTFLAG_NONE);
+        ChargeTimer = 8000;
+    }
+    
+    void Aggro(Unit* who) {}
+
+    void MovementInform(uint32 uiMotionType, uint32 uiPointId)
+    {
+        if (uiMotionType == POINT_MOTION_TYPE)
+        {
+            if (Unit *pTarget = me->SelectNearestTarget(99.0f))
+            {
+                me->AI()->AttackStart(pTarget);
+            }
+       }
+    }
+
+    void EnterEvadeMode()
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_BROGGOKEVENT, FAIL);
+
+        me->DeleteThreatList();
+        me->CombatStop(true);
+        me->GetMotionMaster()->MoveTargetedHome();
+        Reset();
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (ChargeTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_CHARGE);
+            ChargeTimer = 25000 + rand()+5000;
+        }
+        else
+            ChargeTimer -= diff;
+            
+        if (!Frenzy && me->IsBelowHPPercent(30)) {
+            DoCast(me, SPELL_FRENZY);
+            Frenzy = true;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_mob_fel_orc_neophyte(Creature* pCreature)
+{
+    return new mob_fel_orc_neophyteAI(pCreature);
+}
+
+/*######
 ## mob_broggok_poisoncloud
 ######*/
 
@@ -264,6 +343,11 @@ void AddSC_boss_broggok()
     newscript = new Script;
     newscript->Name = "mob_nascent_orc";
     newscript->GetAI = &GetAI_mob_nascent_orc;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "mob_fel_orc_neophyte";
+    newscript->GetAI = &GetAI_mob_fel_orc_neophyte;
     newscript->RegisterSelf();
 
     newscript = new Script;
