@@ -154,9 +154,9 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
     }*/
     
     void EnterEvadeMode() {
-        if (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2)
+        /*if (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2)
             return;
-        else
+        else*/
             npc_escortAI::EnterEvadeMode();
     }
 
