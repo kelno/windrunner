@@ -93,8 +93,10 @@ struct instance_blood_furnace : public ScriptedInstance
         BroggokEventPhase = 0;
         OrcsFlagFixed = false;
 
-        for (uint8 i = 0; i < ENCOUNTERS; i++)
-            Encounter[i] = NOT_STARTED;
+        for (uint8 i = 0; i < ENCOUNTERS; i++) {
+            if (Encounter[i] != DONE)
+                Encounter[i] = NOT_STARTED;
+        }
     }
     
     bool IsEncounterInProgress() const
