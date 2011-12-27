@@ -53,8 +53,8 @@ struct boss_the_makerAI : public ScriptedAI
     void Reset()
     {
         ExplodingBreaker_Timer = 9000;
-        Domination_Timer = 60000;
-        if (pInstance)
+        Domination_Timer = 20000 + rand()%20000;
+        if (pInstance && me->isAlive())
             pInstance->SetData(DATA_MAKEREVENT, NOT_STARTED);
     }
 
@@ -106,7 +106,7 @@ struct boss_the_makerAI : public ScriptedAI
             Unit *pTarget;
             pTarget = SelectUnit(SELECT_TARGET_RANDOM,0);
             DoCast(pTarget,SPELL_DOMINATION);
-            Domination_Timer = 60000;
+            Domination_Timer = 40000;
         }
         else Domination_Timer -=diff;
 

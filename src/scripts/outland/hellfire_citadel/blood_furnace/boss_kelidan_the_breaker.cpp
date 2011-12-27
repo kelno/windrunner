@@ -99,7 +99,8 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         addYell = false;
         SummonChannelers();
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        if (pInstance)
+        me->SetReactState(REACT_PASSIVE);
+        if (pInstance && me->isAlive())
             pInstance->SetData(DATA_KELIDANEVENT, NOT_STARTED);
     }
 
@@ -111,6 +112,12 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         DoStartMovement(who);
         if (pInstance)
             pInstance->SetData(DATA_KELIDANEVENT, IN_PROGRESS);
+    }
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (me->HasAura(SPELL_EVOCATION))
+            return;
     }
 
     void KilledUnit(Unit* victim)
@@ -126,12 +133,12 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         if (who && !addYell)
         {
             addYell = true;
-            switch(rand()%3)
+            /*switch(rand()%3)
             {
-                case 0: DoScriptText(SAY_ADD_AGGRO_1, m_creature); break;
+                case 0: DoScriptText(SAY_ADD_AGGRO_1, m_creature); break; // This was wrong anyway, should be who instead of m_creature to make add yell, not self
                 case 1: DoScriptText(SAY_ADD_AGGRO_2, m_creature); break;
                 default: DoScriptText(SAY_ADD_AGGRO_3, m_creature); break;
-            }
+            }*/
         }
         for(int i=0; i<5; ++i)
         {
@@ -153,6 +160,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         if (killer)
         {
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetReactState(REACT_AGGRESSIVE);
             me->AI()->AttackStart(killer);
         }
     }
@@ -173,6 +181,9 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
 
     void SummonChannelers()
     {
+        if (me->isDead())
+            return;
+
         for(int i=0; i<5; ++i)
         {
             Creature *channeler = Unit::GetCreature(*m_creature, Channelers[i]);
@@ -202,6 +213,13 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
                     DoCast(m_creature,SPELL_EVOCATION);
                 check_Timer = 5000;
             }else check_Timer -= diff;
+            return;
+        }
+        
+        float x, y, z, o;
+        me->GetHomePosition(x, y, z, o);
+        if (me->GetDistance(x, y, z) > 80.0f) {
+            EnterEvadeMode();
             return;
         }
 
@@ -273,6 +291,10 @@ CreatureAI* GetAI_boss_kelidan_the_breaker(Creature *_Creature)
 #define SPELL_MARK_OF_SHADOW    30937
 #define SPELL_CHANNELING        39123
 
+#define CHANNELER_SAY_AGGRO_1   -1765300
+#define CHANNELER_SAY_AGGRO_2   -1765301
+#define CHANNELER_SAY_AGGRO_3   -1765302
+
 struct mob_shadowmoon_channelerAI : public ScriptedAI
 {
     mob_shadowmoon_channelerAI(Creature *c) : ScriptedAI(c)
@@ -296,13 +318,24 @@ struct mob_shadowmoon_channelerAI : public ScriptedAI
         if (m_creature->IsNonMeleeSpellCasted(false))
             m_creature->InterruptNonMeleeSpells(true);
     }
+    
+    void JustRespawned()
+    {
+        Creature* kelidan = me->FindNearestCreature(ENTRY_KELIDAN, 50.0f, true);
+        if (!kelidan)
+            me->Kill(me);
+    }
 
     void Aggro(Unit* who)
     {
         if(Creature *Kelidan = FindCreature(ENTRY_KELIDAN, 100, m_creature)->ToCreature())
             ((boss_kelidan_the_breakerAI*)Kelidan->AI())->ChannelerEngaged(who);
+
         if (m_creature->IsNonMeleeSpellCasted(false))
             m_creature->InterruptNonMeleeSpells(true);
+
+        DoScriptText(RAND(CHANNELER_SAY_AGGRO_1, CHANNELER_SAY_AGGRO_2, CHANNELER_SAY_AGGRO_3), me, NULL);
+
         DoStartMovement(who);
     }
 
