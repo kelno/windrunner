@@ -70,7 +70,7 @@ enum eEnums
 
 #define GOSSIP_ID_START_1       698  //Naralex sleeps again!
 #define GOSSIP_ID_START_2       699  //The fanglords are dead!
-#define GOSSIP_ITEM_NARALEX     "Let the event begin!"
+#define GOSSIP_ITEM_NARALEX     "Allons-y !"
 
 struct npc_disciple_of_naralexAI : public npc_escortAI
 {
@@ -111,6 +111,10 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                 currentEvent = TYPE_NARALEX_PART2;
                 pInstance->SetData(TYPE_NARALEX_PART2, IN_PROGRESS);
             break;
+            case 12:
+                ++eventProgress;
+                SetLastPos(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
+                break;
             case 19:
                 DoScriptText(SAY_BEYOND_THIS_CORRIDOR, m_creature);
             break;
@@ -148,15 +152,10 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
          summoned->AI()->AttackStart(m_creature);
     }
     
-    /*void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
-    {
-        sLog.outString("Pom %u", spellId);
-    }*/
-    
     void EnterEvadeMode() {
-        /*if (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2)
+        if (currentEvent == TYPE_NARALEX_PART3 || (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2) || me->hasUnitState(UNIT_STAT_CASTING))
             return;
-        else*/
+        else
             npc_escortAI::EnterEvadeMode();
     }
 
@@ -314,9 +313,11 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                             eventTimer = 2500;
                             if (Creature* naralex = pInstance->instance->GetCreature(pInstance->GetData64(DATA_NARALEX)))
                             {
+                                naralex->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
                                 naralex->GetMotionMaster()->MovePoint(0, 117.095512, 247.107971, -96.167870);
                                 naralex->GetMotionMaster()->MovePoint(1, 90.388809, 276.135406, -83.389801);
                             }
+                            m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
                             m_creature->GetMotionMaster()->MovePoint(26, 117.095512, 247.107971, -96.167870);
                             m_creature->GetMotionMaster()->MovePoint(27, 144.375443, 281.045837, -82.477135);
                         }
