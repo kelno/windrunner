@@ -95,7 +95,7 @@ struct instance_sunken_temple : public ScriptedInstance
 		tbd6 = false;
     }
 
-    void OnGameObjectCreate(GameObject* pGo, bool /*add*/)
+    void OnObjectCreate(GameObject* pGo)
     {
         switch(pGo->GetEntry())
         {
