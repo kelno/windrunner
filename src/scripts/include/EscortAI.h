@@ -88,6 +88,8 @@ struct npc_escortAI : public ScriptedAI
         Player* GetPlayerForEscort() { return Unit::GetPlayer(PlayerGUID); }
         
         bool AssistPlayerInCombat(Unit* who);
+        
+        void SetLastPos(float x, float y, float z) { LastPos.x = x; LastPos.y = y; LastPos.z = z; }
 
     // EscortAI variables
     protected:
