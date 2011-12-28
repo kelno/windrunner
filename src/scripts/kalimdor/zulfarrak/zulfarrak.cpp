@@ -201,11 +201,12 @@ bool GossipSelect_npc_sergeant_bly(Player *player, Creature *creature, uint32 se
 void initBlyCrewMember(Player* pPlayer, uint32 entry,float x,float y, float z)
 {
     if (Creature* crew = pPlayer->FindCreatureInGrid(entry, 10.0f, true)) {
-       crew->SetReactState(REACT_AGGRESSIVE);
-       crew->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-       crew->SetHomePosition(x,y,z,0);
-       crew->GetMotionMaster()->MovePoint(1,x,y,z);
-       crew->setFaction(FACTION_FREED);
+        crew->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+        crew->SetReactState(REACT_AGGRESSIVE);
+        crew->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        crew->SetHomePosition(x,y,z,0);
+        crew->GetMotionMaster()->MovePoint(1,x,y,z);
+        crew->setFaction(FACTION_FREED);
     }
 }
 
@@ -280,8 +281,11 @@ struct npc_weegli_blastfuseAI : public ScriptedAI
                 DoScriptText(SAY_WEEGLI_OHNO,m_creature);
                 m_creature->SetHomePosition(1882.69,1272.28,41.87,0);
             } else if (destroyingDoor) {
-                pInstance->HandleGameObject(pInstance->GetData64(GO_END_DOOR), true, NULL);
-                if (GameObject* door = GameObject::GetGameObject(*me, pInstance->GetData64(GO_END_DOOR)))
+                //pInstance->HandleGameObject(pInstance->GetData64(GO_END_DOOR), true, NULL);
+                //pInstance->SetData(DATA_OPEN_END_DOOR, DONE);
+                //if (GameObject* door = GameObject::GetGameObject(*me, pInstance->GetData64(GO_END_DOOR)))
+                    //door->UseDoorOrButton();
+                if (GameObject* door = me->FindGOInGrid(GO_END_DOOR, 50.0f))
                     door->UseDoorOrButton();
                 //TODO: leave the area...
                 m_creature->ForcedDespawn();
