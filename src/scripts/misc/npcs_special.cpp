@@ -39,6 +39,8 @@ npc_pet_bomb
 npc_metzen
 npc_clockwork_rocket_bot
 npc_halaa_bomb_target
+trigger_omen
+lunar_large_spotlight
 EndContentData */
 
 #include "precompiled.h"
@@ -1475,6 +1477,146 @@ CreatureAI* GetAI_npc_halaa_bomb_target(Creature* creature)
     return new npc_halaa_bomb_targetAI(creature);
 }
 
+/*######
+## trigger_omen
+######*/
+
+float omenSpawnPos[][4] = { {7556.229492, -2830.243164, 448.822937, 3.877239},
+                            {7554.257324, -2827.974121, 449.009674, 3.877239},
+                            {7552.139648, -2825.533203, 449.265167, 3.877239},
+                            {7550.149414, -2823.249023, 449.503662, 3.877239},
+                            {7548.523438, -2821.410645, 449.628235, 3.877239},
+                            {7549.447754, -2826.799072, 450.329956, 3.877239},
+                            {7548.183594, -2825.402100, 450.329956, 3.877239},
+                            {7546.125488, -2823.120850, 450.347137, 3.877239},
+                            {7544.830078, -2821.656494, 450.429199, 3.877239},
+                            {7543.526367, -2820.192139, 450.487335, 3.877239}};
+
+
+struct trigger_omenAI : public Scripted_NoMovementAI
+{
+    trigger_omenAI(Creature* c) : Scripted_NoMovementAI(c) {}
+    
+    uint32 step;
+    uint32 counter;
+    
+    void Reset()
+    {
+        step = 0;
+        counter = 0;
+    }
+    
+    void SetData(uint32 field, uint32 value)
+    {
+        counter++;
+        
+        if (counter == 5) {
+            DoSpawnWave(step);
+            if (step > 3)
+                Reset();
+        }
+    }
+    
+    void JustSummoned(Creature* summoned)
+    {
+        /*if (Creature* target = summoned->SelectNearestTarget(30.0f))
+            summoned->AI()->AttackStart(target);*/
+        summoned->GetMotionMaster()->MovePoint(0, 7539.403809, -2841.265381, 457.147766/*, false*/);
+    }
+    
+    void DoSpawnWave(uint32 pStep)
+    {
+        switch (pStep) {
+        case 0:
+            for (uint8 i = 5; i < 10; i++)
+                me->SummonCreature(15466, omenSpawnPos[i][0], omenSpawnPos[i][1], omenSpawnPos[i][2], omenSpawnPos[i][3], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
+                
+            break;
+        case 1:
+        case 2:
+            for (uint8 i = 0; i < 10; i++)
+                me->SummonCreature(15466, omenSpawnPos[i][0], omenSpawnPos[i][1], omenSpawnPos[i][2], omenSpawnPos[i][3], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
+                
+            break;
+        case 3:
+            me->SummonCreature(15467, omenSpawnPos[2][0], omenSpawnPos[2][1], omenSpawnPos[2][2], omenSpawnPos[2][3], TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
+            break;
+        }
+        
+        counter = 0;
+        ++step;
+    }
+    
+    void Aggro(Unit* who) {}
+};
+
+CreatureAI* GetAI_trigger_omen(Creature* creature)
+{
+    return new trigger_omenAI(creature);
+}
+
+/*######
+## lunar_large_spotlight
+######*/
+
+struct lunar_large_spotlightAI: public Scripted_NoMovementAI
+{
+    lunar_large_spotlightAI(Creature* c) : Scripted_NoMovementAI(c) {}
+
+    void Aggro(Unit* who) {}
+
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        if (caster->GetTypeId() != TYPEID_PLAYER)
+            return;
+
+        if (spell->Id != 26373)
+            return;
+
+        if (me->GetZoneId() == 493) {
+            if (Creature* reveler = caster->FindCreatureInGrid(15694, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(0, -8748.578125, 1074.502808, 90.559525, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if (Creature* reveler = caster->FindCreatureInGrid(15719, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(1, -1031.914673, -230.591858, 160.152725, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if (Creature* reveler = caster->FindCreatureInGrid(15905, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(1, 10151.400391, 2569.149902, 1321.060059, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if (Creature* reveler = caster->FindCreatureInGrid(15906, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(0, -4663.084473, -956.074341, 500.376801, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if (Creature* reveler = caster->FindCreatureInGrid(15907, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(0, 1642.087036, 239.751450, 62.591553, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if (Creature* reveler = caster->FindCreatureInGrid(15908, 2.0f, true))
+                caster->ToPlayer()->TeleportTo(1, 1983.555298, -4255.447266, 31.666471, TELE_TO_NOT_UNSUMMON_PET, 0);
+        }
+        else {
+            switch (caster->GetZoneId()) {
+            case 85: // Undercity
+                caster->ToPlayer()->TeleportTo(1, 7575.282715, -2239.033691, 469.744263, TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            case 1638: // Thunder Bluff
+                caster->ToPlayer()->TeleportTo(1, 7603.741699, -2211.346924, 471.583405, TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            case 1637: // Orgrimmar
+                caster->ToPlayer()->TeleportTo(1, 7595.355957, -2247.288330, 466.825836, TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            case 1: // Ironforge
+                caster->ToPlayer()->TeleportTo(1, 7570.259766, -2221.030273, 473.404785, TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            case 1519: // Stormwind
+                caster->ToPlayer()->TeleportTo(1, 7585.179688, -2204.956055, 475.351837, TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            case 1657: // Darnassus
+                caster->ToPlayer()->TeleportTo(1, 7610.898438, -2228.915283, 468.704956 , TELE_TO_NOT_UNSUMMON_PET, 0);
+                break;
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_lunar_large_spotlight(Creature* creature)
+{
+    return new lunar_large_spotlightAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1593,6 +1735,16 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_halaa_bomb_target";
     newscript->GetAI = &GetAI_npc_halaa_bomb_target;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "trigger_omen";
+    newscript->GetAI = &GetAI_trigger_omen;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "lunar_large_spotlight";
+    newscript->GetAI = &GetAI_lunar_large_spotlight;
     newscript->RegisterSelf();
 }
 
