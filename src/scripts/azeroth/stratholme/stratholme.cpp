@@ -28,6 +28,7 @@ mob_restless_soul
 mobs_spectral_ghostly_citizen
 at_timmy_the_cruel
 npc_ashari_crystal
+go_stratholme_supply_crate
 EndContentData */
 
 #include "precompiled.h"
@@ -361,6 +362,47 @@ CreatureAI* GetAI_npc_ashari_crystal(Creature *pCreature)
 }
 
 /*######
+## go_stratholme_supply_crate
+######*/
+
+bool GOHello_go_stratholme_supply_crate(Player* player, GameObject* go)
+{
+    switch (rand()%5) {
+    case 0:
+    case 1:
+    {
+        uint8 amount = rand()%3 + 1;
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 13180, amount);
+        if (msg == EQUIP_ERR_OK) {
+            Item* item = player->StoreNewItem(dest, 13180, true);
+            player->SendNewItem(item, amount, true, false);
+        }
+        break;
+    }
+    case 2:
+        for (uint8 i = 0; i < 5; i++)
+            if (Creature* summon = player->SummonCreature(10441, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0))
+                summon->AI()->AttackStart(player);
+        break;
+    case 3:
+        for (uint8 i = 0; i < 5; i++)
+            if (Creature* summon = player->SummonCreature(10461, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0))
+                summon->AI()->AttackStart(player);
+        break;
+    case 4:
+        for (uint8 i = 0; i < 8; i++)
+            if (Creature* summon = player->SummonCreature(10536, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0))
+                summon->AI()->AttackStart(player);
+        break;
+    }
+    
+    go->SetLootState(GO_JUST_DEACTIVATED);
+    
+    return false;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -402,6 +444,11 @@ void AddSC_stratholme()
     newscript = new Script;
     newscript->Name = "npc_ashari_crystal";
     newscript->GetAI = &GetAI_npc_ashari_crystal;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_stratholme_supply_crate";
+    newscript->pGOHello = &GOHello_go_stratholme_supply_crate;
     newscript->RegisterSelf();
 }
 
