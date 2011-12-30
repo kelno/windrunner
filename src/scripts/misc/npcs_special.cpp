@@ -1574,17 +1574,18 @@ struct lunar_large_spotlightAI: public Scripted_NoMovementAI
             return;
 
         if (me->GetZoneId() == 493) {
-            if (Creature* reveler = caster->FindCreatureInGrid(15694, 2.0f, true))
+            Creature* reveler = NULL;
+            if ((reveler = caster->FindCreatureInGrid(15694, 2.0f, true)) && caster->ToPlayer()->GetTeam() == ALLIANCE)
                 caster->ToPlayer()->TeleportTo(0, -8748.578125, 1074.502808, 90.559525, TELE_TO_NOT_UNSUMMON_PET, 0);
-            else if (Creature* reveler = caster->FindCreatureInGrid(15719, 2.0f, true))
+            else if ((reveler = caster->FindCreatureInGrid(15719, 2.0f, true)) && caster->ToPlayer()->GetTeam() == HORDE)
                 caster->ToPlayer()->TeleportTo(1, -1031.914673, -230.591858, 160.152725, TELE_TO_NOT_UNSUMMON_PET, 0);
-            else if (Creature* reveler = caster->FindCreatureInGrid(15905, 2.0f, true))
-                caster->ToPlayer()->TeleportTo(1, 10151.400391, 2569.149902, 1321.060059, TELE_TO_NOT_UNSUMMON_PET, 0);
-            else if (Creature* reveler = caster->FindCreatureInGrid(15906, 2.0f, true))
+            else if ((reveler = caster->FindCreatureInGrid(15905, 2.0f, true)) && caster->ToPlayer()->GetTeam() == ALLIANCE)
+                caster->ToPlayer()->TeleportTo(1, 10150.287109, 2602.150879, 1330.827271, TELE_TO_NOT_UNSUMMON_PET, 0);
+            else if ((reveler = caster->FindCreatureInGrid(15906, 2.0f, true)) && caster->ToPlayer()->GetTeam() == ALLIANCE)
                 caster->ToPlayer()->TeleportTo(0, -4663.084473, -956.074341, 500.376801, TELE_TO_NOT_UNSUMMON_PET, 0);
-            else if (Creature* reveler = caster->FindCreatureInGrid(15907, 2.0f, true))
+            else if ((reveler = caster->FindCreatureInGrid(15907, 2.0f, true)) && caster->ToPlayer()->GetTeam() == HORDE)
                 caster->ToPlayer()->TeleportTo(0, 1642.087036, 239.751450, 62.591553, TELE_TO_NOT_UNSUMMON_PET, 0);
-            else if (Creature* reveler = caster->FindCreatureInGrid(15908, 2.0f, true))
+            else if ((reveler = caster->FindCreatureInGrid(15908, 2.0f, true)) && caster->ToPlayer()->GetTeam() == HORDE)
                 caster->ToPlayer()->TeleportTo(1, 1983.555298, -4255.447266, 31.666471, TELE_TO_NOT_UNSUMMON_PET, 0);
         }
         else {
