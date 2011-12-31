@@ -14,6 +14,8 @@
 
 #define DATA_INSTANCE_BOSS      6
 
+#define TYPE_GET_PLAYER         7
+
 #define DATA_MEDIVH             10
 #define DATA_PORTAL_COUNT       11
 #define DATA_SHIELD             12
