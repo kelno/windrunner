@@ -331,6 +331,10 @@ struct instance_dark_portal : public ScriptedInstance
     {
         if (data == DATA_MEDIVH)
             return MedivhGUID;
+        if (data == TYPE_GET_PLAYER) {
+            Player* player = GetPlayerInMap();
+            return player ? player->GetGUID() : 0;
+        }
 
         return 0;
     }

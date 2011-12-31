@@ -186,6 +186,11 @@ struct npc_medivh_bmAI : public ScriptedAI
         {
             if (Check_Timer <= diff)
             {
+                /*if (!pInstance->GetData64(TYPE_GET_PLAYER)) {
+                    Check_Timer = 0;
+                    return;
+                }*/
+                
                 uint32 pct = pInstance->GetData(DATA_SHIELD);
                 
                 //check if DATA_SHIELD needs to be updated
@@ -226,6 +231,7 @@ struct npc_medivh_bmAI : public ScriptedAI
                     m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     m_creature->RemoveCorpse();
                     m_creature->Respawn();
+                    Check_Timer = 0;
                     return;
                 }
 
