@@ -46,6 +46,7 @@ go_testing_equipment
 go_forged_illidari_blade
 go_blood_filled_orb
 go_ice_stone_ahune
+go_matrix_3005a
 EndContentData */
 
 #include "precompiled.h"
@@ -576,6 +577,25 @@ bool GOHello_go_ice_stone_ahune(Player* pPlayer, GameObject* pGo)
 }
 
 /*######
+## go_matrix_3005a
+######*/
+
+bool GOHello_go_matrix_3005a(Player* player, GameObject* go)
+{
+    if (player->HasItemCount(9279, 1, false)) {
+        player->DestroyItemCount(9279, 1, true);
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 9280, 1);
+        if (msg == EQUIP_ERR_OK) {
+            Item* item = player->StoreNewItem(dest, 9280, true);
+            player->SendNewItem(item, 1, true, false);
+        }
+    }
+    
+    return false;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -727,5 +747,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_ice_stone_ahune";
     newscript->pGOHello = &GOHello_go_ice_stone_ahune;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_matrix_3005a";
+    newscript->pGOHello = &GOHello_go_matrix_3005a;
     newscript->RegisterSelf();
 }
