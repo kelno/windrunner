@@ -618,7 +618,7 @@ bool GOHello_go_matrix_punchograph_3005(Player* player, GameObject* go)
         return true;
 
     if (player->HasItemCount(9327, 1, false) && !player->HasItemCount(itemEntry, 1, true)) {
-        player->DestroyItemCount(9327, 1, true);
+        //player->DestroyItemCount(9327, 1, true);
         ItemPosCountVec dest;
         uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemEntry, 1);
         if (msg == EQUIP_ERR_OK) {
