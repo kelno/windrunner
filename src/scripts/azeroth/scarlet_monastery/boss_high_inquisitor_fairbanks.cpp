@@ -43,9 +43,15 @@ struct boss_high_inquisitor_fairbanksAI : public ScriptedAI
     uint32 CurseOfBlood_Timer;
     uint32 DevouringPlague3_Timer;
     uint32 MindBlast5_Timer;
+    
+    bool ashbringer;
 
     void Reset()
     {
+        if (ashbringer)
+            return;
+
+        ashbringer = false;
         Healing_Timer = 300;
         Sleep2_Timer = 45000;
         Smite_Timer = 30000;
@@ -57,6 +63,15 @@ struct boss_high_inquisitor_fairbanksAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+    }
+    
+    void SpellHit(Unit* caster, SpellEntry const* spell)
+    {
+        if (spell->Id != 28441 || ashbringer)
+            return;
+
+        ashbringer = true;
+        me->UpdateEntry(16439);
     }
 
     void UpdateAI(const uint32 diff)

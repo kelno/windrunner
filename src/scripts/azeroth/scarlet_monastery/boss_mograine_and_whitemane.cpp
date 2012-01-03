@@ -32,6 +32,14 @@ EndScriptData */
 #define SAY_WH_KILL                 -1189009
 #define SAY_WH_RESSURECT            -1189010
 
+#define SAY_ASH_1   -1976000
+#define SAY_ASH_2   -1976001
+#define SAY_ASH_3   -1976002
+#define SAY_ASH_4   -1976003
+#define SAY_ASH_5   -1976004
+#define SAY_ASH_6   -1976005
+#define SAY_ASH_7   -1976006
+
 #define SPELL_DIVINESHIELD2         1020
 #define SPELL_CRUSADERSTRIKE5       35395
 #define SPELL_HAMMEROFJUSTICE3      5589
@@ -47,9 +55,13 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
     boss_scarlet_commander_mograineAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (ScriptedInstance*)m_creature->GetInstanceData();
+        alternative = false;
     }
 
     ScriptedInstance* pInstance;
+    
+    uint64 ashbringerGUID;
+    uint64 fatherGUID;
 
     uint32 Heal_Timer;
     uint32 DivineShield2_Timer;
@@ -58,9 +70,15 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
     uint32 Consecration3_Timer;
     uint32 BlessingOfWisdom_Timer;
     uint32 BlessingOfProtection3_Timer;
+    uint32 eventTimer;
+    
+    uint8 step;
+    
+    bool alternative;
 
     void Reset()
     {
+        alternative = false;
         Heal_Timer = 80000;
         DivineShield2_Timer = 60000;
         CrusaderStrike5_Timer = 20000;
@@ -68,6 +86,10 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
         Consecration3_Timer = 30000;
         BlessingOfWisdom_Timer = 45000;
         BlessingOfProtection3_Timer = 45000;
+        eventTimer = 0;
+        step = 0;
+        ashbringerGUID = 0;
+        fatherGUID = 0;
         
         if(pInstance)
             pInstance->HandleGameObject(pInstance->GetData64(DATA_DOOR_WHITEMANE), false);
@@ -82,7 +104,24 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
 
     void KilledUnit(Unit *victim)
     {
-        DoScriptText(SAY_MO_KILL, m_creature);
+        if (victim != me)
+            DoScriptText(SAY_MO_KILL, m_creature);
+    }
+    
+    void SpellHit(Unit* caster, SpellEntry const* spell)
+    {
+        if (spell->Id != 28441 || alternative)
+            return;
+
+        alternative = true;
+        eventTimer = 5000;
+        step = 1;
+        ashbringerGUID = caster->GetGUID();
+        me->SetFacing(3.1142, NULL);
+        me->SendMovementFlagUpdate();
+        DoScriptText(SAY_ASH_1, me);
+        me->SetReactState(REACT_PASSIVE);
+        me->CombatStop();
     }
     
     void JustDied(Unit *who)
@@ -95,6 +134,71 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (alternative) {
+            me->SetReactState(REACT_PASSIVE);
+            if (eventTimer <= diff) {
+                switch (step) {
+                case 1:
+                    if (Player* ashbringer = Unit::GetPlayer(ashbringerGUID))
+                        DoScriptText(SAY_ASH_2, me, ashbringer);
+                        
+                    eventTimer = 5000;
+                    break;
+                case 2:
+                    if (Creature* father = me->SummonCreature(16440, 1113.977295, 1399.238403, 30.307175, 6.281954, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+                        fatherGUID = father->GetGUID();
+                        father->GetMotionMaster()->MovePoint(0, 1149.960205, 1398.409058, 32.250179, 6.261882);
+                    }
+                    
+                    eventTimer = 18000;
+                    break;
+                case 3:
+                    if (Creature* father = Creature::GetCreature(*me, fatherGUID))
+                        DoScriptText(SAY_ASH_3, father);
+                        
+                    eventTimer = 3000;
+                    break;
+                case 4:
+                    DoScriptText(SAY_ASH_4, me);
+                    eventTimer = 4000;
+                    break;
+                case 5:
+                    if (Creature* father = Creature::GetCreature(*me, fatherGUID))
+                        DoScriptText(SAY_ASH_5, father);
+                        
+                    eventTimer = 8000;
+                    break;
+                case 6:
+                    DoScriptText(SAY_ASH_6, me);
+                    eventTimer = 2000;
+                    break;
+                case 7:
+                    if (Creature* father = Creature::GetCreature(*me, fatherGUID))
+                        father->CastSpell(me, 28697, false); 
+                        
+                    eventTimer = 2000;
+                    break;
+                case 8:
+                    if (Creature* father = Creature::GetCreature(*me, fatherGUID)) {
+                        DoScriptText(SAY_ASH_7, father);
+                        father->DisappearAndDie();
+                    }
+                    me->Kill(me);
+                    eventTimer = 0;
+                    alternative = false;
+                    break;
+                default:
+                    break;
+                }
+                
+                step++;
+            }
+            else
+                eventTimer -= diff;
+                
+            return;
+        }
+
         if (!UpdateVictim())
             return;
 
