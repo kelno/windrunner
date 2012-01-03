@@ -47,6 +47,7 @@ go_forged_illidari_blade
 go_blood_filled_orb
 go_ice_stone_ahune
 go_matrix_3005a
+go_matrix_punchograph_3005
 EndContentData */
 
 #include "precompiled.h"
@@ -596,6 +597,40 @@ bool GOHello_go_matrix_3005a(Player* player, GameObject* go)
 }
 
 /*######
+## go_matrix_punchograph_3005
+######*/
+
+bool GOHello_go_matrix_punchograph_3005(Player* player, GameObject* go)
+{
+    uint32 itemEntry = 0;
+
+    switch (go->GetEntry()) {
+    case 142475: // B
+        itemEntry = 14639;
+        break;
+    case 142696: // D
+        itemEntry = 4413;
+    default:
+        break;
+    }
+    
+    if (!itemEntry)
+        return true;
+
+    if (player->HasItemCount(9327, 1, false) && !player->HasItemCount(itemEntry, 1, true)) {
+        player->DestroyItemCount(9327, 1, true);
+        ItemPosCountVec dest;
+        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, itemEntry, 1);
+        if (msg == EQUIP_ERR_OK) {
+            Item* item = player->StoreNewItem(dest, itemEntry, true);
+            player->SendNewItem(item, 1, true, false);
+        }
+    }
+    
+    return false;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -752,5 +787,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_matrix_3005a";
     newscript->pGOHello = &GOHello_go_matrix_3005a;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_matrix_punchograph_3005";
+    newscript->pGOHello = &GOHello_go_matrix_punchograph_3005;
     newscript->RegisterSelf();
 }
