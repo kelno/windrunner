@@ -159,7 +159,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
 
             float x, y, z;                                  // coords that we move to, close to the crystal.
             CrystalChosen->GetClosePoint(x, y, z, m_creature->GetObjectSize(), CONTACT_DISTANCE);
-
+            m_creature->SetFullTauntImmunity(true);
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
             m_creature->GetMotionMaster()->MovePoint(1, x, y, z);
             DrainingCrystal = true;
@@ -361,6 +361,7 @@ struct mob_fel_crystalAI : public ScriptedAI
                     {
                         Selin->AI()->AttackStart(Selin->getVictim());
                         Selin->GetMotionMaster()->MoveChase(Selin->getVictim());
+                        Selin->SetFullTauntImmunity(false);
                     }
                 }
             }
