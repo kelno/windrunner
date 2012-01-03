@@ -41,6 +41,7 @@ npc_clockwork_rocket_bot
 npc_halaa_bomb_target
 trigger_omen
 lunar_large_spotlight
+npc_rocket_chicken
 EndContentData */
 
 #include "precompiled.h"
@@ -1618,6 +1619,49 @@ CreatureAI* GetAI_lunar_large_spotlight(Creature* creature)
     return new lunar_large_spotlightAI(creature);
 }
 
+/*######
+## npc_rocket_chicken
+######*/
+
+struct npc_rocket_chickenAI : public ScriptedAI
+{
+    npc_rocket_chickenAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint32 animTimer;
+    
+    void Reset()
+    {
+        animTimer = 2000+rand()%3000;
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
+    {
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        
+        if (rand()%5 == 0)
+            me->Kill(me);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (animTimer <= diff) {
+            me->GetMotionMaster()->MoveIdle();
+            DoCast(me, 45255);
+            animTimer = 20000 + rand()%10000;
+        }
+        else
+            animTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_rocket_chicken(Creature* creature)
+{
+    return new npc_rocket_chickenAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1746,6 +1790,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "lunar_large_spotlight";
     newscript->GetAI = &GetAI_lunar_large_spotlight;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_rocket_chicken";
+    newscript->GetAI = &GetAI_npc_rocket_chicken;
     newscript->RegisterSelf();
 }
 
