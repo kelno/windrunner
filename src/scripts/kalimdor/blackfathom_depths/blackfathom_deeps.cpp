@@ -39,6 +39,32 @@ bool GoHello_blackfathom_fire(Player *pPlayer, GameObject* pGo)
     {
         pGo->SetGoState(GO_STATE_ACTIVE);
         pGo->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+        switch (pGo->GetEntry()) {
+        case 21118: // North West
+            for (uint8 i = 0; i < 4; i++) {
+                if (Creature* summon = pPlayer->SummonCreature(4825, -769.013123, -153.537262, -25.879938, 3.121223, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                    summon->AI()->AttackStart(pPlayer);
+            }
+            break;
+        case 21119: // North East
+            for (uint8 i = 0; i < 4; i++) {
+                if (Creature* summon = pPlayer->SummonCreature(4823, -768.617126, -174.640518, -25.870447, 2.980356, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                    summon->AI()->AttackStart(pPlayer);
+            }
+            break;
+        case 21120: // South East
+            for (uint8 i = 0; i < 2; i++) {
+                if (Creature* summon = pPlayer->SummonCreature(4978, -868.376831, -174.436081, -25.870043, 0.109292, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                    summon->AI()->AttackStart(pPlayer);
+            }
+            break;
+        case 21121: // South West
+            for (uint8 i = 0; i < 8; i++) {
+                if (Creature* summon = pPlayer->SummonCreature(4977, -868.235535, -153.906906, -25.881172, 6.167040, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60000))
+                    summon->AI()->AttackStart(pPlayer);
+            }
+            break;
+        }
         pInstance->SetData(DATA_FIRE, pInstance->GetData(DATA_FIRE) + 1);
         return true;
     }
