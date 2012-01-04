@@ -105,6 +105,8 @@ enum eSpells {
     // 3rd cheat: set own creatures to max health
 };
 
+std::map<uint64 /*triggerGUID*/, uint64 /*pieceGUID*/> MoveTriggersState;
+
 struct move_triggerAI : public Scripted_NoMovementAI
 {
     move_triggerAI(Creature *c) : Scripted_NoMovementAI(c)
@@ -197,6 +199,10 @@ struct move_triggerAI : public Scripted_NoMovementAI
                 
             if (!IsMovementAllowed(pCaster))
                 return;
+                
+            std::map<uint64, uint64>::iterator itr = MoveTriggersState.find(me->GetGUID());
+            if (itr != MoveTriggersState.end() && itr->second != 0)
+                return;
 
             EndMarker = true;
             onMarker = pCaster;
@@ -204,6 +210,7 @@ struct move_triggerAI : public Scripted_NoMovementAI
             pCaster->CombatStop();
             
             DoCast(me, SPELL_MOVE_MARKER);
+            MoveTriggersState[me->GetGUID()] = pCaster->GetGUID();
             
             if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS) // Future status when done!
                 return;
@@ -342,8 +349,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         CheckNearEnemiesTimer = 2000 + rand()%1000;
         me->setActive(true);
         
-        start_marker = NULL;
-        end_marker = NULL;
+        /*start_marker = NULL;
+        end_marker = NULL;*/
         
         me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
     }
@@ -565,6 +572,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->CombatStop();
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             me->SendMovementFlagUpdate();
+            if (start_marker) {
+                MoveTriggersState[start_marker->GetGUID()] = 0;
+                start_marker = NULL;
+            }
         }
         
         me->Respawn();
@@ -700,7 +711,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 me->GetHomePosition(x, y, z, o);
                 me->Relocate(x, y, z, o);
                 me->Respawn();
-                me->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_MOVE_1, true);
+                //me->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_MOVE_1, true);
+                LinkCellTimer = 2000;
                 //ResetTriggers();
                 ReturnToHome = false;
             }
@@ -861,8 +873,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
             LockInMovement = true;
         startingOrientation = me->GetOrientation();
-        if (start_marker)
+        if (start_marker) {
             start_marker->AI()->Reset();
+            MoveTriggersState[start_marker->GetGUID()] = 0;
+            MoveTriggersState[target->GetGUID()] = me->GetGUID();
+        }
 
         /*if (me->isCharmed()) {
             Creature* marker = (Creature*)target;
@@ -1118,6 +1133,7 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     if (action == GOSSIP_ACTION_INFO_DEF + 2) {
         pInstance->SetData(DATA_CHESS_EVENT, FAIL);
         creature->GetMotionMaster()->MoveIdle();
+        //MoveTriggersState.clear();
     }
 
     player->CLOSE_GOSSIP_MENU();
