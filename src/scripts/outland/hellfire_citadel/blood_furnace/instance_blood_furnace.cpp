@@ -221,7 +221,7 @@ struct instance_blood_furnace : public ScriptedInstance
                                 {
                                     if (!pOrc->isAlive())
                                         pOrc->Respawn();
-                                        BroggokEventPhase = 0;
+                                    BroggokEventPhase = 0;
                                 }
                             }
 
@@ -234,7 +234,8 @@ struct instance_blood_furnace : public ScriptedInstance
                             }
                         }
                     }
-           
+                    
+                    BroggokEventTimer = 0;           
                 }
                 if (data == DONE)
                 {
