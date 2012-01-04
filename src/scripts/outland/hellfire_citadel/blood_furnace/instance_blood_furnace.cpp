@@ -350,7 +350,7 @@ struct instance_blood_furnace : public ScriptedInstance
                 }
             }
         }
-        BroggokEventTimer = 30000;
+        BroggokEventTimer = 80000;
         ++BroggokEventPhase;
     }
 
