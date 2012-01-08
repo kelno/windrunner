@@ -24,6 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_zulaman.h"
 #include "GridNotifiers.h"
+#include "World.h"
 
 //Trash Waves
 float NalorakkWay[8][3] =
@@ -350,8 +351,14 @@ struct boss_nalorakkAI : public ScriptedAI
         if(!UpdateVictim())
             return;
             
-        if (m_creature->GetPositionY() >= 1380) // Out of his room
+        if (m_creature->GetPositionY() >= 1380) { // Out of his room
             EnterEvadeMode();
+            if (sWorld.getConfig(CONFIG_ENABLE_EXPERIMENTAL_FEATURES)) {
+                inMove = false;
+                waitTimer = 0;
+                MoveEvent = false;
+            }
+        }
 
         if(Berserk_Timer < diff)
         {
