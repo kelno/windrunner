@@ -253,6 +253,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         startingOrientation = c->GetOrientation();
         potentialTarget = NULL;
         LinkCellTimer = 2000; // To ensure move triggers are in place
+        start_marker = NULL;
     }
     
     ScriptedInstance* pInstance;
@@ -711,15 +712,16 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 me->GetHomePosition(x, y, z, o);
                 me->Relocate(x, y, z, o);
                 me->Respawn();
-                //me->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_MOVE_1, true);
                 LinkCellTimer = 2000;
-                //ResetTriggers();
                 ReturnToHome = false;
             }
         }
         
         if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
             return;
+            
+        if (LockInMovement && me->GetMotionMaster()->GetCurrentMovementGeneratorType() != POINT_MOTION_TYPE)
+            LockInMovement = false;
 
         if (!InGame)
             return;
@@ -737,7 +739,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->CombatStop();
 
         if (!me->isCharmed()) {
-            if (!me->getVictim()) {
+            if (!me->isInCombat()) {
                 // Check for possible moves
                 if (NextMove_Timer < diff) {
                     if (rand()%100 <= 30) {
@@ -831,7 +833,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 break;
             }
             
-            if (me->getVictim()) {
+            if (me->isInCombat()) {
                 if (CheckForceMoveTimer <= diff) {
                     // Give it a 5% chance to move even if not in combat
                     if (rand()%100 < 4) {
@@ -846,7 +848,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                         }
                     }
                     
-                    CheckForceMoveTimer = 1000;
+                    CheckForceMoveTimer = 5000;
                 }
                 else
                     CheckForceMoveTimer -= diff;
@@ -874,9 +876,12 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             LockInMovement = true;
         startingOrientation = me->GetOrientation();
         if (start_marker) {
-            start_marker->AI()->Reset();
-            MoveTriggersState[start_marker->GetGUID()] = 0;
-            MoveTriggersState[target->GetGUID()] = me->GetGUID();
+            Unit* onTargetMarker = ((move_triggerAI*)target->ToCreature()->AI())->onMarker;
+            if (!onTargetMarker || (onTargetMarker && onTargetMarker->GetGUID() == me->GetGUID())) {
+                start_marker->AI()->Reset();
+                MoveTriggersState[start_marker->GetGUID()] = 0;
+                MoveTriggersState[target->GetGUID()] = me->GetGUID();
+            }
         }
 
         /*if (me->isCharmed()) {
