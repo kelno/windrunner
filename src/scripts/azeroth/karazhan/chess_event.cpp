@@ -300,6 +300,12 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
 
             if (!me->IsHostileTo((*itr)->ToCreature()))
                 continue;
+                
+            if (!me->HasInArc(M_PI/2.0f, (*itr)))
+                continue;
+                
+            if (((npc_chesspieceAI*)(*itr)->ToCreature()->AI())->LockInMovement)
+                continue;
 
             if (me->HasInArc(M_PI/8, (*itr)) && (*itr)->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) < 6.0f)
                 target = (*itr)->ToCreature();
@@ -373,15 +379,13 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
 
         if (start_marker)
             ((move_triggerAI*)start_marker->AI())->Reset();
-
-        /*char msg[100];
-        sprintf(msg, "Starting orientation: %f", startingOrientation);
-        DoSay(msg, LANG_UNIVERSAL, false);*/
         
         me->SetOrientation(startingOrientation);
         
-        if (end_marker)
+        if (end_marker) {
             me->Relocate(end_marker->GetPositionX(), end_marker->GetPositionY(), end_marker->GetPositionZ(), startingOrientation);
+            me->SendMovementFlagUpdate();
+        }
             
         start_marker = end_marker;
         end_marker = NULL;
@@ -674,10 +678,24 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     {
         return LockInMovement;
     }
+    
+    Creature* GetTarget()
+    {
+        Creature* target = Creature::GetCreature(*me, me->GetUInt64Value(UNIT_FIELD_TARGET));
+        return target;
+    }
+    
+    void MoveInLineOfSight(Unit* who) {}
+    
+    void AttackedBy(Unit* who)
+    {
+        if (!LockInMovement && !me->isInCombat() && me->HasInArc(M_PI/2.0f, who))
+            AttackStart(who);
+    }
 
     void UpdateAI(const uint32 diff)
     {
-        me->SetReactState(REACT_PASSIVE);
+            me->SetReactState(REACT_DEFENSIVE);
         
         if (!pInstance)
             return;
@@ -735,7 +753,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if (me->IsNonMeleeSpellCasted(false))
             return;
 
-        if (me->getVictim() && me->GetExactDistance2d(me->getVictim()->GetPositionX(), me->getVictim()->GetPositionY() >= NPC_ATTACK_RADIUS))
+        if (me->isInCombat() && GetTarget() && me->GetExactDistance2d(GetTarget()->GetPositionX(), GetTarget()->GetPositionY()) >= NPC_ATTACK_RADIUS)
             me->CombatStop();
 
         if (!me->isCharmed()) {
@@ -787,7 +805,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     NextMove_Timer -= diff;
                     
                 // Face nearest enemy
-                if (!moved && !LockInMovement && !me->getVictim()) {
+                if (!moved && !LockInMovement && !me->isInCombat()) {
                     if (CheckNearEnemiesTimer <= diff) {
                         uint32 tmpTimer = 800;
                         std::list<Unit*> enemies = FindNearestEnemies();
@@ -855,13 +873,13 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             }
         }
 
-        if (!me->getVictim()) {
+        if (!me->isInCombat()) {
             potentialTarget = SelectTarget();
             if (potentialTarget && !LockInMovement && !((npc_chesspieceAI*)potentialTarget->AI())->IsLockedInMovement())
                 AttackStart(potentialTarget);
         }
         
-        if (me->getVictim())
+        if (me->isInCombat())
             DoMeleeAttackIfReady();
     }
     
@@ -881,16 +899,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 start_marker->AI()->Reset();
                 MoveTriggersState[start_marker->GetGUID()] = 0;
                 MoveTriggersState[target->GetGUID()] = me->GetGUID();
+                end_marker = target->ToCreature();
+                ((move_triggerAI*)target->ToCreature()->AI())->onMarker = me;
             }
         }
-
-        /*if (me->isCharmed()) {
-            Creature* marker = (Creature*)target;
-            if (marker && ((move_triggerAI*)marker->AI())->onMarker == me) {
-                start_marker = end_marker;
-                end_marker = (Creature*)target;
-            }
-        }*/
     }
 };
 
@@ -1008,6 +1020,9 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                         
                     if (!IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
                         continue;
+                        
+                    if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                        continue;
             
                     finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);
                 }
@@ -1045,6 +1060,9 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                         continue;
                         
                     if (IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
+                        continue;
+                        
+                    if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
                         continue;
             
                     finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);
