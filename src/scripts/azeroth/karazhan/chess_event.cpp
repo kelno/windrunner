@@ -405,12 +405,12 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             float extraX = -2.416992;
             float extraY = 2.889649;
             
-            float offset = 1.3f * (deadCount[DEAD_ALLIANCE] % 8);
+            float offset = 1.3f * (deadCount[DEAD_HORDE] % 8);
 
-            float finalX = baseX + offset * deltaX + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraX;
-            float finalY = baseY + offset * deltaY + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraY;
+            float finalX = baseX + offset * deltaX + (deadCount[DEAD_HORDE] >= 8 ? 1 : 0) * extraX;
+            float finalY = baseY + offset * deltaY + (deadCount[DEAD_HORDE] >= 8 ? 1 : 0) * extraY;
             piece->Relocate(finalX, finalY, 221, orientations[ORI_NE]);
-            ++deadCount[DEAD_ALLIANCE];
+            ++deadCount[DEAD_HORDE];
 
             piece->CombatStop();
             piece->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
