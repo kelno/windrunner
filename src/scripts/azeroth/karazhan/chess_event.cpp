@@ -14,17 +14,11 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Chess_Event
-SD%Complete: xx
-SDComment: Based on Hectolight script.
-SDCategory: Karazhan
-  
+/*
 TODO:
  - Implement in instance_karazhan dead chess_piece count per side to allow Medivh to cheat when is loosing.(Or different terms was used as a treshold for cheat ?)
  - Set proper position on left or right site from chess board for killed units.
  - Half turn if no trigger in arc (facing external side of the board)
- - Figure out why after a reset, some move triggers aren't reset
  - Sounds
 EndScriptData */
 
@@ -43,6 +37,67 @@ EndScriptData */
 #define DUST_COVERED_CHEST      185119
 
 float playerTeleportPosition[4] = { -11107.241211, -1842.897461, 229.625198, 5.385472 };
+
+typedef struct boardCell
+{
+    uint64 triggerGUID;
+    uint64 pieceGUID;
+    uint32 pieceEntry;
+    uint8 row;
+    uint8 col;
+    
+    void setData(uint64 _triggerGUID, uint8 _row, uint8 _col)
+    {
+        triggerGUID = _triggerGUID;
+        row = _row;
+        col = _col;
+    }
+    
+    void reset()
+    {
+        pieceGUID = 0;
+        pieceEntry = 0;
+    }
+    
+    void setPiece(Creature* piece)
+    {
+        pieceGUID = piece->GetGUID();
+        pieceEntry = piece->GetEntry();
+    }
+} BoardCell;
+
+typedef enum gamePhase
+{
+    NOTSTARTED      = 0,
+    PVE_WARMUP      = 1, // Medivh has been spoken too but king isn't controlled yet
+    INPROGRESS_PVE  = 2,
+    FAILED          = 4,
+    PVE_FINISHED    = 5,
+    PVP_WARMUP      = 6,
+    INPROGRESS_PVP  = 7  // Get back to PVE_FINISHED after that
+} GamePhase;
+
+GamePhase chessPhase = NOTSTARTED;
+
+typedef enum chessOrientation
+{
+    ORI_SE  = 0,    // Horde start
+    ORI_SW  = 1,
+    ORI_NW  = 2,    // Alliance start
+    ORI_NE  = 3
+} ChessOrientation;
+
+/*
+x = case (0, 0) - y = case (8, 8)
+    --------------------
+        HORDE PIECES  y
+
+X
+
+     x  ALLY  PIECES
+    --------------------
+
+*/
 
 enum eScriptTexts {
     SCRIPTTEXT_AT_EVENT_START   =  -1650000,
@@ -105,143 +160,355 @@ enum eSpells {
     // 3rd cheat: set own creatures to max health
 };
 
-std::map<uint64 /*triggerGUID*/, uint64 /*pieceGUID*/> MoveTriggersState;
-
-struct move_triggerAI : public Scripted_NoMovementAI
+struct npc_echo_of_medivhAI : public ScriptedAI
 {
-    move_triggerAI(Creature *c) : Scripted_NoMovementAI(c)
+    npc_echo_of_medivhAI(Creature* c) : ScriptedAI(c)
     {
-        pInstance = ((ScriptedInstance*)me->GetInstanceData());
-        needReset = false;
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
 
+    BoardCell* board[8][8];
+    
+    uint32 cheatTimer;
+    
     ScriptedInstance* pInstance;
     
-    Unit* onMarker;
-    bool EndMarker;
-    bool needReset;
-
+    void Aggro(Unit* who) {}
+    
     void Reset()
     {
-        onMarker    = NULL;
-        EndMarker   = false;
-        needReset   = false;
+        cheatTimer = 80000 + rand()%20000;
+        
+        CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+        Cell cell(p);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+
+        std::list<Unit*> pList;
+        std::list<Unit*> finalList;
+        
+        float range = 80.0f;
+
+        Trinity::AllCreaturesOfEntryInRange u_check(me, 22521, range);
+        Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
+        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
+
+        cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
+    
+        for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++) {
+            if ((*itr)->GetEntry() == 22521)
+                (*itr)->ToCreature()->DisappearAndDie();
+        }
     }
     
-    void Aggro(Unit* pWho) {}
+    void RemoveCheats() {} // TODO: fires and buffs
     
-    bool IsMovementAllowed(Unit* piece)
+    void SetupBoard()
     {
-        if (!piece)
-            return false;
-            
-        if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
-            return true;
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                BoardCell* cell = new BoardCell;
+                board[row][col] = cell;
 
-        switch (piece->GetEntry()) {
+                if (Creature* trigger = me->SummonCreature(TRIGGER_ID, (-11108.099609 + (3.49f * col) + (4.4f * row)), (-1872.910034 - (4.4f * col) + (3.45f * row)), 220.667f, 0, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+                    cell->setData(trigger->GetGUID(), row, col);
+                    HandleCellInitialData(row, col, trigger, cell);
+                }
+            }
+        }
+    }
+    
+    void HandleCellInitialData(uint8 row, uint8 col, Creature* trigger, BoardCell* cell)
+    {
+        switch (row) {
+        case 0: // Alliance first row
+            switch (col) {
+            case 0:
+            case 7: // Rook
+                if (Creature* rook = trigger->FindNearestCreature(NPC_ROOK_A, 40.0f, true))
+                    cell->setPiece(rook);
+                break;
+            case 1:
+            case 6: // Knight
+                if (Creature* knight = trigger->FindNearestCreature(NPC_KNIGHT_A, 40.0f, true))
+                    cell->setPiece(knight);
+                break;
+            case 2:
+            case 5: // Bishop
+                if (Creature* bishop = trigger->FindNearestCreature(NPC_BISHOP_A, 40.0f, true))
+                    cell->setPiece(bishop);
+                break;
+            case 3: // Queen
+                if (Creature* queen = trigger->FindNearestCreature(NPC_QUEEN_A, 40.0f, true))
+                    cell->setPiece(queen);
+                break;
+            case 4: // King
+                if (Creature* king = trigger->FindNearestCreature(NPC_KING_A, 40.0f, true))
+                    cell->setPiece(king);
+                break;
+            }
+            break;
+        case 1: // Alliance second row
+            // All pawns
+            if (Creature* pawn = trigger->FindNearestCreature(NPC_PAWN_A, 40.0f, true))
+                cell->setPiece(pawn);
+            break;
+        case 6: // Horde second row
+            // All pawns
+            if (Creature* pawn = trigger->FindNearestCreature(NPC_PAWN_H, 40.0f, true))
+                cell->setPiece(pawn);
+            break;
+        case 7: // Horde first row
+            switch (col) {
+            case 0:
+            case 7: // Rook
+                if (Creature* rook = trigger->FindNearestCreature(NPC_ROOK_H, 40.0f, true))
+                    cell->setPiece(rook);
+                break;
+            case 1:
+            case 6: // Knight
+                if (Creature* knight = trigger->FindNearestCreature(NPC_KNIGHT_H, 40.0f, true))
+                    cell->setPiece(knight);
+                break;
+            case 2:
+            case 5: // Bishop
+                if (Creature* bishop = trigger->FindNearestCreature(NPC_BISHOP_H, 40.0f, true))
+                    cell->setPiece(bishop);
+                break;
+            case 3: // Queen
+                if (Creature* queen = trigger->FindNearestCreature(NPC_QUEEN_H, 40.0f, true))
+                    cell->setPiece(queen);
+                break;
+            case 4: // King
+                if (Creature* king = trigger->FindNearestCreature(NPC_KING_H, 40.0f, true))
+                    cell->setPiece(king);
+                break;
+            }
+            break;
+        default:
+            //sLog.outString("Default for %u %u", row, col);
+            cell->reset();
+        }
+    }
+    
+    bool IsFriendlyPiece(uint32 entry)
+    {
+        if (!pInstance)
+            return false;
+
+        switch (entry) {
         case NPC_PAWN_H:
-        case NPC_PAWN_A:
-        case NPC_BISHOP_H:
-        case NPC_BISHOP_A:
-        case NPC_KING_H:
-        case NPC_KING_A:
-        case NPC_ROOK_H:
-        case NPC_ROOK_A:
-        {
-            float exactDist = piece->GetExactDistance2d(me->GetPositionX(), me->GetPositionY());
-            if (!piece->HasInArc(M_PI, me) || exactDist > 8.2f)
-                return false;
-            break;
-        }
         case NPC_KNIGHT_H:
-        case NPC_KNIGHT_A:
-        {
-            float exactDist = piece->GetExactDistance2d(me->GetPositionX(), me->GetPositionY());
-            if (exactDist > 16.0f || !piece->HasInArc(M_PI/2 - 0.2f, me))
-                return false;
-            break;
-        }
         case NPC_QUEEN_H:
+        case NPC_BISHOP_H:
+        case NPC_ROOK_H:
+        case NPC_KING_H:
+            return (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE);
+        case NPC_PAWN_A:
+        case NPC_KNIGHT_A:
         case NPC_QUEEN_A:
-            if ((piece->HasInArc(M_PI/6, me) && piece->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) > 19.0f) || !piece->HasInArc(M_PI/2 - 0.2f, me))
-                return false;
-            break;
+        case NPC_BISHOP_A:
+        case NPC_ROOK_A:
+        case NPC_KING_A:
+            return (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE);
         }
         
-        return true;
+        return false;
     }
     
-    void SpellHit(Unit* pCaster, const SpellEntry* pSpell)
+    void ReceiveEmote(Player* /*player*/, uint32 /*text_emote*/)
     {
-        if (pSpell->Id == SPELL_CHANGE_FACING) {
-            if (pCaster->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) > 6.0f)
-                return;
-
-            pCaster->CombatStop();
-            pCaster->SetInFront(me);
-            pCaster->SendMovementFlagUpdate();
-        }
-
-        if (pSpell->Id == SPELL_MOVE_1 || pSpell->Id == SPELL_MOVE_2 || pSpell->Id == SPELL_MOVE_3 || pSpell->Id == SPELL_MOVE_4 ||
-           pSpell->Id == SPELL_MOVE_5 || pSpell->Id == SPELL_MOVE_6 || pSpell->Id == SPELL_MOVE_7)
-        {
-            if (onMarker != NULL || EndMarker) {
-                /*if (onMarker) {
-                    char msg[100];
-                    sprintf(msg, "onMarker: %s (%u)%s", onMarker->GetName(), onMarker->ToCreature()->GetDBTableGUIDLow(), EndMarker ? " (EndMarker)" : "");
-                    DoSay(msg, LANG_UNIVERSAL, false);
-                }*/
-                if (onMarker->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) >= 4.0f && !EndMarker)
-                    Reset();
-                else
-                    return;
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                sLog.outString("%u %u: "I64FMTD, row, col, board[row][col]->triggerGUID);
             }
-                
-            if (!IsMovementAllowed(pCaster))
-                return;
-                
-            std::map<uint64, uint64>::iterator itr = MoveTriggersState.find(me->GetGUID());
-            if (itr != MoveTriggersState.end() && itr->second != 0)
-                return;
-
-            EndMarker = true;
-            onMarker = pCaster;
-            
-            pCaster->CombatStop();
-            
-            DoCast(me, SPELL_MOVE_MARKER);
-            MoveTriggersState[me->GetGUID()] = pCaster->GetGUID();
-            
-            if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS) // Future status when done!
-                return;
-
-            pCaster->GetMotionMaster()->Clear();
-            pCaster->GetMotionMaster()->MovePoint(0, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
-            //pCaster->ToCreature()->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), pCaster->GetAngle(me));
         }
     }
     
-    void UpdateAI(const uint32 diff)
+    bool HandlePieceMove(Creature* piece, uint64 trigger)
     {
-        me->SetReactState(REACT_PASSIVE);
+        bool res = false;
+        uint8 oldCol = 8, oldRow = 8, newCol, newRow;
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                BoardCell* cell = board[row][col];
+                if (cell->triggerGUID == trigger) {
+                    if (cell->pieceGUID) {
+                        res = false;
+                    }
+                    else {
+                        newCol = col;
+                        newRow = row;
+                        res = true;
+                    }
+                    break;
+                }
+                if (cell->pieceGUID == piece->GetGUID()) {
+                    oldCol = col;
+                    oldRow = row;
+                }
+            }
+        }
+        
+        if (res) {
+            uint8 deltaRow = fabs(oldRow - newRow);
+            uint8 deltaCol = fabs(oldCol - newCol);
+            switch (piece->GetEntry()) {
+            case NPC_PAWN_H:
+            case NPC_PAWN_A:
+            case NPC_BISHOP_H:
+            case NPC_BISHOP_A:
+            case NPC_ROOK_H:
+            case NPC_ROOK_A:
+            case NPC_KING_H:
+            case NPC_KING_A:
+                if (deltaRow > 1 || deltaCol > 1)
+                    res = false;
+                break;
+            case NPC_QUEEN_H:
+            case NPC_QUEEN_A:
+                if (deltaRow > 3 || deltaCol > 3) // FIXME: not correct
+                    res = false;
+                break;
+            case NPC_KNIGHT_H:
+            case NPC_KNIGHT_A:
+                if (deltaRow > 2 || deltaCol > 2) // FIXME: not correct
+                    res = false;
+                break;
+            default:
+                break;
+            }
+        }
+        
+        if (res) {
+            board[newRow][newCol]->triggerGUID = trigger;
+            board[newRow][newCol]->setPiece(piece);
+            if (oldRow != 8 && oldCol != 8)
+                board[oldRow][oldCol]->reset();
+        }
 
-        if(pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS) {
-            if (needReset)
-                Reset();
-            return;
+        return res;
+    }
+    
+    void HandleCheat()
+    {
+        switch (rand()%3) {
+        case 0: // Heal king
+        {
+            if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE) {
+                if (Creature* king = me->FindCreatureInGrid(NPC_KING_H, 80.0f, true)) {
+                    if (king->isAlive())
+                        king->SetHealth(king->GetMaxHealth());
+                }
+            }
+            else {
+                if (Creature* king = me->FindCreatureInGrid(NPC_KING_A, 80.0f, true)) {
+                    if (king->isAlive())
+                        king->SetHealth(king->GetMaxHealth());
+                }
+            }
+            break;
         }
+        case 1: // Fire
+        {
+            CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+            Cell cell(p);
+            cell.data.Part.reserved = ALL_DISTRICT;
+            cell.SetNoCreate();
+
+            std::list<Unit*> pList;
+            std::list<Unit*> finalList;
             
-        if(onMarker) {
-            /*if (onMarker->isAlive() && onMarker->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) < 8.0f && onMarker->ToCreature()->AI()->GetData(0) == 1)
-                return;
-            else
-                Reset();*/
-            needReset = true;
-            if (onMarker->isDead())
-                Reset();
-            /*if (onMarker->ToCreature()->AI()->GetData(1) != me->GetDBTableGUIDLow() && onMarker->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) >= 7.0f)
-                Reset();*/
+            float range = 80.0f;
+
+            Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
+            Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
+            TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
+
+            cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
+        
+            for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
+            {
+                if ((*itr)->GetEntry() != 22519)
+                    continue;
+                    
+                /*if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
+                    continue;
+                    
+                if (!IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
+                    continue;
+                    
+                if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                    continue;
+        
+                finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);*/
+            }
+            
+            Trinity::RandomResizeList(finalList, 3);
+            for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
+                DoCast(*itr, 39345, true);
+
+            break;
         }
+        case 2: // Buff
+        {
+            CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+            Cell cell(p);
+            cell.data.Part.reserved = ALL_DISTRICT;
+            cell.SetNoCreate();
+
+            std::list<Unit*> pList;
+            std::list<Unit*> finalList;
+            
+            float range = 80.0f;
+
+            Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
+            Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
+            TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
+
+            cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
+        
+            for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
+            {
+                if ((*itr)->GetEntry() != 22519)
+                    continue;
+                    
+                /*if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
+                    continue;
+                    
+                if (IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
+                    continue;
+                    
+                if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
+                    continue;
+        
+                finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);*/
+            }
+            
+            Trinity::RandomResizeList(finalList, 1);                    
+            for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
+                DoCast(*itr, 39339, true);
+
+            break;
+        }
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!pInstance)
+            return;
+            
+        if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
+            return;
+        
+        if (cheatTimer <= diff) {
+            HandleCheat();
+            
+            cheatTimer = 80000 + rand()%20000;
+        }
+        else
+            cheatTimer -= diff;
     }
 };
 
@@ -251,14 +518,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     {
         pInstance = ((ScriptedInstance*)me->GetInstanceData());
         startingOrientation = c->GetOrientation();
-        potentialTarget = NULL;
         LinkCellTimer = 2000; // To ensure move triggers are in place
-        start_marker = NULL;
     }
     
     ScriptedInstance* pInstance;
-    
-    Unit* npc_medivh;
     
     bool ReturnToHome;
     bool InGame;
@@ -273,46 +536,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     uint64 MedivhGUID;
     
+    float destX, destY;
+    
     float startingOrientation;
 
-    Creature *start_marker, *end_marker, *potentialTarget;
-
     std::list<Unit *> PossibleMoveUnits;
-    
-    Creature* SelectTarget()
-    {
-        Creature* target = NULL;
-        
-        std::list<WorldObject*> targets;
-        float dist = 10.0f;
-        Trinity::AllWorldObjectsInRange u_check(me, dist);
-        Trinity::WorldObjectListSearcher<Trinity::AllWorldObjectsInRange> searcher(targets, u_check);
-        me->VisitNearbyObject(dist, searcher);
-
-        for (std::list<WorldObject*>::const_iterator itr = targets.begin(); itr != targets.end() && !target; itr++) {
-            // Exclude not unit objects
-            if ((*itr)->GetTypeId() != TYPEID_UNIT)
-                continue;
-
-            // Exclude movement triggers
-            if ((*itr)->ToCreature()->GetEntry() == 22519)
-                continue;
-
-            if (!me->IsHostileTo((*itr)->ToCreature()))
-                continue;
-                
-            if (!me->HasInArc(M_PI/2.0f, (*itr)))
-                continue;
-                
-            if (((npc_chesspieceAI*)(*itr)->ToCreature()->AI())->LockInMovement)
-                continue;
-
-            if (me->HasInArc(M_PI/8, (*itr)) && (*itr)->GetExactDistance2d(me->GetPositionX(), me->GetPositionY()) < 6.0f)
-                target = (*itr)->ToCreature();
-        }
-        
-        return target;
-    }
     
     void EnterEvadeMode()
     {
@@ -323,8 +551,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void Aggro(Unit* pWho)
     {
-        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
-        npc_medivh = Unit::GetUnit(*me, MedivhGUID);
+        Unit* npc_medivh = Unit::GetUnit(*me, MedivhGUID);
         
         if (npc_medivh) {
             switch (pInstance->GetData(CHESS_EVENT_TEAM)) {
@@ -355,66 +582,25 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         CheckForceMoveTimer = 1000;
         CheckNearEnemiesTimer = 2000 + rand()%1000;
         me->setActive(true);
-        
-        /*start_marker = NULL;
-        end_marker = NULL;*/
-        
-        me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
-    }
     
-    uint32 GetData(uint32 id)
-    {
-        if (id == 0)
-            return LockInMovement ? 1 : 0;
-        if (id == 1 && start_marker)
-            return start_marker->GetDBTableGUIDLow();
-            
-        return 0;
+        me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
     }
     
     void MovementInform(uint32 MovementType, uint32 Data)
     {
         if (MovementType != POINT_MOTION_TYPE)
             return;
-
-        if (start_marker)
-            ((move_triggerAI*)start_marker->AI())->Reset();
         
         me->SetOrientation(startingOrientation);
-        
-        if (end_marker) {
-            me->Relocate(end_marker->GetPositionX(), end_marker->GetPositionY(), end_marker->GetPositionZ(), startingOrientation);
-            me->SendMovementFlagUpdate();
-        }
-            
-        start_marker = end_marker;
-        end_marker = NULL;
-
-        me->SendMovementFlagUpdate();
             
         LockInMovement = false;
-    }
-    
-    void ResetTriggers()
-    {
-        CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-        Cell cell(p);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-
-        std::list<Unit*> pList;
         
-        float range = 120.0f;
-
-        Trinity::AllCreaturesOfEntryInRange u_check(me, TRIGGER_ID, range);
-        Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-        cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-    
-        for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
-            (*itr)->ToCreature()->AI()->Reset();
+        //sLog.outString("MovementInform");
+        me->Relocate(destX, destY, 220.667f);
+        me->SendMovementFlagUpdate();
     }
+    
+    void AttackStart(Unit* who) {}
     
     void JustRespawned()
     {
@@ -437,6 +623,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     {
         if (!pInstance)
             return;
+            
+        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
 
         if (!charmer || charmer->GetTypeId() != TYPEID_PLAYER)
             return;
@@ -445,33 +633,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         else
             me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            
-        switch (me->GetEntry()) {
-        case NPC_KING_A:
-        {
-            if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS) {
-                pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
-                pInstance->SetData(CHESS_EVENT_TEAM, charmer->ToPlayer()->GetTeam());
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveConfused();
-                    medivh->AI()->Reset();
-                }
-            }
-            break;
-        }
-        case NPC_KING_H:
-        {
-            if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS) {
-                pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
-                pInstance->SetData(CHESS_EVENT_TEAM, charmer->ToPlayer()->GetTeam());
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveConfused();
-                    medivh->AI()->Reset();
-                }
-            }
-            break;
-        }
-        }
 
         if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE)
             me->setFaction(A_FACTION);
@@ -481,8 +642,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void JustDied(Unit* pKiller)
     { 
-        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
-        npc_medivh = Unit::GetUnit(*me, MedivhGUID);
+        Unit* npc_medivh = Unit::GetUnit(*me, MedivhGUID);
 
         if (npc_medivh && pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
             switch (me->GetEntry()) {
@@ -501,7 +661,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             case NPC_KING_H:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, npc_medivh);
                 pInstance->SetData(DATA_CHESS_EVENT, FAIL);
-                ResetTriggers();
                 if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                     medivh->GetMotionMaster()->MoveIdle();
                     medivh->AI()->Reset();
@@ -510,7 +669,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             case NPC_KING_A:
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, npc_medivh);
                 pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                ResetTriggers();
                 if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                     medivh->GetMotionMaster()->MoveIdle();
                     medivh->AI()->Reset();
@@ -537,7 +695,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             case NPC_KING_A:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, npc_medivh);
                 pInstance->SetData(DATA_CHESS_EVENT, FAIL);
-                ResetTriggers();
                 if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                     medivh->GetMotionMaster()->MoveIdle();
                     medivh->AI()->Reset();
@@ -546,7 +703,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             case NPC_KING_H:
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, npc_medivh);
                 pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                ResetTriggers();
                 if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                     medivh->GetMotionMaster()->MoveIdle();
                     medivh->AI()->Reset();
@@ -577,10 +733,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->CombatStop();
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             me->SendMovementFlagUpdate();
-            if (start_marker) {
-                MoveTriggersState[start_marker->GetGUID()] = 0;
-                start_marker = NULL;
-            }
         }
         
         me->Respawn();
@@ -618,47 +770,15 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
         for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
         {
-            if ((*itr)->GetEntry() != TRIGGER_ID || ((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker != NULL)// || !me->isInFront((*itr), 8.0f, 2*M_PI/6)) // TODO: Need better check to exclude triggers not in front or not at strafe.
+            /*if ((*itr)->GetEntry() != TRIGGER_ID || ((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker != NULL)// || !me->isInFront((*itr), 8.0f, 2*M_PI/6)) // TODO: Need better check to exclude triggers not in front or not at strafe.
                 continue;
                 
             if (!((move_triggerAI*)((*itr)->ToCreature()->AI()))->IsMovementAllowed(me))
-                continue;
+                continue;*/
     
             returnList.push_back((*itr));
         }
     
-        pList.clear();
-        return returnList;
-    }
-    
-    std::list<Unit*> FindNearestEnemies()
-    {
-        CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-        Cell cell(p);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-
-        std::list<Unit*> pList;
-        std::list<Unit*> returnList;
-        
-        float range = 5.0f;
-        
-        Trinity::AnyUnitInObjectRangeCheck u_check(me, range);
-        Trinity::UnitListSearcher<Trinity::AnyUnitInObjectRangeCheck> searcher(pList, u_check);
-        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AnyUnitInObjectRangeCheck>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-        cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-
-        for (std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++) {
-            if ((*itr)->GetEntry() == TRIGGER_ID)
-                continue;
-                
-            if ((*itr)->IsFriendlyTo(me))
-                continue;
-                
-            returnList.push_back((*itr));
-        }
-        
         pList.clear();
         return returnList;
     }
@@ -686,16 +806,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     }
     
     void MoveInLineOfSight(Unit* who) {}
-    
-    void AttackedBy(Unit* who)
-    {
-        if (!LockInMovement && !me->isInCombat() && me->HasInArc(M_PI/2.0f, who))
-            AttackStart(who);
-    }
 
     void UpdateAI(const uint32 diff)
     {
-            me->SetReactState(REACT_DEFENSIVE);
+        me->SetReactState(REACT_PASSIVE);
         
         if (!pInstance)
             return;
@@ -703,8 +817,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if (LinkCellTimer) {
             if (LinkCellTimer <= diff) {
                 me->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_MOVE_1, true);
-                if (Creature* marker = me->FindNearestCreature(TRIGGER_ID, 2.0f, true))
-                    start_marker = marker;
                 startingOrientation = me->GetOrientation();
                 LinkCellTimer = 0;
             }
@@ -767,9 +879,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                             std::list<Unit*>::iterator i = PossibleMoveUnits.begin();
                             advance (i ,rand()%PossibleMoveUnits.size());
                             
-                            end_marker = (Creature*)(*i);
-                            
-                            if (((move_triggerAI*)end_marker->AI())->onMarker != NULL && !((move_triggerAI*)end_marker->AI())->EndMarker) {             
+                            /*if (((move_triggerAI*)end_marker->AI())->onMarker != NULL && !((move_triggerAI*)end_marker->AI())->EndMarker) {             
                                 for(uint8 x = 0; x<PossibleMoveUnits.size(); x++) {
                                     i = PossibleMoveUnits.begin();
                                     advance(i, x);
@@ -788,7 +898,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                                 //DoCast((*i), SPELL_MOVE_1, true);
                                 me->CastSpell((*i)->GetPositionX(), (*i)->GetPositionY(), (*i)->GetPositionZ(), SPELL_MOVE_1, true);
                                 moved = true;
-                            }
+                            }*/
                         
                             //start_marker = end_marker;
                         }
@@ -808,7 +918,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 if (!moved && !LockInMovement && !me->isInCombat()) {
                     if (CheckNearEnemiesTimer <= diff) {
                         uint32 tmpTimer = 800;
-                        std::list<Unit*> enemies = FindNearestEnemies();
+                        std::list<Unit*> enemies;
                         if (!enemies.empty()) {
                             std::list<Unit*>::iterator i = enemies.begin();
                             advance(i, rand()%enemies.size());
@@ -872,12 +982,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     CheckForceMoveTimer -= diff;
             }
         }
-
-        if (!me->isInCombat()) {
-            potentialTarget = SelectTarget();
-            if (potentialTarget && !LockInMovement && !((npc_chesspieceAI*)potentialTarget->AI())->IsLockedInMovement())
-                AttackStart(potentialTarget);
-        }
         
         if (me->isInCombat())
             DoMeleeAttackIfReady();
@@ -885,215 +989,32 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void SpellHitTarget(Unit *target, const SpellEntry* spell)
     {
-        if (target->GetEntry() != TRIGGER_ID || (spell->Id != SPELL_MOVE_1
-           && spell->Id != SPELL_MOVE_2 && spell->Id != SPELL_MOVE_3 && spell->Id != SPELL_MOVE_4
-           && spell->Id != SPELL_MOVE_5 && spell->Id != SPELL_MOVE_6 && spell->Id != SPELL_MOVE_7) )
+        if (target->GetEntry() != TRIGGER_ID)
             return;
-            
-        if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
-            LockInMovement = true;
+
+        if ((spell->Id == SPELL_MOVE_1
+           || spell->Id == SPELL_MOVE_2 || spell->Id == SPELL_MOVE_3 || spell->Id == SPELL_MOVE_4
+           || spell->Id == SPELL_MOVE_5 || spell->Id == SPELL_MOVE_6 || spell->Id == SPELL_MOVE_7)) {
+            if (Creature* medivh = Creature::GetCreature(*me, MedivhGUID)) {
+                if (((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceMove(me, target->GetGUID())) {
+                    destX = target->GetPositionX();
+                    destY = target->GetPositionY();
+                    me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
+                }
+            }
+        }
+        else if (spell->Id == SPELL_CHANGE_FACING) { // FIXME: use orientations from enum
+            me->SetFacing(0.0f, target);
+            me->SendMovementFlagUpdate();
+        }
+
         startingOrientation = me->GetOrientation();
-        if (start_marker) {
-            Unit* onTargetMarker = ((move_triggerAI*)target->ToCreature()->AI())->onMarker;
-            if (!onTargetMarker || (onTargetMarker && onTargetMarker->GetGUID() == me->GetGUID())) {
-                start_marker->AI()->Reset();
-                MoveTriggersState[start_marker->GetGUID()] = 0;
-                MoveTriggersState[target->GetGUID()] = me->GetGUID();
-                end_marker = target->ToCreature();
-                ((move_triggerAI*)target->ToCreature()->AI())->onMarker = me;
-            }
-        }
-    }
-};
-
-struct npc_echo_of_medivhAI : public ScriptedAI
-{
-    npc_echo_of_medivhAI(Creature* c) : ScriptedAI(c)
-    {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-    }
-    
-    uint32 cheatTimer;
-    
-    ScriptedInstance* pInstance;
-    
-    void Aggro(Unit* who) {}
-    
-    void Reset()
-    {
-        cheatTimer = 80000 + rand()%20000;
-        
-        CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-        Cell cell(p);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-
-        std::list<Unit*> pList;
-        std::list<Unit*> finalList;
-        
-        float range = 80.0f;
-
-        Trinity::AllCreaturesOfEntryInRange u_check(me, 22521, range);
-        Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-        cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-    
-        for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++) {
-            if ((*itr)->GetEntry() == 22521)
-                (*itr)->ToCreature()->DisappearAndDie();
-        }
-    }
-    
-    bool IsFriendlyPiece(uint32 entry)
-    {
-        if (!pInstance)
-            return false;
-
-        switch (entry) {
-        case NPC_PAWN_H:
-        case NPC_KNIGHT_H:
-        case NPC_QUEEN_H:
-        case NPC_BISHOP_H:
-        case NPC_ROOK_H:
-        case NPC_KING_H:
-            return (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE);
-        case NPC_PAWN_A:
-        case NPC_KNIGHT_A:
-        case NPC_QUEEN_A:
-        case NPC_BISHOP_A:
-        case NPC_ROOK_A:
-        case NPC_KING_A:
-            return (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE);
-        }
-        
-        return false;
-    }
-    
-    void UpdateAI(uint32 const diff)
-    {
-        if (!pInstance)
-            return;
-            
-        if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
-            return;
-        
-        if (cheatTimer <= diff) {
-            switch (rand()%3) {
-            case 0: // Heal king
-            {
-                if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE) {
-                    if (Creature* king = me->FindCreatureInGrid(NPC_KING_H, 80.0f, true))
-                        king->SetHealth(king->GetMaxHealth());
-                }
-                else {
-                    if (Creature* king = me->FindCreatureInGrid(NPC_KING_A, 80.0f, true))
-                        king->SetHealth(king->GetMaxHealth());
-                }
-                break;
-            }
-            case 1: // Fire
-            {
-                CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-                Cell cell(p);
-                cell.data.Part.reserved = ALL_DISTRICT;
-                cell.SetNoCreate();
-
-                std::list<Unit*> pList;
-                std::list<Unit*> finalList;
-                
-                float range = 80.0f;
-
-                Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
-                Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-                TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-                cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-            
-                for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
-                {
-                    if ((*itr)->GetEntry() != 22519)
-                        continue;
-                        
-                    if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
-                        continue;
-                        
-                    if (!IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
-                        continue;
-                        
-                    if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                        continue;
-            
-                    finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);
-                }
-                
-                Trinity::RandomResizeList(finalList, 3);
-                for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
-                    DoCast(*itr, 39345, true);
-
-                break;
-            }
-            case 2: // Buff
-            {
-                CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-                Cell cell(p);
-                cell.data.Part.reserved = ALL_DISTRICT;
-                cell.SetNoCreate();
-
-                std::list<Unit*> pList;
-                std::list<Unit*> finalList;
-                
-                float range = 80.0f;
-
-                Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
-                Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-                TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-                cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-            
-                for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
-                {
-                    if ((*itr)->GetEntry() != 22519)
-                        continue;
-                        
-                    if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
-                        continue;
-                        
-                    if (IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
-                        continue;
-                        
-                    if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                        continue;
-            
-                    finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);
-                }
-                
-                Trinity::RandomResizeList(finalList, 1);                    
-                for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
-                    DoCast(*itr, 39339, true);
-
-                break;
-            }
-            }
-            
-            cheatTimer = 80000 + rand()%20000;
-        }
-        else
-            cheatTimer -= diff;
     }
 };
 
 bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
 {
-    ScriptedInstance* pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-
-    if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == DONE)
-        return true;
-  
     if (player->HasAura(SPELL_RECENTLY_INGAME))
-        return true;
-        
-    if (((npc_chesspieceAI*)creature->AI())->LockInMovement && pInstance && pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
         return true;
 
     if (player->GetTeam() == ALLIANCE && creature->getFaction() != A_FACTION)
@@ -1101,12 +1022,39 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
 
     if (player->GetTeam() == HORDE && creature->getFaction() != H_FACTION)
         return true;
+        
+    bool ok = true;
+    
+    switch (creature->GetEntry()) {
+    case NPC_PAWN_H:
+    case NPC_PAWN_A:
+    case NPC_KNIGHT_H:
+    case NPC_KNIGHT_A:
+    case NPC_QUEEN_H:
+    case NPC_QUEEN_A:
+    case NPC_BISHOP_H:
+    case NPC_BISHOP_A:
+    case NPC_ROOK_H:
+    case NPC_ROOK_A:
+        if (chessPhase != INPROGRESS_PVE && chessPhase != INPROGRESS_PVP)
+            ok = false;
+            
+        break;
+    case NPC_KING_H:
+    case NPC_KING_A:
+        if (chessPhase != INPROGRESS_PVE && chessPhase != INPROGRESS_PVP && chessPhase != PVE_WARMUP && chessPhase != PVP_WARMUP)
+            ok = false;
+            
+        break;
+    default:
+        ok = false;
+        break;
+    }
 
-    if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS && creature->GetEntry() != NPC_KING_A && creature->GetEntry() != NPC_KING_H)
-        return true;
-
-    player->ADD_GOSSIP_ITEM(0, GOSSIP_POSSES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    player->SEND_GOSSIP_MENU(8990, creature->GetGUID());
+    if (ok) {
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_POSSES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        player->SEND_GOSSIP_MENU(8990, creature->GetGUID());
+    }
 
     return true;
 }
@@ -1116,6 +1064,11 @@ bool GossipSelect_npc_chesspiece(Player* player, Creature* creature, uint32 send
     if (action == GOSSIP_ACTION_INFO_DEF + 1) {
         player->CastSpell(creature, SPELL_POSSESS_CHESSPIECE, false);
         player->TeleportTo(532, playerTeleportPosition[0], playerTeleportPosition[1], playerTeleportPosition[2], playerTeleportPosition[3]);
+        
+        if (chessPhase == PVE_WARMUP)
+            chessPhase = INPROGRESS_PVE;
+        else if (chessPhase == PVP_WARMUP)
+            chessPhase = INPROGRESS_PVP;
     }
 
     player->CLOSE_GOSSIP_MENU();
@@ -1123,17 +1076,35 @@ bool GossipSelect_npc_chesspiece(Player* player, Creature* creature, uint32 send
     return true;
 }
 
+enum medivhGossipOptions
+{
+    MEDIVH_GOSSIP_START_PVE,
+    MEDIVH_GOSSIP_RESTART,
+    MEDIVH_GOSSIP_START_PVP
+};
+
 bool GossipHello_npc_echo_of_medivh(Player* player, Creature* creature)
 {
     ScriptedInstance* pInstance = ((ScriptedInstance*)creature->GetInstanceData());
     
-    if (pInstance->GetData(DATA_CHESS_EVENT) == FAIL)
-        pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+    if (!pInstance)
+        return true;
 
-    if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
-        player->ADD_GOSSIP_ITEM(0, "Nous souhaitons recommencer.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+    if (chessPhase == FAILED)
+        chessPhase = NOTSTARTED;
+    
+    if (pInstance->GetData(DATA_CHESS_EVENT) == DONE && chessPhase == NOTSTARTED)
+        chessPhase = PVE_FINISHED;
 
-    //player->ADD_GOSSIP_ITEM(0, EVENT_START, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    if (chessPhase == NOTSTARTED)
+        player->ADD_GOSSIP_ITEM(0, "Nous souhaitons jouer une partie contre vous !", GOSSIP_SENDER_MAIN, MEDIVH_GOSSIP_START_PVE);
+
+    if (chessPhase == INPROGRESS_PVE || chessPhase == INPROGRESS_PVP)
+        player->ADD_GOSSIP_ITEM(0, "Nous souhaitons recommencer.", GOSSIP_SENDER_MAIN, MEDIVH_GOSSIP_RESTART);
+        
+    if (chessPhase == PVE_FINISHED)
+        player->ADD_GOSSIP_ITEM(0, "Nous souhaitons jouer entre nous.", GOSSIP_SENDER_MAIN, MEDIVH_GOSSIP_START_PVP);
+
     player->SEND_GOSSIP_MENU(8990, creature->GetGUID());
     
     return true;
@@ -1145,18 +1116,24 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     
     if (!pInstance)
         return true;
-
-    /*if (action == GOSSIP_ACTION_INFO_DEF + 1) {
-        DoScriptText(SCRIPTTEXT_AT_EVENT_START, creature);
-        pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
-        pInstance->SetData(CHESS_EVENT_TEAM, player->GetTeam());
-        creature->GetMotionMaster()->MoveConfused();
-    }*/
+        
+    pInstance->SetData(CHESS_EVENT_TEAM, player->GetTeam());
     
-    if (action == GOSSIP_ACTION_INFO_DEF + 2) {
-        pInstance->SetData(DATA_CHESS_EVENT, FAIL);
-        creature->GetMotionMaster()->MoveIdle();
-        //MoveTriggersState.clear();
+    switch (action) {
+    case MEDIVH_GOSSIP_START_PVE:
+        chessPhase = PVE_WARMUP;
+        ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
+        break;
+    case MEDIVH_GOSSIP_RESTART:
+        chessPhase = FAILED;
+        break;
+    case MEDIVH_GOSSIP_START_PVP:
+        chessPhase = PVP_WARMUP;
+        ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
+        break;
+    default:
+        sLog.outError("Chess event: unknown action %u", action);
+        break;
     }
 
     player->CLOSE_GOSSIP_MENU();
@@ -1164,19 +1141,31 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     return true;
 }
 
+struct chess_move_triggerAI : public Scripted_NoMovementAI
+{
+    chess_move_triggerAI(Creature* c) : Scripted_NoMovementAI(c) {}
+    
+    void Aggro(Unit* who) {}
+    
+    void SpellHit(Unit* caster, const SpellEntry* spell)
+    {
+        
+    }
+};
+
 CreatureAI* GetAI_npc_chesspiece(Creature* pCreature)
 {
     return new npc_chesspieceAI(pCreature);
 }
 
-CreatureAI* GetAI_move_trigger(Creature* pCreature)
-{
-    return new move_triggerAI(pCreature);
-}
-
 CreatureAI* GetAI_npc_echo_of_medivh(Creature* pCreature)
 {
     return new npc_echo_of_medivhAI(pCreature);
+}
+
+CreatureAI* GetAI_chess_move_trigger(Creature* creature)
+{
+    return new chess_move_triggerAI(creature);
 }
 
 void AddSC_chess_event()
@@ -1196,9 +1185,9 @@ void AddSC_chess_event()
     newscript->pGossipSelect = &GossipSelect_npc_echo_of_medivh;
     newscript->GetAI = &GetAI_npc_echo_of_medivh;
     newscript->RegisterSelf();
-
+    
     newscript = new Script;
     newscript->Name = "chess_move_trigger";
-    newscript->GetAI = &GetAI_move_trigger;
+    newscript->GetAI = &GetAI_chess_move_trigger;
     newscript->RegisterSelf();
 }
