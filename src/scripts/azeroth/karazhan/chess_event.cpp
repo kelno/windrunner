@@ -146,6 +146,12 @@ enum eSpells {
     // 3rd cheat: set own creatures to max health
 };
 
+enum deadTeam
+{
+    DEAD_ALLIANCE   = 0,
+    DEAD_HORDE      = 1
+};
+
 struct npc_echo_of_medivhAI : public ScriptedAI
 {
     npc_echo_of_medivhAI(Creature* c) : ScriptedAI(c)
@@ -156,6 +162,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     BoardCell* board[8][8];
     
     uint32 cheatTimer;
+    uint32 deadCount[2];
     
     ScriptedInstance* pInstance;
     
@@ -171,7 +178,6 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         cell.SetNoCreate();
 
         std::list<Unit*> pList;
-        std::list<Unit*> finalList;
         
         float range = 80.0f;
 
@@ -216,6 +222,9 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 }
             }
         }
+        
+        deadCount[DEAD_ALLIANCE] = 0;
+        deadCount[DEAD_HORDE] = 0;
     }
     
     void HandleCellInitialData(uint8 row, uint8 col, Creature* trigger, BoardCell* cell)
@@ -322,6 +331,56 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             for (uint8 col = 0; col < 8; col++) {
                 sLog.outString("%u %u: "I64FMTD, row, col, board[row][col]->triggerGUID);
             }
+        }
+    }
+    
+    void HandlePieceDeath(Creature* piece)
+    {
+        switch (piece->getFaction()) {
+        case A_FACTION:
+        {
+            float baseX = -11078.116211;
+            float baseY = -1908.443115;
+            float deltaX = 2.148438;
+            float deltaY = 1.723755;
+            float extraX = 2.416992;
+            float extraY = -2.889649;
+            
+            float offset = 1.3f * (deadCount[DEAD_ALLIANCE] % 8);
+
+            float finalX = baseX + offset * deltaX + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraX;
+            float finalY = baseY + offset * deltaY + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraY;
+            piece->Relocate(finalX, finalY, 221, orientations[ORI_SW]);
+            ++deadCount[DEAD_ALLIANCE];
+
+            piece->CombatStop();
+            piece->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            piece->SendMovementFlagUpdate();
+            piece->setDeathState(JUST_ALIVED);
+            piece->SetHealth(piece->GetMaxHealth());
+            break;
+        }
+        case H_FACTION:
+            float baseX = -11081.393555;
+            float baseY = -1844.194092;
+            float deltaX = -2.148438;
+            float deltaY = -1.723755;
+            float extraX = -2.416992;
+            float extraY = 2.889649;
+            
+            float offset = 1.3f * (deadCount[DEAD_ALLIANCE] % 8);
+
+            float finalX = baseX + offset * deltaX + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraX;
+            float finalY = baseY + offset * deltaY + (deadCount[DEAD_ALLIANCE] >= 8 ? 1 : 0) * extraY;
+            piece->Relocate(finalX, finalY, 221, orientations[ORI_NE]);
+            ++deadCount[DEAD_ALLIANCE];
+
+            piece->CombatStop();
+            piece->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            piece->SendMovementFlagUpdate();
+            piece->setDeathState(JUST_ALIVED);
+            piece->SetHealth(piece->GetMaxHealth());
+            break;
         }
     }
     
@@ -623,6 +682,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             currentOrientation = ORI_SE;
             break;
         }
+        
+        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
     }
     
     void MovementInform(uint32 MovementType, uint32 Data)
@@ -679,9 +740,16 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void JustDied(Unit* pKiller)
     { 
-        Unit* npc_medivh = Unit::GetUnit(*me, MedivhGUID);
+        Creature* medivh = Creature::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_IMAGE_OF_MEDIVH) : 0);
+        ((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceDeath(me);
+        
+        if (me->isCharmed()) {
+            if (Unit* charmer = me->GetCharmer())
+                charmer->RemoveAurasDueToSpell(30019);
+            me->RemoveCharmedOrPossessedBy(me->GetCharmer());
+        }
 
-        if (npc_medivh && pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
+        /*if (npc_medivh && pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
             switch (me->GetEntry()) {
             case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, npc_medivh);     break;
             case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, npc_medivh);     break;
@@ -772,7 +840,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->SendMovementFlagUpdate();
         }
         
-        me->Respawn();
+        me->Respawn();*/
 
     }
     
