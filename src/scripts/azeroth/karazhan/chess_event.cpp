@@ -620,13 +620,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             break;
         }
     }
-    
+
     ScriptedInstance* pInstance;
-    
-    bool ReturnToHome;
+
     bool InGame;
     bool CanMove;
-    bool LockInMovement;
     
     uint32 Heal_Timer;
     uint32 NextMove_Timer;
@@ -649,7 +647,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         Reset();
     }
     
-    void Aggro(Unit* pWho)
+    void Aggro(Unit* pWho) // TODO
     {
         Unit* npc_medivh = Unit::GetUnit(*me, MedivhGUID);
         
@@ -673,8 +671,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void Reset()
     {
-        LockInMovement = false;
-        //ReturnToHome = true;
         Heal_Timer = 7000;
         InGame = true;
         CanMove = false;
@@ -693,8 +689,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     {
         if (MovementType != POINT_MOTION_TYPE)
             return;
-            
-        LockInMovement = false;
         
         me->SetOrientation(orientations[currentOrientation]);
         me->Relocate(destX, destY, 220.667f);
@@ -849,7 +843,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         me->CombatStop();
         
         if (spellId != SPELL_MOVE_1 && spellId != SPELL_MOVE_2 && spellId != SPELL_MOVE_3 && spellId != SPELL_MOVE_4 && 
-                spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING && !LockInMovement) {
+                spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING) {
             me->SetOrientation(orientations[currentOrientation]);
             me->SendMovementFlagUpdate();
         }
@@ -899,11 +893,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         return 1;
     }
     
-    bool IsLockedInMovement()
-    {
-        return LockInMovement;
-    }
-    
     void MoveInLineOfSight(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
@@ -915,20 +904,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             
         if (chessPhase != INPROGRESS_PVE && chessPhase != INPROGRESS_PVP)
             return;
-        
-        /*if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
-            return;*/
-            
-        if (LockInMovement && me->GetMotionMaster()->GetCurrentMovementGeneratorType() != POINT_MOTION_TYPE)
-            LockInMovement = false;
 
         /*if (!InGame)
             return;*/
-            
-        if (LockInMovement)
-            return;
-            
-        ReturnToHome = true;
+
         bool moved = false;
         
         if (me->IsNonMeleeSpellCasted(false))
@@ -998,7 +977,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     NextMove_Timer -= diff;
                     
                 // Face nearest enemy
-                if (!moved && !LockInMovement && !me->isInCombat()) {
+                if (!moved && !me->isInCombat()) {
                     if (CheckNearEnemiesTimer <= diff) {
                         uint32 tmpTimer = 800;
                         std::list<Unit*> enemies;
