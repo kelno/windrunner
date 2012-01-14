@@ -79,16 +79,18 @@ typedef enum gamePhase
 
 GamePhase chessPhase = NOTSTARTED;
 
-typedef enum chessOrientation
+typedef enum chessOrientationType
 {
     ORI_SE  = 0,    // Horde start
     ORI_SW  = 1,
     ORI_NW  = 2,    // Alliance start
     ORI_NE  = 3
-} ChessOrientation;
+} ChessOrientationType;
+
+float orientations[4] = { 3.809080, 2.235102, 0.661124, 5.385472 };
 
 /*
-x = case (0, 0) - y = case (8, 8)
+x = case (0, 0) - y = case (7, 7)
     --------------------
         HORDE PIECES  y
 
@@ -326,7 +328,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         case NPC_KING_A:
             return (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE);
         }
-        
+
         return false;
     }
     
@@ -337,6 +339,39 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 sLog.outString("%u %u: "I64FMTD, row, col, board[row][col]->triggerGUID);
             }
         }
+    }
+    
+    int HandlePieceRotate(Creature* piece, uint64 trigger)
+    {
+        uint8 pieceRow = 8, pieceCol = 8, targetRow, targetCol;
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                BoardCell* cell = board[row][col];
+                if (cell->triggerGUID == trigger) {
+                    targetRow = row;
+                    targetCol = col;
+                }
+                if (cell->pieceGUID == piece->GetGUID()) {
+                    pieceRow = row;
+                    pieceCol = col;
+                }
+            }
+        }
+
+        int8 deltaRow = pieceRow - targetRow;
+        int8 deltaCol = pieceCol - targetCol;
+        
+        if (fabs(deltaRow) + fabs(deltaCol) > 1)
+            return -1;
+
+        if (deltaRow == 1 && deltaCol == 0)
+            return ORI_SE;
+        if (deltaRow == 0 && deltaCol == 1)
+            return ORI_SW;
+        if (deltaRow == -1 && deltaCol == 0)
+            return ORI_NW;
+        if (deltaRow == 0 && deltaCol == -1)
+            return ORI_NE;
     }
     
     bool HandlePieceMove(Creature* piece, uint64 trigger)
@@ -1017,12 +1052,15 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 }
             }
         }
-        else if (spell->Id == SPELL_CHANGE_FACING) { // FIXME: use orientations from enum
-            me->SetFacing(0.0f, target);
-            me->SendMovementFlagUpdate();
+        else if (spell->Id == SPELL_CHANGE_FACING) {
+            if (Creature* medivh = Creature::GetCreature(*me, MedivhGUID)) {
+                int result = ((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceRotate(me, target->GetGUID());
+                if (result != -1) {
+                    me->SetOrientation(orientations[result]);
+                    me->SendMovementFlagUpdate();
+                }
+            }
         }
-
-        startingOrientation = me->GetOrientation();
     }
 };
 
