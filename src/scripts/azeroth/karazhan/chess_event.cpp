@@ -205,6 +205,20 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     
     void SetupBoard()
     {
+        // Cleanup needed?
+        if (Creature* trigger = me->FindNearestCreature(TRIGGER_ID, 15.0f, true)) {
+            for (uint8 row = 0; row < 8; row++) {
+                for (uint8 col = 0; col < 8; col++) {
+                    if (Creature* cellTrigger = Creature::GetCreature(*me, board[row][col]->triggerGUID))
+                        cellTrigger->ForcedDespawn();
+                }
+                
+                delete[] board[row];
+            }
+            
+            delete[] board;
+        }
+
         for (uint8 row = 0; row < 8; row++) {
             for (uint8 col = 0; col < 8; col++) {
                 BoardCell* cell = new BoardCell;
