@@ -312,14 +312,14 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         case NPC_BISHOP_H:
         case NPC_ROOK_H:
         case NPC_KING_H:
-            return (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE);
+            return (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE);
         case NPC_PAWN_A:
         case NPC_KNIGHT_A:
         case NPC_QUEEN_A:
         case NPC_BISHOP_A:
         case NPC_ROOK_A:
         case NPC_KING_A:
-            return (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE);
+            return (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE);
         }
 
         return false;
@@ -540,82 +540,46 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
         case 1: // Fire
         {
-            CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-            Cell cell(p);
-            cell.data.Part.reserved = ALL_DISTRICT;
-            cell.SetNoCreate();
-
-            std::list<Unit*> pList;
-            std::list<Unit*> finalList;
-            
-            float range = 80.0f;
-
-            Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
-            Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-            TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-            cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-        
-            for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
-            {
-                if ((*itr)->GetEntry() != 22519)
-                    continue;
+            std::list<Creature*> targetList;
+            for (uint8 row = 0; row < 8; row++) {
+                for (uint8 col = 0; col < 8; col++) {
+                    BoardCell* cell = board[row][col];
+                    if (!cell->pieceGUID)
+                        continue;
                     
-                /*if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
-                    continue;
-                    
-                if (!IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
-                    continue;
-                    
-                if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                    continue;
-        
-                finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);*/
+                    if (IsFriendlyPiece(cell->pieceEntry))
+                        continue;
+                        
+                    if (Creature* trigger = Creature::GetCreature(*me, cell->triggerGUID))
+                        targetList.push_back(trigger);
+                }
             }
             
-            Trinity::RandomResizeList(finalList, 3);
-            for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
+            Trinity::RandomResizeList(targetList, ((targetList.size() >= 3) ? 3 : targetList.size()));
+            for (std::list<Creature*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
                 DoCast(*itr, 39345, true);
 
             break;
         }
         case 2: // Buff
-        {
-            CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-            Cell cell(p);
-            cell.data.Part.reserved = ALL_DISTRICT;
-            cell.SetNoCreate();
-
-            std::list<Unit*> pList;
-            std::list<Unit*> finalList;
-            
-            float range = 80.0f;
-
-            Trinity::AllCreaturesOfEntryInRange u_check(me, 22519, range);
-            Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-            TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-            cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-        
-            for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++)
-            {
-                if ((*itr)->GetEntry() != 22519)
-                    continue;
+        {                
+            std::list<Creature*> targetList;
+            for (uint8 row = 0; row < 8; row++) {
+                for (uint8 col = 0; col < 8; col++) {
+                    BoardCell* cell = board[row][col];
+                    if (!cell->pieceGUID)
+                        continue;
                     
-                /*if (((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker == NULL)
-                    continue;
-                    
-                if (IsFriendlyPiece(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker->GetEntry()))
-                    continue;
-                    
-                if ((*itr)->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                    continue;
-        
-                finalList.push_back(((move_triggerAI*)((Creature*)(*itr))->AI())->onMarker);*/
+                    if (!IsFriendlyPiece(cell->pieceEntry))
+                        continue;
+                        
+                    if (Creature* piece = Creature::GetCreature(*me, cell->pieceGUID))
+                        targetList.push_back(piece);
+                }
             }
             
-            Trinity::RandomResizeList(finalList, 1);                    
-            for (std::list<Unit*>::iterator itr = finalList.begin(); itr != finalList.end(); itr++)
+            Trinity::RandomResizeList(targetList, 1);
+            for (std::list<Creature*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
                 DoCast(*itr, 39339, true);
 
             break;
@@ -628,7 +592,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         if (!pInstance)
             return;
             
-        if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
+        if (chessPhase != INPROGRESS_PVE)
             return;
         
         if (cheatTimer <= diff) {
