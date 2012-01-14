@@ -64,6 +64,8 @@ struct instance_karazhan : public ScriptedInstance
     uint64 NetherspaceDoor;                                // Door at Malchezaar
     uint64 MastersTerraceDoor[2];
     uint64 ImageGUID;
+    
+    std::vector<uint64> ChessPieces;
 
     void Initialize()
     {
@@ -90,6 +92,8 @@ struct instance_karazhan : public ScriptedInstance
         MastersTerraceDoor[1]= 0;
         ImageGUID = 0;
         ChessTeam = 0;
+        
+        ChessPieces.resize(0);
     }
 
     bool IsEncounterInProgress() const
@@ -133,6 +137,20 @@ struct instance_karazhan : public ScriptedInstance
             case 15688:   TerestianGUID = creature->GetGUID();   break;
             case 15687:   MoroesGUID = creature->GetGUID();      break;
             case 16816:   ImageGUID = creature->GetGUID();       break;
+            case NPC_PAWN_H:
+            case NPC_KNIGHT_H:
+            case NPC_QUEEN_H:
+            case NPC_BISHOP_H:
+            case NPC_ROOK_H:
+            case NPC_KING_H:
+            case NPC_PAWN_A:
+            case NPC_KNIGHT_A:
+            case NPC_QUEEN_A:
+            case NPC_BISHOP_A:
+            case NPC_ROOK_A:
+            case NPC_KING_A:
+                ChessPieces.push_back(creature->GetGUID());
+                break;
         }
     }
 
@@ -191,6 +209,16 @@ struct instance_karazhan : public ScriptedInstance
                 break;
             case DATA_OPERA_OZ_DEATHCOUNT:     ++OzDeathCount;        break;
             case CHESS_EVENT_TEAM:             ChessTeam = data;      break;
+            case DATA_CHESS_REINIT_PIECES:
+                for (uint8 i = 0; i < ChessPieces.size(); i++) {
+                    if (Creature* piece = instance->GetCreature(ChessPieces.at(i))) {
+                        float x, y, z, o;
+                        piece->GetHomePosition(x, y, z, o);
+                        piece->Relocate(x, y, z, o);
+                        piece->SendMovementFlagUpdate();
+                    }
+                }
+                break;
         }
 
         if (data == DONE)

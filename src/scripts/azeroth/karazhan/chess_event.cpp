@@ -126,22 +126,6 @@ enum eScriptTexts {
     SCRIPTTEXT_MEDIVH_CHEAT_3   =  -1650021
 };
 
-enum eNPCs { 
-    NPC_MEDIVH   = 16816,
-    NPC_PAWN_H   = 17469,
-    NPC_PAWN_A   = 17211,
-    NPC_KNIGHT_H = 21748,
-    NPC_KNIGHT_A = 21664,
-    NPC_QUEEN_H  = 21750,
-    NPC_QUEEN_A  = 21683,
-    NPC_BISHOP_H = 21747,
-    NPC_BISHOP_A = 21682,
-    NPC_ROOK_H   = 21726,
-    NPC_ROOK_A   = 21160,
-    NPC_KING_H   = 21752,
-    NPC_KING_A   = 21684
-};
-
 enum eSpells {
     BISHOP_HEAL_H  = 37456,
     BISHOP_HEAL_A  = 37455,
@@ -566,8 +550,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     npc_chesspieceAI(Creature *c) : Scripted_NoMovementAI(c)
     {
         pInstance = ((ScriptedInstance*)me->GetInstanceData());
-        startingOrientation = c->GetOrientation();
-        LinkCellTimer = 2000; // To ensure move triggers are in place
     }
     
     ScriptedInstance* pInstance;
@@ -579,17 +561,16 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     uint32 Heal_Timer;
     uint32 NextMove_Timer;
-    uint32 LinkCellTimer;
     uint32 CheckForceMoveTimer;
     uint32 CheckNearEnemiesTimer;
     
     uint64 MedivhGUID;
     
     float destX, destY;
-    
-    float startingOrientation;
 
     std::list<Unit *> PossibleMoveUnits;
+    
+    ChessOrientationType currentOrientation;
     
     void EnterEvadeMode()
     {
@@ -633,18 +614,25 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         me->setActive(true);
     
         me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
+        
+        switch (me->getFaction()) {
+        case A_FACTION:
+            currentOrientation = ORI_NW;
+            break;
+        case H_FACTION:
+            currentOrientation = ORI_SE;
+            break;
+        }
     }
     
     void MovementInform(uint32 MovementType, uint32 Data)
     {
         if (MovementType != POINT_MOTION_TYPE)
             return;
-        
-        me->SetOrientation(startingOrientation);
             
         LockInMovement = false;
         
-        //sLog.outString("MovementInform");
+        me->SetOrientation(orientations[currentOrientation]);
         me->Relocate(destX, destY, 220.667f);
         me->SendMovementFlagUpdate();
     }
@@ -794,7 +782,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         
         if (spellId != SPELL_MOVE_1 && spellId != SPELL_MOVE_2 && spellId != SPELL_MOVE_3 && spellId != SPELL_MOVE_4 && 
                 spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING && !LockInMovement) {
-            me->SetOrientation(startingOrientation);
+            me->SetOrientation(orientations[currentOrientation]);
             me->SendMovementFlagUpdate();
         }
     }
@@ -862,16 +850,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         
         if (!pInstance)
             return;
-        
-        if (LinkCellTimer) {
-            if (LinkCellTimer <= diff) {
-                me->CastSpell(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), SPELL_MOVE_1, true);
-                startingOrientation = me->GetOrientation();
-                LinkCellTimer = 0;
-            }
-            else
-                LinkCellTimer -= diff;
-        }
 
         if (pInstance->GetData(DATA_CHESS_EVENT) == DONE || pInstance->GetData(DATA_CHESS_EVENT) == FAIL) {
             if(me->isInCombat())
@@ -891,7 +869,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 me->GetHomePosition(x, y, z, o);
                 me->Relocate(x, y, z, o);
                 me->Respawn();
-                LinkCellTimer = 2000;
                 ReturnToHome = false;
             }
         }
@@ -1049,6 +1026,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     destX = target->GetPositionX();
                     destY = target->GetPositionY();
                     me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
+                    target->CastSpell(target, SPELL_MOVE_MARKER, false);
                 }
             }
         }
@@ -1178,6 +1156,7 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
         break;
     case MEDIVH_GOSSIP_RESTART:
         chessPhase = FAILED;
+        pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
         break;
     case MEDIVH_GOSSIP_START_PVP:
         chessPhase = PVP_WARMUP;

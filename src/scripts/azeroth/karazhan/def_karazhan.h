@@ -35,6 +35,7 @@
 #define DATA_MASTERS_TERRACE_DOOR_2     28
 #define DATA_CHESS_ECHO_OF_MEDIVH       29
 #define CHESS_EVENT_TEAM                30
+#define DATA_CHESS_REINIT_PIECES        31
 
 // Opera Performances
 #define EVENT_OZ        1
@@ -42,5 +43,21 @@
 #define EVENT_RAJ       3
 
 #define ERROR_INST_DATA(a)     error_log("TSCR: Instance Data for Karazhan not set properly. Encounter for Creature Entry %u may not work properly.", a->GetEntry());
+
+enum eNPCs { 
+    NPC_MEDIVH   = 16816,
+    NPC_PAWN_H   = 17469,
+    NPC_PAWN_A   = 17211,
+    NPC_KNIGHT_H = 21748,
+    NPC_KNIGHT_A = 21664,
+    NPC_QUEEN_H  = 21750,
+    NPC_QUEEN_A  = 21683,
+    NPC_BISHOP_H = 21747,
+    NPC_BISHOP_A = 21682,
+    NPC_ROOK_H   = 21726,
+    NPC_ROOK_A   = 21160,
+    NPC_KING_H   = 21752,
+    NPC_KING_A   = 21684
+};
 #endif
 
