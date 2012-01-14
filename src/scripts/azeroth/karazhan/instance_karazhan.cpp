@@ -216,6 +216,7 @@ struct instance_karazhan : public ScriptedInstance
                         piece->GetHomePosition(x, y, z, o);
                         piece->Relocate(x, y, z, o);
                         piece->SendMovementFlagUpdate();
+                        piece->AI()->SetData(0, 0); // Reset default orientation
                     }
                 }
                 break;

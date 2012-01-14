@@ -334,6 +334,43 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
     }
     
+    Creature* GetTargetFor(Creature* piece, ChessOrientationType orientation)
+    {
+        Creature* target = NULL;
+        BoardCell* targetCell = NULL;
+
+        for (uint8 row = 0; row < 8 && !targetCell; row++) {
+            for (uint8 col = 0; col < 8 && !targetCell; col++) {
+                BoardCell* cell = board[row][col];
+                if (cell->pieceGUID == piece->GetGUID()) {
+                    switch (orientation) {
+                    case ORI_SE:
+                        if (row != 0)
+                            targetCell = board[row-1][col];
+                        break;
+                    case ORI_SW:
+                        if (col != 0)
+                            targetCell = board[row][col-1];
+                        break;
+                    case ORI_NW:
+                        if (row != 7)
+                            targetCell = board[row+1][col];
+                        break;
+                    case ORI_NE:
+                        if (col != 7)
+                            targetCell = board[row][col+1];
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (targetCell && targetCell->pieceGUID)
+            target = Creature::GetCreature(*me, targetCell->pieceGUID);
+
+        return target;
+    }
+    
     void HandlePieceDeath(Creature* piece)
     {
         switch (piece->getFaction()) {
@@ -609,6 +646,15 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     npc_chesspieceAI(Creature *c) : Scripted_NoMovementAI(c)
     {
         pInstance = ((ScriptedInstance*)me->GetInstanceData());
+        
+        switch (me->getFaction()) {
+        case A_FACTION:
+            currentOrientation = ORI_NW;
+            break;
+        case H_FACTION:
+            currentOrientation = ORI_SE;
+            break;
+        }
     }
     
     ScriptedInstance* pInstance;
@@ -622,6 +668,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     uint32 NextMove_Timer;
     uint32 CheckForceMoveTimer;
     uint32 CheckNearEnemiesTimer;
+    uint32 AttackTimer;
     
     uint64 MedivhGUID;
     
@@ -674,16 +721,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
         me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
         
-        switch (me->getFaction()) {
-        case A_FACTION:
-            currentOrientation = ORI_NW;
-            break;
-        case H_FACTION:
-            currentOrientation = ORI_SE;
-            break;
-        }
-        
         MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
+        AttackTimer = me->GetAttackTime(BASE_ATTACK);
     }
     
     void MovementInform(uint32 MovementType, uint32 Data)
@@ -696,26 +735,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         me->SetOrientation(orientations[currentOrientation]);
         me->Relocate(destX, destY, 220.667f);
         me->SendMovementFlagUpdate();
+        
+        AttackTimer = 1;
     }
     
     void AttackStart(Unit* who) {}
-    
-    void JustRespawned()
-    {
-        //not finally - just a presentation - need 32place two side of chesstable
-        if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
-            float angle = me->GetOrientation();
-            float pos_x = -11066;
-            float pos_y = -1898;
-            int move_lenght = 2*rand()%10;
-            float new_x = pos_x + move_lenght * cos(angle);
-            float new_y = pos_y + move_lenght * sin(angle);
-            me->Relocate(new_x, new_y, 221, 2.24);
-            me->CombatStop();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SendMovementFlagUpdate();
-        }
-    }
     
     void OnCharmed(Unit* charmer, bool apply)
     {
@@ -736,6 +760,18 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             me->setFaction(A_FACTION);
         else
             me->setFaction(H_FACTION);
+    }
+    
+    void SetData(uint32 type, uint32 value)
+    {
+        switch (me->getFaction()) {
+        case A_FACTION:
+            currentOrientation = ORI_NW;
+            break;
+        case H_FACTION:
+            currentOrientation = ORI_SE;
+            break;
+        }
     }
     
     void JustDied(Unit* pKiller)
@@ -904,12 +940,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         return LockInMovement;
     }
     
-    Creature* GetTarget()
-    {
-        Creature* target = Creature::GetCreature(*me, me->GetUInt64Value(UNIT_FIELD_TARGET));
-        return target;
-    }
-    
     void MoveInLineOfSight(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
@@ -918,37 +948,18 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         
         if (!pInstance)
             return;
-
-        if (pInstance->GetData(DATA_CHESS_EVENT) == DONE || pInstance->GetData(DATA_CHESS_EVENT) == FAIL) {
-            if(me->isInCombat())
-                me->CombatStop();            
-
-            if(me->isCharmed()) {
-                if (Unit* charmer = me->GetCharmer())
-                    charmer->RemoveAurasDueToSpell(30019);
-                me->RemoveCharmedOrPossessedBy(me->GetCharmer());
-            }
-
-            if(me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
-                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             
-            if (ReturnToHome) {
-                float x, y, z, o;
-                me->GetHomePosition(x, y, z, o);
-                me->Relocate(x, y, z, o);
-                me->Respawn();
-                ReturnToHome = false;
-            }
-        }
-        
-        if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
+        if (chessPhase != INPROGRESS_PVE && chessPhase != INPROGRESS_PVP)
             return;
+        
+        /*if (pInstance->GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
+            return;*/
             
         if (LockInMovement && me->GetMotionMaster()->GetCurrentMovementGeneratorType() != POINT_MOTION_TYPE)
             LockInMovement = false;
 
-        if (!InGame)
-            return;
+        /*if (!InGame)
+            return;*/
             
         if (LockInMovement)
             return;
@@ -959,8 +970,22 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if (me->IsNonMeleeSpellCasted(false))
             return;
 
-        if (me->isInCombat() && GetTarget() && me->GetExactDistance2d(GetTarget()->GetPositionX(), GetTarget()->GetPositionY()) >= NPC_ATTACK_RADIUS)
-            me->CombatStop();
+        if (AttackTimer <= diff) {
+            Creature* piece = NULL;
+            if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
+                piece = ((npc_echo_of_medivhAI*)medivh->AI())->GetTargetFor(me, currentOrientation);
+            }
+            if (piece && !me->IsFriendlyTo(piece)) {
+                me->Attack(piece, false);
+            }
+            else {
+                me->CombatStop();
+            }
+
+            AttackTimer = me->GetAttackTime(BASE_ATTACK);
+        }
+        else
+            AttackTimer -= diff;
 
         if (!me->isCharmed()) {
             if (!me->isInCombat()) {
@@ -1095,6 +1120,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     destY = target->GetPositionY();
                     me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
                     target->CastSpell(target, SPELL_MOVE_MARKER, false);
+                    me->CombatStop();
                 }
             }
         }
@@ -1104,6 +1130,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 if (result != -1) {
                     me->SetOrientation(orientations[result]);
                     me->SendMovementFlagUpdate();
+                    currentOrientation = ChessOrientationType(result);
+                    me->CombatStop();
                 }
             }
         }
@@ -1246,9 +1274,19 @@ struct chess_move_triggerAI : public Scripted_NoMovementAI
     
     void Aggro(Unit* who) {}
     
+    void AttackStart(Unit* who)
+    {
+        return;
+    }
+    
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
         
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        me->CombatStop();
     }
 };
 
