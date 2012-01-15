@@ -172,6 +172,23 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     {
         cheatTimer = 80000 + rand()%20000;
         
+        if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == DONE)
+            chessPhase = PVE_FINISHED;
+    }
+    
+    void RemoveCheats()
+    {
+        // Buffs
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                if (uint64 guid = board[row][col]->pieceGUID) {
+                    if (Creature* piece = Creature::GetCreature(*me, guid))
+                        piece->RemoveAurasDueToSpell(39339);
+                }
+            }
+        }
+        
+        // Fires
         CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
         Cell cell(p);
         cell.data.Part.reserved = ALL_DISTRICT;
@@ -192,8 +209,6 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 (*itr)->ToCreature()->DisappearAndDie();
         }
     }
-    
-    void RemoveCheats() {} // TODO: fires and buffs
     
     void SetupBoard()
     {
@@ -419,6 +434,13 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             piece->SetHealth(piece->GetMaxHealth());
             break;
         }
+        
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                if (board[row][col]->pieceGUID == piece->GetGUID())
+                    board[row][col]->reset();
+            }
+        }
     }
     
     int HandlePieceRotate(Creature* piece, uint64 trigger)
@@ -491,8 +513,10 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_ROOK_A:
             case NPC_KING_H:
             case NPC_KING_A:
-                if (deltaRow > 1 || deltaCol > 1)
+                if (deltaRow > 1 || deltaCol > 1) {
+                    sLog.outString("Target cell too far for %s (%u)", piece->GetName(), piece->GetDBTableGUIDLow());
                     res = false;
+                }
                 break;
             case NPC_QUEEN_H:
             case NPC_QUEEN_A:
@@ -517,6 +541,95 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
 
         return res;
+    }
+    
+    bool HandlePieceMoveByAI(Creature* piece, ChessOrientationType orientation)
+    {
+        uint8 pieceRow = 0, pieceCol = 0;
+        bool found = false;
+        for (uint8 row = 0; row < 8 && !found; row++) {
+            for (uint8 col = 0; col < 8 && !found; col++) {
+                if (board[row][col]->pieceGUID == piece->GetGUID()) {
+                    pieceRow = row;
+                    pieceCol = col;
+                    found = true;
+                }
+            }
+        }
+        // Force half-turn?
+        if (orientation == ORI_SE && pieceRow == 0) {
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow+1][pieceCol]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_CHANGE_FACING, false);
+            return true;
+        }
+        else if (orientation == ORI_SW && pieceCol == 0) {
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol+1]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_CHANGE_FACING, false);
+            return true;
+        }
+        else if (orientation == ORI_NW && pieceRow == 7) {
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow-1][pieceCol]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_CHANGE_FACING, false);
+            return true;
+        }
+        else if (orientation == ORI_NE && pieceCol == 7) {
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol-1]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_CHANGE_FACING, false);
+            return true;
+        }
+        else if (rand()%2) { // 1/3 chance to check near enemies
+            if (pieceRow > 0 && pieceRow < 7 && pieceCol > 0 && pieceCol < 7) {
+                if (Creature* neightboor = Creature::GetCreature(*me, board[pieceRow-1][pieceCol]->pieceGUID)) {
+                    if (!piece->IsFriendlyTo(neightboor)) {
+                        piece->CastSpell(neightboor, SPELL_CHANGE_FACING, false);
+                        return true;
+                    }
+                }
+                else if (Creature* neightboor = Creature::GetCreature(*me, board[pieceRow+1][pieceCol]->pieceGUID)) {
+                    if (!piece->IsFriendlyTo(neightboor)) {
+                        piece->CastSpell(neightboor, SPELL_CHANGE_FACING, false);
+                        return true;
+                    }
+                }
+                else if (Creature* neightboor = Creature::GetCreature(*me, board[pieceRow][pieceCol-1]->pieceGUID)) {
+                    if (!piece->IsFriendlyTo(neightboor)) {
+                        piece->CastSpell(neightboor, SPELL_CHANGE_FACING, false);
+                        return true;
+                    }
+                }
+                else if (Creature* neightboor = Creature::GetCreature(*me, board[pieceRow][pieceCol+1]->pieceGUID)) {
+                    if (!piece->IsFriendlyTo(neightboor)) {
+                        piece->CastSpell(neightboor, SPELL_CHANGE_FACING, false);
+                        return true;
+                    }
+                }
+            }
+        }
+
+        switch (orientation) { // Here we shouldn't be facing the edges, check in the 4 first if statements
+        case ORI_SE:
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow-1][pieceCol]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_MOVE_1, false);
+            break;
+            //return HandlePieceMove(piece, board[pieceRow-1][pieceCol]->triggerGUID);
+        case ORI_SW:
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol-1]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_MOVE_1, false);
+            break;
+            //return HandlePieceMove(piece, board[pieceRow][pieceCol-1]->triggerGUID);
+        case ORI_NW:
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow+1][pieceCol]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_MOVE_1, false);
+            break;
+            //return HandlePieceMove(piece, board[pieceRow+1][pieceCol]->triggerGUID);
+        case ORI_NE:
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol+1]->triggerGUID))
+                piece->CastSpell(trigger, SPELL_MOVE_1, false);
+            break;
+            //return HandlePieceMove(piece, board[pieceRow][pieceCol+1]->triggerGUID);
+        }
+        
+        return true;
     }
     
     void HandleCheat()
@@ -587,6 +700,16 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
     }
     
+    void HandleShowDebug(Creature* piece)
+    {
+        for (uint8 row = 0; row < 8; row++) {
+            for (uint8 col = 0; col < 8; col++) {
+                if (board[row][col]->pieceGUID == piece->GetGUID())
+                    sLog.outString("On cell %u %u", row, col);
+            }
+        }
+    }
+    
     void UpdateAI(uint32 const diff)
     {
         if (!pInstance)
@@ -619,21 +742,17 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             currentOrientation = ORI_SE;
             break;
         }
+        
+        NextMoveTimer = 4000 + rand()%1000;
     }
 
     ScriptedInstance* pInstance;
     
     uint32 Heal_Timer;
-    uint32 NextMove_Timer;
-    uint32 CheckForceMoveTimer;
-    uint32 CheckNearEnemiesTimer;
+    uint32 NextMoveTimer;
     uint32 AttackTimer;
     
-    uint64 MedivhGUID;
-    
     float destX, destY;
-
-    std::list<Unit *> PossibleMoveUnits;
     
     ChessOrientationType currentOrientation;
     
@@ -646,7 +765,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void Aggro(Unit* pWho) // TODO
     {
-        Unit* npc_medivh = Unit::GetUnit(*me, MedivhGUID);
+        Unit* npc_medivh = Unit::GetUnit(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH));
         
         if (npc_medivh) {
             switch (pInstance->GetData(CHESS_EVENT_TEAM)) {
@@ -666,17 +785,18 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         }
     }
     
+    void ReceiveEmote(Player* /*player*/, uint32 /*text_emote*/)
+    {
+        if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH)))
+            ((npc_echo_of_medivhAI*)medivh->AI())->HandleShowDebug(me);
+    }
+    
     void Reset()
     {
         Heal_Timer = 7000;
-        NextMove_Timer = 4000 + rand()%1000; // wait 4.5s for first moves
-        CheckForceMoveTimer = 1000;
-        CheckNearEnemiesTimer = 2000 + rand()%1000;
-        me->setActive(true);
+        NextMoveTimer = 4000 + rand()%1000; // wait 4.5s for first moves
     
         me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
-        
-        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
         AttackTimer = me->GetAttackTime(BASE_ATTACK);
     }
     
@@ -687,6 +807,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         
         me->SetOrientation(orientations[currentOrientation]);
         me->Relocate(destX, destY, 220.667f);
+        destX = 0;
+        destY = 0;
         me->SendMovementFlagUpdate();
         
         AttackTimer = 1;
@@ -698,8 +820,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     {
         if (!pInstance)
             return;
-            
-        MedivhGUID = pInstance->GetData64(DATA_IMAGE_OF_MEDIVH);
 
         if (!charmer || charmer->GetTypeId() != TYPEID_PLAYER)
             return;
@@ -717,13 +837,21 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void SetData(uint32 type, uint32 value)
     {
-        switch (me->getFaction()) {
-        case A_FACTION:
-            currentOrientation = ORI_NW;
-            break;
-        case H_FACTION:
-            currentOrientation = ORI_SE;
-            break;
+        if (type == 0) {
+            float x, y, z, o;
+            me->GetHomePosition(x, y, z, o);
+            destX = x;
+            destY = y;
+        }
+        else if (type == 1) {
+            switch (me->getFaction()) {
+            case A_FACTION:
+                currentOrientation = ORI_NW;
+                break;
+            case H_FACTION:
+                currentOrientation = ORI_SE;
+                break;
+            }
         }
     }
     
@@ -805,30 +933,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 break;
             default: break;
             }
-        }
-        
-        if (me->isCharmed()) {
-            if (Unit* charmer = me->GetCharmer())
-                charmer->RemoveAurasDueToSpell(30019);
-            me->RemoveCharmedOrPossessedBy(me->GetCharmer());
-        }
-            
-        me->setActive(false);
-        
-        if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
-            float angle = me->GetOrientation();
-            float pos_x = -11066;
-            float pos_y = -1898;
-            int move_lenght = 2*rand()%10;
-            float new_x = pos_x + move_lenght * cos(angle);
-            float new_y = pos_y + move_lenght * sin(angle);
-            me->Relocate(new_x, new_y, 221, 2.24);
-            me->CombatStop();
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            me->SendMovementFlagUpdate();
-        }
-        
-        me->Respawn();*/
+        }*/
 
     }
     
@@ -843,6 +948,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         }
     }
     
+    void KilledUnit(Unit* victim)
+    {
+        me->CombatStop();
+    }
+
     void MoveInLineOfSight(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
@@ -863,9 +973,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
 
         if (AttackTimer <= diff) {
             Creature* piece = NULL;
-            if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
+            if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH)))
                 piece = ((npc_echo_of_medivhAI*)medivh->AI())->GetTargetFor(me, currentOrientation);
-            }
 
             if (piece && !me->IsFriendlyTo(piece))
                 me->Attack(piece, false);
@@ -877,7 +986,19 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         else
             AttackTimer -= diff;
 
-        if (!me->isCharmed()) {                
+        if (!me->isCharmed()) {
+            if (NextMoveTimer <= diff) {
+                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
+                    if (((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceMoveByAI(me, currentOrientation))
+                        NextMoveTimer = 5000 + rand()%2000;
+                    else
+                        NextMoveTimer = 1000 + rand()%1000;
+                }
+            }
+            else
+                NextMoveTimer -= diff;
+            
+            // Special handling -> Move to subclasses?
             switch(me->GetEntry()) {
             case NPC_BISHOP_A:
                 if (Heal_Timer <= diff) {
@@ -903,6 +1024,9 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 break;
             }
         }
+        
+        if (me->isInCombat())
+            DoMeleeAttackIfReady();
     }
     
     void SpellHitTarget(Unit *target, const SpellEntry* spell)
@@ -913,7 +1037,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if ((spell->Id == SPELL_MOVE_1
            || spell->Id == SPELL_MOVE_2 || spell->Id == SPELL_MOVE_3 || spell->Id == SPELL_MOVE_4
            || spell->Id == SPELL_MOVE_5 || spell->Id == SPELL_MOVE_6 || spell->Id == SPELL_MOVE_7)) {
-            if (Creature* medivh = Creature::GetCreature(*me, MedivhGUID)) {
+            if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                 if (((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceMove(me, target->GetGUID())) {
                     destX = target->GetPositionX();
                     destY = target->GetPositionY();
@@ -924,7 +1048,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             }
         }
         else if (spell->Id == SPELL_CHANGE_FACING) {
-            if (Creature* medivh = Creature::GetCreature(*me, MedivhGUID)) {
+            if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                 int result = ((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceRotate(me, target->GetGUID());
                 if (result != -1) {
                     me->SetOrientation(orientations[result]);
@@ -1048,14 +1172,23 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     case MEDIVH_GOSSIP_START_PVE:
         chessPhase = PVE_WARMUP;
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
+        pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
         break;
     case MEDIVH_GOSSIP_RESTART:
         chessPhase = FAILED;
         pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+        ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_ALLIANCE] = 0;
+        ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_HORDE] = 0;
+        ((npc_echo_of_medivhAI*)creature->AI())->RemoveCheats();
+        if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
+            pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+        else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL)
+            pInstance->SetData(DATA_CHESS_EVENT, DONE);
         break;
     case MEDIVH_GOSSIP_START_PVP:
         chessPhase = PVP_WARMUP;
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
+        pInstance->SetData(DATA_CHESS_EVENT, SPECIAL);
         break;
     default:
         sLog.outError("Chess event: unknown action %u", action);
