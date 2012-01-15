@@ -36,6 +36,7 @@
 #define DATA_CHESS_ECHO_OF_MEDIVH       29
 #define CHESS_EVENT_TEAM                30
 #define DATA_CHESS_REINIT_PIECES        31
+#define DATA_CHESS_CHECK_PIECES_ALIVE   32
 
 // Opera Performances
 #define EVENT_OZ        1

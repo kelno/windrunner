@@ -66,6 +66,7 @@ struct instance_karazhan : public ScriptedInstance
     uint64 ImageGUID;
     
     std::vector<uint64> ChessPieces;
+    std::vector<uint64> MedivhCheatFires;
 
     void Initialize()
     {
@@ -94,6 +95,7 @@ struct instance_karazhan : public ScriptedInstance
         ChessTeam = 0;
         
         ChessPieces.resize(0);
+        MedivhCheatFires.resize(0);
     }
 
     bool IsEncounterInProgress() const
@@ -150,6 +152,10 @@ struct instance_karazhan : public ScriptedInstance
             case NPC_ROOK_A:
             case NPC_KING_A:
                 ChessPieces.push_back(creature->GetGUID());
+                creature->SetHealth(creature->GetMaxHealth());
+                break;
+            case 22521:
+                MedivhCheatFires.push_back(creature->GetGUID());
                 break;
         }
     }
@@ -219,6 +225,7 @@ struct instance_karazhan : public ScriptedInstance
                 for (uint8 i = 0; i < ChessPieces.size(); i++) {
                     if (Creature* piece = instance->GetCreature(ChessPieces.at(i))) {
                         piece->CombatStop();
+                        piece->setDeathState(JUST_ALIVED);
                         piece->SetHealth(piece->GetMaxHealth());
                         piece->AI()->SetData(0, 0);
                         float x, y, z, o;
@@ -226,6 +233,23 @@ struct instance_karazhan : public ScriptedInstance
                         piece->Relocate(x, y, z, o);
                         piece->SendMovementFlagUpdate();
                         piece->AI()->SetData(1, 0); // Reset default orientation
+                        piece->RemoveAurasDueToSpell(39339);
+                        piece->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    }
+                }
+                for (uint8 i = 0; i < MedivhCheatFires.size(); i++) {
+                    if (Creature* fire = instance->GetCreature(MedivhCheatFires.at(i)))
+                        fire->DisappearAndDie();
+                }
+                MedivhCheatFires.resize(0);
+                break;
+            case DATA_CHESS_CHECK_PIECES_ALIVE:
+                for (uint8 i = 0; i < ChessPieces.size(); i++) {
+                    if (Creature* piece = instance->GetCreature(ChessPieces.at(i))) {
+                        if (!piece->isAlive()) {
+                            piece->setDeathState(JUST_ALIVED);
+                            piece->SetHealth(piece->GetMaxHealth());
+                        }
                     }
                 }
                 break;
