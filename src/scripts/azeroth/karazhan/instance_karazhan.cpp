@@ -153,6 +153,12 @@ struct instance_karazhan : public ScriptedInstance
                 break;
         }
     }
+    
+    void OnPlayerEnter(Player* player)
+    {
+        if (GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
+            player->RemoveAurasDueToSpell(39331);
+    }
 
     uint64 GetData64(uint32 data)
     {
@@ -196,9 +202,9 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_NETHERSPITE_EVENT:       Encounters[8]  = data; break;
             case DATA_CHESS_EVENT: 
                 Encounters[9]  = data;
-                if (data == FAIL || data == DONE)
+                if (data == FAIL || data == DONE || data == NOT_STARTED)
                     RemoveAuraOnAllPlayers(39331);
-                else if (data == IN_PROGRESS)
+                else if (data == IN_PROGRESS || data == SPECIAL)
                     CastOnAllPlayers(39331);
                 break;
             case DATA_MALCHEZZAR_EVENT:        Encounters[10] = data; break;
@@ -212,11 +218,14 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_CHESS_REINIT_PIECES:
                 for (uint8 i = 0; i < ChessPieces.size(); i++) {
                     if (Creature* piece = instance->GetCreature(ChessPieces.at(i))) {
+                        piece->CombatStop();
+                        piece->SetHealth(piece->GetMaxHealth());
+                        piece->AI()->SetData(0, 0);
                         float x, y, z, o;
                         piece->GetHomePosition(x, y, z, o);
                         piece->Relocate(x, y, z, o);
                         piece->SendMovementFlagUpdate();
-                        piece->AI()->SetData(0, 0); // Reset default orientation
+                        piece->AI()->SetData(1, 0); // Reset default orientation
                     }
                 }
                 break;
