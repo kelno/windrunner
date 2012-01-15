@@ -170,7 +170,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     
     void Reset()
     {
-        cheatTimer = 80000 + rand()%20000;
+        cheatTimer = /*80000 + rand()%*/20000;
         
         if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == DONE)
             chessPhase = PVE_FINISHED;
@@ -189,7 +189,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
         
         // Fires
-        CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+        /*CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
         Cell cell(p);
         cell.data.Part.reserved = ALL_DISTRICT;
         cell.SetNoCreate();
@@ -207,11 +207,13 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++) {
             if ((*itr)->GetEntry() == 22521)
                 (*itr)->ToCreature()->DisappearAndDie();
-        }
+        }*/
     }
     
     void SetupBoard()
     {
+        if (pInstance)
+            pInstance->SetData(DATA_CHESS_CHECK_PIECES_ALIVE, 0);
         // Cleanup needed?
         if (Creature* trigger = me->FindNearestCreature(TRIGGER_ID, 15.0f, true)) {
             for (uint8 row = 0; row < 8; row++) {
@@ -439,6 +441,84 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             for (uint8 col = 0; col < 8; col++) {
                 if (board[row][col]->pieceGUID == piece->GetGUID())
                     board[row][col]->reset();
+            }
+        }
+        
+        if (!pInstance)
+            return;
+        
+        if (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
+            switch (piece->GetEntry()) {
+            case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, me);     break;
+            case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, me);     break;
+            case NPC_QUEEN_H:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_P, me);    break;
+            case NPC_QUEEN_A:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_M, me);    break;
+            case NPC_BISHOP_H: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_P, me);   break;
+            case NPC_BISHOP_A: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_M, me);   break;
+            case NPC_KNIGHT_H: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_P, me);   break;
+            case NPC_KNIGHT_A: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_M, me);   break;
+            case NPC_PAWN_H:
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), me); break;
+            case NPC_PAWN_A:
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), me); break;
+            case NPC_KING_H:
+                DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
+                pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+                pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                chessPhase = NOTSTARTED;
+                break;
+            case NPC_KING_A:
+                DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
+                if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
+                    pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    chessPhase = PVE_FINISHED;
+                    me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
+                    pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                }
+                else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
+                    pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                    chessPhase = PVE_FINISHED;
+                }
+                break;
+            default: break;
+            }
+        }
+        else {
+            switch(me->GetEntry()) {
+            case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, me);     break;
+            case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, me);     break;
+            case NPC_QUEEN_A:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_P, me);    break;
+            case NPC_QUEEN_H:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_M, me);    break;
+            case NPC_BISHOP_A: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_P, me);   break;
+            case NPC_BISHOP_H: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_M, me);   break;
+            case NPC_KNIGHT_A: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_P, me);   break;
+            case NPC_KNIGHT_H: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_M, me);   break;
+            case NPC_PAWN_A:
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), me); break;
+            case NPC_PAWN_H:
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), me); break;
+            case NPC_KING_A:
+                DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
+                pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+                pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                chessPhase = NOTSTARTED;
+                break;
+            case NPC_KING_H:
+                DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
+                if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
+                    pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    chessPhase = PVE_FINISHED;
+                    me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
+                    pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                }
+                else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
+                    pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                    chessPhase = PVE_FINISHED;
+                }
+                break;
+            default: break;
             }
         }
     }
@@ -721,7 +801,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         if (cheatTimer <= diff) {
             HandleCheat();
             
-            cheatTimer = 80000 + rand()%20000;
+            cheatTimer = /*80000 + rand()%*/20000;
         }
         else
             cheatTimer -= diff;
@@ -1179,7 +1259,7 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
         pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
         ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_ALLIANCE] = 0;
         ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_HORDE] = 0;
-        ((npc_echo_of_medivhAI*)creature->AI())->RemoveCheats();
+        //((npc_echo_of_medivhAI*)creature->AI())->RemoveCheats();
         if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS)
             pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
         else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL)
