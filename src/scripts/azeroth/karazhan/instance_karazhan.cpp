@@ -164,6 +164,7 @@ struct instance_karazhan : public ScriptedInstance
     {
         if (GetData(DATA_CHESS_EVENT) != IN_PROGRESS)
             player->RemoveAurasDueToSpell(39331);
+        player->RemoveAurasDueToSpell(30019);
     }
 
     uint64 GetData64(uint32 data)

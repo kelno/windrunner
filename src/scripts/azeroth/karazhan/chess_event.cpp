@@ -36,6 +36,8 @@ EndScriptData */
 #define SEARCH_RANGE            5
 #define DUST_COVERED_CHEST      185119
 
+#define BOTH 536 // HORDE + ALLIANCE
+
 float playerTeleportPosition[4] = { -11107.241211, -1842.897461, 229.625198, 5.385472 };
 
 typedef struct boardCell
@@ -170,7 +172,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     
     void Reset()
     {
-        cheatTimer = /*80000 + rand()%*/20000;
+        cheatTimer = 80000 + rand()%20000;
         
         if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == DONE)
             chessPhase = PVE_FINISHED;
@@ -187,27 +189,6 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 }
             }
         }
-        
-        // Fires
-        /*CellPair p(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
-        Cell cell(p);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-
-        std::list<Unit*> pList;
-        
-        float range = 80.0f;
-
-        Trinity::AllCreaturesOfEntryInRange u_check(me, 22521, range);
-        Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(pList, u_check);
-        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer >  grid_unit_searcher(searcher);
-
-        cell.Visit(p, grid_unit_searcher, *(me->GetMap()));
-    
-        for(std::list<Unit *>::iterator itr = pList.begin(); itr != pList.end(); itr++) {
-            if ((*itr)->GetEntry() == 22521)
-                (*itr)->ToCreature()->DisappearAndDie();
-        }*/
     }
     
     void SetupBoard()
@@ -344,6 +325,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     
     void ReceiveEmote(Player* /*player*/, uint32 /*text_emote*/)
     {
+        sLog.outString("ChessPhase %u", chessPhase);
+        return;
         for (uint8 row = 0; row < 8; row++) {
             for (uint8 col = 0; col < 8; col++) {
                 sLog.outString("%u %u: "I64FMTD, row, col, board[row][col]->triggerGUID);
@@ -460,7 +443,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_PAWN_H:
                 DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), me); break;
             case NPC_PAWN_A:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), me); break;
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2, SCRIPTTEXT_LOSE_PAWN_M_3), me); break;
             case NPC_KING_H:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
@@ -484,8 +467,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             default: break;
             }
         }
-        else {
-            switch(me->GetEntry()) {
+        else if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE) {
+            switch(piece->GetEntry()) {
             case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, me);     break;
             case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, me);     break;
             case NPC_QUEEN_A:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_P, me);    break;
@@ -497,7 +480,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_PAWN_A:
                 DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), me); break;
             case NPC_PAWN_H:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), me); break;
+                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2, SCRIPTTEXT_LOSE_PAWN_M_3), me); break;
             case NPC_KING_A:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
@@ -519,6 +502,16 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 }
                 break;
             default: break;
+            }
+        }
+        else {
+            switch(piece->GetEntry()) {
+            case NPC_KING_H:
+            case NPC_KING_A:
+                pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
+                chessPhase = PVE_FINISHED;
+                break;
             }
         }
     }
@@ -594,7 +587,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_H:
             case NPC_KING_A:
                 if (deltaRow > 1 || deltaCol > 1) {
-                    sLog.outString("Target cell too far for %s (%u)", piece->GetName(), piece->GetDBTableGUIDLow());
+                    sLog.outString("Target cell too far away for %s (%u) - Starting (%u, %u) - Ending (%u, %u)", piece->GetName(), piece->GetDBTableGUIDLow(), oldRow, oldCol, newRow, newCol);
                     res = false;
                 }
                 break;
@@ -685,28 +678,110 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 }
             }
         }
+        else if (rand()%4 != 0)
+            return true;
 
         switch (orientation) { // Here we shouldn't be facing the edges, check in the 4 first if statements
         case ORI_SE:
-            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow-1][pieceCol]->triggerGUID))
+        {
+            int randomCol;
+            switch (rand()%3) {
+            case 0:
+                randomCol = pieceCol-1;
+                break;
+            case 1:
+                randomCol = pieceCol;
+                break;
+            case 2:
+                randomCol = pieceCol+1;
+                break;
+            }
+
+            if (randomCol > 7)
+                randomCol = 7;
+            if (randomCol < 0)
+                randomCol = 0;
+
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow-1][randomCol]->triggerGUID))
                 piece->CastSpell(trigger, SPELL_MOVE_1, false);
             break;
             //return HandlePieceMove(piece, board[pieceRow-1][pieceCol]->triggerGUID);
+        }
         case ORI_SW:
-            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol-1]->triggerGUID))
+        {
+            int randomRow;
+            switch (rand()%3) {
+            case 0:
+                randomRow = pieceRow-1;
+                break;
+            case 1:
+                randomRow = pieceRow;
+                break;
+            case 2:
+                randomRow = pieceRow+1;
+                break;
+            }
+
+            if (randomRow > 7)
+                randomRow = 7;
+            if (randomRow < 0)
+                randomRow = 0;
+                
+            if (Creature* trigger = Creature::GetCreature(*me, board[randomRow][pieceCol-1]->triggerGUID))
                 piece->CastSpell(trigger, SPELL_MOVE_1, false);
             break;
             //return HandlePieceMove(piece, board[pieceRow][pieceCol-1]->triggerGUID);
+        }
         case ORI_NW:
-            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow+1][pieceCol]->triggerGUID))
+        {
+            int randomCol;
+            switch (rand()%3) {
+            case 0:
+                randomCol = pieceCol-1;
+                break;
+            case 1:
+                randomCol = pieceCol;
+                break;
+            case 2:
+                randomCol = pieceCol+1;
+                break;
+            }
+
+            if (randomCol > 7)
+                randomCol = 7;
+            if (randomCol < 0)
+                randomCol = 0;
+                
+            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow+1][randomCol]->triggerGUID))
                 piece->CastSpell(trigger, SPELL_MOVE_1, false);
             break;
             //return HandlePieceMove(piece, board[pieceRow+1][pieceCol]->triggerGUID);
+        }
         case ORI_NE:
-            if (Creature* trigger = Creature::GetCreature(*me, board[pieceRow][pieceCol+1]->triggerGUID))
+        {
+            int randomRow;
+            switch (rand()%3) {
+            case 0:
+                randomRow = pieceRow-1;
+                break;
+            case 1:
+                randomRow = pieceRow;
+                break;
+            case 2:
+                randomRow = pieceRow+1;
+                break;
+            }
+
+            if (randomRow > 7)
+                randomRow = 7;
+            if (randomRow < 0)
+                randomRow = 0;
+                
+            if (Creature* trigger = Creature::GetCreature(*me, board[randomRow][pieceCol+1]->triggerGUID))
                 piece->CastSpell(trigger, SPELL_MOVE_1, false);
             break;
             //return HandlePieceMove(piece, board[pieceRow][pieceCol+1]->triggerGUID);
+        }
         }
         
         return true;
@@ -723,12 +798,15 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                         king->SetHealth(king->GetMaxHealth());
                 }
             }
-            else {
+            else if (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
                 if (Creature* king = me->FindCreatureInGrid(NPC_KING_A, 80.0f, true)) {
                     if (king->isAlive())
                         king->SetHealth(king->GetMaxHealth());
                 }
             }
+            
+            DoScriptText(SCRIPTTEXT_MEDIVH_CHEAT_1, me);
+
             break;
         }
         case 1: // Fire
@@ -751,6 +829,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             Trinity::RandomResizeList(targetList, ((targetList.size() >= 3) ? 3 : targetList.size()));
             for (std::list<Creature*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
                 DoCast(*itr, 39345, true);
+                
+            DoScriptText(SCRIPTTEXT_MEDIVH_CHEAT_2, me);
 
             break;
         }
@@ -774,6 +854,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             Trinity::RandomResizeList(targetList, 1);
             for (std::list<Creature*>::iterator itr = targetList.begin(); itr != targetList.end(); ++itr)
                 DoCast(*itr, 39339, true);
+                
+            DoScriptText(SCRIPTTEXT_MEDIVH_CHEAT_3, me);
 
             break;
         }
@@ -801,7 +883,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         if (cheatTimer <= diff) {
             HandleCheat();
             
-            cheatTimer = /*80000 + rand()%*/20000;
+            cheatTimer = 80000 + rand()%20000;
         }
         else
             cheatTimer -= diff;
@@ -890,6 +972,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         destX = 0;
         destY = 0;
         me->SendMovementFlagUpdate();
+        if (!me->isCharmed())
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
         
         AttackTimer = 1;
     }
@@ -911,8 +995,10 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
 
         if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE)
             me->setFaction(A_FACTION);
-        else
+        else if (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE)
             me->setFaction(H_FACTION);
+        else
+            me->setFaction(me->GetCreatureInfo()->faction_A);
     }
     
     void SetData(uint32 type, uint32 value)
@@ -945,76 +1031,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                 charmer->RemoveAurasDueToSpell(30019);
             me->RemoveCharmedOrPossessedBy(me->GetCharmer());
         }
-
-        /*if (npc_medivh && pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
-            switch (me->GetEntry()) {
-            case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, npc_medivh);     break;
-            case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, npc_medivh);     break;
-            case NPC_QUEEN_H:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_P, npc_medivh);    break;
-            case NPC_QUEEN_A:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_M, npc_medivh);    break;
-            case NPC_BISHOP_H: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_P, npc_medivh);   break;
-            case NPC_BISHOP_A: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_M, npc_medivh);   break;
-            case NPC_KNIGHT_H: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_P, npc_medivh);   break;
-            case NPC_KNIGHT_A: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_M, npc_medivh);   break;
-            case NPC_PAWN_H:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), npc_medivh); break;
-            case NPC_PAWN_A:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), npc_medivh); break;
-            case NPC_KING_H:
-                DoScriptText(SCRIPTTEXT_MEDIVH_WIN, npc_medivh);
-                pInstance->SetData(DATA_CHESS_EVENT, FAIL);
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveIdle();
-                    medivh->AI()->Reset();
-                }
-                break;
-            case NPC_KING_A:
-                DoScriptText(SCRIPTTEXT_PLAYER_WIN, npc_medivh);
-                pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveIdle();
-                    medivh->AI()->Reset();
-                }
-                me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
-                break;
-            default: break;
-            }
-        }
-        else if (npc_medivh) {
-            switch(me->GetEntry()) {
-            case NPC_ROOK_A:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_P, npc_medivh);     break;
-            case NPC_ROOK_H:   DoScriptText(SCRIPTTEXT_LOSE_ROOK_M, npc_medivh);     break;
-            case NPC_QUEEN_A:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_P, npc_medivh);    break;
-            case NPC_QUEEN_H:  DoScriptText(SCRIPTTEXT_LOSE_QUEEN_M, npc_medivh);    break;
-            case NPC_BISHOP_A: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_P, npc_medivh);   break;
-            case NPC_BISHOP_H: DoScriptText(SCRIPTTEXT_LOSE_BISHOP_M, npc_medivh);   break;
-            case NPC_KNIGHT_A: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_P, npc_medivh);   break;
-            case NPC_KNIGHT_H: DoScriptText(SCRIPTTEXT_LOSE_KNIGHT_M, npc_medivh);   break;
-            case NPC_PAWN_A:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_P_1, SCRIPTTEXT_LOSE_PAWN_P_2, SCRIPTTEXT_LOSE_PAWN_P_3), npc_medivh); break;
-            case NPC_PAWN_H:
-                DoScriptText(RAND(SCRIPTTEXT_LOSE_PAWN_M_1, SCRIPTTEXT_LOSE_PAWN_M_2), npc_medivh); break;
-            case NPC_KING_A:
-                DoScriptText(SCRIPTTEXT_MEDIVH_WIN, npc_medivh);
-                pInstance->SetData(DATA_CHESS_EVENT, FAIL);
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveIdle();
-                    medivh->AI()->Reset();
-                }
-                break;
-            case NPC_KING_H:
-                DoScriptText(SCRIPTTEXT_PLAYER_WIN, npc_medivh);
-                pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
-                    medivh->GetMotionMaster()->MoveIdle();
-                    medivh->AI()->Reset();
-                }
-                me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
-                break;
-            default: break;
-            }
-        }*/
-
     }
     
     void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
@@ -1119,6 +1135,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
            || spell->Id == SPELL_MOVE_5 || spell->Id == SPELL_MOVE_6 || spell->Id == SPELL_MOVE_7)) {
             if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                 if (((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceMove(me, target->GetGUID())) {
+                    me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                     destX = target->GetPositionX();
                     destY = target->GetPositionY();
                     me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
@@ -1146,10 +1163,10 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
     if (player->HasAura(SPELL_RECENTLY_INGAME))
         return true;
 
-    if (player->GetTeam() == ALLIANCE && creature->getFaction() != A_FACTION)
+    if (player->GetTeam() == ALLIANCE && creature->getFaction() != A_FACTION && chessPhase < PVE_FINISHED)
         return true;
 
-    if (player->GetTeam() == HORDE && creature->getFaction() != H_FACTION)
+    if (player->GetTeam() == HORDE && creature->getFaction() != H_FACTION && chessPhase < PVE_FINISHED)
         return true;
         
     bool ok = true;
@@ -1245,14 +1262,18 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     
     if (!pInstance)
         return true;
-        
-    pInstance->SetData(CHESS_EVENT_TEAM, player->GetTeam());
+    
+    if (chessPhase < PVE_FINISHED)
+        pInstance->SetData(CHESS_EVENT_TEAM, player->GetTeam());
+    else
+        pInstance->SetData(CHESS_EVENT_TEAM, BOTH);
     
     switch (action) {
     case MEDIVH_GOSSIP_START_PVE:
         chessPhase = PVE_WARMUP;
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
         pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
+        DoScriptText(SCRIPTTEXT_AT_EVENT_START, creature);
         break;
     case MEDIVH_GOSSIP_RESTART:
         chessPhase = FAILED;
