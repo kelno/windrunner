@@ -926,7 +926,7 @@ struct Mob_EventAI : public ScriptedAI
                 Unit* target = GetTargetByType(param2, pActionInvoker);
 
                 if (target && target->GetTypeId() == TYPEID_PLAYER)
-                    (target->ToPlayer())->KilledMonster(param1, m_creature->GetGUID());
+                    (target->ToPlayer())->RewardPlayerAndGroupAtEvent(param1, m_creature);
             }
             break;
         case ACTION_T_SET_INST_DATA:
