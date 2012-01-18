@@ -205,7 +205,7 @@ struct boss_brutallusAI : public ScriptedAI
             return;
             
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
 
         Creature *Madrigosa = Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_MADRIGOSA));
         if (Madrigosa) {
@@ -227,7 +227,7 @@ struct boss_brutallusAI : public ScriptedAI
     {
         //error_log("Brutallus: Ending intro");
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         me->SetReactState(REACT_AGGRESSIVE);
         Intro = false;
         IsIntro = false;
@@ -355,7 +355,7 @@ struct boss_brutallusAI : public ScriptedAI
             me->SetHealth(me->GetMaxHealth());
             me->AttackStop();
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             IntroPhaseTimer = 4000;
             ++IntroPhase;
             break;

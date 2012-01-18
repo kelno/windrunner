@@ -383,7 +383,7 @@ bool AreaTrigger_at_zumrah(Player *pPlayer, AreaTriggerEntry const *pAt)
 {
     if (Creature *pZumrah = pPlayer->FindNearestCreature(7271, 15.0f, true)) {
         pZumrah->setFaction(14);
-        pZumrah->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        pZumrah->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         pZumrah->AI()->AttackStart(pPlayer);
     }
     

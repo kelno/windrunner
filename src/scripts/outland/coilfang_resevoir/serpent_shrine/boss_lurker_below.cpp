@@ -131,7 +131,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         DoCast(m_creature,SPELL_SUBMERGE);//submerge anim
         m_creature->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+        m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
     }
 
     void JustDied(Unit* Killer)
@@ -197,7 +197,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 {
                     WaitTimer = 3000;
                     CanStartEvent=true;//fresh fished from pool
-                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     if (m_creature->getVictim())
                         AttackStart(m_creature->getVictim());
@@ -321,7 +321,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 Submerged = false;
                 m_creature->InterruptNonMeleeSpells(false);//shouldn't be any
                 m_creature->RemoveAllAuras();
-                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+                m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                 m_creature->RemoveFlag(UNIT_NPC_EMOTESTATE,EMOTE_STATE_SUBMERGED);
                 DoCast(m_creature,SPELL_EMERGE,true);
                 Spawned = false;
@@ -340,7 +340,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if (!Spawned)
             {
-                m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_ATTACKABLE_2);
+                m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                 //spawn adds
                 for (uint8 i = 0; i < 9; ++i)
                 {
