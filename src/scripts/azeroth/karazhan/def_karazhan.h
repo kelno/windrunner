@@ -37,6 +37,7 @@
 #define CHESS_EVENT_TEAM                30
 #define DATA_CHESS_REINIT_PIECES        31
 #define DATA_CHESS_CHECK_PIECES_ALIVE   32
+#define DATA_IMAGE_OF_MEDIVH_NIGHTBANE  33
 
 // Opera Performances
 #define EVENT_OZ        1
