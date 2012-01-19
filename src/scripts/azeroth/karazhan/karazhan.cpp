@@ -533,9 +533,9 @@ struct npc_image_of_medivhAI : public ScriptedAI
     {
         ArcanagosGUID = 0;
 
-        if(pInstance && pInstance->GetData64(DATA_IMAGE_OF_MEDIVH) == 0)
+        if(pInstance && pInstance->GetData64(DATA_IMAGE_OF_MEDIVH_NIGHTBANE) == 0)
         {
-            pInstance->SetData64(DATA_IMAGE_OF_MEDIVH, m_creature->GetGUID());
+            pInstance->SetData64(DATA_IMAGE_OF_MEDIVH_NIGHTBANE, m_creature->GetGUID());
             (*m_creature).GetMotionMaster()->MovePoint(1,MedivPos[0],MedivPos[1],MedivPos[2]);
             Step = 0;
         }else
