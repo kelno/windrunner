@@ -201,12 +201,14 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 for (uint8 col = 0; col < 8; col++) {
                     if (Creature* cellTrigger = Creature::GetCreature(*me, board[row][col]->triggerGUID))
                         cellTrigger->ForcedDespawn();
+                        
+                    delete board[row][col];
                 }
                 
-                delete[] board[row];
+                //delete[] board[row];
             }
             
-            delete[] board;
+            //delete[] board;
         }
 
         for (uint8 row = 0; row < 8; row++) {
@@ -323,7 +325,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         return false;
     }
     
-    void ReceiveEmote(Player* /*player*/, uint32 /*text_emote*/)
+    /*void ReceiveEmote(Player* player, uint32 text_emote)
     {
         sLog.outString("ChessPhase %u", chessPhase);
         return;
@@ -332,7 +334,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 sLog.outString("%u %u: "I64FMTD, row, col, board[row][col]->triggerGUID);
             }
         }
-    }
+    }*/
     
     Creature* GetTargetFor(Creature* piece, ChessOrientationType orientation)
     {
