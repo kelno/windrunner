@@ -214,7 +214,7 @@ ATTACK_YELL     = -1000258,
 SPELL_DYNAMITE  = 7978
 };
 
-#define GOSSIP_FIGHT    "Traitor! You will be brought to justice!"
+#define GOSSIP_FIGHT    "Traître ! Tu vas être livré à la justice !"
 
 struct npc_engineer_spark_overgrindAI : public ScriptedAI
 {
@@ -390,6 +390,7 @@ struct npc_magwinAI : public npc_escortAI
 
     void UpdateAI(const uint32 diff)
     {
+        me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
         npc_escortAI::UpdateAI(diff);
     }
 };
