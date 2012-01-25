@@ -48,6 +48,7 @@ item_purification_mixture           Quest 9361
 item_staff_elders                   Quest 10369
 item_attuned_crystal_cores
 item_orwins_shovel
+item_netherwave_net
 EndContentData */
 
 #include "precompiled.h"
@@ -628,6 +629,20 @@ bool ItemUse_item_orwins_shovel(Player* player, Item* item, SpellCastTargets con
 }
 
 /*######
+## item_netherwave_net
+######*/
+
+bool ItemUse_item_netherwave_net(Player* player, Item* item, SpellCastTargets const& targets)
+{
+    if (Unit* target = Unit::GetUnit(*player, player->GetSelection())) {
+        if (!target->IsFriendlyTo(player))
+            player->CastSpell(target, 31367, false);
+    }
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -758,6 +773,11 @@ void AddSC_item_scripts()
     newscript = new Script;
     newscript->Name = "item_orwins_shovel";
     newscript->pItemUse = &ItemUse_item_orwins_shovel;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "item_netherwave_net";
+    newscript->pItemUse = &ItemUse_item_netherwave_net;
     newscript->RegisterSelf();
 }
 
