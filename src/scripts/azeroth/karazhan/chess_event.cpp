@@ -949,11 +949,11 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         }
     }
     
-    void ReceiveEmote(Player* /*player*/, uint32 /*text_emote*/)
+    /*void ReceiveEmote(Player* player, uint32 text_emote)
     {
         if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH)))
             ((npc_echo_of_medivhAI*)medivh->AI())->HandleShowDebug(me);
-    }
+    }*/
     
     void Reset()
     {
