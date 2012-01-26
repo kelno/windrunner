@@ -29,6 +29,7 @@ at_mechanar             4614
 at_botanica             4612
 at_orb_of_command
 at_childweek_quest911   3549
+at_quest_whispers_raven_god
 EndContentData */
 
 #include "precompiled.h"
@@ -276,6 +277,43 @@ bool AreaTrigger_at_crashing_wickerman(Player* player, AreaTriggerEntry const* p
     return true;
 }
 
+/*######
+## at_quest_whispers_raven_god
+######*/
+
+bool AreaTrigger_at_quest_whispers_raven_god(Player* player, AreaTriggerEntry const* at)
+{
+    if (player->GetQuestStatus(10607) != QUEST_STATUS_INCOMPLETE)
+        return true;
+        
+    if (!player->HasAura(37466))
+        return true;
+        
+    uint32 credit = 0;
+    switch (at->id) {
+    case 4613:
+        credit = 22798;
+        break;
+    case 4615:
+        credit = 22799;
+        break;
+    case 4616:
+        credit = 22800;
+        break;
+    case 4617:
+        credit = 22801;
+        break;
+    default:
+        sLog.outError("AreaTrigger_at_quest_whispers_raven_god: wrong areatrigger %u", at->id);
+        credit = 0;
+        break;
+    }
+    
+    player->KilledMonster(credit, 0);
+    
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -358,6 +396,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_crashing_wickerman";
     newscript->pAreaTrigger = &AreaTrigger_at_crashing_wickerman;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_quest_whispers_raven_god";
+    newscript->pAreaTrigger = &AreaTrigger_at_quest_whispers_raven_god;
     newscript->RegisterSelf();
 }
 
