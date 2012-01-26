@@ -59,6 +59,7 @@ npc_furywing
 trigger_banishing_crystal_bunny01
 npc_rally_zapnabber
 npc_grulloc
+npc_grishna
 EndContentData */
 
 #include "precompiled.h"
@@ -2748,6 +2749,35 @@ CreatureAI* GetAI_npc_huffer(Creature* creature)
 }
 
 /*######
+## npc_grishna
+######*/
+
+struct npc_grishnaAI : public ScriptedAI
+{
+    npc_grishnaAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* who) {}
+    
+    void JustDied(Unit* killer)
+    {
+        killer->CastSpell(killer, 37466, true);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_grishna(Creature* creature)
+{
+    return new npc_grishnaAI(creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -2980,6 +3010,11 @@ void AddSC_blades_edge_mountains()
     newscript = new Script;
     newscript->Name = "npc_huffer";
     newscript->GetAI = &GetAI_npc_huffer;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_grishna";
+    newscript->GetAI = &GetAI_npc_grishna;
     newscript->RegisterSelf();
 }
 
