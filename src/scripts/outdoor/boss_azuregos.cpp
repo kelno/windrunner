@@ -15,9 +15,11 @@
  */
 
 #include "precompiled.h"
+#include "CreatureScript.h"
+#include "CreatureAINew.h"
 
 enum {
-    SAY_TELEPORT            = -1000100,
+    SAY_TELEPORT            = 0,
 
     SPELL_MARK_OF_FROST     = 23182,
     SPELL_AURA_OF_FROST     = 23186,
@@ -40,99 +42,112 @@ enum {
 
 class Boss_azuregos : public CreatureScript
 {
+public:
+    Boss_azuregos() : CreatureScript("boss_azuregos_new") {}
+
+    class Boss_azuregos_newAI : public CreatureAINew
+    {
     public:
-        Boss_azuregos() : CreatureScript("boss_azuregos_new") {}
-
-        class Boss_azuregos_newAI : public CreatureAINew
-        {
-            public:
-                Boss_azuregos_newAI(Creature* creature) : CreatureAINew(creature) {}
-                
-                void onReset(bool onSpawn)
-                {
-                    schedule(EV_MANASTORM, 5000, 17000);
-                    schedule(EV_CHILL, 10000, 30000);
-                    schedule(EV_BREATH, 2000, 8000);
-                    schedule(EV_TELEPORT, 30000);
-                    schedule(EV_REFLECT, 15000, 30000);
-                    schedule(EV_CLEAVE, 7000);
-                    
-                    enraged = false;
-                }
-                
-                void onKill(Unit* killed)
-                {
-                    me->AddAura(SPELL_MARK_OF_FROST, killed);
-                }
-                
-                void onThreatAdd(Unit* who, float& threat)
-                {
-                    if (who->HasAura(SPELL_MARK_OF_FROST) && !who->HasAura(SPELL_AURA_OF_FROST))
-                        who->CastSpell(me, SPELL_AURA_OF_FROST, true);
-                }
-
-                void update(uint32 const diff)
-                {
-                    if (!updateVictim())
-                        return;
-
-                    updateEvents(diff);
-                        
-                    if (me->IsBelowHPPercent(25.0f) && !enraged) {
-                        doCast(me, SPELL_ENRAGE, true);
-                        enraged = true;
-                    }
-
-                    while (executeEvent(diff, m_currEvent)) {
-                        switch (m_currEvent) {
-                        case EV_MANASTORM:
-                        {
-                            doCast(selectUnit(TARGET_RANDOM, 0), SPELL_MANASTORM);
-                            schedule(EV_MANASTORM, 7500, 12500);
-                            break;
-                        }
-                        case EV_CHILL:
-                        {
-                            doCast(me->getVictim(), SPELL_CHILL);
-                            schedule(EV_CHILL, 13000, 25000);
-                            break;
-                        }
-                        case EV_BREATH:
-                        {
-                            doCast(me->getVictim(), SPELL_FROSTBREATH);
-                            schedule(EV_BREATH, 1000, 15000);
-                            break;
-                        }
-                        case EV_TELEPORT:
-                        {
-                            break;
-                        }
-                        case EV_REFLECT:
-                        {
-                            doCast(me, SPELL_REFLECT);
-                            schedule(EV_REFLECT, 20000, 35000);
-                            break;
-                        }
-                        case EV_CLEAVE:
-                        {
-                            doCast(me->getVictim(), SPELL_CLEAVE);
-                            schedule(EV_CLEAVE, 7000);
-                            break;
-                        }
-                        }
-                    }
-                    
-                    doMeleeAttackIfReady();
-                }
-                
-            private:
-                bool enraged;
-        };
+        Boss_azuregos_newAI(Creature* creature) : CreatureAINew(creature) {}
         
-        CreatureAINew* getAI(Creature* creature)
+        void onReset(bool onSpawn)
         {
-            return new Boss_azuregos_newAI(creature);
+            scheduleEvent(EV_MANASTORM, 5000, 17000);
+            scheduleEvent(EV_CHILL, 10000, 30000);
+            scheduleEvent(EV_BREATH, 2000, 8000);
+            scheduleEvent(EV_TELEPORT, 30000);
+            scheduleEvent(EV_REFLECT, 15000, 30000);
+            scheduleEvent(EV_CLEAVE, 7000);
+            
+            enraged = false;
         }
+        
+        void onKill(Unit* killed)
+        {
+            me->AddAura(SPELL_MARK_OF_FROST, killed);
+        }
+        
+        void onThreatAdd(Unit* who, float& threat)
+        {
+            if (who->HasAura(SPELL_MARK_OF_FROST) && !who->HasAura(SPELL_AURA_OF_FROST))
+                who->CastSpell(me, SPELL_AURA_OF_FROST, true);
+        }
+
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+
+            updateEvents(diff);
+                
+            if (me->IsBelowHPPercent(25.0f) && !enraged) {
+                doCast(me, SPELL_ENRAGE, true);
+                enraged = true;
+            }
+
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_MANASTORM:
+                {
+                    doCast(selectUnit(TARGET_RANDOM, 0), SPELL_MANASTORM);
+                    scheduleEvent(EV_MANASTORM, 7500, 12500);
+                    break;
+                }
+                case EV_CHILL:
+                {
+                    doCast(me->getVictim(), SPELL_CHILL);
+                    scheduleEvent(EV_CHILL, 13000, 25000);
+                    break;
+                }
+                case EV_BREATH:
+                {
+                    doCast(me->getVictim(), SPELL_FROSTBREATH);
+                    scheduleEvent(EV_BREATH, 1000, 15000);
+                    break;
+                }
+                case EV_TELEPORT:
+                {
+                    float x, y, z;
+                    me->GetNearPoint(me, x, y, z, me->GetObjectSize(), 5.0f, 0.0f);
+
+                    std::list<Player*> players;
+                    getAllPlayersInRange(players, 25.0f);
+                    
+                    for (std::list<Player*>::const_iterator itr = players.begin(); itr != players.end(); itr++) {
+                        (*itr)->TeleportTo(me->GetMapId(), x, y, z, (*itr)->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT);
+                        deleteFromThreatList((*itr)->GetGUID());
+                    }
+                    
+                    talk(SAY_TELEPORT);
+
+                    break;
+                }
+                case EV_REFLECT:
+                {
+                    doCast(me, SPELL_REFLECT);
+                    scheduleEvent(EV_REFLECT, 20000, 35000);
+                    break;
+                }
+                case EV_CLEAVE:
+                {
+                    doCast(me->getVictim(), SPELL_CLEAVE);
+                    scheduleEvent(EV_CLEAVE, 7000);
+                    break;
+                }
+                }
+            }
+            
+            doMeleeAttackIfReady();
+        }
+        
+    private:
+        bool enraged;
+    };
+    
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Boss_azuregos_newAI(creature);
+    }
 };
 
 void AddSC_boss_azuregos()

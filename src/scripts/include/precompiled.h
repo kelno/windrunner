@@ -15,8 +15,6 @@
 #include "ScriptedCreature.h"
 #include "ScriptedGossip.h"
 #include "ScriptedInstance.h"
-#include "CreatureScript.h"
-#include "CreatureAINew.h"
 
 #endif
 
