@@ -52,12 +52,22 @@ public:
         
         void onReset(bool onSpawn)
         {
-            scheduleEvent(EV_MANASTORM, 5000, 17000);
-            scheduleEvent(EV_CHILL, 10000, 30000);
-            scheduleEvent(EV_BREATH, 2000, 8000);
-            scheduleEvent(EV_TELEPORT, 30000);
-            scheduleEvent(EV_REFLECT, 15000, 30000);
-            scheduleEvent(EV_CLEAVE, 7000);
+            if (onSpawn) {
+                addEvent(EV_MANASTORM, 5000, 17000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_CHILL, 10000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_BREATH, 2000, 8000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_TELEPORT, 30000, 30000);
+                addEvent(EV_REFLECT, 15000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_CLEAVE, 7000, EVENT_FLAG_DELAY_IF_CASTING);
+            }
+            else {
+                scheduleEvent(EV_MANASTORM, 5000, 17000);
+                scheduleEvent(EV_CHILL, 10000, 30000);
+                scheduleEvent(EV_BREATH, 2000, 8000);
+                scheduleEvent(EV_TELEPORT, 30000);
+                scheduleEvent(EV_REFLECT, 15000, 30000);
+                scheduleEvent(EV_CLEAVE, 7000);
+            }
             
             enraged = false;
         }
