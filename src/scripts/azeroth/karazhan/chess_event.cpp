@@ -344,7 +344,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         for (uint8 row = 0; row < 8 && !targetCell; row++) {
             for (uint8 col = 0; col < 8 && !targetCell; col++) {
                 BoardCell* cell = board[row][col];
-                if (cell->pieceGUID == piece->GetGUID()) {
+                if (cell && cell->pieceGUID == piece->GetGUID()) {
                     switch (orientation) {
                     case ORI_SE:
                         if (row != 0)
