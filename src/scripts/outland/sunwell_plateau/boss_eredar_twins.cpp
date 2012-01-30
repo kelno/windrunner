@@ -515,6 +515,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45348, true);
         
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1714, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
+        
         m_creature->SetFullTauntImmunity(true);
         me->RemoveAurasDueToSpell(45769);
         me->CastSpell(me, 45769, true);
