@@ -61,8 +61,8 @@ CreatureAI* GetAI_mobs_mana_tapped(Creature* pCreature)
 ## npc_prospector_anvilward
 ######*/
 
-#define GOSSIP_HELLO    "I need a moment of your time, sir."
-#define GOSSIP_SELECT   "Why... yes, of course. I've something to show you right inside this building, Mr. Anvilward."
+#define GOSSIP_HELLO    "J'ai besoin d'un peu de votre temps, seigneur."
+#define GOSSIP_SELECT   "Pourquoi... oui, bien sûr. J'ai quelque chose à vous montrer juste dans ce bâtiment, Mr. Garde-enclume."
 
 enum eAnvilward
 {
@@ -573,6 +573,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
         Summons.DespawnAll();
         Summon = false;
         Validated = false;
+        me->GetMotionMaster()->MoveTargetedHome();
     }
 
     void Aggro(Unit* pWho){}
@@ -621,6 +622,11 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
             m_creature->SummonCreature(MOB_ANGERSHADE, 8745, -7134.32, 35.22, 0, TEMPSUMMON_CORPSE_DESPAWN, 4000);
             Summon = false;
         }
+        
+        if (!UpdateVictim(false))
+            return;
+            
+        DoMeleeAttackIfReady();
     }
 };
 
@@ -731,8 +737,20 @@ struct npc_infused_crystalAI : public Scripted_NoMovementAI
             if (PlayerGUID)
             {
                 Player* player = Unit::GetPlayer(PlayerGUID);
-                if(player)
-                    player->CompleteQuest(QUEST_POWERING_OUR_DEFENSES);
+                if (Group* group = player->GetGroup()) {
+                    for (GroupReference *itr = group->GetFirstMember(); itr != NULL; itr = itr->next()) {
+                        Player* pGroupGuy = itr->getSource();
+                        if (!pGroupGuy)
+                            continue;
+
+                        if (!pGroupGuy->IsAtGroupRewardDistance(player))
+                            continue;
+                            
+                        pGroupGuy->KilledMonster(16364, 0);
+                    }
+                }
+                else
+                    player->KilledMonster(16364, 0);
             }
             m_creature->DealDamage(m_creature,m_creature->GetHealth(),NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             m_creature->RemoveCorpse();
