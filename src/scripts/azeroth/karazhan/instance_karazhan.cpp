@@ -65,6 +65,8 @@ struct instance_karazhan : public ScriptedInstance
     uint64 MastersTerraceDoor[2];
     uint64 ImageGUID;
     
+    uint32 ChessGamePhase;
+    
     std::vector<uint64> ChessPieces;
     std::vector<uint64> MedivhCheatFires;
 
@@ -96,6 +98,7 @@ struct instance_karazhan : public ScriptedInstance
         
         ChessPieces.resize(0);
         MedivhCheatFires.resize(0);
+        ChessGamePhase = NOTSTARTED;
     }
 
     bool IsEncounterInProgress() const
@@ -126,6 +129,7 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_OPERA_PERFORMANCE:      return OperaEvent;
             case DATA_OPERA_OZ_DEATHCOUNT:    return OzDeathCount;
             case CHESS_EVENT_TEAM:            return ChessTeam;
+            case DATA_CHESS_GAME_PHASE:       return ChessGamePhase;
         }
 
         return 0;
@@ -254,9 +258,12 @@ struct instance_karazhan : public ScriptedInstance
                     }
                 }
                 break;
+            case DATA_CHESS_GAME_PHASE:
+                ChessGamePhase = data;
+                break;
         }
 
-        if (data == DONE)
+        if (data == DONE && type != DATA_CHESS_GAME_PHASE)
             SaveToDB();
     }
 

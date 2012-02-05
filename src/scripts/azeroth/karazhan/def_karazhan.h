@@ -38,6 +38,7 @@
 #define DATA_CHESS_REINIT_PIECES        31
 #define DATA_CHESS_CHECK_PIECES_ALIVE   32
 #define DATA_IMAGE_OF_MEDIVH_NIGHTBANE  33
+#define DATA_CHESS_GAME_PHASE           34
 
 // Opera Performances
 #define EVENT_OZ        1
@@ -61,5 +62,16 @@ enum eNPCs {
     NPC_KING_H   = 21752,
     NPC_KING_A   = 21684
 };
+
+typedef enum gamePhase
+{
+    NOTSTARTED      = 0,
+    PVE_WARMUP      = 1, // Medivh has been spoken too but king isn't controlled yet
+    INPROGRESS_PVE  = 2,
+    FAILED          = 4,
+    PVE_FINISHED    = 5,
+    PVP_WARMUP      = 6,
+    INPROGRESS_PVP  = 7  // Get back to PVE_FINISHED after that
+} GamePhase;
 #endif
 

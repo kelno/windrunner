@@ -68,19 +68,6 @@ typedef struct boardCell
     }
 } BoardCell;
 
-typedef enum gamePhase
-{
-    NOTSTARTED      = 0,
-    PVE_WARMUP      = 1, // Medivh has been spoken too but king isn't controlled yet
-    INPROGRESS_PVE  = 2,
-    FAILED          = 4,
-    PVE_FINISHED    = 5,
-    PVP_WARMUP      = 6,
-    INPROGRESS_PVP  = 7  // Get back to PVE_FINISHED after that
-} GamePhase;
-
-GamePhase chessPhase = NOTSTARTED;
-
 typedef enum chessOrientationType
 {
     ORI_SE  = 0,    // Horde start
@@ -175,7 +162,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         cheatTimer = 80000 + rand()%20000;
         
         if (pInstance && pInstance->GetData(DATA_CHESS_EVENT) == DONE)
-            chessPhase = PVE_FINISHED;
+            pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
     }
     
     void RemoveCheats()
@@ -450,20 +437,20 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
-                chessPhase = NOTSTARTED;
+                pInstance->SetData(DATA_CHESS_GAME_PHASE, NOTSTARTED);
                 break;
             case NPC_KING_A:
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
                 if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                    chessPhase = PVE_FINISHED;
+                    pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                     me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 }
                 else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
-                    chessPhase = PVE_FINISHED;
+                    pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 }
                 break;
             default: break;
@@ -487,20 +474,20 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
-                chessPhase = NOTSTARTED;
+                pInstance->SetData(DATA_CHESS_GAME_PHASE, NOTSTARTED);
                 break;
             case NPC_KING_H:
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
                 if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
-                    chessPhase = PVE_FINISHED;
+                    pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                     me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 }
                 else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
-                    chessPhase = PVE_FINISHED;
+                    pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 }
                 break;
             default: break;
@@ -512,7 +499,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_A:
                 pInstance->SetData(DATA_CHESS_EVENT, DONE);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
-                chessPhase = PVE_FINISHED;
+                pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 break;
             }
         }
@@ -879,6 +866,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         if (!pInstance)
             return;
             
+        uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
+            
         if (chessPhase != INPROGRESS_PVE)
             return;
         
@@ -1060,6 +1049,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         if (!pInstance)
             return;
             
+        uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
+            
         if (chessPhase != INPROGRESS_PVE && chessPhase != INPROGRESS_PVP)
             return;
 
@@ -1164,6 +1155,12 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
 {
     if (player->HasAura(SPELL_RECENTLY_INGAME))
         return true;
+        
+    ScriptedInstance* pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+    if (!pInstance)
+        return true;
+        
+    uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
 
     if (player->GetTeam() == ALLIANCE && creature->getFaction() != A_FACTION && chessPhase < PVE_FINISHED)
         return true;
@@ -1215,10 +1212,16 @@ bool GossipSelect_npc_chesspiece(Player* player, Creature* creature, uint32 send
         player->CastSpell(creature, SPELL_POSSESS_CHESSPIECE, false);
         player->TeleportTo(532, playerTeleportPosition[0], playerTeleportPosition[1], playerTeleportPosition[2], playerTeleportPosition[3]);
         
+        ScriptedInstance* pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        if (!pInstance)
+            return true;
+            
+        uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
+        
         if (chessPhase == PVE_WARMUP)
-            chessPhase = INPROGRESS_PVE;
+            pInstance->SetData(DATA_CHESS_GAME_PHASE, INPROGRESS_PVE);
         else if (chessPhase == PVP_WARMUP)
-            chessPhase = INPROGRESS_PVP;
+            pInstance->SetData(DATA_CHESS_GAME_PHASE, INPROGRESS_PVP);
     }
 
     player->CLOSE_GOSSIP_MENU();
@@ -1239,12 +1242,14 @@ bool GossipHello_npc_echo_of_medivh(Player* player, Creature* creature)
     
     if (!pInstance)
         return true;
+        
+    uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
 
     if (chessPhase == FAILED)
-        chessPhase = NOTSTARTED;
+        pInstance->SetData(DATA_CHESS_GAME_PHASE, NOTSTARTED);
     
     if (pInstance->GetData(DATA_CHESS_EVENT) == DONE && chessPhase == NOTSTARTED)
-        chessPhase = PVE_FINISHED;
+        pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
 
     if (chessPhase == NOTSTARTED)
         player->ADD_GOSSIP_ITEM(0, "Nous souhaitons jouer une partie contre vous !", GOSSIP_SENDER_MAIN, MEDIVH_GOSSIP_START_PVE);
@@ -1266,6 +1271,8 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     
     if (!pInstance)
         return true;
+        
+    uint32 chessPhase = pInstance->GetData(DATA_CHESS_GAME_PHASE);
     
     if (chessPhase < PVE_FINISHED)
         pInstance->SetData(CHESS_EVENT_TEAM, player->GetTeam());
@@ -1274,13 +1281,13 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
     
     switch (action) {
     case MEDIVH_GOSSIP_START_PVE:
-        chessPhase = PVE_WARMUP;
+        pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_WARMUP);
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
         pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
         DoScriptText(SCRIPTTEXT_AT_EVENT_START, creature);
         break;
     case MEDIVH_GOSSIP_RESTART:
-        chessPhase = FAILED;
+        pInstance->SetData(DATA_CHESS_GAME_PHASE, FAILED);
         pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
         ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_ALLIANCE] = 0;
         ((npc_echo_of_medivhAI*)creature->AI())->deadCount[DEAD_HORDE] = 0;
@@ -1291,7 +1298,7 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
             pInstance->SetData(DATA_CHESS_EVENT, DONE);
         break;
     case MEDIVH_GOSSIP_START_PVP:
-        chessPhase = PVP_WARMUP;
+        pInstance->SetData(DATA_CHESS_GAME_PHASE, PVP_WARMUP);
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
         pInstance->SetData(DATA_CHESS_EVENT, SPECIAL);
         break;
