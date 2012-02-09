@@ -694,7 +694,14 @@ void ScriptMgr::LoadDatabase()
     }
 
     //Initialize connection to DB
-    if (dbstring && TScriptDB.Initialize(dbstring) )
+    uint8 num_threads = sConfig.GetIntDefault("WorldDatabase.WorkerThreads", 1);
+    if (num_threads < 1 || num_threads > 32) {
+        sLog.outError("World database: invalid number of worker threads specified. "
+            "Please pick a value between 1 and 32.");
+        return;
+    }
+    
+    if (TScriptDB.Open(dbstring, num_threads))
         outstring_log("TSCR: TrinityScript database: %s",dbstring);
     else
     {
@@ -1352,7 +1359,7 @@ void ScriptMgr::LoadDatabase()
     }
 
     //Free database thread and resources
-    TScriptDB.HaltDelayThread();
+    TScriptDB.Close();
 
 }
 
