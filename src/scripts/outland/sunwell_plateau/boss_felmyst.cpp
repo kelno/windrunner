@@ -270,8 +270,10 @@ struct boss_felmystAI : public ScriptedAI
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, DONE);
             
-        if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0))
+        if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
+            kalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             kalecgos->setActive(true);
+        }
     }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
