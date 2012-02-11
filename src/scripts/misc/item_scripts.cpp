@@ -38,7 +38,6 @@ item_soul_cannon(i32825)            Prevents abuse of this item
 item_sparrowhawk_net(i32321)        Quest To Catch A Sparrowhawk (q10987). Prevents abuse
 item_voodoo_charm                   Provide proper error message and target(q2561)
 item_vorenthals_presence(i30259)    Prevents abuse of this item
-item_yehkinyas_bramble(i10699)      Allow cast spell on vale screecher only and remove corpse if cast sucessful (q3520)
 item_zezzak_shard(i31463)           Quest The eyes of Grillok (q10813). Prevents abuse
 item_inoculating_crystal            Quest Inoculating. Prevent abuse
 item_tuber_whistle                  Quest 10514 : spell 36652 seems to not have a EffectDummy in DBC.
@@ -438,33 +437,6 @@ bool ItemUse_item_vorenthals_presence(Player *player, Item* _Item, SpellCastTarg
 }
 
 /*#####
-# item_yehkinyas_bramble
-#####*/
-
-bool ItemUse_item_yehkinyas_bramble(Player *player, Item* _Item, SpellCastTargets const& targets)
-{
-    if (player->GetQuestStatus(3520) == QUEST_STATUS_INCOMPLETE)
-    {
-        Unit * unit_target = targets.getUnitTarget();
-        if( unit_target &&
-            unit_target->GetTypeId()==TYPEID_UNIT &&
-            unit_target->isDead() &&
-                                                            // cast only on corpse 5307 or 5308
-            (unit_target->GetEntry()==5307 || unit_target->GetEntry()==5308) )
-        {
-            (unit_target->ToCreature())->RemoveCorpse();       // remove corpse for cancelling second use
-            return false;                                   // all ok
-        }
-    }
-    WorldPacket data(SMSG_CAST_FAILED, (4+2));              // prepare packet error message
-    data << uint32(10699);                                  // itemId
-    data << uint8(SPELL_FAILED_BAD_TARGETS);                // reason
-    player->GetSession()->SendPacket(&data);                // send message: Bad target
-    player->SendEquipError(EQUIP_ERR_NONE,_Item,NULL);      // break spell
-    return true;
-}
-
-/*#####
 # item_zezzak_shard
 #####*/
 
@@ -733,11 +705,6 @@ void AddSC_item_scripts()
     newscript = new Script;
     newscript->Name="item_vorenthals_presence";
     newscript->pItemUse = &ItemUse_item_vorenthals_presence;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name="item_yehkinyas_bramble";
-    newscript->pItemUse = &ItemUse_item_yehkinyas_bramble;
     newscript->RegisterSelf();
 
     newscript = new Script;
