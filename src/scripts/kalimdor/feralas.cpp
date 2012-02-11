@@ -165,6 +165,11 @@ bool QuestAccept_npc_oox22fe(Player* pPlayer, Creature* pCreature, const Quest* 
 
 bool GossipHello_npc_screecher_spirit(Player* pPlayer, Creature* pCreature)
 {
+    if (Creature* screecher = pCreature->FindNearestCreature(5307, 2.0f, false))
+        screecher->RemoveCorpse();
+    else if (Creature* screecher = pCreature->FindNearestCreature(5308, 2.0f, false))
+        screecher->RemoveCorpse();
+
     pPlayer->SEND_GOSSIP_MENU(2039, pCreature->GetGUID() );
     pPlayer->TalkedToCreature(pCreature->GetEntry(), pCreature->GetGUID());
     pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
