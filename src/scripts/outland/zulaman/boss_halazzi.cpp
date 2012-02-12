@@ -79,7 +79,7 @@ struct boss_halazziAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         // need to find out what controls totem's spell cooldown
-        /*SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_LIGHTNING);
+        /*SpellEntry *TempSpell = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_LIGHTNING);
         if(TempSpell && TempSpell->CastingTimeIndex != 5)
             TempSpell->CastingTimeIndex = 5; // 2000 ms casting time*/
     }

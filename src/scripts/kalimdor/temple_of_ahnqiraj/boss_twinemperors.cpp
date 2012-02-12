@@ -442,7 +442,7 @@ struct boss_veknilashAI : public boss_twinemperorsAI
     {
         target->setFaction(14);
         ((CreatureAI*)target->AI())->AttackStart(m_creature->getThreatManager().getHostilTarget());
-        SpellEntry *spell = (SpellEntry *)spellmgr.LookupSpell(SPELL_MUTATE_BUG);
+        SpellEntry *spell = (SpellEntry *)sSpellMgr->LookupSpell(SPELL_MUTATE_BUG);
         for (int i=0; i<3; i++)
         {
             if (!spell->Effect[i])
@@ -525,7 +525,7 @@ struct boss_veklorAI : public boss_twinemperorsAI
     void CastSpellOnBug(Creature *target)
     {
         target->setFaction(14);
-        SpellEntry *spell = (SpellEntry *)spellmgr.LookupSpell(SPELL_EXPLODEBUG);
+        SpellEntry *spell = (SpellEntry *)sSpellMgr->LookupSpell(SPELL_EXPLODEBUG);
         for (int i=0; i<3; i++)
         {
             if (!spell->Effect[i])

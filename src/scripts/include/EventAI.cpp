@@ -667,7 +667,7 @@ struct Mob_EventAI : public ScriptedAI
 
                 if (canCast)
                 {
-                    const SpellEntry* tSpell = spellmgr.LookupSpell(param1);
+                    const SpellEntry* tSpell = sSpellMgr->LookupSpell(param1);
 
                     //Verify that spell exists
                     if (tSpell)

@@ -104,7 +104,7 @@ bool GOHello_go_western_crystal_pylon(Player *player, GameObject* _GO)
 
 bool GOHello_go_barov_journal(Player *player, GameObject* _GO)
 {
-    if(player->HasSkill(SKILL_TAILORING) && player->GetBaseSkillValue(SKILL_TAILORING) >= 280 && !player->HasSpell(26086))
+    if(player->HasSkill(SKILL_TAILORING) && player->GetBaseSkillValue(SKILL_TAILORING) >= 280 && !player->hasSpell(26086))
     {
         player->CastSpell(player,26095,false);
     }
@@ -117,7 +117,7 @@ bool GOHello_go_barov_journal(Player *player, GameObject* _GO)
 
 bool GOHello_go_field_repair_bot_74A(Player *player, GameObject* _GO)
 {
-    if(player->HasSkill(SKILL_ENGINERING) && player->GetBaseSkillValue(SKILL_ENGINERING) >= 300 && !player->HasSpell(22704))
+    if(player->HasSkill(SKILL_ENGINERING) && player->GetBaseSkillValue(SKILL_ENGINERING) >= 300 && !player->hasSpell(22704))
     {
         player->CastSpell(player,22864,false);
     }
@@ -142,7 +142,7 @@ bool GOHello_go_orb_of_command(Player *player, GameObject* _GO)
 
 bool GOHello_go_tablet_of_madness(Player *player, GameObject* _GO)
 {
-    if (player->HasSkill(SKILL_ALCHEMY) && player->GetSkillValue(SKILL_ALCHEMY) >= 300 && !player->HasSpell(24266))
+    if (player->HasSkill(SKILL_ALCHEMY) && player->GetSkillValue(SKILL_ALCHEMY) >= 300 && !player->hasSpell(24266))
     {
         player->CastSpell(player,24267,false);
     }

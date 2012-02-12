@@ -138,10 +138,10 @@ struct mob_wisp_invisAI : public ScriptedAI
     {
         Creaturetype = delay = spell = spell2 = 0;
         //that's hack but there are no info about range of this spells in dbc
-        SpellEntry *wisp = (SpellEntry*)spellmgr.LookupSpell(SPELL_WISP_BLUE);
+        SpellEntry *wisp = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_WISP_BLUE);
         if (wisp)
             wisp->rangeIndex = 6; //100 yards
-        SpellEntry *port = (SpellEntry*)spellmgr.LookupSpell(SPELL_WISP_FLIGHT_PORT);
+        SpellEntry *port = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_WISP_FLIGHT_PORT);
         if (port)
             port->rangeIndex = 6;
     }
@@ -374,7 +374,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
 {
     boss_headless_horsemanAI(Creature *c) : ScriptedAI(c)
     {
-        SpellEntry *confl = (SpellEntry*)spellmgr.LookupSpell(SPELL_CONFLAGRATION);
+        SpellEntry *confl = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_CONFLAGRATION);
         if(confl) {
             confl->EffectApplyAuraName[0] = SPELL_AURA_PERIODIC_DAMAGE_PERCENT;
             confl->EffectBasePoints[0] = 10;

@@ -219,7 +219,7 @@ int32 DoLowUnlearnCost(Player *player)                      //blacksmith
 
 bool EquippedOk(Player* player, uint32 spellId)
 {
-    SpellEntry const* spell = spellmgr.LookupSpell(spellId);
+    SpellEntry const* spell = sSpellMgr->LookupSpell(spellId);
 
     if( !spell )
         return false;
@@ -345,7 +345,7 @@ void ProfessionUnlearnSpells(Player *player, uint32 type)
 
 bool HasAlchemySpell(Player *player)
 {
-    if(player->HasSpell(S_TRANSMUTE) || player->HasSpell(S_ELIXIR) || player->HasSpell(S_POTION))
+    if(player->hasSpell(S_TRANSMUTE) || player->hasSpell(S_ELIXIR) || player->hasSpell(S_POTION))
         return true;
     return false;
 }
@@ -370,19 +370,19 @@ bool GossipHello_npc_prof_alchemy(Player *player, Creature *_Creature)
                 case 22427:                                 //Zarevhi
                     if (!HasAlchemySpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_TRANSMUTE,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 1);
-                    if (player->HasSpell(S_TRANSMUTE))
+                    if (player->hasSpell(S_TRANSMUTE))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_TRANSMUTE,  GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 4);
                     break;
                 case 19052:                                 //Lorokeem
                     if (!HasAlchemySpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_ELIXIR,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 2);
-                    if (player->HasSpell(S_ELIXIR))
+                    if (player->hasSpell(S_ELIXIR))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_ELIXIR,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 5);
                     break;
                 case 17909:                                 //Lauranna Thar'well
                     if (!HasAlchemySpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_POTION,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 3);
-                    if (player->HasSpell(S_POTION))
+                    if (player->hasSpell(S_POTION))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_POTION,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 6);
                     break;
             }
@@ -405,7 +405,7 @@ void SendActionMenu_npc_prof_alchemy(Player *player, Creature *_Creature, uint32
             break;
             //Learn Alchemy
         case GOSSIP_ACTION_INFO_DEF + 1:
-            if(!player->HasSpell(S_TRANSMUTE) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_TRANSMUTE) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_TRANSMUTE, true);
                 player->ModifyMoney(-DoLearnCost(player));
@@ -414,7 +414,7 @@ void SendActionMenu_npc_prof_alchemy(Player *player, Creature *_Creature, uint32
             player->CLOSE_GOSSIP_MENU();
             break;
         case GOSSIP_ACTION_INFO_DEF + 2:
-            if(!player->HasSpell(S_ELIXIR) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_ELIXIR) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_ELIXIR, true);
                 player->ModifyMoney(-DoLearnCost(player));
@@ -423,7 +423,7 @@ void SendActionMenu_npc_prof_alchemy(Player *player, Creature *_Creature, uint32
             player->CLOSE_GOSSIP_MENU();
             break;
         case GOSSIP_ACTION_INFO_DEF + 3:
-            if(!player->HasSpell(S_POTION) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_POTION) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_POTION, true);
                 player->ModifyMoney(-DoLearnCost(player));
@@ -532,7 +532,7 @@ bool GossipSelect_npc_prof_alchemy(Player *player, Creature *_Creature, uint32 s
 
 bool HasWeaponSub(Player *player)
 {
-    if (player->HasSpell(S_HAMMER) || player->HasSpell(S_AXE) || player->HasSpell(S_SWORD))
+    if (player->hasSpell(S_HAMMER) || player->hasSpell(S_AXE) || player->hasSpell(S_SWORD))
         return true;
     return false;
 }
@@ -554,44 +554,44 @@ bool GossipHello_npc_prof_blacksmith(Player *player, Creature *_Creature)
         {
             case 11145:                                     //Myolor Sunderfury
             case 11176:                                     //Krathok Moltenfist
-                if(!player->HasSpell(S_ARMOR) && !player->HasSpell(S_WEAPON) && player->GetReputationRank(REP_ARMOR) >=  REP_FRIENDLY)
+                if(!player->hasSpell(S_ARMOR) && !player->hasSpell(S_WEAPON) && player->GetReputationRank(REP_ARMOR) >=  REP_FRIENDLY)
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_ARMOR_LEARN,   GOSSIP_SENDER_MAIN,          GOSSIP_ACTION_INFO_DEF + 1);
-                if(!player->HasSpell(S_WEAPON) && !player->HasSpell(S_ARMOR) && player->GetReputationRank(REP_WEAPON) >= REP_FRIENDLY)
+                if(!player->hasSpell(S_WEAPON) && !player->hasSpell(S_ARMOR) && player->GetReputationRank(REP_WEAPON) >= REP_FRIENDLY)
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_WEAPON_LEARN,  GOSSIP_SENDER_MAIN,          GOSSIP_ACTION_INFO_DEF + 2);
                 break;
             case 11146:                                     //Ironus Coldsteel
             case 11178:                                     //Borgosh Corebender
-                if(player->HasSpell(S_WEAPON))
+                if(player->hasSpell(S_WEAPON))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_WEAPON_UNLEARN,    GOSSIP_SENDER_UNLEARN,   GOSSIP_ACTION_INFO_DEF + 3);
                 break;
             case 5164:                                      //Grumnus Steelshaper
             case 11177:                                     //Okothos Ironrager
-                if(player->HasSpell(S_ARMOR))
+                if(player->hasSpell(S_ARMOR))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_ARMOR_UNLEARN,     GOSSIP_SENDER_UNLEARN,   GOSSIP_ACTION_INFO_DEF + 4);
                 break;
         }
     }
     //WEAPONSMITH SPEC
-    if(player->HasSpell(S_WEAPON) && player->getLevel() > 49 && player->GetBaseSkillValue(SKILL_BLACKSMITHING)>=250)
+    if(player->hasSpell(S_WEAPON) && player->getLevel() > 49 && player->GetBaseSkillValue(SKILL_BLACKSMITHING)>=250)
     {
         switch (eCreature)
         {
             case 11191:                                     //Lilith the Lithe
                 if(!HasWeaponSub(player))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_HAMMER,       GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 5);
-                if(player->HasSpell(S_HAMMER))
+                if(player->hasSpell(S_HAMMER))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_HAMMER,     GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 8);
                 break;
             case 11192:                                     //Kilram
                 if(!HasWeaponSub(player))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_AXE,          GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 6);
-                if(player->HasSpell(S_AXE))
+                if(player->hasSpell(S_AXE))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_AXE,        GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 9);
                 break;
             case 11193:                                     //Seril Scourgebane
                 if(!HasWeaponSub(player))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_SWORD,        GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 7);
-                if(player->HasSpell(S_SWORD))
+                if(player->hasSpell(S_SWORD))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_SWORD,      GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 10);
                 break;
         }
@@ -613,7 +613,7 @@ void SendActionMenu_npc_prof_blacksmith(Player *player, Creature *_Creature, uin
             break;
             //Learn Armor/Weapon
         case GOSSIP_ACTION_INFO_DEF + 1:
-            if(!player->HasSpell(S_ARMOR))
+            if(!player->hasSpell(S_ARMOR))
             {
                 player->CastSpell(player, S_LEARN_ARMOR, true);
                 //_Creature->CastSpell(player, S_REP_ARMOR, true);
@@ -621,7 +621,7 @@ void SendActionMenu_npc_prof_blacksmith(Player *player, Creature *_Creature, uin
             player->CLOSE_GOSSIP_MENU();
             break;
         case GOSSIP_ACTION_INFO_DEF + 2:
-            if(!player->HasSpell(S_WEAPON))
+            if(!player->hasSpell(S_WEAPON))
             {
                 player->CastSpell(player, S_LEARN_WEAPON, true);
                 //_Creature->CastSpell(player, S_REP_WEAPON, true);
@@ -834,17 +834,17 @@ bool GossipHello_npc_prof_leather(Player *player, Creature *_Creature)
         {
             case 7866:                                      //Peter Galen
             case 7867:                                      //Thorkaf Dragoneye
-                if(player->HasSpell(S_DRAGON))
+                if(player->hasSpell(S_DRAGON))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_DRAGON,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 1);
                 break;
             case 7868:                                      //Sarah Tanner
             case 7869:                                      //Brumn Winterhoof
-                if(player->HasSpell(S_ELEMENTAL))
+                if(player->hasSpell(S_ELEMENTAL))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_ELEMENTAL,   GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 2);
                 break;
             case 7870:                                      //Caryssia Moonhunter
             case 7871:                                      //Se'Jib
-                if(player->HasSpell(S_TRIBAL))
+                if(player->hasSpell(S_TRIBAL))
                     player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_TRIBAL,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 3);
                 break;
         }
@@ -956,7 +956,7 @@ bool GossipSelect_npc_prof_leather(Player *player, Creature *_Creature, uint32 s
 
 bool HasTailorSpell(Player *player)
 {
-    if (player->HasSpell(S_MOONCLOTH) || player->HasSpell(S_SHADOWEAVE) || player->HasSpell(S_SPELLFIRE))
+    if (player->hasSpell(S_MOONCLOTH) || player->hasSpell(S_SHADOWEAVE) || player->hasSpell(S_SPELLFIRE))
         return true;
     return false;
 }
@@ -981,19 +981,19 @@ bool GossipHello_npc_prof_tailor(Player *player, Creature *_Creature)
                 case 22213:                                 //Gidge Spellweaver
                     if (!HasTailorSpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_SPELLFIRE,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 1);
-                    if (player->HasSpell(S_SPELLFIRE))
+                    if (player->hasSpell(S_SPELLFIRE))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_SPELLFIRE,  GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 4);
                     break;
                 case 22208:                                 //Nasmara Moonsong
                     if (!HasTailorSpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_MOONCLOTH,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 2);
-                    if (player->HasSpell(S_MOONCLOTH))
+                    if (player->hasSpell(S_MOONCLOTH))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_MOONCLOTH,  GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 5);
                     break;
                 case 22212:                                 //Andrion Darkspinner
                     if (!HasTailorSpell(player))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_SHADOWEAVE,   GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 3);
-                    if (player->HasSpell(S_SHADOWEAVE))
+                    if (player->hasSpell(S_SHADOWEAVE))
                         player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_SHADOWEAVE, GOSSIP_SENDER_UNLEARN,  GOSSIP_ACTION_INFO_DEF + 6);
                     break;
             }
@@ -1016,7 +1016,7 @@ void SendActionMenu_npc_prof_tailor(Player *player, Creature *_Creature, uint32 
             break;
             //Learn Tailor
         case GOSSIP_ACTION_INFO_DEF + 1:
-            if(!player->HasSpell(S_SPELLFIRE) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_SPELLFIRE) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_SPELLFIRE, true);
                 player->ModifyMoney(-DoLearnCost(player));
@@ -1025,7 +1025,7 @@ void SendActionMenu_npc_prof_tailor(Player *player, Creature *_Creature, uint32 
             player->CLOSE_GOSSIP_MENU();
             break;
         case GOSSIP_ACTION_INFO_DEF + 2:
-            if(!player->HasSpell(S_MOONCLOTH) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_MOONCLOTH) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_MOONCLOTH, true);
                 player->ModifyMoney(-DoLearnCost(player));
@@ -1034,7 +1034,7 @@ void SendActionMenu_npc_prof_tailor(Player *player, Creature *_Creature, uint32 
             player->CLOSE_GOSSIP_MENU();
             break;
         case GOSSIP_ACTION_INFO_DEF + 3:
-            if(!player->HasSpell(S_SHADOWEAVE) && player->GetMoney() >= DoLearnCost(player))
+            if(!player->hasSpell(S_SHADOWEAVE) && player->GetMoney() >= DoLearnCost(player))
             {
                 player->CastSpell(player, S_LEARN_SHADOWEAVE, true);
                 player->ModifyMoney(-DoLearnCost(player));

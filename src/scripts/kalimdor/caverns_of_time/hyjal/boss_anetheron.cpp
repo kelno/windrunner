@@ -43,7 +43,7 @@ struct boss_anetheronAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         go = false;
         pos = 0;
-        SpellEntry *TempSpell = (SpellEntry*)spellmgr.spellmgr.LookupSpell(SPELL_SLEEP);
+        SpellEntry *TempSpell = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_SLEEP);
         if(TempSpell && TempSpell->EffectImplicitTargetA[0] != 1)
         {
             TempSpell->EffectImplicitTargetA[0] = 1;

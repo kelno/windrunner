@@ -1296,7 +1296,7 @@ struct npc_explosive_sheepAI : public ScriptedAI
                 //m_creature->DisappearAndDie();
                 if (m_creature->GetOwner() && m_creature->GetOwner()->ToPlayer()) {
                     m_creature->GetOwner()->ToPlayer()->RemoveGuardians();
-                    m_creature->GetOwner()->ToPlayer()->SendCooldownEvent(spellmgr.LookupSpell(4074));
+                    m_creature->GetOwner()->ToPlayer()->SendCooldownEvent(sSpellMgr->LookupSpell(4074));
                 }
             }
         }

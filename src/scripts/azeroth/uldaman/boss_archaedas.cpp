@@ -105,7 +105,7 @@ struct boss_archaedasAI : public ScriptedAI
     void SpellHit (Unit* caster, const SpellEntry *spell)
     {
         // Being woken up from the altar, start the awaken sequence
-        if (spell == spellmgr.LookupSpell(SPELL_ARCHAEDAS_AWAKEN)) {
+        if (spell == sSpellMgr->LookupSpell(SPELL_ARCHAEDAS_AWAKEN)) {
             DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
             DoPlaySoundToSet(m_creature,SOUND_AGGRO);
             Awaken_Timer = 4000;
@@ -248,7 +248,7 @@ struct mob_archaedas_minionsAI : public ScriptedAI
 
     void SpellHit (Unit* caster, const SpellEntry *spell) {
         // time to wake up, start animation
-        if (spell == spellmgr.LookupSpell(SPELL_ARCHAEDAS_AWAKEN)){
+        if (spell == sSpellMgr->LookupSpell(SPELL_ARCHAEDAS_AWAKEN)){
             Awaken_Timer = 5000;
             wakingUp = true;
         }

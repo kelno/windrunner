@@ -505,7 +505,7 @@ bool GOHello_go_landmark_treasure(Player *player, GameObject* _GO)
 
 bool GossipHello_npc_jhordy_lapforge(Player *pPlayer, Creature *pCreature)
 {
-    if (pPlayer->HasSkill(SKILL_ENGINERING) && (pPlayer->GetBaseSkillValue(SKILL_ENGINERING) >= 260) && pPlayer->HasSpell(SPELL_GNOME_ENGINEER) && !pPlayer->HasSpell(SPELL_ULTRASAFE_TELE)) {
+    if (pPlayer->HasSkill(SKILL_ENGINERING) && (pPlayer->GetBaseSkillValue(SKILL_ENGINERING) >= 260) && pPlayer->hasSpell(SPELL_GNOME_ENGINEER) && !pPlayer->hasSpell(SPELL_ULTRASAFE_TELE)) {
         pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_ZAP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->SEND_GOSSIP_MENU(3377, pCreature->GetGUID());
         

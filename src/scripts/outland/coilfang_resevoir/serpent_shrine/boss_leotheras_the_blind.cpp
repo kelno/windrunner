@@ -502,7 +502,7 @@ struct boss_leotheras_the_blindAI : public ScriptedAI
                     if(tempTarget && tempTarget->GetTypeId() == TYPEID_PLAYER && tempTarget->GetGUID() != m_creature->getVictim()->GetGUID() && TargetList.size()<5)
                         TargetList.push_back( tempTarget );
                 }
-                SpellEntry *spell = (SpellEntry *)spellmgr.LookupSpell(SPELL_INSIDIOUS_WHISPER);
+                SpellEntry *spell = (SpellEntry *)sSpellMgr->LookupSpell(SPELL_INSIDIOUS_WHISPER);
                 for(std::vector<Unit *>::iterator itr = TargetList.begin(); itr != TargetList.end(); ++itr)
                 {
                     if( (*itr) && (*itr)->isAlive() )

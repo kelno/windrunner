@@ -61,7 +61,7 @@ struct boss_akilzonAI : public ScriptedAI
 {
     boss_akilzonAI(Creature *c) : ScriptedAI(c)
     {
-        SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_ELECTRICAL_DAMAGE);
+        SpellEntry *TempSpell = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_ELECTRICAL_DAMAGE);
         if(TempSpell)
             TempSpell->EffectBasePoints[1] = 49;//disable bugged lightning until fixed in core
         pInstance = ((ScriptedInstance*)c->GetInstanceData());

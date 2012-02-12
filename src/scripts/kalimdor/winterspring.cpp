@@ -154,7 +154,7 @@ bool GossipSelect_npc_witch_doctor_mauari(Player *player, Creature *_Creature, u
 
 bool GossipHello_npc_zap_farflinger(Player *pPlayer, Creature *pCreature)
 {
-    if (pPlayer->HasSkill(SKILL_ENGINERING) && (pPlayer->GetBaseSkillValue(SKILL_ENGINERING) >= 260) && pPlayer->HasSpell(SPELL_GOBLIN_ENGINEER) && !pPlayer->HasSpell(SPELL_DIMENS_RIPPER)) {
+    if (pPlayer->HasSkill(SKILL_ENGINERING) && (pPlayer->GetBaseSkillValue(SKILL_ENGINERING) >= 260) && pPlayer->hasSpell(SPELL_GOBLIN_ENGINEER) && !pPlayer->hasSpell(SPELL_DIMENS_RIPPER)) {
         pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_ZAP, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         pPlayer->SEND_GOSSIP_MENU(3377, pCreature->GetGUID());
         
