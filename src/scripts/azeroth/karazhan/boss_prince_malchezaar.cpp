@@ -303,7 +303,7 @@ struct boss_malchezaarAI : public ScriptedAI
 
     void EnfeebleHealthEffect()
     {
-        const SpellEntry *info = sSpellMgr->LookupSpell(SPELL_ENFEEBLE_EFFECT);
+        const SpellEntry *info = sSpellMgr->lookupSpell(SPELL_ENFEEBLE_EFFECT);
         if(!info)
             return;
 

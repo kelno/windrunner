@@ -243,7 +243,7 @@ struct aqsentinelAI : public ScriptedAI
 
     void GainSentinelAbility(uint32 id)
     {
-        const SpellEntry *spell = sSpellMgr->LookupSpell(id);
+        const SpellEntry *spell = sSpellMgr->lookupSpell(id);
         for (int i=0; i<3; i++)
         {
             if (!spell->Effect[i])
