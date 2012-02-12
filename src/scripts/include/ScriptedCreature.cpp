@@ -574,7 +574,7 @@ SpellEntry const* ScriptedAI::SelectSpell(Unit* Target, int32 School, int32 Mech
     //Check if each spell is viable(set it to null if not)
     for (uint32 i = 0; i < CREATURE_MAX_SPELLS; i++)
     {
-        TempSpell = sSpellMgr->LookupSpell(m_creature->m_spells[i]);
+        TempSpell = sSpellMgr->lookupSpell(m_creature->m_spells[i]);
 
         //This spell doesn't exist
         if (!TempSpell)
@@ -694,7 +694,7 @@ void ScriptedAI::SetCombatMovement(bool bCombatMove)
 
 float GetSpellMaxRange(uint32 id)
 {
-    SpellEntry const *spellInfo = sSpellMgr->LookupSpell(id);
+    SpellEntry const *spellInfo = sSpellMgr->lookupSpell(id);
     if(!spellInfo) return 0;
     SpellRangeEntry const *range = GetSpellRangeStore()->LookupEntry(spellInfo->rangeIndex);
     if(!range) return 0;
@@ -714,7 +714,7 @@ void FillSpellSummary()
         SpellSummary[i].Effects = 0;
         SpellSummary[i].Targets = 0;
 
-        TempSpell = sSpellMgr->LookupSpell(i);
+        TempSpell = sSpellMgr->lookupSpell(i);
         //This spell doesn't exist
         if (!TempSpell)
             continue;
@@ -999,7 +999,7 @@ void LoadOverridenDBCData()
     SpellEntry *spellInfo;
 
     // Black Temple : Illidan : Parasitic Shadowfiend Passive
-    spellInfo = const_cast<SpellEntry*>(sSpellMgr->LookupSpell(41913));
+    spellInfo = const_cast<SpellEntry*>(sSpellMgr->lookupSpell(41913));
     if(spellInfo)
         spellInfo->EffectApplyAuraName[0] = 4; // proc debuff, and summon infinite fiends
 }

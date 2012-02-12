@@ -31,7 +31,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         go = false;
         pos = 0;
-        SpellEntry *TempSpell = (SpellEntry*)sSpellMgr->LookupSpell(SPELL_MARK);
+        SpellEntry *TempSpell = (SpellEntry*)sSpellMgr->lookupSpell(SPELL_MARK);
         if(TempSpell && TempSpell->EffectImplicitTargetA[0] != 1)
         {
             TempSpell->EffectImplicitTargetA[0] = 1;
