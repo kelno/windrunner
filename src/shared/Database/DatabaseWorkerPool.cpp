@@ -17,9 +17,10 @@
  */
 
 #include "DatabaseWorkerPool.h"
+#include "DatabaseWorker.h"
 #include "MySQLConnection.h"
-#include "DatabaseEnv.h"
 #include "SQLOperation.h"
+#include "Database.h"
 //#include "Threading/Threading.cpp"
 
 DatabaseWorkerPool::DatabaseWorkerPool() :
@@ -63,15 +64,12 @@ void DatabaseWorkerPool::Close()
 {
     DEBUG_LOG("Closing down %u connections on this DatabaseWorkerPool", (uint32)m_connections.value());
     /// Shuts down worker threads for this connection pool.
-    ACE_Thread_Mutex shutdown_Mtx;
-    ACE_Condition_Thread_Mutex m_condition(shutdown_Mtx);
+    m_queue->queue()->deactivate();
+
     for (uint8 i = 0; i < m_async_connections.size(); i++) {
-        Enqueue(new DatabaseWorkerPoolEnd(m_condition));
-        m_condition.wait();
+        m_async_connections[i]->m_worker->wait();
         --m_connections;
     }
-        
-    m_queue->queue()->deactivate();
 
     delete m_bundle_conn;
     m_bundle_conn = NULL;
@@ -82,8 +80,6 @@ void DatabaseWorkerPool::Close()
     DEBUG_LOG("Waiting for %u synchroneous database threads to exit.", (uint32)m_connections.value());
     while (!m_sync_connections.empty()) {}
     DEBUG_LOG("Synchroneous database threads exited succesfuly.");
-    
-    mysql_library_end();
 }
 
 /*! This function creates a new MySQL connection for every MapUpdate thread
@@ -96,6 +92,11 @@ void DatabaseWorkerPool::Init_MySQL_Connection()
 
     {
         ACE_Guard<ACE_Thread_Mutex> guard(m_connectionMap_mtx);
+        ConnectionMap::const_iterator itr = m_sync_connections.find(ACE_Based::Thread::current());
+        #ifdef _DEBUG
+        if (itr != m_sync_connections.end())
+            sLog.outError("Thread ["UI64FMTD"] already started a MySQL connection", (uint64)ACE_Based::Thread::currentId());
+        #endif
         m_sync_connections[ACE_Based::Thread::current()] = conn;
     }
 
@@ -111,6 +112,10 @@ void DatabaseWorkerPool::End_MySQL_Connection()
     {
         ACE_Guard<ACE_Thread_Mutex> guard(m_connectionMap_mtx);
         ConnectionMap::iterator itr = m_sync_connections.find(ACE_Based::Thread::current());
+        #ifdef _DEBUG
+        if (itr == m_sync_connections.end())
+            sLog.outError("Thread ["UI64FMTD" already shut down their MySQL connection.", (uint64)ACE_Based::Thread::currentId());
+        #endif
         conn = itr->second;
         m_sync_connections.erase(itr);
     }
@@ -181,44 +186,24 @@ QueryResult* DatabaseWorkerPool::PQuery(const char* sql, ...)
     return Query(szQuery);
 }
 
-void DatabaseWorkerPool::BeginTransaction()
+SQLTransaction DatabaseWorkerPool::BeginTransaction()
 {
-    ACE_Guard<ACE_Thread_Mutex> guard(m_transQueues_mtx);
-    ACE_Based::Thread* tranThread = ACE_Based::Thread::current();              // owner of this transaction
-    TransactionQueues::iterator itr = m_tranQueues.find(tranThread);
-    if (itr != m_tranQueues.end() && itr->second != NULL)
-    {
-        itr->second->ForcefulDelete();
-        delete itr->second;
-    }
-    m_tranQueues[tranThread] = new TransactionTask();
-    return;
+    return SQLTransaction(new Transaction);
 }
 
-void DatabaseWorkerPool::RollbackTransaction()
-{
-    ACE_Guard<ACE_Thread_Mutex> guard(m_transQueues_mtx);
-    ACE_Based::Thread* tranThread = ACE_Based::Thread::current();              // owner of this transaction
-    TransactionQueues::iterator itr = m_tranQueues.find(tranThread);
-    if (itr != m_tranQueues.end() && itr->second != NULL)
-    {
-        itr->second->ForcefulDelete();
-        delete itr->second;
-    }
-}
 
-void DatabaseWorkerPool::CommitTransaction()
+void DatabaseWorkerPool::CommitTransaction(SQLTransaction transaction)
 {
-    ACE_Guard<ACE_Thread_Mutex> guard(m_transQueues_mtx);
-    ACE_Based::Thread* tranThread = ACE_Based::Thread::current();              // owner of this transaction
-    TransactionQueues::iterator itr = m_tranQueues.find(tranThread);
-    if (itr != m_tranQueues.end() && itr->second != NULL)
-    {
-        Enqueue(itr->second);
-        m_tranQueues.erase(itr);
+    #ifdef _DEBUG
+    if (transaction->GetSize() == 0) {
+        sLog.outError("Transaction contains 0 queries");
+        return;
     }
+    if (transaction->GetSize() == 1)
+        sLog.outDetail("Warning: Transaction only holds 1 query, consider removing Transaction context in code.");
+ 	#endif
+ 	Enqueue(new TransactionTask(transaction));
 }
-
 
 MySQLConnection* DatabaseWorkerPool::GetConnection()
 {
