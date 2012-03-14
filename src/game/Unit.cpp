@@ -11936,10 +11936,12 @@ void Unit::Kill(Unit *pVictim, bool durabilityLoss)
                 std::map<uint32, uint32> guildOccurs;
                 uint8 groupSize = 0;
                 uint32 downByGuildId = 0;
+                uint32 leaderGuid = 0;
                 float guildPercentage = 0;
                 bool mustLog = true;
 
                 if (Group* group = killingPlayer->GetGroup()) {
+                    leaderGuid = group->GetLeaderGUID();
                     groupSize = group->GetMembersCount();
                     for (GroupReference* gr = group->GetFirstMember(); gr != NULL; gr = gr->next())
                     {
@@ -11990,6 +11992,7 @@ void Unit::Kill(Unit *pVictim, bool durabilityLoss)
                 case 22951:
                 case 22952:
                 case 15302: // Shadow of Taerar
+                case 17256:
                     mustLog = false;
                     break;
                 case 25165: // Eredar Twins, log only if both are defeated
@@ -12001,12 +12004,18 @@ void Unit::Kill(Unit *pVictim, bool durabilityLoss)
                         mustLog = false;
                     break;
                 }
+                case 17533: // Romulo
+                    mustLog = false;
+                    break;
+                case 17534: // Julianne
+                    frName = "Romulo et Julianne";
+                    break;
                 default:
                     break;
                 }
 
                 if (mustLog)
-                    LogsDatabase.PQuery("INSERT INTO boss_down (boss_entry, boss_name, guild_id, guild_name, time, guild_percentage) VALUES (%u, \"%s\", %u, \"%s\", %u, %.2f)", cVictim->GetEntry(), frName, downByGuildId, guildname, time(NULL), guildPercentage);
+                    LogsDatabase.PQuery("INSERT INTO boss_down (boss_entry, boss_name, guild_id, guild_name, time, guild_percentage, leaderGuid) VALUES (%u, \"%s\", %u, \"%s\", %u, %.2f, %u)", cVictim->GetEntry(), frName, downByGuildId, guildname, time(NULL), guildPercentage, leaderGuid);
             }
         }
 
