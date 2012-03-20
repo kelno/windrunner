@@ -227,7 +227,7 @@ struct boss_muruAI : public Scripted_NoMovementAI
     void KilledUnit(Unit* victim){}
 
     void DamageTaken(Unit *done_by, uint32 &damage) {
-        if(damage > m_creature->GetHealth() && Phase == 1){
+        if(damage >= m_creature->GetHealth() && Phase == 1){
             damage = 0;
             Phase = 2;
             m_creature->RemoveAllAuras();
