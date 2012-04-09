@@ -344,7 +344,7 @@ struct boss_muruAI : public Scripted_NoMovementAI
         for (uint8 i = 0; i < 4; ++i)
         {
             if (i != TIMER_PHASE)Timer[i] -= diff;
-            else if (Phase == 2) Timer[i] -= diff;
+            else if (Phase == 2 && Timer[i] > diff) Timer[i] -= diff;
         }
     }
 };
