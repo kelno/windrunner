@@ -335,17 +335,12 @@ struct instance_stratholme : public ScriptedInstance
 
                             if (pGroupie->HasAura(SPELL_BARON_ULTIMATUM,0))
                                 pGroupie->RemoveAurasDueToSpell(SPELL_BARON_ULTIMATUM);
-                                
-                            pGroupie->KilledMonster(16031, 0);
-                            pGroupie->AreaExploredOrEventHappens(8945);
                         }
                     } else if (player->HasAura(SPELL_BARON_ULTIMATUM,0))
                         player->RemoveAurasDueToSpell(SPELL_BARON_ULTIMATUM);
 
-                    if (Unit *temp = Unit::GetUnit(*player,GetData64(DATA_BARON))) {
+                    if (Unit *temp = Unit::GetUnit(*player,GetData64(DATA_BARON)))
                         player->KilledMonster(16031, 0);
-                        player->AreaExploredOrEventHappens(8945);
-                    }
 
                     SetData(TYPE_BARON_RUN,DONE);
                 }

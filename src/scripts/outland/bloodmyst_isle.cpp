@@ -24,7 +24,6 @@ EndScriptData */
 /* ContentData
 mob_webbed_creature
 npc_captured_sunhawk_agent
-npc_razormaw
 EndContentData */
 
 #include "precompiled.h"
@@ -132,65 +131,11 @@ bool GossipSelect_npc_captured_sunhawk_agent(Player* pPlayer, Creature* pCreatur
 
 bool QuestAccept_npc_exarch_admetius(Player* pPlayer, Creature* pCreature, Quest const *quest)
 {
+    sLog.outString("Pom, questId = %u", quest->GetQuestId());
     if (quest->GetQuestId() == 9756)
         pPlayer->AddAura(31609, pPlayer);
         
     return true;
-}
-
-/*######
-## npc_razormaw
-######*/
-
-struct npc_razormawAI : public ScriptedAI
-{
-    npc_razormawAI(Creature* c) : ScriptedAI(c)
-    {
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        me->GetMotionMaster()->MovePoint(1, -1204.845581, -12465.271484, 94.779945, false);
-        landed = false;
-    }
-    
-    bool landed;
-    
-    void Reset()
-    {
-        me->setActive(true);
-    }
-    
-    void MovementInform(uint32 type, uint32 id)
-    {
-        if (id == 1) {
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-            landed = true;
-            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-            me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-        }
-    }
-    
-    void Aggro(Unit* who)
-    {
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-        landed = true;
-    }
-    
-    void UpdateAI(uint32 const diff)
-    {
-        if (!landed)
-            return;
-            
-        if (!UpdateVictim(false))
-            return;
-            
-        DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_npc_razormaw(Creature* creature)
-{
-    return new npc_razormawAI(creature);
 }
 
 void AddSC_bloodmyst_isle()
@@ -211,11 +156,6 @@ void AddSC_bloodmyst_isle()
     newscript = new Script;
     newscript->Name = "npc_exarch_admetius";
     newscript->pQuestAccept = &QuestAccept_npc_exarch_admetius;
-    newscript->RegisterSelf();
-    
-    newscript = new Script;
-    newscript->Name = "npc_razormaw";
-    newscript->GetAI = &GetAI_npc_razormaw;
     newscript->RegisterSelf();
 }
 

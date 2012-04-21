@@ -70,14 +70,6 @@ struct npc_corporal_keeshanAI : public npc_escortAI
 
         switch(uiI)
         {
-            case 11:
-                pPlayer->AreaExploredOrEventHappens(QUEST_MISSING_IN_ACTION);
-                SetRun(true);
-                break;
-            case 12:
-                me->DisappearAndDie();
-                me->Respawn();
-                break;
             case 39:
                 SetEscortPaused(true);
                 uiTimer = 2000;
@@ -147,7 +139,7 @@ struct npc_corporal_keeshanAI : public npc_escortAI
 
         if (uiShieldBashTimer <= uiDiff)
         {
-            DoCast(me->getVictim(),SPELL_SHIELD_BASH);
+            DoCast(me->getVictim(),SPELL_MOCKING_BLOW);
             uiShieldBashTimer = 8000;
         } else uiShieldBashTimer -= uiDiff;
 
@@ -159,8 +151,7 @@ bool QuestAccept_npc_corporal_keeshan(Player* pPlayer, Creature* pCreature, Ques
 {
     if (pQuest->GetQuestId() == QUEST_MISSING_IN_ACTION)
     {
-        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
-        pCreature->setFaction(pPlayer->getFaction());
+        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID(), pCreature->GetEntry());
         DoScriptText(SAY_CORPORAL_1, pCreature);
     }
 

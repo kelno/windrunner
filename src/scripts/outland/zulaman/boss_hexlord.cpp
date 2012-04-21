@@ -433,7 +433,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
                 PlayerAbility_Timer = 8000 + rand()%2000;
                 PlayerClass = target->getClass() - 1;
                 if(PlayerClass == 10) PlayerClass = 9; // druid
-                if(PlayerClass == 4 && target->hasSpell(15473)) PlayerClass = 5; // shadow priest
+                if(PlayerClass == 4 && target->HasSpell(15473)) PlayerClass = 5; // shadow priest
                 SiphonSoul_Timer = 99999;   // buff lasts 30 sec
             }
         }else SiphonSoul_Timer -= diff;

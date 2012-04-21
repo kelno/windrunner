@@ -20,7 +20,7 @@
 #define CAST_PET(a)     (SCRIPT_CAST_TYPE<Pet*>(a))
 #define CAST_AI(a,b)    (SCRIPT_CAST_TYPE<a*>(b))
 
-#define GET_SPELL(a)    (const_cast<SpellEntry*>(sSpellMgr->lookupSpell(a)))
+#define GET_SPELL(a)    (const_cast<SpellEntry*>(spellmgr.LookupSpell(a)))
 
 float GetSpellMaxRange(uint32 id);
 
@@ -31,7 +31,7 @@ public:
     void Summon(Creature *summon) {push_back(summon->GetGUID());}
     void Despawn(Creature *summon);
     void DespawnEntry(uint32 entry);
-    void DespawnAll(bool withoutWorldBoss = false);
+    void DespawnAll();
     bool IsEmpty();
 private:
     Creature *m_creature;
