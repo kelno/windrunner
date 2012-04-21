@@ -492,15 +492,15 @@ bool GossipSelect_npc_berthold(Player* player, Creature* _Creature, uint32 sende
 # npc_image_of_medivh
 ####*/
 
-#define SAY_DIALOG_MEDIVH_1         "Vous avez attiré mon attention, dragon. Mais on ne m'effraie pas aussi facilement que les villageois d'en-dessous."
-#define SAY_DIALOG_ARCANAGOS_2      "Votre jeu avec la force des arcanes est allé trop loin, Medivh. Vous avez attiré l'attention de puissances au-delà de votre compréhension. Vous devez quitter Karazhan sur le champ !!"
-#define SAY_DIALOG_MEDIVH_3         "Vous osez me défier dans ma propre demeure ? Votre arrogance est stupéfiante, même pour un dragon !"
-#define SAY_DIALOG_ARCANAGOS_4      "Une puissance obscure cherche à vous utiliser, Medivh ! Si vous restez, de sombres jours vont suivre. Il faut vous dépêcher, nous n'avons pas beaucoup de temps !"
-#define SAY_DIALOG_MEDIVH_5         "Je ne vois pas de quoi vous voulez parler, dragon... mais je ne vais pas me laisser intimider par tant d'insolence. Je quitterai Karazhan quand je l'aurai décidé !"
-#define SAY_DIALOG_ARCANAGOS_6      "Vous ne me laissez pas le choix. Je vous arrêterai par la force si vous ne voulez pas revenir à la raison."
-#define EMOTE_DIALOG_MEDIVH_7       "commence à invoquer un sort d'une grande puissance, tissant sa propre essence avec la magie."
-#define SAY_DIALOG_ARCANAGOS_8      "Qu'avez-vous fait, magicien ? Cela ne peut être... ! Je brûle de... à l'intérieur !"
-#define SAY_DIALOG_MEDIVH_9         "Il n'aurait pas dû me mettre en colère. Je dois désormais aller... récupérer ma puissance..."
+#define SAY_DIALOG_MEDIVH_1         "You've got my attention, dragon. You'll find I'm not as easily scared as the villagers below."
+#define SAY_DIALOG_ARCANAGOS_2      "Your dabbling in the arcane has gone too far, Medivh. You've attracted the attention of powers beyond your understanding. You must leave Karazhan at once!"
+#define SAY_DIALOG_MEDIVH_3         "You dare challenge me at my own dwelling? Your arrogance is astounding, even for a dragon!"
+#define SAY_DIALOG_ARCANAGOS_4      "A dark power seeks to use you, Medivh! If you stay, dire days will follow. You must hurry, we don't have much time!"
+#define SAY_DIALOG_MEDIVH_5         "I do not know what you speak of, dragon... but I will not be bullied by this display of insolence. I'll leave Karazhan when it suits me!"
+#define SAY_DIALOG_ARCANAGOS_6      "You leave me no alternative. I will stop you by force if you won't listen to reason!"
+#define EMOTE_DIALOG_MEDIVH_7       "begins to cast a spell of great power, weaving his own essence into the magic."
+#define SAY_DIALOG_ARCANAGOS_8      "What have you done, wizard? This cannot be! I'm burning from... within!"
+#define SAY_DIALOG_MEDIVH_9         "He should not have angered me. I must go... recover my strength now..."
 
 #define MOB_ARCANAGOS               17652
 #define SPELL_FIRE_BALL             30967

@@ -662,7 +662,7 @@ struct mob_enchanted_elementalAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MovePoint(0, MIDDLE_X, MIDDLE_Y, MIDDLE_Z);
                 if(m_creature->GetDistance(MIDDLE_X, MIDDLE_Y, MIDDLE_Z) < 3)
                 {
-                    SpellEntry *spell = (SpellEntry *)sSpellMgr->lookupSpell(SPELL_SURGE);
+                    SpellEntry *spell = (SpellEntry *)spellmgr.LookupSpell(SPELL_SURGE);
                     if( spell )
                     {
                         for(uint32 i = 0;i<3;i++)

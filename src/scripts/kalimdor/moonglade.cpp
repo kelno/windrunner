@@ -1684,7 +1684,7 @@ struct npc_priestess_of_the_moonAI : public ScriptedAI
 
     void Aggro(Unit* unit)
     {
-        if (unit->GetEntry() == ERANIKUS)
+        if (unit->GetGUIDMid() == ERANIKUS)
         {
             me->SetReactState(REACT_AGGRESSIVE);
             AttackStart(unit, false);
