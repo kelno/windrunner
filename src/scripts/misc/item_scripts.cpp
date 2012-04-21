@@ -607,11 +607,13 @@ bool ItemUse_item_orwins_shovel(Player* player, Item* item, SpellCastTargets con
 bool ItemUse_item_netherwave_net(Player* player, Item* item, SpellCastTargets const& targets)
 {
     if (Unit* target = Unit::GetUnit(*player, player->GetSelection())) {
-        if (!target->IsFriendlyTo(player))
+        if (!target->IsFriendlyTo(player)) {
             player->CastSpell(target, 31367, false);
+            //player->DestroyItemCount(item->GetEntry(), 1, true);
+        }
     }
     
-    return true;
+    return false;
 }
 
 /*######
