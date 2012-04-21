@@ -499,7 +499,7 @@ bool GossipSelect_npc_berthold(Player* player, Creature* _Creature, uint32 sende
 #define SAY_DIALOG_MEDIVH_5         "Je ne vois pas de quoi vous voulez parler, dragon... mais je ne vais pas me laisser intimider par tant d'insolence. Je quitterai Karazhan quand je l'aurai décidé !"
 #define SAY_DIALOG_ARCANAGOS_6      "Vous ne me laissez pas le choix. Je vous arrêterai par la force si vous ne voulez pas revenir à la raison."
 #define EMOTE_DIALOG_MEDIVH_7       "commence à invoquer un sort d'une grande puissance, tissant sa propre essence avec la magie."
-#define SAY_DIALOG_ARCANAGOS_8      "Qu'avez-vous fait, magicien ? Cela ne peut être... ! Je brûle de... à l'intérieur!"
+#define SAY_DIALOG_ARCANAGOS_8      "Qu'avez-vous fait, magicien ? Cela ne peut être... ! Je brûle de... à l'intérieur !"
 #define SAY_DIALOG_MEDIVH_9         "Il n'aurait pas dû me mettre en colère. Je dois désormais aller... récupérer ma puissance..."
 
 #define MOB_ARCANAGOS               17652
