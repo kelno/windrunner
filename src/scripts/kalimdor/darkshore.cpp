@@ -255,18 +255,18 @@ bool GossipSelect_npc_threshwackonator(Player* pPlayer, Creature* pCreature, uin
 enum eRemtravel
 {
     SAY_REM_START               = -1000327,
-    SAY_REM_AGGRO               = -1000328,
-    SAY_REM_RAMP1_1             = -1000329,
-    SAY_REM_RAMP1_2             = -1000330,
-    SAY_REM_BOOK                = -1000331,
-    SAY_REM_TENT1_1             = -1000332,
-    SAY_REM_TENT1_2             = -1000333,
-    SAY_REM_MOSS                = -1000334,
-    EMOTE_REM_MOSS              = -1000335,
-    SAY_REM_MOSS_PROGRESS       = -1000336,
-    SAY_REM_PROGRESS            = -1000337,
-    SAY_REM_REMEMBER            = -1000338,
-    EMOTE_REM_END               = -1000339,
+    SAY_REM_RAMP1_1             = -1000328,
+    SAY_REM_RAMP1_2             = -1000329,
+    SAY_REM_BOOK                = -1000330,
+    SAY_REM_TENT1_1             = -1000331,
+    SAY_REM_TENT1_2             = -1000332,
+    SAY_REM_MOSS                = -1000333,
+    EMOTE_REM_MOSS              = -1000334,
+    SAY_REM_MOSS_PROGRESS       = -1000335,
+    SAY_REM_PROGRESS            = -1000336,
+    SAY_REM_REMEMBER            = -1000337,
+    EMOTE_REM_END               = -1000338,
+    SAY_REM_AGGRO               = -1000339,
 
     FACTION_ESCORTEE            = 10,
     QUEST_ABSENT_MINDED_PT2     = 731,
@@ -291,51 +291,39 @@ struct npc_prospector_remtravelAI : public npc_escortAI
             case 0:
                 DoScriptText(SAY_REM_START, me, pPlayer);
                 break;
-            case 5:
+            case 1:
                 DoScriptText(SAY_REM_RAMP1_1, me, pPlayer);
                 break;
-            case 6:
+            case 2:
                 DoSpawnCreature(NPC_GRAVEL_SCOUT, -10.0f, 5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_GRAVEL_BONE, -10.0f, 7.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 break;
-            case 9:
+            case 4:
                 DoScriptText(SAY_REM_RAMP1_2, me, pPlayer);
                 break;
-            case 14:
-                //depend quest rewarded?
-                DoScriptText(SAY_REM_BOOK, me, pPlayer);
-                break;
-            case 15:
+            case 7:
                 DoScriptText(SAY_REM_TENT1_1, me, pPlayer);
-                break;
-            case 16:
                 DoSpawnCreature(NPC_GRAVEL_SCOUT, -10.0f, 5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_GRAVEL_BONE, -10.0f, 7.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 break;
-            case 17:
+            case 8:
                 DoScriptText(SAY_REM_TENT1_2, me, pPlayer);
                 break;
-            case 26:
-                DoScriptText(SAY_REM_MOSS, me, pPlayer);
-                break;
-            case 27:
-                DoScriptText(EMOTE_REM_MOSS, me, pPlayer);
-                break;
-            case 28:
+            case 14:
                 DoScriptText(SAY_REM_MOSS_PROGRESS, me, pPlayer);
                 break;
-            case 29:
+            case 15:
                 DoSpawnCreature(NPC_GRAVEL_SCOUT, -15.0f, 3.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_GRAVEL_BONE, -15.0f, 5.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 DoSpawnCreature(NPC_GRAVEL_GEO, -15.0f, 7.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
                 break;
-            case 31:
-                DoScriptText(SAY_REM_PROGRESS, me, pPlayer);
+            case 18:
+                DoScriptText(SAY_REM_BOOK, me, pPlayer);
                 break;
-            case 41:
+            case 24:
                 DoScriptText(SAY_REM_REMEMBER, me, pPlayer);
                 break;
-            case 42:
+            case 25:
                 DoScriptText(EMOTE_REM_END, me, pPlayer);
                 pPlayer->GroupEventHappens(QUEST_ABSENT_MINDED_PT2, me);
                 break;
@@ -360,8 +348,7 @@ bool QuestAccept_npc_prospector_remtravel(Player* pPlayer, Creature* pCreature, 
 {
     if (pQuest->GetQuestId() == QUEST_ABSENT_MINDED_PT2)
     {
-        ((npc_escortAI*)(pCreature->AI()))->Start(false, false, false, pPlayer->GetGUID(), pCreature->GetEntry());
-
+        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
         pCreature->setFaction(FACTION_ESCORTEE);
     }
 
