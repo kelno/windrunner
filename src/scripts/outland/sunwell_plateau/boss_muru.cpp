@@ -26,7 +26,7 @@ SDComment: all sounds, black hole effect triggers to often (46228)
 #include "precompiled.h"
 #include "CreatureScript.h"
 #include "CreatureAINew.h"
-#include "sunwell_plateau.h"
+#include "def_sunwell_plateau.h"
 
 // Muru & Entropius's spells
 enum Spells
@@ -114,7 +114,7 @@ public:
     public:
 	    boss_entropiusAI(Creature* creature) : CreatureAINew(creature), Summons(me)
 		{
-		    pInstance = creature->GetInstanceData();
+		    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 		}
 
         ScriptedInstance* pInstance;
@@ -127,7 +127,7 @@ public:
         {
             BlackHoleSummonTimer = 15000;
 		    EnrageTimer = 600000;
-            DoCastAOE(SPELL_NEGATIVE_ENERGY_E, false);
+            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, false);
 
             Summons.DespawnAll();
 
@@ -143,8 +143,8 @@ public:
 
         void onCombatStart(Unit * /*who*/)
         {
-            DoCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
-            DoCast(me, SPELL_ENTROPIUS_SPAWN, false);
+            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
+            doCast(me, SPELL_ENTROPIUS_SPAWN, false);
 
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
@@ -164,7 +164,7 @@ public:
                     me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
                     break;
             }
-            summoned->AI()->AttackStart(SelectTarget(SELECT_TARGET_RANDOM,0, 50, true));
+            summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
             Summons.Summon(summoned);
         }
 		
@@ -183,23 +183,23 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!UpdateVictim())
+            if (!updateVictim())
                 return;
 
             if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
             {
-                DoCast(me, SPELL_ENRAGE, false);
+                doCast(me, SPELL_ENRAGE, false);
             } else EnrageTimer -= diff;
 
             if (BlackHoleSummonTimer <= diff)
             {
-                Unit* random = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
+                Unit* random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
 
-                DoCast(random, SPELL_DARKNESS_E, false);
+                doCast(random, SPELL_DARKNESS_E, false);
 
-                random = SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true);
+                random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
 
@@ -227,7 +227,7 @@ public:
     public:
 	    boss_muruAI(Creature* creature) : CreatureAINew(creature), Summons(me)
 		{
-		    pInstance = creature->GetInstanceData();
+		    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 		}
 
         ScriptedInstance* pInstance;
@@ -265,7 +265,7 @@ public:
 
         void onCombatStart(Unit * /*who*/)
         {
-            DoCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY,false);
+            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY,false);
 
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
@@ -291,7 +291,7 @@ public:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
             }
-            summoned->AI()->AttackStart(SelectTarget(SELECT_TARGET_RANDOM,0, 50, true));
+            summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
             Summons.Summon(summoned);
         }
 	
@@ -302,7 +302,7 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!UpdateVictim())
+            if (!updateVictim())
                 return;
 
 		    if (me->hasUnitState(UNIT_STAT_CASTING))
@@ -316,14 +316,14 @@ public:
 		            {
 				        case 1:
 						    me->RemoveAllAuras();
-                            DoCast(me, SPELL_OPEN_ALL_PORTALS, false);
+                            doCast(me, SPELL_OPEN_ALL_PORTALS, false);
                             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
 						    Phase = 2;
 						    PhaseTimer = 2000;
 						    break;
 					    case 2:
 						    me->RemoveAllAuras();
-                            DoCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
 						    me->SetVisibility(VISIBILITY_OFF);
 						    Phase = 3;
                             PhaseTimer = 3000;
@@ -351,14 +351,14 @@ public:
 		    }
 
             if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
-                DoCast(me, SPELL_ENRAGE, false);
+                doCast(me, SPELL_ENRAGE, false);
             else EnrageTimer -= diff;
 
 		    if (DarknessTimer <= diff)
 		    {
 			    if (!DarkFiend)
                 {
-				    DoCast((Unit*)NULL, SPELL_DARKNESS, false);
+				    doCast((Unit*)NULL, SPELL_DARKNESS, false);
                     DarknessTimer = 3000;
                     DarkFiend = true;
 			    }
@@ -384,7 +384,7 @@ public:
 
 		    if (SentinelTimer <= diff)
 		    {
-                DoCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
+                doCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
                 SentinelTimer = 30000;
 		    }
 		    else
@@ -408,7 +408,7 @@ public:
     public:
 	    npc_muru_portalAI(Creature* creature) : CreatureAINew(creature), Summons(me)
 		{
-		    pInstance = creature->GetInstanceData();
+		    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 		}
 
         ScriptedInstance* pInstance;
@@ -438,7 +438,7 @@ public:
         {
             if (pInstance)
                 if (Player* Target = Unit::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID)))
-                    summoned->AI()->AttackStart(Target);
+                    summoned->getAI()->attackStart(Target);
 
             Summons.Summon(summoned);
         }
@@ -457,10 +457,10 @@ public:
             switch(Spell->Id)
             {
                 case SPELL_OPEN_ALL_PORTALS:
-                    DoCast((Unit*)NULL, SPELL_OPEN_PORTAL, false);
+                    doCast((Unit*)NULL, SPELL_OPEN_PORTAL, false);
                     break;
                 case SPELL_OPEN_PORTAL_2:
-                    DoCast((Unit*)NULL, SPELL_OPEN_PORTAL, false);
+                    doCast((Unit*)NULL, SPELL_OPEN_PORTAL, false);
                     SummonSentinel = true;
                     break;
             }
@@ -478,7 +478,7 @@ public:
             }
             if (SummonTimer <= diff)
             {
-                DoCast((Unit*)NULL, SPELL_SUMMON_VOID_SENTINEL, false);
+                doCast((Unit*)NULL, SPELL_SUMMON_VOID_SENTINEL, false);
                 SummonTimer = 5000;
                 SummonSentinel = false;
             } else SummonTimer -= diff;
@@ -521,7 +521,7 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!UpdateVictim())
+            if (!updateVictim())
                 return;
 
             if (WaitTimer <= diff)
@@ -529,8 +529,8 @@ public:
                 if (!InAction)
                 {
                     me->clearUnitState(UNIT_STAT_STUNNED);
-                    DoCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
-                    AttackStart(SelectTarget(SELECT_TARGET_RANDOM, 0, 100, true));
+                    doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
+                    attackStart(selectUnit(TARGET_RANDOM, 0, 100.0f, true));
                     InAction = true;
                     WaitTimer = 500;
                 }
@@ -538,7 +538,7 @@ public:
                 {
                     if (me->GetDistance(me->getVictim()) < 5)
                     {
-                        DoCast((Unit*)NULL, SPELL_DARKFIEND_AOE, false);
+                        doCast((Unit*)NULL, SPELL_DARKFIEND_AOE, false);
                         me->DisappearAndDie();
                     }
                     WaitTimer = 500;
@@ -584,18 +584,18 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!UpdateVictim())
+            if (!updateVictim())
                 return;
 
             if (PulseTimer <= diff)
             {
-                DoCast((Unit*)NULL, SPELL_SHADOW_PULSE, true);
+                doCast((Unit*)NULL, SPELL_SHADOW_PULSE, true);
                 PulseTimer = 3000;
             } else PulseTimer -= diff;
 
             if (VoidBlastTimer <= diff)
             {
-                DoCast(me->getVictim(), SPELL_VOID_BLAST, false);
+                doCast(me->getVictim(), SPELL_VOID_BLAST, false);
                 VoidBlastTimer = 45000;
             } else VoidBlastTimer -= diff;
 
@@ -619,7 +619,7 @@ public:
     public:
 	    npc_blackholeAI(Creature* creature) : CreatureAINew(creature)
 		{
-		    pInstance = creature->GetInstanceData();
+		    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 		}
 
         ScriptedInstance* pInstance;
@@ -636,7 +636,7 @@ public:
             Phase = 0;
 
             me->addUnitState(UNIT_STAT_STUNNED);
-            DoCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
+            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
         }
 
         void update(const uint32 diff)
@@ -648,9 +648,9 @@ public:
                 {
                     case 0:
                         me->clearUnitState(UNIT_STAT_STUNNED);
-                        DoCast((Unit*)NULL, SPELL_BLACKHOLE_GROW, false);
+                        doCast((Unit*)NULL, SPELL_BLACKHOLE_GROW, false);
                         if (Victim)
-                            AttackStart(Victim);
+                            attackStart(Victim);
                         SpellTimer = 700;
                         NeedForAHack = 2;
                         break;
@@ -670,7 +670,7 @@ public:
                         if (Unit* Temp = me->getVictim())
                         {
                             if (Temp->GetPositionZ() > 73 && Victim)
-                                AttackStart(Victim);
+                                attackStart(Victim);
                         } else
                             return;
                 }
