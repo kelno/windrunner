@@ -207,7 +207,7 @@ public:
                 BlackHoleSummonTimer = 15000;
             } else BlackHoleSummonTimer -= diff;
 
-            DoMeleeAttackIfReady();
+            doMeleeAttackIfReady();
         }
 	};
 	
@@ -238,6 +238,7 @@ public:
 	    uint32 HumanoidesTimer;
 	    uint32 PhaseTimer;
 	    uint32 SentinelTimer;
+		uint32 EnrageTimer;
 
         bool DarkFiend;
 
@@ -335,7 +336,7 @@ public:
 						    switch(pInstance->GetData(DATA_MURU_EVENT))
                             {
                                 case NOT_STARTED:
-                                    Reset();
+                                    onReset(false);
                                     break;
                                 case DONE:
                                     Phase = 4;
@@ -471,7 +472,7 @@ public:
             if (!SummonSentinel)
             {
                 if (InAction && pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
-                    Reset();
+                    onReset(false);
 			    else if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == DONE)
 				    Summons.DespawnAll();
                 return;
@@ -599,7 +600,7 @@ public:
                 VoidBlastTimer = 45000;
             } else VoidBlastTimer -= diff;
 
-            DoMeleeAttackIfReady();
+            doMeleeAttackIfReady();
         }
 	};
 	
