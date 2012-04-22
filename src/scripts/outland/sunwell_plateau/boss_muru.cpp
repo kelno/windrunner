@@ -438,7 +438,7 @@ public:
         void onSummon(Creature* summoned)
         {
             if (pInstance)
-                if (Player* Target = Unit::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID)))
+                if (Player* Target = ObjectAccessor::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID)))
                     summoned->getAI()->attackStart(Target);
 
             Summons.Summon(summoned);
@@ -453,7 +453,7 @@ public:
         {
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
-            DoTeleportTo(x,y,z);
+            doTeleportTo(x,y,z);
             InAction = true;
             switch(Spell->Id)
             {
@@ -574,7 +574,7 @@ public:
 
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
-            DoTeleportTo(x,y,71);
+            doTeleportTo(x,y,71);
         }
 
         void onDeath(Unit* /*killer*/)
