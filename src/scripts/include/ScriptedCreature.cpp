@@ -51,12 +51,15 @@ void SummonList::DespawnEntry(uint32 entry)
     }
 }
 
-void SummonList::DespawnAll()
+void SummonList::DespawnAll(bool withoutWorldBoss)
 {
     for(iterator i = begin(); i != end(); ++i)
     {
         if(Creature *summon = Unit::GetCreature(*m_creature, *i))
         {
+		    if (withoutWorldBoss && summon->isWorldBoss())
+			    continue;
+
             summon->setDeathState(JUST_DIED);
             summon->RemoveCorpse();
         }

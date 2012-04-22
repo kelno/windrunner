@@ -31,7 +31,7 @@ public:
     void Summon(Creature *summon) {push_back(summon->GetGUID());}
     void Despawn(Creature *summon);
     void DespawnEntry(uint32 entry);
-    void DespawnAll();
+    void DespawnAll(bool withoutWorldBoss = false);
     bool IsEmpty();
 private:
     Creature *m_creature;
