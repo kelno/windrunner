@@ -164,7 +164,10 @@ public:
                     me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
                     break;
             }
-            summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+            if (summoned->getAI())
+                summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+            else
+                summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
             Summons.Summon(summoned);
         }
 		
@@ -292,7 +295,10 @@ public:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
             }
-            summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
+            if (summoned->getAI())
+                summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
+            else
+                summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
             Summons.Summon(summoned);
         }
 	
@@ -324,7 +330,8 @@ public:
 						    break;
 					    case 2:
 						    me->RemoveAllAuras();
-                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                            //doCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                            me->SummonCreature(25840, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
 						    me->SetVisibility(VISIBILITY_OFF);
 						    Phase = 3;
                             PhaseTimer = 3000;
@@ -344,6 +351,8 @@ public:
                                     me->DisappearAndDie();
                                     break;
                             }
+                            
+                            PhaseTimer = 3000;                            
 						    break;
 				    }
 			    }
@@ -437,9 +446,14 @@ public:
 
         void onSummon(Creature* summoned)
         {
-            if (pInstance)
-                if (Player* Target = ObjectAccessor::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID)))
-                    summoned->getAI()->attackStart(Target);
+            if (pInstance) {
+                if (Player* Target = ObjectAccessor::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID))) {
+                    if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
+                        summoned->getAI()->attackStart(Target);
+                    else
+                        summoned->AI()->AttackStart(Target);
+                }
+            }
 
             Summons.Summon(summoned);
         }
