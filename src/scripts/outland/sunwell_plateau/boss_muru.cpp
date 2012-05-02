@@ -257,8 +257,6 @@ public:
             SentinelTimer = 31500;
 
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			me->GetMotionMaster()->Clear();
-			me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
             me->SetVisibility(VISIBILITY_ON);
 
             Summons.DespawnAll();
@@ -274,6 +272,12 @@ public:
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
+		
+		void attackStart(Unit* victim)
+		{
+		    CreatureAINew::attackStart(victim)
+			me->GetMotionMaster()->MoveIdle()
+		}
 
         void onDamageTaken(Unit * /*done_by*/, uint32 &damage)
         {
@@ -330,8 +334,7 @@ public:
 						    break;
 					    case 2:
 						    me->RemoveAllAuras();
-                            //doCast(me, SPELL_SUMMON_ENTROPIUS, false);
-                            me->SummonCreature(25840, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
 						    me->SetVisibility(VISIBILITY_OFF);
 						    Phase = 3;
                             PhaseTimer = 3000;
@@ -438,8 +441,6 @@ public:
             SummonSentinel = false;
 
             me->addUnitState(UNIT_STAT_STUNNED);
-		    me->GetMotionMaster()->Clear();
-		    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
 
             Summons.DespawnAll();
         }
@@ -480,6 +481,12 @@ public:
                     break;
             }
         }
+		
+		void attackStart(Unit* victim)
+		{
+		    CreatureAINew::attackStart(victim)
+			me->GetMotionMaster()->MoveIdle()
+		}
 
         void update(const uint32 diff)
         {
