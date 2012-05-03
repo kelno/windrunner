@@ -273,11 +273,11 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
 		
-		void attackStart(Unit* victim)
-		{
-		    CreatureAINew::attackStart(victim)
-			me->GetMotionMaster()->MoveIdle()
-		}
+        void attackStart(Unit* victim)
+        {
+            CreatureAINew::attackStart(victim);
+            me->GetMotionMaster()->MoveIdle();
+        }
 
         void onDamageTaken(Unit * /*done_by*/, uint32 &damage)
         {
@@ -482,11 +482,11 @@ public:
             }
         }
 		
-		void attackStart(Unit* victim)
-		{
-		    CreatureAINew::attackStart(victim)
-			me->GetMotionMaster()->MoveIdle()
-		}
+        void attackStart(Unit* victim)
+        {
+            CreatureAINew::attackStart(victim);
+            me->GetMotionMaster()->MoveIdle();
+        }
 
         void update(const uint32 diff)
         {
