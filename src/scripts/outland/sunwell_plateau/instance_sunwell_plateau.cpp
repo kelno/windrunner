@@ -210,6 +210,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     southList.push_back(pCreature->GetGUID());
                 //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
+            case CREATURE_PORTAL:
+                pCreature->SetVisibility(VISIBILITY_OFF);
+                break;
         }
     }
 
