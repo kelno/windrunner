@@ -112,16 +112,16 @@ public:
     class boss_entropiusAI : public CreatureAINew
     {
         public:
-	boss_entropiusAI(Creature* creature) : CreatureAINew(creature), Summons(me)
-	{
+        boss_entropiusAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-	}
+        }
 
         ScriptedInstance* pInstance;
         SummonList Summons;
 
         uint32 BlackHoleSummonTimer;
-	uint32 EnrageTimer;
+        uint32 EnrageTimer;
 
         void onReset(bool onSpawn)
         {
@@ -130,15 +130,13 @@ public:
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, false);
 
             Summons.DespawnAll();
-            sLog.outString("log3");
-	    if (!onSpawn)
+            if (!onSpawn)
             {
-	        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-	            muru->AttackStop();
+                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                    muru->AttackStop();
 
                 if (pInstance)
                 {
-                    sLog.outString("log4");
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
                 }
             }
@@ -146,7 +144,6 @@ public:
 
         void onCombatStart(Unit * /*who*/)
         {
-            sLog.outString("log5");
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
             doCast(me, SPELL_ENTROPIUS_SPAWN, false);
 
@@ -264,22 +261,19 @@ public:
             me->SetVisibility(VISIBILITY_ON);
 
             Summons.DespawnAll();
-            sLog.outString("log5");
+
             if (pInstance)
             {
-                sLog.outString("log6");
                 pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
             }
         }
 
         void onCombatStart(Unit* /*who*/)
         {
-            sLog.outString("log1");
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY,false);
 
             if (pInstance)
             {
-                sLog.outString("log2");
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
             }
         }
@@ -410,7 +404,7 @@ public:
         }
     };
 
-    Creature_NoMovementAINew* getAI(Creature* creature)
+    CreatureAINew* getAI(Creature* creature)
     {
         return new boss_muruAI(creature);
     }
@@ -511,7 +505,7 @@ public:
         }
     };
 
-    Creature_NoMovementAINew* getAI(Creature* creature)
+    CreatureAINew* getAI(Creature* creature)
     {
         return new npc_muru_portalAI(creature);
     }
