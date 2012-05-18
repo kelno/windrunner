@@ -136,9 +136,7 @@ public:
                     muru->AttackStop();
 
                 if (pInstance)
-                {
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
-                }
             }
         }
 
@@ -441,8 +439,7 @@ public:
 
             me->addUnitState(UNIT_STAT_STUNNED);
 
-            if (onSpawn)
-                Summons.DespawnAll();
+            Summons.DespawnAll();
         }
 
         void onSummon(Creature* summoned)
