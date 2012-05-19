@@ -82,26 +82,26 @@ enum BossTimers{
     TIMER_SENTINEL              = 3
 };
 
-float DarkFiends[8][4] =
+float DarkFiends[8][2] =
 {
-    {1819.9f,    609.80f,    69.74f,    1.94f},
-    {1829.39f,   617.89f,    69.73f,    2.61f},
-    {1801.98f,   633.62f,    69.74f,    5.71f},
-    {1830.88f,   629.99f,    69.73f,    3.52f},
-    {1800.38f,   621.41f,    69.74f,    0.22f},
-    {1808.3f ,   612.45f,    69.73f,    1.02f},
-    {1823.9f ,   639.69f,    69.74f,    4.12f},
-    {1811.85f,   640.46f,    69.73f,    4.97f}
+    {69.74f,    1.94f},
+    {69.73f,    2.61f},
+    {69.74f,    5.71f},
+    {69.73f,    3.52f},
+    {69.74f,    0.22f},
+    {69.73f,    1.02f},
+    {69.74f,    4.12f},
+    {69.73f,    4.97f}
 };
 
 float Humanoides[6][5] =
 {
-    {CREATURE_FURY_MAGE, 1780.16f,    666.83f,    71.19f,    5.21f},
-    {CREATURE_FURY_MAGE, 1847.93f,    600.30f,    71.30f,    2.57f},
-    {CREATURE_BERSERKER, 1779.97f,    660.64f,    71.19f,    5.28f},
-    {CREATURE_BERSERKER, 1786.2f ,    661.01f,    71.19f,    4.51f},
-    {CREATURE_BERSERKER, 1845.17f,    602.63f,    71.28f,    2.43f},
-    {CREATURE_BERSERKER, 1842.91f,    599.93f,    71.23f,    2.44f}
+    {CREATURE_FURY_MAGE, 1724.64f,    702.93f,    71.19f,    5.21f},
+    {CREATURE_FURY_MAGE, 1900.85f,    555.99f,    71.30f,    2.57f},
+    {CREATURE_BERSERKER, 1724.64f,    702.93f,    71.19f,    5.28f},
+    {CREATURE_BERSERKER, 1724.64f,    702.93f,    71.19f,    4.51f},
+    {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.43f},
+    {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.44f}
 };
 
 class boss_entropius : public CreatureScript
@@ -236,11 +236,11 @@ public:
         SummonList Summons;
 
         uint8 Phase;
-	uint32 DarknessTimer;
-	uint32 HumanoidesTimer;
-	uint32 PhaseTimer;
-	uint32 SentinelTimer;
-	uint32 EnrageTimer;
+        uint32 DarknessTimer;
+        uint32 HumanoidesTimer;
+        uint32 PhaseTimer;
+        uint32 SentinelTimer;
+        uint32 EnrageTimer;
 
         bool DarkFiend;
 
@@ -284,8 +284,8 @@ public:
                 Phase = 1;
             }
 
-	    if (Phase > 1 && Phase < 4)
-	        damage = 0;
+            if (Phase > 1 && Phase < 4)
+                damage = 0;
         }
 
         void onSummon(Creature* summoned)
@@ -304,7 +304,7 @@ public:
         }
 	
         void onSummonDespawn(Creature* unit)
-	{
+        {
             Summons.Despawn(unit);
         }
 
@@ -319,83 +319,93 @@ public:
 	    if (Phase != 0)
 	    {
 	        if (PhaseTimer <= diff)
+            {
+                switch (Phase)
                 {
-		    switch (Phase)
-		    {
-		        case 1:
-			    me->RemoveAllAuras();
-                            doCast(me, SPELL_OPEN_ALL_PORTALS, false);
-                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-			    Phase = 2;
-			    PhaseTimer = 2000;
-			    break;
-		        case 2:
-			    me->RemoveAllAuras();
-                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
-			    me->SetVisibility(VISIBILITY_OFF);
-			    Phase = 3;
-                            PhaseTimer = 3000;
-                            break;
-			case 3:
-			    if (!pInstance)
-                                return;
+                    case 1:
+                        me->RemoveAllAuras();
+                        doCast(me, SPELL_OPEN_ALL_PORTALS, false);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        Phase = 2;
+                        PhaseTimer = 2000;
+                        break;
+                    case 2:
+                        me->RemoveAllAuras();
+                        doCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                        me->SetVisibility(VISIBILITY_OFF);
+                        Phase = 3;
+                        PhaseTimer = 3000;
+                        break;
+                    case 3:
+                        if (!pInstance)
+                            return;
 
-			    switch(pInstance->GetData(DATA_MURU_EVENT))
-                            {
-                                case NOT_STARTED:
-                                    onReset(false);
-                                    break;
-                                case DONE:
-                                    Phase = 4;
-				    Summons.DespawnAll(true);
-                                    me->DisappearAndDie();
-                                    break;
-                            }
+                        switch(pInstance->GetData(DATA_MURU_EVENT))
+                        {
+                            case NOT_STARTED:
+                                onReset(false);
+                                break;
+                            case DONE:
+                                Phase = 4;
+                                Summons.DespawnAll(true);
+                                me->DisappearAndDie();
+                                break;
+                        }
                             
-                            PhaseTimer = 3000;                            
-			    break;
-		    }
+                        PhaseTimer = 3000;                            
+                        break;
+                }
 	        }
 	        else
-		    PhaseTimer -= diff;
+                PhaseTimer -= diff;
 	    }
 
-            if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
-                doCast(me, SPELL_ENRAGE, false);
-            else EnrageTimer -= diff;
+        if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
+            doCast(me, SPELL_ENRAGE, false);
+        else
+            EnrageTimer -= diff;
 
-            if (DarknessTimer <= diff)
+        if (DarknessTimer <= diff)
 	    {
 	        if (!DarkFiend)
+            {
+                doCast((Unit*)NULL, SPELL_DARKNESS, false);
+                DarknessTimer = 3000;
+                DarkFiend = true;
+            }
+            else
+            {
+                uint16 angleDegre = 0;
+                for (uint8 i = 0; i < 8; i++)
                 {
-		    doCast((Unit*)NULL, SPELL_DARKNESS, false);
-                    DarknessTimer = 3000;
-                    DarkFiend = true;
-	        }
-		else
-	        {
-		    DarkFiend = false;
-                    for (uint8 i = 0; i < 8; ++i)
-                        me->SummonCreature(CREATURE_DARK_FIENDS,DarkFiends[i][0],DarkFiends[i][1],DarkFiends[i][2], DarkFiends[i][3], TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    DarknessTimer = 42000;
+                    float px, py;
+                    float angle = angleDegre * (2*M_PI) / 360;
+                    float rayon = 12.0f;
+                    sx = me->GetPositionX() + cos(angle) * rayon;
+                    sy = me->GetPositionY() + sin(angle) * rayon;
+                    Creature* crea = me->SummonCreature(CREATURE_DARK_FIENDS, px, sy, DarkFiends[i][0], DarkFiends[i][1], TEMPSUMMON_MANUAL_DESPAWN, 0);
+                    angleDegre = angleDegre + 45;
+                }
+                DarkFiend = false;
+                DarknessTimer = 42000;
 	        }
 	    }
-            else
-	        DarknessTimer -= diff;
+        else
+            DarknessTimer -= diff;
 
 	    if (HumanoidesTimer <= diff)
 	    {
 	        for (uint8 i = 0; i < 6; ++i)
-                    me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
-                HumanoidesTimer = 60000;
+                me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
+            HumanoidesTimer = 60000;
 	    }
 	    else
 	        HumanoidesTimer -= diff;
 
-            if (SentinelTimer <= diff)
+        if (SentinelTimer <= diff)
 	    {
-                doCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
-                SentinelTimer = 30000;
+            doCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
+            SentinelTimer = 30000;
 	    }
 	    else
 	        SentinelTimer -= diff;
@@ -459,8 +469,8 @@ public:
         }
 
         void onSummonDespawn(Creature* unit)
-	{
-	    Summons.Despawn(unit);
+        {
+            Summons.Despawn(unit);
         }
 
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
@@ -487,8 +497,8 @@ public:
             {
                 if (InAction && pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                     onReset(false);
-	        else if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == DONE)
-		    Summons.DespawnAll();
+                else if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == DONE)
+                    Summons.DespawnAll();
                 return;
             }
             if (SummonTimer <= diff)
@@ -516,7 +526,7 @@ public:
     class npc_dark_fiendAI : public CreatureAINew
     {
         public:
-	npc_dark_fiendAI(Creature* creature) : CreatureAINew(creature) {}
+        npc_dark_fiendAI(Creature* creature) : CreatureAINew(creature) {}
 
         uint32 WaitTimer;
         bool InAction;
@@ -639,10 +649,10 @@ public:
     class npc_blackholeAI : public CreatureAINew
     {
         public:
-	npc_blackholeAI(Creature* creature) : CreatureAINew(creature)
-	{
-	    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-	}
+        npc_blackholeAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
 
         ScriptedInstance* pInstance;
 
@@ -656,6 +666,7 @@ public:
             DespawnTimer = 15000;
             SpellTimer = 5000;
             Phase = 0;
+            NeedForAHack = 0;
 
             me->addUnitState(UNIT_STAT_STUNNED);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
