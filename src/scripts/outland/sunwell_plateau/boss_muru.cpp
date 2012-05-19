@@ -381,9 +381,9 @@ public:
                     float px, py;
                     float angle = angleDegre * (2*M_PI) / 360;
                     float rayon = 12.0f;
-                    sx = me->GetPositionX() + cos(angle) * rayon;
-                    sy = me->GetPositionY() + sin(angle) * rayon;
-                    Creature* crea = me->SummonCreature(CREATURE_DARK_FIENDS, px, sy, DarkFiends[i][0], DarkFiends[i][1], TEMPSUMMON_MANUAL_DESPAWN, 0);
+                    px = me->GetPositionX() + cos(angle) * rayon;
+                    py = me->GetPositionY() + sin(angle) * rayon;
+                    Creature* crea = me->SummonCreature(CREATURE_DARK_FIENDS, px, py, DarkFiends[i][0], DarkFiends[i][1], TEMPSUMMON_MANUAL_DESPAWN, 0);
                     angleDegre = angleDegre + 45;
                 }
                 DarkFiend = false;
