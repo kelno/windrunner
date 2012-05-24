@@ -947,7 +947,7 @@ struct boss_kaelthasAI : public ScriptedAI
                                 {
                                     Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
                                     ++i;
-                                    if(pUnit && pUnit->GetTypeId() == TYPEID_PLAYER)
+                                    if(pUnit && pUnit->GetTypeId() == TYPEID_PLAYER && pUnit->isAlive())
                                     {
                                         m_creature->CastSpell(pUnit, SPELL_KNOCKBACK, true);
                                         //Gravity lapse - needs an exception in Spell system to work
