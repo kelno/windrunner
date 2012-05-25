@@ -45,7 +45,7 @@ enum Spells
     SPELL_SUMMON_ENTROPIUS      = 46217,
 
     // Entropius's spells
-    SPELL_DARKNESS_E            = 46269,
+    SPELL_DARKNESS_E            = 46268,
     SPELL_BLACKHOLE             = 46282,
     SPELL_NEGATIVE_ENERGY_E     = 46284,
     SPELL_ENTROPIUS_SPAWN       = 46223,
@@ -170,9 +170,9 @@ public:
             Summons.Summon(summoned);
         }
 
-	void onSummonDespawn(Creature* unit)
-	{
-	    Summons.Despawn(unit);
+        void onSummonDespawn(Creature* unit)
+        {
+            Summons.Despawn(unit);
         }
 
         void onDeath(Unit* /*killer*/)
@@ -313,102 +313,105 @@ public:
             if (!updateVictim())
                 return;
 
-	    if (me->hasUnitState(UNIT_STAT_CASTING))
+            if (me->hasUnitState(UNIT_STAT_CASTING))
                 return;
 
-	    if (Phase != 0)
-	    {
-	        if (PhaseTimer <= diff)
+            if (Phase != 0)
             {
-                switch (Phase)
+                if (PhaseTimer <= diff)
                 {
-                    case 1:
-                        me->RemoveAllAuras();
-                        doCast(me, SPELL_OPEN_ALL_PORTALS, false);
-                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        Phase = 2;
-                        PhaseTimer = 2000;
-                        break;
-                    case 2:
-                        me->RemoveAllAuras();
-                        doCast(me, SPELL_SUMMON_ENTROPIUS, false);
-                        me->SetVisibility(VISIBILITY_OFF);
-                        Phase = 3;
-                        PhaseTimer = 3000;
-                        break;
-                    case 3:
-                        if (!pInstance)
-                            return;
+                    switch (Phase)
+                    {
+                        case 1:
+                            me->RemoveAllAuras();
+                            doCast(me, SPELL_OPEN_ALL_PORTALS, false);
+                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                            Phase = 2;
+                            PhaseTimer = 2000;
+                            break;
+                        case 2:
+                            me->RemoveAllAuras();
+                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                            me->SetVisibility(VISIBILITY_OFF);
+                            Phase = 3;
+                            PhaseTimer = 3000;
+                            break;
+                        case 3:
+                            if (!pInstance)
+                                return;
 
-                        switch(pInstance->GetData(DATA_MURU_EVENT))
-                        {
-                            case NOT_STARTED:
-                                onReset(false);
-                                break;
-                            case DONE:
-                                Phase = 4;
-                                Summons.DespawnAll(true);
-                                me->DisappearAndDie();
-                                break;
-                        }
+                            switch(pInstance->GetData(DATA_MURU_EVENT))
+                            {
+                                case NOT_STARTED:
+                                    onReset(false);
+                                    break;
+                                case DONE:
+                                    Phase = 4;
+                                    Summons.DespawnAll(true);
+                                    me->DisappearAndDie();
+                                    break;
+                            }
                             
-                        PhaseTimer = 3000;                            
-                        break;
+                            PhaseTimer = 3000;                            
+                            break;
+                    }
                 }
-	        }
-	        else
-                PhaseTimer -= diff;
-	    }
-
-        if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
-            doCast(me, SPELL_ENRAGE, false);
-        else
-            EnrageTimer -= diff;
-
-        if (DarknessTimer <= diff)
-	    {
-	        if (!DarkFiend)
-            {
-                doCast((Unit*)NULL, SPELL_DARKNESS, false);
-                DarknessTimer = 3000;
-                DarkFiend = true;
+                else
+                    PhaseTimer -= diff;
             }
+
+            if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
+                doCast(me, SPELL_ENRAGE, false);
             else
+                EnrageTimer -= diff;
+
+            if (Phase == 0)
             {
-                uint16 angleDegre = 0;
-                for (uint8 i = 0; i < 8; i++)
+                if (DarknessTimer <= diff)
                 {
-                    float px, py;
-                    float angle = angleDegre * (2*M_PI) / 360;
-                    float rayon = 12.0f;
-                    px = me->GetPositionX() + cos(angle) * rayon;
-                    py = me->GetPositionY() + sin(angle) * rayon;
-                    Creature* crea = me->SummonCreature(CREATURE_DARK_FIENDS, px, py, DarkFiends[i][0], DarkFiends[i][1], TEMPSUMMON_MANUAL_DESPAWN, 0);
-                    angleDegre = angleDegre + 45;
+                    if (!DarkFiend)
+                    {
+                        doCast((Unit*)NULL, SPELL_DARKNESS, false);
+                        DarknessTimer = 3000;
+                        DarkFiend = true;
+                    }
+                    else
+                    {
+                        uint16 angleDegre = 0;
+                        for (uint8 i = 0; i < 8; i++)
+                        {
+                            float px, py;
+                            float angle = angleDegre * (2*M_PI) / 360;
+                            float rayon = 12.0f;
+                            px = me->GetPositionX() + cos(angle) * rayon;
+                            py = me->GetPositionY() + sin(angle) * rayon;
+                            Creature* crea = me->SummonCreature(CREATURE_DARK_FIENDS, px, py, DarkFiends[i][0], DarkFiends[i][1], TEMPSUMMON_MANUAL_DESPAWN, 0);
+                            angleDegre = angleDegre + 45;
+                        }
+                        DarkFiend = false;
+                        DarknessTimer = 42000;
+                    }
                 }
-                DarkFiend = false;
-                DarknessTimer = 42000;
-	        }
-	    }
-        else
-            DarknessTimer -= diff;
+                else
+                    DarknessTimer -= diff;
 
-	    if (HumanoidesTimer <= diff)
-	    {
-	        for (uint8 i = 0; i < 6; ++i)
-                me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
-            HumanoidesTimer = 60000;
-	    }
-	    else
-	        HumanoidesTimer -= diff;
+                if (HumanoidesTimer <= diff)
+                {
+                    for (uint8 i = 0; i < 6; ++i)
+                        me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    HumanoidesTimer = 60000;
+                }
+                else
+                    HumanoidesTimer -= diff;
 
-        if (SentinelTimer <= diff)
-	    {
-            doCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
-            SentinelTimer = 30000;
-	    }
-	    else
-	        SentinelTimer -= diff;
+                if (SentinelTimer <= diff)
+                {
+                    doCast((Unit*)NULL, SPELL_OPEN_PORTAL_2, false);
+                    SentinelTimer = 30000;
+                }
+                else
+                    SentinelTimer -= diff;
+            }
         }
     };
 
