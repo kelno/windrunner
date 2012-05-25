@@ -243,10 +243,12 @@ public:
         uint32 EnrageTimer;
 
         bool DarkFiend;
+        bool Gate;
 
         void onReset(bool /*onSpawn*/)
         {
             DarkFiend = false;
+            Gate = false;
             Phase = 0;
 
             EnrageTimer = 600000;
@@ -397,6 +399,13 @@ public:
 
                 if (HumanoidesTimer <= diff)
                 {
+                    if (!Gate)
+                    {
+                        Gate = true;
+                        if (pInstance)
+                            pInstance->SetData(DATA_MURU_GATE_EVENT, 0);
+                    }
+
                     for (uint8 i = 0; i < 6; ++i)
                         me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
                     HumanoidesTimer = 60000;
@@ -611,13 +620,14 @@ class npc_void_sentinel : public CreatureScript
         void onDeath(Unit* /*killer*/)
         {
             for (uint8 i = 0; i < 8; ++i)
-                me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 180000);
+                me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0);
         }
 
         void update(const uint32 diff)
         {
             if (!updateVictim())
                 return;
+
             if (PulseTimer <= diff)
             {
                 doCast((Unit*)NULL, SPELL_SHADOW_PULSE, true);
