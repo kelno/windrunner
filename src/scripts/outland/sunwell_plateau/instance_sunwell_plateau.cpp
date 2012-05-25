@@ -45,36 +45,36 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 Encounters[ENCOUNTERS];
 
     /** Creatures **/
-	uint64 Kalecgos_Dragon;
-	uint64 Kalecgos_Human;
-	uint64 Sathrovarr;
-	uint64 Brutallus;
-	uint64 Madrigosa;
-	uint64 Felmyst;
-	uint64 Alythess;
-	uint64 Sacrolash;
-	uint64 Muru;
-	uint64 KilJaeden;
-	uint64 KilJaedenController;
-	uint64 Anveena;
-	uint64 KalecgosKJ;
+    uint64 Kalecgos_Dragon;
+    uint64 Kalecgos_Human;
+    uint64 Sathrovarr;
+    uint64 Brutallus;
+    uint64 Madrigosa;
+    uint64 Felmyst;
+    uint64 Alythess;
+    uint64 Sacrolash;
+    uint64 Muru;
+    uint64 KilJaeden;
+    uint64 KilJaedenController;
+    uint64 Anveena;
+    uint64 KalecgosKJ;
     uint64 FlightLeft;
     uint64 FlightRight;
     uint64 CommanderGUID;
-	uint32 SpectralPlayers;
+    uint32 SpectralPlayers;
     uint64 BarrierTriggerGUID;
     std::vector<uint64> northList, centerList, southList;
 
-	/** GameObjects **/
-	uint64 ForceField;                                      // Kalecgos Encounter
-	uint64 KalecgosWall[2];
-	uint64 FireBarrier;                                     // Felmysts Encounter
-	uint64 MurusGate[2];                                    // Murus Encounter
+    /** GameObjects **/
+    uint64 ForceField;                                      // Kalecgos Encounter
+    uint64 KalecgosWall[2];
+    uint64 FireBarrier;                                     // Felmysts Encounter
+    uint64 MurusGate[2];                                    // Murus Encounter
     uint64 IceBarrier;
 
-	/*** Misc ***/
-	uint32 SpectralRealmTimer;
-	std::vector<uint64> SpectralRealmList;
+    /*** Misc ***/
+    uint32 SpectralRealmTimer;
+    std::vector<uint64> SpectralRealmList;
     uint32 GauntletStatus;
     uint32 BringersTimer;
     uint32 FiendTimer;
@@ -288,8 +288,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_KALECGOS_HUMAN:       return Kalecgos_Human;
             case DATA_SATHROVARR:           return Sathrovarr;
             case DATA_GO_FORCEFIELD:        return ForceField;
-            case DATA_GO_KALEC_WALL_1:		return KalecgosWall[0];
-            case DATA_GO_KALEC_WALL_2:		return KalecgosWall[1];
+            case DATA_GO_KALEC_WALL_1:      return KalecgosWall[0];
+            case DATA_GO_KALEC_WALL_2:      return KalecgosWall[1];
             case DATA_BRUTALLUS:            return Brutallus;
             case DATA_MADRIGOSA:            return Madrigosa;
             case DATA_FELMYST:              return Felmyst;
@@ -348,10 +348,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
                         HandleGameObject(MurusGate[0], true);
                         HandleGameObject(MurusGate[1], true);
                         break;
-                    case IN_PROGRESS:
-                        HandleGameObject(MurusGate[0], false);
-                        HandleGameObject(MurusGate[1], false);
-                        break;
                     case NOT_STARTED:
                         HandleGameObject(MurusGate[0], true);
                         HandleGameObject(MurusGate[1], false);
@@ -389,6 +385,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 if (Creature* trigger = instance->GetCreatureInMap(BarrierTriggerGUID))
                     trigger->CastSpell(trigger, 47030, true);
                 ShowIceBarrier();
+                break;
+            case DATA_MURU_GATE_EVENT:
+                HandleGameObject(MurusGate[0], false);
+                HandleGameObject(MurusGate[1], false);
                 break;
         }
 
