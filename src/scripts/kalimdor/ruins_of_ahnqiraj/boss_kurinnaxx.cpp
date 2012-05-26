@@ -113,14 +113,9 @@ public:
                     scheduleEvent(EV_MORTAL_WOUND, 2000, 7000);
                     break;
                 case EV_SANDTRAP:
-                {
-                    Unit* target = selectUnit(TARGET_RANDOM, 0, 200.0f, true); // FIXME: 2nd parameter is 3, 0 is set for debug
-                    if (target)
-                        me->CastSpell(target, SPELL_SANDTRAP, true);
-                        
+                    doCast(selectUnit(TARGET_RANDOM, 3, 200.0f, true), SPELL_SANDTRAP, true);
                     scheduleEvent(EV_SANDTRAP, 20000);
                     break;
-                }
                 case EV_WIDE_SLASH:
                     doCast(me->getVictim(), SPELL_WIDE_SLASH);
                     scheduleEvent(EV_WIDE_SLASH, 10000, 15000);
