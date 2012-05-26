@@ -28,6 +28,8 @@ SDComment: all sounds, black hole effect triggers to often (46228)
 #include "CreatureAINew.h"
 #include "def_sunwell_plateau.h"
 
+typedef std::map<Unit*, uint64> GuidMap;
+
 // Muru & Entropius's spells
 enum Spells
 {
@@ -72,7 +74,11 @@ enum Spells
 
     //Black Hole Spells
     SPELL_BLACKHOLE_SPAWN       = 46242,
-    SPELL_BLACKHOLE_GROW        = 46228
+    SPELL_BLACKHOLE_SPAWN2      = 46247,
+    SPELL_BLACKHOLE_VISUAL2     = 46235,
+    SPELL_BLACKHOLE_GROW        = 46228,
+    SPELl_BLACK_HOLE_EFFECT     = 46230,
+    SPELL_SINGULARITY           = 46238
 };
 
 enum BossTimers{
@@ -155,19 +161,16 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
+                    summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
                     break;
                 case CREATURE_DARKNESS:
                     summoned->addUnitState(UNIT_STAT_STUNNED);
                     float x,y,z,o;
                     summoned->GetHomePosition(x,y,z,o);
                     me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
                     break;
             }
-            if (summoned->getAI())
-                summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
-            else
-                summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
-            Summons.Summon(summoned);
         }
 
         void onSummonDespawn(Creature* unit)
@@ -198,14 +201,12 @@ public:
                 Unit* random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
-
                 doCast(random, SPELL_DARKNESS_E, false);
 
                 random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
-
-                random->CastSpell(random, SPELL_BLACKHOLE, false);
+                doCast(random, SPELL_BLACKHOLE, false);
                 BlackHoleSummonTimer = 15000;
             } else BlackHoleSummonTimer -= diff;
 
@@ -654,6 +655,13 @@ class npc_void_sentinel : public CreatureScript
     }
 };
 
+enum Events
+{
+    EV_CHANGE_TARGET,
+};
+
+
+
 class npc_blackhole : public CreatureScript
 {
 public:
@@ -671,64 +679,113 @@ public:
 
         uint32 DespawnTimer;
         uint32 SpellTimer;
-        uint8 Phase;
-        uint8 NeedForAHack;
+        uint32 SingularityTimer;
+        GuidMap PlayerMap;
+        bool Visual2;
 
-        void onReset(bool /*onSpawn*/)
+        void onReset(bool onSpawn)
         {
             DespawnTimer = 15000;
             SpellTimer = 5000;
-            Phase = 0;
-            NeedForAHack = 0;
+            SingularityTimer = 1000;
+            Visual2 = false;
 
-            me->addUnitState(UNIT_STAT_STUNNED);
+            if (onSpawn)
+            {
+                addEvent(EV_CHANGE_TARGET, 6000, 6000, EVENT_FLAG_DELAY_IF_CASTING);
+            }
+            else
+            {
+                scheduleEvent(EV_CHANGE_TARGET, 6000, 6000);
+            }
+
+            PlayerMap.clear();
+            Map::PlayerList const& playerList = pInstance->instance->GetPlayers();
+
+            if (playerList.isEmpty())
+                return;
+
+            for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
+                if (Player* player = i->getSource())
+                    PlayerMap[player->ToUnit()] = 0;
+
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
+            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
+            me->addUnitState(UNIT_STAT_STUNNED);
+            attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
         }
 
         void update(const uint32 diff)
         {
-            if (SpellTimer <= diff)
-            {
-                Unit* Victim = Unit::GetUnit(*me, pInstance ? pInstance->GetData64(DATA_PLAYER_GUID) : 0);
-                switch (NeedForAHack)
-                {
-                    case 0:
-                        me->clearUnitState(UNIT_STAT_STUNNED);
-                        doCast((Unit*)NULL, SPELL_BLACKHOLE_GROW, false);
-                        if (Victim)
-                            attackStart(Victim);
-                        SpellTimer = 700;
-                        NeedForAHack = 2;
-                        break;
-                    case 1:
-                        me->AddAura(SPELL_BLACKHOLE_GROW, me);
-                        NeedForAHack = 2;
-                        SpellTimer = 600;
-                        break;
-                    case 2:
-                        SpellTimer = 400;
-                        NeedForAHack = 3;
-                        me->RemoveAura(SPELL_BLACKHOLE_GROW, 1);
-                        break;
-                    case 3:
-                        SpellTimer = urand(400,900);
-                        NeedForAHack = 1;
-                        if (Unit* Temp = me->getVictim())
-                        {
-                            if (Temp->GetPositionZ() > 73 && Victim)
-                                attackStart(Victim);
-                        }
-                        else
-                            return;
-                }
-            }
-            else
-                SpellTimer -= diff;
-
             if (DespawnTimer <= diff)
                 me->DisappearAndDie();
             else
                 DespawnTimer -= diff;
+
+            updateEvents(diff);
+
+            while (executeEvent(diff, m_currEvent))
+            {
+                switch (m_currEvent)
+                {
+                    case EV_CHANGE_TARGET:
+                        Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
+                        if (Victim)
+                            attackStart(Victim);
+                        scheduleEvent(EV_CHANGE_TARGET, 2000, 4000);
+                        break;
+                }
+            }
+
+            if (SpellTimer <= diff)
+            {
+                if (!Visual2)
+                {
+                    Visual2 = true;
+                    me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
+                    doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
+                    me->clearUnitState(UNIT_STAT_STUNNED);
+                }
+                Unit* target = selectUnit(TARGET_RANDOM, 0, 5.0f, true);
+                if (target)
+                {
+                    GuidMap::iterator plr = PlayerMap.find(target);
+                    if (PlayerMap[target] == 0)
+                    {
+                        doCast(target, SPELl_BLACK_HOLE_EFFECT, true);
+                        PlayerMap[target] = 4000;
+                    }
+                }
+                SpellTimer = 300;
+            }
+            else
+                SpellTimer -= diff;
+
+            if (SingularityTimer <= diff)
+            {
+                for (GuidMap::iterator itr = PlayerMap.begin(); itr != PlayerMap.end(); itr++)
+                {
+                    if (PlayerMap[(*itr).first] > 0)
+                    {
+                        doCast((*itr).first, SPELL_SINGULARITY, true);
+                    }
+                }
+                SingularityTimer = 1000;
+            }
+            else
+                SingularityTimer -= diff;
+
+            for (GuidMap::iterator itr = PlayerMap.begin(); itr != PlayerMap.end(); itr++)
+            {
+                if ((PlayerMap[(*itr).first] - diff) <= 0)
+                {
+                    PlayerMap[(*itr).first] = 0;
+                }
+                else
+                {
+                    PlayerMap[(*itr).first] = PlayerMap[(*itr).first] - diff;
+                }
+            }
         }
     };
 
