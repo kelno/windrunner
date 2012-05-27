@@ -28,8 +28,6 @@ SDComment: all sounds, black hole effect triggers to often (46228)
 #include "CreatureAINew.h"
 #include "def_sunwell_plateau.h"
 
-typedef std::map<Unit*, uint64> GuidMap;
-
 // Muru & Entropius's spells
 enum Spells
 {
@@ -680,7 +678,6 @@ public:
         uint32 DespawnTimer;
         uint32 SpellTimer;
         uint32 SingularityTimer;
-        GuidMap PlayerMap;
         bool Visual2;
 
         void onReset(bool onSpawn)
@@ -698,16 +695,6 @@ public:
             {
                 scheduleEvent(EV_CHANGE_TARGET, 6000, 6000);
             }
-
-            PlayerMap.clear();
-            Map::PlayerList const& playerList = pInstance->instance->GetPlayers();
-
-            if (playerList.isEmpty())
-                return;
-
-            for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
-                if (Player* player = i->getSource())
-                    PlayerMap[player->ToUnit()] = 0;
 
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
@@ -746,16 +733,12 @@ public:
                     doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
                     me->clearUnitState(UNIT_STAT_STUNNED);
                 }
-                Unit* target = selectUnit(TARGET_RANDOM, 0, 5.0f, true);
-                if (target)
-                {
-                    GuidMap::iterator plr = PlayerMap.find(target);
-                    if (PlayerMap[target] == 0)
-                    {
-                        doCast(target, SPELl_BLACK_HOLE_EFFECT, true);
-                        PlayerMap[target] = 4000;
-                    }
-                }
+                std::list<Unit*> players;
+                players.clear();
+                selectUnitList(players, 25, TARGET_RANDOM, 3.0f, true);
+                for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    doCast((*itr), SPELl_BLACK_HOLE_EFFECT, true);
+
                 SpellTimer = 300;
             }
             else
@@ -763,29 +746,16 @@ public:
 
             if (SingularityTimer <= diff)
             {
-                for (GuidMap::iterator itr = PlayerMap.begin(); itr != PlayerMap.end(); itr++)
-                {
-                    if (PlayerMap[(*itr).first] > 0)
-                    {
-                        doCast((*itr).first, SPELL_SINGULARITY, true);
-                    }
-                }
+                std::list<Unit*> players;
+                players.clear();
+                selectUnitList(players, 25, TARGET_RANDOM, 5.0f, true);
+                for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    doCast((*itr), SPELL_SINGULARITY, true);
+
                 SingularityTimer = 1000;
             }
             else
                 SingularityTimer -= diff;
-
-            for (GuidMap::iterator itr = PlayerMap.begin(); itr != PlayerMap.end(); itr++)
-            {
-                if ((PlayerMap[(*itr).first] - diff) <= 0)
-                {
-                    PlayerMap[(*itr).first] = 0;
-                }
-                else
-                {
-                    PlayerMap[(*itr).first] = PlayerMap[(*itr).first] - diff;
-                }
-            }
         }
     };
 
