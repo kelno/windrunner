@@ -104,7 +104,6 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
     
     void JustSummoned(Creature* summoned)
     {
-        sLog.outString("Attacking %s", me->getVictim()->GetName());
         summoned->AI()->AttackStart(me->getVictim());
     }
 
