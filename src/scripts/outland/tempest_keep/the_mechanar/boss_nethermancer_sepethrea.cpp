@@ -101,6 +101,11 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
         case 1: DoScriptText(SAY_SLAY2, m_creature); break;
         }
     }
+    
+    void JustSummoned(Creature* summoned)
+    {
+        summoned->AI()->AttackStart(me->getVictim());
+    }
 
     void JustDied(Unit* Killer)
     {
