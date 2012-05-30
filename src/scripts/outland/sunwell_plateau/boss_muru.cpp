@@ -126,12 +126,13 @@ public:
 
         uint32 BlackHoleSummonTimer;
         uint32 EnrageTimer;
+        uint32 NegativeEnergyTimer;
 
         void onReset(bool onSpawn)
         {
-            BlackHoleSummonTimer = 15000;
+            BlackHoleSummonTimer = 30000;
+            NegativeEnergyTimer = 15000;
             EnrageTimer = 600000;
-            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, false);
 
             Summons.DespawnAll();
             if (!onSpawn)
@@ -169,6 +170,7 @@ public:
                     summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
                     break;
             }
+            Summons.Summon(summoned);
         }
 
         void onSummonDespawn(Creature* unit)
@@ -208,6 +210,14 @@ public:
                 BlackHoleSummonTimer = 15000;
             } else BlackHoleSummonTimer -= diff;
 
+            if (NegativeEnergyTimer <= diff)
+            {
+                 doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
+                 NegativeEnergyTimer = 15000;
+            }
+            else
+                NegativeEnergyTimer -= diff;
+
             doMeleeAttackIfReady();
         }
     };
@@ -240,15 +250,19 @@ public:
         uint32 PhaseTimer;
         uint32 SentinelTimer;
         uint32 EnrageTimer;
+        uint32 RespawnTimer;
 
         bool DarkFiend;
         bool Gate;
 
-        void onReset(bool /*onSpawn*/)
+        void onReset(bool onSpawn)
         {
             DarkFiend = false;
             Gate = false;
             Phase = 0;
+
+            if (onSpawn)
+                RespawnTimer = 0;
 
             EnrageTimer = 600000;
             DarknessTimer = 45000;
@@ -261,15 +275,13 @@ public:
 
             Summons.DespawnAll();
 
-            if (pInstance)
-            {
+            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
-            }
         }
 
         void onCombatStart(Unit* /*who*/)
         {
-            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY,false);
+            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY, false);
 
             if (pInstance)
             {
@@ -309,8 +321,28 @@ public:
             Summons.Despawn(unit);
         }
 
+        void evade()
+        {
+            me->SetVisibility(VISIBILITY_OFF);
+            RespawnTimer = 30000;
+            me->SetReactState(REACT_PASSIVE);
+            CreatureAINew::evade();
+        }
+
         void update(const uint32 diff)
         {
+            if (RespawnTimer)
+            {
+                if (RespawnTimer <= diff)
+                {
+                    me->SetVisibility(VISIBILITY_ON);
+                    me->SetReactState(REACT_AGGRESSIVE);
+                    RespawnTimer = 0;
+                }
+                else
+                    RespawnTimer -= diff;
+            }
+
             if (!updateVictim())
                 return;
 
@@ -334,6 +366,7 @@ public:
                             me->RemoveAllAuras();
                             doCast(me, SPELL_SUMMON_ENTROPIUS, false);
                             me->SetVisibility(VISIBILITY_OFF);
+                            me->SetReactState(REACT_PASSIVE);
                             Phase = 3;
                             PhaseTimer = 3000;
                             break;
@@ -576,7 +609,12 @@ public:
                 {
                     if (me->GetDistance(me->getVictim()) < 5)
                     {
-                        doCast((Unit*)NULL, SPELL_DARKFIEND_AOE, false);
+                        if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
+                        {
+                            trigger->setFaction(16);
+                            trigger->SetName("Sombre fiel");
+                            trigger->CastSpell(trigger, SPELL_DARKFIEND_AOE, false);
+                        }
                         me->DisappearAndDie();
                     }
                     WaitTimer = 500;
