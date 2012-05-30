@@ -657,7 +657,18 @@ class npc_void_sentinel : public CreatureScript
         void onDeath(Unit* /*killer*/)
         {
             for (uint8 i = 0; i < 8; ++i)
-                me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0);
+            {
+                if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                {
+                    if (Unit* random = selectUnit(TARGET_RANDOM, 0, 25.0f, true))
+                    {
+                        if (spawn->getAI())
+                            spawn->getAI()->attackStart(random);
+                        else
+                            spawn->AI()->AttackStart(random);
+                    }
+                }
+            }
         }
 
         void update(const uint32 diff)
@@ -688,6 +699,54 @@ class npc_void_sentinel : public CreatureScript
     CreatureAINew* getAI(Creature* creature)
     {
         return new npc_void_sentinelAI(creature);
+    }
+};
+
+class npc_void_spawn : public CreatureScript
+{
+    public:
+    npc_void_spawn() : CreatureScript("npc_void_spawn") {}
+
+    class npc_void_spawnAI : public CreatureAINew
+    {
+        public:
+	npc_void_spawnAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 ShadowBoltVolleyTimer;
+
+        void onReset(bool /*onSpawn*/)
+        {
+            ShadowBoltVolleyTimer = 15000;
+        }
+
+        void update(const uint32 diff)
+        {
+            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+                me->DisappearAndDie();
+
+            if (!updateVictim())
+                return;
+
+            if (ShadowBoltVolleyTimer <= diff)
+            {
+                doCast((Unit*)NULL, SPELL_SHADOW_BOLT_VOLLEY, false);
+                ShadowBoltVolleyTimer = urand(25000, 35000);
+            }
+            else
+                ShadowBoltVolleyTimer -= diff;
+
+            doMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_void_spawnAI(creature);
     }
 };
 
@@ -810,5 +869,6 @@ void AddSC_boss_muru()
     sScriptMgr.addScript(new npc_muru_portal());
     sScriptMgr.addScript(new npc_dark_fiend());
     sScriptMgr.addScript(new npc_void_sentinel());
+    sScriptMgr.addScript(new npc_void_spawn());
     sScriptMgr.addScript(new npc_blackhole());
 }
