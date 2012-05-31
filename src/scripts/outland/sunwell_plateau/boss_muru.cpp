@@ -653,19 +653,16 @@ class npc_void_sentinel : public CreatureScript
             doTeleportTo(x,y,71);
         }
 
-        void onDeath(Unit* /*killer*/)
+        void onDeath(Unit* killer)
         {
             for (uint8 i = 0; i < 8; ++i)
             {
                 if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
                 {
-                    if (Unit* random = selectUnit(TARGET_NEAREST, 0, 100.0f, true))
-                    {
-                        if (spawn->getAI())
-                            spawn->getAI()->attackStart(random);
-                        else
-                            spawn->AI()->AttackStart(random);
-                    }
+                    if (spawn->getAI())
+                        spawn->getAI()->attackStart(killer);
+                    else
+                        spawn->AI()->AttackStart(killer);
                 }
             }
         }
