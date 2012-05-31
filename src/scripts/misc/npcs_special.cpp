@@ -1439,6 +1439,7 @@ struct npc_halaa_bomb_targetAI : public Scripted_NoMovementAI
     
     void Reset()
     {
+        me->setActive(true);
         despawnTimer = 300000; // 5 min
         DoCast(me, 31963, true);
         HandleAOE();
