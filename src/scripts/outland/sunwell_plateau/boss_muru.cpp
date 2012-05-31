@@ -366,7 +366,6 @@ public:
                             me->RemoveAllAuras();
                             doCast(me, SPELL_SUMMON_ENTROPIUS, false);
                             me->SetVisibility(VISIBILITY_OFF);
-                            me->SetReactState(REACT_PASSIVE);
                             Phase = 3;
                             PhaseTimer = 3000;
                             break;
@@ -660,7 +659,7 @@ class npc_void_sentinel : public CreatureScript
             {
                 if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
                 {
-                    if (Unit* random = selectUnit(TARGET_RANDOM, 0, 25.0f, true))
+                    if (Unit* random = selectUnit(TARGET_NEAREST, 0, 100.0f, true))
                     {
                         if (spawn->getAI())
                             spawn->getAI()->attackStart(random);
