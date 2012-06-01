@@ -431,6 +431,7 @@ SET(scripts_STAT_SRCS
     outland/zulaman/boss_janalai.cpp
     outland/zulaman/boss_nalorakk.cpp
     outland/zulaman/boss_zuljin.cpp
+    outland/zulaman/boss_zuljin_new.cpp
     outland/zulaman/def_zulaman.h
     outland/zulaman/instance_zulaman.cpp
     outland/zulaman/zulaman.cpp

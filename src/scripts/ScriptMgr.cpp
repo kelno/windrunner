@@ -678,6 +678,7 @@ extern void AddSC_boss_hex_lord_malacrass();
 extern void AddSC_boss_janalai();
 extern void AddSC_boss_nalorakk();
 extern void AddSC_boss_zuljin();
+extern void AddSC_boss_zuljin_new();
 extern void AddSC_instance_zulaman();
 extern void AddSC_zulaman();
 
@@ -2064,6 +2065,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_janalai();
     AddSC_boss_nalorakk();
     AddSC_boss_zuljin();
+    AddSC_boss_zuljin_new();
     AddSC_instance_zulaman();
     AddSC_zulaman();
 
