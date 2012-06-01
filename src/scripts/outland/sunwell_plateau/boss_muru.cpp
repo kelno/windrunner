@@ -723,7 +723,10 @@ class npc_void_spawn : public CreatureScript
         void update(const uint32 diff)
         {
             if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+            {
+                me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f);
                 me->DisappearAndDie();
+            }
 
             if (!updateVictim())
                 return;
