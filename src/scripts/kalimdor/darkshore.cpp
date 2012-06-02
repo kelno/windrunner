@@ -213,8 +213,10 @@ struct npc_threshwackonatorAI : public FollowerAI
 
         SetFollowComplete(true);
 
-        if (Player* pHolder = GetLeaderForFollower())
+        if (Player* pHolder = GetLeaderForFollower()) {
             me->AI()->AttackStart(pHolder);
+            me->GetMotionMaster()->MoveChase(pHolder);
+        }
     }
 };
 
