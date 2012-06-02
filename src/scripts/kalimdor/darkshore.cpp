@@ -25,6 +25,8 @@ EndScriptData */
 npc_kerlonian
 npc_threshwackonator
 npc_prospector_remtravel
+npc_rabid_thistle_bear
+npc_tharnariun_treetender
 EndContentData */
 
 #include "precompiled.h"
@@ -358,6 +360,80 @@ bool QuestAccept_npc_prospector_remtravel(Player* pPlayer, Creature* pCreature, 
 }
 
 /*######
+## npc_rabid_thistle_bear
+######*/
+
+struct npc_rabid_thistle_bearAI : public ScriptedAI
+{
+    npc_rabid_thistle_bearAI(Creature* pCreature) : ScriptedAI(pCreature) {}
+    
+    uint64 guid;
+
+    void Reset() {}
+
+    void Aggro(Unit* who) {}
+    
+    bool sOnDummyEffect(Unit* caster, uint32 spellId, uint32 effIndex)
+    {
+        if (spellId == 9439) {
+            if (Player* plr = Unit::GetPlayer(guid)) {
+                me->UpdateEntry(11836);
+                me->GetMotionMaster()->MoveFollow(plr, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                plr->CastedCreatureOrGO(11836, me->GetGUID(), 9437);
+                me->CombatStop();
+                plr->CombatStop();
+            }
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (me->getVictim()->ToPlayer())
+            guid = me->getVictim()->GetGUID();
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_rabid_thistle_bear(Creature* pCreature)
+{
+    return new npc_rabid_thistle_bearAI(pCreature);
+}
+
+/*######
+## npc_tharnariun_treetender
+######*/
+
+struct npc_tharnariun_treetenderAI : public ScriptedAI
+{
+    npc_tharnariun_treetenderAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* who) {}
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (who->ToCreature() && who->GetEntry() == 11836)
+            who->ToCreature()->ForcedDespawn();
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_tharnariun_treetender(Creature* creature)
+{
+    return new npc_tharnariun_treetenderAI(creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -383,5 +459,15 @@ void AddSC_darkshore()
     newscript->Name = "npc_prospector_remtravel";
     newscript->GetAI = &GetAI_npc_prospector_remtravel;
     newscript->pQuestAccept = &QuestAccept_npc_prospector_remtravel;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_rabid_thistle_bear";
+    newscript->GetAI = &GetAI_npc_rabid_thistle_bear;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_tharnariun_treetender";
+    newscript->GetAI = &GetAI_npc_tharnariun_treetender;
     newscript->RegisterSelf();
 }
