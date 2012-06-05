@@ -436,6 +436,7 @@ struct mob_hellfire_channelerAI : public ScriptedAI
         if(pInstance)
             pInstance->SetData(DATA_CHANNELER_EVENT, NOT_STARTED);
 
+        m_creature->RemoveAllAuras();
         m_creature->CastSpell(m_creature, SPELL_SHADOW_GRASP_C, false);
     }
 

@@ -48,6 +48,7 @@ go_blood_filled_orb
 go_ice_stone_ahune
 go_matrix_3005a
 go_matrix_punchograph_3005
+go_tablet_of_theka
 EndContentData */
 
 #include "precompiled.h"
@@ -631,6 +632,18 @@ bool GOHello_go_matrix_punchograph_3005(Player* player, GameObject* go)
 }
 
 /*######
+## go_tablet_of_theka
+######*/
+
+bool GOHello_go_tablet_of_theka(Player* player, GameObject* go)
+{
+    if (Creature* theka = player->FindCreatureInGrid(7272, 150.0f, false))
+        player->AreaExploredOrEventHappens(2936);
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -792,5 +805,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_matrix_punchograph_3005";
     newscript->pGOHello = &GOHello_go_matrix_punchograph_3005;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_tablet_of_theka";
+    newscript->pGOHello = &GOHello_go_tablet_of_theka;
     newscript->RegisterSelf();
 }

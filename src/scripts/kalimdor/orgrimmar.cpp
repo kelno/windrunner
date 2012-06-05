@@ -25,6 +25,7 @@ EndScriptData */
 npc_neeru_fireblade     npc_text + gossip options text missing
 npc_shenthul
 npc_thrall_warchief
+npc_eitrigg
 EndContentData */
 
 #include "precompiled.h"
@@ -259,6 +260,32 @@ bool QuestComplete_npc_thrall_warchief(Player* pPlayer, Creature* pCreature, Que
     return true;
 }
 
+/*######
+## npc_eitrigg
+######*/
+
+bool GossipHello_npc_eitrigg(Player* player, Creature* creature)
+{
+    if (creature->isQuestGiver())
+        player->PrepareQuestMenu(creature->GetGUID());
+        
+    if (player->GetQuestStatus(4941) == QUEST_STATUS_INCOMPLETE)
+        player->ADD_GOSSIP_ITEM(0, "[PH] Valider la quête \"Sagesse d'Eitrigg\".", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_eitrigg(Player* player, Creature* creature, uint32 sender, uint32 action)
+{
+    if (action == GOSSIP_ACTION_INFO_DEF + 1)
+        player->AreaExploredOrEventHappens(4941);
+        
+    player->CLOSE_GOSSIP_MENU();
+        
+    return true;
+}
+
 void AddSC_orgrimmar()
 {
     Script *newscript;
@@ -282,6 +309,12 @@ void AddSC_orgrimmar()
     newscript->pGossipHello =  &GossipHello_npc_thrall_warchief;
     newscript->pGossipSelect = &GossipSelect_npc_thrall_warchief;
     newscript->pQuestComplete = &QuestComplete_npc_thrall_warchief;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_eitrigg";
+    newscript->pGossipHello = &GossipHello_npc_eitrigg;
+    newscript->pGossipSelect = &GossipSelect_npc_eitrigg;
     newscript->RegisterSelf();
 }
 
