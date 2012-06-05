@@ -26,6 +26,7 @@ SDCategory: Razorfen Downs
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_razorfen_downs.h"
 
 bool GossipHello_npc_henry_stern(Player *pPlayer, Creature *pCreature)
 {

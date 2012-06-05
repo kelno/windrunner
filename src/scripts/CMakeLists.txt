@@ -250,8 +250,15 @@ SET(scripts_STAT_SRCS
     kalimdor/mulgore.cpp
     kalimdor/onyxias_lair/boss_onyxia.cpp
     kalimdor/orgrimmar.cpp
-    kalimdor/razorfen_downs/boss_amnennar_the_coldbringer.cpp
+    kalimdor/razorfen_downs/def_razorfen_downs.h
+    kalimdor/razorfen_downs/instance_razorfen_downs.cpp
     kalimdor/razorfen_downs/razorfen_downs.cpp
+    kalimdor/razorfen_downs/boss_amnennar_the_coldbringer.cpp
+    kalimdor/razorfen_downs/boss_glutton.cpp
+    kalimdor/razorfen_downs/boss_mordresh_fire_eye.cpp
+    kalimdor/razorfen_downs/boss_plaguemaw_the_rotting.cpp
+    kalimdor/razorfen_downs/boss_ragglesnout.cpp
+    kalimdor/razorfen_downs/boss_tuten_kash.cpp
     kalimdor/razorfen_kraul/def_razorfen_kraul.h
     kalimdor/razorfen_kraul/instance_razorfen_kraul.cpp
     kalimdor/razorfen_kraul/razorfen_kraul.cpp

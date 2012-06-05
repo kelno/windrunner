@@ -452,8 +452,14 @@ extern void AddSC_orgrimmar();
 
 //Ragefire Chasm
 //Razorfen Downs
+extern void AddSC_boss_tuten_kash();
+extern void AddSC_boss_plaguemaw_the_rotting();
+extern void AddSC_boss_ragglesnout();
+extern void AddSC_boss_glutton();
+extern void AddSC_boss_mordresh_fire_eye();
 extern void AddSC_boss_amnennar_the_coldbringer();
 extern void AddSC_razorfen_downs();
+extern void AddSC_instance_razorfen_downs();
 
 //Razorfen Kraul
 extern void AddSC_razorfen_kraul();
@@ -1838,6 +1844,12 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     //Ragefire Chasm
     //Razorfen Downs
+    AddSC_boss_tuten_kash();
+    AddSC_boss_plaguemaw_the_rotting();
+    AddSC_boss_ragglesnout();
+    AddSC_boss_glutton();
+    AddSC_boss_mordresh_fire_eye();
+    AddSC_instance_razorfen_downs();
     AddSC_boss_amnennar_the_coldbringer();
     AddSC_razorfen_downs();
 

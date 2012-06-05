@@ -22,6 +22,7 @@ SDCategory: Razorfen Downs
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_razorfen_downs.h"
 
 #define SAY_0             "You'll never leave this place... alive."
 #define SAY_1             "Come, spirits, attend your master."
@@ -35,8 +36,12 @@ EndScriptData */
 
 struct boss_amnennar_the_coldbringerAI : public ScriptedAI
 {
-    boss_amnennar_the_coldbringerAI(Creature *c) : ScriptedAI(c) {}
+    boss_amnennar_the_coldbringerAI(Creature *c) : ScriptedAI(c)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
+    ScriptedInstance *pInstance;
     uint32 AmnenarsWrath_Timer;
     uint32 FrostBolt_Timer;
     bool Spectrals;
@@ -50,12 +55,24 @@ struct boss_amnennar_the_coldbringerAI : public ScriptedAI
         AmnenarsWrath_Timer = 8000;
         FrostBolt_Timer = 1000;
         Spectrals = false;
+        
+        if (pInstance && pInstance->GetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT) != DONE)
+            pInstance->SetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT, NOT_STARTED);
     }
 
     void Aggro(Unit *who)
     {
+        if (pInstance)
+            pInstance->SetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT, IN_PROGRESS);
+
         DoYell(SAY_0,LANG_UNIVERSAL,NULL);
         DoPlaySoundToSet(m_creature,SOUND_AGGRO);
+    }
+
+    void JustDied(Unit *killer)
+    {
+        if (pInstance)
+            pInstance->SetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT, DONE);
     }
 
     void KilledUnit()
@@ -141,4 +158,3 @@ void AddSC_boss_amnennar_the_coldbringer()
     newscript->GetAI = &GetAI_boss_amnennar_the_coldbringer;
     newscript->RegisterSelf();
 }
-
