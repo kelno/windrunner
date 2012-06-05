@@ -247,6 +247,11 @@ struct pyrewood_ambushAI : public ScriptedAI
         Summons.Despawn(pSummoned);
         --KillCount;
     }
+    
+    void JustRespawned()
+    {
+        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+    }
 
     void SummonCreatureWithRandomTarget(uint32 creatureId, int position)
     {
@@ -300,6 +305,7 @@ struct pyrewood_ambushAI : public ScriptedAI
                 pPlayer->FailQuest(QUEST_PYREWOOD_AMBUSH);
                 Summons.DespawnAll();
                 QuestInProgress = false;
+                me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
             }
         }
 
@@ -349,6 +355,7 @@ struct pyrewood_ambushAI : public ScriptedAI
                     {
                         m_creature->Say(NPCSAY_END, LANG_UNIVERSAL, 0); //no blizzlike
                         (player->ToPlayer())->GroupEventHappens(QUEST_PYREWOOD_AMBUSH, m_creature);
+                        me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
                     }
                 }
                 QuestInProgress = false;
@@ -374,6 +381,7 @@ bool QuestAccept_pyrewood_ambush(Player *pPlayer, Creature *pCreature, const Que
         ((pyrewood_ambushAI*)(pCreature->AI()))->Phase = 0;
         ((pyrewood_ambushAI*)(pCreature->AI()))->KillCount = 0;
         ((pyrewood_ambushAI*)(pCreature->AI()))->PlayerGUID = pPlayer->GetGUID();
+        pCreature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
     }
 
     return true;

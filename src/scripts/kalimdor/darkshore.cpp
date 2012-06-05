@@ -25,6 +25,9 @@ EndScriptData */
 npc_kerlonian
 npc_threshwackonator
 npc_prospector_remtravel
+npc_rabid_thistle_bear
+npc_tharnariun_treetender
+npc_sentinel_aynasha
 EndContentData */
 
 #include "precompiled.h"
@@ -213,8 +216,10 @@ struct npc_threshwackonatorAI : public FollowerAI
 
         SetFollowComplete(true);
 
-        if (Player* pHolder = GetLeaderForFollower())
+        if (Player* pHolder = GetLeaderForFollower()) {
             me->AI()->AttackStart(pHolder);
+            me->GetMotionMaster()->MoveChase(pHolder);
+        }
     }
 };
 
@@ -356,6 +361,238 @@ bool QuestAccept_npc_prospector_remtravel(Player* pPlayer, Creature* pCreature, 
 }
 
 /*######
+## npc_rabid_thistle_bear
+######*/
+
+struct npc_rabid_thistle_bearAI : public ScriptedAI
+{
+    npc_rabid_thistle_bearAI(Creature* pCreature) : ScriptedAI(pCreature) {}
+    
+    uint64 guid;
+
+    void Reset() {}
+
+    void Aggro(Unit* who) {}
+    
+    bool sOnDummyEffect(Unit* caster, uint32 spellId, uint32 effIndex)
+    {
+        if (spellId == 9439) {
+            if (Player* plr = Unit::GetPlayer(guid)) {
+                me->UpdateEntry(11836);
+                me->GetMotionMaster()->MoveFollow(plr, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                plr->CastedCreatureOrGO(11836, me->GetGUID(), 9437);
+                me->CombatStop();
+                plr->CombatStop();
+            }
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        if (me->getVictim()->ToPlayer())
+            guid = me->getVictim()->GetGUID();
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_rabid_thistle_bear(Creature* pCreature)
+{
+    return new npc_rabid_thistle_bearAI(pCreature);
+}
+
+/*######
+## npc_tharnariun_treetender
+######*/
+
+struct npc_tharnariun_treetenderAI : public ScriptedAI
+{
+    npc_tharnariun_treetenderAI(Creature* c) : ScriptedAI(c) {}
+    
+    void Aggro(Unit* who) {}
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (who->ToCreature() && who->GetEntry() == 11836)
+            who->ToCreature()->ForcedDespawn();
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_tharnariun_treetender(Creature* creature)
+{
+    return new npc_tharnariun_treetenderAI(creature);
+}
+
+/*######
+## npc_sentinel_aynasha
+######*/
+
+enum AynashaData
+{
+    SPELL_AYNASHAS_BOW      = 19767,
+    
+    QUEST_ONESHOT_ONEKILL   = 5713,
+    
+    NPC_BLACKWOOD_TRACKER   = 11713,
+    NPC_MAROSH_THE_DEVIOUS  = 11714,
+    
+    TALK_QUESTACCEPT        = 0,
+    TALK_QUESTFINISHED1     = 1,
+    TALK_QUESTFINISHED2     = 2,
+    TALK_QUESTFINISHED3     = 3
+};
+
+struct npc_sentinel_aynashaAI : public ScriptedAI
+{
+    npc_sentinel_aynashaAI(Creature* c) : ScriptedAI(c)
+    {
+        timer = 0;
+        step = 0;
+        said = false;
+    }
+    
+    uint32 timer;
+    uint32 step;
+    bool said;
+    
+    void Reset()
+    {
+        me->RemoveAurasDueToSpell(18373);
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void MovementInform(uint32 type, uint32 id)
+    {
+        if (id == 1) {
+            me->DisappearAndDie();
+            me->Respawn();
+            timer = 0;
+            step = 0;
+            said = false;
+        }
+    }
+    
+    void MoveInLineOfSight(Unit* who)
+    {
+        if (!who->ToPlayer())
+            return;
+
+        if (!said && who->ToPlayer()->GetQuestStatus(QUEST_ONESHOT_ONEKILL) == QUEST_STATUS_COMPLETE && step == 3) {
+            said = true;
+            timer = 1;
+        }
+    }
+    
+    void EnterEvadeMode()
+    {
+        CreatureAI::EnterEvadeMode();
+        me->GetMotionMaster()->MoveIdle();
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (timer) {
+            if (timer <= diff) {
+                switch (step) {
+                case 0: // 2 mobs
+                    if (Creature* tracker = me->SummonCreature(NPC_BLACKWOOD_TRACKER, 4387.776855, -36.047455, 82.273827, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        tracker->AI()->AttackStart(me);
+                    if (Creature* tracker = me->SummonCreature(NPC_BLACKWOOD_TRACKER, 4388.480469, -37.534382, 82.793724, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        tracker->AI()->AttackStart(me);
+                    timer = 50000;
+                    step++;
+                    break;
+                case 1: // 3 mobs
+                    if (Creature* tracker = me->SummonCreature(NPC_BLACKWOOD_TRACKER, 4387.776855, -36.047455, 82.273827, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        tracker->AI()->AttackStart(me);
+                    if (Creature* tracker = me->SummonCreature(NPC_BLACKWOOD_TRACKER, 4388.480469, -37.534382, 82.793724, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        tracker->AI()->AttackStart(me);
+                    if (Creature* tracker = me->SummonCreature(NPC_BLACKWOOD_TRACKER, 4389.127441, -38.901089, 83.472984, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        tracker->AI()->AttackStart(me);
+                    timer = 60000;
+                    step++;
+                    break;
+                case 2: // Boss
+                    if (Creature* marosh = me->SummonCreature(NPC_MAROSH_THE_DEVIOUS, 4388.480469, -37.534382, 82.793724, 3.583573, TEMPSUMMON_DEAD_DESPAWN, 0))
+                        marosh->AI()->AttackStart(me);
+                    timer = 0;
+                    step++;
+                    break;
+                case 3: // Thanks 1
+                    Talk(TALK_QUESTFINISHED1);
+                    timer = 5000;
+                    step++;
+                    break;
+                case 4: // Thanks 2
+                    Talk(TALK_QUESTFINISHED2);
+                    timer = 5000;
+                    step++;
+                    break;
+                    
+                case 5: // Thanks 3
+                    Talk(TALK_QUESTFINISHED3);
+                    timer = 5000;
+                    step++;
+                    break;
+                case 6: // I'm leaving, cyaaa!
+                    me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
+                    //me->GetMotionMaster()->MovePoint(1, 4363.714844, -5.714110, 66.114090);
+                    me->DisappearAndDie();
+                    me->Respawn();
+                    timer = 0;
+                    step = 0;
+                    said = false;
+                    break;
+                default:
+                    break;
+                }
+            }
+            else
+                timer -= diff;
+        }
+        
+        if (!UpdateVictim())
+            return;
+            
+        if (me->getVictim()->IsWithinDistInMap(me, 8.0f)) {
+            me->GetMotionMaster()->MoveChase(me->getVictim());
+            DoMeleeAttackIfReady();
+        }
+        else {
+            //me->GetMotionMaster()->MoveIdle();
+            DoCast(me->getVictim(), SPELL_AYNASHAS_BOW);
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_sentinel_aynasha(Creature* creature)
+{
+    return new npc_sentinel_aynashaAI(creature);
+}
+
+bool QuestAccept_npc_sentinel_aynasha(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == QUEST_ONESHOT_ONEKILL) {
+        ((npc_sentinel_aynashaAI*)creature->AI())->timer = 8000;
+        creature->AI()->Talk(TALK_QUESTACCEPT);
+    }
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -381,5 +618,21 @@ void AddSC_darkshore()
     newscript->Name = "npc_prospector_remtravel";
     newscript->GetAI = &GetAI_npc_prospector_remtravel;
     newscript->pQuestAccept = &QuestAccept_npc_prospector_remtravel;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_rabid_thistle_bear";
+    newscript->GetAI = &GetAI_npc_rabid_thistle_bear;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_tharnariun_treetender";
+    newscript->GetAI = &GetAI_npc_tharnariun_treetender;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_sentinel_aynasha";
+    newscript->GetAI = &GetAI_npc_sentinel_aynasha;
+    newscript->pQuestAccept = &QuestAccept_npc_sentinel_aynasha;
     newscript->RegisterSelf();
 }

@@ -157,9 +157,12 @@ struct boss_the_black_stalkerAI : public ScriptedAI
         // Chain Lightning
         if(ChainLightning_Timer < diff)
         {
-            if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(target, SPELL_CHAIN_LIGHTNING);
-            ChainLightning_Timer = 7000;
+            if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0)) {
+                if (target->isAlive()) {
+                    DoCast(target, SPELL_CHAIN_LIGHTNING);
+                    ChainLightning_Timer = 7000;
+                }
+            }
         }else ChainLightning_Timer -= diff;
 
         // Static Charge
