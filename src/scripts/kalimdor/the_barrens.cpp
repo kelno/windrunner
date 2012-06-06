@@ -566,6 +566,8 @@ struct npc_wizzlecrank_shredderAI : public npc_escortAI
             break;
         case 24:
             m_bIsPostEvent = true;
+            if (Player* pPlayer = GetPlayerForEscort())
+                pPlayer->GroupEventHappens(QUEST_ESCAPE, m_creature);
             break;
         }
     }
