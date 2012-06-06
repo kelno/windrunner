@@ -396,10 +396,8 @@ bool AreaTrigger_at_zumrah(Player *pPlayer, AreaTriggerEntry const *pAt)
 
 bool AreaTrigger_at_antusul(Player* player, const AreaTriggerEntry* at)
 {
-    if (Creature* antusul = player->FindCreatureInGrid(8127, 70.0f, true)) {
-        antusul->AI()->Aggro(player);
+    if (Creature* antusul = player->FindCreatureInGrid(8127, 70.0f, true))
         antusul->AI()->AttackStart(player);
-    }
         
     return true;
 }
