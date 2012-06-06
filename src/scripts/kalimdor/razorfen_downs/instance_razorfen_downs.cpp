@@ -27,20 +27,20 @@ struct instance_razorfen_downs : public ScriptedInstance
     {
         IsWipe = false;
         waves = 0;
+        creatureCredit = 0;
         tuten_kashGUID = 0;
         mordresh_fire_eyeGUID = 0;
+        plaguemaw_the_rottingGUID = 0;
+        ragglesnoutGUID = 0;
+        gluttonGUID = 0;
+        amnennar_the_coldbringerGUID = 0;
         
         for(uint8 i=0; i < ENCOUNTERS; ++i)
             Encounters[i] = NOT_STARTED;
     }
-    
-    void OnWipe()
-    {
-        if (Encounters[0] != DONE)
-            waves = 0;
-    }
 
     uint32 waves;
+    uint32 creatureCredit;
     uint64 tuten_kashGUID;
     uint64 mordresh_fire_eyeGUID;
     uint64 plaguemaw_the_rottingGUID;
@@ -58,6 +58,9 @@ struct instance_razorfen_downs : public ScriptedInstance
         {
             case DATA_WAVE_EVENT:
                 waves++;
+                break;
+            case DATA_CREATURE_CREDIT:
+                creatureCredit = data;
                 break;
             case DATA_TUTEN_KASH_EVENT:
                 Encounters[0] = data;
@@ -101,6 +104,7 @@ struct instance_razorfen_downs : public ScriptedInstance
             case DATA_GLUTTON_EVENT:                    return Encounters[4];
             case DATA_PLAGUEMAW_THE_ROTTING_EVENT:      return Encounters[5];
             case DATA_WAVE_EVENT:                       return waves;
+            case DATA_CREATURE_CREDIT:                  return creatureCredit;
         }
         return 0;
     }
@@ -145,25 +149,15 @@ struct instance_razorfen_downs : public ScriptedInstance
         }
     }
 
-    void Update(uint32 /*diff*/)
+    void OnCreatureKill(Creature* victim)
     {
-        Map::PlayerList const& players = instance->GetPlayers();
-        if (!players.isEmpty())
+        switch (victim->GetEntry())
         {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                Player* plr = itr->getSource();
-                if (plr && plr->isAlive() && !plr->isGameMaster())
-                {
-                    IsWipe = false;
-                    return;
-                }
-            }
-        }
-        if (!IsWipe)
-        {
-            OnWipe();
-            IsWipe = true;
+            case NPC_TOMB_FIEND:
+            case NPC_TOMB_REAVER:
+                if (creatureCredit > 0)
+                    creatureCredit--;
+                break;
         }
     }
 
