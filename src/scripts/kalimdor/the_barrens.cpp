@@ -28,6 +28,7 @@ npc_taskmaster_fizzule
 npc_twiggy_flathead
 npc_wizzlecrank_shredder
 npc_regthar_deathgate
+npc_gilthares_firebough
 EndContentData */
 
 #include "precompiled.h"
@@ -933,6 +934,89 @@ bool QuestAccept_npc_regthar_deathgate(Player* player, Creature* creature, const
     return true;
 }
 
+/*######
+## npc_gilthares_firebough
+######*/
+
+enum GiltharesFireboughData
+{
+    TALK_GILTHARES_START        = 0,
+    TALK_GILTHARES_THANKS       = 1,
+
+    QUEST_FREE_FROM_THE_HOLD    = 898,
+    FACTION_ESCORT              = 232
+};
+
+struct npc_gilthares_fireboughAI : public npc_escortAI
+{
+    npc_gilthares_fireboughAI(Creature* c) : npc_escortAI(c) {}
+    
+    bool completed;
+    
+    void Aggro(Unit* who) {}
+    
+    void Reset()
+    {
+        completed = false;
+    }
+    
+    void JustDied(Unit* killer)
+    {
+        if (!completed) {
+            if (Player* player = GetPlayerForEscort())
+                player->FailQuest(QUEST_FREE_FROM_THE_HOLD);
+        }
+    }
+    
+    void WaypointReached(uint32 id)
+    {
+        switch (id) {
+        case 0:
+            me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            Talk(TALK_GILTHARES_START);
+            break;
+        case 10:
+            Talk(TALK_GILTHARES_THANKS);
+            if (Player* player = GetPlayerForEscort())
+                player->GroupEventHappens(QUEST_FREE_FROM_THE_HOLD, me);
+            SetRun(true);
+            break;
+        case 11:
+            completed = true;
+            me->DisappearAndDie();
+            me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+            me->Respawn();
+            break;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        npc_escortAI::UpdateAI(diff);
+        
+        if (!UpdateVictim())
+            return;
+            
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_gilthares_firebough(Creature* creature)
+{
+    return new npc_gilthares_fireboughAI(creature);
+}
+
+bool QuestAccept_npc_gilthares_firebough(Player* player, Creature* creature, const Quest* quest)
+{
+    if (quest->GetQuestId() == QUEST_FREE_FROM_THE_HOLD) {
+        if (npc_escortAI* escortAI = CAST_AI(npc_gilthares_fireboughAI, (creature->AI())))
+            escortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+            
+        creature->setFaction(FACTION_ESCORT);
+    }
+    return true;
+}
+
 void AddSC_the_barrens()
 {
     Script* newscript;
@@ -978,6 +1062,12 @@ void AddSC_the_barrens()
     newscript->pGossipHello = &GossipHello_npc_regthar_deathgate;
     newscript->pGossipSelect = &GossipSelect_npc_regthar_deathgate;
     newscript->pQuestAccept = &QuestAccept_npc_regthar_deathgate;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_gilthares_firebough";
+    newscript->GetAI = &GetAI_npc_gilthares_firebough;
+    newscript->pQuestAccept = &QuestAccept_npc_gilthares_firebough;
     newscript->RegisterSelf();
 }
 
