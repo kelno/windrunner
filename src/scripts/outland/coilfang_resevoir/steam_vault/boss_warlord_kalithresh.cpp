@@ -48,9 +48,11 @@ struct mob_naga_distillerAI : public Scripted_NoMovementAI
     }
 
     ScriptedInstance *pInstance;
+    bool checkDistance;
 
     void Reset()
     {
+        checkDistance = false;
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
@@ -69,13 +71,7 @@ struct mob_naga_distillerAI : public Scripted_NoMovementAI
 
     void StartRageGen(Unit *caster)
     {
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-        DoCast(m_creature,SPELL_WARLORDS_RAGE_NAGA,true);
-
-        if (pInstance)
-            pInstance->SetData(TYPE_DISTILLER,IN_PROGRESS);
+        checkDistance = true;
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
@@ -83,6 +79,33 @@ struct mob_naga_distillerAI : public Scripted_NoMovementAI
         if (m_creature->GetHealth() <= damage)
             if (pInstance)
                 pInstance->SetData(TYPE_DISTILLER,DONE);
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (checkDistance)
+        {
+            if (Creature* distiller = SelectCreatureInGrid(m_creature, 17798, 5.0f))
+            {
+                if (Creature* boss = pInstance->instance->GetCreature(pInstance->GetData64(DATA_KALITRESH)))
+                {
+                    boss->GetMotionMaster()->Clear();
+                    boss->GetMotionMaster()->MoveChase(boss->getVictim(), 0.0f, 0.0f);
+                    checkDistance = false;
+
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
+                    DoCast(boss, SPELL_WARLORDS_RAGE_NAGA, true);
+
+                    DoScriptText(SAY_REGEN, boss);
+                    boss->CastSpell(boss, SPELL_WARLORDS_RAGE, true);
+
+                    if (pInstance)
+                        pInstance->SetData(TYPE_DISTILLER, IN_PROGRESS);
+                }
+            }
+        }
     }
 };
 
@@ -133,25 +156,6 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
         }
     }
 
-    Creature* SelectCreatureInGrid(uint32 entry, float range)
-    {
-        Creature* pCreature = NULL;
-
-        CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
-        Cell cell(pair);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-
-        Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck creature_check(*m_creature, entry, true, range);
-        Trinity::CreatureLastSearcher<Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pCreature, creature_check);
-
-        TypeContainerVisitor<Trinity::CreatureLastSearcher<Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck>, GridTypeMapContainer> creature_searcher(searcher);
-
-        cell.Visit(pair, creature_searcher, *(m_creature->GetMap()));
-
-        return pCreature;
-    }
-
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
         //hack :(
@@ -176,14 +180,28 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
 
         if (Rage_Timer < diff)
         {
-            Creature* distiller = SelectCreatureInGrid(17954, 100);
-            if (distiller)
+            if (Aura* aur = m_creature->GetAura(36453, 0))
             {
-                DoScriptText(SAY_REGEN, m_creature);
-                DoCast(m_creature,SPELL_WARLORDS_RAGE);
-                ((mob_naga_distillerAI*)distiller->AI())->StartRageGen(m_creature);
+                if (aur->GetStackAmount() < 10)
+                {
+                    Creature* distiller = SelectCreatureInGrid(m_creature, 17954, 100.0f);
+                    if (distiller)
+                    {
+                        m_creature->GetMotionMaster()->MovePoint(0, distiller->GetPositionX(), distiller->GetPositionY(), distiller->GetPositionZ());
+                        ((mob_naga_distillerAI*)distiller->AI())->StartRageGen(m_creature);
+                    }
+                }
             }
-            Rage_Timer = 3000+rand()%15000;
+            else
+            {
+                Creature* distiller = SelectCreatureInGrid(m_creature, 17954, 100.0f);
+                if (distiller)
+                {
+                    m_creature->GetMotionMaster()->MovePoint(0, distiller->GetPositionX(), distiller->GetPositionY(), distiller->GetPositionZ());
+                    ((mob_naga_distillerAI*)distiller->AI())->StartRageGen(m_creature);
+                }
+            }
+            Rage_Timer = urand(22000, 25000);
         }else Rage_Timer -= diff;
 
         //Reflection_Timer
