@@ -96,6 +96,9 @@ bool GOHello_go_gong(Player *player, GameObject* go)
     if (pInstance->GetData(DATA_WAVE_EVENT) >= 3)
         return true;
 
+    if (pInstance->GetData(DATA_CREATURE_CREDIT) != 0)
+        return true;
+
     pInstance->SetData(DATA_WAVE_EVENT, 0);
     
     go->AddUse();
@@ -110,6 +113,7 @@ bool GOHello_go_gong(Player *player, GameObject* go)
             for (uint8 i = 0; i < 4; ++i)
                 if (Creature* add = go->SummonCreature(NPC_TOMB_FIEND, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60))
                     add->AI()->AttackStart(player);
+            pInstance->SetData(DATA_CREATURE_CREDIT, 8);
             break;
         case 2:
             for (uint8 i = 0; i < 4; ++i)
@@ -119,11 +123,12 @@ bool GOHello_go_gong(Player *player, GameObject* go)
             for (uint8 i = 0; i < 4; ++i)
                 if (Creature* add = go->SummonCreature(NPC_TOMB_REAVER, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300))
                     add->AI()->AttackStart(player);
+            pInstance->SetData(DATA_CREATURE_CREDIT, 8);
             break;
         case 3:
-            for (uint8 i = 0; i < 4; ++i)
-                if (Creature* add = go->SummonCreature(BOSS_TUTEN_KASH, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3600))
-                    add->AI()->AttackStart(player);
+            if (Creature* boss = go->SummonCreature(BOSS_TUTEN_KASH, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3600))
+                boss->AI()->AttackStart(player);
+            pInstance->SetData(DATA_CREATURE_CREDIT, 0);
             break;
     }
 }
