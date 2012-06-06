@@ -2167,6 +2167,25 @@ void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target)
     }
 }
 
+Creature* SelectCreatureInGrid(Creature* origin, uint32 entry, float range)
+{
+    Creature* pCreature = NULL;
+
+    CellPair pair(Trinity::ComputeCellPair(origin->GetPositionX(), origin->GetPositionY()));
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
+
+    Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck creature_check(*origin, entry, true, range);
+    Trinity::CreatureLastSearcher<Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck> searcher(pCreature, creature_check);
+
+    TypeContainerVisitor<Trinity::CreatureLastSearcher<Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck>, GridTypeMapContainer> creature_searcher(searcher);
+
+    cell.Visit(pair, creature_searcher, *(origin->GetMap()));
+
+    return pCreature;
+}
+
 //*********************************
 //*** Functions used internally ***
 
