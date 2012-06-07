@@ -112,16 +112,17 @@ public:
     {
     public:
         enum events {
-            EV_OVERPOWER_READY  = 0, // PHASE_BEAR
-            EV_WHIRLWIND        = 1, // PHASE_TROLL
-            EV_GRIEVOUS_THROW   = 2, // PHASE TROLL
-            EV_CREEPING_PARA    = 3, // PHASE BEAR
-            EV_CLAW_RAGE        = 4, // PHASE_LYNX
-            EV_CLAW_RAGE_RESET  = 5, // PHASE_LYNX - Resets threat on target after claw rage
-            EV_LYNX_RUSH        = 6, // PHASE_LYNX
-            EV_FLAME_WHIRL      = 7, // PHASE_DRAGONHAWK
-            EV_PILLAR_OF_FIRE   = 8, // PHASE_DRAGONHAWK
-            EV_FLAME_BREATH     = 9  // PHASE_DRAGONHAWK
+            EV_OVERPOWER_READY  = 0,    // PHASE_BEAR
+            EV_WHIRLWIND        = 1,    // PHASE_TROLL
+            EV_GRIEVOUS_THROW   = 2,    // PHASE TROLL
+            EV_CREEPING_PARA    = 3,    // PHASE BEAR
+            EV_CLAW_RAGE        = 4,    // PHASE_LYNX
+            EV_CLAW_RAGE_RESET  = 5,    // PHASE_LYNX - Resets threat on target after claw rage
+            EV_LYNX_RUSH        = 6,    // PHASE_LYNX
+            EV_FLAME_WHIRL      = 7,    // PHASE_DRAGONHAWK
+            EV_PILLAR_OF_FIRE   = 8,    // PHASE_DRAGONHAWK
+            EV_FLAME_BREATH     = 9,    // PHASE_DRAGONHAWK
+            EV_REINIT_SPEED     = 10    // PHASE_LYNX
         };
 
         Boss_zuljin_newAI(Creature* creature) : CreatureAINew(creature), summons(me)
@@ -159,6 +160,7 @@ public:
                 addEvent(EV_FLAME_WHIRL, 5000, 5000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(PHASE_DRAGONHAWK));
                 addEvent(EV_PILLAR_OF_FIRE, 6000, 6000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(PHASE_DRAGONHAWK));
                 addEvent(EV_FLAME_BREATH, 7000, 7000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(PHASE_DRAGONHAWK));
+                addEvent(EV_REINIT_SPEED, 1000, 1000, 0, false, phaseMaskForPhase(PHASE_LYNX));
             }
             else {
                 scheduleEvent(EV_WHIRLWIND, 7000);
@@ -171,6 +173,7 @@ public:
                 scheduleEvent(EV_FLAME_WHIRL, 5000);
                 scheduleEvent(EV_PILLAR_OF_FIRE, 6000);
                 scheduleEvent(EV_FLAME_BREATH, 7000);
+                disableEvent(EV_REINIT_SPEED);
             }
             
             overpowerReady = false;
@@ -347,6 +350,9 @@ public:
                     if (clawRageTarget) {
                         clawRageTargetGUID = clawRageTarget->GetGUID();
                         doModifyThreat(clawRageTarget, 1000000); // 1.000.000 threat should be enough
+                        me->SetSpeed(MOVE_RUN, 1.2f);
+                        scheduleEvent(EV_REINIT_SPEED, 2000);
+                        enableEvent(EV_REINIT_SPEED);
                         doCast(clawRageTarget, SPELL_CLAW_RAGE_CHARGE);
                         doCast(me, SPELL_CLAW_RAGE_TRIGGER, true); // Triggers SPELL_CLAW_RAGE_DAMAGE every 500 ms
                     }
@@ -365,8 +371,11 @@ public:
                     disableEvent(EV_CLAW_RAGE_RESET);
                     break;
                 case EV_LYNX_RUSH:
+                    me->SetSpeed(MOVE_RUN, 1.2f);
                     doCast(selectUnit(TARGET_RANDOM, 1, 80.0f, true), SPELL_LYNX_RUSH_DAMAGE);
                     delayEvent(EV_CLAW_RAGE, 2000);
+                    scheduleEvent(EV_REINIT_SPEED, 2000);
+                    enableEvent(EV_REINIT_SPEED);
                     scheduleEvent(EV_LYNX_RUSH, 15000, 20000);
                     break;
                 case EV_FLAME_WHIRL:
@@ -380,6 +389,10 @@ public:
                 case EV_FLAME_BREATH:
                     doCast(selectUnit(TARGET_RANDOM, 0, 80.0f, true), SPELL_FLAME_BREATH);
                     scheduleEvent(EV_FLAME_BREATH, 10000);
+                    break;
+                case EV_REINIT_SPEED:
+                    me->SetSpeed(MOVE_RUN, 1.0f);
+                    disableEvent(EV_REINIT_SPEED);
                     break;
                 }
             }
