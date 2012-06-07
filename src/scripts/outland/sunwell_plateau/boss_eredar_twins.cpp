@@ -138,8 +138,16 @@ struct boss_sacrolashAI : public ScriptedAI
             SisterDeath = false;
         }
 
-        if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != IN_PROGRESS)
-            pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
+        if (pInstance)
+        {
+            if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+                pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
+            else
+            {
+                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                     muru->SetReactState(REACT_AGGRESSIVE);
+            }
+        }
             
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
         

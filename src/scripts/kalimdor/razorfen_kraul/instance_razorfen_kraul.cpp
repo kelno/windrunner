@@ -32,13 +32,11 @@ struct instance_razorfen_kraul : public ScriptedInstance
     instance_razorfen_kraul(Map *map) : ScriptedInstance(map) {Initialize();};
 
     uint64 DoorWardGUID;
-    uint32 WardCheck_Timer;
     int WardKeeperAlive;
 
     void Initialize()
     {
-        WardKeeperAlive = 1;
-        WardCheck_Timer = 4000;
+        WardKeeperAlive = 0;
         DoorWardGUID = 0;
     }
 
@@ -62,34 +60,21 @@ struct instance_razorfen_kraul : public ScriptedInstance
     {
         switch(go->GetEntry())
         {
-        case 21099: DoorWardGUID = go->GetGUID(); break;
+            case 21099:
+                DoorWardGUID = go->GetGUID();
+                break;
         }
     }
 
-    void HandleGameObject(uint64 guid, uint32 state)
+    void OnCreatureCreate(Creature* pCreature, uint32 creature_entry)
     {
-        Player *player = GetPlayerInMap();
-
-        if (!player || !guid)
+        switch(creature_entry)
         {
-            debug_log("SD2: Instance Razorfen Kraul: HandleGameObject fail");
-            return;
+            case 4625:
+                WardKeeperAlive++;
+                break;
         }
-
-        if (GameObject *go = GameObject::GetGameObject(*player,guid))
-            go->SetGoState(state);
     }
-
-    void Update(uint32 diff)
-    {
-        if (WardCheck_Timer < diff)
-        {
-            HandleGameObject(DoorWardGUID, WardKeeperAlive);
-            WardKeeperAlive = 0;
-            WardCheck_Timer = 4000;
-        }else
-            WardCheck_Timer -= diff;
-    }     
 
     void SetData(uint32 type, uint32 data)
     {
@@ -97,11 +82,20 @@ struct instance_razorfen_kraul : public ScriptedInstance
         {
             case TYPE_WARD_KEEPERS:
                 if (data == NOT_STARTED)
-                    WardKeeperAlive = 1;
+                {
+                    if (WardKeeperAlive > 0)
+                    {
+                        WardKeeperAlive--;
+                        if (WardKeeperAlive == 0)
+                        {
+                            if (GameObject *door = instance->GetGameObject(DoorWardGUID))
+                                door->SwitchDoorOrButton(true);
+                        }
+                    }
+                }
                 break;
         }
     }
-
 };
 
 InstanceData* GetInstanceData_instance_razorfen_kraul(Map* map)

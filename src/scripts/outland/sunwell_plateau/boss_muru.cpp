@@ -126,12 +126,10 @@ public:
 
         uint32 BlackHoleSummonTimer;
         uint32 EnrageTimer;
-        uint32 NegativeEnergyTimer;
 
         void onReset(bool onSpawn)
         {
             BlackHoleSummonTimer = 30000;
-            NegativeEnergyTimer = 15000;
             EnrageTimer = 600000;
 
             Summons.DespawnAll();
@@ -210,14 +208,6 @@ public:
                 BlackHoleSummonTimer = 15000;
             } else BlackHoleSummonTimer -= diff;
 
-            if (NegativeEnergyTimer <= diff)
-            {
-                 doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
-                 NegativeEnergyTimer = 15000;
-            }
-            else
-                NegativeEnergyTimer -= diff;
-
             doMeleeAttackIfReady();
         }
     };
@@ -275,8 +265,14 @@ public:
 
             Summons.DespawnAll();
 
-            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) != DONE)
-                pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
+            if (pInstance)
+            {
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                    pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
+
+                if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+                    me->SetReactState(REACT_PASSIVE);
+            }
         }
 
         void onCombatStart(Unit* /*who*/)
@@ -284,9 +280,7 @@ public:
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY, false);
 
             if (pInstance)
-            {
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
-            }
         }
 
         void onDamageTaken(Unit * /*done_by*/, uint32 &damage)

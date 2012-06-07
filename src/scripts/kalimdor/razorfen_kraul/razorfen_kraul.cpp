@@ -149,7 +149,6 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
     npc_deaths_head_ward_keeperAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        Reset();
     }
 
     ScriptedInstance *pInstance;
@@ -169,9 +168,6 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
         if (!m_creature->isAlive())
             return;
 
-        if (pInstance)
-            pInstance->SetData(TYPE_WARD_KEEPERS, NOT_STARTED);
-
         if (QuillboarChanneling_Timer < diff)
         {
             if( m_creature->IsNonMeleeSpellCasted(false) )
@@ -180,6 +176,12 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
             QuillboarChanneling_Timer = 1100;
         }else QuillboarChanneling_Timer -= diff;
 
+    }
+
+    void JustDied(Unit* /*killer*/)
+    {
+        if (pInstance)
+            pInstance->SetData(TYPE_WARD_KEEPERS, NOT_STARTED);
     }
 };
 
