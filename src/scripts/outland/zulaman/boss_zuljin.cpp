@@ -612,8 +612,13 @@ CreatureAI* GetAI_boss_zuljin(Creature *_Creature)
 struct feather_vortexAI : public ScriptedAI
 {
     feather_vortexAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 switchTargetTimer;
 
-    void Reset() {}
+    void Reset()
+    {
+        switchTargetTimer = urand(5000, 8000);
+    }
 
     void Aggro(Unit* target) {}
 
@@ -626,8 +631,17 @@ struct feather_vortexAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //if the vortex reach the target, it change his target to another player
-        if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+            switchTargetTimer = urand(5000, 8000);
+        }
+        
+        if (switchTargetTimer <= diff) {
+            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+            switchTargetTimer = urand(5000, 8000);
+        }
+        else
+            switchTargetTimer -= diff;
     }
 };
 
