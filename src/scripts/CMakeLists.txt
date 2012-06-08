@@ -338,6 +338,7 @@ SET(scripts_STAT_SRCS
     outland/black_temple/boss_illidan.cpp
     outland/black_temple/boss_mother_shahraz.cpp
     outland/black_temple/boss_reliquary_of_souls.cpp
+    outland/black_temple/boss_reliquary_of_souls_new.cpp
     outland/black_temple/boss_shade_of_akama.cpp
     outland/black_temple/boss_supremus.cpp
     outland/black_temple/boss_teron_gorefiend.cpp
