@@ -37,6 +37,8 @@ enum Spells
     SPELL_CREEPING_PLAGUE            = 20512,
     SPELL_THORNS                     = 25640,
     SPELL_DISMEMBER                  = 96,
+    SPELL_BURU_TRANSFORM             = 24721,
+    SPELL_GATHERING_SPEED            = 1834,
 };
 
 class boss_buru : public CreatureScript
@@ -59,6 +61,7 @@ public:
         uint32 creepingplagueTimer;
         uint32 dismemberTimer;
         uint32 summonTimer;
+        uint32 gatheringspeedTimer;
         bool actionDone;
 
         void onReset(bool onSpawn)
@@ -66,10 +69,10 @@ public:
             perc = 0;
             creepingplagueTimer = 1000;
             summonTimer = 3000;
-            dismemberTimer = 10000;
+            dismemberTimer = urand(4000, 10000);
+            gatheringspeedTimer = 9000;
             actionDone = false;
 
-            me->SetDisplayId(me->GetNativeDisplayId());
             Summons.DespawnAll();
 
             if (pInstance)
@@ -112,10 +115,18 @@ public:
             if (dismemberTimer <= diff)
             {
                 doCast(me, SPELL_DISMEMBER, false);
-                dismemberTimer = urand(5000, 8000);
+                dismemberTimer = urand(4000, 10000);
             }
             else
                 dismemberTimer -= diff;
+
+            if (gatheringspeedTimer <= diff)
+            {
+                doCast(me, SPELL_GATHERING_SPEED, false);
+                gatheringspeedTimer = 9000;
+            }
+            else
+                gatheringspeedTimer -= diff;
 
             perc = (me->getVictim()->GetHealth()*100) / me->getVictim()->GetMaxHealth();
             if (perc <= 20)
@@ -123,7 +134,7 @@ public:
                 if (!actionDone)
                 {
                     actionDone = true;
-                    me->SetDisplayId(15655);
+                    doCast(me, SPELL_BURU_TRANSFORM, false);
                     me->RemoveAurasDueToSpell(SPELL_THORNS);
                 }
 
