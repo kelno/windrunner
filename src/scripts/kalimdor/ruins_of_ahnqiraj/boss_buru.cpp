@@ -189,7 +189,7 @@ public:
 
         void onDeath(Unit* /*killer*/)
         {
-            doCast((Unit)NULL, SPELL_EGG_EXPLOSION, false);
+            doCast((Unit*)NULL, SPELL_EGG_EXPLOSION, false);
             doCast(me, SPELL_SUMMON_HIVE_HATCHALING, false);
             if (Creature* buru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_BURU)))
                 buru->getAI()->attackStart(selectUnit(TARGET_RANDOM, 1, 100.0f, false));
