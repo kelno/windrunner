@@ -148,7 +148,7 @@ public:
 
                 if (summonTimer <= diff)
                 {
-                    me->SummonCreature(15521, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);
+                    doCast(me, SPELL_SUMMON_HIVE_HATCHALING, false);
                     summonTimer = urand(3000, 5000);
                 }
                 else
