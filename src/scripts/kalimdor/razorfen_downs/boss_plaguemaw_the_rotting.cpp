@@ -74,7 +74,7 @@ struct boss_plaguemaw_the_rottingAI : public ScriptedAI
 
             if (witheredtouchTimer <= diff)
             {
-                DoCast(SelectUnit(TARGET_RANDOM, 0, 5.0f), SPELL_WITHERED_TOUCH);
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 5.0f, false), SPELL_WITHERED_TOUCH);
                 witheredtouchTimer = urand(15000, 23000);
             }
             else
