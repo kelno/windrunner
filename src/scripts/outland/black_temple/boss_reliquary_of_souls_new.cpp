@@ -109,6 +109,8 @@ public:
             
             if (instance)
                 instance->RemoveAuraOnAllPlayers(SPELL_ENEMY_SEETHE);
+                
+            me->SetNoCallAssistance(true);
         }
         
         void onCombatStart(Unit* victim)
@@ -348,6 +350,7 @@ public:
             }
             
             me->SetFullTauntImmunity(true);
+            me->SetNoCallAssistance(true);
         }
         
         void evade()
@@ -463,6 +466,7 @@ public:
             }
             
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CONFUSE, true);
+            me->SetNoCallAssistance(true);
         }
         
         void evade()
@@ -588,6 +592,7 @@ public:
             
             tankGUID = 0;
             spiteGUIDs.clear();
+            me->SetNoCallAssistance(true);
         }
         
         void evade()
