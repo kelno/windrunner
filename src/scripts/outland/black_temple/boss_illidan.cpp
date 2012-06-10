@@ -1081,6 +1081,8 @@ struct npc_akama_illidanAI : public ScriptedAI
             m_creature->SetVisibility(VISIBILITY_OFF);
         else
             m_creature->SetVisibility(VISIBILITY_ON);
+            
+        me->SetReactState(REACT_PASSIVE);
     }
 
     // Do not call reset in Akama's evade mode, as this will stop him from summoning minions after he kills the first bit
