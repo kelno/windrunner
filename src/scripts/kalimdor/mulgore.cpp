@@ -220,11 +220,15 @@ float wp_plain_vision[50][3] =
 
 struct npc_plains_visionAI  : public ScriptedAI
 {
-    npc_plains_visionAI(Creature *c) : ScriptedAI(c) {}
+    npc_plains_visionAI(Creature *c) : ScriptedAI(c)
+    {
+        despawnTimer = 900000;
+    }
 
     bool newWaypoint;
     uint8 WayPointId;
     uint8 amountWP;
+    uint32 despawnTimer;
 
     void Reset()
     {
@@ -254,6 +258,12 @@ struct npc_plains_visionAI  : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (despawnTimer <= diff) {
+            me->DisappearAndDie();
+        }
+        else
+            despawnTimer -= diff;
+
         if (newWaypoint)
         {
             m_creature->GetMotionMaster()->MovePoint(WayPointId, wp_plain_vision[WayPointId][0], wp_plain_vision[WayPointId][1], wp_plain_vision[WayPointId][2]);
