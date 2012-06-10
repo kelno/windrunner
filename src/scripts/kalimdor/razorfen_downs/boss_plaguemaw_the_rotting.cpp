@@ -20,6 +20,7 @@
 enum Spells
 {
     SPELL_PUTRID_STENCH           = 12946,
+    SPELL_WITHERED_TOUCH          = 11442,
 };
 
 struct boss_plaguemaw_the_rottingAI : public ScriptedAI
@@ -32,11 +33,13 @@ struct boss_plaguemaw_the_rottingAI : public ScriptedAI
     ScriptedInstance *pInstance;
     uint32 eventTimer;
     uint32 putridstenchTimer;
+    uint32 witheredtouchTimer;
 
     void Reset()
     {
         eventTimer = 500;
         putridstenchTimer = urand(8000, 12000);
+        witheredtouchTimer = urand(8000, 12000);
 
         if (pInstance && pInstance->GetData(DATA_PLAGUEMAW_THE_ROTTING_EVENT) != DONE)
             pInstance->SetData(DATA_PLAGUEMAW_THE_ROTTING_EVENT, NOT_STARTED);
@@ -63,11 +66,19 @@ struct boss_plaguemaw_the_rottingAI : public ScriptedAI
         {
             if (putridstenchTimer <= diff)
             {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_PUTRID_STENCH);
+                DoCast(me, SPELL_PUTRID_STENCH);
                 putridstenchTimer = urand(15000, 23000);
             }
             else
                 putridstenchTimer -= diff;
+
+            if (witheredtouchTimer <= diff)
+            {
+                DoCast(SelectUnit(TARGET_RANDOM, 0, 5.0f), SPELL_WITHERED_TOUCH);
+                witheredtouchTimer = urand(15000, 23000);
+            }
+            else
+                witheredtouchTimer -= diff;
 
             eventTimer = 500;
         }

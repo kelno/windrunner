@@ -31,8 +31,9 @@ EndScriptData */
 #define SOUND_SLAY        5826
 #define SOUND_SUMMON      5829
 
-#define SPELL_AMNENNARSWRATH        13009
-#define SPELL_FROSTBOLT             10179
+#define SPELL_AMNENNARSWRATH          13009
+#define SPELL_FROSTBOLT               10179
+#define SPELL_SUMMON_FROST_SPECTRES   12642
 
 struct boss_amnennar_the_coldbringerAI : public ScriptedAI
 {
@@ -81,27 +82,6 @@ struct boss_amnennar_the_coldbringerAI : public ScriptedAI
         DoPlaySoundToSet(m_creature, SOUND_SLAY);
     }
 
-    void SummonSpectrals(Unit* victim)
-    {
-        Rand = rand()%5;
-        switch (rand()%2)
-        {
-            case 0: RandX = 0 - Rand; break;
-            case 1: RandX = 0 + Rand; break;
-        }
-        Rand = 0;
-        Rand = rand()%5;
-        switch (rand()%2)
-        {
-            case 0: RandY = 0 - Rand; break;
-            case 1: RandY = 0 + Rand; break;
-        }
-        Rand = 0;
-        Summoned = DoSpawnCreature(8585, RandX, RandY, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 60000);
-        if(Summoned)
-            ((CreatureAI*)Summoned->AI())->AttackStart(victim);
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
@@ -133,11 +113,8 @@ struct boss_amnennar_the_coldbringerAI : public ScriptedAI
             target = SelectUnit(SELECT_TARGET_RANDOM,0);
 
             if(target)
-            {
-                SummonSpectrals(target);
-                SummonSpectrals(target);
-                SummonSpectrals(target);
-            }
+                DoCast(target, SPELL_SUMMON_FROST_SPECTRES);
+
             Spectrals = true;
         }
 
