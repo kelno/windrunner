@@ -107,26 +107,26 @@ bool GOHello_go_gong(Player *player, GameObject* go)
     {
         case 1:
             for (uint8 i = 0; i < 4; ++i)
-                if (Creature* add = go->SummonCreature(NPC_TOMB_FIEND, 2546.67f, 891.78f, 47.8f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60))
+                if (Creature* add = go->SummonCreature(NPC_TOMB_FIEND, 2546.67f, 891.78f, 47.8f, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     add->AI()->AttackStart(player);
 
             for (uint8 i = 0; i < 4; ++i)
-                if (Creature* add = go->SummonCreature(NPC_TOMB_FIEND, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 60))
+                if (Creature* add = go->SummonCreature(NPC_TOMB_FIEND, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     add->AI()->AttackStart(player);
             pInstance->SetData(DATA_CREATURE_CREDIT, 8);
             break;
         case 2:
             for (uint8 i = 0; i < 4; ++i)
-                if (Creature* add = go->SummonCreature(NPC_TOMB_REAVER, 2546.67f, 891.78f, 47.8f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300))
+                if (Creature* add = go->SummonCreature(NPC_TOMB_REAVER, 2546.67f, 891.78f, 47.8f, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     add->AI()->AttackStart(player);
 
             for (uint8 i = 0; i < 4; ++i)
-                if (Creature* add = go->SummonCreature(NPC_TOMB_REAVER, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 300))
+                if (Creature* add = go->SummonCreature(NPC_TOMB_REAVER, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     add->AI()->AttackStart(player);
             pInstance->SetData(DATA_CREATURE_CREDIT, 8);
             break;
         case 3:
-            if (Creature* boss = go->SummonCreature(BOSS_TUTEN_KASH, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 3600))
+            if (Creature* boss = go->SummonCreature(BOSS_TUTEN_KASH, 2490.06f, 832.66f, 44.5f, 0.0f, TEMPSUMMON_MANUAL_DESPAWN, 0))
                 boss->AI()->AttackStart(player);
             pInstance->SetData(DATA_CREATURE_CREDIT, 0);
             break;
