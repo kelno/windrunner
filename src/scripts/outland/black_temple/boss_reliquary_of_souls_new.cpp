@@ -180,8 +180,6 @@ public:
         
         void onMoveInLoS(Unit* who)
         {
-            if (who->ToPlayer())
-                sLog.outString("Moving: %s at %f (%f) yards", who->GetName(), who->GetDistance(me), me->GetDistance(who));
             if (!me->isInCombat() && who->ToPlayer() && who->GetDistance(me) <= 75.0f)
                 attackStart(who);
         }
