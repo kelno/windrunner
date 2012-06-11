@@ -1095,7 +1095,12 @@ struct npc_akama_illidanAI : public ScriptedAI
         InCombat = false;
     }
 
-    void Aggro(Unit *who) {}
+    void Aggro(Unit *who)
+    {
+        if (me->GetVisibility() == VISIBILITY_OFF)
+            me->CombatStop();
+    }
+
     void MoveInLineOfSight(Unit *) {}
 
     void MovementInform(uint32 MovementType, uint32 Data)

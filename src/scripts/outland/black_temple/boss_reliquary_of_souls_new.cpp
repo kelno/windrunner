@@ -76,10 +76,10 @@ class Boss_reliquary_of_souls : public CreatureScript
 public:
     Boss_reliquary_of_souls() : CreatureScript("boss_reliquary_of_souls") {}
     
-    class Boss_reliquary_of_soulsAI : public CreatureAINew
+    class Boss_reliquary_of_soulsAI : public Creature_NoMovementAINew
     {
     public:
-        Boss_reliquary_of_soulsAI(Creature* creature) : CreatureAINew(creature)
+        Boss_reliquary_of_soulsAI(Creature* creature) : Creature_NoMovementAINew(creature)
         {
             instance = ((ScriptedInstance*)creature->GetInstanceData());
             essenceGUID = 0;
@@ -178,6 +178,14 @@ public:
                 soulDeathCount++;
         }
         
+        void onMoveInLoS(Unit* who)
+        {
+            if (who->ToPlayer())
+                sLog.outString("Moving: %s at %f (%f) yards", who->GetName(), who->GetDistance(me), me->GetDistance(who));
+            if (!me->isInCombat() && who->ToPlayer() && who->GetDistance(me) <= 75.0f)
+                attackStart(who);
+        }
+        
         void update(uint32 const diff)
         {
             if (phase == PHASE_NONE)
@@ -231,7 +239,7 @@ public:
                     }
                     else {
                         if (essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
-                            mergeThreatList(essence);
+                            //mergeThreatList(essence);
                             essence->DeleteThreatList();
                             essence->SetReactState(REACT_PASSIVE);
                             essence->GetMotionMaster()->MoveFollow(me, 0, 0);
@@ -249,7 +257,7 @@ public:
                         essence->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_SUBMERGE); // Rotate and disappear
                     }
                     else { // Really necessary?
-                        mergeThreatList(essence);
+                        //mergeThreatList(essence);
                         essence->DeleteThreatList();
                         essence->SetReactState(REACT_PASSIVE);
                         essence->GetMotionMaster()->MoveFollow(me, 0, 0);
@@ -400,7 +408,7 @@ public:
                 switch (m_currEvent) {
                 case EV_FIXATE:
                 {
-                    Unit* target = selectUnit(TARGET_NEAREST, 0);
+                    Unit* target = selectUnit(TARGET_NEAREST, 0, 30.0f, true);
 
                     if (target) {
                         target->CastSpell(me, SPELL_FIXATE_TAUNT, true);
