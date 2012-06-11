@@ -348,6 +348,7 @@ public:
                 {
                     Unit* clawRageTarget = selectUnit(TARGET_RANDOM, 1, 80.0f, true);
                     if (clawRageTarget) {
+                        me->SetFullTauntImmunity(false);
                         clawRageTargetGUID = clawRageTarget->GetGUID();
                         doModifyThreat(clawRageTarget, 1000000); // 1.000.000 threat should be enough
                         me->SetSpeed(MOVE_RUN, 1.2f);
@@ -367,6 +368,7 @@ public:
                     if (Unit* clawRageTarget = Unit::GetUnit(*me, clawRageTargetGUID))
                         doModifyThreat(clawRageTarget, -1000000);
 
+                    me->SetFullTauntImmunity(true);
                     clawRageTargetGUID = 0;
                     disableEvent(EV_CLAW_RAGE_RESET);
                     break;
