@@ -49,51 +49,40 @@ public:
     class boss_buruAI : public CreatureAINew
     {
         public:
-        boss_buruAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        boss_buruAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
 
         ScriptedInstance* pInstance;
-        SummonList Summons;
 
         uint32 perc;
         uint32 creepingplagueTimer;
         uint32 dismemberTimer;
-        uint32 summonTimer;
         uint32 gatheringspeedTimer;
+        uint32 phase;
         bool actionDone;
 
         void onReset(bool onSpawn)
         {
             perc = 0;
+            phase = 0;
             creepingplagueTimer = 1000;
-            summonTimer = 3000;
             dismemberTimer = urand(4000, 10000);
             gatheringspeedTimer = 9000;
             actionDone = false;
-
-            Summons.DespawnAll();
 
             if (pInstance)
             {
                 if (pInstance->GetData(DATA_BURU_EVENT) != DONE)
                     pInstance->SetData(DATA_BURU_EVENT, NOT_STARTED);
             }
+
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         }
 
-        void onSummon(Creature* summoned)
-        {
-            summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM,0, 100.0f, false));
-            Summons.Summon(summoned);
-        }
-	
-        void onSummonDespawn(Creature* unit)
-        {
-            Summons.Despawn(unit);
-        }
-
-        void onCombatStart(Unit* /*who*/)
+        void onCombatStart(Unit * /*who*/)
         {
             if (pInstance)
                 pInstance->SetData(DATA_BURU_EVENT, IN_PROGRESS);
@@ -112,13 +101,17 @@ public:
             if (!updateVictim())
                 return;
 
-            if (dismemberTimer <= diff)
+            if (phase == 0)
             {
-                doCast(me, SPELL_DISMEMBER, false);
-                dismemberTimer = urand(4000, 10000);
+                if (dismemberTimer <= diff)
+                {
+                    if (me->getVictim())
+                        doCast(me->getVictim(), SPELL_DISMEMBER, false);
+                    dismemberTimer = urand(4000, 10000);
+                }
+                else
+                    dismemberTimer -= diff;
             }
-            else
-                dismemberTimer -= diff;
 
             if (gatheringspeedTimer <= diff)
             {
@@ -128,16 +121,19 @@ public:
             else
                 gatheringspeedTimer -= diff;
 
-            perc = (me->getVictim()->GetHealth()*100) / me->getVictim()->GetMaxHealth();
-            if (perc <= 20)
+            perc = (me->GetHealth()*100) / me->GetMaxHealth();
+            if (perc <= 20 && !actionDone)
             {
-                if (!actionDone)
-                {
-                    actionDone = true;
-                    doCast(me, SPELL_BURU_TRANSFORM, false);
-                    me->RemoveAurasDueToSpell(SPELL_THORNS);
-                }
-
+                phase = 1;
+                actionDone = true;
+                doCast(me, SPELL_BURU_TRANSFORM, false);
+                me->RemoveAurasDueToSpell(SPELL_THORNS);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            }
+            
+            if (phase == 1)
+            {
                 if (creepingplagueTimer <= diff)
                 {
                     doCast(me, SPELL_CREEPING_PLAGUE, false);
@@ -145,14 +141,6 @@ public:
                 }
                 else
                     creepingplagueTimer -= diff;
-
-                if (summonTimer <= diff)
-                {
-                    doCast(me, SPELL_SUMMON_HIVE_HATCHALING, false);
-                    summonTimer = urand(3000, 5000);
-                }
-                else
-                    summonTimer -= diff;
             }
 
             doMeleeAttackIfReady();
@@ -173,12 +161,24 @@ public:
     class buru_eggAI : public Creature_NoMovementAINew
     {
         public:
-        buru_eggAI(Creature* creature) : Creature_NoMovementAINew(creature)
+        buru_eggAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
 
         ScriptedInstance* pInstance;
+        SummonList Summons;
+
+        void onSummon(Creature* summoned)
+        {
+            summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM,0, 100.0f, false));
+            Summons.Summon(summoned);
+        }
+
+        void onSummonDespawn(Creature* unit)
+        {
+            Summons.Despawn(unit);
+        }
 
         void onCombatStart(Unit* who)
         {
@@ -214,7 +214,7 @@ public:
 
         uint32 DespawnTimer;
 
-        void onReset(bool onSpawn)
+        void onReset(bool /*onSpawn*/)
         {
             DespawnTimer = 2000;
             doCast(me, SPELL_BURU_EGG_TRIGGER_EFFECT, false);
