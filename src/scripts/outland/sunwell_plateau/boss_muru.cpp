@@ -129,7 +129,7 @@ public:
 
         void onReset(bool onSpawn)
         {
-            BlackHoleSummonTimer = 30000;
+            BlackHoleSummonTimer = 27000;
             EnrageTimer = 600000;
 
             Summons.DespawnAll();
@@ -645,6 +645,8 @@ class npc_void_sentinel : public CreatureScript
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
             doTeleportTo(x,y,71);
+
+            me->SetFullTauntImmunity(false);
         }
 
         void onDeath(Unit* killer)
@@ -711,7 +713,7 @@ class npc_void_spawn : public CreatureScript
 
         void onReset(bool /*onSpawn*/)
         {
-            ShadowBoltVolleyTimer = 15000;
+            ShadowBoltVolleyTimer = urand(15000, 25000);
         }
 
         void update(const uint32 diff)
@@ -774,7 +776,7 @@ public:
         {
             DespawnTimer = 15000;
             SpellTimer = 5000;
-            SingularityTimer = 1000;
+            SingularityTimer = 6000;
             Visual2 = false;
 
             if (onSpawn)
