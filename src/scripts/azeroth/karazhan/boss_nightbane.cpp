@@ -39,7 +39,7 @@ EndScriptData */
 #define SPELL_SUMMON_SKELETON       30170
 
 #define EMOTE_SUMMON                "Un être ancien apparait au loin..."
-#define YELL_AGGRO                  "!Pauvres fous ! Je devrais apporter une fin rapide à votre souffrance !"
+#define YELL_AGGRO                  "Pauvres fous ! Je devrais apporter une fin rapide à votre souffrance !"
 #define YELL_FLY_PHASE              "Misérable vermine. Je vais vous exterminer depuis les airs !"
 #define YELL_LAND_PHASE_1           "Assez ! Je vais atterrir et vous écraser moi-même !"
 #define YELL_LAND_PHASE_2           "Insectes ! Laissez-moi vous montrer ma force !"
