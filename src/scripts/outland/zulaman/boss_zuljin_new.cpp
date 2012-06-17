@@ -376,7 +376,7 @@ public:
                     delayEvent(EV_CLAW_RAGE, 2000);
                     scheduleEvent(EV_REINIT_SPEED, 2000);
                     enableEvent(EV_REINIT_SPEED);
-                    scheduleEvent(EV_LYNX_RUSH, 15000, 20000);
+                    scheduleEvent(EV_LYNX_RUSH, 25000, 30000);
                     break;
                 case EV_FLAME_WHIRL:
                     doCast(me, SPELL_FLAME_WHIRL);
