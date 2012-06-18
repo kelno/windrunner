@@ -1865,14 +1865,14 @@ CreatureAI* GetAI_npc_spirits_totem(Creature* creature)
 ## npc_deathbringer_jovaan
 ######*/
 
-const char* Conv[] = {"Everything is in readiness, warbringer.",
-                        "Doom Lord Kazzak will be pleased. You are to increase the pace of your attacks. Destroy the orcish and dwarven strongholds with all haste.",
-                        "Warbringer, that will require the use of all the hold's infernals. It may leave us vulnerable to a counterattack.",
-                        "Don't worry about that. I've increased production at the Deathforge. You'll have all the infernals you need to carry out your orders. Don't fail, Jovaan.",
-                        "It shall be as you say, warbringer. One last question, if I may...",
-                        "Yes?",
-                        "What's in the crate?",
-                        "Crate? I didn't send you a crate, Jovaan. Don't you have more important things to worry about? Go see to them!"};
+const char* Conv[] = {  "Tout est presque prêt, Porteguerre.",
+                        "Le Seigneur Kazzak sera enchanté. Vous devez augmenter la fréquence de vos attaques. Détruisez les bastions orcs et nains en toute hâte.",
+                        "Porteguerre, cela va nécessiter l'utilisation de tous les infernaux du fort. Cela pourrait nous laisser vulnérables face à une contre-attaque.",
+                        "Ne vous en faites pas pour ça. J'ai augmenté la production à la Forgemort. Vous aurez tous les infernaux dont vous avez besoin pour exécuter vos ordres. N'échouez pas, Jovaan.",
+                        "Cela sera fait selon vos demandes, Porteguerre. Une dernière question, si je puis...",
+                        "Oui ?",
+                        "Qu'y a-t-il dans la caisse ?",
+                        "La caisse ? Je ne vous ai pas envoyé de caisse, Jovaan. N'avez-vous pas des choses plus importantes à faire ? Allez-y !"};
 
 struct npc_deathbringer_jovaanAI : public ScriptedAI
 {
