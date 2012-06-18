@@ -49,6 +49,7 @@ go_ice_stone_ahune
 go_matrix_3005a
 go_matrix_punchograph_3005
 go_tablet_of_theka
+go_fel_reaver_control_console
 EndContentData */
 
 #include "precompiled.h"
@@ -644,6 +645,19 @@ bool GOHello_go_tablet_of_theka(Player* player, GameObject* go)
 }
 
 /*######
+## go_fel_reaver_control_console
+######*/
+
+// Not working for some reason
+bool GOHello_go_fel_reaver_control_console(Player* player, GameObject* go)
+{
+    if (Creature* felreaver = player->SummonCreature(21949, -2646.709961, 2673.530029, 74.858299, 4.974770, TEMPSUMMON_MANUAL_DESPAWN, 0))
+        player->CastSpell(felreaver, 530, true);
+    
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -810,5 +824,10 @@ void AddSC_go_scripts()
     newscript = new Script;
     newscript->Name = "go_tablet_of_theka";
     newscript->pGOHello = &GOHello_go_tablet_of_theka;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "go_fel_reaver_control_console";
+    newscript->pGOHello = &GOHello_go_fel_reaver_control_console;
     newscript->RegisterSelf();
 }
