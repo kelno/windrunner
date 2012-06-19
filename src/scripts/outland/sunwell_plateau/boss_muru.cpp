@@ -646,7 +646,7 @@ class npc_void_sentinel : public CreatureScript
             me->GetHomePosition(x,y,z,o);
             doTeleportTo(x,y,71);
 
-            me->SetFullTauntImmunity(false);
+            me->SetFullTauntImmunity(true);
         }
 
         void onDeath(Unit* killer)
@@ -809,8 +809,10 @@ public:
                 {
                     case EV_CHANGE_TARGET:
                         Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
+                        me->DeleteThreatList();
                         if (Victim)
                             attackStart(Victim);
+                        doModifyThreat(Victim, 1000000.0f);
                         scheduleEvent(EV_CHANGE_TARGET, 2000, 4000);
                         break;
                 }
@@ -827,7 +829,7 @@ public:
                 }
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, TARGET_RANDOM, 3.0f, true);
+                selectUnitList(players, 25, TARGET_RANDOM, 5.0f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                     doCast((*itr), SPELl_BLACK_HOLE_EFFECT, true);
 
