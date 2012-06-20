@@ -435,6 +435,7 @@ public:
                         {
                             summon->GetMotionMaster()->Clear();
                             summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                            summon->SetSpeed(MOVE_RUN, 1.0f);
                             summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
                         }
 
@@ -443,6 +444,7 @@ public:
                         {
                             summon->GetMotionMaster()->Clear();
                             summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                            summon->SetSpeed(MOVE_RUN, 1.0f);
                             summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
                         }
 
