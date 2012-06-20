@@ -42,6 +42,7 @@ npc_halaa_bomb_target
 trigger_omen
 lunar_large_spotlight
 npc_rocket_chicken
+npc_midsummer_bonfire
 EndContentData */
 
 #include "precompiled.h"
@@ -1663,6 +1664,62 @@ CreatureAI* GetAI_npc_rocket_chicken(Creature* creature)
     return new npc_rocket_chickenAI(creature);
 }
 
+/*######
+## npc_midsummer_bonfire
+######*/
+
+struct npc_midsummer_bonfireAI : public ScriptedAI
+{
+    npc_midsummer_bonfireAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint32 auraTimer;
+    uint32 unauraTimer;
+    
+    void Reset()
+    {
+        auraTimer = urand(2000, 17000);
+        unauraTimer = 0;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void SpellHit(Unit* caster, SpellEntry const* spell)
+    {
+        if (spell->Id == 46054 && me->HasAura(34832) && caster->ToPlayer()) {
+            caster->ToPlayer()->KilledMonster(me->GetEntry(), me->GetGUID());
+            unauraTimer = 1;
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (auraTimer) {
+            if (auraTimer <= diff) {
+                DoCast(me, 34832, true);
+                unauraTimer = 3500;
+                auraTimer = 0;
+            }
+            else
+                auraTimer -= diff;
+        }
+            
+        if (unauraTimer) {
+            if (unauraTimer <= diff) {
+                me->RemoveAurasDueToSpell(34832);
+                auraTimer = urand(10000, 25000);
+                unauraTimer = 0;
+            }
+            else
+                unauraTimer -= diff;
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_midsummer_bonfire(Creature* creature)
+{
+    return new npc_midsummer_bonfireAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1796,6 +1853,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_rocket_chicken";
     newscript->GetAI = &GetAI_npc_rocket_chicken;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_midsummer_bonfire";
+    newscript->GetAI = &GetAI_npc_midsummer_bonfire;
     newscript->RegisterSelf();
 }
 
