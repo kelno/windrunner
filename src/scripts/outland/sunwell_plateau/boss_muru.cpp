@@ -76,7 +76,14 @@ enum Spells
     SPELL_BLACKHOLE_VISUAL2     = 46235,
     SPELL_BLACKHOLE_GROW        = 46228,
     SPELl_BLACK_HOLE_EFFECT     = 46230,
-    SPELL_SINGULARITY           = 46238
+    SPELL_SINGULARITY           = 46238,
+
+    // Berserker
+    SEPLL_FURY_B                = 46160,
+
+    // Mage
+    SPELL_FURY_M                = 46102,
+    SPELL_FELL_FIREBALL         = 46101
 };
 
 enum BossTimers{
@@ -101,11 +108,11 @@ float DarkFiends[8][2] =
 float Humanoides[6][5] =
 {
     {CREATURE_FURY_MAGE, 1724.64f,    702.93f,    71.19f,    5.21f},
-    {CREATURE_FURY_MAGE, 1900.85f,    555.99f,    71.30f,    2.57f},
     {CREATURE_BERSERKER, 1724.64f,    702.93f,    71.19f,    5.28f},
     {CREATURE_BERSERKER, 1724.64f,    702.93f,    71.19f,    4.51f},
     {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.43f},
-    {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.44f}
+    {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.44f},
+    {CREATURE_FURY_MAGE, 1900.85f,    555.99f,    71.30f,    2.57f}
 };
 
 class boss_entropius : public CreatureScript
@@ -241,6 +248,7 @@ public:
         uint32 SentinelTimer;
         uint32 EnrageTimer;
         uint32 RespawnTimer;
+        uint32 GateTimer;
 
         bool DarkFiend;
         bool Gate;
@@ -257,6 +265,7 @@ public:
             EnrageTimer = 600000;
             DarknessTimer = 45000;
             HumanoidesTimer = 10000;
+            GateTimer = 5000;
             PhaseTimer = 0;
             SentinelTimer = 31500;
 
@@ -300,13 +309,10 @@ public:
             switch(summoned->GetEntry())
             {
                 case CREATURE_DARK_FIENDS:
-                    summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
+                    summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
+                    summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
                     break;
             }
-            if (summoned->getAI())
-                summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
-            else
-                summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
             Summons.Summon(summoned);
         }
 	
@@ -424,19 +430,38 @@ public:
 
                 if (HumanoidesTimer <= diff)
                 {
+                    for (uint8 i = 0; i < 3; ++i)
+                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        {
+                            summon->GetMotionMaster()->Clear();
+                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                            summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
+                        }
+
+                    for (uint8 i = 3; i < 6; ++i)
+                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        {
+                            summon->GetMotionMaster()->Clear();
+                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                            summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
+                        }
+
+                    HumanoidesTimer = 60000;
+                }
+                else
+                    HumanoidesTimer -= diff;
+
+                if (GateTimer <= diff)
+                {
                     if (!Gate)
                     {
                         Gate = true;
                         if (pInstance)
                             pInstance->SetData(DATA_MURU_GATE_EVENT, 0);
                     }
-
-                    for (uint8 i = 0; i < 6; ++i)
-                        me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    HumanoidesTimer = 60000;
                 }
                 else
-                    HumanoidesTimer -= diff;
+                    GateTimer -= diff;
 
                 if (SentinelTimer <= diff)
                 {
@@ -745,13 +770,6 @@ class npc_void_spawn : public CreatureScript
     }
 };
 
-enum Events
-{
-    EV_CHANGE_TARGET,
-};
-
-
-
 class npc_blackhole : public CreatureScript
 {
 public:
@@ -779,19 +797,23 @@ public:
             SingularityTimer = 6000;
             Visual2 = false;
 
-            if (onSpawn)
-            {
-                addEvent(EV_CHANGE_TARGET, 6000, 6000, EVENT_FLAG_DELAY_IF_CASTING);
-            }
-            else
-            {
-                scheduleEvent(EV_CHANGE_TARGET, 6000, 6000);
-            }
-
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
             me->addUnitState(UNIT_STAT_STUNNED);
             attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+        }
+
+        void onCombatStart(Unit* who)
+        {
+            Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
+            if (Victim)
+            {
+                me->DeleteThreatList();
+                attackStart(Victim);
+                doModifyThreat(Victim, 1000000.0f);
+            }
+            else
+                doModifyThreat(who, 1000000.0f);
         }
 
         void update(const uint32 diff)
@@ -800,23 +822,6 @@ public:
                 me->DisappearAndDie();
             else
                 DespawnTimer -= diff;
-
-            updateEvents(diff);
-
-            while (executeEvent(diff, m_currEvent))
-            {
-                switch (m_currEvent)
-                {
-                    case EV_CHANGE_TARGET:
-                        Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
-                        me->DeleteThreatList();
-                        if (Victim)
-                            attackStart(Victim);
-                        doModifyThreat(Victim, 1000000.0f);
-                        scheduleEvent(EV_CHANGE_TARGET, 2000, 4000);
-                        break;
-                }
-            }
 
             if (SpellTimer <= diff)
             {
@@ -859,6 +864,143 @@ public:
     }
 };
 
+class npc_berserker : public CreatureScript
+{
+    public:
+    npc_berserker() : CreatureScript("npc_berserker") {}
+
+    class npc_berserkerAI : public CreatureAINew
+    {
+        public:
+	npc_berserkerAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 FuryTimer;
+
+        void onReset(bool /*onSpawn*/)
+        {
+            FuryTimer = 20000;
+        }
+
+        void onMovementInform(uint32 type, uint32 id)
+        {
+            if (type == POINT_MOTION_TYPE)
+            {
+                if (id == 0)
+                {
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                    if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                        attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                }
+            }
+        }
+
+        void update(const uint32 diff)
+        {
+            if (!updateVictim())
+                return;
+
+            if (FuryTimer <= diff)
+            {
+                if (!me->HasAura(SEPLL_FURY_B))
+                {
+                    me->InterruptNonMeleeSpells(false);
+                    doCast(me, SEPLL_FURY_B, false);
+                }
+
+                FuryTimer = urand(20000, 35000);
+            }
+            else
+                FuryTimer -= diff;
+
+            doMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_berserkerAI(creature);
+    }
+};
+
+class npc_mage : public CreatureScript
+{
+    public:
+    npc_mage() : CreatureScript("npc_mage") {}
+
+    class npc_mageAI : public CreatureAINew
+    {
+        public:
+	npc_mageAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 FuryTimer;
+        uint32 FelFireballTimer;
+
+        void onReset(bool /*onSpawn*/)
+        {
+            FuryTimer = 25000;
+            FelFireballTimer = 10000;
+        }
+
+        void onMovementInform(uint32 type, uint32 id)
+        {
+            if (type == POINT_MOTION_TYPE)
+            {
+                if (id == 0)
+                {
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                    if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                        attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                }
+            }
+        }
+
+        void update(const uint32 diff)
+        {
+            if (!updateVictim())
+                return;
+
+            if (FuryTimer <= diff)
+            {
+                if (!me->HasAura(SPELL_FURY_M))
+                {
+                    me->InterruptNonMeleeSpells(false);
+                    doCast(me, SPELL_FURY_M, false);
+                }
+
+                FuryTimer = urand(45000, 55000);
+            }
+            else
+                FuryTimer -= diff;
+
+            if (FelFireballTimer <= diff)
+            {
+                doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
+
+                FelFireballTimer = urand(5000, 7000);
+            }
+            else
+                FelFireballTimer -= diff;
+
+            doMeleeAttackIfReady();
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_mageAI(creature);
+    }
+};
+
 void AddSC_boss_muru()
 {
     sScriptMgr.addScript(new boss_entropius());
@@ -868,4 +1010,6 @@ void AddSC_boss_muru()
     sScriptMgr.addScript(new npc_void_sentinel());
     sScriptMgr.addScript(new npc_void_spawn());
     sScriptMgr.addScript(new npc_blackhole());
+    sScriptMgr.addScript(new npc_berserker());
+    sScriptMgr.addScript(new npc_mage());
 }
