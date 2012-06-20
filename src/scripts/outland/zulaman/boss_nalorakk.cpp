@@ -353,11 +353,9 @@ struct boss_nalorakkAI : public ScriptedAI
             
         if (m_creature->GetPositionY() >= 1380) { // Out of his room
             EnterEvadeMode();
-            if (sWorld.getConfig(CONFIG_ENABLE_EXPERIMENTAL_FEATURES)) {
-                inMove = false;
-                waitTimer = 0;
-                MoveEvent = false;
-            }
+            inMove = false;
+            waitTimer = 0;
+            MoveEvent = false;
         }
 
         if(Berserk_Timer < diff)
