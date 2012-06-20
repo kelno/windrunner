@@ -882,10 +882,14 @@ class npc_berserker : public CreatureScript
         ScriptedInstance* pInstance;
 
         uint32 FuryTimer;
+        uint32 TempTimer;
+        bool Temp;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 20000;
+            TempTimer = 1000;
+            Temp = false;
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -894,9 +898,10 @@ class npc_berserker : public CreatureScript
             {
                 if (id == 0)
                 {
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                     if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                         attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+
+                    Temp = true;
                 }
             }
         }
@@ -918,6 +923,17 @@ class npc_berserker : public CreatureScript
             }
             else
                 FuryTimer -= diff;
+
+            if (Temp)
+            {
+                if (TempTimer <= diff)
+                {
+                    Temp = false;
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                }
+                else
+                    TempTimer -= diff;
+            }
 
             doMeleeAttackIfReady();
         }
@@ -946,11 +962,15 @@ class npc_mage : public CreatureScript
 
         uint32 FuryTimer;
         uint32 FelFireballTimer;
+        uint32 TempTimer;
+        bool Temp;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 25000;
             FelFireballTimer = 10000;
+            TempTimer = 1000;
+            Temp = false;
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -959,9 +979,10 @@ class npc_mage : public CreatureScript
             {
                 if (id == 0)
                 {
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                     if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                         attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+
+                    Temp = true;
                 }
             }
         }
@@ -992,6 +1013,17 @@ class npc_mage : public CreatureScript
             }
             else
                 FelFireballTimer -= diff;
+
+            if (Temp)
+            {
+                if (TempTimer <= diff)
+                {
+                    Temp = false;
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
+                }
+                else
+                    TempTimer -= diff;
+            }
 
             doMeleeAttackIfReady();
         }
