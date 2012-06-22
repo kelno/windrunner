@@ -108,43 +108,84 @@ enum Creatures
     NPC_GENERAL_RAJAXX      = 15341  // Wave 8
 };
 
-struct boss_rajaxxAI : public ScriptedAI
+class Boss_Rajaxx : public CreatureScript
 {
-    boss_rajaxxAI(Creature *c) : ScriptedAI(c)
-    {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-    }
+public:
+    Boss_Rajaxx() : CreatureScript("rajaxx"){}
     
-    ScriptedInstance *pInstance;
-    
-    void Reset()
+    class Boss_RajaxxAI : public CreatureAINew
     {
-        if (pInstance)
-            pInstance->SetData(DATA_RAJAXX_EVENT, NOT_STARTED);
-    }
+        Boss_RajaxxAI(Creature* creature) : CreatureAINew (creature)
+        {
+            instance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+        
+        enum Talks
+        {
+            TALK_AGGRO=0,
+            TALK_CHANGE_TARGET=1,
+            TALK_DEATH=2,
+        };
+        
+        enum Event
+        {
+            EV_THUNDER_CLAP=0,
+        };
+        enum Spells
+        {
+            SPELL_THUNDER_CLAP=25599,
+        };
+        
+        void onCombatStart(Unit* victim)
+        {
+            talk(TALK_AGGRO);
+            if (instance)
+                instance->SetData(DATA_RAJAXX_EVENT, IN_PROGRESS);            
+        }
+        
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+            updateEvents(diff);
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_THUNDER_CLAP:
+                    doCast(me->getVictim(), SPELL_THUNDER_CLAP);
+                    talk(TALK_CHANGE_TARGET, me->getVictim()->GetGUID());
+                    doResetThreat();
+                    scheduleEvent(EV_THUNDER_CLAP, 25000, 35000);
+                    break;
+                }
+            }
+            
+        }
+        void onReset (bool onSpawn)
+        {
+            if (onSpawn)
+                addEvent(EV_THUNDER_CLAP, 25000, 35000, EVENT_FLAG_DELAY_IF_CASTING);
+            else
+                scheduleEvent(EV_THUNDER_CLAP, 25000, 35000);
+                
+            if (instance)
+                instance->SetData(DATA_RAJAXX_EVENT, NOT_STARTED);
+        }
+        
+        void onDeath(Unit* killer)
+        {
+            talk(TALK_DEATH);
+        }
+        
+        ScriptedInstance* instance;
+    };
     
-    void Aggro(Unit *who)
+    CreatureAINew* getAI(Creature* creature)
     {
-        if (pInstance)
-            pInstance->SetData(DATA_RAJAXX_EVENT, IN_PROGRESS);
-    }
-    
-    void JustDied(Unit *killer)
-    {
-        if (pInstance)
-            pInstance->SetData(DATA_RAJAXX_EVENT, DONE);
+        return new Boss_RajaxxAI(creature);
     }
 };
-CreatureAI* GetAI_boss_rajaxx(Creature* pCreature)
-{
-    return new boss_rajaxxAI (pCreature);
-}
 
 void AddSC_boss_rajaxx()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name = "boss_rajaxx";
-    newscript->GetAI = &GetAI_boss_rajaxx;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Rajaxx());
 }
