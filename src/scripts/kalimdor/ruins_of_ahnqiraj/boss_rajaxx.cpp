@@ -115,6 +115,7 @@ public:
     
     class Boss_RajaxxAI : public CreatureAINew
     {
+    public:
         Boss_RajaxxAI(Creature* creature) : CreatureAINew (creature)
         {
             instance = ((ScriptedInstance*)creature->GetInstanceData());
@@ -175,7 +176,8 @@ public:
         {
             talk(TALK_DEATH);
         }
-        
+    
+    private:
         ScriptedInstance* instance;
     };
     
