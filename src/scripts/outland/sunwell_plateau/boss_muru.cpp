@@ -432,21 +432,11 @@ public:
                 {
                     for (uint8 i = 0; i < 3; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        {
-                            summon->GetMotionMaster()->Clear();
-                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-                            summon->SetSpeed(MOVE_RUN, 1.0f);
                             summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
-                        }
 
                     for (uint8 i = 3; i < 6; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        {
-                            summon->GetMotionMaster()->Clear();
-                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-                            summon->SetSpeed(MOVE_RUN, 1.0f);
                             summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
-                        }
 
                     HumanoidesTimer = 60000;
                 }
@@ -883,59 +873,56 @@ class npc_berserker : public CreatureScript
 
         uint32 FuryTimer;
         uint32 TempTimer;
-        bool Temp;
+        uint32 Phase;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 20000;
             TempTimer = 1000;
-            Temp = false;
+            Phase = 0;
         }
 
         void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
-            {
                 if (id == 0)
-                {
-                    if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                        attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
-
-                    Temp = true;
-                }
-            }
+                    Phase = 1;
         }
 
         void update(const uint32 diff)
         {
-            if (!updateVictim())
-                return;
-
-            if (FuryTimer <= diff)
+            switch (Phase)
             {
-                if (!me->HasAura(SEPLL_FURY_B))
-                {
-                    me->InterruptNonMeleeSpells(false);
-                    doCast(me, SEPLL_FURY_B, false);
-                }
+                case 1:
+                    if (TempTimer <= diff)
+                    {
+                        Phase = 2;
+                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                    }
+                    else
+                        TempTimer -= diff;
+                    break;
+                case 2:
+                    if (!updateVictim())
+                        return;
 
-                FuryTimer = urand(20000, 35000);
+                    if (FuryTimer <= diff)
+                    {
+                        if (!me->HasAura(SEPLL_FURY_B))
+                        {
+                            me->InterruptNonMeleeSpells(false);
+                            doCast(me, SEPLL_FURY_B, false);
+                        }
+
+                        FuryTimer = urand(20000, 35000);
+                    }
+                    else
+                        FuryTimer -= diff;
+
+                    doMeleeAttackIfReady();
+                    break;
             }
-            else
-                FuryTimer -= diff;
-
-            if (Temp)
-            {
-                if (TempTimer <= diff)
-                {
-                    Temp = false;
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-                }
-                else
-                    TempTimer -= diff;
-            }
-
-            doMeleeAttackIfReady();
         }
     };
 
@@ -963,69 +950,66 @@ class npc_mage : public CreatureScript
         uint32 FuryTimer;
         uint32 FelFireballTimer;
         uint32 TempTimer;
-        bool Temp;
+        uint32 Phase;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 25000;
-            FelFireballTimer = 10000;
+            FelFireballTimer = urand(5000,7000);
             TempTimer = 1000;
-            Temp = false;
+            Phase = 0;
         }
 
         void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
-            {
                 if (id == 0)
-                {
-                    if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                        attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
-
-                    Temp = true;
-                }
-            }
+                    Phase = 1;
         }
 
         void update(const uint32 diff)
         {
-            if (!updateVictim())
-                return;
-
-            if (FuryTimer <= diff)
+            switch (Phase)
             {
-                if (!me->HasAura(SPELL_FURY_M))
-                {
-                    me->InterruptNonMeleeSpells(false);
-                    doCast(me, SPELL_FURY_M, false);
-                }
+                case 1:
+                    if (TempTimer <= diff)
+                    {
+                        Phase = 2;
+                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                    }
+                    else
+                        TempTimer -= diff;
+                    break;
+                case 2:
+                    if (!updateVictim())
+                       return;
 
-                FuryTimer = urand(45000, 55000);
+                    if (FuryTimer <= diff)
+                    {
+                        if (!me->HasAura(SPELL_FURY_M))
+                        {
+                            me->InterruptNonMeleeSpells(false);
+                            doCast(me, SPELL_FURY_M, false);
+                        }
+
+                            FuryTimer = urand(45000, 55000);
+                    }
+                    else
+                        FuryTimer -= diff;
+
+                    if (FelFireballTimer <= diff)
+                    {
+                        doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
+
+                        FelFireballTimer = urand(5000, 7000);
+                    }
+                    else
+                        FelFireballTimer -= diff;
+
+                    doMeleeAttackIfReady();
+                    break;
             }
-            else
-                FuryTimer -= diff;
-
-            if (FelFireballTimer <= diff)
-            {
-                doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
-
-                FelFireballTimer = urand(5000, 7000);
-            }
-            else
-                FelFireballTimer -= diff;
-
-            if (Temp)
-            {
-                if (TempTimer <= diff)
-                {
-                    Temp = false;
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
-                }
-                else
-                    TempTimer -= diff;
-            }
-
-            doMeleeAttackIfReady();
         }
     };
 
