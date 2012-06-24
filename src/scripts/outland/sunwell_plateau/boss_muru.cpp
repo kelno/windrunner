@@ -797,6 +797,8 @@ public:
 
         void onCombatStart(Unit* who)
         {
+            me->GetMotionMaster()->MovePoint(0, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
+
             Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
             if (Victim)
             {
