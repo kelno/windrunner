@@ -641,7 +641,7 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_CHECK_TANK:
-                    if (me->getVictim()->GetGUID() != tankGUID) {
+                    if (me->getVictim() && me->getVictim()->GetGUID() != tankGUID) {
                         talk(TALK_ANGER_SAY_BEFORE);
                         doCast(me, SPELL_SELF_SEETHE, true);
                         tankGUID = me->getVictim()->GetGUID();
