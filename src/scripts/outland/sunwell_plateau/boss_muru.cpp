@@ -203,6 +203,7 @@ public:
 
             if (BlackHoleSummonTimer <= diff)
             {
+                BlackHoleSummonTimer = 15000;
                 Unit* random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
@@ -212,7 +213,6 @@ public:
                 if (!random)
                     return;
                 doCast(random, SPELL_BLACKHOLE, false);
-                BlackHoleSummonTimer = 15000;
             } else BlackHoleSummonTimer -= diff;
 
             doMeleeAttackIfReady();
