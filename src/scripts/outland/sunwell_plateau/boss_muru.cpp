@@ -1011,12 +1011,15 @@ class npc_mage : public CreatureScript
                     {
                         doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
 
-                        FelFireballTimer = urand(5000, 7000);
+                        FelFireballTimer = urand(3000, 5000);
                     }
                     else
                         FelFireballTimer -= diff;
 
-                    doMeleeAttackIfReady();
+                    uint32 perc = uint32(100.0f * me->GetPower(POWER_MANA) / me->GetMaxPower(POWER_MANA));
+                    if (perc <= 2)
+                        doMeleeAttackIfReady();
+
                     break;
             }
         }
