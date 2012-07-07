@@ -23,80 +23,75 @@ EndScriptData */
 
 #include "precompiled.h"
 
+typedef UNORDERED_MAP<uint64, uint32> AttackerMap;
+
 struct npc_training_dummy : Scripted_NoMovementAI
 {
     npc_training_dummy(Creature *c) : Scripted_NoMovementAI(c)
     {
-        m_Entry = c->GetEntry();
+        m_entry = c->GetEntry();
     }
 
-    uint64 m_Entry;
-    uint32 ResetTimer;
-    uint32 DespawnTimer;
+    uint64 m_entry;
+    
+    AttackerMap attackers;
     
     void Reset()
     {
-        m_creature->SetControlled(true,UNIT_STAT_STUNNED);      //disable rotate
-        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);        //imune to knock aways like blast wave
-        m_creature->ApplySpellImmune(0, IMMUNITY_MECHANIC, MECHANIC_STUN, true);
-//        m_creature->CastSpell(m_creature, 33356, true);
-        ResetTimer = 8000;
-        DespawnTimer = 15000;
+        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
+        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
+        m_creature->SetHealth(m_creature->GetMaxHealth()/5);
     }
 
-    void DamageTaken(Unit *done_by, uint32 &damage)
+    void DamageTaken(Unit* done_by, uint32& damage)
     {
-        ResetTimer = 8000;
-        if (m_creature->GetHealth() <= (m_creature->GetMaxHealth()/10))
-            m_creature->SetHealth(m_creature->GetMaxHealth());
+        if (done_by->GetTypeId() == TYPEID_PLAYER)
+            attackers[done_by->GetGUID()] = 8000;
+        else if (done_by->ToCreature() && done_by->ToCreature()->isPet()) {
+            if (Unit* owner = done_by->ToCreature()->GetOwner())
+                attackers[owner->GetGUID()] = 8000;
+        }
+
+        if (m_creature->GetHealth() < (m_creature->GetMaxHealth()/10.0f) || m_creature->GetHealth() > (m_creature->GetMaxHealth()/5.0f)) // allow players using finishers
+            m_creature->SetHealth(m_creature->GetMaxHealth()/5);
+
+        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
     }
 
     void Aggro(Unit *who)
     {
-        if (m_Entry != 2674 && m_Entry != 2673)
-            return;
+        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim())
-            return;
-        
-        if (!m_creature->hasUnitState(UNIT_STAT_STUNNED))
-            m_creature->SetControlled(true,UNIT_STAT_STUNNED);      //disable rotate
-            
-        /*if (!m_creature->hasUnitState(UNIT_STAT_ROOT))
-            m_creature->SetControlled(true,UNIT_STAT_ROOT);*/
-            
-        m_creature->SetSpeed(MOVE_RUN, 0.0f);
-
-        if (m_Entry != 2674 && m_Entry != 2673)
+        for (AttackerMap::iterator itr = attackers.begin(); itr != attackers.end();)
         {
-            if (ResetTimer <= diff)
+            if (itr->second <= diff)
             {
-                //EnterEvadeMode();
-                m_creature->RemoveAllAuras();
-                m_creature->DeleteThreatList();
-                m_creature->CombatStop();
-                m_creature->LoadCreaturesAddon();
-                m_creature->SetLootRecipient(NULL);
-                m_creature->ResetPlayerDamageReq();
-                ResetTimer = 8000;
+                if (Player* attacker = Unit::GetPlayer(itr->first))
+                {
+                    attacker->CombatStop(true);
+                    attacker->AttackStop();
+                    attacker->CombatStopWithPets(true);
+                    attacker->ClearInCombat();
+                }
+
+                itr = attackers.erase(itr);
+
+                if (attackers.empty())
+                {
+                    EnterEvadeMode();
+                    m_creature->SetHealth(m_creature->GetMaxHealth()/5);
+                }
             }
             else
-                ResetTimer -= diff;
-            return;
-        }
-        else
-        {
-            if (DespawnTimer <= diff)
-                m_creature->ForcedDespawn();
-            else
-                DespawnTimer -= diff;
+            {
+                itr->second -= diff;
+                ++itr;
+            }
         }
     }
-    
-    void MoveInLineOfSight(Unit *who){return;}
 };
 
 CreatureAI* GetAI_npc_training_dummy(Creature* pCreature)
