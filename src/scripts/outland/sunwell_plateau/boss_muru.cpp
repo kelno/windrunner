@@ -800,7 +800,8 @@ public:
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
             me->addUnitState(UNIT_STAT_STUNNED);
-            attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+            if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 50.0f, true));
         }
 
         void onCombatStart(Unit* who)
