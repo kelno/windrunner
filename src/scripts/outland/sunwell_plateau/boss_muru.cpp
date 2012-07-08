@@ -888,6 +888,7 @@ class npc_berserker : public CreatureScript
             FuryTimer = 20000;
             TempTimer = 1000;
             Phase = 0;
+             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -967,6 +968,7 @@ class npc_mage : public CreatureScript
             FelFireballTimer = urand(5000,7000);
             TempTimer = 1000;
             Phase = 0;
+             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
         void onMovementInform(uint32 type, uint32 id)
