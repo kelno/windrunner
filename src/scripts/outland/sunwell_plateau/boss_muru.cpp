@@ -433,7 +433,6 @@ public:
                     for (uint8 i = 0; i < 3; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
                         {
-                            summon->GetMotionMaster()->Clear();
                             summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                             summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
                         }
@@ -441,7 +440,6 @@ public:
                     for (uint8 i = 3; i < 6; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
                         {
-                            summon->GetMotionMaster()->Clear();
                             summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                             summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
                         }
@@ -800,8 +798,6 @@ public:
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
             me->addUnitState(UNIT_STAT_STUNNED);
-            if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 50.0f, true));
         }
 
         void onCombatStart(Unit* who)
