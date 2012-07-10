@@ -432,17 +432,11 @@ public:
                 {
                     for (uint8 i = 0; i < 3; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        {
-                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                             summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
-                        }
 
                     for (uint8 i = 3; i < 6; ++i)
                         if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        {
-                            summon->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                             summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
-                        }
 
                     HumanoidesTimer = 60000;
                 }
@@ -902,7 +896,6 @@ class npc_berserker : public CreatureScript
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
                     }
@@ -957,14 +950,16 @@ class npc_mage : public CreatureScript
         uint32 FelFireballTimer;
         uint32 TempTimer;
         uint32 Phase;
+        uint32 HackTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 25000;
-            FelFireballTimer = urand(5000,7000);
+            FelFireballTimer = urand(2000, 3000);
             TempTimer = 1000;
             Phase = 0;
-             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
+            HackTimer = 11000;
+            me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -978,11 +973,21 @@ class npc_mage : public CreatureScript
         {
             switch (Phase)
             {
+                case 0:
+                    // If mob aggro before end of MovePoint
+                    if (HackTimer <= diff)
+                    {
+                        Phase = 2;
+                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                    }
+                    else
+                        HackTimer -= diff;
+                    break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
-                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
                     }
@@ -1010,7 +1015,7 @@ class npc_mage : public CreatureScript
                     {
                         doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
 
-                        FelFireballTimer = urand(3000, 5000);
+                        FelFireballTimer = urand(2000, 3000);
                     }
                     else
                         FelFireballTimer -= diff;
