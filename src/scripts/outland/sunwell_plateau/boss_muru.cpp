@@ -510,12 +510,12 @@ public:
         {
             if (pInstance)
             {
-                if (Player* Target = ObjectAccessor::GetPlayer(*me, pInstance->GetData64(DATA_PLAYER_GUID)))
+                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                 {
                     if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
-                        summoned->getAI()->attackStart(Target);
+                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
                     else
-                        summoned->AI()->AttackStart(Target);
+                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
                 }
             }
 
@@ -872,13 +872,15 @@ class npc_berserker : public CreatureScript
         uint32 FuryTimer;
         uint32 TempTimer;
         uint32 Phase;
+        uint32 HackTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 20000;
             TempTimer = 1000;
             Phase = 0;
-             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
+            HackTimer = 11000;
+            me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -892,6 +894,17 @@ class npc_berserker : public CreatureScript
         {
             switch (Phase)
             {
+                case 0:
+                    // If mob aggro before end of MovePoint
+                    if (HackTimer <= diff)
+                    {
+                        Phase = 2;
+                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                    }
+                    else
+                        HackTimer -= diff;
+                    break;
                 case 1:
                     if (TempTimer <= diff)
                     {
