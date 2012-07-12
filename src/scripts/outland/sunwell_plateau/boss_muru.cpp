@@ -148,6 +148,7 @@ public:
                 if (pInstance)
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
             }
+            me->SetFullTauntImmunity(true);
         }
 
         void onCombatStart(Unit * /*who*/)
