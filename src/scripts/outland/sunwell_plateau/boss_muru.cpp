@@ -1020,10 +1020,7 @@ class npc_mage : public CreatureScript
                     else
                         FelFireballTimer -= diff;
 
-                    uint32 perc = uint32(100.0f * me->GetPower(POWER_MANA) / me->GetMaxPower(POWER_MANA));
-                    if (perc <= 2)
-                        doMeleeAttackIfReady();
-
+                    doMeleeAttackIfReady();
                     break;
             }
         }
