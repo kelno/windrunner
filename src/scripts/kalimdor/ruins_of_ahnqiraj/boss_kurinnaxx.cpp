@@ -113,7 +113,7 @@ public:
                     scheduleEvent(EV_MORTAL_WOUND, 2000, 7000);
                     break;
                 case EV_SANDTRAP:
-                    doCast(selectUnit(TARGET_RANDOM, 3, 200.0f, true), SPELL_SANDTRAP, true);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 3, 200.0f, true), SPELL_SANDTRAP, true);
                     scheduleEvent(EV_SANDTRAP, 20000);
                     break;
                 case EV_WIDE_SLASH:
@@ -125,7 +125,7 @@ public:
                     scheduleEvent(EV_TRASH, 20000, 25000);
                     break;
                 case EV_SUMMON_PLAYER:
-                    doCast(selectUnit(TARGET_RANDOM, 3, 150.0f, true), SPELL_SUMMON_PLAYER);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 3, 150.0f, true), SPELL_SUMMON_PLAYER);
                     scheduleEvent(EV_SUMMON_PLAYER, 30000, 40000);
                     break;
                 }

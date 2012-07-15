@@ -260,7 +260,7 @@ public:
                             vortex->CastSpell(vortex, SPELL_CYCLONE_VISUAL, true);
                             vortex->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             vortex->SetSpeed(MOVE_RUN, 1.0f);
-                            vortex->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0)); // FIXME: when converting vortex AI, change this
+                            vortex->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0)); // FIXME: when converting vortex AI, change this
                             setZoneInCombat();
                         }
                     }
@@ -337,7 +337,7 @@ public:
                     scheduleEvent(EV_WHIRLWIND, 15000, 20000);
                     break;
                 case EV_GRIEVOUS_THROW:
-                    doCast(selectUnit(TARGET_RANDOM, 0, 80.0f, true), SPELL_GRIEVOUS_THROW);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_GRIEVOUS_THROW);
                     scheduleEvent(EV_GRIEVOUS_THROW, 10000);
                     break;
                 case EV_CREEPING_PARA:
@@ -346,7 +346,7 @@ public:
                     break;
                 case EV_CLAW_RAGE:
                 {
-                    Unit* clawRageTarget = selectUnit(TARGET_RANDOM, 1, 80.0f, true);
+                    Unit* clawRageTarget = selectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);
                     if (clawRageTarget) {
                         clawRageTargetGUID = clawRageTarget->GetGUID();
                         doModifyThreat(clawRageTarget, 1000000); // 1.000.000 threat should be enough
@@ -372,7 +372,7 @@ public:
                     break;
                 case EV_LYNX_RUSH:
                     me->SetSpeed(MOVE_RUN, 1.2f);
-                    doCast(selectUnit(TARGET_RANDOM, 1, 80.0f, true), SPELL_LYNX_RUSH_DAMAGE);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true), SPELL_LYNX_RUSH_DAMAGE);
                     delayEvent(EV_CLAW_RAGE, 2000);
                     scheduleEvent(EV_REINIT_SPEED, 2000);
                     enableEvent(EV_REINIT_SPEED);
@@ -383,11 +383,11 @@ public:
                     scheduleEvent(EV_FLAME_WHIRL, 12000);
                     break;
                 case EV_PILLAR_OF_FIRE:
-                    doCast(selectUnit(TARGET_RANDOM, 0, 80.0f, true), SPELL_SUMMON_PILLAR);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_SUMMON_PILLAR);
                     scheduleEvent(EV_PILLAR_OF_FIRE, 10000);
                     break;
                 case EV_FLAME_BREATH:
-                    doCast(selectUnit(TARGET_RANDOM, 0, 80.0f, true), SPELL_FLAME_BREATH);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_FLAME_BREATH);
                     scheduleEvent(EV_FLAME_BREATH, 10000);
                     break;
                 case EV_REINIT_SPEED:

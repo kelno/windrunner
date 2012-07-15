@@ -171,7 +171,7 @@ public:
 
         void onSummon(Creature* summoned)
         {
-            summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM,0, 100.0f, false));
+            summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM,0, 100.0f, false));
             Summons.Summon(summoned);
         }
 
@@ -192,7 +192,7 @@ public:
             doCast((Unit*)NULL, SPELL_EGG_EXPLOSION, false);
             doCast(me, SPELL_SUMMON_HIVE_HATCHALING, false);
             if (Creature* buru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_BURU)))
-                buru->getAI()->attackStart(selectUnit(TARGET_RANDOM, 1, 100.0f, false));
+                buru->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, false));
         }
     };
 
