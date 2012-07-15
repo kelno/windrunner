@@ -99,7 +99,7 @@ public:
                 switch (m_currEvent) {
                 case EV_MANASTORM:
                 {
-                    doCast(selectUnit(TARGET_RANDOM, 0), SPELL_MANASTORM);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_MANASTORM);
                     scheduleEvent(EV_MANASTORM, 7500, 12500);
                     break;
                 }

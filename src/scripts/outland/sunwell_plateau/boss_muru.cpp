@@ -166,14 +166,14 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
-                    summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
                     break;
                 case CREATURE_DARKNESS:
                     summoned->addUnitState(UNIT_STAT_STUNNED);
                     float x,y,z,o;
                     summoned->GetHomePosition(x,y,z,o);
                     me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    summoned->AI()->AttackStart(selectUnit(TARGET_RANDOM, 0, 50.0f, true));
+                    summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -205,12 +205,12 @@ public:
             if (BlackHoleSummonTimer <= diff)
             {
                 BlackHoleSummonTimer = 15000;
-                Unit* random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
+                Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
                 doCast(random, SPELL_DARKNESS_E, false);
 
-                random = selectUnit(TARGET_RANDOM, 0, 100.0f, true);
+                random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
                 doCast(random, SPELL_BLACKHOLE, false);
@@ -311,7 +311,7 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
-                    summoned->getAI()->attackStart(selectUnit(TARGET_RANDOM,0, 50.0f, true));
+                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM,0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -514,9 +514,9 @@ public:
                 if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                 {
                     if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
-                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     else
-                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                 }
             }
 
@@ -612,7 +612,7 @@ public:
                 {
                     me->clearUnitState(UNIT_STAT_STUNNED);
                     doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
-                    attackStart(selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                    attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     InAction = true;
                     WaitTimer = 500;
                 }
@@ -795,18 +795,6 @@ public:
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
-        void onCombatStart(Unit* who)
-        {
-            Unit* Victim = selectUnit(TARGET_RANDOM, 0, -15.0f, true);
-            if (Victim)
-            {
-                attackStart(Victim);
-                doModifyThreat(Victim, 1000000.0f);
-            }
-            else
-                doModifyThreat(who, 1000000.0f);
-        }
-
         void update(const uint32 diff)
         {
             if (DespawnTimer <= diff)
@@ -822,10 +810,19 @@ public:
                     me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
                     doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
                     me->clearUnitState(UNIT_STAT_STUNNED);
+                    setZoneInCombat(true);
+                    Unit* Victim = selectUnit(SELECT_TARGET_RANDOM, 0, -15.0f, true);
+                    if (Victim)
+                    {
+                        attackStart(Victim);
+                        doModifyThreat(Victim, 1000000.0f);
+                    }
+                    else
+                        doModifyThreat(selectUnit(SELECT_TARGET_TOPAGGRO, 0, 100.0f, true), 1000000.0f);
                 }
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, TARGET_RANDOM, 5.0f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                     doCast((*itr), SPELl_BLACK_HOLE_EFFECT, true);
 
@@ -838,7 +835,7 @@ public:
             {
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, TARGET_RANDOM, 5.0f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                     doCast((*itr), SPELL_SINGULARITY, true);
 
@@ -901,7 +898,7 @@ class npc_berserker : public CreatureScript
                     {
                         Phase = 2;
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
                     else
                         HackTimer -= diff;
@@ -911,7 +908,7 @@ class npc_berserker : public CreatureScript
                     {
                         Phase = 2;
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
                     else
                         TempTimer -= diff;
@@ -993,7 +990,7 @@ class npc_mage : public CreatureScript
                     {
                         Phase = 2;
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
                     else
                         HackTimer -= diff;
@@ -1003,7 +1000,7 @@ class npc_mage : public CreatureScript
                     {
                         Phase = 2;
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(TARGET_RANDOM, 0, 100.0f, true));
+                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
                     else
                         TempTimer -= diff;

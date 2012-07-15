@@ -135,7 +135,7 @@ public:
             if (!soul)
                 return false;
                 
-            if (Unit* target = selectUnit(TARGET_RANDOM, 0)) {
+            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0)) {
                 soul->SetSummoner(me);
                 if (soul->getAI())
                     soul->getAI()->attackStart(target);
@@ -218,7 +218,7 @@ public:
                     if (Creature* summon = me->SummonCreature(23417 + phase, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0)) {
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         if (summon->getAI()) {
-                            summon->getAI()->attackStart(selectUnit(TARGET_TOPAGGRO, 0));
+                            summon->getAI()->attackStart(selectUnit(SELECT_TARGET_TOPAGGRO, 0));
                             essenceGUID = summon->GetGUID();
                             summon->SetSummoner(me);
                             me->GetMotionMaster()->MoveIdle();
@@ -406,7 +406,7 @@ public:
                 switch (m_currEvent) {
                 case EV_FIXATE:
                 {
-                    Unit* target = selectUnit(TARGET_NEAREST, 0, 30.0f, true);
+                    Unit* target = selectUnit(SELECT_TARGET_NEAREST, 0, 30.0f, true);
 
                     if (target) {
                         target->CastSpell(me, SPELL_FIXATE_TAUNT, true);
@@ -426,7 +426,7 @@ public:
                     scheduleEvent(EV_ENRAGE, 60000);
                     break;
                 case EV_SOUL_DRAIN:
-                    doCast(selectUnit(TARGET_RANDOM, 0), SPELL_SOUL_DRAIN);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SOUL_DRAIN);
                     scheduleEvent(EV_SOUL_DRAIN, 60000);
                     break;
                 }
