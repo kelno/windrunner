@@ -166,14 +166,12 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
-                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
                     break;
                 case CREATURE_DARKNESS:
                     summoned->addUnitState(UNIT_STAT_STUNNED);
                     float x,y,z,o;
                     summoned->GetHomePosition(x,y,z,o);
                     me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -311,7 +309,6 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
-                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM,0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -603,21 +600,22 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!updateVictim())
-                return;
-
             if (WaitTimer <= diff)
             {
                 if (!InAction)
                 {
                     me->clearUnitState(UNIT_STAT_STUNNED);
                     doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
+                    setZoneInCombat(true);
                     attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     InAction = true;
                     WaitTimer = 500;
                 }
                 else
                 {
+                    if (!updateVictim())
+                        return;
+
                     if (me->GetDistance(me->getVictim()) < 5)
                     {
                         if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
@@ -818,7 +816,14 @@ public:
                         doModifyThreat(Victim, 1000000.0f);
                     }
                     else
-                        doModifyThreat(selectUnit(SELECT_TARGET_TOPAGGRO, 0, 100.0f, true), 1000000.0f);
+                    {
+                        Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                        if (Victim)
+                        {
+                            attackStart(Victim);
+                            doModifyThreat(Victim, 1000000.0f);
+                        }
+                    }
                 }
                 std::list<Unit*> players;
                 players.clear();
