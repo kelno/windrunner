@@ -203,12 +203,15 @@ public:
             if (BlackHoleSummonTimer <= diff)
             {
                 BlackHoleSummonTimer = 15000;
-                Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
-                if (!random)
-                    return;
-                doCast(random, SPELL_DARKNESS_E, false);
+                float px, py;
+                float angleDegre = rand()%360;
+                float angle = angleDegre * (2*M_PI) / 360;
+                float rayon = rand()%25;
+                px = 1816.25f + cos(angle) * rayon;
+                py = 625.484f + sin(angle) * rayon;
+                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_E, false);
 
-                random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
                 doCast(random, SPELL_BLACKHOLE, false);
