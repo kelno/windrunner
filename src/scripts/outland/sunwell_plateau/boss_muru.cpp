@@ -167,12 +167,6 @@ public:
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
-                case CREATURE_DARKNESS:
-                    summoned->addUnitState(UNIT_STAT_STUNNED);
-                    float x,y,z,o;
-                    summoned->GetHomePosition(x,y,z,o);
-                    me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    break;
             }
             Summons.Summon(summoned);
         }
@@ -573,6 +567,54 @@ public:
     }
 };
 
+class npc_darkness : public CreatureScript
+{
+public:
+    npc_darkness() : CreatureScript("npc_darkness") {}
+
+    class npc_darknessAI : public CreatureAINew
+    {
+        public:
+        npc_darknessAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 WaitTimer;
+        bool Spawned;
+
+        void onReset(bool /*onSpawn*/)
+        {
+            WaitTimer = 3000;
+            bool Spawned = false;
+            me->addUnitState(UNIT_STAT_STUNNED);
+        }
+
+        void update(const uint32 diff)
+        {
+            if (!Spawned)
+            {
+                if (WaitTimer <= diff)
+                {
+                    if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                        entropius->SummonCreature(CREATURE_DARK_FIENDS, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_CORPSE_DESPAWN, 0);
+
+                    Spawned = true;
+                }
+                else
+                    WaitTimer -= diff;
+            }
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_darknessAI(creature);
+    }
+};
+                
 class npc_dark_fiend : public CreatureScript
 {
 public:
@@ -1057,6 +1099,7 @@ void AddSC_boss_muru()
     sScriptMgr.addScript(new boss_muru());
     sScriptMgr.addScript(new npc_muru_portal());
     sScriptMgr.addScript(new npc_dark_fiend());
+    sScriptMgr.addScript(new npc_darkness());
     sScriptMgr.addScript(new npc_void_sentinel());
     sScriptMgr.addScript(new npc_void_spawn());
     sScriptMgr.addScript(new npc_blackhole());
