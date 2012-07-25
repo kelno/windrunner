@@ -166,14 +166,6 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
-                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
-                    break;
-                case CREATURE_DARKNESS:
-                    summoned->addUnitState(UNIT_STAT_STUNNED);
-                    float x,y,z,o;
-                    summoned->GetHomePosition(x,y,z,o);
-                    me->SummonCreature(CREATURE_DARK_FIENDS, x,y,z,o, TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -205,12 +197,15 @@ public:
             if (BlackHoleSummonTimer <= diff)
             {
                 BlackHoleSummonTimer = 15000;
-                Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
-                if (!random)
-                    return;
-                doCast(random, SPELL_DARKNESS_E, false);
+                float px, py;
+                float angleDegre = rand()%360;
+                float angle = angleDegre * (2*M_PI) / 360;
+                float rayon = rand()%25;
+                px = 1816.25f + cos(angle) * rayon;
+                py = 625.484f + sin(angle) * rayon;
+                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_E, false);
 
-                random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
                     return;
                 doCast(random, SPELL_BLACKHOLE, false);
@@ -311,7 +306,6 @@ public:
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
-                    summoned->getAI()->attackStart(selectUnit(SELECT_TARGET_RANDOM,0, 50.0f, true));
                     break;
             }
             Summons.Summon(summoned);
@@ -573,6 +567,54 @@ public:
     }
 };
 
+class npc_darkness : public CreatureScript
+{
+public:
+    npc_darkness() : CreatureScript("npc_darkness") {}
+
+    class npc_darknessAI : public CreatureAINew
+    {
+        public:
+        npc_darknessAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 WaitTimer;
+        bool Spawned;
+
+        void onReset(bool /*onSpawn*/)
+        {
+            WaitTimer = 3000;
+            bool Spawned = false;
+            me->addUnitState(UNIT_STAT_STUNNED);
+        }
+
+        void update(const uint32 diff)
+        {
+            if (!Spawned)
+            {
+                if (WaitTimer <= diff)
+                {
+                    if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                        entropius->SummonCreature(CREATURE_DARK_FIENDS, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_CORPSE_DESPAWN, 0);
+
+                    Spawned = true;
+                }
+                else
+                    WaitTimer -= diff;
+            }
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_darknessAI(creature);
+    }
+};
+                
 class npc_dark_fiend : public CreatureScript
 {
 public:
@@ -603,21 +645,22 @@ public:
 
         void update(const uint32 diff)
         {
-            if (!updateVictim())
-                return;
-
             if (WaitTimer <= diff)
             {
                 if (!InAction)
                 {
                     me->clearUnitState(UNIT_STAT_STUNNED);
                     doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
+                    setZoneInCombat(true);
                     attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     InAction = true;
                     WaitTimer = 500;
                 }
                 else
                 {
+                    if (!updateVictim())
+                        return;
+
                     if (me->GetDistance(me->getVictim()) < 5)
                     {
                         if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
@@ -818,7 +861,14 @@ public:
                         doModifyThreat(Victim, 1000000.0f);
                     }
                     else
-                        doModifyThreat(selectUnit(SELECT_TARGET_TOPAGGRO, 0, 100.0f, true), 1000000.0f);
+                    {
+                        Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                        if (Victim)
+                        {
+                            attackStart(Victim);
+                            doModifyThreat(Victim, 1000000.0f);
+                        }
+                    }
                 }
                 std::list<Unit*> players;
                 players.clear();
@@ -1049,6 +1099,7 @@ void AddSC_boss_muru()
     sScriptMgr.addScript(new boss_muru());
     sScriptMgr.addScript(new npc_muru_portal());
     sScriptMgr.addScript(new npc_dark_fiend());
+    sScriptMgr.addScript(new npc_darkness());
     sScriptMgr.addScript(new npc_void_sentinel());
     sScriptMgr.addScript(new npc_void_spawn());
     sScriptMgr.addScript(new npc_blackhole());
