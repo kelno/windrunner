@@ -185,7 +185,7 @@ struct boss_warp_splinterAI : public ScriptedAI
         if (!UpdateVictim() )
             return;
 
-        if (me->GetDistance2d(65.8663f, 392.454f) >= 15.0f) {
+        if (me->GetDistance2d(65.8663f, 392.454f) >= 50.0f) {
             EnterEvadeMode();
             return;
         }
