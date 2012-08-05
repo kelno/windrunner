@@ -83,7 +83,10 @@ enum Spells
 
     // Mage
     SPELL_FURY_M                = 46102,
-    SPELL_FELL_FIREBALL         = 46101
+    SPELL_FELL_FIREBALL         = 46101,
+
+    // Darkness
+    SPELL_DARNESS_EFFECT        = 45996
 };
 
 enum BossTimers{
@@ -583,17 +586,27 @@ public:
         ScriptedInstance* pInstance;
 
         uint32 WaitTimer;
+        uint32 DarknessTimer;
         bool Spawned;
 
         void onReset(bool /*onSpawn*/)
         {
             WaitTimer = 3000;
+            DarknessTimer = 3000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
         void update(const uint32 diff)
         {
+            if (DarknessTimer <= diff)
+            {
+                me->CastCustomSpell(SPELL_DARNESS_EFFECT, SPELLVALUE_RADIUS, 8, NULL, false);
+                DarknessTimer = 3000;
+            }
+            else
+                DarknessTimer -= diff;
+
             if (!Spawned)
             {
                 if (WaitTimer <= diff)
