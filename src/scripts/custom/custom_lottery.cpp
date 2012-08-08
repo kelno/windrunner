@@ -48,9 +48,9 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
         // Check not already registered and check 30d played
         if (pPlayer->GetTotalAccountPlayedTime() > 2592000 || pPlayer->GetSession()->GetSecurity() > 0) {
             uint32 playerAccountId = pPlayer->GetSession()->GetAccountId();
-            QueryResult* result = CharacterDatabase.PQuery("SELECT * FROM lottery WHERE accountid = %u", playerAccountId);
+            QueryResult* result = CharacterDatabase.PQuery("SELECT * FROM lottery WHERE accountid = %u OR ip = '%s'", playerAccountId, pPlayer->GetSession()->GetRemoteAddress().c_str());
             if (!result) {
-                CharacterDatabase.PExecute("INSERT INTO lottery VALUES (%u, %u, "I64FMTD", %u)", pPlayer->GetGUIDLow(), playerAccountId, time(NULL), pPlayer->GetTeam());
+                CharacterDatabase.PExecute("INSERT INTO lottery VALUES (%u, %u, "I64FMTD", %u, '%s')", pPlayer->GetGUIDLow(), playerAccountId, time(NULL), pPlayer->GetTeam(), pPlayer->GetSession()->GetRemoteAddress().c_str());
                 pPlayer->PlayerTalkClass->SendGossipMenu(44, pCreature->GetGUID());
             }
             else {
