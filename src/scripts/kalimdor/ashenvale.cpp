@@ -92,6 +92,39 @@ struct npc_torekAI : public npc_escortAI
             break;
         }
     }
+    
+    void GatherGuards()
+    {
+        std::list<Creature*> templist;
+        float x, y, z;
+        m_creature->GetPosition(x, y, z);
+
+        {
+            CellPair pair(Trinity::ComputeCellPair(x, y));
+            Cell cell(pair);
+            cell.data.Part.reserved = ALL_DISTRICT;
+            cell.SetNoCreate();
+
+            Trinity::AllFriendlyCreaturesInGrid check(m_creature);
+            Trinity::CreatureListSearcher<Trinity::AllFriendlyCreaturesInGrid> searcher(templist, check);
+
+            TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllFriendlyCreaturesInGrid>, GridTypeMapContainer> cSearcher(searcher);
+
+            cell.Visit(pair, cSearcher, *(m_creature->GetMap()));
+        }
+
+        if(!templist.size())
+            return;
+
+        for(std::list<Creature*>::iterator i = templist.begin(); i != templist.end(); ++i)
+        {
+            if((*i) && (*i)->GetEntry() == 12859)
+            {
+                (*i)->SetNoCallAssistance(true);
+                (*i)->GetMotionMaster()->MoveFollow(me, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+            }
+        }
+    }
 
     void Reset()
     {
@@ -144,8 +177,10 @@ bool QuestAccept_npc_torek(Player* pPlayer, Creature* pCreature, Quest const* pQ
     if (pQuest->GetQuestId() == QUEST_TOREK_ASSULT)
     {
         //TODO: find companions, make them follow Torek, at any time (possibly done by mangos/database in future?)
-        if (npc_escortAI* pEscortAI = CAST_AI(npc_torekAI, (pCreature->AI())))
+        if (npc_escortAI* pEscortAI = CAST_AI(npc_torekAI, (pCreature->AI()))) {
             pEscortAI->Start(true, true, true, pPlayer->GetGUID(), pCreature->GetEntry());
+            ((npc_torekAI*)pEscortAI)->GatherGuards();
+        }
             
         DoScriptText(SAY_READY, pCreature, pPlayer);
         pCreature->setFaction(113);
