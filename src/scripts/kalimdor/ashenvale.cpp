@@ -244,7 +244,8 @@ bool QuestAccept_npc_ruul_snowhoof(Player* player, Creature* creature, Quest con
 {
     if (quest->GetQuestId() == QUEST_FREEDOM_TO_RUUL)
     {
-        creature->setFaction(113);
+        creature->setFaction(player->getFaction());
+        creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         ((npc_escortAI*)(creature->AI()))->Start(true, true, false, player->GetGUID(), creature->GetEntry());
     }
     return true;
