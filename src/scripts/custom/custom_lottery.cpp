@@ -62,65 +62,29 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
         }
         break;
     case GOSSIP_ACTION_INFO_DEF+1:
-    {
-        uint32 hordeWin = 0, allianceWin = 0;
-        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 3", HORDE);
+        uint32 winner;
+        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM lottery ORDER BY RAND() LIMIT 10", HORDE);
         if (!result)
             break;
             
-        std::ostringstream hsst, asst;
-        std::string hWinName, aWinName;
-        //objmgr.GetPlayerNameByGUID(hordeWin, hWinName);
-        hsst << "Pour la Horde, le gagnant de la peluche est ";
-        //objmgr.GetPlayerNameByGUID(allianceWin, aWinName);
-        asst << "Pour l'Alliance, le gagnant de la peluche est " << aWinName;
+        std::ostringstream oss;
+        std::string winner_str;
         
-        uint8 i = 0;
+        uint8 num = 0;
             
         do {
+            oss.str("");
             Field* fields = result->Fetch();
             
-            hordeWin = fields[0].GetUInt32();
-            objmgr.GetPlayerNameByGUID(hordeWin, hWinName);
+            winner = fields[0].GetUInt32();
+            objmgr.GetPlayerNameByGUID(winner, winner_str);
             
-            if (i == 0)
-                hsst << hWinName << " et les gagnants de la monture sont ";
-            else if (i == 1)
-                hsst << hWinName << " et ";
-            else
-                hsst << hWinName << " !";
+            oss << "Le gagnant numéro " << num << " est " << winner_str << " !";
+            pCreature->Yell(oss.str().c_str(), LANG_UNIVERSAL, NULL);
             
-            i++;
+            num++;
         } while (result->NextRow());
         
-        i = 0;
-        
-        result = CharacterDatabase.PQuery("SELECT guid FROM lottery WHERE faction = %u ORDER BY RAND() LIMIT 3", ALLIANCE);
-        if (!result)
-            break;
-            
-        do {
-            Field* fields = result->Fetch();
-            
-            allianceWin = fields[0].GetUInt32();
-            objmgr.GetPlayerNameByGUID(allianceWin, aWinName);
-            
-            if (i == 0)
-                asst << aWinName << " et les gagnants de la monture sont ";
-            else if (i == 1)
-                asst << aWinName << " et ";
-            else
-                asst << aWinName << " !";
-            
-            i++;
-        } while (result->NextRow());
-        
-        pCreature->Yell(hsst.str().c_str(), LANG_UNIVERSAL, NULL);
-        pCreature->Yell(asst.str().c_str(), LANG_UNIVERSAL, NULL);
-        
-        break;
-    }
-    default:
         break;
     }
     
