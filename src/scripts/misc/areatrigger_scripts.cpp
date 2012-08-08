@@ -328,6 +328,19 @@ bool AreaTrigger_at_quest_ravenholdt(Player* player, AreaTriggerEntry const* at)
     return true;
 }
 
+/*######
+## at_quest_simmer_down_now
+######*/
+
+bool AreaTrigger_at_quest_simmer_down_now(Player* player, AreaTriggerEntry const* at)
+{
+    if (player->GetQuestStatus(25) != QUEST_STATUS_INCOMPLETE)
+        return true;
+
+    player->AreaExploredOrEventHappens(25);
+    return true;
+}
+
 void AddSC_areatrigger_scripts()
 {
     Script* newscript;
@@ -420,6 +433,11 @@ void AddSC_areatrigger_scripts()
     newscript = new Script;
     newscript->Name = "at_quest_ravenholdt";
     newscript->pAreaTrigger = &AreaTrigger_at_quest_ravenholdt;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "at_quest_simmer_down_now";
+    newscript->pAreaTrigger = &AreaTrigger_at_quest_simmer_down_now;
     newscript->RegisterSelf();
 }
 
