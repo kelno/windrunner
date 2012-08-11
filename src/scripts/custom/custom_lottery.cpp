@@ -70,7 +70,7 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
         std::ostringstream oss;
         std::string winner_str;
         
-        uint8 num = 0;
+        uint32 num = 1;
             
         do {
             oss.str("");
