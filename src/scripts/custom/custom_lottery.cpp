@@ -63,7 +63,7 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
         break;
     case GOSSIP_ACTION_INFO_DEF+1:
         uint32 winner;
-        QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM lottery ORDER BY RAND() LIMIT 10", HORDE);
+        QueryResult* result = CharacterDatabase.PQuery("SELECT DISTINCT guid FROM lottery ORDER BY RAND() LIMIT 10", HORDE);
         if (!result)
             break;
             
