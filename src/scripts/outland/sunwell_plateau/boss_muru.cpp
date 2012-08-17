@@ -583,17 +583,44 @@ public:
         ScriptedInstance* pInstance;
 
         uint32 WaitTimer;
+        uint32 DarknessTimer;
         bool Spawned;
 
         void onReset(bool /*onSpawn*/)
         {
             WaitTimer = 3000;
+            DarknessTimer = 1000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
         void update(const uint32 diff)
         {
+            if (DarknessTimer <= diff)
+            {
+                std::list<Unit*> players;
+                players.clear();
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
+                for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* plr = (*itr)->ToPlayer();
+                    if (plr)
+                    {
+                        uint32 damage = 3000;
+                        uint32 absorb, resist;
+                        me->CalcAbsorbResist(plr, SPELL_SCHOOL_MASK_SHADOW, DOT, damage, &absorb, &resist);
+                        uint32 damageTaken = me->DealDamage(plr, damage - absorb - resist);
+                        me->SendSpellNonMeleeDamageLog(plr, 45996, damageTaken, SPELL_SCHOOL_MASK_SHADOW, absorb, resist, false, 0);
+
+                        SpellEntry const *spellProto = spellmgr.LookupSpell(45996);
+                        me->SpellHealingBonus(spellProto, 127, DOT, plr);
+                    }
+                }
+                DarknessTimer = 1000;
+            }
+            else
+                DarknessTimer -= diff;
+
             if (!Spawned)
             {
                 if (WaitTimer <= diff)
