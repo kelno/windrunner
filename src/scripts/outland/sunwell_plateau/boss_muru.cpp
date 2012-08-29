@@ -76,14 +76,7 @@ enum Spells
     SPELL_BLACKHOLE_VISUAL2     = 46235,
     SPELL_BLACKHOLE_GROW        = 46228,
     SPELl_BLACK_HOLE_EFFECT     = 46230,
-    SPELL_SINGULARITY           = 46238,
-
-    // Berserker
-    SEPLL_FURY_B                = 46160,
-
-    // Mage
-    SPELL_FURY_M                = 46102,
-    SPELL_FELL_FIREBALL         = 46101
+    SPELL_SINGULARITY           = 46238
 };
 
 enum BossTimers{
@@ -589,7 +582,7 @@ public:
         void onReset(bool /*onSpawn*/)
         {
             WaitTimer = 3000;
-            DarknessTimer = 1000;
+            DarknessTimer = 3000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
         }
@@ -605,18 +598,10 @@ public:
                 {
                     Player* plr = (*itr)->ToPlayer();
                     if (plr)
-                    {
-                        uint32 damage = 3000;
-                        uint32 absorb, resist;
-                        me->CalcAbsorbResist(plr, SPELL_SCHOOL_MASK_SHADOW, DOT, damage, &absorb, &resist);
-                        uint32 damageTaken = me->DealDamage(plr, damage - absorb - resist);
-                        me->SendSpellNonMeleeDamageLog(plr, 45996, damageTaken, SPELL_SCHOOL_MASK_SHADOW, absorb, resist, false, 0);
-
-                        SpellEntry const *spellProto = spellmgr.LookupSpell(45996);
-                        me->SpellHealingBonus(spellProto, 127, DOT, plr);
-                    }
+                        // Hack with new spell
+                        me->CastSpell(plr, 45997, false);
                 }
-                DarknessTimer = 1000;
+                DarknessTimer = 3000;
             }
             else
                 DarknessTimer -= diff;
@@ -996,10 +981,10 @@ class npc_berserker : public CreatureScript
 
                     if (FuryTimer <= diff)
                     {
-                        if (!me->HasAura(SEPLL_FURY_B))
+                        if (!me->HasAura(SPELL_FLURRY))
                         {
                             me->InterruptNonMeleeSpells(false);
-                            doCast(me, SEPLL_FURY_B, false);
+                            doCast(me, SPELL_FLURRY, false);
                         }
 
                         FuryTimer = urand(20000, 35000);
@@ -1088,10 +1073,10 @@ class npc_mage : public CreatureScript
 
                     if (FuryTimer <= diff)
                     {
-                        if (!me->HasAura(SPELL_FURY_M))
+                        if (!me->HasAura(SPELL_SPELL_FURY))
                         {
                             me->InterruptNonMeleeSpells(false);
-                            doCast(me, SPELL_FURY_M, false);
+                            doCast(me, SPELL_SPELL_FURY, false);
                         }
 
                             FuryTimer = urand(45000, 55000);
@@ -1101,7 +1086,7 @@ class npc_mage : public CreatureScript
 
                     if (FelFireballTimer <= diff)
                     {
-                        doCast(me->getVictim(), SPELL_FELL_FIREBALL, false);
+                        doCast(me->getVictim(), SPELL_FEL_FIREBALL, false);
 
                         FelFireballTimer = urand(2000, 3000);
                     }
