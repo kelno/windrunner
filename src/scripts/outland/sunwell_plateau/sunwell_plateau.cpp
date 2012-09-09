@@ -44,6 +44,14 @@ EndContentData */
 #include "precompiled.h"
 #include "def_sunwell_plateau.h"
 
+enum Quotes
+{
+    YELL_ACTIVATE              =   -1580115,
+    YELL_KILL                  =   -1580116,
+    YELL_AGGRO                 =   -1580117,
+    YELL_AGGRO2                =   -1580118,
+};
+
 /*######
 ## npc_prophet_velen
 ######*/
@@ -82,13 +90,6 @@ enum LiadrinnSpeeches
 
 #define SPELL_SW_RADIANCE       45769
 #define SPELL_FEL_LIGHTNING     46480
-
-enum Quotes
-{
-    YELL_ACTIVATE              =   -1580115,
-    YELL_KILL                  =   -1580116,
-    YELL_AGGRO                 =   -1580117
-};
 
 struct npc_sunblade_protectorAI : public ScriptedAI
 {
@@ -188,6 +189,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
+        DoScriptText(YELL_AGGRO2, m_creature);
     }
     
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
