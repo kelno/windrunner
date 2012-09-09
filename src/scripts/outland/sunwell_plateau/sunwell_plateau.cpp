@@ -83,6 +83,13 @@ enum LiadrinnSpeeches
 #define SPELL_SW_RADIANCE       45769
 #define SPELL_FEL_LIGHTNING     46480
 
+enum Quotes
+{
+    YELL_ACTIVATE              =   -1580115,
+    YELL_KILL                  =   -1580116,
+    YELL_AGGRO                 =   -1580117
+};
+
 struct npc_sunblade_protectorAI : public ScriptedAI
 {
     npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c)
@@ -98,10 +105,13 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     {
         felLightningTimer = 5000;
         
-        if (m_creature->GetDefaultMovementType() == IDLE_MOTION_TYPE && !isActivated) {
-            m_creature->SetReactState(REACT_DEFENSIVE);
-            m_creature->SetHasChangedReactState();
-            //felLightningTimer = 0;
+        m_creature->SetReactState(REACT_DEFENSIVE);
+        m_creature->SetHasChangedReactState();
+
+        if (isActivated)
+        {
+            DoScriptText(YELL_KILL, m_creature);
+            isActivated = false;
         }
 
         DoCast(m_creature, SPELL_SW_RADIANCE);
@@ -113,21 +123,22 @@ struct npc_sunblade_protectorAI : public ScriptedAI
             me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
     }
     
-    void Aggro(Unit *pWho) {}
+    void Aggro(Unit *pWho)
+    {
+        DoScriptText(YELL_AGGRO, m_creature);
+    }
     
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim())
             return;
             
-        if (felLightningTimer) {
-            if (felLightningTimer <= diff) {
-                DoCast(m_creature->getVictim(), SPELL_FEL_LIGHTNING);
-                felLightningTimer = 7000+rand()%5000;
-            }
-            else
-                felLightningTimer -= diff;
+        if (felLightningTimer <= diff) {
+            DoCast(m_creature->getVictim(), SPELL_FEL_LIGHTNING);
+            felLightningTimer = 7000+rand()%5000;
         }
+        else
+            felLightningTimer -= diff;
         
         DoMeleeAttackIfReady();
     }
@@ -191,6 +202,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
+                    DoScriptText(YELL_ACTIVATE, target->ToCreature());
                 }
                 target->GetMotionMaster()->MoveChase(puller);
                 target->Attack(puller, true);
@@ -203,6 +215,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
+                     DoScriptText(YELL_ACTIVATE, target->ToCreature());
                     target->ToCreature()->AI()->AttackStart(me->SelectNearestTarget(50.0f));
                 }
             }
