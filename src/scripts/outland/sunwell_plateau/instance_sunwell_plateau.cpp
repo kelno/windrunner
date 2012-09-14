@@ -477,7 +477,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 Bringer2->GetMotionMaster()->MovePath(25851, false);
             }
                 
-            BringersTimer = 40000;
+            BringersTimer = 80000;
         }
         else
             BringersTimer -= diff;
@@ -493,7 +493,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 Fiend->GetMotionMaster()->MovePath(25851, false);
             }
                 
-            FiendTimer = 15000;
+            FiendTimer = 45000;
         }
         else
             FiendTimer -= diff;
