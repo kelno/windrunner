@@ -207,6 +207,14 @@ struct instance_zulaman : public ScriptedInstance
         instance->SendToPlayers(&data);
     }
     
+    void MonsterPulled(Creature* creature, Unit* puller)
+    {
+        if (GetData(DATA_GONG_EVENT) != DONE) {
+            creature->SetNoCallAssistance(true);
+            creature->AI()->EnterEvadeMode();
+        }
+    }
+    
     Player* GetPlayerInMap()
     {
         Map::PlayerList const& players = instance->GetPlayers();

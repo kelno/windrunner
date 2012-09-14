@@ -30,3 +30,8 @@ void ScriptedInstance::RemoveAuraOnAllPlayers(uint32 spellId)
         }
     }
 }
+
+void ScriptedInstance::MonsterPulled(Creature* creature, Unit* puller)
+{
+    
+}
