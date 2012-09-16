@@ -191,9 +191,9 @@ public:
             {
                 BlackHoleSummonTimer = 15000;
                 float px, py;
-                float angleDegre = rand()%360;
+                float angleDegre = rand() % 360;
                 float angle = angleDegre * (2*M_PI) / 360;
-                float rayon = rand()%25;
+                float rayon = rand() % 25;
                 px = 1816.25f + cos(angle) * rayon;
                 py = 625.484f + sin(angle) * rayon;
                 me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_E, false);
@@ -579,29 +579,58 @@ public:
         uint32 DarknessTimer;
         bool Spawned;
 
-        void onReset(bool /*onSpawn*/)
+        void onReset(bool onSpawn)
         {
             WaitTimer = 3000;
             DarknessTimer = 3000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
+            
+            // Transfert threat list
+            if (onSpawn) {
+                if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS))) {
+                    std::list<HostilReference*>::iterator itr;
+                    for (itr = entropius->getThreatManager().getThreatList().begin(); itr != entropius->getThreatManager().getThreatList().end(); ++itr) {
+                        Unit* unit = Unit::GetUnit(*me, (*itr)->getUnitGuid());
+                        if (unit)
+                            me->AddThreat(unit, 1.0f);
+                    }
+                }
+            }
         }
 
         void update(const uint32 diff)
         {
             if (DarknessTimer <= diff)
             {
+                sLog.outString("darknesstimer <= diff");
                 std::list<Unit*> players;
                 players.clear();
                 selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
+                sLog.outString("found %u targets", players.size());
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
-                    if (plr)
-                        // Hack with new spell
-                        me->CastSpell(plr, 45997, false);
+                    if (plr && !plr->HasAura(45996)) {
+                        sLog.outString("Applying");
+                        SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
+                        if (spellInfo) {
+                            for (uint8 i = 0; i < 3 ; ++i) {
+                                uint8 eff = spellInfo->Effect[i];
+                                if (eff>=TOTAL_SPELL_EFFECTS)
+                                    continue;
+                                if (IsAreaAuraEffect(eff)
+                                    || eff == SPELL_EFFECT_APPLY_AURA
+                                    || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                                {
+                                    Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
+                                    plr->AddAura(Aur);
+                                }
+                            }
+                        }
+                    }
                 }
-                DarknessTimer = 3000;
+                DarknessTimer = 500;
             }
             else
                 DarknessTimer -= diff;
