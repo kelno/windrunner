@@ -1036,7 +1036,6 @@ struct npc_volatile_fiendAI : public ScriptedAI
     
     void Reset()
     {
-        DoCast(m_creature, SPELL_BURNING_WINDS);
         despawnTimer = 0;
         damageTimer = 1000;
         fissionTimer = 2000;
@@ -1250,6 +1249,67 @@ CreatureAI* GetAI_npc_kalec_felmyst(Creature* creature)
 }
 
 /*######
+## npc_doomfire_destroyer
+######*/
+
+#define SPELL_CREATE_DOOMFIRE               46306
+
+struct npc_doomfire_destroyerAI : public ScriptedAI
+{
+    npc_doomfire_destroyerAI(Creature *c) : ScriptedAI(c), Summons(me)
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+    
+    ScriptedInstance *pInstance;
+    SummonList Summons;
+    uint32 summonTimer;
+    
+    void Reset()
+    {
+        summonTimer = 0;
+        DoCast(m_creature, SPELL_SW_RADIANCE);
+        Summons.DespawnAll();
+    }
+
+    void Aggro(Unit* who) {}
+
+    void JustSummoned(Creature* summoned)
+    {
+        Summons.Summon(summoned);
+    }
+
+    void SummonedCreatureDespawn(Creature* unit)
+    {
+        Summons.Despawn(unit);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (summonTimer <= diff)
+        {
+            Unit* random = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+            if (random)
+                DoCast(random, SPELL_CREATE_DOOMFIRE, false);
+
+            summonTimer = 1500;
+        }
+        else
+            summonTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_doomfire_destroyer(Creature *pCreature)
+{
+    return new npc_doomfire_destroyerAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -1331,5 +1391,10 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_kalec_felmyst";
     newscript->GetAI = &GetAI_npc_kalec_felmyst;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_doomfire_destroyer";
+    newscript->GetAI = &GetAI_npc_doomfire_destroyer;
     newscript->RegisterSelf();
 }
