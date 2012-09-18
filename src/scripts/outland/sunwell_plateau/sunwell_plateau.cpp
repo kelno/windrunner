@@ -189,6 +189,14 @@ struct npc_sunblade_scoutAI : public ScriptedAI
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
+        else
+        {
+            m_creature->clearUnitState(UNIT_STAT_ROOT);
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+            AttackStart(me->SelectNearestTarget(50.0f));
+            sinisterStrikeTimer = 2000;
+        }
+
         DoScriptText(YELL_AGGRO2, m_creature);
     }
     
@@ -222,8 +230,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 }
             }
         }
-        
-        
+
         m_creature->clearUnitState(UNIT_STAT_ROOT);
         m_creature->SetReactState(REACT_AGGRESSIVE);
     }
@@ -270,19 +277,25 @@ CreatureAI* GetAI_npc_sunblade_scout(Creature *pCreature)
 ## npc_sunblade_slayer
 ######*/
 
-#define SPELL_SHOOT     47001
+#define SPELL_SHOOT            47001
+#define SPELL_SCATTER_SHOT     46681
+#define SPELL_SLAYING_SHOT     46557
 
 struct npc_sunblade_slayerAI : public ScriptedAI
 {
     npc_sunblade_slayerAI(Creature *c) : ScriptedAI(c) {}
     
     uint32 shootTimer;
+    uint32 scatterTimer;
+    uint32 slayingTimer;
     
     void Reset()
     {
         DoCast(m_creature, SPELL_SW_RADIANCE);
         
         shootTimer = 1000;
+        scatterTimer = 4000;
+        slayingTimer = 8000;
     }
     
     void Aggro(Unit *pWho) {}
@@ -314,6 +327,20 @@ struct npc_sunblade_slayerAI : public ScriptedAI
         }
         else
             shootTimer -= diff;
+
+        if (scatterTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SCATTER_SHOT);
+            scatterTimer = 6000+rand()%4000;
+        }
+        else
+            scatterTimer -= diff;
+
+        if (slayingTimer <= diff) {
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SLAYING_SHOT);
+            slayingTimer = 8000+rand()%5000;
+        }
+        else
+            slayingTimer -= diff;
             
         if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
             DoMeleeAttackIfReady();
@@ -382,6 +409,11 @@ struct npc_sunblade_cabalist : public ScriptedAI
     void JustSummoned(Creature* pSummon)
     {
         summons.Summon(pSummon);
+    }
+
+    void SummonedCreatureDespawn(Creature* unit)
+    {
+        Summons.Despawn(unit);
     }
     
     void UpdateAI(uint32 const diff)
@@ -552,7 +584,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
         //if (m_creature->IsNonMeleeSpellCasted(false))
         if (mindFlayTimer <= diff) {
             DoCast(m_creature->getVictim(), SPELL_MINDFLAY);
-            mindFlayTimer = 1000+rand()%2000;
+            mindFlayTimer = 6000+rand()%7000;
         }
         else
             mindFlayTimer -= diff;
@@ -1267,7 +1299,7 @@ struct npc_doomfire_destroyerAI : public ScriptedAI
     
     void Reset()
     {
-        summonTimer = 0;
+        summonTimer = 10000;
         DoCast(m_creature, SPELL_SW_RADIANCE);
         Summons.DespawnAll();
     }
@@ -1295,7 +1327,7 @@ struct npc_doomfire_destroyerAI : public ScriptedAI
             if (random)
                 DoCast(random, SPELL_CREATE_DOOMFIRE, false);
 
-            summonTimer = 1500;
+            summonTimer = 10000;
         }
         else
             summonTimer -= diff;
