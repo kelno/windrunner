@@ -605,16 +605,13 @@ public:
         {
             if (DarknessTimer <= diff)
             {
-                sLog.outString("darknesstimer <= diff");
                 std::list<Unit*> players;
                 players.clear();
                 selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
-                sLog.outString("found %u targets", players.size());
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
                     if (plr && !plr->HasAura(45996)) {
-                        sLog.outString("Applying");
                         SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
                         if (spellInfo) {
                             for (uint8 i = 0; i < 3 ; ++i) {
