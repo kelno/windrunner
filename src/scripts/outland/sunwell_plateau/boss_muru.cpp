@@ -740,11 +740,13 @@ class npc_void_sentinel : public CreatureScript
 
         uint32 PulseTimer;
         uint32 VoidBlastTimer;
+        uint32 StartActiveTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             PulseTimer = 3000;
             VoidBlastTimer = 45000; //is this a correct timer?
+            StartActiveTimer = 500;
 
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
@@ -769,6 +771,11 @@ class npc_void_sentinel : public CreatureScript
 
         void update(const uint32 diff)
         {
+            if (StartActiveTimer >= diff) {
+                StartActiveTimer -= diff;
+                return;
+            }
+            
             if (!updateVictim())
                 return;
 
