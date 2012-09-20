@@ -413,7 +413,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
 
     void SummonedCreatureDespawn(Creature* unit)
     {
-        Summons.Despawn(unit);
+        summons.Despawn(unit);
     }
     
     void UpdateAI(uint32 const diff)
