@@ -156,6 +156,7 @@ CreatureAI* GetAI_npc_protector(Creature *pCreature)
 
 #define SPELL_ACTIVATE_PROTEC   46475
 #define SPELL_SINISTER_STRIKE   46558
+#define SPELL_DUAL_WIELD        42459
 
 #define NPC_SUNBLADE_PROTEC     25507
 
@@ -173,7 +174,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_SW_RADIANCE);
-        
+        DoCast(m_creature, SPELL_DUAL_WIELD, true);
         sinisterStrikeTimer = 0;
         pullerGUID = 0;
         protector = NULL;
@@ -1068,6 +1069,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
     
     void Reset()
     {
+        DoCast(m_creature, SPELL_BURNING_WINDS);
         despawnTimer = 0;
         damageTimer = 1000;
         fissionTimer = 2000;
