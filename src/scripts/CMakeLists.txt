@@ -216,6 +216,7 @@ SET(scripts_STAT_SRCS
     kalimdor/caverns_of_time/dark_portal/boss_temporus.cpp
     kalimdor/caverns_of_time/hyjal/boss_anetheron.cpp
     kalimdor/caverns_of_time/hyjal/boss_archimonde.cpp
+    kalimdor/caverns_of_time/hyjal/boss_archimonde_new.cpp
     kalimdor/caverns_of_time/hyjal/boss_azgalor.cpp
     kalimdor/caverns_of_time/hyjal/boss_kazrogal.cpp
     kalimdor/caverns_of_time/hyjal/boss_rage_winterchill.cpp
