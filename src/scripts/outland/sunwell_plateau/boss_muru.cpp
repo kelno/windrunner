@@ -996,22 +996,28 @@ class npc_berserker : public CreatureScript
                     // If mob aggro before end of MovePoint
                     if (HackTimer <= diff)
                     {
-                        Phase = 2;
+                        Phase = 1;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         HackTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         TempTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 2:
                     if (!updateVictim())
@@ -1088,22 +1094,28 @@ class npc_mage : public CreatureScript
                     // If mob aggro before end of MovePoint
                     if (HackTimer <= diff)
                     {
-                        Phase = 2;
+                        Phase = 1;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         HackTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         TempTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 2:
                     if (!updateVictim())
