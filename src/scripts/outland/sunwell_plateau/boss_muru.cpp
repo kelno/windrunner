@@ -333,6 +333,8 @@ public:
 
             if (!updateVictim())
                 return;
+                
+            me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
             if (me->hasUnitState(UNIT_STAT_CASTING))
                 return;
