@@ -36,6 +36,9 @@ class ScriptedInstance : public InstanceData
         void CastOnAllPlayers(uint32 spellId);  // TODO: Add Unit* caster as parameter?
         void RemoveAuraOnAllPlayers(uint32 spellId);
         virtual void MonsterPulled(Creature* creature, Unit* puller); // puller can be a pet, thus use a Unit ptr
+        virtual void PlayerDied(Player* player);
+        
+        void SendScriptInTestNoLootMessageToAll();
 };
 
 #endif
