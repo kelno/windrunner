@@ -119,6 +119,14 @@ struct instance_mount_hyjal : public ScriptedInstance
         if(GameObject *Door = instance->GetGameObjectInMap(DoorGUID))
             Door->SetUInt32Value(GAMEOBJECT_STATE, open ? 0 : 1);
     }
+    
+    void PlayerDied(Player* player)
+    {
+        if (GetData(DATA_ARCHIMONDEEVENT) == IN_PROGRESS) {
+            if (Creature* archimonde = instance->GetCreatureInMap(Archimonde))
+                archimonde->getAI()->message(0, player->getClass());
+        }
+    }
 
     void OnCreatureCreate(Creature *creature, uint32 creature_entry)
     {
