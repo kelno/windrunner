@@ -740,11 +740,13 @@ class npc_void_sentinel : public CreatureScript
 
         uint32 PulseTimer;
         uint32 VoidBlastTimer;
+        uint32 StartActiveTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             PulseTimer = 3000;
             VoidBlastTimer = 45000; //is this a correct timer?
+            StartActiveTimer = 500;
 
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
@@ -769,6 +771,11 @@ class npc_void_sentinel : public CreatureScript
 
         void update(const uint32 diff)
         {
+            if (StartActiveTimer >= diff) {
+                StartActiveTimer -= diff;
+                return;
+            }
+            
             if (!updateVictim())
                 return;
 
@@ -989,22 +996,28 @@ class npc_berserker : public CreatureScript
                     // If mob aggro before end of MovePoint
                     if (HackTimer <= diff)
                     {
-                        Phase = 2;
+                        Phase = 1;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         HackTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         TempTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 2:
                     if (!updateVictim())
@@ -1081,26 +1094,35 @@ class npc_mage : public CreatureScript
                     // If mob aggro before end of MovePoint
                     if (HackTimer <= diff)
                     {
-                        Phase = 2;
+                        Phase = 1;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         HackTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
+                        me->SetReactState(REACT_AGGRESSIVE);
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                             attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else
+                    else {
                         TempTimer -= diff;
+                        me->SetReactState(REACT_PASSIVE);
+                    }
                     break;
                 case 2:
                     if (!updateVictim())
                        return;
+                       
+                    if (me->GetDistance(me->getVictim()) <= 8.0f)
+                        me->GetMotionMaster()->MoveIdle();
 
                     if (FuryTimer <= diff)
                     {
