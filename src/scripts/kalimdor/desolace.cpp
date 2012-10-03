@@ -234,6 +234,76 @@ bool QuestAccept_npc_dalinda(Player* player, Creature* creature, Quest const* qu
     return true;
 }
 
+struct npc_melizzaAI : public npc_escortAI
+{
+    npc_melizzaAI(Creature* pCreature) : npc_escortAI(pCreature)
+    {
+        completed = false;
+    }   
+        
+    bool completed;    
+    
+    void WaypointReached(uint32 i)
+    {
+        Player* player = GetPlayerForEscort();
+        switch (i)
+        {        
+            case 7:                
+                if (player)
+                    player->GroupEventHappens(6132, me);
+                    
+                me->DisappearAndDie();
+                completed = true;
+                break;            
+        }
+    }
+
+    void Aggro(Unit* /*pWho*/) { }
+
+    void Reset() {}
+
+    void JustDied(Unit* /*pKiller*/)
+    {
+        if (completed)
+            return;
+
+        Player* player = GetPlayerForEscort();
+        if (player)
+            player->FailQuest(6132);
+
+        return;
+    }
+
+    void UpdateAI(const uint32 uiDiff)
+    {        
+        npc_escortAI::UpdateAI(uiDiff);
+
+        if (!UpdateVictim())
+            return;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_melizza(Creature* c)
+{
+    return new npc_melizzaAI(c);
+}
+
+bool QuestAccept_npc_melizza(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == 6132)
+   {        
+        if (npc_escortAI* pEscortAI = CAST_AI(npc_melizzaAI, creature->AI()))
+        {
+            pEscortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
+            creature->setFaction(113);
+            creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        }
+    }
+    return true;
+}
+
 void AddSC_desolace()
 {
     Script *newscript;
@@ -249,6 +319,12 @@ void AddSC_desolace()
     newscript->Name = "npc_dalinda";
     newscript->GetAI = &GetAI_npc_dalinda;
     newscript->pQuestAccept = &QuestAccept_npc_dalinda;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_melizza";
+    newscript->GetAI = &GetAI_npc_melizza;
+    newscript->pQuestAccept = &QuestAccept_npc_melizza;
     newscript->RegisterSelf();
 
 }
