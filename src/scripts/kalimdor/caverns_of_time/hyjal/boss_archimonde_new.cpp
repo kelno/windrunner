@@ -261,7 +261,8 @@ public:
             EV_NORDRASSIL_CHECK,
             EV_ENRAGE,
             EV_ENRAGE_CAST,
-            EV_UNLEASH_SOULCHARGE
+            EV_UNLEASH_SOULCHARGE,
+            EV_UNDER_10_PERCENT
         };
     
         Boss_ArchimondeAI(Creature* creature) : CreatureAINew(creature)
@@ -281,6 +282,7 @@ public:
                 addEvent(EV_ENRAGE, 600000, 600000);
                 addEvent(EV_ENRAGE_CAST, 2000, 2000, EVENT_FLAG_NONE, false);
                 addEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000, EVENT_FLAG_DELAY_IF_CASTING, false);
+                addEvent(EV_UNDER_10_PERCENT, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, false);
             }
             else {
                 scheduleEvent(EV_FEAR, 42000);
@@ -296,9 +298,12 @@ public:
                 disableEvent(EV_ENRAGE_CAST);
                 scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000);
                 disableEvent(EV_UNLEASH_SOULCHARGE);
+                scheduleEvent(EV_UNDER_10_PERCENT, 1000, 1000);
+                disableEvent(EV_UNDER_10_PERCENT);
             }
 
             _enraged = false;
+            _under10Percent = false;
             _checkTimer = 1000;
 
             me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_YELLOW);
@@ -387,6 +392,12 @@ public:
             
             if (!updateVictim())
                 return;
+            
+            if (me->IsBelowHPPercent(10.0f)) {
+                _under10Percent = true;
+                enableEvent(EV_UNDER_10_PERCENT);
+                doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE);
+            }
                 
             updateEvents(diff);
             
@@ -443,6 +454,7 @@ public:
                     scheduleEvent(EV_ENRAGE_CAST, 2000);
                     break;
                 case EV_UNLEASH_SOULCHARGE:
+                {
                     std::list<uint32> unleashSpells;
                     if (me->HasAura(SPELL_SOUL_CHARGE_GREEN))
                         unleashSpells.push_back(SPELL_UNLEASH_SOUL_GREEN);
@@ -475,6 +487,11 @@ public:
                         scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000);
                     else
                         disableEvent(EV_UNLEASH_SOULCHARGE);
+                    break;
+                }
+                case EV_UNDER_10_PERCENT:
+                    doCast(me, SPELL_HAND_OF_DEATH);
+                    scheduleEvent(EV_UNDER_10_PERCENT, 1000);
                     break;
                 }
             }
@@ -517,7 +534,7 @@ public:
             targets.sort(TargetDistanceOrder(me));
             Unit* target = targets.front();
             if (target) {
-                if (!me->IsWithinDistInMap(target, me->GetAttackDistance(target)))
+                if (!me->IsWithinDistInMap(target, me->GetAttackDistance(target)) && abs(me->GetPositionZ() - target->GetPositionZ()) < 5.0f)
                     return true; // Cast Finger of Death
                 else // This target is closest, he is our new tank
                     me->AddThreat(target, doGetThreat(me->getVictim()));
@@ -529,6 +546,7 @@ public:
         ScriptedInstance* _instance;
         
         bool _enraged;
+        bool _under10Percent;
         
         uint32 _checkTimer;
         uint32 _chargeCount;
