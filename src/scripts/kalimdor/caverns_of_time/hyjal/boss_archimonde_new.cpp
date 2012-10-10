@@ -352,8 +352,10 @@ public:
         
         void onCombatStart(Unit* /*victim*/)
         {
-            if (_instance)
+            if (_instance) {
                 _instance->SendScriptInTestNoLootMessageToAll();
+                _instance->SetData(DATA_ARCHIMONDEEVENT, IN_PROGRESS);
+            }
         }
         
         void update(uint32 const diff)
