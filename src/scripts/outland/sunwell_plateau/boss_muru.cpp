@@ -277,8 +277,10 @@ public:
         {
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY, false);
 
-            if (pInstance)
+            if (pInstance) {
+                pInstance->SendScriptInTestNoLootMessageToAll();
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
+            }
         }
 
         void onDamageTaken(Unit * /*done_by*/, uint32 &damage)
