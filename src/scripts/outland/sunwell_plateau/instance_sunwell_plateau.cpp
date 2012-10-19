@@ -72,6 +72,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint64 FireBarrier;                                     // Felmysts Encounter
     uint64 MurusGate[2];                                    // Murus Encounter
     uint64 IceBarrier;
+    uint64 SecondGate; // Just after the Twins
 
     /*** Misc ***/
     uint32 SpectralRealmTimer;
@@ -238,7 +239,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 HandleGameObject(NULL, false, pGo);
                 break;*/
             case 187764:    // The second gate FIXME: Always closed for now, will change later
-                HandleGameObject(NULL, false, pGo);
+                if (GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+                    HandleGameObject(NULL, false, pGo);
+                SecondGate = pGo->GetGUID();
                 break;
             case 187765:    // The third gate FIXME: Always closed for now, will change later
                 HandleGameObject(NULL, false, pGo);
@@ -344,7 +347,10 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     FiendTimer = 2000;
                 }
                 break;
-            case DATA_EREDAR_TWINS_EVENT:  Encounters[3] = data; break;
+            case DATA_EREDAR_TWINS_EVENT:
+                Encounters[3] = data;
+                HandleGameObject(SecondGate, true);
+                break;
             case DATA_MURU_EVENT:
                 switch(data)
                 {

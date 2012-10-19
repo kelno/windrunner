@@ -681,8 +681,10 @@ public:
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
         {
             for (uint8 i = 0; i < 3; ++i)
-                if (Spell->Effect[i] == 38)
+                if (Spell->Effect[i] == 38) {
+                    doCast(me, 45936, true);
                     me->DisappearAndDie();
+                }
         }
 
         void update(const uint32 diff)
@@ -743,7 +745,7 @@ class npc_void_sentinel : public CreatureScript
 
         void onReset(bool /*onSpawn*/)
         {
-            PulseTimer = 3000;
+            PulseTimer = 10000 + rand()%10000;
             VoidBlastTimer = 45000; //is this a correct timer?
             StartActiveTimer = 500;
 
@@ -781,7 +783,7 @@ class npc_void_sentinel : public CreatureScript
             if (PulseTimer <= diff)
             {
                 doCast((Unit*)NULL, SPELL_SHADOW_PULSE, true);
-                PulseTimer = 3000;
+                PulseTimer = 20000;
             }
             else
                 PulseTimer -= diff;
@@ -823,7 +825,7 @@ class npc_void_spawn : public CreatureScript
 
         void onReset(bool /*onSpawn*/)
         {
-            ShadowBoltVolleyTimer = urand(15000, 25000);
+            ShadowBoltVolleyTimer = 5000;
         }
 
         void update(const uint32 diff)
@@ -840,7 +842,7 @@ class npc_void_spawn : public CreatureScript
             if (ShadowBoltVolleyTimer <= diff)
             {
                 doCast((Unit*)NULL, SPELL_SHADOW_BOLT_VOLLEY, false);
-                ShadowBoltVolleyTimer = urand(25000, 35000);
+                ShadowBoltVolleyTimer = 5000;
             }
             else
                 ShadowBoltVolleyTimer -= diff;
@@ -1122,6 +1124,8 @@ class npc_mage : public CreatureScript
                        
                     if (me->GetDistance(me->getVictim()) <= 8.0f)
                         me->GetMotionMaster()->MoveIdle();
+                    else if (me->GetDistance(me->getVictim()) >= 10.0f)
+                        me->GetMotionMaster()->MoveChase(me->getVictim());
 
                     if (FuryTimer <= diff)
                     {

@@ -1069,7 +1069,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
     
     void Reset()
     {
-        DoCast(m_creature, SPELL_BURNING_WINDS);
+        //DoCast(m_creature, SPELL_BURNING_WINDS);
         despawnTimer = 0;
         damageTimer = 1000;
         fissionTimer = 2000;
@@ -1113,13 +1113,6 @@ struct npc_volatile_fiendAI : public ScriptedAI
             else
                 despawnTimer -= diff;
         }
-        
-        if (fissionTimer <= diff) {
-            DoCast(m_creature, SPELL_FELFIRE_FISSION);
-            fissionTimer = 2000;
-        }
-        else
-            fissionTimer -= diff;
 
         if (!UpdateVictim())
             return;
@@ -1133,7 +1126,16 @@ struct npc_volatile_fiendAI : public ScriptedAI
             }
             else
                 damageTimer -= diff;
+        
+            if (fissionTimer <= diff) {
+                DoCast(m_creature, SPELL_FELFIRE_FISSION);
+                fissionTimer = 2000;
+            }
+            else
+                fissionTimer -= diff;
         }
+        
+        DoMeleeAttackIfReady();
     }
 };
 
@@ -1151,6 +1153,8 @@ bool GossipHello_npc_moorba(Player* pPlayer, Creature* pCreature)
     if (ScriptedInstance *pInstance = ((ScriptedInstance*)pCreature->GetInstanceData())) {
         if (pInstance->GetData(DATA_KALECGOS_EVENT) == DONE)
             pPlayer->ADD_GOSSIP_ITEM(0, "Téléportez-moi dans la salle de Kalecgos.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) == DONE)
+            pPlayer->ADD_GOSSIP_ITEM(0, "Téléportez-moi dans la salle des Jumelles Erédar.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
         /*if (pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE)
             pPlayer->ADD_GOSSIP_ITEM(0, "Tééportez-moi dans la salle de Brutallus.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);*/
     }
@@ -1167,7 +1171,7 @@ bool GossipSelect_npc_moorba(Player* pPlayer, Creature* pCreature, uint32 sender
         pPlayer->TeleportTo(580, 1703.977051, 928.625610, 53.077671, 4.748818);
         break;
     case GOSSIP_ACTION_INFO_DEF + 2:
-        pPlayer->TeleportTo(580, 1487.503662, 620.776001, 24.353388, 3.293650);
+        pPlayer->CastSpell(pPlayer, 46879, true);
         break;
     }
     
