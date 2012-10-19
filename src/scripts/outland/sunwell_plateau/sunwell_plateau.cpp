@@ -1171,7 +1171,7 @@ bool GossipSelect_npc_moorba(Player* pPlayer, Creature* pCreature, uint32 sender
         pPlayer->TeleportTo(580, 1703.977051, 928.625610, 53.077671, 4.748818);
         break;
     case GOSSIP_ACTION_INFO_DEF + 2:
-        pPlayer->CastSpell(pPlayer, 46879, true);
+        pPlayer->CastSpell(pPlayer, 46883, true);
         break;
     }
     
