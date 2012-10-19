@@ -1124,8 +1124,8 @@ class npc_mage : public CreatureScript
                        
                     if (me->GetDistance(me->getVictim()) <= 8.0f)
                         me->GetMotionMaster()->MoveIdle();
-                    else if (me->GetDistance(me->getVictim()) >= 10.0f)
-                        me->GetMotionMaster()->MoveChase(me->getVictim());
+                    //else if (me->GetDistance(me->getVictim()) >= 10.0f)
+                      //  me->GetMotionMaster()->MoveChase(me->getVictim());
 
                     if (FuryTimer <= diff)
                     {
