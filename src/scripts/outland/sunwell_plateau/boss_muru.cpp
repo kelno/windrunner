@@ -42,6 +42,7 @@ enum Spells
     SPELL_SUMMON_BERSERKER      = 46037,
     SPELL_SUMNON_FURY_MAGE      = 46038,
     SPELL_SUMMON_VOID_SENTINEL  = 45988,
+    SPELL_SUMMON_VOID_SENTINEL_VISUAL  = 45989,
     SPELL_SUMMON_ENTROPIUS      = 46217,
 
     // Entropius's spells
@@ -279,8 +280,8 @@ public:
                 if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
                     me->SetReactState(REACT_PASSIVE);
             }
-            
-            if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
+
+            if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
                 entropius->DisappearAndDie();
         }
 
@@ -393,7 +394,8 @@ public:
                                     break;
                                 case IN_PROGRESS:
                                     if (!EnrageTimerTransmitted) {
-                                        if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true)) {
+                                        if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                                        {
                                             entropius->getAI()->message(1, EnrageTimer);
                                             EnrageTimerTransmitted = true;
                                         }
@@ -501,14 +503,12 @@ public:
     class npc_muru_portalAI : public Creature_NoMovementAINew
     {
         public:
-	npc_muru_portalAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
+	npc_muru_portalAI(Creature* creature) : Creature_NoMovementAINew(creature)
 	{
 	    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	}
 
         ScriptedInstance* pInstance;
-
-        SummonList Summons;
 
         bool SummonSentinel;
         bool InAction;
@@ -523,29 +523,6 @@ public:
             SummonSentinel = false;
 
             me->addUnitState(UNIT_STAT_STUNNED);
-
-            Summons.DespawnAll();
-        }
-
-        void onSummon(Creature* summoned)
-        {
-            if (pInstance)
-            {
-                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                {
-                    if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
-                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    else
-                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                }
-            }
-
-            Summons.Summon(summoned);
-        }
-
-        void onSummonDespawn(Creature* unit)
-        {
-            Summons.Despawn(unit);
         }
 
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
@@ -572,13 +549,15 @@ public:
             {
                 if (InAction && pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                     onReset(false);
-                else if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == DONE)
-                    Summons.DespawnAll();
+
                 return;
             }
+
             if (SummonTimer <= diff)
             {
-                doCast((Unit*)NULL, SPELL_SUMMON_VOID_SENTINEL, false);
+                if (Creature* summoner = me->FindNearestCreature(CREATURE_SENTINAL_SUMMONER, 100.0f, true))
+                    doCast(summoner, SPELL_SUMMON_VOID_SENTINEL_VISUAL, true);
+
                 SummonTimer = 5000;
                 SummonSentinel = false;
             }
@@ -590,6 +569,75 @@ public:
     CreatureAINew* getAI(Creature* creature)
     {
         return new npc_muru_portalAI(creature);
+    }
+};
+
+class npc_sentinal_summoner : public CreatureScript
+{
+public:
+    npc_sentinal_summoner() : CreatureScript("npc_sentinal_summoner") {}
+
+    class npc_sentinal_summonerAI : public CreatureAINew
+    {
+        public:
+        npc_sentinal_summonerAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+        SummonList Summons;
+
+        void onReset(bool onSpawn)
+        {
+            Summons.DespawnAll();
+        }
+
+        void onSummon(Creature* summoned)
+        {
+            if (pInstance)
+            {
+                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                {
+                    if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
+                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                    else
+                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                }
+            }
+
+            Summons.Summon(summoned);
+        }
+
+        void onSummonDespawn(Creature* unit)
+        {
+            Summons.Despawn(unit);
+        }
+
+        void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
+        {
+            switch(Spell->Id)
+            {
+                case SPELL_SUMMON_VOID_SENTINEL_VISUAL:
+                    doCast((Unit*)NULL, SPELL_SUMMON_VOID_SENTINEL, false);
+                    break;
+            }
+        }
+
+        void update(const uint32 diff)
+        {
+            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+                if (!Summons.IsEmpty())
+                    Summons.DespawnAll();
+            else if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == DONE)
+                if (!Summons.IsEmpty())
+                    Summons.DespawnAll();
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_sentinal_summonerAI(creature);
     }
 };
 
@@ -1195,6 +1243,7 @@ void AddSC_boss_muru()
     sScriptMgr.addScript(new boss_entropius());
     sScriptMgr.addScript(new boss_muru());
     sScriptMgr.addScript(new npc_muru_portal());
+    sScriptMgr.addScript(new npc_sentinal_summoner());
     sScriptMgr.addScript(new npc_dark_fiend());
     sScriptMgr.addScript(new npc_darkness());
     sScriptMgr.addScript(new npc_void_sentinel());

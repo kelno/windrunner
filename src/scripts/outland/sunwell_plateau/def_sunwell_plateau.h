@@ -122,6 +122,7 @@ enum Creatures
     CREATURE_VOID_SENTINEL                          = 25772,
     CREATURE_VOID_SPAWN                             = 25824,
     CREATURE_BLACK_HOLE                             = 25855,
+    CREATURE_SENTINAL_SUMMONER                      = 25782,
 };
 
 enum GameObjects
