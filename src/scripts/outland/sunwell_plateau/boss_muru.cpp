@@ -62,6 +62,7 @@ enum Spells
     // Void Sentinel's spells
     SPELL_SHADOW_PULSE          = 46087,
     SPELL_VOID_BLAST            = 46161,
+    SPELL_SUMMON_VOID_SPAWN     = 46071,
 
     // Void Spawn's spells
     SPELL_SHADOW_BOLT_VOLLEY    = 46082,
@@ -837,13 +838,7 @@ class npc_void_sentinel : public CreatureScript
         {
             for (uint8 i = 0; i < 8; ++i)
             {
-                if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX() + ((2 * rand()%1000) / 1000.0f),me->GetPositionY() + ((2 * rand()%1000) / 1000.0f),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                {
-                    if (spawn->getAI())
-                        spawn->getAI()->attackStart(killer);
-                    else
-                        spawn->AI()->AttackStart(killer);
-                }
+                me->CastSpell(me->GetPositionX() + ((2 * rand()%1000) / 1000.0f), me->GetPositionY() + ((2 * rand()%1000) / 1000.0f), me->GetPositionZ(), SPELL_SUMMON_VOID_SPAWN, false);
             }
         }
 
