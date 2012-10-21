@@ -338,7 +338,7 @@ public:
             
             if (Phase >= 2) {
                 if (EnrageTimer <= diff) {
-                    EnrageTimer = 99999;
+                    EnrageTimer = 999999;
                     if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
                         entropius->CastSpell(entropius, SPELL_ENRAGE, true);
                 }
