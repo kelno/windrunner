@@ -436,11 +436,11 @@ public:
                 if (HumanoidesTimer <= diff)
                 {
                     for (uint8 i = 0; i < 3; ++i)
-                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1] + ((2 * rand()%1000) / 1000.0f),Humanoides[i][2] + ((2 * rand()%1000) / 1000.0f),Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
                             summon->GetMotionMaster()->MovePoint(0, 1785.72f, 653.95f, 71.21f);
 
                     for (uint8 i = 3; i < 6; ++i)
-                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1],Humanoides[i][2],Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        if (Creature* summon = me->SummonCreature(Humanoides[i][0],Humanoides[i][1] + ((2 * rand()%1000) / 1000.0f),Humanoides[i][2] + ((2 * rand()%1000) / 1000.0f),Humanoides[i][3], Humanoides[i][4], TEMPSUMMON_CORPSE_DESPAWN, 0))
                             summon->GetMotionMaster()->MovePoint(0, 1844.83f, 601.82f, 71.30f);
 
                     HumanoidesTimer = 60000;
@@ -773,7 +773,7 @@ class npc_void_sentinel : public CreatureScript
         {
             for (uint8 i = 0; i < 8; ++i)
             {
-                if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX(),me->GetPositionY(),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                if (Creature* spawn = me->SummonCreature(CREATURE_VOID_SPAWN, me->GetPositionX() + ((2 * rand()%1000) / 1000.0f),me->GetPositionY() + ((2 * rand()%1000) / 1000.0f),me->GetPositionZ(), rand()%6, TEMPSUMMON_CORPSE_DESPAWN, 0))
                 {
                     if (spawn->getAI())
                         spawn->getAI()->attackStart(killer);
