@@ -271,6 +271,9 @@ public:
                 if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
                     me->SetReactState(REACT_PASSIVE);
             }
+            
+            if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
+                entropius->DisappearAndDie();
         }
 
         void onCombatStart(Unit* /*who*/)
@@ -331,6 +334,16 @@ public:
                 }
                 else
                     RespawnTimer -= diff;
+            }
+            
+            if (Phase >= 2) {
+                if (EnrageTimer <= diff) {
+                    EnrageTimer = 99999;
+                    if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
+                        entropius->CastSpell(entropius, SPELL_ENRAGE, true);
+                }
+                else
+                    EnrageTimer -= diff;
             }
 
             if (!updateVictim())
@@ -745,8 +758,8 @@ class npc_void_sentinel : public CreatureScript
 
         void onReset(bool /*onSpawn*/)
         {
-            PulseTimer = 10000 + rand()%10000;
-            VoidBlastTimer = 45000; //is this a correct timer?
+            PulseTimer = 3000;
+            VoidBlastTimer = 10000 + rand()%10000; //is this a correct timer?
             StartActiveTimer = 500;
 
             float x,y,z,o;
@@ -783,7 +796,7 @@ class npc_void_sentinel : public CreatureScript
             if (PulseTimer <= diff)
             {
                 doCast((Unit*)NULL, SPELL_SHADOW_PULSE, true);
-                PulseTimer = 20000;
+                PulseTimer = 3000;
             }
             else
                 PulseTimer -= diff;
@@ -791,7 +804,7 @@ class npc_void_sentinel : public CreatureScript
             if (VoidBlastTimer <= diff)
             {
                 doCast(me->getVictim(), SPELL_VOID_BLAST, false);
-                VoidBlastTimer = 45000;
+                VoidBlastTimer = 20000;
             }
             else
                 VoidBlastTimer -= diff;
