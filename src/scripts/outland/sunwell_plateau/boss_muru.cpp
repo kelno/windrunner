@@ -557,7 +557,7 @@ public:
             if (SummonTimer <= diff)
             {
                 if (Creature* summoner = me->FindNearestCreature(CREATURE_SENTINAL_SUMMONER, 100.0f, true))
-                    doCast(summoner, SPELL_SUMMON_VOID_SENTINEL_VISUAL, true);
+                    doCast(summoner, SPELL_SUMMON_VOID_SENTINEL_VISUAL, false);
 
                 SummonTimer = 5000;
                 SummonSentinel = false;
