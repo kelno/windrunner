@@ -152,6 +152,12 @@ public:
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
+        
+        void message(uint32 id, uint32 data)
+        {
+            if (id == 1)
+                EnrageTimer = data;
+        }
 
         void onSummon(Creature* summoned)
         {
@@ -241,11 +247,13 @@ public:
 
         bool DarkFiend;
         bool Gate;
+        bool EnrageTimerTransmitted;
 
         void onReset(bool onSpawn)
         {
             DarkFiend = false;
             Gate = false;
+            EnrageTimerTransmitted = false;
             Phase = 0;
 
             if (onSpawn)
@@ -336,7 +344,7 @@ public:
                     RespawnTimer -= diff;
             }
             
-            if (Phase >= 2) {
+            /*if (Phase >= 2) {
                 if (EnrageTimer <= diff) {
                     EnrageTimer = 999999;
                     if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
@@ -344,7 +352,7 @@ public:
                 }
                 else
                     EnrageTimer -= diff;
-            }
+            }*/
 
             if (!updateVictim())
                 return;
@@ -382,6 +390,14 @@ public:
                             {
                                 case NOT_STARTED:
                                     onReset(false);
+                                    break;
+                                case IN_PROGRESS:
+                                    if (!EnrageTimerTransmitted) {
+                                        if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true)) {
+                                            entropius->getAI()->message(1, EnrageTimer);
+                                            EnrageTimerTransmitted = true;
+                                        }
+                                    }
                                     break;
                                 case DONE:
                                     Phase = 4;
