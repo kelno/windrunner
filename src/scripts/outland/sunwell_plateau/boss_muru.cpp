@@ -897,7 +897,7 @@ class npc_void_spawn : public CreatureScript
 
         void onReset(bool /*onSpawn*/)
         {
-            ShadowBoltVolleyTimer = 5000;
+            ShadowBoltVolleyTimer = urand(2000, 10000);
         }
 
         void update(const uint32 diff)
