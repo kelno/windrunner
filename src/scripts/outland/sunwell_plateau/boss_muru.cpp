@@ -596,17 +596,6 @@ public:
 
         void onSummon(Creature* summoned)
         {
-            if (pInstance)
-            {
-                if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                {
-                    if (summoned->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
-                        summoned->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    else
-                        summoned->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                }
-            }
-
             Summons.Summon(summoned);
         }
 
@@ -815,23 +804,32 @@ class npc_void_sentinel : public CreatureScript
     class npc_void_sentinelAI : public CreatureAINew
     {
         public:
-	npc_void_sentinelAI(Creature* creature) : CreatureAINew(creature) {}
+	npc_void_sentinelAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
 
         uint32 PulseTimer;
         uint32 VoidBlastTimer;
-        uint32 StartActiveTimer;
+        uint32 phase;
+        uint32 phaseTimer;
 
         void onReset(bool /*onSpawn*/)
         {
-            PulseTimer = 3000;
+            phase = 0;
+            phaseTimer = 3000;
+            PulseTimer = 6000;
             VoidBlastTimer = 10000 + rand()%10000; //is this a correct timer?
-            StartActiveTimer = 500;
 
             float x,y,z,o;
             me->GetHomePosition(x,y,z,o);
             doTeleportTo(x,y,71);
 
             me->SetFullTauntImmunity(true);
+
+            me->addUnitState(UNIT_STAT_STUNNED);
         }
 
         void onDeath(Unit* killer)
@@ -844,13 +842,33 @@ class npc_void_sentinel : public CreatureScript
 
         void update(const uint32 diff)
         {
-            if (StartActiveTimer >= diff) {
-                StartActiveTimer -= diff;
-                return;
-            }
-            
             if (!updateVictim())
                 return;
+
+            if (phaseTimer <= diff)
+            {
+                switch (phase)
+                {
+                    case 0:
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        doResetThreat();
+                        setZoneInCombat(true);
+                        if (pInstance)
+                        {
+                            if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                            {
+                                if (me->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
+                                    me->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                                else
+                                    me->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                            }
+                        }
+                        phase = 1;
+                        break;
+                }
+            }
+            else
+                phaseTimer -= diff;
 
             if (PulseTimer <= diff)
             {
