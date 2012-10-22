@@ -820,7 +820,7 @@ class npc_void_sentinel : public CreatureScript
         {
             phase = 0;
             phaseTimer = 3000;
-            PulseTimer = 6000;
+            PulseTimer = 3000;
             VoidBlastTimer = 10000 + rand()%10000; //is this a correct timer?
 
             float x,y,z,o;
@@ -842,16 +842,12 @@ class npc_void_sentinel : public CreatureScript
 
         void update(const uint32 diff)
         {
-            if (!updateVictim())
-                return;
-
             if (phaseTimer <= diff)
             {
                 switch (phase)
                 {
                     case 0:
                         me->clearUnitState(UNIT_STAT_STUNNED);
-                        doResetThreat();
                         setZoneInCombat(true);
                         if (pInstance)
                         {
@@ -869,6 +865,9 @@ class npc_void_sentinel : public CreatureScript
             }
             else
                 phaseTimer -= diff;
+
+            if (!updateVictim())
+                return;
 
             if (PulseTimer <= diff)
             {
