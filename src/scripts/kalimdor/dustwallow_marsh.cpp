@@ -287,6 +287,15 @@ bool GossipSelect_npc_overlord_mokmorokk(Player* pPlayer, Creature* pCreature, u
     return true;
 }
 
+bool QuestAccept_npc_overlord_mokmorokk(Player* player, Creature* creature, const Quest* quest) {
+    if (quest->GetQuestId() == 1173) {
+        creature->setFaction(FACTION_UNFRIENDLY);
+        creature->AI()->AttackStart(player);
+    }
+    
+    return true;
+}
+
 /*######
 ## npc_private_hendel
 ######*/
@@ -556,6 +565,7 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_overlord_mokmorokk";
     newscript->pGossipHello =  &GossipHello_npc_overlord_mokmorokk;
     newscript->pGossipSelect = &GossipSelect_npc_overlord_mokmorokk;
+    newscript->pQuestAccept = &QuestAccept_npc_overlord_mokmorokk;
     newscript->GetAI = &GetAI_npc_overlord_mokmorokk;
     newscript->RegisterSelf();
     
