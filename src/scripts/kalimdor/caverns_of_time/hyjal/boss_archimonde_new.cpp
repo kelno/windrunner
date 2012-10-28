@@ -480,7 +480,7 @@ public:
                     Trinity::RandomResizeList(unleashSpells, 1);
                     sLog.outString("[ARCHIMONDE] Unleashing spell %u.", unleashSpells.front());
                     doCast(me->getVictim(), unleashSpells.front(), true);
-                    /*switch (unleashSpells.front()) {
+                    switch (unleashSpells.front()) {
                     case SPELL_UNLEASH_SOUL_GREEN:
                         me->RemoveSingleAuraFromStack(SPELL_SOUL_CHARGE_GREEN, 0);
                         break;
@@ -490,7 +490,7 @@ public:
                     case SPELL_UNLEASH_SOUL_YELLOW:
                         me->RemoveSingleAuraFromStack(SPELL_SOUL_CHARGE_YELLOW, 0);
                         break;
-                    }*/
+                    }
                     
                     --_chargeCount;
                     sLog.outString("[ARCHIMONDE] Cast done, %u charges left.", _chargeCount);
