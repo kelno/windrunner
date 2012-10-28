@@ -281,7 +281,7 @@ public:
                 addEvent(EV_NORDRASSIL_CHECK, 3000, 3000);
                 addEvent(EV_ENRAGE, 600000, 600000);
                 addEvent(EV_ENRAGE_CAST, 2000, 2000, EVENT_FLAG_NONE, false);
-                addEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000, EVENT_FLAG_DELAY_IF_CASTING, false);
+                addEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000, EVENT_FLAG_DELAY_IF_CASTING, false);
                 addEvent(EV_UNDER_10_PERCENT, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, false);
             }
             else {
@@ -296,7 +296,7 @@ public:
                 enableEvent(EV_ENRAGE);
                 scheduleEvent(EV_ENRAGE_CAST, 2000);
                 disableEvent(EV_ENRAGE_CAST);
-                scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000);
+                scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                 disableEvent(EV_UNLEASH_SOULCHARGE);
                 scheduleEvent(EV_UNDER_10_PERCENT, 1000, 1000);
                 disableEvent(EV_UNDER_10_PERCENT);
@@ -318,28 +318,33 @@ public:
         
         void message(uint32 type, uint32 data)
         {
+            std::string color;
             if (type == 0) {
                 talk(YELL_SLAY);
                 switch (data) {
                 case CLASS_PRIEST:
                 case CLASS_PALADIN:
                 case CLASS_WARLOCK:
+                    color = "red";
                     doCast(me, SPELL_SOUL_CHARGE_RED, true);
                     break;
                 case CLASS_MAGE:
                 case CLASS_ROGUE:
                 case CLASS_WARRIOR:
+                    color = "yellow";
                     doCast(me, SPELL_SOUL_CHARGE_YELLOW, true);
                     break;
                 case CLASS_DRUID:
                 case CLASS_SHAMAN:
                 case CLASS_HUNTER:
+                    color = "green";
                     doCast(me, SPELL_SOUL_CHARGE_GREEN, true);
                     break;
                 }
                 
                 ++_chargeCount;
                 enableEvent(EV_UNLEASH_SOULCHARGE);
+                sLog.outString("[ARCHIMONDE] Got %s soulcharge (total %u), event enabled.", color.c_str(), _chargeCount);
             }
         }
         
@@ -457,6 +462,7 @@ public:
                     break;
                 case EV_UNLEASH_SOULCHARGE:
                 {
+                    sLog.outString("[ARCHIMONDE] EV_UNLEASH_SOULCHARGE triggered.");
                     std::list<uint32> unleashSpells;
                     if (me->HasAura(SPELL_SOUL_CHARGE_GREEN))
                         unleashSpells.push_back(SPELL_UNLEASH_SOUL_GREEN);
@@ -468,9 +474,11 @@ public:
                     if (unleashSpells.empty()) { // Something went wrong
                         _chargeCount = 0;
                         disableEvent(EV_UNLEASH_SOULCHARGE);
+                        break;
                     }
                         
                     Trinity::RandomResizeList(unleashSpells, 1);
+                    sLog.outString("[ARCHIMONDE] Unleashing spell %u.", unleashSpells.front());
                     doCast(me->getVictim(), unleashSpells.front(), true);
                     /*switch (unleashSpells.front()) {
                     case SPELL_UNLEASH_SOUL_GREEN:
@@ -485,10 +493,15 @@ public:
                     }*/
                     
                     --_chargeCount;
-                    if (_chargeCount)
-                        scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 30000);
-                    else
+                    sLog.outString("[ARCHIMONDE] Cast done, %u charges left.", _chargeCount);
+                    if (_chargeCount) {
+                        sLog.outString("[ARCHIMONDE] Rescheduling event.");
+                        scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
+                    }
+                    else {
+                        sLog.outString("[ARCHIMONDE] Disabling event.");
                         disableEvent(EV_UNLEASH_SOULCHARGE);
+                    }
                     break;
                 }
                 case EV_UNDER_10_PERCENT:
