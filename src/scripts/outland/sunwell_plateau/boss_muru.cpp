@@ -609,7 +609,7 @@ public:
             switch(Spell->Id)
             {
                 case SPELL_SUMMON_VOID_SENTINEL_VISUAL:
-                    doCast((Unit*)NULL, SPELL_SUMMON_VOID_SENTINEL, false);
+                    doCast(me, SPELL_SUMMON_VOID_SENTINEL, false);
                     break;
             }
         }
