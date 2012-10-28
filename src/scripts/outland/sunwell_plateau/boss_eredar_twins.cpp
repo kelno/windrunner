@@ -129,9 +129,9 @@ struct boss_sacrolashAI : public ScriptedAI
         if (!m_creature->isInCombat()) {
             ShadowbladesTimer = 10000;
             ShadownovaTimer = 30000;
-            ConfoundingblowTimer = 20000;
+            ConfoundingblowTimer = 25000;
             ShadowimageTimer = 10000 + rand()%2000;
-            ConflagrationTimer = 40000;
+            ConflagrationTimer = 30000;
             EnrageTimer = 360000;
             CheckFBTimer = 200;
 
@@ -171,8 +171,6 @@ struct boss_sacrolashAI : public ScriptedAI
         
         me->RemoveAurasDueToSpell(45769);
         me->CastSpell(me, 45769, true);
-
-        DoCast(m_creature, SPELL_DUAL_WIELD, true);
     }
     
     void JustSummoned(Creature* pSummon)
@@ -353,10 +351,11 @@ struct boss_sacrolashAI : public ScriptedAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-                    if (Temp && Temp->getVictim())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
 
@@ -371,10 +370,11 @@ struct boss_sacrolashAI : public ScriptedAI
 
                 if (!m_creature->IsNonMeleeSpellCasted(false)) {
                     Unit* target = NULL;
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-                    if (Temp && Temp->getVictim())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
                     if (target) 
                         DoCast(target, SPELL_SHADOW_NOVA);
 
@@ -396,11 +396,11 @@ struct boss_sacrolashAI : public ScriptedAI
             if (!m_creature->IsNonMeleeSpellCasted(false))
             {
                 Unit* target = NULL;
-                target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
+                target = SelectUnit(SELECT_TARGET_RANDOM, 0);
                 if(target)
                     DoCast(target, SPELL_CONFOUNDING_BLOW);
 
-                ConfoundingblowTimer = 20000;
+                ConfoundingblowTimer = 20000 + (rand()%5000);
             }
         }else ConfoundingblowTimer -=diff;
 
@@ -777,9 +777,10 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     Unit* target = NULL;
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
-                    if (Temp && Temp->getVictim())
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
                     if(target)
                         DoCast(target, SPELL_SHADOW_NOVA);
@@ -798,10 +799,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
-                    if (Temp && Temp->getVictim())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
+                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
 
