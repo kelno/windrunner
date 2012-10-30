@@ -342,9 +342,8 @@ struct npc_sunblade_slayerAI : public ScriptedAI
         }
         else
             slayingTimer -= diff;
-            
-        if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
-            DoMeleeAttackIfReady();
+
+        DoMeleeAttackIfReady();
     }
 };
 
@@ -363,30 +362,19 @@ CreatureAI* GetAI_npc_sunblade_slayer(Creature *pCreature)
 
 struct npc_sunblade_cabalist : public ScriptedAI
 {
-    npc_sunblade_cabalist(Creature *c) : ScriptedAI(c), summons(m_creature)
-    {
-        firstReset = true;
-    }
+    npc_sunblade_cabalist(Creature *c) : ScriptedAI(c), summons(m_creature) {}
     
     uint32 igniteManaTimer;
-    bool firstReset;
+    uint32 summonImpTimer;
     
     SummonList summons;
     
     void Reset()
     {
         igniteManaTimer = 3000;
+        summonImpTimer = urand(5000, 10000);
         
         summons.DespawnAll();
-        if (firstReset && m_creature->isAlive()) {
-            DoCast(m_creature, SPELL_SUMMON_IMP);
-            firstReset = false;
-        }
-    }
-    
-    void JustReachedHome()
-    {
-        DoCast(m_creature, SPELL_SUMMON_IMP);
     }
     
     void Aggro(Unit *pWho) {}
@@ -433,6 +421,15 @@ struct npc_sunblade_cabalist : public ScriptedAI
             igniteManaTimer = 10000+rand()%3000;
             return;
         }
+
+        if (summonImpTimer <= diff)
+        {
+            DoCast(m_creature, SPELL_SUMMON_IMP);
+            summonImpTimer = urand(10000, 20000);
+            return;
+        }
+        else
+            summonImpTimer -= diff;
             
         // Continuously cast Shadow bolt when nothing else to do
         DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
