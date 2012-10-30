@@ -155,10 +155,6 @@ public:
                 addEvent(EV_CHECK, 3000, 3000);
                 addEvent(EV_CHANGE_TARGET, 500, 500);
             }
-            else {
-                scheduleEvent(EV_CHECK, 3000);
-                scheduleEvent(EV_CHANGE_TARGET, 500);
-            }
             
             _archimondeGUID = 0;
             
@@ -173,19 +169,17 @@ public:
         
         void update(uint32 const diff)
         {
-            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            //me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            me->SetReactState(REACT_PASSIVE);
 
             if (!_archimondeGUID) {
                 if (_instance)
                     _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
             }
-            
-            if (Unit* target = me->getVictim()) {
-                if (!target->isInAccessiblePlaceFor(me) || me->IsWithinMeleeRange(target))
-                    scheduleEvent(EV_CHANGE_TARGET, 1);
-            }
-            
+
             updateEvents(diff);
+            
+            me->SetSpeed(MOVE_RUN, 1.4f);
             
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
@@ -206,12 +200,17 @@ public:
                     if (Creature* archimonde = Creature::GetCreature(*me, _archimondeGUID))
                         target = archimonde->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0);
 
-                    if (target) {
+                    if (target && target->isInAccessiblePlaceFor(me)) {
                         me->AddThreat(target, 1000000.0f);
-                        me->GetMotionMaster()->MoveFollow(target, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                        //me->GetMotionMaster()->MoveFollow(target, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                        _targetZ = target->GetPositionZ();
+                        me->UpdateGroundPositionZ(target->GetPositionX(), target->GetPositionY(),_targetZ);
+                        me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), _targetZ);
+                        scheduleEvent(EV_CHANGE_TARGET, 5000);
+                        
                     }
-                    
-                    scheduleEvent(EV_CHANGE_TARGET, 5000);
+                    else
+                        scheduleEvent(EV_CHANGE_TARGET, 500);
 
                     break;
                 }
@@ -223,6 +222,7 @@ public:
         ScriptedInstance* _instance;
         
         uint64 _archimondeGUID;
+        float _targetZ;
     };
     
     CreatureAINew* getAI(Creature* creature)
@@ -281,7 +281,7 @@ public:
                 addEvent(EV_NORDRASSIL_CHECK, 3000, 3000);
                 addEvent(EV_ENRAGE, 600000, 600000);
                 addEvent(EV_ENRAGE_CAST, 2000, 2000, EVENT_FLAG_NONE, false);
-                addEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000, EVENT_FLAG_DELAY_IF_CASTING, false);
+                addEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                 addEvent(EV_UNDER_10_PERCENT, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, false);
             }
             else {
@@ -297,7 +297,6 @@ public:
                 scheduleEvent(EV_ENRAGE_CAST, 2000);
                 disableEvent(EV_ENRAGE_CAST);
                 scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
-                disableEvent(EV_UNLEASH_SOULCHARGE);
                 scheduleEvent(EV_UNDER_10_PERCENT, 1000, 1000);
                 disableEvent(EV_UNDER_10_PERCENT);
             }
@@ -342,9 +341,9 @@ public:
                     break;
                 }
                 
-                ++_chargeCount;
-                enableEvent(EV_UNLEASH_SOULCHARGE);
-                sLog.outString("[ARCHIMONDE] Got %s soulcharge (total %u), event enabled.", color.c_str(), _chargeCount);
+                /*++_chargeCount;
+                enableEvent(EV_UNLEASH_SOULCHARGE);*/
+                sLog.outString("[ARCHIMONDE] Got %s soulcharge (total %u).", color.c_str(), _chargeCount);
             }
         }
         
@@ -471,9 +470,10 @@ public:
                     if (me->HasAura(SPELL_SOUL_CHARGE_YELLOW))
                         unleashSpells.push_back(SPELL_UNLEASH_SOUL_YELLOW);
                     
-                    if (unleashSpells.empty()) { // Something went wrong
-                        _chargeCount = 0;
-                        disableEvent(EV_UNLEASH_SOULCHARGE);
+                    if (unleashSpells.empty()) {
+                        /*_chargeCount = 0;
+                        disableEvent(EV_UNLEASH_SOULCHARGE);*/
+                        scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                         break;
                     }
                         
@@ -492,16 +492,16 @@ public:
                         break;
                     }
                     
-                    --_chargeCount;
+                    //--_chargeCount;
                     sLog.outString("[ARCHIMONDE] Cast done, %u charges left.", _chargeCount);
-                    if (_chargeCount) {
+                    //if (_chargeCount) {
                         sLog.outString("[ARCHIMONDE] Rescheduling event.");
                         scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
-                    }
+                    /*}
                     else {
                         sLog.outString("[ARCHIMONDE] Disabling event.");
                         disableEvent(EV_UNLEASH_SOULCHARGE);
-                    }
+                    }*/
                     break;
                 }
                 case EV_UNDER_10_PERCENT:
