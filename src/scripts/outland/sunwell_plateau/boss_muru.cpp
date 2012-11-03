@@ -77,7 +77,7 @@ enum Spells
     SPELL_BLACKHOLE_SPAWN2      = 46247,
     SPELL_BLACKHOLE_VISUAL2     = 46235,
     SPELL_BLACKHOLE_GROW        = 46228,
-    SPELl_BLACK_HOLE_EFFECT     = 46230,
+    SPELL_BLACK_HOLE_EFFECT     = 46230,
     SPELL_SINGULARITY           = 46238
 };
 
@@ -109,6 +109,8 @@ float Humanoides[6][5] =
     {CREATURE_BERSERKER, 1900.85f,    555.99f,    71.30f,    2.44f},
     {CREATURE_FURY_MAGE, 1900.85f,    555.99f,    71.30f,    2.57f}
 };
+
+typedef std::map<uint64, uint32> GuidMapCD;
 
 class boss_entropius : public CreatureScript
 {
@@ -968,18 +970,34 @@ public:
         uint32 DespawnTimer;
         uint32 SpellTimer;
         uint32 SingularityTimer;
+        uint32 blackHoleTimer;
         bool Visual2;
+        Map::PlayerList players;
+        GuidSet guidPlayerCD;
 
         void onReset(bool onSpawn)
         {
             DespawnTimer = 15000;
             SpellTimer = 5000;
             SingularityTimer = 6000;
+            blackHoleTimer = 5000;
             Visual2 = false;
 
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
             me->addUnitState(UNIT_STAT_STUNNED);
+
+            guidPlayerCD.clear();
+            players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* plr = itr->getSource();
+                    if (plr)
+                        guidPlayerCD[plr->GetGUID()] = 0;
+                }
+            }
         }
 
         void update(const uint32 diff)
@@ -1014,12 +1032,22 @@ public:
                         }
                     }
                 }
-                std::list<Unit*> players;
-                players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
-                for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    doCast((*itr), SPELl_BLACK_HOLE_EFFECT, true);
 
+                if (!players.isEmpty())
+                {
+                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    {
+                        Player* plr = itr->getSource();
+                        if (plr && guidPlayerCDfind && me->GetDistance(plr) <= 7.0f !plr->HasAura(SPELL_BLACK_HOLE_EFFECT))
+                        {
+                            if (guidPlayerCD[plr->GetGUID()] == 0)
+                            {
+                                doCast(plr, SPELL_BLACK_HOLE_EFFECT, false);
+                                guidPlayerCD[plr->GetGUID()] = 4000;
+                            }
+                        }
+                    }
+                }
                 SpellTimer = 300;
             }
             else
@@ -1027,16 +1055,63 @@ public:
 
             if (SingularityTimer <= diff)
             {
-                std::list<Unit*> players;
-                players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
-                for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    doCast((*itr), SPELL_SINGULARITY, true);
-
+                if (!players.isEmpty())
+                {
+                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    {
+                        Player* plr = itr->getSource();
+                        if (plr && me->GetDistance(plr) <= 5.0f)
+                        {
+                            doCast(plr, SPELL_SINGULARITY, true);
+                        }
+                    }
+                }
                 SingularityTimer = 1000;
             }
             else
                 SingularityTimer -= diff;
+
+            if (!guidPlayerCD.empty())
+            {
+                for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                {
+                    if ((*i).second > diff)
+                        guidPlayerCD[(*i).first] = (*i).second - diff;
+                    else
+                        guidPlayerCD[(*i).first] = 0;
+                }
+            }
+
+            if (blackHoleTimer <= diff)
+            {
+                if (!guidPlayerCD.empty())
+                {
+                    for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                    {
+                        if ((*i).second > 0)
+                        {
+                            Player *plr = objmgr.GetPlayer((*i).first);
+                            float vcos, vsin;
+                            float angle = me->GetMap()->rand_norm()*2*M_PI;
+                            vcos = cos(angle);
+                            vsin = sin(angle);
+
+                            WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+                            data.append(plr->GetPackGUID());
+                            data << uint32(0);                                      // Sequence
+                            data << float(vcos);                                    // x direction
+                            data << float(vsin);                                    // y direction
+                            data << float(plr->GetDistance2d(me));                  // Horizontal speed
+                            data << float(-15.0f);                                  // Z Movement speed
+
+                            plr->GetSession()->SendPacket(&data);
+                        }
+                    }
+                }
+                blackHoleTimer = 1000;
+            }
+            else
+                blackHoleTimer -= diff;
         }
     };
 
