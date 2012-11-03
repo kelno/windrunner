@@ -745,11 +745,15 @@ public:
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
+        void onDeath(Unit* killer)
+        {
+            doCast((Unit*)NULL, SPELL_DARKFIEND_VISUAL, false);
+        }
+
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
         {
             for (uint8 i = 0; i < 3; ++i)
                 if (Spell->Effect[i] == 38) {
-                    doCast(me, 45936, true);
                     me->DisappearAndDie();
                 }
         }
