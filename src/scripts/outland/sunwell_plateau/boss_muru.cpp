@@ -747,7 +747,7 @@ public:
 
         void onDeath(Unit* killer)
         {
-            doCast((Unit*)NULL, SPELL_DARKFIEND_VISUAL, false);
+            doCast(me, SPELL_DARKFIEND_VISUAL, false);
         }
 
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
