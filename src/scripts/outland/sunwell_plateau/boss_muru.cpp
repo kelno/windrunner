@@ -27,6 +27,7 @@ SDComment: all sounds, black hole effect triggers to often (46228)
 #include "CreatureScript.h"
 #include "CreatureAINew.h"
 #include "def_sunwell_plateau.h"
+#include "ObjectMgr.h"
 
 // Muru & Entropius's spells
 enum Spells
@@ -972,8 +973,7 @@ public:
         uint32 SingularityTimer;
         uint32 blackHoleTimer;
         bool Visual2;
-        Map::PlayerList players;
-        GuidSet guidPlayerCD;
+        GuidMapCD guidPlayerCD;
 
         void onReset(bool onSpawn)
         {
@@ -988,7 +988,7 @@ public:
             me->addUnitState(UNIT_STAT_STUNNED);
 
             guidPlayerCD.clear();
-            players = pInstance->instance->GetPlayers();
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
             if (!players.isEmpty())
             {
                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
@@ -1033,12 +1033,13 @@ public:
                     }
                 }
 
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
                 if (!players.isEmpty())
                 {
                     for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                     {
                         Player* plr = itr->getSource();
-                        if (plr && guidPlayerCDfind && me->GetDistance(plr) <= 7.0f !plr->HasAura(SPELL_BLACK_HOLE_EFFECT))
+                        if (plr && me->GetDistance(plr) <= 7.0f)
                         {
                             if (guidPlayerCD[plr->GetGUID()] == 0)
                             {
@@ -1055,6 +1056,7 @@ public:
 
             if (SingularityTimer <= diff)
             {
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
                 if (!players.isEmpty())
                 {
                     for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
