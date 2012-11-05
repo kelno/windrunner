@@ -300,23 +300,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
     }
     
     void Aggro(Unit *pWho) {}
-    
-    /*void AttackStart(Unit* who)
-    {
-        if (m_creature->Attack(who, true))
-        {
-            m_creature->AddThreat(who, 0.0f);
 
-            if (!InCombat)
-            {
-                InCombat = true;
-                Aggro(who);
-            }
-
-            DoStartMovement(who, 13, 0);
-        }
-    }*/
-    
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())
@@ -365,36 +349,21 @@ struct npc_sunblade_cabalist : public ScriptedAI
     npc_sunblade_cabalist(Creature *c) : ScriptedAI(c), summons(m_creature) {}
     
     uint32 igniteManaTimer;
-    uint32 summonImpTimer;
-    
+
     SummonList summons;
     
     void Reset()
     {
         igniteManaTimer = 3000;
-        summonImpTimer = urand(5000, 10000);
-        
+
         summons.DespawnAll();
     }
     
-    void Aggro(Unit *pWho) {}
-    
-    /*void AttackStart(Unit* who)
+    void Aggro(Unit *pWho)
     {
-        if (m_creature->Attack(who, true))
-        {
-            m_creature->AddThreat(who, 0.0f);
+        DoCast(m_creature, SPELL_SUMMON_IMP);
+    }
 
-            if (!InCombat)
-            {
-                InCombat = true;
-                Aggro(who);
-            }
-
-            DoStartMovement(who, 15, 0);
-        }
-    }*/
-    
     void JustSummoned(Creature* pSummon)
     {
         summons.Summon(pSummon);
@@ -409,27 +378,16 @@ struct npc_sunblade_cabalist : public ScriptedAI
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
-        
-        if (igniteManaTimer > 400)
-            igniteManaTimer -= diff;
-            
-        if (m_creature->IsNonMeleeSpellCasted(false))
-            return;
-            
-        if (igniteManaTimer <= 400) {
+
+        if (igniteManaTimer <= diff)
+        {
+            me->InterruptNonMeleeSpells(false);
             DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_IGNITE_MANA);
             igniteManaTimer = 10000+rand()%3000;
             return;
         }
-
-        if (summonImpTimer <= diff)
-        {
-            DoCast(m_creature, SPELL_SUMMON_IMP);
-            summonImpTimer = urand(10000, 20000);
-            return;
-        }
         else
-            summonImpTimer -= diff;
+            igniteManaTimer -= diff;
             
         // Continuously cast Shadow bolt when nothing else to do
         DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
@@ -466,23 +424,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
     {
         DoCast(m_creature, SPELL_HOLYFORM);
     }
-    
-    /*void AttackStart(Unit* who)
-    {
-        if (m_creature->Attack(who, true))
-        {
-            m_creature->AddThreat(who, 0.0f);
 
-            if (!InCombat)
-            {
-                InCombat = true;
-                Aggro(who);
-            }
-
-            DoStartMovement(who, 10, 0);
-        }
-    }*/
-    
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())
@@ -541,23 +483,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
     }
     
     void Aggro(Unit *pWho) {}
-    
-    /*void AttackStart(Unit* who)
-    {
-        if (m_creature->Attack(who, true))
-        {
-            m_creature->AddThreat(who, 0.0f);
 
-            if (!InCombat)
-            {
-                InCombat = true;
-                Aggro(who);
-            }
-
-            DoStartMovement(who, 10, 0);
-        }
-    }*/
-    
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())
@@ -622,23 +548,7 @@ struct npc_sunblade_archmage : public ScriptedAI
     }
     
     void Aggro(Unit *pWho) {}
-    
-    /*void AttackStart(Unit* who)
-    {
-        if (m_creature->Attack(who, true))
-        {
-            m_creature->AddThreat(who, 0.0f);
 
-            if (!InCombat)
-            {
-                InCombat = true;
-                Aggro(who);
-            }
-
-            DoStartMovement(who, 8, 0);
-        }
-    }*/
-    
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())

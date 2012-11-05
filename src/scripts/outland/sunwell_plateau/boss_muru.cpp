@@ -748,11 +748,6 @@ public:
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
-        void onDeath(Unit* killer)
-        {
-            doCast(me, SPELL_DARKFIEND_VISUAL, false);
-        }
-
         void onHitBySpell(Unit* /*caster*/, const SpellEntry* Spell)
         {
             for (uint8 i = 0; i < 3; ++i)
