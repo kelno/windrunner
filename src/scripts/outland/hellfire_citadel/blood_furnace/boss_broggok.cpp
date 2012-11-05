@@ -51,9 +51,9 @@ struct boss_broggokAI : public ScriptedAI
     void Reset()
     {
         me->SetUnitMovementFlags(MOVEMENTFLAG_NONE);
-        AcidSpray_Timer = 10000;
-        PoisonSpawn_Timer = 5000;
-        PoisonBolt_Timer = 7000;
+        AcidSpray_Timer = 5000;
+        PoisonSpawn_Timer = 10000;
+        PoisonBolt_Timer = 8000;
         if (pInstance && me->isAlive())
             pInstance->SetData(DATA_BROGGOKEVENT, NOT_STARTED);
     }
@@ -111,21 +111,21 @@ struct boss_broggokAI : public ScriptedAI
 
         if (AcidSpray_Timer <= diff) {
             DoCast(me->getVictim(), HeroicMode ? SPELL_SLIME_SPRAY_H : SPELL_SLIME_SPRAY);
-            AcidSpray_Timer = 4000 + rand()%8000;
+            AcidSpray_Timer = 10000;
         }
         else
             AcidSpray_Timer -= diff;
 
         if (PoisonBolt_Timer <= diff) {
             DoCast(me->getVictim(), HeroicMode ? SPELL_POISON_BOLT_H : SPELL_POISON_BOLT);
-            PoisonBolt_Timer = 4000 + rand()%8000;
+            PoisonBolt_Timer = 8000;
         }
         else
             PoisonBolt_Timer -= diff;
 
         if (PoisonSpawn_Timer <= diff) {
             DoCast(me, SPELL_POISON_CLOUD);
-            PoisonSpawn_Timer = 20000;
+            PoisonSpawn_Timer = 10000;
         }
         else
             PoisonSpawn_Timer -= diff;
