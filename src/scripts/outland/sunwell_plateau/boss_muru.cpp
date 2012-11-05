@@ -1104,13 +1104,13 @@ public:
                             data << float(vcos);                                    // x direction
                             data << float(vsin);                                    // y direction
                             data << float(plr->GetDistance2d(me));                  // Horizontal speed
-                            data << float(-15.0f);                                  // Z Movement speed
+                            data << float(-7.0f);                                   // Z Movement speed
 
                             plr->GetSession()->SendPacket(&data);
                         }
                     }
                 }
-                blackHoleTimer = 1000;
+                blackHoleTimer = urand(500, 1500);
             }
             else
                 blackHoleTimer -= diff;
