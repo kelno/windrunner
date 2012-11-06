@@ -562,7 +562,7 @@ public:
         void onReset(bool onSpawn)
         {
             SummonTimer = 5000;
-            switchTimer = 1000;
+            switchTimer = 0;
 
             InAction = false;
             SummonSentinel = false;
@@ -605,10 +605,10 @@ public:
                     {
                         if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
                         {
-                            doCast(muru, switchState ? 46178 : 46208, false);
+                            doCast(muru, switchState ? 46178 : 46208, true);
                             switchState = 1 - switchState;
                         }
-                        switchTimer = 1000;
+                        switchTimer = 500;
                    }
                     else
                         switchTimer -= diff;
@@ -1018,15 +1018,19 @@ public:
         uint32 SpellTimer;
         uint32 SingularityTimer;
         uint32 blackHoleTimer;
+        uint32 phase;
+        uint32 phaseTimer;
         bool Visual2;
         GuidMapCD guidPlayerCD;
 
         void onReset(bool onSpawn)
         {
+            phase = 0;
+            phaseTimer = 5000;
             DespawnTimer = 15000;
-            SpellTimer = 5000;
-            SingularityTimer = 6000;
-            blackHoleTimer = 5000;
+            SpellTimer = 300;
+            SingularityTimer = 300;
+            blackHoleTimer = 300;
             Visual2 = false;
 
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
@@ -1053,113 +1057,127 @@ public:
             else
                 DespawnTimer -= diff;
 
-            if (SpellTimer <= diff)
+            if (phaseTimer <= diff)
             {
-                if (!Visual2)
+                switch (phase)
                 {
-                    Visual2 = true;
-                    me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
-                    doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
-                    me->clearUnitState(UNIT_STAT_STUNNED);
-                    setZoneInCombat(true);
-                    Unit* Victim = selectUnit(SELECT_TARGET_RANDOM, 0, -15.0f, true);
-                    if (Victim)
+                    case 0:
+                        me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
+                        doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        phaseTimer = 300;
+                        phase = 1;
+                        break;
+                    case 1:
                     {
-                        attackStart(Victim);
-                        doModifyThreat(Victim, 1000000.0f);
-                    }
-                    else
-                    {
-                        Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                        Unit* Victim = selectUnit(SELECT_TARGET_RANDOM, 0, -15.0f, true);
                         if (Victim)
                         {
                             attackStart(Victim);
                             doModifyThreat(Victim, 1000000.0f);
                         }
-                    }
-                }
-
-                Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                if (!players.isEmpty())
-                {
-                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    {
-                        Player* plr = itr->getSource();
-                        if (plr && me->GetDistance(plr) <= 7.0f)
+                        else
                         {
-                            if (guidPlayerCD[plr->GetGUID()] == 0)
+                            Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                            if (Victim)
                             {
-                                doCast(plr, SPELL_BLACK_HOLE_EFFECT, false);
-                                guidPlayerCD[plr->GetGUID()] = 4000;
+                                attackStart(Victim);
+                                doModifyThreat(Victim, 1000000.0f);
                             }
                         }
+                        phaseTimer = 300;
+                        phase = 2;
+                        break;
                     }
-                }
-                SpellTimer = 300;
-            }
-            else
-                SpellTimer -= diff;
-
-            if (SingularityTimer <= diff)
-            {
-                Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                if (!players.isEmpty())
-                {
-                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    {
-                        Player* plr = itr->getSource();
-                        if (plr && me->GetDistance(plr) <= 5.0f)
+                    case 2:
+                        if (SpellTimer <= diff)
                         {
-                            doCast(plr, SPELL_SINGULARITY, true);
+                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                            if (!players.isEmpty())
+                            {
+                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                                {
+                                    Player* plr = itr->getSource();
+                                    if (plr && me->GetDistance(plr) <= 7.0f)
+                                    {
+                                        if (guidPlayerCD[plr->GetGUID()] == 0)
+                                        {
+                                            doCast(plr, SPELL_BLACK_HOLE_EFFECT, false);
+                                            guidPlayerCD[plr->GetGUID()] = 4000;
+                                        }
+                                    }
+                                }
+                            }
+                            SpellTimer = 300;
                         }
-                    }
-                }
-                SingularityTimer = 1000;
-            }
-            else
-                SingularityTimer -= diff;
+                        else
+                            SpellTimer -= diff;
 
-            if (!guidPlayerCD.empty())
-            {
-                for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
-                {
-                    if ((*i).second > diff)
-                        guidPlayerCD[(*i).first] = (*i).second - diff;
-                    else
-                        guidPlayerCD[(*i).first] = 0;
-                }
-            }
-
-            if (blackHoleTimer <= diff)
-            {
-                if (!guidPlayerCD.empty())
-                {
-                    for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
-                    {
-                        if ((*i).second > 0)
+                        if (SingularityTimer <= diff)
                         {
-                            Player *plr = objmgr.GetPlayer((*i).first);
-                            float vcos, vsin;
-                            float angle = me->GetMap()->rand_norm()*2*M_PI;
-                            vcos = cos(angle);
-                            vsin = sin(angle);
-
-                            WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
-                            data.append(plr->GetPackGUID());
-                            data << uint32(0);                                      // Sequence
-                            data << float(vcos);                                    // x direction
-                            data << float(vsin);                                    // y direction
-                            data << float(plr->GetDistance2d(me));                  // Horizontal speed
-                            data << float(-7.0f);                                   // Z Movement speed
-
-                            plr->GetSession()->SendPacket(&data);
+                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                            if (!players.isEmpty())
+                            {
+                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                                {
+                                    Player* plr = itr->getSource();
+                                    if (plr && me->GetDistance(plr) <= 5.0f)
+                                        doCast(plr, SPELL_SINGULARITY, true);
+                                }
+                            }
+                            SingularityTimer = 1000;
                         }
-                    }
+                        else
+                            SingularityTimer -= diff;
+
+                        if (!guidPlayerCD.empty())
+                        {
+                            for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                            {
+                                if ((*i).second > diff)
+                                    guidPlayerCD[(*i).first] = (*i).second - diff;
+                                else
+                                    guidPlayerCD[(*i).first] = 0;
+                            }
+                        }
+
+                        if (blackHoleTimer <= diff)
+                        {
+                            if (!guidPlayerCD.empty())
+                            {
+                                for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                                {
+                                    if ((*i).second > 0)
+                                    {
+                                        Player *plr = objmgr.GetPlayer((*i).first);
+                                        float vcos, vsin;
+                                        float angle = me->GetMap()->rand_norm()*2*M_PI;
+                                        vcos = cos(angle);
+                                        vsin = sin(angle);
+
+                                        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+                                        data.append(plr->GetPackGUID());
+                                        data << uint32(0);                                      // Sequence
+                                        data << float(vcos);                                    // x direction
+                                        data << float(vsin);                                    // y direction
+                                        data << float(12.0f);                                   // Horizontal speed
+                                        data << float(-9.0f);                                   // Z Movement speed
+
+                                        plr->GetSession()->SendPacket(&data);
+                                    }
+                                }
+                            }
+                            blackHoleTimer = 700;
+                        }
+                        else
+                            blackHoleTimer -= diff;
+
+                        break;
                 }
-                blackHoleTimer = urand(500, 1500);
             }
             else
-                blackHoleTimer -= diff;
+                phaseTimer -= diff;
         }
     };
 
