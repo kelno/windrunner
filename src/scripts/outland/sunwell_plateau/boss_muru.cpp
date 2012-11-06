@@ -1109,7 +1109,7 @@ public:
                                     }
                                 }
                             }
-                            SpellTimer = 300;
+                            SpellTimer = 500;
                         }
                         else
                             SpellTimer -= diff;
@@ -1168,7 +1168,7 @@ public:
                                     }
                                 }
                             }
-                            blackHoleTimer = 700;
+                            blackHoleTimer = 800;
                         }
                         else
                             blackHoleTimer -= diff;
