@@ -83,6 +83,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint32 IceBarrierTimer;
     bool IceBarrierDone;
     uint32 felmystNorthTimer, felmystCenterTimer, felmystSouthTimer;
+    uint32 phaseEntropius;
 
     void Initialize()
     {
@@ -136,6 +137,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             Encounters[i] = NOT_STARTED;
             
         GauntletStatus = NOT_STARTED;
+        phaseEntropius = NOT_STARTED;
     }
 
     bool IsEncounterInProgress() const
@@ -282,6 +284,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_EREDAR_TWINS_EVENT: return Encounters[3];
             case DATA_MURU_EVENT:         return Encounters[4];
             case DATA_KILJAEDEN_EVENT:    return Encounters[5];
+            case DATA_MURU_TO_ENTROPIUS:  return phaseEntropius;
         }
         return 0;
     }
@@ -399,6 +402,9 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_MURU_GATE_EVENT:
                 HandleGameObject(MurusGate[0], false);
                 HandleGameObject(MurusGate[1], false);
+                break;
+            case DATA_MURU_TO_ENTROPIUS:
+                phaseEntropius = data;
                 break;
         }
 
