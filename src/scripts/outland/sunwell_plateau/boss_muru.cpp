@@ -131,11 +131,15 @@ public:
 
         uint32 BlackHoleSummonTimer;
         uint32 EnrageTimer;
+        uint32 phaseTimer;
+        uint32 phase;
 
         void onReset(bool onSpawn)
         {
             BlackHoleSummonTimer = 27000;
             EnrageTimer = 600000;
+            phaseTimer = 1000;
+            phase = 0;
 
             Summons.DespawnAll();
             if (!onSpawn)
@@ -144,15 +148,17 @@ public:
                     muru->AttackStop();
 
                 if (pInstance)
+                {
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
+                }
             }
             me->SetFullTauntImmunity(true);
+            me->addUnitState(UNIT_STAT_STUNNED);
         }
 
         void onCombatStart(Unit * /*who*/)
         {
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
-            doCast(me, SPELL_ENTROPIUS_SPAWN, false);
 
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
@@ -190,6 +196,26 @@ public:
 
         void update(const uint32 diff)
         {
+            if (phaseTimer <= diff)
+            {
+                switch (phase)
+                {
+                    case 0:
+                        doCast(me, SPELL_ENTROPIUS_SPAWN, false);
+                        phase = 1;
+                        phaseTimer = 3000;
+                        break;
+                    case 1:
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        phase = 2;
+                        break;
+                }
+            }
+            else
+                phaseTimer -= diff;
+
             if (!updateVictim())
                 return;
 
@@ -307,7 +333,7 @@ public:
                 Phase = 1;
             }
 
-            if (Phase > 1 && Phase < 4)
+            if (Phase >= 1 && Phase < 7)
                 damage = 0;
         }
 
@@ -367,58 +393,70 @@ public:
             if (me->hasUnitState(UNIT_STAT_CASTING))
                 return;
 
-            if (Phase != 0)
+            if (PhaseTimer <= diff)
             {
-                if (PhaseTimer <= diff)
+                switch (Phase)
                 {
-                    switch (Phase)
-                    {
-                        case 1:
-                            me->RemoveAllAuras();
-                            doCast(me, SPELL_OPEN_ALL_PORTALS, false);
-                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                            Phase = 2;
-                            PhaseTimer = 2000;
-                            break;
-                        case 2:
-                            me->RemoveAllAuras();
-                            doCast(me, SPELL_SUMMON_ENTROPIUS, false);
-                            me->SetVisibility(VISIBILITY_OFF);
-                            Phase = 3;
-                            PhaseTimer = 3000;
-                            break;
-                        case 3:
-                            if (!pInstance)
-                                return;
+                    case 1:
+                        me->RemoveAllAuras();
+                        doCast(me, SPELL_OPEN_ALL_PORTALS, false);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        Phase = 2;
+                        PhaseTimer = 3000;
+                        break;
+                    case 2:
+                        me->RemoveAllAuras();
+                        if (pInstance)
+                            pInstance->SetData(DATA_MURU_TO_ENTROPIUS, IN_PROGRESS);
+                        Phase = 3;
+                        PhaseTimer = 3000;
+                        break;
+                    case 3:
+                        doCast(me, SPELL_SUMMON_ENTROPIUS, false);
+                        Phase = 4;
+                        PhaseTimer = 2000;
+                        break;
+                    case 4:
+                        me->SetVisibility(VISIBILITY_OFF);
+                        Phase = 5;
+                        PhaseTimer = 1000;
+                        break;
+                    case 5:
+                        pInstance->SetData(DATA_MURU_TO_ENTROPIUS, NOT_STARTED);
+                        Phase = 6;
+                        PhaseTimer = 1000;
+                        break;
+                    case 6:
+                        if (!pInstance)
+                            return;
 
-                            switch(pInstance->GetData(DATA_MURU_EVENT))
-                            {
-                                case NOT_STARTED:
-                                    onReset(false);
-                                    break;
-                                case IN_PROGRESS:
-                                    if (!EnrageTimerTransmitted) {
-                                        if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
-                                        {
-                                            entropius->getAI()->message(1, EnrageTimer);
-                                            EnrageTimerTransmitted = true;
-                                        }
+                        switch(pInstance->GetData(DATA_MURU_EVENT))
+                        {
+                            case NOT_STARTED:
+                                onReset(false);
+                                break;
+                            case IN_PROGRESS:
+                                if (!EnrageTimerTransmitted) {
+                                    if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                                    {
+                                        entropius->getAI()->message(1, EnrageTimer);
+                                        EnrageTimerTransmitted = true;
                                     }
-                                    break;
-                                case DONE:
-                                    Phase = 4;
-                                    Summons.DespawnAll(true);
-                                    me->DisappearAndDie();
-                                    break;
-                            }
-                            
-                            PhaseTimer = 3000;                            
-                            break;
-                    }
+                                }
+                                break;
+                            case DONE:
+                                Phase = 7;
+                                Summons.DespawnAll(true);
+                                me->DisappearAndDie();
+                                break;
+                        }
+
+                        PhaseTimer = 1000;                            
+                        break;
                 }
-                else
-                    PhaseTimer -= diff;
             }
+            else
+                PhaseTimer -= diff;
 
             if (EnrageTimer <= diff && !me->HasAura(SPELL_ENRAGE, 0))
                 doCast(me, SPELL_ENRAGE, false);
@@ -516,15 +554,19 @@ public:
 
         bool SummonSentinel;
         bool InAction;
+        bool switchState;
 
         uint32 SummonTimer;
+        uint32 switchTimer;
 
         void onReset(bool onSpawn)
         {
             SummonTimer = 5000;
+            switchTimer = 1000;
 
             InAction = false;
             SummonSentinel = false;
+            switchState = false;
 
             me->addUnitState(UNIT_STAT_STUNNED);
         }
@@ -551,8 +593,26 @@ public:
         {
             if (!SummonSentinel)
             {
-                if (InAction && pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+                if (!pInstance)
+                    return;
+
+                if (InAction && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                     onReset(false);
+
+                if (pInstance->GetData(DATA_MURU_TO_ENTROPIUS) == IN_PROGRESS)
+                {
+                    if (switchTimer <= diff)
+                    {
+                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
+                        {
+                            doCast(muru, switchState ? 46178 : 46208, false);
+                            switchState = 1 - switchState;
+                        }
+                        switchTimer = 1000;
+                   }
+                    else
+                        switchTimer -= diff;
+                }
 
                 return;
             }
@@ -851,16 +911,7 @@ class npc_void_sentinel : public CreatureScript
                     case 0:
                         me->clearUnitState(UNIT_STAT_STUNNED);
                         setZoneInCombat(true);
-                        if (pInstance)
-                        {
-                            if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            {
-                                if (me->getAI()) // FIXME: Hack because getAI() may not be initialized and there is no fallback like in old CreatureAI system.
-                                    me->getAI()->attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                                else
-                                    me->AI()->AttackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                            }
-                        }
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                         phase = 1;
                         break;
                 }
