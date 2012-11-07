@@ -146,6 +146,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     {
         if (pInstance)
         {
+            pInstance->SendScriptInTestNoLootMessageToAll();
             pInstance->SetData(DATA_THELURKERBELOWEVENT, IN_PROGRESS);
             DoZoneInCombat();
         }
