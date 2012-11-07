@@ -455,7 +455,7 @@ public:
                 addEvent(EV_FEAR, 42000, 42000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_AIR_BURST, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_GRIP_LEGION, 5000, 25000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_DOOMFIRE, 10000, 10000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_DOOMFIRE, 10000, 10000);
                 addEvent(EV_MELEE_CHECK, 2000, 2000);
                 addEvent(EV_NORDRASSIL_CHECK, 3000, 3000);
                 addEvent(EV_ENRAGE, 600000, 600000);
@@ -613,7 +613,10 @@ public:
                     x = me->GetPositionX() - 5 + rand()%15;
                     y = me->GetPositionY() - 5 + rand()%15;
                     me->UpdateGroundPositionZ(x, y, z);
-                    me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000));
+                    if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000)))
+                        sLog.outString("[ARCHIMONDE] Spawned Doomfire");
+                    else
+                        sLog.outString("[ARCHIMONDE] Failed to spawn Doomfire");
                     talk(YELL_DOOMFIRE);
                     
                     //doCast(me, SPELL_DOOMFIRE_STRIKE);
