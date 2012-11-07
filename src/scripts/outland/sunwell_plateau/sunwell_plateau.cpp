@@ -400,6 +400,50 @@ CreatureAI* GetAI_npc_sunblade_cabalist(Creature *pCreature)
 }
 
 /*######
+## npc_fire_fiend
+######*/
+
+#define SPELL_FIRE_NOVA   46551
+
+struct npc_fire_fiend : public ScriptedAI
+{
+    npc_fire_fiend(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 fireNovaTimer;
+    
+    void Reset()
+    {
+        fireNovaTimer = urand(5000, 10000);
+    }
+    
+    void Aggro(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+
+        if (me->hasUnitState(UNIT_STAT_CASTING))
+            return;
+
+        if (fireNovaTimer <= diff)
+        {
+            DoCast(me, SPELL_FIRE_NOVA, false);
+            fireNovaTimer = urand(5000, 10000);
+        }
+        else
+            fireNovaTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_fire_fiend(Creature *pCreature)
+{
+    return new npc_fire_fiend(pCreature);
+}
+
+/*######
 ## npc_sunblade_dawnpriest
 ######*/
 
@@ -1280,6 +1324,11 @@ void AddSC_sunwell_plateau()
     newscript = new Script;
     newscript->Name = "npc_sunblade_cabalist";
     newscript->GetAI = &GetAI_npc_sunblade_cabalist;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_fire_fiend";
+    newscript->GetAI = &GetAI_npc_fire_fiend;
     newscript->RegisterSelf();
     
     newscript = new Script;
