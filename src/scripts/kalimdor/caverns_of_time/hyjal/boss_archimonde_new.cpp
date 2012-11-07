@@ -187,7 +187,8 @@ public:
                 {
                     if (i_pl->isAlive() && i_pl->GetDistance(me) <= 3)
                     {
-                        i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
+                        //i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
+                        i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true);
                         //soulcharges seems to be gained correctly.
                     }
                 }
@@ -293,8 +294,8 @@ public:
                         float NewAngle = _CurrentAngle + AngularDifference;
                         float NewX = _CurrentX + cos(DegreeToRadian(NewAngle)) * 6;
                         float NewY = _CurrentY + sin(DegreeToRadian(NewAngle)) * 6;
-                        float NewZ = _CurrentZ;
-                        me->UpdateGroundPositionZ(NewX, NewY, NewZ);
+                        float NewZ = me->GetMap()->GetHeight(NewX, NewY, _CurrentZ);
+                        //me->UpdateGroundPositionZ(NewX, NewY, NewZ);
 
                         Creature* Doomfire = me->SummonCreature(CREATURE_DOOMFIRE, NewX, NewY, NewZ, 0, TEMPSUMMON_TIMED_DESPAWN, DOOMFIRE_DESPAWNTIME);
                         if(Doomfire)
@@ -612,9 +613,10 @@ public:
                     float x, y, z;
                     x = me->GetPositionX() - 5 + rand()%15;
                     y = me->GetPositionY() - 5 + rand()%15;
-                    me->UpdateGroundPositionZ(x, y, z);
+                    z = me->GetPositionZ() + 1.5f;
+//                    me->UpdateGroundPositionZ(x, y, z);
                     if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000)))
-                        sLog.outString("[ARCHIMONDE] Spawned Doomfire");
+                        sLog.outString("[ARCHIMONDE] Spawned Doomfire at %f %f %f", x, y, z);
                     else
                         sLog.outString("[ARCHIMONDE] Failed to spawn Doomfire");
                     talk(YELL_DOOMFIRE);
