@@ -39,7 +39,11 @@ enum {
     SPELL_UNLEASH_SOUL_GREEN    = 32057,
     SPELL_UNLEASH_SOUL_RED      = 32053,
     
-    SPELL_FEAR                  = 31970
+    SPELL_FEAR                  = 31970,
+    
+    DOOMFIRE_REFRESHTIMER       = 1000,
+    DOOMFIRE_SUMMONTIMER        = 1000, //aka speed of the trail
+    DOOMFIRE_DESPAWNTIME        = 20000
 };
 
 enum {
@@ -130,104 +134,279 @@ public:
     }
 };
 
-class Mob_Walking_Doomfire : public CreatureScript
+class Mob_Doomfire : public CreatureScript
 {
 public:
-    Mob_Walking_Doomfire() : CreatureScript("mob_walking_doomfire") {}
-    
-    class Mob_Walking_DoomfireAI : public CreatureAINew
+    Mob_Doomfire() : CreatureScript("mob_doomfire") {}
+
+    class Mob_DoomfireAI : public CreatureAINew
     {
     public:
-        enum events
-        {
-            EV_CHECK    = 0,
-            EV_CHANGE_TARGET
-        };
-    
-        Mob_Walking_DoomfireAI(Creature* creature) : CreatureAINew(creature)
+        Mob_DoomfireAI(Creature* creature) : CreatureAINew(creature)
         {
             _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            _refreshTimer = DOOMFIRE_REFRESHTIMER;
+            _lifeTime = DOOMFIRE_DESPAWNTIME;
+            me->CastSpell(me, SPELL_DOOMFIRE_VISUAL, true);
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         }
-        
-        void onReset(bool onSpawn)
-        {
-            if (onSpawn) {
-                addEvent(EV_CHECK, 3000, 3000);
-                addEvent(EV_CHANGE_TARGET, 500, 500);
-            }
-            
-            _archimondeGUID = 0;
-            
-            doCast(me, SPELL_DOOMFIRE_SPAWN, true);
-            doCast(me, SPELL_DOOMFIRE_TRIG_TRIG);
-        }
-        
-        void onDamageTaken(Unit* /*attacker*/, uint32& damage)
-        {
-            damage = 0;
-        }
-        
+
+        void onDamageTaken(Unit* /*attacker*/, uint32& damage)	{ damage = 0; }
+
         void update(uint32 const diff)
         {
-            //me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
             me->SetReactState(REACT_PASSIVE);
 
-            if (!_archimondeGUID) {
+            if (_lifeTime < 500)
+                me->RemoveAura(SPELL_DOOMFIRE_VISUAL, 0); //esthetic
+
+            if(_archimondeGUID)
+            { 
+                if (_refreshTimer < diff)
+                {
+                    IncinerateRecklessPlayers();
+                    _refreshTimer = DOOMFIRE_REFRESHTIMER;
+                } else {
+                    _refreshTimer -= diff;
+                }
+            } else {
                 if (_instance)
                     _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
             }
+            _lifeTime -= diff;
+        }
 
-            updateEvents(diff);
-            
-            me->SetSpeed(MOVE_RUN, 1.4f);
-            
-            while (executeEvent(diff, m_currEvent)) {
-                switch (m_currEvent) {
-                case EV_CHECK:
-                {
-                    Unit* archimonde = Unit::GetUnit(*me, _archimondeGUID);
-                    if (!archimonde || archimonde->isDead() || !archimonde->isInCombat())
-                        me->DisappearAndDie();
-                        
-                    scheduleEvent(EV_CHECK, 1000);
-                    
-                    break;
-                }
-                case EV_CHANGE_TARGET:
-                {
-                    doResetThreat();
-                    Unit* target = NULL;
-                    if (Creature* archimonde = Creature::GetCreature(*me, _archimondeGUID))
-                        target = archimonde->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0);
+        void IncinerateRecklessPlayers()
+        {
+            Map *map = me->GetMap();
+            Map::PlayerList const &PlayerList = map->GetPlayers();
 
-                    if (target && target->isInAccessiblePlaceFor(me)) {
-                        me->AddThreat(target, 1000000.0f);
-                        //me->GetMotionMaster()->MoveFollow(target, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
-                        _targetZ = target->GetPositionZ();
-                        me->UpdateGroundPositionZ(target->GetPositionX(), target->GetPositionY(),_targetZ);
-                        me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), _targetZ);
-                        scheduleEvent(EV_CHANGE_TARGET, 5000);
-                        
+            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (Player* i_pl = i->getSource())
+                {
+                    if (i_pl->isAlive() && i_pl->GetDistance(me) <= 3)
+                    {
+                        i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
+                        //soulcharges seems to be gained correctly.
                     }
-                    else
-                        scheduleEvent(EV_CHANGE_TARGET, 500);
-
-                    break;
-                }
                 }
             }
         }
-        
+
     private:
         ScriptedInstance* _instance;
-        
         uint64 _archimondeGUID;
-        float _targetZ;
+        uint32 _refreshTimer;
+        uint32 _lifeTime;
     };
-    
+
     CreatureAINew* getAI(Creature* creature)
     {
-        return new Mob_Walking_DoomfireAI(creature);
+        return new Mob_DoomfireAI(creature);
+    }
+};
+
+/* This mob control the trajectory of the flamme trail and summons doomfires along the way. (His position doesnt matters.) */
+class Mob_Doomfire_Targeting : public CreatureScript
+{
+public:
+    Mob_Doomfire_Targeting() : CreatureScript("mob_doomfire_targeting") {}
+
+    class Mob_Doomfire_TargetingAI : public CreatureAINew
+    {
+    public:
+        Mob_Doomfire_TargetingAI(Creature* creature) : CreatureAINew(creature)
+        {
+            _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            _CurrentX = me->GetPositionX();
+            _CurrentY = me->GetPositionY();
+            _CurrentZ = me->GetPositionZ();
+            _LastX = 0;
+            _LastY = 0;
+            _SummonTimer = DOOMFIRE_SUMMONTIMER;
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->CastSpell(me, SPELL_DOOMFIRE_SPAWN, true);
+            _archimondeGUID = NULL;
+            _Archimonde = NULL;
+            _CurrentTarget = NULL;
+
+            if (_instance)
+            {
+                _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
+                if (_archimondeGUID)
+                {
+                    _Archimonde = Unit::GetUnit((*me), _archimondeGUID);
+                    if (_Archimonde)
+                    {
+                        _LastX = _Archimonde->GetPositionX(); //to dont initially go beneath Archimonde
+                        _LastY = _Archimonde->GetPositionY();
+                    }
+                }
+            }
+        }
+
+        void update(uint32 const diff)
+        {
+            me->SetReactState(REACT_PASSIVE);
+            if(_archimondeGUID)
+            {
+                if (!_Archimonde)
+                {
+                    _Archimonde = Unit::GetUnit((*me), _archimondeGUID);
+                }
+
+                if(_Archimonde && _Archimonde->isAlive() && _Archimonde->isInCombat())
+                {
+                    if(_SummonTimer < diff)
+                    {
+                        _CurrentAngle = GetCurrentAngle();
+
+                        float AngularDifference;
+                        if (_Archimonde->GetDistance(_CurrentX, _CurrentY, _CurrentZ) < 70)
+                        {
+                            //if I already got a target, got to check if it's still valid.
+                            if (_CurrentTarget)
+                            {
+                                float AngleWithTarget = GetAngleWithTarget(_CurrentTarget);
+                                AngularDifference = GetAngularDifference(_CurrentAngle, AngleWithTarget);
+
+                                if (fabs(AngularDifference) > 80)
+                                    _CurrentTarget = NULL;
+                            }
+
+                            if (!_CurrentTarget) 
+                            {
+                                if (_CurrentTarget = FindNewFriend())
+                                {
+                                    float AngleWithTarget = GetAngleWithTarget(_CurrentTarget);
+                                    AngularDifference = SoftenCurve(GetAngularDifference(_CurrentAngle, AngleWithTarget), 40); //diziz the mothfockin missile agility
+                                } else {
+                                    AngularDifference = 0; 
+                                }
+                            }
+                        } else { //Oh fock Ive gone too far
+                            float AngleWithTarget = GetAngleWithTarget(_Archimonde);
+                            AngularDifference = SoftenCurve(GetAngularDifference(_CurrentAngle, AngleWithTarget), 45);
+                        }
+
+                        float NewAngle = _CurrentAngle + AngularDifference;
+                        float NewX = _CurrentX + cos(DegreeToRadian(NewAngle)) * 6;
+                        float NewY = _CurrentY + sin(DegreeToRadian(NewAngle)) * 6;
+                        float NewZ = _CurrentZ;
+                        me->UpdateGroundPositionZ(NewX, NewY, NewZ);
+
+                        Creature* Doomfire = me->SummonCreature(CREATURE_DOOMFIRE, NewX, NewY, NewZ, 0, TEMPSUMMON_TIMED_DESPAWN, DOOMFIRE_DESPAWNTIME);
+                        if(Doomfire)
+                        {
+                            _LastX = _CurrentX;
+                            _LastY = _CurrentY;
+                            _CurrentX = NewX;
+                            _CurrentY = NewY;
+                            _CurrentZ = NewZ;
+                            _SummonTimer = DOOMFIRE_SUMMONTIMER;
+                        }
+                    } else { 
+                        _SummonTimer -= diff;
+                    }
+                }
+            } else {
+                if (_instance)
+                    _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
+                else
+                    _instance = ((ScriptedInstance*)me->GetInstanceData());
+            }
+        }
+
+        Player* FindNewFriend()
+        {
+            Map *map = me->GetMap();
+            Map::PlayerList const &PlayerList = map->GetPlayers();
+            std::vector<Player *> target_list;
+            Player* NewFriend = NULL;
+
+            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+            {
+                if (Player* i_pl = i->getSource())
+                {	
+                    if  (i_pl->isAlive() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
+                    {
+                        float AngleWithTarget = GetAngleWithTarget(i_pl);
+                        float AngularDifference = GetAngularDifference(_CurrentAngle, AngleWithTarget);
+                        if (fabs(AngularDifference) < 90)
+                            target_list.push_back(i_pl);
+                    }
+                }
+            }
+            if(target_list.size())
+                NewFriend = *(target_list.begin()+rand()%target_list.size());
+
+            return NewFriend; //Player* or NULL
+        }
+
+        float SoftenCurve(int givenangle, int maxangle)
+        {
+            if (givenangle > maxangle)
+                return maxangle;
+            else if (givenangle < -maxangle)
+                return -maxangle;
+            else
+                return givenangle;
+        }
+
+        float GetAngleWithTarget(Unit* target) // from -90 to 270
+        {
+            float angle;
+            if (target->GetPositionX() - _CurrentX > 0)
+                angle = RadianToDegree(atan((target->GetPositionY() - _CurrentY)/(target->GetPositionX() - _CurrentX)));
+            else
+                angle = 180 + RadianToDegree(atan((target->GetPositionY() - _CurrentY)/(target->GetPositionX() - _CurrentX)));
+            return angle;
+        }
+
+        float GetCurrentAngle() // from -90 to 270
+        {	
+            float angle;
+            if (_CurrentX - _LastX > 0)
+                angle = RadianToDegree(atan((_CurrentY - _LastY)/(_CurrentX - _LastX)));
+            else
+                angle = 180 + RadianToDegree(atan((_CurrentY - _LastY)/(_CurrentX - _LastX)));
+
+            return angle;
+        }
+
+        float GetAngularDifference(float ang1, float ang2)
+        {
+            float diff = ang2 - ang1;
+            if (diff > 180)
+                diff -= 360;
+            else if (diff < -180)
+                diff += 360;
+
+            return diff;
+        }
+
+        float RadianToDegree(float radian)  { return radian  * (180/3.14159265); }
+        float DegreeToRadian(float degree) { return degree / (180/3.14159265); }
+
+    private:
+        ScriptedInstance* _instance;
+        uint32 _SummonTimer;
+        uint64 _archimondeGUID;
+        Unit* _Archimonde;
+
+        float _CurrentX;
+        float _CurrentY;
+        float _CurrentZ;
+        float _LastX;
+        float _LastY;
+        float _CurrentAngle;
+        Player* _CurrentTarget;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Mob_Doomfire_TargetingAI(creature);
     }
 };
 
@@ -276,7 +455,7 @@ public:
                 addEvent(EV_FEAR, 42000, 42000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_AIR_BURST, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_GRIP_LEGION, 5000, 25000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_DOOMFIRE, 20000, 20000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_DOOMFIRE, 10000, 10000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_MELEE_CHECK, 2000, 2000);
                 addEvent(EV_NORDRASSIL_CHECK, 3000, 3000);
                 addEvent(EV_ENRAGE, 600000, 600000);
@@ -288,7 +467,7 @@ public:
                 scheduleEvent(EV_FEAR, 42000);
                 scheduleEvent(EV_AIR_BURST, 30000);
                 scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
-                scheduleEvent(EV_DOOMFIRE, 20000);
+                scheduleEvent(EV_DOOMFIRE, 10000);
                 scheduleEvent(EV_MELEE_CHECK, 2000);
                 scheduleEvent(EV_NORDRASSIL_CHECK, 3000);
                 enableEvent(EV_NORDRASSIL_CHECK);
@@ -430,8 +609,15 @@ public:
                         me->CastSpell(x, y, z, SPELL_DOOMFIRE_SPAWN, true);
                         talk(YELL_DOOMFIRE);
                     }*/
-                    doCast(me, SPELL_DOOMFIRE_STRIKE);
-                    scheduleEvent(EV_DOOMFIRE, 40000);
+                    float x, y, z;
+                    x = me->GetPositionX() - 5 + rand()%15;
+                    y = me->GetPositionY() - 5 + rand()%15;
+                    me->UpdateGroundPositionZ(x, y, z);
+                    me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000));
+                    talk(YELL_DOOMFIRE);
+                    
+                    //doCast(me, SPELL_DOOMFIRE_STRIKE);
+                    scheduleEvent(EV_DOOMFIRE, 10000);
                     break;
                 case EV_MELEE_CHECK:
                     if (_canUseFingerOfDeath())
@@ -576,6 +762,7 @@ public:
 void AddSC_boss_archimonde_new()
 {
     sScriptMgr.addScript(new Mob_Ancient_Whisp());
-    sScriptMgr.addScript(new Mob_Walking_Doomfire());
+    sScriptMgr.addScript(new Mob_Doomfire());
+    sScriptMgr.addScript(new Mob_Doomfire_Targeting());
     sScriptMgr.addScript(new Boss_Archimonde());
 }
