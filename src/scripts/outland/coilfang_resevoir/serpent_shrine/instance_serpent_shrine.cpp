@@ -223,7 +223,9 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     SetData(DATA_STRANGE_POOL, DONE);
                 break;
             case GAMEOBJECT_FISHINGNODE_ENTRY://no way checking if fish is hooked, so we create a timed event
-                if (GameObject * gob = go->FindNearestGameObject(184956, 20.0f))
+            {
+                uint32 rnd = urand(0, 100);
+                if (30 <= rnd)
                 {
                     if(LurkerSubEvent == LURKER_NOT_STARTED)
                     {
@@ -232,6 +234,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     }
                 }
                 break;
+            }
         }
     }
 
