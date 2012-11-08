@@ -223,10 +223,13 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     SetData(DATA_STRANGE_POOL, DONE);
                 break;
             case GAMEOBJECT_FISHINGNODE_ENTRY://no way checking if fish is hooked, so we create a timed event
-                if(LurkerSubEvent == LURKER_NOT_STARTED)
+                if (GameObject * gob = go->FindNearestGameObject(184956, 20.0f))
                 {
-                    FishingTimer = 10000+rand()%30000;//random time before lurker emerges
-                    LurkerSubEvent = LURKER_FISHING;
+                    if(LurkerSubEvent == LURKER_NOT_STARTED)
+                    {
+                        FishingTimer = 10000+rand()%30000;//random time before lurker emerges
+                        LurkerSubEvent = LURKER_FISHING;
+                    }
                 }
                 break;
         }
