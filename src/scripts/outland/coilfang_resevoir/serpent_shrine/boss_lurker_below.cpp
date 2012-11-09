@@ -66,7 +66,7 @@ float AddPos[9][3] =
 
 struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 {
-    boss_the_lurker_belowAI(Creature *c) : Scripted_NoMovementAI(c), Summons(m_creature)
+    boss_the_lurker_belowAI(Creature *c) : Scripted_NoMovementAI(c), summons(m_creature)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         SpellEntry *TempSpell = GET_SPELL(SPELL_SPOUT_ANIM);
@@ -79,7 +79,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     }
 
     ScriptedInstance* pInstance;
-    SummonList Summons;
+    SummonList summons;
 
     bool Spawned;
     bool Submerged;
@@ -111,7 +111,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         WaterboltTimer = 15000;//give time to get in range when fight starts
         SpoutTimer = 45000;
         WhirlTimer = 18000;//after avery spout
-        PhaseTimer = 120000;
+        PhaseTimer = 90000;
         GeyserTimer = rand()%5000 + 15000;
         CheckTimer = 15000;//give time to get in range when fight starts
         WaitTimer = 60000;//never reached
@@ -122,7 +122,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         InRange = false;
         CanStartEvent = false;
 
-        Summons.DespawnAll();
+        summons.DespawnAll();
 
         if (pInstance)
         {
@@ -139,7 +139,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         if (pInstance)
             pInstance->SetData(DATA_THELURKERBELOWEVENT, DONE);
 
-        Summons.DespawnAll();
+        summons.DespawnAll();
     }
      
     void Aggro(Unit* who)
@@ -152,6 +152,16 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         }
             
         //Scripted_NoMovementAI::Aggro(who);
+    }
+
+    void JustSummoned(Creature* pSummon)
+    {
+        summons.Summon(pSummon);
+    }
+
+    void SummonedCreatureDespawn(Creature* unit)
+    {
+        summons.Despawn(unit);
     }
     
     void MoveInLineOfSight(Unit *who)
@@ -327,7 +337,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 DoCast(m_creature,SPELL_EMERGE,true);
                 Spawned = false;
                 SpoutTimer = 3000; // directly cast Spout after emerging!
-                PhaseTimer = 120000;
+                PhaseTimer = 90000;
                 return;
             }else PhaseTimer-=diff;
 
@@ -345,16 +355,10 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 //spawn adds
                 for (uint8 i = 0; i < 9; ++i)
                 {
-                    Creature* Summoned;
                     if (i < 6)
-                        Summoned = m_creature->SummonCreature(MOB_COILFANG_AMBUSHER,AddPos[i][0],AddPos[i][1],AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
-                    else Summoned = m_creature->SummonCreature(MOB_COILFANG_GUARDIAN,AddPos[i][0],AddPos[i][1],AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
-
-                    if (Summoned)
-                    {
-                        Summons.Summon(Summoned);
-                        Summoned->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
-                    }
+                        m_creature->SummonCreature(MOB_COILFANG_AMBUSHER,AddPos[i][0],AddPos[i][1],AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
+                    else
+                        m_creature->SummonCreature(MOB_COILFANG_GUARDIAN,AddPos[i][0],AddPos[i][1],AddPos[i][2], 0, TEMPSUMMON_CORPSE_DESPAWN, 0);
                 }
                 Spawned = true;
             }
