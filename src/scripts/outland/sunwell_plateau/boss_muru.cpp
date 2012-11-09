@@ -885,10 +885,6 @@ class npc_void_sentinel : public CreatureScript
             PulseTimer = 3000;
             VoidBlastTimer = 10000 + rand()%10000; //is this a correct timer?
 
-            float x,y,z,o;
-            me->GetHomePosition(x,y,z,o);
-            doTeleportTo(x,y,71);
-
             me->SetFullTauntImmunity(true);
 
             me->addUnitState(UNIT_STAT_STUNNED);
@@ -964,10 +960,15 @@ class npc_void_spawn : public CreatureScript
         ScriptedInstance* pInstance;
 
         uint32 ShadowBoltVolleyTimer;
+        uint32 phase;
+        uint32 phaseTimer;
 
         void onReset(bool /*onSpawn*/)
         {
+            phase = 0;
+            phaseTimer = 1000;
             ShadowBoltVolleyTimer = urand(2000, 10000);
+            me->addUnitState(UNIT_STAT_STUNNED);
         }
 
         void update(const uint32 diff)
@@ -977,6 +978,21 @@ class npc_void_spawn : public CreatureScript
                 me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f);
                 me->DisappearAndDie();
             }
+
+            if (phaseTimer <= diff)
+            {
+                switch (phase)
+                {
+                    case 0:
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        phase = 1;
+                        break;
+                }
+            }
+            else
+                phaseTimer -= diff;
 
             if (!updateVictim())
                 return;
