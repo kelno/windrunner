@@ -966,7 +966,7 @@ class npc_void_spawn : public CreatureScript
         void onReset(bool /*onSpawn*/)
         {
             phase = 0;
-            phaseTimer = 1000;
+            phaseTimer = 2000;
             ShadowBoltVolleyTimer = urand(2000, 10000);
             me->addUnitState(UNIT_STAT_STUNNED);
         }
