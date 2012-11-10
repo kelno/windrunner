@@ -98,7 +98,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     
     bool CheckCanStart()//check if players fished
     {
-        if(pInstance && pInstance->GetData(DATA_STRANGE_POOL) == NOT_STARTED)
+        if(pInstance && pInstance->GetData(DATA_STRANGE_POOL) != IN_PROGRESS)
             return false;
         return true;
     }
@@ -126,6 +126,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
         if (pInstance)
         {
+            pInstance->SetData(DATA_THELURKERBELOWEVENT, NOT_STARTED);
             pInstance->SetData(DATA_STRANGE_POOL, NOT_STARTED);
         }
         DoCast(m_creature,SPELL_SUBMERGE);//submerge anim
@@ -212,6 +213,9 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     if (m_creature->getVictim())
                         AttackStart(m_creature->getVictim());
+
+                    if (pInstance)
+                        pInstance->SetData(DATA_STRANGE_POOL, DONE);
                 }else WaitTimer -= diff;
             }
             return;

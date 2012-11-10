@@ -71,6 +71,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
     uint64 KarathressEvent_Starter;
     uint64 LeotherasTheBlind;
     uint64 LeotherasEventStarter;
+    uint64 SerpentshrineConsole;
 
     uint64 ControlConsole;
     uint64 BridgePart[3];
@@ -97,6 +98,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         KarathressEvent_Starter = 0;
         LeotherasTheBlind = 0;
         LeotherasEventStarter = 0;
+        SerpentshrineConsole = 0;
 
         ControlConsole = 0;
         BridgePart[0] = 0;
@@ -144,10 +146,13 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         {
             if (GetData(DATA_THELURKERBELOWEVENT) != DONE)
             {
+                Water = WATERSTATE_FRENZY;
                 if(TrashCount >= MIN_KILLS)
-                    Water = WATERSTATE_SCALDING;
-                else
-                    Water = WATERSTATE_FRENZY;
+                {
+                    if(GameObject *Console = instance->GetGameObjectInMap(SerpentshrineConsole))
+                        if (Console->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE))
+                            Water = WATERSTATE_SCALDING;
+                }
             }
                 
             Map::PlayerList const &PlayerList = instance->GetPlayers();
@@ -217,10 +222,8 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 BridgePart[2] = go->GetGUID();
                 go->setActive(true);
             break;
-            case 184956:
-                StrangePool = go->GetGUID();
-                if(go->isActiveObject())
-                    SetData(DATA_STRANGE_POOL, DONE);
+            case 185114:
+                SerpentshrineConsole = go->GetGUID();
                 break;
             case GAMEOBJECT_FISHINGNODE_ENTRY://no way checking if fish is hooked, so we create a timed event
             {
