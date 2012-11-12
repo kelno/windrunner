@@ -157,7 +157,7 @@ struct ScriptedAI : public CreatureAI
     void DoPlaySoundToSet(Unit* unit, uint32 sound);
 
     //Places the entire map into combat with creature
-    void DoZoneInCombat(Unit* pUnit = 0);
+    void DoZoneInCombat(Unit* pUnit = NULL, bool force = false);
 
     //Drops all threat to 0%. Does not remove players from the threat list
     void DoResetThreat();
