@@ -133,6 +133,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         m_creature->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+        m_creature->addUnitState(UNIT_STAT_FORCEROOT);
     }
 
     void JustDied(Unit* Killer)
