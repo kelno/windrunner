@@ -791,7 +791,7 @@ void FillSpellSummary()
     }
 }
 
-void ScriptedAI::DoZoneInCombat(Unit* pUnit)
+void ScriptedAI::DoZoneInCombat(Unit* pUnit, bool force)
 {
     if (!pUnit)
         pUnit = m_creature;
@@ -804,11 +804,14 @@ void ScriptedAI::DoZoneInCombat(Unit* pUnit)
         return;
     }
 
-    if (!pUnit->CanHaveThreatList() || pUnit->getThreatManager().isThreatListEmpty())
+    if (!pUnit->CanHaveThreatList())
     {
-        error_log("TSCR: DoZoneInCombat called for creature that either cannot have threat list or has empty threat list (pUnit entry = %d)", pUnit->GetTypeId() == TYPEID_UNIT ? (pUnit->ToCreature())->GetEntry() : 0);
+        if (!force && pUnit->getThreatManager().isThreatListEmpty())
+        {
+            error_log("TSCR: DoZoneInCombat called for creature that either cannot have threat list or has empty threat list (pUnit entry = %d)", pUnit->GetTypeId() == TYPEID_UNIT ? (pUnit->ToCreature())->GetEntry() : 0);
 
-        return;
+            return;
+        }
     }
 
     Map::PlayerList const &PlayerList = map->GetPlayers();

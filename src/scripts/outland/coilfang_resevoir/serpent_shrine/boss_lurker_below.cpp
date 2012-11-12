@@ -369,26 +369,52 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             }
         }
     }
- };
+};
 
-CreatureAI* GetAI_mob_coilfang_guardian(Creature* pCreature)
+struct mob_coilfang_guardianAI : public ScriptedAI
 {
-    SimpleAI* ai = new SimpleAI (pCreature);
+    mob_coilfang_guardianAI(Creature *c) : ScriptedAI(c) {}
 
-    ai->Spell[0].Enabled = true;
-    ai->Spell[0].Spell_Id = SPELL_ARCINGSMASH;
-    ai->Spell[0].Cooldown = 15000;
-    ai->Spell[0].First_Cast = 5000;
-    ai->Spell[0].Cast_Target_Type = CAST_HOSTILE_TARGET;
+    uint32 ArcingsmashTimer;
+    uint32 HamstringTimer;
 
-    ai->Spell[1].Enabled = true;
-    ai->Spell[1].Spell_Id = SPELL_HAMSTRING;
-    ai->Spell[1].Cooldown = 10000;
-    ai->Spell[1].First_Cast = 2000;
-    ai->Spell[1].Cast_Target_Type = CAST_HOSTILE_TARGET;
+    void Reset()
+    {
+        ArcingsmashTimer = 5000;
+        HamstringTimer = 2000;
+        DoZoneInCombat(NULL, true);
+        AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
+    }
 
-    return ai;
-}
+    void JustDied(Unit *victim)
+    {
+    }
+
+    void Aggro(Unit *who)
+    {
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        //Return since we have no target
+        if (!UpdateVictim() )
+            return;
+
+        if (ArcingsmashTimer < diff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_ARCINGSMASH);
+            ArcingsmashTimer = urand(10000, 15000);
+        }else ArcingsmashTimer -= diff;
+
+        if(HamstringTimer < diff)
+        {
+            DoCast(m_creature->getVictim(), SPELL_HAMSTRING);
+            HamstringTimer = urand(10000, 15000);
+        }else HamstringTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
 
 struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 {
@@ -406,12 +432,10 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
     {
         MultiShotTimer = 10000;
         ShootBowTimer = 4000;
-
     }
 
     void Aggro(Unit *who)
     {
-
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -451,6 +475,11 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 CreatureAI* GetAI_mob_coilfang_ambusher(Creature* pCreature)
 {
     return new mob_coilfang_ambusherAI (pCreature);
+}
+
+CreatureAI* GetAI_mob_coilfang_guardian(Creature* pCreature)
+{
+    return new mob_coilfang_guardianAI (pCreature);
 }
 
 CreatureAI* GetAI_boss_the_lurker_below(Creature* pCreature)
