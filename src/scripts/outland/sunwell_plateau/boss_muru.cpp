@@ -158,8 +158,6 @@ public:
 
         void onCombatStart(Unit * /*who*/)
         {
-            doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
-
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
@@ -209,12 +207,16 @@ public:
                         me->clearUnitState(UNIT_STAT_STUNNED);
                         setZoneInCombat(true);
                         attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
                         phase = 2;
                         break;
                 }
             }
             else
                 phaseTimer -= diff;
+
+            if (phase != 2)
+                return;
 
             if (!updateVictim())
                 return;
@@ -375,18 +377,16 @@ public:
                     RespawnTimer -= diff;
             }
             
-            /*if (Phase >= 2) {
-                if (EnrageTimer <= diff) {
-                    EnrageTimer = 999999;
-                    if (Creature* entropius = me->FindCreatureInGrid(25840, 100.0f, true))
-                        entropius->CastSpell(entropius, SPELL_ENRAGE, true);
-                }
-                else
-                    EnrageTimer -= diff;
-            }*/
+            
 
             if (!updateVictim())
                 return;
+
+            if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
+            {
+                evade();
+                return;
+            }
                 
             me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
@@ -797,13 +797,13 @@ public:
         public:
         npc_dark_fiendAI(Creature* creature) : CreatureAINew(creature) {}
 
-        uint32 WaitTimer;
-        bool InAction;
+        uint32 phase;
+        uint32 phaseTimer;
 
         void onReset(bool /*onSpawn*/)
         {
-            WaitTimer = 2000;
-            InAction = false;
+            phase = 0;
+            phaseTimer = 2000;
 
             me->addUnitState(UNIT_STAT_STUNNED);
         }
@@ -818,37 +818,39 @@ public:
 
         void update(const uint32 diff)
         {
-            if (WaitTimer <= diff)
+            if (phaseTimer <= diff)
             {
-                if (!InAction)
+                switch (phase)
                 {
-                    me->clearUnitState(UNIT_STAT_STUNNED);
-                    doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
-                    setZoneInCombat(true);
-                    attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    InAction = true;
-                    WaitTimer = 500;
-                }
-                else
-                {
-                    if (!updateVictim())
-                        return;
+                    case 0:
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        doCast((Unit*)NULL, SPELL_DARKFIEND_SKIN, false);
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        phase = 1;
+                        phaseTimer = 500;
+                        break;
+                    case 1:
+                        phaseTimer = 500;
 
-                    if (me->GetDistance(me->getVictim()) < 5)
-                    {
-                        if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
+                        if (!updateVictim())
+                            return;
+
+                        if (me->GetDistance(me->getVictim()) < 5)
                         {
-                            trigger->setFaction(16);
-                            trigger->SetName("Sombre fiel");
-                            trigger->CastSpell(trigger, SPELL_DARKFIEND_AOE, false);
+                            if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
+                            {
+                                trigger->setFaction(16);
+                                trigger->SetName("Sombre fiel");
+                                trigger->CastSpell(trigger, SPELL_DARKFIEND_AOE, false);
+                            }
+                            me->DisappearAndDie();
                         }
-                        me->DisappearAndDie();
-                    }
-                    WaitTimer = 500;
+                        break;
                 }
             }
             else
-                WaitTimer -= diff;
+                phaseTimer -= diff;
         }
     };
 
@@ -915,6 +917,9 @@ class npc_void_sentinel : public CreatureScript
             else
                 phaseTimer -= diff;
 
+            if (phase != 1)
+                return;
+
             if (!updateVictim())
                 return;
 
@@ -974,10 +979,7 @@ class npc_void_spawn : public CreatureScript
         void update(const uint32 diff)
         {
             if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
-            {
-                me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f);
                 me->DisappearAndDie();
-            }
 
             if (phaseTimer <= diff)
             {
@@ -993,6 +995,9 @@ class npc_void_spawn : public CreatureScript
             }
             else
                 phaseTimer -= diff;
+
+            if (phase != 1)
+                return;
 
             if (!updateVictim())
                 return;
