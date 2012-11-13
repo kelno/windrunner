@@ -454,7 +454,6 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         {
             if (m_creature->getVictim())
                 DoCast(m_creature->getVictim(), SPELL_SPREAD_SHOT);
-
             MultiShotTimer = urand(2000, 5000);
         }else MultiShotTimer -= diff;
 
@@ -462,9 +461,8 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-            int bp0 = 1100;
             if (target)
-                m_creature->CastCustomSpell(target,SPELL_SHOOT,&bp0,NULL,NULL,false);
+                DoCast(target, SPELL_SHOOT);
             ShootBowTimer = urand(2000, 5000);
         }else ShootBowTimer -= diff;
     }
