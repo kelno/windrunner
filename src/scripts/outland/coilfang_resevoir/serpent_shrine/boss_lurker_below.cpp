@@ -418,12 +418,7 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
 struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 {
-    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c)
-    {
-        SpellEntry *TempSpell = GET_SPELL(SPELL_SHOOT);
-        if (TempSpell)
-            TempSpell->Effect[0] = 2;//change spell effect from weapon % dmg to simple phisical dmg
-    }
+    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c) {}
 
     uint32 MultiShotTimer;
     uint32 ShootBowTimer;
@@ -455,19 +450,16 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
             if (m_creature->getVictim())
                 DoCast(m_creature->getVictim(), SPELL_SPREAD_SHOT);
 
-            MultiShotTimer = 1000 + rand()%2 * 500;
-            ShootBowTimer += 1500;//add global cooldown
+            MultiShotTimer = urand(2000, 5000);
         }else MultiShotTimer -= diff;
 
         if (ShootBowTimer < diff)
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-            int bp0 = 1100;
             if (target)
-                m_creature->CastCustomSpell(target,SPELL_SHOOT,&bp0,NULL,NULL,false);
-            ShootBowTimer = 1000 + rand()%2000;
-            MultiShotTimer += 1500;//add global cooldown
+                DoCast(target, SPELL_SHOOT);
+            ShootBowTimer = urand(2000, 5000);
         }else ShootBowTimer -= diff;
     }
 };
