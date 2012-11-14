@@ -453,7 +453,14 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         if (MultiShotTimer < diff)
         {
             if (m_creature->getVictim())
-                DoCast(m_creature->getVictim(), SPELL_SPREAD_SHOT);
+            {
+                uint32 damage = 0;
+                uint32 absorb, resist;
+                damage = m_creature->getVictim()->CalcArmorReducedDamage(m_creature->getVictim(), 3500);
+                m_creature->getVictim()->CalcAbsorbResist(m_creature->getVictim(), SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SPREAD_SHOT);
+                uint32 damageTaken = m_creature->DealDamage(m_creature->getVictim(), damage - absorb - resist);
+                m_creature->SendSpellNonMeleeDamageLog(m_creature->getVictim(), SPELL_SPREAD_SHOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
+            }
             MultiShotTimer = urand(2000, 5000);
         }else MultiShotTimer -= diff;
 
@@ -462,7 +469,14 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM, 0);
             if (target)
-                DoCast(target, SPELL_SHOOT);
+            {
+                uint32 damage = 0;
+                uint32 absorb, resist;
+                damage = target->CalcArmorReducedDamage(target, 3500);
+                target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SHOOT);
+                uint32 damageTaken = m_creature->DealDamage(target, damage - absorb - resist);
+                m_creature->SendSpellNonMeleeDamageLog(target, SPELL_SHOOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
+            }
             ShootBowTimer = urand(2000, 5000);
         }else ShootBowTimer -= diff;
     }
