@@ -223,6 +223,13 @@ public:
             _CurrentX = me->GetPositionX();
             _CurrentY = me->GetPositionY();
             _CurrentZ = me->GetPositionZ();
+            
+            if (_CurrentX < 20000.0f && _CurrentY < 20000.0f) {
+                sLog.outString("[ARCHIMONDE] Spawned at (%f, %f), aborting to prevent crash on GetHeight()", _CurrentX, _CurrentY);
+                me->DisappearAndDie();
+                return;
+            }
+            
             _LastX = 0;
             _LastY = 0;
             _SummonTimer = DOOMFIRE_SUMMONTIMER;
@@ -671,6 +678,8 @@ public:
                     Trinity::RandomResizeList(unleashSpells, 1);
                     sLog.outString("[ARCHIMONDE] Unleashing spell %u.", unleashSpells.front());
                     doCast(me->getVictim(), unleashSpells.front(), true);
+                    
+                    scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                     switch (unleashSpells.front()) {
                     case SPELL_UNLEASH_SOUL_GREEN:
                         me->RemoveSingleAuraFromStack(SPELL_SOUL_CHARGE_GREEN, 0);
@@ -687,7 +696,6 @@ public:
                     sLog.outString("[ARCHIMONDE] Cast done, %u charges left.", _chargeCount);
                     //if (_chargeCount) {
                         sLog.outString("[ARCHIMONDE] Rescheduling event.");
-                        scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                     /*}
                     else {
                         sLog.outString("[ARCHIMONDE] Disabling event.");
