@@ -95,6 +95,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     uint32 CheckTimer;
     uint32 WaitTimer;
     uint32 WaitTimer2;
+    uint32 phaseRotate;
+    uint32 phaseRotateTimer;
     
     bool CheckCanStart()//check if players fished
     {
@@ -105,6 +107,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
     void Reset()
     {
+        phaseRotate = 0;
+        phaseRotateTimer = 0;
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
         SpoutAnimTimer = 1000;
         RotTimer = 0;
@@ -240,24 +244,41 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if (SpoutTimer < diff)
             {
-                m_creature->MonsterTextEmote(EMOTE_SPOUT,0,true);
-                m_creature->SetReactState(REACT_PASSIVE);
-                if(rand()%2)
-                    m_creature->StartAutoRotate(CREATURE_ROTATE_LEFT,20000);
-                else
-                    m_creature->StartAutoRotate(CREATURE_ROTATE_RIGHT,20000);
                 SpoutTimer = 45000;
                 WhirlTimer = 20000;//whirl directly after spout
                 RotTimer = 20000;
-                return;
+                phaseRotate = 1;
             }else SpoutTimer -= diff;
+
+            if (phaseRotateTimer <= diff)
+            {
+                switch (phaseRotate)
+                {
+                    case 1:
+                        m_creature->MonsterTextEmote(EMOTE_SPOUT,0,true);
+                        m_creature->SetReactState(REACT_PASSIVE);
+                        DoCast(m_creature, SPELL_SPOUT_BREATH);
+                        phaseRotate = 2;
+                        phaseRotateTimer = 3000;
+                        break;
+                    case 2:
+                        if(rand()%2)
+                            m_creature->StartAutoRotate(CREATURE_ROTATE_LEFT,17000);
+                        else
+                            m_creature->StartAutoRotate(CREATURE_ROTATE_RIGHT,17000);
+                        phaseRotate = 3;
+                        break;
+                }
+            }
+            else
+                phaseRotateTimer -= diff;
 
             //Whirl directly after a Spout and at random times
             if (WhirlTimer < diff)
             {
                 m_creature->SetReactState(REACT_AGGRESSIVE);
                 WhirlTimer = 18000;
-                DoCast(m_creature,SPELL_WHIRL);                
+                DoCast(m_creature,SPELL_WHIRL);
             }else WhirlTimer -= diff;
 
             if(CheckTimer < diff)//check if there are players in melee range
@@ -278,27 +299,49 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if(RotTimer)
             {
+                if (phaseRotate != 3)
+                    return;
+
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+
                 Map* pMap = m_creature->GetMap();
                 if (pMap->IsDungeon())
                 {
                     Map::PlayerList const &PlayerList = pMap->GetPlayers();
                     for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                     {
-                        if (i->getSource() && i->getSource()->isAlive() && !i->getSource()->isPet() && m_creature->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()) && m_creature->IsWithinDistInMap(i->getSource(), SPOUT_DIST) && !i->getSource()->IsInWater())
-                            DoCast(i->getSource(),SPELL_SPOUT,true);//only knock back players in arc, in 100yards, not in water
+                        if (i->getSource() && i->getSource()->isAlive() && !i->getSource()->isPet())
+                        {
+                            if (m_creature->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()))
+                            {
+                                if (m_creature->IsWithinDistInMap(i->getSource(), SPOUT_DIST))
+                                {
+                                    if (!i->getSource()->IsInWater())
+                                    {
+                                        DoCast(i->getSource(),SPELL_SPOUT,true);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
                 if(SpoutAnimTimer < diff)
                 {
                     DoCast(m_creature,SPELL_SPOUT_ANIM,true);
-                    SpoutAnimTimer = 1000;                    
-                }else SpoutAnimTimer -= diff;
+                    SpoutAnimTimer = 1000;
+                }
+                else
+                    SpoutAnimTimer -= diff;
 
                 if(RotTimer < diff)
                 {
                     RotTimer = 0;
-                }else RotTimer -= diff;
+                    phaseRotate = 0;
+                }
+                else
+                    RotTimer -= diff;
+
                 return;
             }
 
@@ -418,12 +461,7 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
 struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 {
-    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c)
-    {
-        SpellEntry *TempSpell = GET_SPELL(SPELL_SHOOT);
-        if (TempSpell)
-            TempSpell->Effect[0] = 2;//change spell effect from weapon % dmg to simple phisical dmg
-    }
+    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c) {}
 
     uint32 MultiShotTimer;
     uint32 ShootBowTimer;
