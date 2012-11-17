@@ -129,6 +129,7 @@ public:
                     }
                     
                     talk(SAY_TELEPORT);
+                    scheduleEvent(EV_TELEPORT, 30000);
 
                     break;
                 }
