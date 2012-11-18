@@ -224,7 +224,7 @@ public:
             _CurrentY = me->GetPositionY();
             _CurrentZ = me->GetPositionZ();
             
-            if (_CurrentX < 20000.0f && _CurrentY < 20000.0f) {
+            if (_CurrentX > 20000.0f && _CurrentY > 20000.0f || _CurrentX < -20000.0f && _CurrentY < -20000.0f) {
                 sLog.outString("[ARCHIMONDE] Spawned at (%f, %f), aborting to prevent crash on GetHeight()", _CurrentX, _CurrentY);
                 me->DisappearAndDie();
                 return;
@@ -602,7 +602,7 @@ public:
                     break;
                 case EV_AIR_BURST:
                     talk(YELL_AIR_BURST);
-                    doCast(selectUnit(SELECT_TARGET_RANDOM, 1), SPELL_AIR_BURST);
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true), SPELL_AIR_BURST);
                     scheduleEvent(EV_AIR_BURST, 25000, 40000);
                     break;
                 case EV_GRIP_LEGION:
