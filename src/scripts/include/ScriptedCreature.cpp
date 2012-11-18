@@ -275,7 +275,6 @@ Creature* ScriptedAI::DoSpawnCreature(uint32 id, float x, float y, float z, floa
 
 Unit* ScriptedAI::SelectUnit(SelectAggroTarget target, uint32 position)
 {
-    //ThreatList m_threatlist;
     std::list<HostilReference*>& m_threatlist = me->getThreatManager().getThreatList();
     std::list<HostilReference*>::iterator i = m_threatlist.begin();
     std::list<HostilReference*>::reverse_iterator r = m_threatlist.rbegin();
@@ -285,23 +284,40 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget target, uint32 position)
 
     switch (target)
     {
-    case SELECT_TARGET_RANDOM:
-        advance ( i , position +  (rand() % (m_threatlist.size() - position ) ));
-        return Unit::GetUnit((*me),(*i)->getUnitGuid());
-        break;
-
-    case SELECT_TARGET_TOPAGGRO:
-        advance ( i , position);
-        return Unit::GetUnit((*me),(*i)->getUnitGuid());
-        break;
-
-    case SELECT_TARGET_BOTTOMAGGRO:
-        advance ( r , position);
-        return Unit::GetUnit((*me),(*r)->getUnitGuid());
-        break;
+        case SELECT_TARGET_RANDOM:
+            advance(i, position + (rand()%(m_threatlist.size() - position)));
+            return Unit::GetUnit((*me), (*i)->getUnitGuid());
+        case SELECT_TARGET_TOPAGGRO:
+            advance(i, position);
+            return Unit::GetUnit((*me), (*i)->getUnitGuid());
+        case SELECT_TARGET_BOTTOMAGGRO:
+            advance(r, position);
+            return Unit::GetUnit((*me),(*r)->getUnitGuid());
+        default:
+            break;
     }
 
     return NULL;
+}
+
+bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
+{
+    if (!me)
+        return false;
+
+    if (!target)
+        return false;
+
+    if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
+        return false;
+
+    if (radius > 0.0f && !me->IsWithinCombatRange(target, radius))
+        return false;
+
+    if (radius < 0.0f && me->IsWithinCombatRange(target, -radius))
+        return false;
+
+    return true;
 }
 
 struct TargetDistanceOrder : public std::binary_function<const Unit, const Unit, bool>
@@ -315,74 +331,47 @@ struct TargetDistanceOrder : public std::binary_function<const Unit, const Unit,
     }
 };
 
-Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float dist, bool playerOnly)
+Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float radius, bool playersOnly)
 {
-    if(targetType == SELECT_TARGET_NEAREST || targetType == SELECT_TARGET_FARTHEST)
-    {
-        std::list<HostilReference*> &m_threatlist = m_creature->getThreatManager().getThreatList();
-        if(m_threatlist.empty()) return NULL;
-        std::list<Unit*> targetList;
-        std::list<HostilReference*>::iterator itr = m_threatlist.begin();
-        for(; itr!= m_threatlist.end(); ++itr)
-        {
-            Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-            if(!target
-                || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-                || dist && !m_creature->IsWithinCombatRange(target, dist))
-            {
-                continue;
-            }
-            targetList.push_back(target);
-        }
-        if(position >= targetList.size())
-            return NULL;
-        targetList.sort(TargetDistanceOrder(m_creature));
-        if(targetType == SELECT_TARGET_NEAREST)
-        {
-            std::list<Unit*>::iterator i = targetList.begin();
-            advance(i, position);
-            return *i;
-        }
-        else
-        {
-            std::list<Unit*>::reverse_iterator i = targetList.rbegin();
-            advance(i, position);
-            return *i;
-        }
-    }
-    else
-    {
-        std::list<HostilReference*> m_threatlist = m_creature->getThreatManager().getThreatList();
-        std::list<HostilReference*>::iterator i;
-        Unit *target;
-        while(position < m_threatlist.size())
-        {
-            if(targetType == SELECT_TARGET_BOTTOMAGGRO)
-            {
-                i = m_threatlist.end();
-                advance(i, - (int32)position - 1);
-            }
-            else
-            {
-                i = m_threatlist.begin();
-                if(targetType == SELECT_TARGET_TOPAGGRO)
-                    advance(i, position);
-                else // random
-                    advance(i, position + rand()%(m_threatlist.size() - position));
-            }
+    std::list<HostilReference*>& threatlist = me->getThreatManager().getThreatList();
+    if (position >= threatlist.size())
+        return NULL;
 
-            target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
-            if(!target
-                || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-                || dist && !m_creature->IsWithinCombatRange(target, dist))
-            {
-                m_threatlist.erase(i);
-            }
-            else
-            {
-                return target;
-            }
+    std::list<Unit*> targetList;
+    for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+            targetList.push_back((*itr)->getTarget());
+
+    if (position >= targetList.size())
+        return NULL;
+
+    if (targetType == SELECT_TARGET_NEAREST || targetType == SELECT_TARGET_FARTHEST)
+        targetList.sort(Trinity::ObjectDistanceOrderPred(me));
+        
+    switch (targetType)
+    {
+        case SELECT_TARGET_NEAREST:
+        case SELECT_TARGET_TOPAGGRO:
+        {
+            std::list<Unit*>::iterator itr = targetList.begin();
+            std::advance(itr, position);
+            return *itr;
         }
+        case SELECT_TARGET_FARTHEST:
+        case SELECT_TARGET_BOTTOMAGGRO:
+        {
+            std::list<Unit*>::reverse_iterator ritr = targetList.rbegin();
+            std::advance(ritr, position);
+            return *ritr;
+        }
+        case SELECT_TARGET_RANDOM:
+        {
+            std::list<Unit*>::iterator itr = targetList.begin();
+            std::advance(itr, urand(position, targetList.size() - 1));
+            return *itr;
+        }
+        default:
+            break;
     }
 
     return NULL;
@@ -496,60 +485,29 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
     return NULL;
 }
 
-void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 num, SelectAggroTarget targetType, float dist, bool playerOnly)
+void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly)
 {
-    if(targetType == SELECT_TARGET_NEAREST || targetType == SELECT_TARGET_FARTHEST)
-    {
-        std::list<HostilReference*> &m_threatlist = m_creature->getThreatManager().getThreatList();
-        if(m_threatlist.empty()) return;
-        std::list<HostilReference*>::iterator itr = m_threatlist.begin();
-        for(; itr!= m_threatlist.end(); ++itr)
-        {
-            Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-            if(!target
-                || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-                || dist && !m_creature->IsWithinCombatRange(target, dist))
-            {
-                continue;
-            }
-            targetList.push_back(target);
-        }
-        targetList.sort(TargetDistanceOrder(m_creature));
-        targetList.resize(num);
-        if(targetType == SELECT_TARGET_FARTHEST)
-            targetList.reverse();
-    }
-    else
-    {
-        std::list<HostilReference*> m_threatlist = m_creature->getThreatManager().getThreatList();
-        std::list<HostilReference*>::iterator i;
-        Unit *target;
-        while(m_threatlist.size() && num)
-        {
-            if(targetType == SELECT_TARGET_BOTTOMAGGRO)
-            {
-                i = m_threatlist.end();
-                --i;
-            }
-            else
-            {
-                i = m_threatlist.begin();
-                if(targetType == SELECT_TARGET_RANDOM)
-                    advance(i, rand()%m_threatlist.size());
-            }
+    std::list<HostilReference*> const& threatlist = me->getThreatManager().getThreatList();
+    if (threatlist.empty())
+        return;
 
-            target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
-            m_threatlist.erase(i);
-            if(!target
-                || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-                || dist && !m_creature->IsWithinCombatRange(target, dist))
-            {
-                continue;
-            }
-            targetList.push_back(target);
-            --num;
-        }
-    }
+    for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+            targetList.push_back((*itr)->getTarget());
+
+    if (targetList.size() < maxTargets)
+        return;
+
+    if (targetType == SELECT_TARGET_NEAREST || targetType == SELECT_TARGET_FARTHEST)
+        targetList.sort(Trinity::ObjectDistanceOrderPred(me));
+
+    if (targetType == SELECT_TARGET_FARTHEST || targetType == SELECT_TARGET_BOTTOMAGGRO)
+        targetList.reverse();
+
+    if (targetType == SELECT_TARGET_RANDOM)
+        Trinity::Containers::RandomResizeList(targetList, maxTargets);
+    else
+        targetList.resize(maxTargets);
 }
 
 SpellEntry const* ScriptedAI::SelectSpell(Unit* Target, int32 School, int32 Mechanic, SelectTarget Targets, uint32 PowerCostMin, uint32 PowerCostMax, float RangeMin, float RangeMax, SelectEffect Effects)

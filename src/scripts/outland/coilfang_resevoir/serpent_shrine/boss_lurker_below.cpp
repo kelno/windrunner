@@ -53,15 +53,15 @@ EndScriptData */
 
 float AddPos[9][3] =
 {
-    {2.8553810, -459.823914, -19.182686},   //MOVE_AMBUSHER_1 X, Y, Z
-    {12.400000, -466.042267, -19.182686},   //MOVE_AMBUSHER_2 X, Y, Z
-    {51.366653, -460.836060, -19.182686},   //MOVE_AMBUSHER_3 X, Y, Z
-    {62.597980, -457.433044, -19.182686},   //MOVE_AMBUSHER_4 X, Y, Z
-    {77.607452, -384.302765, -19.182686},   //MOVE_AMBUSHER_5 X, Y, Z
-    {63.897900, -378.984924, -19.182686},   //MOVE_AMBUSHER_6 X, Y, Z
-    {34.447250, -387.333618, -19.182686},   //MOVE_GUARDIAN_1 X, Y, Z
-    {14.388216, -423.468018, -19.625271},   //MOVE_GUARDIAN_2 X, Y, Z
-    {42.471519, -445.115295, -19.769423}    //MOVE_GUARDIAN_3 X, Y, Z
+    {-6.21f , -491.38f, -22.16f},   //MOVE_AMBUSHER_1 X, Y, Z
+    {0.90f  , -495.27f, -22.20f},   //MOVE_AMBUSHER_2 X, Y, Z
+    {60.38f , -494.72f, -22.16f},   //MOVE_AMBUSHER_3 X, Y, Z
+    {71.14f , -493.37f, -22.54f},   //MOVE_AMBUSHER_4 X, Y, Z
+    {82.11f , -349.43f, -22.21f},   //MOVE_AMBUSHER_5 X, Y, Z
+    {93.45f , -355.93f, -21.59f},   //MOVE_AMBUSHER_6 X, Y, Z
+    {47.60f , -364.82f, -21.68f},   //MOVE_GUARDIAN_1 X, Y, Z
+    {-14.71f, -446.60f, -21.85f},   //MOVE_GUARDIAN_2 X, Y, Z
+    {94.24f , -400.72f, -21.65f}    //MOVE_GUARDIAN_3 X, Y, Z
 };
 
 struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
@@ -97,6 +97,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     uint32 WaitTimer2;
     uint32 phaseRotate;
     uint32 phaseRotateTimer;
+    uint32 nbPops;
     
     bool CheckCanStart()//check if players fished
     {
@@ -107,6 +108,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
     void Reset()
     {
+        nbPops = 0;
         phaseRotate = 0;
         phaseRotateTimer = 0;
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
@@ -137,6 +139,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         m_creature->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+        m_creature->SetReactState(REACT_AGGRESSIVE);
         m_creature->addUnitState(UNIT_STAT_FORCEROOT);
     }
 
@@ -163,6 +166,47 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     void JustSummoned(Creature* pSummon)
     {
         summons.Summon(pSummon);
+
+        nbPops++;
+        switch (nbPops)
+        {
+            case 1:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 0.17f, -468.30f, -19.79f);
+                break;
+            case 2:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 8.43f, -471.48f, -19.79f);
+                break;
+            case 3:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 56.75f, -466.73f, -19.79f);
+                break;
+            case 4:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 63.88f, -464.75f, -19.79f);
+                break;
+            case 5:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 65.88f, -474.74f, -19.79f);
+                break;
+            case 6:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 78.52f, -381.9f, -19.72f);
+                break;
+            case 7:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
+                break;
+            case 8:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
+                break;
+            case 9:
+                pSummon->SetReactState(REACT_PASSIVE);
+                pSummon->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
+                break;
+        }
     }
 
     void SummonedCreatureDespawn(Creature* unit)
@@ -276,9 +320,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             //Whirl directly after a Spout and at random times
             if (WhirlTimer < diff)
             {
-                m_creature->SetReactState(REACT_AGGRESSIVE);
                 WhirlTimer = 18000;
-                DoCast(m_creature,SPELL_WHIRL);
+                DoCast(m_creature, SPELL_WHIRL);
             }else WhirlTimer -= diff;
 
             if(CheckTimer < diff)//check if there are players in melee range
@@ -338,6 +381,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 {
                     RotTimer = 0;
                     phaseRotate = 0;
+                    m_creature->SetReactState(REACT_AGGRESSIVE);
                 }
                 else
                     RotTimer -= diff;
@@ -359,11 +403,9 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             {
                 if (WaterboltTimer < diff)
                 {
-                    Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0);
-                    if (!target && m_creature->getVictim())
-                        target = m_creature->getVictim();
-                    if (target)
+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
                         DoCast(target,SPELL_WATERBOLT);
+
                     WaterboltTimer = 3000;
                 }else WaterboltTimer -= diff;
             }
@@ -399,6 +441,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if (!Spawned)
             {
+                nbPops = 0;
                 m_creature->SetUInt32Value(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                 //spawn adds
                 for (uint8 i = 0; i < 9; ++i)
@@ -420,13 +463,15 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
     uint32 ArcingsmashTimer;
     uint32 HamstringTimer;
+    uint32 phaseTimer;
+    uint32 phase;
 
     void Reset()
     {
+        phaseTimer = 1000;
+        phase = 0;
         ArcingsmashTimer = 5000;
         HamstringTimer = 2000;
-        DoZoneInCombat(NULL, true);
-        AttackStart(SelectUnit(SELECT_TARGET_RANDOM,0));
     }
 
     void JustDied(Unit *victim)
@@ -437,8 +482,38 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     {
     }
 
+    void MovementInform(uint32 type, uint32 id) 
+    {
+        if(type == POINT_MOTION_TYPE)
+        {
+            m_creature->addUnitState(UNIT_STAT_STUNNED);
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+        }
+    }
+
     void UpdateAI(const uint32 diff)
     {
+        if (m_creature->GetReactState() != REACT_AGGRESSIVE)
+            return;
+
+        if (phaseTimer <= diff)
+        {
+            switch (phase)
+            {
+                case 0:
+                    me->clearUnitState(UNIT_STAT_STUNNED);
+                    DoZoneInCombat(NULL, true);
+                    AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                    phase = 1;
+                    break;
+            }
+        }
+        else
+            phaseTimer -= diff;
+
+        if (phase != 1)
+            return;
+
         //Return since we have no target
         if (!UpdateVictim() )
             return;
@@ -461,15 +536,35 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
 struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 {
-    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c) {}
+    mob_coilfang_ambusherAI(Creature *c) : Scripted_NoMovementAI(c)
+    {
+        SpellEntry *TempSpell = GET_SPELL(SPELL_SPREAD_SHOT);
+        if (TempSpell)
+        {
+            TempSpell->Effect[0] = 0;
+            TempSpell->Effect[1] = 0;
+            TempSpell->Effect[2] = 0;
+        }
+        TempSpell = GET_SPELL(SPELL_SHOOT);
+        if (TempSpell)
+        {
+            TempSpell->Effect[0] = 0;
+            TempSpell->Effect[1] = 0;
+            TempSpell->Effect[2] = 0;
+        }
+    }
 
     uint32 MultiShotTimer;
     uint32 ShootBowTimer;
+    uint32 phaseTimer;
+    uint32 phase;
 
     void Reset()
     {
         MultiShotTimer = 10000;
         ShootBowTimer = 4000;
+        phaseTimer = 1000;
+        phase = 0;
     }
 
     void Aggro(Unit *who)
@@ -478,41 +573,90 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || m_creature->getVictim()) return;
+    }
 
-        if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who) && m_creature->IsWithinDistInMap(who, 45))
+    void MovementInform(uint32 type, uint32 id) 
+    {
+        if(type == POINT_MOTION_TYPE)
         {
-            AttackStart(who);
+            m_creature->addUnitState(UNIT_STAT_STUNNED);
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+        }
+    }
+
+    void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
+    {
+        if (spellId == 37790)
+        {
+            if (caster->ToCreature())
+            {
+                if (m_creature = caster->ToCreature())
+                {
+                    uint32 damage = 0;
+                    uint32 absorb, resist;
+                    damage = target->CalcArmorReducedDamage(target, 3500);
+                    target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SPREAD_SHOT);
+                    uint32 damageTaken = m_creature->DealDamage(target, damage - absorb - resist);
+                    m_creature->SendSpellNonMeleeDamageLog(target, SPELL_SPREAD_SHOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
+                }
+            }
+        }
+        else if (spellId = 37770)
+        {
+            if (caster->ToCreature())
+            {
+                if (m_creature = caster->ToCreature())
+                {
+                    uint32 damage = 0;
+                    uint32 absorb, resist;
+                    damage = target->CalcArmorReducedDamage(target, 3500);
+                    target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SHOOT);
+                    uint32 damageTaken = m_creature->DealDamage(target, damage - absorb - resist);
+                    m_creature->SendSpellNonMeleeDamageLog(target, SPELL_SHOOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
+                }
+            }
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        //Return since we have no target
-        if (!UpdateVictim() )
+        if (m_creature->GetReactState() != REACT_AGGRESSIVE)
+            return;
+
+        if (phaseTimer <= diff)
+        {
+            switch (phase)
+            {
+                case 0:
+                    me->clearUnitState(UNIT_STAT_STUNNED);
+                    DoZoneInCombat(NULL, true);
+                    phase = 1;
+                    break;
+            }
+        }
+        else
+            phaseTimer -= diff;
+
+        if (phase != 1)
             return;
 
         if (MultiShotTimer < diff)
         {
-            uint32 damage = 0;
-            uint32 absorb, resist;
-            damage = m_creature->getVictim()->CalcArmorReducedDamage(m_creature->getVictim(), 3500);
-            m_creature->getVictim()->CalcAbsorbResist(m_creature->getVictim(), SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SPREAD_SHOT);
-            uint32 damageTaken = m_creature->DealDamage(m_creature->getVictim(), damage - absorb - resist);
-            m_creature->SendSpellNonMeleeDamageLog(m_creature->getVictim(), SPELL_SPREAD_SHOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
-            MultiShotTimer = urand(2000, 5000);
+            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
+                DoCast(target, SPELL_SPREAD_SHOT);
+
+            MultiShotTimer = urand(5000, 15000);
         }
         else
             MultiShotTimer -= diff;
 
         if (ShootBowTimer < diff)
         {
-            uint32 damage = 0;
-            uint32 absorb, resist;
-            damage = m_creature->getVictim()->CalcArmorReducedDamage(m_creature->getVictim(), 3500);
-            m_creature->getVictim()->CalcAbsorbResist(m_creature->getVictim(), SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SHOOT);
-            uint32 damageTaken = m_creature->DealDamage(m_creature->getVictim(), damage - absorb - resist);
-            m_creature->SendSpellNonMeleeDamageLog(m_creature->getVictim(), SPELL_SHOOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
+            if (!m_creature->hasUnitState(UNIT_STAT_CASTING))
+            {
+                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
+                    DoCast(target, SPELL_SHOOT);
+            }
             ShootBowTimer = urand(2000, 5000);
         }
         else

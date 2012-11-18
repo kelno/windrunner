@@ -186,6 +186,7 @@ struct ScriptedAI : public CreatureAI
     Creature* DoSpawnCreature(uint32 id, float x, float y, float z, float angle, uint32 type, uint32 despawntime);
 
     //Selects a unit from the creature's current aggro list
+    bool checkTarget(Unit* target, bool playersOnly, float radius);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position, float dist, bool playerOnly);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position, float distNear, float distFar, bool playerOnly);
