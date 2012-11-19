@@ -258,7 +258,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 {
                     m_creature->RemoveAllAuras();
                     m_creature->RemoveFlag(UNIT_NPC_EMOTESTATE,EMOTE_STATE_SUBMERGED);
-                    DoCast(m_creature,SPELL_EMERGE,false);
+                    DoCast(m_creature, SPELL_EMERGE);
                     WaitTimer2 = 60000;//never reached
                     WaitTimer = 3000;
                 }else WaitTimer2 -= diff;
@@ -400,11 +400,11 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if (GeyserTimer < diff)
             {
-                Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1);
+                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
                 if (!target && m_creature->getVictim())
                     target = m_creature->getVictim();
                 if (target)
-                    DoCast(target,SPELL_GEYSER,true);
+                    DoCast(target, SPELL_GEYSER);
                 GeyserTimer = rand()%5000 + 15000;
             }else GeyserTimer -= diff;
 
@@ -433,7 +433,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 m_creature->RemoveAllAuras();
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                 m_creature->RemoveFlag(UNIT_NPC_EMOTESTATE,EMOTE_STATE_SUBMERGED);
-                DoCast(m_creature,SPELL_EMERGE,true);
+                DoCast(m_creature, SPELL_EMERGE, true);
                 Spawned = false;
                 SpoutTimer = 3000; // directly cast Spout after emerging!
                 PhaseTimer = 90000;
