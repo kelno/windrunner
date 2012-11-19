@@ -171,38 +171,47 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         switch (nbPops)
         {
             case 1:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 0.17f, -468.30f, -19.79f);
                 break;
             case 2:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 8.43f, -471.48f, -19.79f);
                 break;
             case 3:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 56.75f, -466.73f, -19.79f);
                 break;
             case 4:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 63.88f, -464.75f, -19.79f);
                 break;
             case 5:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
-                pSummon->GetMotionMaster()->MovePoint(0, 65.88f, -474.74f, -19.79f);
+                pSummon->GetMotionMaster()->MovePoint(0, 65.88f, -374.74f, -19.79f);
                 break;
             case 6:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
-                pSummon->GetMotionMaster()->MovePoint(0, 78.52f, -381.9f, -19.72f);
+                pSummon->GetMotionMaster()->MovePoint(0, 78.52f, -381.99f, -19.72f);
                 break;
             case 7:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
                 break;
             case 8:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
                 break;
             case 9:
+                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                 pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
                 break;
