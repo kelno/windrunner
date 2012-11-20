@@ -139,7 +139,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         m_creature->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
-        m_creature->SetReactState(REACT_AGGRESSIVE);
+        m_creature->SetReactState(REACT_PASSIVE);
         m_creature->addUnitState(UNIT_STAT_FORCEROOT);
     }
 
@@ -150,6 +150,10 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
         summons.DespawnAll();
     }
+
+    void MoveInLineOfSight(Unit *who)
+    {
+    }
      
     void Aggro(Unit* who)
     {
@@ -157,7 +161,6 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         {
             pInstance->SendScriptInTestNoLootMessageToAll();
             pInstance->SetData(DATA_THELURKERBELOWEVENT, IN_PROGRESS);
-            DoZoneInCombat();
         }
             
         //Scripted_NoMovementAI::Aggro(who);
@@ -171,48 +174,30 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         switch (nbPops)
         {
             case 1:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 0.17f, -468.30f, -19.79f);
                 break;
             case 2:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 8.43f, -471.48f, -19.79f);
                 break;
             case 3:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 56.75f, -466.73f, -19.79f);
                 break;
             case 4:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 63.88f, -464.75f, -19.79f);
                 break;
             case 5:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 65.88f, -374.74f, -19.79f);
                 break;
             case 6:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 78.52f, -381.99f, -19.72f);
                 break;
             case 7:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
                 break;
             case 8:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
                 break;
             case 9:
-                pSummon->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                pSummon->SetReactState(REACT_PASSIVE);
                 pSummon->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
                 break;
         }
@@ -221,25 +206,6 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     void SummonedCreatureDespawn(Creature* unit)
     {
         summons.Despawn(unit);
-    }
-    
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (!CanStartEvent)
-            return;
-            
-        if (pInstance->GetData(DATA_THELURKERBELOWEVENT) == NOT_STARTED)
-        {
-            m_creature->SetInCombatWith(who);
-            who->SetInCombatWith(m_creature);
-            m_creature->AddThreat(who, 0.0f);
-        }
-    }
-    
-    void MovementInform(uint32 type, uint32 id) 
-    {
-        //if(type == ROTATE_MOTION_TYPE) 
-            //me->SetReactState(REACT_AGGRESSIVE); 
     }
 
     void UpdateAI(const uint32 diff)
@@ -267,10 +233,13 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 {
                     WaitTimer = 3000;
                     CanStartEvent=true;//fresh fished from pool
+                    m_creature->SetReactState(REACT_AGGRESSIVE);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                    if (m_creature->getVictim())
-                        AttackStart(m_creature->getVictim());
+
+                    DoZoneInCombat(NULL, true);
+                    if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                        AttackStart(target);
 
                     if (pInstance)
                         pInstance->SetData(DATA_STRANGE_POOL, DONE);
@@ -283,8 +252,10 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         {
             if(m_creature->isInCombat())
                 EnterEvadeMode();
+
             return;
         }
+
         if (!Submerged)
         {
             if (PhaseTimer < diff)
@@ -445,6 +416,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                 EnterEvadeMode();
                 return;
             }
+
             if (!m_creature->isInCombat())
                 DoZoneInCombat();
 
@@ -474,6 +446,7 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     uint32 HamstringTimer;
     uint32 phaseTimer;
     uint32 phase;
+    bool movePointPhase;
 
     void Reset()
     {
@@ -481,9 +454,16 @@ struct mob_coilfang_guardianAI : public ScriptedAI
         phase = 0;
         ArcingsmashTimer = 5000;
         HamstringTimer = 2000;
+        movePointPhase = false;
+
+        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
 
     void JustDied(Unit *victim)
+    {
+    }
+
+    void MoveInLineOfSight(Unit *who)
     {
     }
 
@@ -495,14 +475,14 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     {
         if(type == POINT_MOTION_TYPE)
         {
+            movePointPhase = true;
             m_creature->addUnitState(UNIT_STAT_STUNNED);
-            m_creature->SetReactState(REACT_AGGRESSIVE);
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (m_creature->GetReactState() != REACT_AGGRESSIVE)
+        if (!movePointPhase)
             return;
 
         if (phaseTimer <= diff)
@@ -567,6 +547,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
     uint32 ShootBowTimer;
     uint32 phaseTimer;
     uint32 phase;
+    bool movePointPhase;
 
     void Reset()
     {
@@ -574,6 +555,9 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         ShootBowTimer = 4000;
         phaseTimer = 1000;
         phase = 0;
+        movePointPhase = false;
+
+        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
 
     void Aggro(Unit *who)
@@ -587,10 +571,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
     void MovementInform(uint32 type, uint32 id) 
     {
         if(type == POINT_MOTION_TYPE)
-        {
-            m_creature->addUnitState(UNIT_STAT_STUNNED);
-            m_creature->SetReactState(REACT_AGGRESSIVE);
-        }
+            movePointPhase = true;
     }
 
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
@@ -629,7 +610,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (m_creature->GetReactState() != REACT_AGGRESSIVE)
+        if (!movePointPhase)
             return;
 
         if (phaseTimer <= diff)
@@ -637,7 +618,6 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
             switch (phase)
             {
                 case 0:
-                    me->clearUnitState(UNIT_STAT_STUNNED);
                     DoZoneInCombat(NULL, true);
                     phase = 1;
                     break;
