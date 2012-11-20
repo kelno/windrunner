@@ -269,8 +269,8 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             if (SpoutTimer < diff)
             {
                 SpoutTimer = 45000;
-                WhirlTimer = 20000;//whirl directly after spout
-                RotTimer = 20000;
+                WhirlTimer = 23000;//whirl directly after spout
+                RotTimer = 23000;
                 phaseRotate = 1;
             }else SpoutTimer -= diff;
 
@@ -287,9 +287,9 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
                         break;
                     case 2:
                         if(rand()%2)
-                            m_creature->StartAutoRotate(CREATURE_ROTATE_LEFT,17000);
+                            m_creature->StartAutoRotate(CREATURE_ROTATE_LEFT,20000);
                         else
-                            m_creature->StartAutoRotate(CREATURE_ROTATE_RIGHT,17000);
+                            m_creature->StartAutoRotate(CREATURE_ROTATE_RIGHT,20000);
                         phaseRotate = 3;
                         break;
                 }
