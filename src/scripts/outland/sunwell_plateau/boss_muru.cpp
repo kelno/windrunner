@@ -1237,43 +1237,33 @@ class npc_berserker : public CreatureScript
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
+        void onMoveInLoS(Unit* /*who*/)
+        {
+        }
+
         void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
-                if (id == 0)
-                    Phase = 1;
+            {
+                me->addUnitState(UNIT_STAT_STUNNED);
+                Phase = 1;
+            }
         }
 
         void update(const uint32 diff)
         {
             switch (Phase)
             {
-                case 0:
-                    // If mob aggro before end of MovePoint
-                    if (HackTimer <= diff)
-                    {
-                        Phase = 1;
-                        me->SetReactState(REACT_AGGRESSIVE);
-                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    }
-                    else {
-                        HackTimer -= diff;
-                        me->SetReactState(REACT_PASSIVE);
-                    }
-                    break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
-                        me->SetReactState(REACT_AGGRESSIVE);
-                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else {
+                    else
                         TempTimer -= diff;
-                        me->SetReactState(REACT_PASSIVE);
-                    }
                     break;
                 case 2:
                     if (!updateVictim())
@@ -1335,43 +1325,33 @@ class npc_mage : public CreatureScript
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
-        void onMovementInform(uint32 type, uint32 id)
+        void onMoveInLoS(Unit* /*who*/)
+        {
+        }
+
+        void onMovementInform(uint32 type, uint32 /*id*/)
         {
             if (type == POINT_MOTION_TYPE)
-                if (id == 0)
-                    Phase = 1;
+            {
+                me->addUnitState(UNIT_STAT_STUNNED);
+                Phase = 1;
+            }
         }
 
         void update(const uint32 diff)
         {
             switch (Phase)
             {
-                case 0:
-                    // If mob aggro before end of MovePoint
-                    if (HackTimer <= diff)
-                    {
-                        Phase = 1;
-                        me->SetReactState(REACT_AGGRESSIVE);
-                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    }
-                    else {
-                        HackTimer -= diff;
-                        me->SetReactState(REACT_PASSIVE);
-                    }
-                    break;
                 case 1:
                     if (TempTimer <= diff)
                     {
                         Phase = 2;
-                        me->SetReactState(REACT_AGGRESSIVE);
-                        if (Creature* muru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_MURU)))
-                            attackStart(muru->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
-                    else {
+                    else
                         TempTimer -= diff;
-                        me->SetReactState(REACT_PASSIVE);
-                    }
                     break;
                 case 2:
                     if (!updateVictim())
