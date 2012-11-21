@@ -54,6 +54,22 @@ enum {
     CREATURE_CHANNEL_TARGET         = 22418
 };
 
+float WhispPos[12][3] =
+{
+    {5496.45f, -3769.92f, 1595.71f},
+    {5292.58f, -3729.76f, 1594.16f},
+    {5283.23f, -3465.24f, 1575.75f},
+    {5323.52f, -3518.22f, 1576.43f},
+    {5223.31f, -3339.21f, 1652.52f},
+    {5144.24f, -3364.30f, 1644.78f},
+    {5133.14f, -3436.74f, 1627.73f},
+    {5427.22f, -3434.14f, 1573.39f},
+    {5593.33f, -3686.86f, 1608.35f},
+    {5440.87f, -3596.51f, 1561.63f},
+    {5742.63f, -3373.12f, 1597.39f},
+    {5745.13f, -3449.40f, 1595.42f},
+};
+
 #define NORDRASSIL_X        5503.713
 #define NORDRASSIL_Y       -3523.436
 #define NORDRASSIL_Z        1608.781
@@ -86,6 +102,12 @@ public:
             _archimondeGUID = 0;
             
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
+            if (Creature* archimonde = Creature::GetCreature(*me, _instance->GetData64(DATA_ARCHIMONDE)))
+            {
+                attackStart(archimonde);
+                doModifyThreat(archimonde, 1000000.0f);
+            }
         }
         
         void onDamageTaken(Unit* /*attacker*/, uint32& damage)
@@ -95,6 +117,11 @@ public:
         
         void update(uint32 const diff)
         {
+            me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
+            if (!updateVictim())
+                return;
+
             if (!_archimondeGUID) {
                 if (_instance)
                     _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
@@ -115,7 +142,7 @@ public:
                             doCast(archimonde, SPELL_ANCIENT_SPARK);
                     }
                     
-                    scheduleEvent(EV_CHECK, 1000);
+                    scheduleEvent(EV_CHECK, urand (3000, 10000));
                     
                     break;
                 }
@@ -586,10 +613,13 @@ public:
             if (!updateVictim())
                 return;
             
-            if (me->IsBelowHPPercent(10.0f)) {
+            if (me->IsBelowHPPercent(10.0f) && !_under10Percent) {
                 _under10Percent = true;
                 enableEvent(EV_UNDER_10_PERCENT);
                 doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE);
+
+                for (uint8 i = 0; i < 12; ++i)
+                    me->SummonCreature(CREATURE_ANCIENT_WISP, WhispPos[i][0], WhispPos[i][1], WhispPos[i][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
             }
                 
             updateEvents(diff);
