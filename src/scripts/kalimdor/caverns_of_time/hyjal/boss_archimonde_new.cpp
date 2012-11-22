@@ -618,8 +618,11 @@ public:
                 enableEvent(EV_UNDER_10_PERCENT);
                 doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE);
 
-                for (uint8 i = 0; i < 12; ++i)
-                    me->SummonCreature(CREATURE_ANCIENT_WISP, WhispPos[i][0], WhispPos[i][1], WhispPos[i][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+                for (uint8 j = 0; j < 2; ++j)
+                {
+                    for (uint8 i = 0; i < 12; ++i)
+                        me->SummonCreature(CREATURE_ANCIENT_WISP, WhispPos[i][0] + ((2 * rand()%1000) / 1000.0f), WhispPos[i][1] + ((2 * rand()%1000) / 1000.0f), WhispPos[i][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+                }
             }
                 
             updateEvents(diff);
