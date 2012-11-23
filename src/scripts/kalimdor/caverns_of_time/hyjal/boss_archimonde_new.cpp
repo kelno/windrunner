@@ -479,7 +479,7 @@ public:
             EV_UNDER_10_PERCENT
         };
     
-        Boss_ArchimondeAI(Creature* creature) : CreatureAINew(creature)
+        Boss_ArchimondeAI(Creature* creature) : CreatureAINew(creature), Summons(me)
         {
             _instance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -560,7 +560,23 @@ public:
                 sLog.outString("[ARCHIMONDE] Got %s soulcharge (total %u).", color.c_str(), _chargeCount);
             }
         }
-        
+
+        void onSummon(Creature* summoned)
+        {
+            Summons.Summon(summoned);
+        }
+
+        void onSummonDespawn(Creature* unit)
+        {
+            Summons.Despawn(unit);
+        }
+
+        void evade()
+        {
+            Summons.DespawnEntry(CREATURE_ANCIENT_WISP);
+            CreatureAINew::evade();
+        }
+
         void onDeath(Unit* /*killer*/)
         {
             talk(YELL_DEATH);
@@ -791,6 +807,7 @@ public:
         }
     
         ScriptedInstance* _instance;
+        SummonList Summons;
         
         bool _enraged;
         bool _under10Percent;
