@@ -566,7 +566,7 @@ extern void AddSC_boss_brutallus();
 extern void AddSC_boss_felmyst();
 extern void AddSC_boss_eredar_twins();
 extern void AddSC_boss_muru();
-extern void AddSC_boss_kiljaeden();
+extern void AddSC_boss_kiljaeden_new();
 extern void AddSC_sunwell_plateau();
 
 //Swamp of Sorrows
@@ -1961,7 +1961,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_felmyst();
     AddSC_boss_eredar_twins();
     AddSC_boss_muru();
-    AddSC_boss_kiljaeden();
+    AddSC_boss_kiljaeden_new();
     AddSC_sunwell_plateau();
     
     //Swamp of Sorrows

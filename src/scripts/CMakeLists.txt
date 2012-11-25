@@ -403,6 +403,7 @@ SET(scripts_STAT_SRCS
     outland/shattrath_city.cpp
     outland/silvermoon_city.cpp
     outland/sunwell_plateau/boss_kiljaeden.cpp
+    outland/sunwell_plateau/boss_kiljaeden_new.cpp
     outland/sunwell_plateau/boss_muru.cpp
     outland/sunwell_plateau/boss_eredar_twins.cpp
     outland/sunwell_plateau/boss_felmyst.cpp
