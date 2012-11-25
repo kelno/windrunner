@@ -103,11 +103,15 @@ public:
             
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
-            if (Creature* archimonde = Creature::GetCreature(*me, _instance->GetData64(DATA_ARCHIMONDE)))
+            if (Creature* archimonde = _instance->instance->GetCreatureInMap(_instance->GetData64(DATA_ARCHIMONDE)))
             {
                 attackStart(archimonde);
                 doModifyThreat(archimonde, 1000000.0f);
             }
+        }
+
+        void onMoveInLoS(Unit* /*who*/)
+        {
         }
         
         void onDamageTaken(Unit* /*attacker*/, uint32& damage)
