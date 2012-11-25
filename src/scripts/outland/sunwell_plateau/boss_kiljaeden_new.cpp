@@ -484,6 +484,7 @@ public:
                 shadowSpike = false;
                 OrbActivated = false;
                 IsWaiting = false;
+                me->SetFullTauntImmunity(true);
             }
 
             void onSummon(Creature* summoned)
