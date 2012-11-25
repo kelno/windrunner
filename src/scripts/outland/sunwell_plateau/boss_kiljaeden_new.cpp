@@ -153,8 +153,7 @@ enum FelfirePortal
 
 enum FelfireFiend
 {
-    EVENT_EXPLODE               = 0,
-    EVENT_STUN                  = 1
+    EVENT_STUN                  = 0
 };
 
 enum Armageddontarget
@@ -1043,11 +1042,6 @@ public:
                 Summons.DespawnAll();
             }
 
-            void onDeath(Unit* /*killer*/)
-            {
-                Summons.DespawnAll();
-            }
-
             void onSummon(Creature* summoned)
             {
                 Summons.Summon(summoned);
@@ -1060,9 +1054,6 @@ public:
 
             void update(uint32 const diff)
             {
-                if (!updateVictim())
-                    return;
-
                 updateEvents(diff);
             
                 while (executeEvent(diff, m_currEvent))
@@ -1071,7 +1062,7 @@ public:
                     {
                         case EVENT_SPAWNFIEND:
                             doCast(me, SPELL_SUMMON_FELFIRE_FIEND, false);
-                            disableEvent(EVENT_FELFIRE);
+                            disableEvent(EVENT_SPAWNFIEND);
                             break;
                     }
                 }
@@ -1103,33 +1094,33 @@ public:
             void onReset(bool onSpawn)
             {
                 if (onSpawn)
-                {
                     addEvent(EVENT_STUN, 1000, 1000);
-                    addEvent(EVENT_EXPLODE, 2000, 2000);
-                }
                 else
-                {
                     resetEvent(EVENT_STUN, 1000);
-                    resetEvent(EVENT_EXPLODE, 2000);
-                }
 
                 me->addUnitState(UNIT_STAT_STUNNED);
             }
 
             void onDamageTaken(Unit* /*attacker*/, uint32& damage)
             {
-                if(damage > me->GetHealth())
-                    doCast(me, SPELL_FELFIRE_FISSION, true);
+                doCast(me, SPELL_FELFIRE_FISSION, false);
+                me->DisappearAndDie();
             }
 
             void onMoveInLoS(Unit* /*who*/)
             {
             }
 
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
             void update(uint32 const diff)
             {
-                if (!updateVictim())
-                    return;
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
 
                 updateEvents(diff);
 
@@ -1143,21 +1134,17 @@ public:
                             if (Unit *unit = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, false))
                             {
                                 attackStart(unit);
-                                me->AddThreat(unit, 10000000.0f);
+                                doModifyThreat(unit, 10000000.0f);
                             }
                             disableEvent(EVENT_STUN);
                             break;
-                        case EVENT_EXPLODE:
-                            if (me->IsWithinMeleeRange(me->getVictim()))
-                            {
-                                // Explode if it's close enough to it's target
-                                doCast(me->getVictim(), SPELL_FELFIRE_FISSION);
-                                me->DisappearAndDie();
-                            }
-                            disableEvent(EVENT_EXPLODE);
-                            break;
                     }
                 }
+
+                if (!updateVictim())
+                    return;
+
+                doMeleeAttackIfReady();
             }
     };
 

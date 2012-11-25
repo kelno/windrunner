@@ -98,16 +98,9 @@ public:
                 addEvent(EV_CHECK, 1000, 1000);
             else
                 scheduleEvent(EV_CHECK, 1000);
-            
-            _archimondeGUID = 0;
-            
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
-            if (Creature* archimonde = _instance->instance->GetCreatureInMap(_instance->GetData64(DATA_ARCHIMONDE)))
-            {
-                attackStart(archimonde);
-                doModifyThreat(archimonde, 1000000.0f);
-            }
+            aggro = false;
+            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
         void onMoveInLoS(Unit* /*who*/)
@@ -123,23 +116,23 @@ public:
         {
             me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
-            if (!updateVictim())
-                return;
-
-            if (!_archimondeGUID) {
-                if (_instance)
-                    _archimondeGUID = _instance->GetData64(DATA_ARCHIMONDE);
+            if (!aggro)
+            {
+                if (Creature* archimonde = _instance->instance->GetCreatureInMap(_instance->GetData64(DATA_ARCHIMONDE)))
+                {
+                    attackStart(archimonde);
+                    doModifyThreat(archimonde, 1000000.0f);
+                    aggro = true;
+                }
             }
-            
+
             updateEvents(diff);
             
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_CHECK:
-                    if (!_archimondeGUID)
-                        break;
-                    
-                    if (Creature* archimonde = Creature::GetCreature(*me, _archimondeGUID)) {
+                    if (Creature* archimonde = _instance->instance->GetCreatureInMap(_instance->GetData64(DATA_ARCHIMONDE)))
+                    {
                         if (archimonde->IsBelowHPPercent(2.0f) || archimonde->isDead())
                             doCast(me, SPELL_DENOUEMENT_WISP);
                         else
@@ -155,8 +148,8 @@ public:
     
     private:
         ScriptedInstance* _instance;
-        
-        uint64 _archimondeGUID;
+
+        bool aggro;
     };
     
     CreatureAINew* getAI(Creature* creature)
@@ -480,7 +473,8 @@ public:
             EV_ENRAGE,
             EV_ENRAGE_CAST,
             EV_UNLEASH_SOULCHARGE,
-            EV_UNDER_10_PERCENT
+            EV_UNDER_10_PERCENT,
+            EV_UNDER_10_PERCENT2
         };
     
         Boss_ArchimondeAI(Creature* creature) : CreatureAINew(creature), Summons(me)
@@ -501,6 +495,7 @@ public:
                 addEvent(EV_ENRAGE_CAST, 2000, 2000, EVENT_FLAG_NONE, false);
                 addEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                 addEvent(EV_UNDER_10_PERCENT, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, false);
+                addEvent(EV_UNDER_10_PERCENT2, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, false);
             }
             else {
                 scheduleEvent(EV_FEAR, 42000);
@@ -517,6 +512,8 @@ public:
                 scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                 scheduleEvent(EV_UNDER_10_PERCENT, 1000, 1000);
                 disableEvent(EV_UNDER_10_PERCENT);
+                scheduleEvent(EV_UNDER_10_PERCENT2, 1000, 1000);
+                disableEvent(EV_UNDER_10_PERCENT2);
             }
 
             _enraged = false;
@@ -636,13 +633,8 @@ public:
             if (me->IsBelowHPPercent(10.0f) && !_under10Percent) {
                 _under10Percent = true;
                 enableEvent(EV_UNDER_10_PERCENT);
+                enableEvent(EV_UNDER_10_PERCENT2);
                 doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE);
-
-                for (uint8 j = 0; j < 2; ++j)
-                {
-                    for (uint8 i = 0; i < 12; ++i)
-                        me->SummonCreature(CREATURE_ANCIENT_WISP, WhispPos[i][0] + ((2 * rand()%1000) / 1000.0f), WhispPos[i][1] + ((2 * rand()%1000) / 1000.0f), WhispPos[i][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
-                }
             }
                 
             updateEvents(diff);
@@ -758,7 +750,15 @@ public:
                 }
                 case EV_UNDER_10_PERCENT:
                     doCast(me, SPELL_HAND_OF_DEATH);
-                    scheduleEvent(EV_UNDER_10_PERCENT, 1000);
+                    scheduleEvent(EV_UNDER_10_PERCENT, 3000);
+                    break;
+                case EV_UNDER_10_PERCENT2:
+                    for (uint8 i = 0; i < 3; ++i)
+                    {
+                        uint8 j = rand()%13;
+                        me->SummonCreature(CREATURE_ANCIENT_WISP, WhispPos[j][0] + ((2 * rand()%1000) / 1000.0f), WhispPos[j][1] + ((2 * rand()%1000) / 1000.0f), WhispPos[j][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
+                    }
+                    scheduleEvent(EV_UNDER_10_PERCENT2, 3000, 5000);
                     break;
                 }
             }
