@@ -720,17 +720,7 @@ public:
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
             
-            // Transfert threat list
-            if (onSpawn) {
-                if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS))) {
-                    std::list<HostilReference*>::iterator itr;
-                    for (itr = entropius->getThreatManager().getThreatList().begin(); itr != entropius->getThreatManager().getThreatList().end(); ++itr) {
-                        Unit* unit = Unit::GetUnit(*me, (*itr)->getUnitGuid());
-                        if (unit)
-                            me->AddThreat(unit, 1.0f);
-                    }
-                }
-            }
+            setZoneInCombat(true);
         }
 
         void update(const uint32 diff)
@@ -976,9 +966,15 @@ class npc_void_spawn : public CreatureScript
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 
+        void updateEM(const uint32 diff)
+        {
+            if (pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+                me->DisappearAndDie();
+        }
+
         void update(const uint32 diff)
         {
-            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+            if (pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                 me->DisappearAndDie();
 
             if (phaseTimer <= diff)
@@ -1250,6 +1246,14 @@ class npc_berserker : public CreatureScript
             }
         }
 
+        void attackStart(Unit* victim)
+        {
+            if (Phase == 0)
+                return;
+
+            CreatureAINew::attackStart(victim);
+        }
+
         void update(const uint32 diff)
         {
             switch (Phase)
@@ -1259,6 +1263,7 @@ class npc_berserker : public CreatureScript
                     {
                         Phase = 2;
                         me->clearUnitState(UNIT_STAT_STUNNED);
+                        doResetThreat();
                         setZoneInCombat(true);
                         attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }
@@ -1338,6 +1343,15 @@ class npc_mage : public CreatureScript
             }
         }
 
+        void attackStart(Unit* victim)
+        {
+            if (Phase == 0)
+                return;
+
+            CreatureAINew::attackStart(victim);
+        }
+
+
         void update(const uint32 diff)
         {
             switch (Phase)
@@ -1347,6 +1361,7 @@ class npc_mage : public CreatureScript
                     {
                         Phase = 2;
                         me->clearUnitState(UNIT_STAT_STUNNED);
+                        doResetThreat();
                         setZoneInCombat(true);
                         attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
                     }

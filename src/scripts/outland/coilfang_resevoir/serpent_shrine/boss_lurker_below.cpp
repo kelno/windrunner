@@ -469,6 +469,9 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
     void Aggro(Unit *who)
     {
+        DoZoneInCombat(NULL, true);
+        movePointPhase = true;
+        phase = 1;
     }
 
     void MovementInform(uint32 type, uint32 id) 
@@ -562,6 +565,9 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void Aggro(Unit *who)
     {
+        DoZoneInCombat(NULL, true);
+        movePointPhase = true;
+        phase = 1;
     }
 
     void MoveInLineOfSight(Unit *who)
