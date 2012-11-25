@@ -355,7 +355,7 @@ struct boss_sacrolashAI : public ScriptedAI
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2, 100.0f, true);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
 
@@ -803,7 +803,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2);
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2, 100.0f, true);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
 
