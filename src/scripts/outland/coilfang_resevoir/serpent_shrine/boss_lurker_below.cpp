@@ -322,10 +322,10 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
 
             if(RotTimer)
             {
+                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+
                 if (phaseRotate != 3)
                     return;
-
-                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
                 Map* pMap = m_creature->GetMap();
                 if (pMap->IsDungeon())
