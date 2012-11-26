@@ -153,7 +153,8 @@ enum FelfirePortal
 
 enum FelfireFiend
 {
-    EVENT_STUN                  = 0
+    EVENT_STUN                  = 0,
+    EVENT_EXPLODE               = 1
 };
 
 enum Armageddontarget
@@ -286,7 +287,9 @@ public:
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->setActive(true);
                 Searched = false;
+                me->SetVisibility(VISIBILITY_OFF);
                 FindOrbs();     // FIXME: Is this really useful?
+                ResetOrbs();
             }
 
             void FindOrbs()
@@ -858,9 +861,6 @@ public:
 
                 setPhase(PHASE_DECEIVERS);
 
-                if (Creature *KalecKJ = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)KalecKJ->getAI())->ResetOrbs();
-
                 DeceiverDeathCount = 0;
                 KiljaedenDeath = false;
 
@@ -870,6 +870,7 @@ public:
                     me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
 
                 me->SummonCreature(CREATURE_ANVEENA,  0, 0, 40, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
+                me->SummonCreature(CREATURE_KALECGOS,  1701.7f, 635.515f, 72.2884f, 4.65461f, TEMPSUMMON_DEAD_DESPAWN, 0);
                 doCast(me, SPELL_ANVEENA_ENERGY_DRAIN);
             }
 
@@ -962,6 +963,10 @@ public:
                 }
 
                 me->InterruptNonMeleeSpells(true);
+
+                if (Creature *controller = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
+                    if (!controller->getAI()->aiInCombat())
+                        controller->getAI()->attackStart(victim);
             }
 
             void onDeath(Unit* /*killer*/)
@@ -1094,16 +1099,22 @@ public:
             void onReset(bool onSpawn)
             {
                 if (onSpawn)
-                    addEvent(EVENT_STUN, 1000, 1000);
+                {
+                    addEvent(EVENT_STUN, 2000, 2000);
+                    addEvent(EVENT_EXPLODE, 2000, 2000);
+                }
                 else
-                    resetEvent(EVENT_STUN, 1000);
+                {
+                    resetEvent(EVENT_STUN, 2000);
+                    resetEvent(EVENT_EXPLODE, 2000);
+                }
 
                 me->addUnitState(UNIT_STAT_STUNNED);
             }
 
             void onDamageTaken(Unit* /*attacker*/, uint32& damage)
             {
-                doCast(me, SPELL_FELFIRE_FISSION, false);
+                doCast(me, SPELL_FELFIRE_FISSION);
                 me->DisappearAndDie();
             }
 
@@ -1137,6 +1148,16 @@ public:
                                 doModifyThreat(unit, 10000000.0f);
                             }
                             disableEvent(EVENT_STUN);
+                            break;
+                        case EVENT_EXPLODE:
+                            if (me->IsWithinMeleeRange(me->getVictim()))
+                            {
+                                // Explode if it's close enough to it's target
+                                doCast(me->getVictim(), SPELL_FELFIRE_FISSION);
+                                disableEvent(EVENT_EXPLODE);
+                                me->DisappearAndDie();
+                            }
+                            scheduleEvent(EVENT_EXPLODE, 2000);
                             break;
                     }
                 }
