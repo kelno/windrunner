@@ -154,7 +154,8 @@ enum FelfirePortal
 enum FelfireFiend
 {
     EVENT_STUN                  = 0,
-    EVENT_EXPLODE               = 1
+    EVENT_EXPLODE               = 1,
+    EVENT_DIE_F                 = 2
 };
 
 enum Armageddontarget
@@ -289,7 +290,6 @@ public:
                 Searched = false;
                 me->SetVisibility(VISIBILITY_OFF);
                 FindOrbs();     // FIXME: Is this really useful?
-                ResetOrbs();
             }
 
             void FindOrbs()
@@ -861,6 +861,9 @@ public:
 
                 setPhase(PHASE_DECEIVERS);
 
+                if (Creature *KalecKJ = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)KalecKJ->getAI())->ResetOrbs();
+
                 DeceiverDeathCount = 0;
                 KiljaedenDeath = false;
 
@@ -870,7 +873,6 @@ public:
                     me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
 
                 me->SummonCreature(CREATURE_ANVEENA,  0, 0, 40, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
-                me->SummonCreature(CREATURE_KALECGOS,  1701.7f, 635.515f, 72.2884f, 4.65461f, TEMPSUMMON_DEAD_DESPAWN, 0);
                 doCast(me, SPELL_ANVEENA_ENERGY_DRAIN);
             }
 
@@ -1002,7 +1004,7 @@ public:
                             scheduleEvent(EVENT_SHADOWBOLT, 2000, 3000);
                             break;
                         case EVENT_FELFIRE:
-                            doCast(me, SPELL_FELFIRE_PORTAL, false);
+                            doCast(me, SPELL_FELFIRE_PORTAL);
                             scheduleEvent(EVENT_FELFIRE, 20000);
                             break;
                     }
@@ -1102,11 +1104,13 @@ public:
                 {
                     addEvent(EVENT_STUN, 2000, 2000);
                     addEvent(EVENT_EXPLODE, 2000, 2000);
+                    addEvent(EVENT_DIE_F, 500, 500, EVENT_FLAG_NONE, false);
                 }
                 else
                 {
                     resetEvent(EVENT_STUN, 2000);
                     resetEvent(EVENT_EXPLODE, 2000);
+                    resetEvent(EVENT_DIE_F, 500);
                 }
 
                 me->addUnitState(UNIT_STAT_STUNNED);
@@ -1115,7 +1119,7 @@ public:
             void onDamageTaken(Unit* /*attacker*/, uint32& damage)
             {
                 doCast(me, SPELL_FELFIRE_FISSION);
-                me->DisappearAndDie();
+                enableEvent(EVENT_DIE_F);
             }
 
             void onMoveInLoS(Unit* /*who*/)
@@ -1133,7 +1137,7 @@ public:
                 if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                     me->DisappearAndDie();
 
-                updateEvents(diff);
+                updateEvents(diff, 5);
 
                 while (executeEvent(diff, m_currEvent))
                 {
@@ -1146,24 +1150,31 @@ public:
                             {
                                 attackStart(unit);
                                 doModifyThreat(unit, 10000000.0f);
+                                disableEvent(EVENT_STUN);
                             }
-                            disableEvent(EVENT_STUN);
+                            scheduleEvent(EVENT_STUN, 500);
                             break;
                         case EVENT_EXPLODE:
                             if (me->IsWithinMeleeRange(me->getVictim()))
                             {
                                 // Explode if it's close enough to it's target
-                                doCast(me->getVictim(), SPELL_FELFIRE_FISSION);
+                                doCast(me, SPELL_FELFIRE_FISSION);
                                 disableEvent(EVENT_EXPLODE);
-                                me->DisappearAndDie();
+                                enableEvent(EVENT_DIE_F);
                             }
                             scheduleEvent(EVENT_EXPLODE, 2000);
+                            break;
+                        case EVENT_DIE_F:
+                            disableEvent(EVENT_DIE_F);
+                            me->DisappearAndDie();
                             break;
                     }
                 }
 
                 if (!updateVictim())
                     return;
+
+                updateEvents(diff, 2);
 
                 doMeleeAttackIfReady();
             }
@@ -1235,6 +1246,7 @@ public:
                             break;
                         case EVENT_DIE:
                             incrPhase();
+                            disableEvent(EVENT_DIE);
                             me->DisappearAndDie();
                             break;
                     }
