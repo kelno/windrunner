@@ -376,8 +376,6 @@ public:
                 else
                     RespawnTimer -= diff;
             }
-            
-            
 
             if (!updateVictim())
                 return;
@@ -733,19 +731,26 @@ public:
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
-                    if (plr && !plr->HasAura(45996)) {
-                        SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
-                        if (spellInfo) {
-                            for (uint8 i = 0; i < 3 ; ++i) {
-                                uint8 eff = spellInfo->Effect[i];
-                                if (eff>=TOTAL_SPELL_EFFECTS)
-                                    continue;
-                                if (IsAreaAuraEffect(eff)
-                                    || eff == SPELL_EFFECT_APPLY_AURA
-                                    || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                    if (plr->GetPositionZ() < 73.0f)
+                    {
+                        if (plr && !plr->HasAura(45996))
+                        {
+                            SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
+                            if (spellInfo)
+                            {
+                                for (uint8 i = 0; i < 3 ; ++i)
                                 {
-                                    Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
-                                    plr->AddAura(Aur);
+                                    uint8 eff = spellInfo->Effect[i];
+                                    if (eff>=TOTAL_SPELL_EFFECTS)
+                                        continue;
+
+                                    if (IsAreaAuraEffect(eff)
+                                        || eff == SPELL_EFFECT_APPLY_AURA
+                                        || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                                    {
+                                        Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
+                                        plr->AddAura(Aur);
+                                    }
                                 }
                             }
                         }

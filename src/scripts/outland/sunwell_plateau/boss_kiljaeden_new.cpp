@@ -1146,7 +1146,7 @@ public:
                         case EVENT_STUN:
                             me->clearUnitState(UNIT_STAT_STUNNED);
                             setZoneInCombat(true);
-                            if (Unit *unit = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, false))
+                            if (Unit *unit = selectUnit(SELECT_TARGET_NEAREST, 0, 1000.0f, false))
                             {
                                 attackStart(unit);
                                 doModifyThreat(unit, 10000000.0f);
