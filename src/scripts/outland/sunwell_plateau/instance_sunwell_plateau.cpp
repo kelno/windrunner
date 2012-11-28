@@ -502,7 +502,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 //Fiend->MonsterSay("[DEBUG] Fiend!", LANG_UNIVERSAL, NULL);
                 Fiend->setActive(true);
                 Fiend->SetSpeed(MOVE_WALK, 5);
-                Fiend->GetMotionMaster()->MovePath(25851, false);
             }
                 
             FiendTimer = 45000;
