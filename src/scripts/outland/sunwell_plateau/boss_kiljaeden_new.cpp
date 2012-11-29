@@ -873,7 +873,17 @@ public:
                     me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
 
                 me->SummonCreature(CREATURE_ANVEENA,  0, 0, 40, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
-                doCast(me, SPELL_ANVEENA_ENERGY_DRAIN);
+
+                if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
+                {
+                    SpellEntry const *spellInfo = spellmgr.LookupSpell(SPELL_ANVEENA_ENERGY_DRAIN);
+                    if (spellInfo)
+                    {
+                        uint8 eff = 0;
+                        Aura* Aur = CreateAura(spellInfo, eff, NULL, me);
+                        me->AddAura(Aur);
+                    }
+                }
             }
 
             void update(uint32 const diff)
