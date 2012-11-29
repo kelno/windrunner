@@ -174,25 +174,25 @@ enum ShieldOrb
 // Locations of the Hand of Deceiver adds
 float DeceiverLocations[3][3]=
 {
-    {1682.045, 631.299, 5.936},
-    {1684.099, 618.848, 0.589},
-    {1694.170, 612.272, 1.416},
+    {1687.777f, 638.084f, 5.527f},
+    {1684.099f, 618.848f, 0.589f},
+    {1704.398f, 612.848f, 1.884f},
 };
 
 // Locations, where Shield Orbs will spawn
 float ShieldOrbLocations[4][2]=
 {
-    {1698.900, 627.870},    //middle pont of Sunwell
-    {12, 3.14},             // First one spawns northeast of KJ
-    {12, 3.14/0.7},         // Second one spawns southeast
-    {12, 3.14*3.8}          // Third one spawns (?)
+    {1698.900f, 627.870f},    //middle pont of Sunwell
+    {12.0f, 3.14f},             // First one spawns northeast of KJ
+    {12.0f, 3.14f/0.7f},         // Second one spawns southeast
+    {12.0f, 3.14f*3.8f}          // Third one spawns (?)
 };
 
 float OrbLocations[4][5] = {
-    (1694.48, 674.29,  28.0502, 4.86985),
-    (1745.68, 621.823, 28.0505, 2.93777),
-    (1704.14, 583.591, 28.1696, 1.59003),
-    (1653.12, 635.41,  28.0932, 0.0977725),
+    (1694.48f, 674.29f,  28.0502f, 4.86985f),
+    (1745.68f, 621.823f, 28.0505f, 2.93777f),
+    (1704.14f, 583.591f, 28.1696f, 1.59003f),
+    (1653.12f, 635.41f,  28.0932f, 0.0977725f),
 };
 
 struct Speech
