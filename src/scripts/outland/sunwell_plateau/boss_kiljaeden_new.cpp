@@ -909,6 +909,15 @@ public:
                     setPhase(PHASE_NORMAL);
                     me->SummonCreature(CREATURE_KILJAEDEN, 0, 0, 0, 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
                 }
+
+                if (!updateVictim())
+                    return;
+
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                {
+                    evade();
+                    return;
+                }
             }
     };
 
@@ -997,6 +1006,12 @@ public:
 
                 if (!updateVictim())
                     return;
+
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                {
+                    evade();
+                    return;
+                }
 
                 // Gain Shadow Infusion
                 if (me->IsBetweenHPPercent(20, 25) && !me->HasAura(SPELL_SHADOW_INFUSION))
