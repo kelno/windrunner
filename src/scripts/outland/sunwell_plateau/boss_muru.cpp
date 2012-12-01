@@ -112,6 +112,213 @@ float Humanoides[6][5] =
 };
 
 typedef std::map<uint64, uint32> GuidMapCD;
+typedef std::set<uint64> GuidSet;
+
+class npc_blackhole : public CreatureScript
+{
+public:
+    npc_blackhole() : CreatureScript("npc_blackhole") {}
+
+    class npc_blackholeAI : public CreatureAINew
+    {
+        public:
+        npc_blackholeAI(Creature* creature) : CreatureAINew(creature)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+
+        ScriptedInstance* pInstance;
+
+        uint32 DespawnTimer;
+        uint32 SpellTimer;
+        uint32 SingularityTimer;
+        uint32 blackHoleTimer;
+        uint32 phase;
+        uint32 phaseTimer;
+        bool Visual2;
+        GuidMapCD guidPlayerCD;
+
+        void onReset(bool onSpawn)
+        {
+            phase = 0;
+            phaseTimer = 5000;
+            DespawnTimer = 15000;
+            SpellTimer = 300;
+            SingularityTimer = 300;
+            blackHoleTimer = 300;
+            Visual2 = false;
+
+            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
+            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
+            me->addUnitState(UNIT_STAT_STUNNED);
+
+            guidPlayerCD.clear();
+            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+            if (!players.isEmpty())
+            {
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* plr = itr->getSource();
+                    if (plr)
+                        guidPlayerCD[plr->GetGUID()] = 0;
+                }
+            }
+        }
+
+        void onDeath(Unit* /*killer*/)
+        {
+            guidPlayerCD.clear();
+        }
+
+        bool isBump(Unit *target)
+        {
+            for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+            {
+                if ((*i).second > 0)
+                {
+                    if ((*i).first == target->GetGUID())
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        void update(const uint32 diff)
+        {
+            if (DespawnTimer <= diff)
+                me->DisappearAndDie();
+            else
+                DespawnTimer -= diff;
+
+            if (phaseTimer <= diff)
+            {
+                switch (phase)
+                {
+                    case 0:
+                        me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
+                        doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        phaseTimer = 300;
+                        phase = 1;
+                        break;
+                    case 1:
+                    {
+                        Unit* Victim = selectUnit(SELECT_TARGET_RANDOM, 0, -15.0f, true);
+                        if (Victim)
+                        {
+                            attackStart(Victim);
+                            doModifyThreat(Victim, 1000000.0f);
+                        }
+                        else
+                        {
+                            Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
+                            if (Victim)
+                            {
+                                attackStart(Victim);
+                                doModifyThreat(Victim, 1000000.0f);
+                            }
+                        }
+                        phaseTimer = 300;
+                        phase = 2;
+                        break;
+                    }
+                    case 2:
+                        if (SpellTimer <= diff)
+                        {
+                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                            if (!players.isEmpty())
+                            {
+                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                                {
+                                    Player* plr = itr->getSource();
+                                    if (plr && me->GetDistance(plr) <= 7.0f)
+                                    {
+                                        if (guidPlayerCD[plr->GetGUID()] == 0)
+                                        {
+                                            doCast(plr, SPELL_BLACK_HOLE_EFFECT, false);
+                                            guidPlayerCD[plr->GetGUID()] = 4000;
+                                        }
+                                    }
+                                }
+                            }
+                            SpellTimer = 500;
+                        }
+                        else
+                            SpellTimer -= diff;
+
+                        if (SingularityTimer <= diff)
+                        {
+                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                            if (!players.isEmpty())
+                            {
+                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                                {
+                                    Player* plr = itr->getSource();
+                                    if (plr && me->GetDistance(plr) <= 5.0f)
+                                        doCast(plr, SPELL_SINGULARITY, true);
+                                }
+                            }
+                            SingularityTimer = 1000;
+                        }
+                        else
+                            SingularityTimer -= diff;
+
+                        if (!guidPlayerCD.empty())
+                        {
+                            for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                            {
+                                if ((*i).second > diff)
+                                    guidPlayerCD[(*i).first] = (*i).second - diff;
+                                else
+                                    guidPlayerCD[(*i).first] = 0;
+                            }
+                        }
+
+                        if (blackHoleTimer <= diff)
+                        {
+                            if (!guidPlayerCD.empty())
+                            {
+                                for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
+                                {
+                                    if ((*i).second > 0)
+                                    {
+                                        Player *plr = objmgr.GetPlayer((*i).first);
+                                        float vcos, vsin;
+                                        float angle = me->GetMap()->rand_norm()*2*M_PI;
+                                        vcos = cos(angle);
+                                        vsin = sin(angle);
+
+                                        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+                                        data.append(plr->GetPackGUID());
+                                        data << uint32(0);                                      // Sequence
+                                        data << float(vcos);                                    // x direction
+                                        data << float(vsin);                                    // y direction
+                                        data << float(12.0f);                                   // Horizontal speed
+                                        data << float(-9.0f);                                   // Z Movement speed
+
+                                        plr->GetSession()->SendPacket(&data);
+                                    }
+                                }
+                            }
+                            blackHoleTimer = 800;
+                        }
+                        else
+                            blackHoleTimer -= diff;
+
+                        break;
+                }
+            }
+            else
+                phaseTimer -= diff;
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_blackholeAI(creature);
+    }
+};
 
 class boss_entropius : public CreatureScript
 {
@@ -128,6 +335,7 @@ public:
 
         ScriptedInstance* pInstance;
         SummonList Summons;
+        GuidSet setDarkness;
 
         uint32 BlackHoleSummonTimer;
         uint32 EnrageTimer;
@@ -154,6 +362,7 @@ public:
             }
             me->SetFullTauntImmunity(true);
             me->addUnitState(UNIT_STAT_STUNNED);
+            setDarkness.clear();
         }
 
         void onCombatStart(Unit * /*who*/)
@@ -175,21 +384,42 @@ public:
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
+                case CREATURE_DARKNESS:
+                    setDarkness.insert(summoned->GetGUID());
+                    break;
             }
             Summons.Summon(summoned);
         }
 
         void onSummonDespawn(Creature* unit)
         {
+            switch(unit->GetEntry())
+            {
+                case CREATURE_DARKNESS:
+                    setDarkness.erase(unit->GetGUID());
+                    break;
+            }
             Summons.Despawn(unit);
         }
 
         void onDeath(Unit* /*killer*/)
         {
             Summons.DespawnAll();
+            setDarkness.clear();
 
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, DONE);
+        }
+
+        bool isBump(Unit* unit)
+        {
+            for (GuidSet::const_iterator i = setDarkness.begin(); i != setDarkness.end(); ++i)
+            {
+                if (Creature *darkness = pInstance->instance->GetCreatureInMap(*i))
+                    if (((npc_blackhole::npc_blackholeAI*)darkness->getAI())->isBump(unit))
+                        return true;
+            }
+            return false;
         }
 
         void update(const uint32 diff)
@@ -731,26 +961,29 @@ public:
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
-                    if (plr->GetPositionZ() < 73.0f)
+                    if (plr && !plr->HasAura(45996))
                     {
-                        if (plr && !plr->HasAura(45996))
+                        if (Creature* entropius = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ENTROPIUS)))
                         {
-                            SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
-                            if (spellInfo)
-                            {
-                                for (uint8 i = 0; i < 3 ; ++i)
-                                {
-                                    uint8 eff = spellInfo->Effect[i];
-                                    if (eff>=TOTAL_SPELL_EFFECTS)
-                                        continue;
+                            if (((boss_entropius::boss_entropiusAI*)entropius->getAI())->isBump(plr))
+                                continue;
+                        }
 
-                                    if (IsAreaAuraEffect(eff)
-                                        || eff == SPELL_EFFECT_APPLY_AURA
-                                        || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
-                                    {
-                                        Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
-                                        plr->AddAura(Aur);
-                                    }
+                        SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
+                        if (spellInfo)
+                        {
+                            for (uint8 i = 0; i < 3 ; ++i)
+                            {
+                                uint8 eff = spellInfo->Effect[i];
+                                if (eff>=TOTAL_SPELL_EFFECTS)
+                                    continue;
+
+                                if (IsAreaAuraEffect(eff)
+                                    || eff == SPELL_EFFECT_APPLY_AURA
+                                    || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                                {
+                                    Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
+                                    plr->AddAura(Aur);
                                 }
                             }
                         }
@@ -1018,194 +1251,6 @@ class npc_void_spawn : public CreatureScript
     CreatureAINew* getAI(Creature* creature)
     {
         return new npc_void_spawnAI(creature);
-    }
-};
-
-class npc_blackhole : public CreatureScript
-{
-public:
-    npc_blackhole() : CreatureScript("npc_blackhole") {}
-
-    class npc_blackholeAI : public CreatureAINew
-    {
-        public:
-        npc_blackholeAI(Creature* creature) : CreatureAINew(creature)
-        {
-            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-        }
-
-        ScriptedInstance* pInstance;
-
-        uint32 DespawnTimer;
-        uint32 SpellTimer;
-        uint32 SingularityTimer;
-        uint32 blackHoleTimer;
-        uint32 phase;
-        uint32 phaseTimer;
-        bool Visual2;
-        GuidMapCD guidPlayerCD;
-
-        void onReset(bool onSpawn)
-        {
-            phase = 0;
-            phaseTimer = 5000;
-            DespawnTimer = 15000;
-            SpellTimer = 300;
-            SingularityTimer = 300;
-            blackHoleTimer = 300;
-            Visual2 = false;
-
-            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
-            doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
-            me->addUnitState(UNIT_STAT_STUNNED);
-
-            guidPlayerCD.clear();
-            Map::PlayerList const& players = pInstance->instance->GetPlayers();
-            if (!players.isEmpty())
-            {
-                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                {
-                    Player* plr = itr->getSource();
-                    if (plr)
-                        guidPlayerCD[plr->GetGUID()] = 0;
-                }
-            }
-        }
-
-        void update(const uint32 diff)
-        {
-            if (DespawnTimer <= diff)
-                me->DisappearAndDie();
-            else
-                DespawnTimer -= diff;
-
-            if (phaseTimer <= diff)
-            {
-                switch (phase)
-                {
-                    case 0:
-                        me->RemoveAura(SPELL_BLACKHOLE_SPAWN2, 1);
-                        doCast((Unit*)NULL, SPELL_BLACKHOLE_VISUAL2, true);
-                        me->clearUnitState(UNIT_STAT_STUNNED);
-                        setZoneInCombat(true);
-                        phaseTimer = 300;
-                        phase = 1;
-                        break;
-                    case 1:
-                    {
-                        Unit* Victim = selectUnit(SELECT_TARGET_RANDOM, 0, -15.0f, true);
-                        if (Victim)
-                        {
-                            attackStart(Victim);
-                            doModifyThreat(Victim, 1000000.0f);
-                        }
-                        else
-                        {
-                            Victim = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
-                            if (Victim)
-                            {
-                                attackStart(Victim);
-                                doModifyThreat(Victim, 1000000.0f);
-                            }
-                        }
-                        phaseTimer = 300;
-                        phase = 2;
-                        break;
-                    }
-                    case 2:
-                        if (SpellTimer <= diff)
-                        {
-                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                            if (!players.isEmpty())
-                            {
-                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                                {
-                                    Player* plr = itr->getSource();
-                                    if (plr && me->GetDistance(plr) <= 7.0f)
-                                    {
-                                        if (guidPlayerCD[plr->GetGUID()] == 0)
-                                        {
-                                            doCast(plr, SPELL_BLACK_HOLE_EFFECT, false);
-                                            guidPlayerCD[plr->GetGUID()] = 4000;
-                                        }
-                                    }
-                                }
-                            }
-                            SpellTimer = 500;
-                        }
-                        else
-                            SpellTimer -= diff;
-
-                        if (SingularityTimer <= diff)
-                        {
-                            Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                            if (!players.isEmpty())
-                            {
-                                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                                {
-                                    Player* plr = itr->getSource();
-                                    if (plr && me->GetDistance(plr) <= 5.0f)
-                                        doCast(plr, SPELL_SINGULARITY, true);
-                                }
-                            }
-                            SingularityTimer = 1000;
-                        }
-                        else
-                            SingularityTimer -= diff;
-
-                        if (!guidPlayerCD.empty())
-                        {
-                            for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
-                            {
-                                if ((*i).second > diff)
-                                    guidPlayerCD[(*i).first] = (*i).second - diff;
-                                else
-                                    guidPlayerCD[(*i).first] = 0;
-                            }
-                        }
-
-                        if (blackHoleTimer <= diff)
-                        {
-                            if (!guidPlayerCD.empty())
-                            {
-                                for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
-                                {
-                                    if ((*i).second > 0)
-                                    {
-                                        Player *plr = objmgr.GetPlayer((*i).first);
-                                        float vcos, vsin;
-                                        float angle = me->GetMap()->rand_norm()*2*M_PI;
-                                        vcos = cos(angle);
-                                        vsin = sin(angle);
-
-                                        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
-                                        data.append(plr->GetPackGUID());
-                                        data << uint32(0);                                      // Sequence
-                                        data << float(vcos);                                    // x direction
-                                        data << float(vsin);                                    // y direction
-                                        data << float(12.0f);                                   // Horizontal speed
-                                        data << float(-9.0f);                                   // Z Movement speed
-
-                                        plr->GetSession()->SendPacket(&data);
-                                    }
-                                }
-                            }
-                            blackHoleTimer = 800;
-                        }
-                        else
-                            blackHoleTimer -= diff;
-
-                        break;
-                }
-            }
-            else
-                phaseTimer -= diff;
-        }
-    };
-
-    CreatureAINew* getAI(Creature* creature)
-    {
-        return new npc_blackholeAI(creature);
     }
 };
 
