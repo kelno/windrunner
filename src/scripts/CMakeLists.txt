@@ -167,6 +167,7 @@ SET(scripts_STAT_SRCS
     azeroth/sunken_temple/instance_sunken_temple.cpp
     azeroth/sunken_temple/sunken_temple.cpp
     azeroth/swamp_of_sorrows.cpp
+    azeroth/the_balance_of_light_and_shadow.cpp
     azeroth/tirisfal_glades.cpp
     azeroth/uldaman/boss_archaedas.cpp
     azeroth/uldaman/instance_uldaman.cpp

@@ -24,7 +24,7 @@
 
 float GetSpellMaxRange(uint32 id);
 
-class SummonList : std::list<uint64>
+class SummonList : public std::list<uint64>
 {
 public:
     SummonList(Creature* creature) : m_creature(creature) {}

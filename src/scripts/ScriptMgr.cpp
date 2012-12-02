@@ -625,6 +625,9 @@ extern void AddSC_thousand_needles();
 //Thunder Bluff
 extern void AddSC_thunder_bluff();
 
+//The Balance of Light and Shadow - Epic priest quest
+extern void AddSC_the_balance_of_light_and_shadow();
+
 //Tirisfal Glades
 extern void AddSC_tirisfal_glades();
 
@@ -2021,6 +2024,9 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     //Thunder Bluff
     AddSC_thunder_bluff();
 
+    // The Balance of Light and Shadow - Epic priest quest
+    AddSC_the_balance_of_light_and_shadow();
+    
     //Tirisfal Glades
     AddSC_tirisfal_glades();
 
