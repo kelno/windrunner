@@ -587,6 +587,9 @@ public:
 
         void attackStart(Unit* victim)
         {
+            if (!victim)
+                return;
+
             if (victim->GetEntry() == CREATURE_ANCIENT_WISP)
             {
                 attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 1000.0f, true));
