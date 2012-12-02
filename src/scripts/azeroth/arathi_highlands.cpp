@@ -133,6 +133,58 @@ CreatureAI* GetAI_npc_professor_phizzlethorpeAI(Creature *pCreature)
     return new npc_professor_phizzlethorpeAI(pCreature);
 }
 
+struct npc_myzraelAI : public ScriptedAI
+{
+    npc_myzraelAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint32 summon1Timer;
+    uint32 summon2Timer;
+    uint32 seismeTimer;
+    
+    void Reset()
+    {
+        summon1Timer = 10000;
+        summon2Timer = 30000;
+        seismeTimer = 20000;
+    }
+    
+    void Aggro(Unit* who) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (!UpdateVictim())
+            return;
+        
+        if (summon1Timer <= diff) {
+            DoCast(me->getVictim(), 4937, true);
+            summon1Timer = 20000;
+        }
+        else
+            summon1Timer -= diff;
+        
+        if (summon2Timer <= diff) {
+            DoCast(me->getVictim(), 10388, true);
+            summon2Timer = 20000;
+        }
+        else
+            summon2Timer -= diff;
+        
+        if (seismeTimer <= diff) {
+            DoCast(me, 4938, false);
+            seismeTimer = 20000;
+        }
+        else
+            seismeTimer -= diff;
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_myzrael(Creature* c)
+{
+    return new npc_myzraelAI(c);
+}
+
 void AddSC_arathi_highlands()
 {
     Script * newscript;
@@ -141,6 +193,11 @@ void AddSC_arathi_highlands()
     newscript->Name = "npc_professor_phizzlethorpe";
     newscript->GetAI = &GetAI_npc_professor_phizzlethorpeAI;
     newscript->pQuestAccept = &QuestAccept_npc_professor_phizzlethorpe;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_myzrael";
+    newscript->GetAI = &GetAI_npc_myzrael;
     newscript->RegisterSelf();
 }
 
