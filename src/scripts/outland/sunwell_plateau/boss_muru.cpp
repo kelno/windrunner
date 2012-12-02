@@ -344,6 +344,7 @@ public:
                 if (pInstance)
                 {
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
+                    pInstance->SetData(DATA_MURU_TO_ENTROPIUS, NOT_STARTED);
                 }
             }
             me->SetFullTauntImmunity(true);
@@ -505,6 +506,8 @@ public:
 
                 if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
                     me->SetReactState(REACT_PASSIVE);
+
+                pInstance->SetData(DATA_MURU_TO_ENTROPIUS, NOT_STARTED);
             }
 
             if (Creature* entropius = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
