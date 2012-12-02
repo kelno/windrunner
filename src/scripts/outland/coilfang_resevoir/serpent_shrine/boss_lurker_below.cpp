@@ -98,7 +98,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     uint32 phaseRotate;
     uint32 phaseRotateTimer;
     uint32 nbPops;
-    
+
     bool CheckCanStart()//check if players fished
     {
         if(pInstance && pInstance->GetData(DATA_STRANGE_POOL) != IN_PROGRESS)
@@ -154,7 +154,23 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
     void MoveInLineOfSight(Unit *who)
     {
     }
-     
+
+    void AttackStart(Unit *victim)
+    {
+        if (RotTimer)
+            return;
+
+        ScriptedAI::AttackStart(victim);
+    }
+
+    void AttackStart(Unit *victim, bool melee)
+    {
+       if (RotTimer)
+            return;
+
+       ScriptedAI::AttackStart(victim, melee);
+    }
+
     void Aggro(Unit* who)
     {
         if (pInstance)
@@ -459,19 +475,28 @@ struct mob_coilfang_guardianAI : public ScriptedAI
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
 
-    void JustDied(Unit *victim)
-    {
-    }
-
     void MoveInLineOfSight(Unit *who)
     {
     }
 
+    void AttackStart(Unit *victim)
+    {
+        if (!movePointPhase)
+            return;
+
+        ScriptedAI::AttackStart(victim);
+    }
+
+    void AttackStart(Unit *victim, bool melee)
+    {
+       if (!movePointPhase)
+            return;
+
+       ScriptedAI::AttackStart(victim, melee);
+    }
+
     void Aggro(Unit *who)
     {
-        DoZoneInCombat(NULL, true);
-        movePointPhase = true;
-        phase = 1;
     }
 
     void MovementInform(uint32 type, uint32 id) 
@@ -565,13 +590,26 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void Aggro(Unit *who)
     {
-        DoZoneInCombat(NULL, true);
-        movePointPhase = true;
-        phase = 1;
     }
 
     void MoveInLineOfSight(Unit *who)
     {
+    }
+
+    void AttackStart(Unit *victim)
+    {
+        if (!movePointPhase)
+            return;
+
+        ScriptedAI::AttackStart(victim);
+    }
+
+    void AttackStart(Unit *victim, bool melee)
+    {
+       if (!movePointPhase)
+            return;
+
+       ScriptedAI::AttackStart(victim, melee);
     }
 
     void MovementInform(uint32 type, uint32 id) 
@@ -586,7 +624,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         {
             if (caster->ToCreature())
             {
-                if (m_creature = caster->ToCreature())
+                if (m_creature == caster->ToCreature())
                 {
                     uint32 damage = 0;
                     uint32 absorb, resist;
@@ -601,7 +639,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         {
             if (caster->ToCreature())
             {
-                if (m_creature = caster->ToCreature())
+                if (m_creature == caster->ToCreature())
                 {
                     uint32 damage = 0;
                     uint32 absorb, resist;
