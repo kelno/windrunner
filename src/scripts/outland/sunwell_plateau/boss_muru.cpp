@@ -170,19 +170,6 @@ public:
             guidPlayerCD.clear();
         }
 
-        bool isBump(Unit *target)
-        {
-            for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
-            {
-                if ((*i).second > 0)
-                {
-                    if ((*i).first == target->GetGUID())
-                        return true;
-                }
-            }
-            return false;
-        }
-
         void update(const uint32 diff)
         {
             if (DespawnTimer <= diff)
@@ -335,7 +322,6 @@ public:
 
         ScriptedInstance* pInstance;
         SummonList Summons;
-        GuidSet setDarkness;
 
         uint32 BlackHoleSummonTimer;
         uint32 EnrageTimer;
@@ -362,7 +348,6 @@ public:
             }
             me->SetFullTauntImmunity(true);
             me->addUnitState(UNIT_STAT_STUNNED);
-            setDarkness.clear();
         }
 
         void onCombatStart(Unit * /*who*/)
@@ -384,42 +369,21 @@ public:
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
-                case CREATURE_DARKNESS:
-                    setDarkness.insert(summoned->GetGUID());
-                    break;
             }
             Summons.Summon(summoned);
         }
 
         void onSummonDespawn(Creature* unit)
         {
-            switch(unit->GetEntry())
-            {
-                case CREATURE_DARKNESS:
-                    setDarkness.erase(unit->GetGUID());
-                    break;
-            }
             Summons.Despawn(unit);
         }
 
         void onDeath(Unit* /*killer*/)
         {
             Summons.DespawnAll();
-            setDarkness.clear();
 
             if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, DONE);
-        }
-
-        bool isBump(Unit* unit)
-        {
-            for (GuidSet::const_iterator i = setDarkness.begin(); i != setDarkness.end(); ++i)
-            {
-                if (Creature *darkness = pInstance->instance->GetCreatureInMap(*i))
-                    if (((npc_blackhole::npc_blackholeAI*)darkness->getAI())->isBump(unit))
-                        return true;
-            }
-            return false;
         }
 
         void update(const uint32 diff)
@@ -963,12 +927,6 @@ public:
                     Player* plr = (*itr)->ToPlayer();
                     if (plr && !plr->HasAura(45996))
                     {
-                        if (Creature* entropius = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ENTROPIUS)))
-                        {
-                            if (((boss_entropius::boss_entropiusAI*)entropius->getAI())->isBump(plr))
-                                continue;
-                        }
-
                         SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
                         if (spellInfo)
                         {
