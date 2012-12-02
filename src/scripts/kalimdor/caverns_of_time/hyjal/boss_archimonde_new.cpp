@@ -536,33 +536,25 @@ public:
         
         void message(uint32 type, uint32 data)
         {
-            std::string color;
             if (type == 0) {
                 talk(YELL_SLAY);
                 switch (data) {
                 case CLASS_PRIEST:
                 case CLASS_PALADIN:
                 case CLASS_WARLOCK:
-                    color = "red";
                     doCast(me, SPELL_SOUL_CHARGE_RED, true);
                     break;
                 case CLASS_MAGE:
                 case CLASS_ROGUE:
                 case CLASS_WARRIOR:
-                    color = "yellow";
                     doCast(me, SPELL_SOUL_CHARGE_YELLOW, true);
                     break;
                 case CLASS_DRUID:
                 case CLASS_SHAMAN:
                 case CLASS_HUNTER:
-                    color = "green";
                     doCast(me, SPELL_SOUL_CHARGE_GREEN, true);
                     break;
                 }
-                
-                /*++_chargeCount;
-                enableEvent(EV_UNLEASH_SOULCHARGE);*/
-                sLog.outString("[ARCHIMONDE] Got %s soulcharge (total %u).", color.c_str(), _chargeCount);
             }
         }
 
@@ -623,6 +615,10 @@ public:
                         trigger->CastSpell(me, SPELL_DRAIN_WORLD_TREE_2, true);
                     }
                     
+                    me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_YELLOW);
+                    me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_RED);
+                    me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_GREEN);
+                    
                     _checkTimer = 1000;
                 }
                 else
@@ -659,13 +655,6 @@ public:
                     scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                     break;
                 case EV_DOOMFIRE:
-                    /*float x, y, z;
-                    me->GetRandomPoint(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 40.0f, x, y, z);
-                    if (Creature* doomfire = me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 30000)) {
-                        doomfire->setFaction(me->getFaction());
-                        me->CastSpell(x, y, z, SPELL_DOOMFIRE_SPAWN, true);
-                        talk(YELL_DOOMFIRE);
-                    }*/
                     float x, y, z;
                     /*x = me->GetPositionX() - 5 + rand()%15;
                     y = me->GetPositionY() - 5 + rand()%15;*/
@@ -678,7 +667,6 @@ public:
                         sLog.outString("[ARCHIMONDE] Failed to spawn Doomfire");
                     talk(YELL_DOOMFIRE);
                     
-                    //doCast(me, SPELL_DOOMFIRE_STRIKE);
                     scheduleEvent(EV_DOOMFIRE, 10000);
                     break;
                 case EV_MELEE_CHECK:
@@ -709,7 +697,6 @@ public:
                     break;
                 case EV_UNLEASH_SOULCHARGE:
                 {
-                    sLog.outString("[ARCHIMONDE] EV_UNLEASH_SOULCHARGE triggered.");
                     std::list<uint32> unleashSpells;
                     if (me->HasAura(SPELL_SOUL_CHARGE_GREEN))
                         unleashSpells.push_back(SPELL_UNLEASH_SOUL_GREEN);
@@ -719,14 +706,11 @@ public:
                         unleashSpells.push_back(SPELL_UNLEASH_SOUL_YELLOW);
                     
                     if (unleashSpells.empty()) {
-                        /*_chargeCount = 0;
-                        disableEvent(EV_UNLEASH_SOULCHARGE);*/
                         scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                         break;
                     }
                         
                     Trinity::RandomResizeList(unleashSpells, 1);
-                    sLog.outString("[ARCHIMONDE] Unleashing spell %u.", unleashSpells.front());
                     doCast(me->getVictim(), unleashSpells.front(), true);
                     
                     scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
@@ -742,15 +726,6 @@ public:
                         break;
                     }
                     
-                    //--_chargeCount;
-                    sLog.outString("[ARCHIMONDE] Cast done, %u charges left.", _chargeCount);
-                    //if (_chargeCount) {
-                        sLog.outString("[ARCHIMONDE] Rescheduling event.");
-                    /*}
-                    else {
-                        sLog.outString("[ARCHIMONDE] Disabling event.");
-                        disableEvent(EV_UNLEASH_SOULCHARGE);
-                    }*/
                     break;
                 }
                 case EV_UNDER_10_PERCENT:
