@@ -77,6 +77,7 @@ extern void AddSC_generic_creature();
 // -- Custom --
 extern void AddSC_npc_rez();
 extern void AddSC_training_dummy();
+extern void AddSC_zone_silence();
 extern void AddSC_custom_example();
 extern void AddSC_custom_gossip_codebox();
 extern void AddSC_test();
@@ -1472,6 +1473,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Custom --
     AddSC_npc_rez();
     AddSC_training_dummy();
+    AddSC_zone_silence();
     AddSC_custom_example();
     AddSC_custom_gossip_codebox();
     AddSC_test();
