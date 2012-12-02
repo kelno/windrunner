@@ -921,7 +921,7 @@ public:
             {
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 5.0f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 4.5f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
