@@ -160,7 +160,7 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
         if (RotTimer)
             return;
 
-        ScriptedAI::AttackStart(victim);
+        Scripted_NoMovementAI::AttackStart(victim);
     }
 
     void AttackStart(Unit *victim, bool melee)
@@ -169,6 +169,14 @@ struct boss_the_lurker_belowAI : public Scripted_NoMovementAI
             return;
 
        ScriptedAI::AttackStart(victim, melee);
+    }
+
+    void AttackStartNoMove(Unit *pTarget)
+    {
+        if (RotTimer)
+            return;
+
+       ScriptedAI::AttackStartNoMove(pTarget);
     }
 
     void Aggro(Unit* who)
@@ -495,6 +503,14 @@ struct mob_coilfang_guardianAI : public ScriptedAI
        ScriptedAI::AttackStart(victim, melee);
     }
 
+    void AttackStartNoMove(Unit *pTarget)
+    {
+        if (!movePointPhase)
+            return;
+
+       ScriptedAI::AttackStartNoMove(pTarget);
+    }
+
     void Aggro(Unit *who)
     {
     }
@@ -601,7 +617,7 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         if (!movePointPhase)
             return;
 
-        ScriptedAI::AttackStart(victim);
+        Scripted_NoMovementAI::AttackStart(victim);
     }
 
     void AttackStart(Unit *victim, bool melee)
@@ -610,6 +626,14 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
             return;
 
        ScriptedAI::AttackStart(victim, melee);
+    }
+
+    void AttackStartNoMove(Unit *pTarget)
+    {
+        if (!movePointPhase)
+            return;
+
+       ScriptedAI::AttackStartNoMove(pTarget);
     }
 
     void MovementInform(uint32 type, uint32 id) 
