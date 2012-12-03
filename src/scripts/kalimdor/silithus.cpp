@@ -32,13 +32,13 @@ EndContentData */
 ## npc_highlord_demitrian
 ###*/
 
-#define GOSSIP_DEMITRIAN1 "What do you know of it?"
-#define GOSSIP_DEMITRIAN2 "I am listening , Demitrian."
-#define GOSSIP_DEMITRIAN3 "Continue, please."
-#define GOSSIP_DEMITRIAN4 "A battle?"
-#define GOSSIP_DEMITRIAN5 "<Nod>"
-#define GOSSIP_DEMITRIAN6 "Caught unaware? How?"
-#define GOSSIP_DEMITRIAN7 "So what did Ragnaros do next?"
+#define GOSSIP_DEMITRIAN1 "Qu'en savez-vous ?"
+#define GOSSIP_DEMITRIAN2 "J'écoute, Demitrian."
+#define GOSSIP_DEMITRIAN3 "Continuez, s'il vous plait."
+#define GOSSIP_DEMITRIAN4 "Une bataille ?"
+#define GOSSIP_DEMITRIAN5 "<Hocher la tête>"
+#define GOSSIP_DEMITRIAN6 "Pris par surprise ? Comment ?"
+#define GOSSIP_DEMITRIAN7 "Qu'a fait Ragnaros ensuite ?"
 
 bool GossipHello_npc_highlord_demitrian(Player *player, Creature *_Creature)
 {
@@ -100,20 +100,19 @@ bool GossipSelect_npc_highlord_demitrian(Player *player, Creature *_Creature, ui
 ###*/
 
 //gossip item text best guess
-#define GOSSIP_ITEM1 "I seek information about Natalia"
+#define GOSSIP_ITEM1 "Je cherche des informations sur Natalia"
 
-#define GOSSIP_ITEM2 "That sounds dangerous!"
-#define GOSSIP_ITEM3 "What did you do?"
-#define GOSSIP_ITEM4 "Who?"
-#define GOSSIP_ITEM5 "Women do that. What did she demand?"
-#define GOSSIP_ITEM6 "What do you mean?"
-#define GOSSIP_ITEM7 "What happened next?"
-
-#define GOSSIP_ITEM11 "Yes, please continue"
-#define GOSSIP_ITEM12 "What language?"
-#define GOSSIP_ITEM13 "The Priestess attacked you?!"
-#define GOSSIP_ITEM14 "I should ask the monkey about this"
-#define GOSSIP_ITEM15 "Then what..."
+#define GOSSIP_ITEM2 "Cela semble dangereux !"
+#define GOSSIP_ITEM3 "Qu'avez-vous fait ?"
+#define GOSSIP_ITEM4 "Qui ?"
+#define GOSSIP_ITEM5 "Les femmes font ça. Qu'a-t-elle demandé ?"
+#define GOSSIP_ITEM6 "Que voulez-vous dire ?"
+#define GOSSIP_ITEM7 "Qu'est-il arrivé après ?"
+#define GOSSIP_ITEM11 "Oui, continuez s'il vous plait"
+#define GOSSIP_ITEM12 "Quel langue ?"
+#define GOSSIP_ITEM13 "La Prêtresse vous a attaqué ?"
+#define GOSSIP_ITEM14 "Je devrais demander au singe"
+#define GOSSIP_ITEM15 "Et puis quoi..."
 
 //trigger creatures to kill
 #define TRIGGER_RUTGAR 15222

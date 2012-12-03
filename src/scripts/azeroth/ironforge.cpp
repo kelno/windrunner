@@ -81,6 +81,17 @@ bool GossipSelect_npc_royal_historian_archesonus(Player* pPlayer, Creature* pCre
     return true;
 }
 
+bool QuestComplete_npc_magni_bronzebeard(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
+{
+    if (pQuest->GetQuestId() == 8484) {
+        std::stringstream sst;
+        sst << "Sachez tous que " << pPlayer->GetName() << " - " << pPlayer->getClass() << " de l'Alliance - a gagné le respect de Forgefer et de l'Alliance dans son entièreté. Il a engagé la diplomatie avec les Grumegueules et accompli diverses actions en notre nom. Il est allé bien au delà de l'appel du devoir. Trois félicitations pour " << pPlayer->GetName() << " - un vrai héros de l'Alliance !";
+        pCreature->MonsterYell(sst.str().c_str(), LANG_UNIVERSAL, 0);
+    }
+    
+    return true;
+}
+
 void AddSC_ironforge()
 {
     Script* newscript;
@@ -89,6 +100,11 @@ void AddSC_ironforge()
     newscript->Name="npc_royal_historian_archesonus";
     newscript->pGossipHello =  &GossipHello_npc_royal_historian_archesonus;
     newscript->pGossipSelect = &GossipSelect_npc_royal_historian_archesonus;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_magni_bronzebeard";
+    newscript->pQuestComplete = &QuestComplete_npc_magni_bronzebeard;
     newscript->RegisterSelf();
 }
 
