@@ -37,7 +37,7 @@ EndContentData */
 ## npc_archmage_malin
 ######*/
 
-#define GOSSIP_ITEM_MALIN "Can you send me to Theramore? I have an urgent message for Lady Jaina from Highlord Bolvar."
+#define GOSSIP_ITEM_MALIN "Pouvez-vous m'envoyer à Theramore ? J'ai un message urgent pour Jaina, de la part de Bolvar."
 
 bool GossipHello_npc_archmage_malin(Player *player, Creature *_Creature)
 {
@@ -196,10 +196,10 @@ bool ReceiveEmote_npc_general_marcus_jonathan(Player *player, Creature *_Creatur
 ## npc_lady_katrana_prestor
 ######*/
 
-#define GOSSIP_ITEM_KAT_1 "Pardon the intrusion, Lady Prestor, but Highlord Bolvar suggested that I seek your advice."
-#define GOSSIP_ITEM_KAT_2 "My apologies, Lady Prestor."
-#define GOSSIP_ITEM_KAT_3 "Begging your pardon, Lady Prestor. That was not my intent."
-#define GOSSIP_ITEM_KAT_4 "Thank you for your time, Lady Prestor."
+#define GOSSIP_ITEM_KAT_1 "Excusez mon intrusion, Dame Prestor, mais le Seigneur Bolvar a suggéré que je vous demande conseil."
+#define GOSSIP_ITEM_KAT_2 "Mes excuses, Dame Prestor."
+#define GOSSIP_ITEM_KAT_3 "Je vous demande pardon, Dame Prestor. Ce n'était pas mon intention."
+#define GOSSIP_ITEM_KAT_4 "Merci pour votre temps, Dame Prestor."
 
 bool GossipHello_npc_lady_katrana_prestor(Player *player, Creature *_Creature)
 {

@@ -34,13 +34,13 @@ EndContentData */
 ## npc_lorax
 ######*/
 
-#define GOSSIP_HL "Talk to me"
+#define GOSSIP_HL "Parlez-moi"
 
-#define GOSSIP_SL1 "What do you do here?"
-#define GOSSIP_SL2 "I can help you"
-#define GOSSIP_SL3 "What deal?"
-#define GOSSIP_SL4 "Then what happened?"
-#define GOSSIP_SL5 "He is not safe, i'll make sure of that."
+#define GOSSIP_SL1 "Que faites-vous ici ?"
+#define GOSSIP_SL2 "Je peux vous aider"
+#define GOSSIP_SL3 "Quel marché ?"
+#define GOSSIP_SL4 "Et ensuite, qu'est-il arrivé ?"
+#define GOSSIP_SL5 "Il n'est pas en sécurité, je vais m'en assurer."
 
 bool GossipHello_npc_lorax(Player *player, Creature *_Creature)
 {
@@ -116,7 +116,7 @@ bool GossipSelect_npc_rivern_frostwind(Player *player, Creature *_Creature, uint
 ## npc_witch_doctor_mauari
 ######*/
 
-#define GOSSIP_HWDM "I'd like you to make me a new Cache of Mau'ari please."
+#define GOSSIP_HWDM "J'aimerais que vous me fassiez une nouvelle Cache de Mau'ari, s'il vous plait."
 
 bool GossipHello_npc_witch_doctor_mauari(Player *player, Creature *_Creature)
 {

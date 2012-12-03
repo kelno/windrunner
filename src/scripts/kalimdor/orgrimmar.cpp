@@ -253,7 +253,7 @@ bool QuestComplete_npc_thrall_warchief(Player* pPlayer, Creature* pCreature, Que
 {
     if (pQuest->GetQuestId() == 8485) {
         std::stringstream sst;
-        sst << "Let it be known that " << pPlayer->GetName() << " Horde " << pPlayer->getClass() << " - has earned the undying respect of the Warchief. He has engaged in great diplomacy with Timbermaw Hold and performed valiant actions for them on our behalf. He has gone above and beying the call of duty. Three cheers for " << pPlayer->GetName() << " - a true hero of the Horde!";
+        sst << "Sachez tous que " << pPlayer->GetName() << " - " << pPlayer->getClass() << " de la Horde - a gagné le respect du Chef de guerre. Il a engagé la diplomatie avec les Grumegueules et accompli diverses actions en notre nom. Il est allé bien au delà de l'appel du devoir. Trois félicitations pour " << pPlayer->GetName() << " - un vrai héros de la Horde !";
         pCreature->MonsterYell(sst.str().c_str(), LANG_UNIVERSAL, 0);
     }
     

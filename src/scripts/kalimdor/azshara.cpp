@@ -105,10 +105,10 @@ bool GossipHello_npc_loramus_thalipedes(Player *pPlayer, Creature *pCreature)
         pPlayer->PrepareQuestMenu(pCreature->GetGUID());
 
     if (pPlayer->GetQuestStatus(2744) == QUEST_STATUS_INCOMPLETE)
-        pPlayer->ADD_GOSSIP_ITEM(0, "Can you help me?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        pPlayer->ADD_GOSSIP_ITEM(0, "Pouvez-vous m'aider ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     if (pPlayer->GetQuestStatus(3141) == QUEST_STATUS_INCOMPLETE)
-        pPlayer->ADD_GOSSIP_ITEM(0, "Tell me your story", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+        pPlayer->ADD_GOSSIP_ITEM(0, "Racontez-moi votre histoire", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
 
     pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
 
@@ -125,23 +125,23 @@ bool GossipSelect_npc_loramus_thalipedes(Player *pPlayer, Creature *pCreature, u
             break;
 
         case GOSSIP_ACTION_INFO_DEF+2:
-            pPlayer->ADD_GOSSIP_ITEM( 0, "Please continue", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 21);
+            pPlayer->ADD_GOSSIP_ITEM( 0, "Continuez", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 21);
             pPlayer->SEND_GOSSIP_MENU(1813, pCreature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF+21:
-            pPlayer->ADD_GOSSIP_ITEM( 0, "I do not understand", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 22);
+            pPlayer->ADD_GOSSIP_ITEM( 0, "Je ne comprends pas", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 22);
             pPlayer->SEND_GOSSIP_MENU(1814, pCreature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF+22:
-            pPlayer->ADD_GOSSIP_ITEM( 0, "Indeed", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 23);
+            pPlayer->ADD_GOSSIP_ITEM( 0, "En effet", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 23);
             pPlayer->SEND_GOSSIP_MENU(1815, pCreature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF+23:
-            pPlayer->ADD_GOSSIP_ITEM( 0, "I will do this with or your help, Loramus", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 24);
+            pPlayer->ADD_GOSSIP_ITEM( 0, "Je ferai ceci avec ou sans votre aide, Loramus", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 24);
             pPlayer->SEND_GOSSIP_MENU(1816, pCreature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF+24:
-            pPlayer->ADD_GOSSIP_ITEM( 0, "Yes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 25);
+            pPlayer->ADD_GOSSIP_ITEM( 0, "Oui", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 25);
             pPlayer->SEND_GOSSIP_MENU(1817, pCreature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF+25:
@@ -171,10 +171,10 @@ SAY_RIZZLE_GRENADE              = -1000246,
 SAY_RIZZLE_FINAL                = -1000247
 };
 
-#define GOSSIP_GET_MOONSTONE "Hand over the Southfury moonstone and I'll let you go."
+#define GOSSIP_GET_MOONSTONE "Donne-moi la pierre de lune Furie-du-sud et je te laisserai partir."
 
 //next message must be send to player when Rizzle jump into river, not implemented
-#define MSG_ESCAPE_NOTICE "Rizzle Sprysprocket takes the Southfury moonstone and escapes into the river. Follow her!"
+#define MSG_ESCAPE_NOTICE "Rizzle Sprysprocket prend la pierre de lune Furie-du-sud et s'enfuit dans la rivière. Suivez-la !"
 
 float WPs[58][4] =
 {
