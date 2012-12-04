@@ -518,10 +518,8 @@ public:
         {
             doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY, false);
 
-            if (pInstance) {
-                pInstance->SendScriptInTestNoLootMessageToAll();
+            if (pInstance)
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
-            }
         }
 
         void onDamageTaken(Unit * /*done_by*/, uint32 &damage)
@@ -924,7 +922,7 @@ public:
             {
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 4.5f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 3.5f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
