@@ -89,7 +89,7 @@ void npc_escortAI::EnterEvadeMode()
     m_creature->CombatStop();
     m_creature->SetLootRecipient(NULL);
 
-    if (IsBeingEscorted)
+    if (IsBeingEscorted || !DespawnAtEnd)
     {
         debug_log("TSCR: EscortAI has left combat and is now returning to last point.");
         Returning = true;
@@ -155,7 +155,8 @@ void npc_escortAI::UpdateAI(const uint32 diff)
                     return;
                 }else{
                     debug_log("TSCR: EscortAI reached end of waypoints with Despawn off");
-                    IsBeingEscorted = false;
+                    if (DespawnAtEnd)
+                        IsBeingEscorted = false;
                     WaitTimer = 0;
                     return;
                 }

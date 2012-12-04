@@ -344,15 +344,40 @@ struct npc_muglashAI : public npc_escortAI
     uint32 m_uiWaveId;
     uint32 m_uiEventTimer;
     bool m_bIsBrazierExtinguished;
+    bool m_completed;
+    
+    uint64 playerGUID;
 
     void JustSummoned(Creature* pSummoned)
     {
         pSummoned->AI()->AttackStart(me);        
     }
+    
+    void SummonedCreatureDespawn(Creature* summon)
+    {
+        if (summon->GetEntry() == NPC_VORSHA) {
+            if (Player* player = GetPlayerForEscort()) {
+                player->GroupEventHappens(QUEST_VORSHA, summon);
+                m_completed = true;
+            }
+        }
+    }
+    
+    void EnterEvadeMode()
+    {
+        InCombat = false;
+
+        m_creature->RemoveAllAuras();
+        m_creature->DeleteThreatList();
+        m_creature->CombatStop();
+        m_creature->SetLootRecipient(NULL);
+    }
 
     void WaypointReached(uint32 i)
     {
         Player* pPlayer = GetPlayerForEscort();
+        if (pPlayer)
+                playerGUID = pPlayer->GetGUID();
 
         switch(i)
         {
@@ -360,29 +385,22 @@ struct npc_muglashAI : public npc_escortAI
                 if (pPlayer)
                     DoScriptText(SAY_MUG_START2, me, pPlayer);
                 break;
-            case 24:
+            case 13:
                 if (pPlayer)
                     DoScriptText(SAY_MUG_BRAZIER, me, pPlayer);
 
                 if (pPlayer) {
                     if (GameObject* pGo = pPlayer->FindGOInGrid(GO_NAGA_BRAZIER, INTERACTION_DISTANCE*2))
                     {
+                        me->MonsterSay("Activez le brasier, s'il vous plait.", LANG_UNIVERSAL, 0);
                         pGo->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_UNK1);
+                        SetIsBeingEscorted(true);
                         SetEscortPaused(true);
                     }
                 }
                 break;
-            case 25:
-                DoScriptText(SAY_MUG_GRATITUDE, me);
-
-                if (pPlayer)
-                    pPlayer->GroupEventHappens(QUEST_VORSHA, me);
-                break;
-            case 26:
-                DoScriptText(SAY_MUG_PATROL, me);
-                break;
-            case 27:
-                DoScriptText(SAY_MUG_RETURN, me);
+            case 14:
+                SetIsBeingEscorted(true);
                 break;
         }
     }
@@ -401,13 +419,14 @@ struct npc_muglashAI : public npc_escortAI
     {
         m_uiEventTimer = 10000;
         m_uiWaveId = 0;
-        m_bIsBrazierExtinguished = false;      
+        m_bIsBrazierExtinguished = false;
+        m_completed = false;
     }
 
     void JustDied(Unit* pKiller)
     {
         Player* pPlayer = GetPlayerForEscort();
-        if (HasEscortState(STATE_ESCORT_ESCORTING))
+        if (HasEscortState(STATE_ESCORT_ESCORTING) && !m_completed)
         {
             if (pPlayer)
             {
@@ -434,9 +453,17 @@ struct npc_muglashAI : public npc_escortAI
                 me->SummonCreature(NPC_VORSHA, m_fVorshaCoord[0], m_fVorshaCoord[1], m_fVorshaCoord[2], 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 60000);
                 break;
             case 4:
+            {
                 SetEscortPaused(false);
                 DoScriptText(SAY_MUG_DONE, me);
+                me->DisappearAndDie();
+                me->Respawn();
+                if (Player* player = Unit::GetPlayer(playerGUID)) {
+                    player->GroupEventHappens(QUEST_VORSHA, me);
+                    m_completed = true;
+                }
                 break;
+            }
         }
     }    
 
@@ -446,7 +473,7 @@ struct npc_muglashAI : public npc_escortAI
 
         if (!me->getVictim())
         {
-            if (HasEscortState(STATE_ESCORT_PAUSED) && m_bIsBrazierExtinguished)
+            if (m_bIsBrazierExtinguished)
             {
                 if (m_uiEventTimer < uiDiff)
                 {
@@ -459,6 +486,7 @@ struct npc_muglashAI : public npc_escortAI
             }    
             return;            
         }
+        
         DoMeleeAttackIfReady();
     }
 };
@@ -478,7 +506,8 @@ bool QuestAccept_npc_muglash(Player* pPlayer, Creature* pCreature, const Quest* 
             DoScriptText(SAY_MUG_START1, pCreature);
             pCreature->setFaction(113);
 
-            pEscortAI->Start(true, true, pPlayer->GetGUID());
+            pEscortAI->Start(true, true, true, pPlayer->GetGUID(), pCreature->GetEntry());
+            pEscortAI->SetDespawnAtEnd(false);
         }
     }
     return true;
