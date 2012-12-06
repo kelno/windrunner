@@ -262,6 +262,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                     data << uint32(0);
                     i_pl->SendMessageToSet(&data, true);
                     i_pl->SetSpeed(MOVE_FLIGHT, 2.0f);
+					i_pl->SetCanFly(true);
                 }
             }
         }
@@ -283,6 +284,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                 data.append(i_pl->GetPackGUID());
                 data << uint32(0);
                 i_pl->SendMessageToSet(&data, true);
+				i_pl->SetCanFly(false);
             }
         }
     }
