@@ -1231,74 +1231,55 @@ class npc_berserker : public CreatureScript
         uint32 FuryTimer;
         uint32 TempTimer;
         uint32 Phase;
-        uint32 HackTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 20000;
             TempTimer = 1000;
             Phase = 0;
-            HackTimer = 11000;
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
-        void onMoveInLoS(Unit* /*who*/)
+        void onMoveInLoS(Unit* who)
         {
+            if (Phase != 1)
+                return;
+
+            CreatureAINew::onMoveInLoS(who);
         }
 
         void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
             {
-                me->addUnitState(UNIT_STAT_STUNNED);
                 Phase = 1;
+                setZoneInCombat(true);
+                attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
             }
-        }
-
-        void attackStart(Unit* victim)
-        {
-            if (Phase == 0)
-                return;
-
-            CreatureAINew::attackStart(victim);
         }
 
         void update(const uint32 diff)
         {
-            switch (Phase)
+            if (!updateVictim())
+                return;
+
+            if (Phase != 1)
+                Phase = 1;
+
+            if (FuryTimer <= diff)
             {
-                case 1:
-                    if (TempTimer <= diff)
-                    {
-                        Phase = 2;
-                        me->clearUnitState(UNIT_STAT_STUNNED);
-                        doResetThreat();
-                        setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    }
-                    else
-                        TempTimer -= diff;
-                    break;
-                case 2:
-                    if (!updateVictim())
-                        return;
+                if (!me->HasAura(SPELL_FLURRY))
+                {
+                    me->InterruptNonMeleeSpells(false);
+                    doCast(me, SPELL_FLURRY, false);
+                }
 
-                    if (FuryTimer <= diff)
-                    {
-                        if (!me->HasAura(SPELL_FLURRY))
-                        {
-                            me->InterruptNonMeleeSpells(false);
-                            doCast(me, SPELL_FLURRY, false);
-                        }
-
-                        FuryTimer = urand(20000, 35000);
-                    }
-                    else
-                        FuryTimer -= diff;
-
-                    doMeleeAttackIfReady();
-                    break;
+                FuryTimer = urand(20000, 35000);
             }
+            else
+                FuryTimer -= diff;
+
+            doMeleeAttackIfReady();
         }
     };
 
@@ -1327,7 +1308,6 @@ class npc_mage : public CreatureScript
         uint32 FelFireballTimer;
         uint32 TempTimer;
         uint32 Phase;
-        uint32 HackTimer;
 
         void onReset(bool /*onSpawn*/)
         {
@@ -1335,82 +1315,58 @@ class npc_mage : public CreatureScript
             FelFireballTimer = urand(2000, 3000);
             TempTimer = 1000;
             Phase = 0;
-            HackTimer = 11000;
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
-        void onMoveInLoS(Unit* /*who*/)
+        void onMoveInLoS(Unit* who)
         {
+            if (Phase != 1)
+                return;
+
+            CreatureAINew::onMoveInLoS(who);
         }
 
         void onMovementInform(uint32 type, uint32 /*id*/)
         {
             if (type == POINT_MOTION_TYPE)
             {
-                me->addUnitState(UNIT_STAT_STUNNED);
                 Phase = 1;
+                setZoneInCombat(true);
+                attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
             }
         }
-
-        void attackStart(Unit* victim)
-        {
-            if (Phase == 0)
-                return;
-
-            CreatureAINew::attackStart(victim);
-        }
-
 
         void update(const uint32 diff)
         {
-            switch (Phase)
+            if (!updateVictim())
+               return;
+
+            if (Phase != 1)
+                Phase = 1;
+
+            if (FuryTimer <= diff)
             {
-                case 1:
-                    if (TempTimer <= diff)
-                    {
-                        Phase = 2;
-                        me->clearUnitState(UNIT_STAT_STUNNED);
-                        doResetThreat();
-                        setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
-                    }
-                    else
-                        TempTimer -= diff;
-                    break;
-                case 2:
-                    if (!updateVictim())
-                       return;
-                       
-//                    if (me->GetDistance(me->getVictim()) <= 8.0f)
-//                        me->GetMotionMaster()->MoveIdle();
-                    //else if (me->GetDistance(me->getVictim()) >= 10.0f)
-                      //  me->GetMotionMaster()->MoveChase(me->getVictim());
+                if (!me->HasAura(SPELL_SPELL_FURY))
+                {
+                    me->InterruptNonMeleeSpells(false);
+                    doCast(me, SPELL_SPELL_FURY, false);
+                }
 
-                    if (FuryTimer <= diff)
-                    {
-                        if (!me->HasAura(SPELL_SPELL_FURY))
-                        {
-                            me->InterruptNonMeleeSpells(false);
-                            doCast(me, SPELL_SPELL_FURY, false);
-                        }
-
-                            FuryTimer = urand(45000, 55000);
-                    }
-                    else
-                        FuryTimer -= diff;
-
-                    if (FelFireballTimer <= diff)
-                    {
-                        doCast(me->getVictim(), SPELL_FEL_FIREBALL, false);
-
-                        FelFireballTimer = urand(2000, 3000);
-                    }
-                    else
-                        FelFireballTimer -= diff;
-
-                    doMeleeAttackIfReady();
-                    break;
+                FuryTimer = urand(45000, 55000);
             }
+            else
+                FuryTimer -= diff;
+
+            if (FelFireballTimer <= diff)
+            {
+                doCast(me->getVictim(), SPELL_FEL_FIREBALL, false);
+
+                FelFireballTimer = urand(2000, 3000);
+            }
+            else
+                FelFireballTimer -= diff;
+
+            doMeleeAttackIfReady();
         }
     };
 

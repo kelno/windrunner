@@ -470,7 +470,6 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     uint32 HamstringTimer;
     uint32 phaseTimer;
     uint32 phase;
-    bool movePointPhase;
 
     void Reset()
     {
@@ -478,37 +477,16 @@ struct mob_coilfang_guardianAI : public ScriptedAI
         phase = 0;
         ArcingsmashTimer = 5000;
         HamstringTimer = 2000;
-        movePointPhase = false;
 
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
 
     void MoveInLineOfSight(Unit *who)
     {
-    }
-
-    void AttackStart(Unit *victim)
-    {
-        if (!movePointPhase)
+        if (phase != 1)
             return;
 
-        ScriptedAI::AttackStart(victim);
-    }
-
-    void AttackStart(Unit *victim, bool melee)
-    {
-       if (!movePointPhase)
-            return;
-
-       ScriptedAI::AttackStart(victim, melee);
-    }
-
-    void AttackStartNoMove(Unit *pTarget)
-    {
-        if (!movePointPhase)
-            return;
-
-       ScriptedAI::AttackStartNoMove(pTarget);
+        ScriptedAI::MoveInLineOfSight(who);
     }
 
     void Aggro(Unit *who)
@@ -519,37 +497,20 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     {
         if(type == POINT_MOTION_TYPE)
         {
-            movePointPhase = true;
-            m_creature->addUnitState(UNIT_STAT_STUNNED);
+            phase = 1;
+            DoZoneInCombat(NULL, true);
+            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!movePointPhase)
+        //Return since we have no target
+        if (!UpdateVictim())
             return;
-
-        if (phaseTimer <= diff)
-        {
-            switch (phase)
-            {
-                case 0:
-                    me->clearUnitState(UNIT_STAT_STUNNED);
-                    DoZoneInCombat(NULL, true);
-                    AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
-                    phase = 1;
-                    break;
-            }
-        }
-        else
-            phaseTimer -= diff;
 
         if (phase != 1)
-            return;
-
-        //Return since we have no target
-        if (!UpdateVictim() )
-            return;
+            phase = 1;
 
         if (ArcingsmashTimer < diff)
         {
@@ -591,7 +552,6 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
     uint32 ShootBowTimer;
     uint32 phaseTimer;
     uint32 phase;
-    bool movePointPhase;
 
     void Reset()
     {
@@ -599,7 +559,6 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
         ShootBowTimer = 4000;
         phaseTimer = 1000;
         phase = 0;
-        movePointPhase = false;
 
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
@@ -610,36 +569,19 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void MoveInLineOfSight(Unit *who)
     {
-    }
-
-    void AttackStart(Unit *victim)
-    {
-        if (!movePointPhase)
+        if (phase != 1)
             return;
 
-        Scripted_NoMovementAI::AttackStart(victim);
-    }
-
-    void AttackStart(Unit *victim, bool melee)
-    {
-       if (!movePointPhase)
-            return;
-
-       ScriptedAI::AttackStart(victim, melee);
-    }
-
-    void AttackStartNoMove(Unit *pTarget)
-    {
-        if (!movePointPhase)
-            return;
-
-       ScriptedAI::AttackStartNoMove(pTarget);
+        ScriptedAI::MoveInLineOfSight(who);
     }
 
     void MovementInform(uint32 type, uint32 id) 
     {
         if(type == POINT_MOTION_TYPE)
-            movePointPhase = true;
+        {
+            phase = 1;
+            DoZoneInCombat(NULL, true);
+        }
     }
 
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
@@ -678,24 +620,11 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!movePointPhase)
+        if (!UpdateVictim())
             return;
-
-        if (phaseTimer <= diff)
-        {
-            switch (phase)
-            {
-                case 0:
-                    DoZoneInCombat(NULL, true);
-                    phase = 1;
-                    break;
-            }
-        }
-        else
-            phaseTimer -= diff;
 
         if (phase != 1)
-            return;
+            phase = 1;
 
         if (MultiShotTimer < diff)
         {
