@@ -1005,7 +1005,12 @@ public:
                     doCast(me, SPELL_SHADOW_CHANNELING);
 
                 if (!updateVictim())
+                {
+                    if (Player* plr = me->FindNearestPlayer(30.0f))
+                        attackStart(plr);
+
                     return;
+                }
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
@@ -1084,10 +1089,19 @@ public:
                 Summons.Despawn(unit);
             }
 
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
             void update(uint32 const diff)
             {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+
                 updateEvents(diff);
-            
+
                 while (executeEvent(diff, m_currEvent))
                 {
                     switch (m_currEvent)
