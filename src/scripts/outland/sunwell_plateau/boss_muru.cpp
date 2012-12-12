@@ -1229,42 +1229,50 @@ class npc_berserker : public CreatureScript
         ScriptedInstance* pInstance;
 
         uint32 FuryTimer;
-        uint32 TempTimer;
-        uint32 Phase;
+        uint32 tempTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 20000;
-            TempTimer = 1000;
-            Phase = 0;
+            tempTimer = 11000;
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
-        }
-
-        void onMoveInLoS(Unit* who)
-        {
-            if (Phase != 1)
-                return;
-
-            CreatureAINew::onMoveInLoS(who);
         }
 
         void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
             {
-                Phase = 1;
-                setZoneInCombat(true);
-                attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                switch (id)
+                {
+                    case 0:
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        break;
+                }
             }
         }
 
         void update(const uint32 diff)
         {
+            if (tempTimer)
+            {
+                if (tempTimer <= diff)
+                {
+                    setZoneInCombat(true);
+                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    {
+                        attackStart(target);
+                        tempTimer = 0;
+                    }
+                    else
+                        tempTimer = 500;
+                }
+                else
+                    tempTimer -= diff;
+            }
+
             if (!updateVictim())
                 return;
-
-            if (Phase != 1)
-                Phase = 1;
 
             if (FuryTimer <= diff)
             {
@@ -1306,43 +1314,51 @@ class npc_mage : public CreatureScript
 
         uint32 FuryTimer;
         uint32 FelFireballTimer;
-        uint32 TempTimer;
-        uint32 Phase;
+        uint32 tempTimer;
 
         void onReset(bool /*onSpawn*/)
         {
             FuryTimer = 25000;
             FelFireballTimer = urand(2000, 3000);
-            TempTimer = 1000;
-            Phase = 0;
+            tempTimer = 11000;
             me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
         }
 
-        void onMoveInLoS(Unit* who)
-        {
-            if (Phase != 1)
-                return;
-
-            CreatureAINew::onMoveInLoS(who);
-        }
-
-        void onMovementInform(uint32 type, uint32 /*id*/)
+        void onMovementInform(uint32 type, uint32 id)
         {
             if (type == POINT_MOTION_TYPE)
             {
-                Phase = 1;
-                setZoneInCombat(true);
-                attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                switch (id)
+                {
+                    case 0:
+                        setZoneInCombat(true);
+                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        break;
+                }
             }
         }
 
         void update(const uint32 diff)
         {
+            if (tempTimer)
+            {
+                if (tempTimer <= diff)
+                {
+                    setZoneInCombat(true);
+                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    {
+                        attackStart(target);
+                        tempTimer = 0;
+                    }
+                    else
+                        tempTimer = 500;
+                }
+                else
+                    tempTimer -= diff;
+            }
+                    
             if (!updateVictim())
                return;
-
-            if (Phase != 1)
-                Phase = 1;
 
             if (FuryTimer <= diff)
             {

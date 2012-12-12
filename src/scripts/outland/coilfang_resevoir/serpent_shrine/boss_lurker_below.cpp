@@ -468,25 +468,15 @@ struct mob_coilfang_guardianAI : public ScriptedAI
 
     uint32 ArcingsmashTimer;
     uint32 HamstringTimer;
-    uint32 phaseTimer;
-    uint32 phase;
+    uint32 tempTimer;
 
     void Reset()
     {
-        phaseTimer = 1000;
-        phase = 0;
         ArcingsmashTimer = 5000;
         HamstringTimer = 2000;
+        tempTimer = 11000;
 
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-    }
-
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (phase != 1)
-            return;
-
-        ScriptedAI::MoveInLineOfSight(who);
     }
 
     void Aggro(Unit *who)
@@ -497,20 +487,38 @@ struct mob_coilfang_guardianAI : public ScriptedAI
     {
         if(type == POINT_MOTION_TYPE)
         {
-            phase = 1;
-            DoZoneInCombat(NULL, true);
-            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+            switch (id)
+            {
+                case 0:
+                    DoZoneInCombat(NULL, true);
+                    AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                    break;
+            }
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
+        if (tempTimer)
+        {
+            if (tempTimer <= diff)
+            {
+                DoZoneInCombat(NULL, true);
+                if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    AttackStart(target);
+                    tempTimer = 0;
+                }
+                else
+                    tempTimer = 500;
+            }
+            else
+                tempTimer -= diff;
+        }
+
         //Return since we have no target
         if (!UpdateVictim())
             return;
-
-        if (phase != 1)
-            phase = 1;
 
         if (ArcingsmashTimer < diff)
         {
@@ -550,15 +558,13 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     uint32 MultiShotTimer;
     uint32 ShootBowTimer;
-    uint32 phaseTimer;
-    uint32 phase;
+    uint32 tempTimer;
 
     void Reset()
     {
         MultiShotTimer = 10000;
         ShootBowTimer = 4000;
-        phaseTimer = 1000;
-        phase = 0;
+        tempTimer = 11000;
 
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
     }
@@ -567,20 +573,16 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
     {
     }
 
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (phase != 1)
-            return;
-
-        ScriptedAI::MoveInLineOfSight(who);
-    }
-
     void MovementInform(uint32 type, uint32 id) 
     {
         if(type == POINT_MOTION_TYPE)
         {
-            phase = 1;
-            DoZoneInCombat(NULL, true);
+            switch (id)
+            {
+                case 0:
+                    DoZoneInCombat(NULL, true);
+                    break;
+            }
         }
     }
 
@@ -620,11 +622,18 @@ struct mob_coilfang_ambusherAI : public Scripted_NoMovementAI
 
     void UpdateAI(const uint32 diff)
     {
+        if (tempTimer)
+        {
+            if (tempTimer <= diff)
+            {
+                DoZoneInCombat(NULL, true);
+            }
+            else
+                tempTimer -= diff;
+        }
+
         if (!UpdateVictim())
             return;
-
-        if (phase != 1)
-            phase = 1;
 
         if (MultiShotTimer < diff)
         {
