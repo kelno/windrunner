@@ -872,6 +872,8 @@ public:
 
         void update(const uint32 diff)
         {
+            me->SetReactState(REACT_PASSIVE);
+
             if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                 if (!Summons.IsEmpty())
                     Summons.DespawnAll();
