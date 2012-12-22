@@ -401,7 +401,7 @@ public:
                     case 1:
                         me->clearUnitState(UNIT_STAT_STUNNED);
                         setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        attackStart(selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true));
                         doCast((Unit*)NULL, SPELL_NEGATIVE_ENERGY_E, true);
                         phase = 2;
                         break;
@@ -503,9 +503,6 @@ public:
             {
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                     pInstance->SetData(DATA_MURU_EVENT, NOT_STARTED);
-
-                if (pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE)
-                    me->SetReactState(REACT_PASSIVE);
 
                 pInstance->SetData(DATA_MURU_TO_ENTROPIUS, NOT_STARTED);
             }
@@ -1098,7 +1095,7 @@ class npc_void_sentinel : public CreatureScript
                     case 0:
                         me->clearUnitState(UNIT_STAT_STUNNED);
                         setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        attackStart(selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true));
                         phase = 1;
                         break;
                 }
@@ -1183,7 +1180,7 @@ class npc_void_spawn : public CreatureScript
                     case 0:
                         me->clearUnitState(UNIT_STAT_STUNNED);
                         setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        attackStart(selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true));
                         phase = 1;
                         break;
                 }
@@ -1248,7 +1245,7 @@ class npc_berserker : public CreatureScript
                 {
                     case 0:
                         setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        attackStart(selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true));
                         break;
                 }
             }
@@ -1261,7 +1258,7 @@ class npc_berserker : public CreatureScript
                 if (tempTimer <= diff)
                 {
                     setZoneInCombat(true);
-                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    if (Unit* target = selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true))
                     {
                         attackStart(target);
                         tempTimer = 0;
@@ -1334,7 +1331,7 @@ class npc_mage : public CreatureScript
                 {
                     case 0:
                         setZoneInCombat(true);
-                        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true));
+                        attackStart(selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true));
                         break;
                 }
             }
@@ -1347,7 +1344,7 @@ class npc_mage : public CreatureScript
                 if (tempTimer <= diff)
                 {
                     setZoneInCombat(true);
-                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                    if (Unit* target = selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true))
                     {
                         attackStart(target);
                         tempTimer = 0;
