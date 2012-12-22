@@ -436,6 +436,7 @@ public:
             SummonList Summons;
 
             uint32 WaitTimer;
+            uint32 annimSpawnTimer;
             bool IsInDarkness;
             bool shadowSpike;
             bool OrbActivated;
@@ -448,14 +449,15 @@ public:
 
             void onReset(bool onSpawn)
             {
+                setPhase(PHASE_DECEIVERS);
                 if (onSpawn)
                 {
                     addEvent(EVENT_KALEC_JOIN, 26000, 26000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 2
-                    addEvent(EVENT_SOUL_FLAY, 20000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_SOUL_FLAY, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_LEGION_LIGHTNING, 40000, 40000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_FIRE_BLOOM, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_SUMMON_SHILEDORB, 45000, 45000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_FIRE_BLOOM, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_SUMMON_SHILEDORB, 20000, 25000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_NONE, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
@@ -470,8 +472,8 @@ public:
                     // Phase 2
                     resetEvent(EVENT_SOUL_FLAY, 20000);
                     resetEvent(EVENT_LEGION_LIGHTNING, 40000);
-                    resetEvent(EVENT_FIRE_BLOOM, 30000);
-                    resetEvent(EVENT_SUMMON_SHILEDORB, 45000);
+                    resetEvent(EVENT_FIRE_BLOOM, 20000, 25000);
+                    resetEvent(EVENT_SUMMON_SHILEDORB, 20000, 25000);
                     // Phase 3
                     resetEvent(EVENT_SHADOW_SPIKE, 4000);
                     resetEvent(EVENT_FLAME_DART, 3000);
@@ -481,12 +483,16 @@ public:
                     resetEvent(EVENT_ARMAGEDDON, 2000);
                 }
 
-                setPhase(PHASE_DECEIVERS);
+                annimSpawnTimer = 11000;
+                WaitTimer = 0;
                 IsInDarkness  = false;
                 shadowSpike = false;
                 OrbActivated = false;
                 IsWaiting = false;
                 me->SetFullTauntImmunity(true);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                me->addUnitState(UNIT_STAT_STUNNED);
             }
 
             void onSummon(Creature* summoned)
@@ -498,11 +504,7 @@ public:
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         break;
-                    default:
-                        summoned->SetLevel(me->getLevel());
-                        break;
                 }
-                summoned->setFaction(me->getFaction());
             }
 	
             void onSummonDespawn(Creature* unit)
@@ -512,6 +514,8 @@ public:
 
             void onDeath(Unit* /*killer*/)
             {
+                Summons.DespawnAll();
+
                 talk(YELL_DEATH);
 
                 if (pInstance)
@@ -521,20 +525,6 @@ public:
             void onKill(Unit* /*victim*/)
             {
                 talk(YELL_SLAY);
-            }
-
-            void evade()
-            {
-                CreatureAINew::evade();
-
-                Summons.DespawnAll();
-
-                // Reset the controller
-                if (pInstance)
-                {
-                    if (Creature* Control = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
-                        Control->getAI()->onReset(false);
-                }
             }
 
             void onCombatStart(Unit* /*who*/)
@@ -610,6 +600,28 @@ public:
 
             void update(const uint32 diff)
             {
+                if (annimSpawnTimer)
+                {
+                    me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+                    if (annimSpawnTimer <= diff)
+                    {
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->clearUnitState(UNIT_STAT_STUNNED);
+                        setZoneInCombat(true);
+                        if (Unit *unit = selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true))
+                        {
+                            attackStart(unit);
+                            annimSpawnTimer = 0;
+                        }
+                        else
+                            annimSpawnTimer = 500;
+                    }
+                    else
+                        annimSpawnTimer -= diff;
+                    return;
+                }
+
                 if (!updateVictim())
                     return;
 
@@ -637,29 +649,26 @@ public:
                             break;
                         case EVENT_SOUL_FLAY:
                             doCast(me, SPELL_SOUL_FLAY);
-                            me->getVictim()->CastSpell(me->getVictim(), SPELL_SOUL_FLAY_SLOW, true);
-                            scheduleEvent(EVENT_SOUL_FLAY, 3500);
+                            scheduleEvent(EVENT_SOUL_FLAY, 4000, 5000);
                             break;
                         case EVENT_LEGION_LIGHTNING:
                             me->RemoveAurasDueToSpell(SPELL_SOUL_FLAY);
                             for(uint8 i = 0; i < 6; ++i)
                             {
-                                if (Unit *randomPlayer = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
+                                if (Unit *randomPlayer = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
                                 {
                                     if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
                                         break;
 
                                     doCast(randomPlayer, SPELL_LEGION_LIGHTNING);
-                                    scheduleEvent(EVENT_LEGION_LIGHTNING, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000);
-                                    scheduleEvent(EVENT_SOUL_FLAY, 2500);
                                 }
                             }
+                            scheduleEvent(EVENT_LEGION_LIGHTNING, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000);
                             break;
                         case EVENT_FIRE_BLOOM:
                             me->RemoveAurasDueToSpell(SPELL_SOUL_FLAY);
                             doCast(NULL, SPELL_FIRE_BLOOM);
-                            scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 25000 : 40000);
-                            scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                            scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 22000 : 40000);
                             break;
                         case EVENT_SUMMON_SHILEDORB:
                             for (uint8 i = 1; i < getPhase(); ++i)
@@ -670,8 +679,7 @@ public:
                                 me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000);
                             }
 
-                            scheduleEvent(EVENT_SUMMON_SHILEDORB, 30000, 60000);
-                            scheduleEvent(EVENT_SOUL_FLAY, 2000);
+                            scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast(NULL, SPELL_SHADOW_SPIKE);
@@ -806,6 +814,7 @@ public:
             SummonList Summons;
 
             bool KiljaedenDeath;
+            uint64 handDeceiver[3];
         public:
 	    mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
 	    {
@@ -835,7 +844,6 @@ public:
                     case CREATURE_KILJAEDEN:
                         summoned->CastSpell(summoned, SPELL_REBIRTH, false);
                         summoned->getAI()->setPhase(PHASE_NORMAL);
-                        summoned->AddThreat(me->getVictim(), 1.0f);
                         break;
                 }
             }
@@ -870,7 +878,10 @@ public:
                 Summons.DespawnAll();
 
                 for(uint8 i = 0; i < 3; ++i)
-                    me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
+                {
+                    Creature *hand = me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
+                    handDeceiver[i] = hand->GetGUID();
+                }
 
                 me->SummonCreature(CREATURE_ANVEENA,  0, 0, 40, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
 
@@ -907,11 +918,33 @@ public:
                 {
                     me->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN);
                     setPhase(PHASE_NORMAL);
-                    me->SummonCreature(CREATURE_KILJAEDEN, 0, 0, 0, 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
+                    me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
                 }
 
                 if (!updateVictim())
+                {
+                    Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                    if (!players.isEmpty())
+                    {
+                        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                        {
+                            Player* plr = itr->getSource();
+                            if (plr && !plr->isGameMaster())
+                            {
+                                if (me->GetDistance(plr) <= 50.0f)
+                                {
+                                    for(uint8 i = 0; i < 3; ++i)
+                                    {
+                                        if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
+                                            hand->getAI()->attackStart(plr);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     return;
+                }
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
@@ -980,20 +1013,15 @@ public:
                 {
                     pInstance->SetData(DATA_KILJAEDEN_EVENT, IN_PROGRESS);
                     if (Creature* Control = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
-                        Control->AddThreat(victim, 1.0f);
+                        if (!Control->getAI()->aiInCombat())
+                            Control->getAI()->attackStart(victim);
                 }
 
                 me->InterruptNonMeleeSpells(true);
-
-                if (Creature *controller = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
-                    if (!controller->getAI()->aiInCombat())
-                        controller->getAI()->attackStart(victim);
             }
 
             void onDeath(Unit* /*killer*/)
             {
-                Summons.DespawnAll();
-
                 if(pInstance)
                     if (Creature* Control = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
                         ((mob_kiljaeden_controller::mob_kiljaeden_controllerAI*)Control->getAI())->DeceiverDeathCount++;
@@ -1005,12 +1033,7 @@ public:
                     doCast(me, SPELL_SHADOW_CHANNELING);
 
                 if (!updateVictim())
-                {
-                    if (Player* plr = me->FindNearestPlayer(30.0f))
-                        attackStart(plr);
-
                     return;
-                }
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
