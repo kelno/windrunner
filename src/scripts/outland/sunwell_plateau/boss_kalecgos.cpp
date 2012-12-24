@@ -715,7 +715,7 @@ struct boss_kalecAI : public ScriptedAI
             me->InterruptNonMeleeSpells(false);
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
             {
-                if (target->getPowerType() == POWER_MANA)
+                if (target->getPowerType() == POWER_MANA && target->HasAura(AURA_SPECTRAL_REALM))
                 {
                     DoCast(target, SPELL_REVITALIZE);
                     RevitalizeTimer = 5000;
