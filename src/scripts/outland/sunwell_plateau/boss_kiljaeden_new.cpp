@@ -992,12 +992,12 @@ public:
                 if (onSpawn)
                 {
                     addEvent(EVENT_SHADOWBOLT, 2000, 3000, EVENT_FLAG_DELAY_IF_CASTING);
-                    addEvent(EVENT_FELFIRE, 20000, 20000, EVENT_FLAG_DELAY_IF_CASTING);
+                    addEvent(EVENT_FELFIRE, 5000, 10000, EVENT_FLAG_DELAY_IF_CASTING);
                 }
                 else
                 {
                     resetEvent(EVENT_SHADOWBOLT, 2000, 3000);
-                    resetEvent(EVENT_FELFIRE, 20000);
+                    resetEvent(EVENT_FELFIRE, 5000, 10000);
                 }
 
                 if (pInstance)
