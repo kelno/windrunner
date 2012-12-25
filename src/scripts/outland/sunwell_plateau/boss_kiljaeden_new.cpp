@@ -448,6 +448,7 @@ public:
 
             void onReset(bool onSpawn)
             {
+                Summons.DespawnAll();
                 setPhase(PHASE_DECEIVERS);
                 if (onSpawn)
                 {
@@ -513,8 +514,6 @@ public:
 
             void onDeath(Unit* /*killer*/)
             {
-                Summons.DespawnAll();
-
                 talk(YELL_DEATH);
 
                 if (pInstance)
@@ -647,25 +646,19 @@ public:
                                 kalec->getAI()->talk(YELL_KALEC);
                             break;
                         case EVENT_SOUL_FLAY:
-                            doCast(me, SPELL_SOUL_FLAY);
+                            doCast(me->getVictim(), SPELL_SOUL_FLAY);
                             scheduleEvent(EVENT_SOUL_FLAY, 4000, 5000);
                             break;
                         case EVENT_LEGION_LIGHTNING:
-                            me->RemoveAurasDueToSpell(SPELL_SOUL_FLAY);
-                            for(uint8 i = 0; i < 6; ++i)
+                            if (Unit *randomPlayer = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
                             {
-                                if (Unit *randomPlayer = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                                {
-                                    if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                                        break;
-
-                                    doCast(randomPlayer, SPELL_LEGION_LIGHTNING);
-                                }
+                                /*if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                                    break;*/
+                                doCast(randomPlayer, SPELL_LEGION_LIGHTNING);
                             }
                             scheduleEvent(EVENT_LEGION_LIGHTNING, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000);
                             break;
                         case EVENT_FIRE_BLOOM:
-                            me->RemoveAurasDueToSpell(SPELL_SOUL_FLAY);
                             doCast(NULL, SPELL_FIRE_BLOOM);
                             scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 22000 : 40000);
                             break;
@@ -1021,6 +1014,8 @@ public:
 
             void onDeath(Unit* /*killer*/)
             {
+                Summons.DespawnAll();
+
                 if(pInstance)
                     if (Creature* Control = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
                         ((mob_kiljaeden_controller::mob_kiljaeden_controllerAI*)Control->getAI())->DeceiverDeathCount++;
@@ -1183,8 +1178,9 @@ public:
                 enableEvent(EVENT_DIE_F);
             }
 
-            void onMoveInLoS(Unit* /*who*/)
+            void updateEM(uint32 const diff)
             {
+                me->DisappearAndDie();
             }
 
             void update(uint32 const diff)
@@ -1273,8 +1269,17 @@ public:
                 }
             }
 
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
             void update(uint32 const diff)
             {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+
                 updateEvents(diff);
 
                 while (executeEvent(diff, m_currEvent))
@@ -1371,8 +1376,20 @@ public:
                 PointReached = true;
             }
 
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
             void update(uint32 const diff)
             {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                {
+                    me->DisappearAndDie();
+                    return;
+                }
+
                 if (PointReached)
                 {
                     if (Clockwise)
