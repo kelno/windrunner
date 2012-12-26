@@ -488,7 +488,7 @@ struct boss_sathrovarrAI : public ScriptedAI
         UnitAI::DoMeleeAttackIfReady();
     }
 
-    void RemoveAura(Unit* target, Unit* caster, Aura* Aur, AuraRemoveMode mode)
+    void RemoveAura(Unit* target, Aura* Aur, AuraRemoveMode mode)
     {
         switch (Aur->GetSpellProto()->Id)
         {
@@ -496,7 +496,6 @@ struct boss_sathrovarrAI : public ScriptedAI
             case 45034:
                 if (mode == AURA_REMOVE_BY_DISPEL)
                     DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), 45034, true);
-
                 break;
         }
     }
