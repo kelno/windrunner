@@ -455,9 +455,9 @@ public:
                     addEvent(EVENT_KALEC_JOIN, 26000, 26000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 2
                     addEvent(EVENT_SOUL_FLAY, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_LEGION_LIGHTNING, 40000, 40000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_LEGION_LIGHTNING, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FIRE_BLOOM, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_SUMMON_SHILEDORB, 20000, 25000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_NONE, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
@@ -470,10 +470,10 @@ public:
                 {
                     resetEvent(EVENT_KALEC_JOIN, 26000);
                     // Phase 2
-                    resetEvent(EVENT_SOUL_FLAY, 20000);
-                    resetEvent(EVENT_LEGION_LIGHTNING, 40000);
+                    resetEvent(EVENT_SOUL_FLAY, 1000);
+                    resetEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
                     resetEvent(EVENT_FIRE_BLOOM, 20000, 25000);
-                    resetEvent(EVENT_SUMMON_SHILEDORB, 20000, 25000);
+                    resetEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                     // Phase 3
                     resetEvent(EVENT_SHADOW_SPIKE, 4000);
                     resetEvent(EVENT_FLAME_DART, 3000);
@@ -572,21 +572,11 @@ public:
             void CastSinisterReflection()
             {
                 talk(YELL_REFLECTION);
-                doCast(me, SPELL_SINISTER_REFLECTION, true);
         
-                for (uint8 i = 0; i < 4; i++)
+                for (uint8 i = 0; i < 5; i++)
                 {
                     float x,y,z;
-                    Unit* target;
-                    for (uint8 z = 0; z < 6; ++z)
-                    {
-                        target = NULL;
-                        if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
-                            if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                                break;
-                    }
-
-                    if (target)
+                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                     {
                         target->GetPosition(x,y,z);
             
@@ -594,6 +584,7 @@ public:
                             SinisterReflection->getAI()->attackStart(target);
                     }
                 }
+                me->getVictim()->CastSpell(me->getVictim(), SPELL_SINISTER_REFLECTION, true);
             }
 
             void update(const uint32 diff)
@@ -656,7 +647,7 @@ public:
                                     break;*/
                                 doCast(randomPlayer, SPELL_LEGION_LIGHTNING);
                             }
-                            scheduleEvent(EVENT_LEGION_LIGHTNING, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000, (getPhase() == PHASE_SACRIFICE) ? 18000 : 30000);
+                            scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
                             break;
                         case EVENT_FIRE_BLOOM:
                             doCast(NULL, SPELL_FIRE_BLOOM);
@@ -668,7 +659,8 @@ public:
                                 float sx, sy;
                                 sx = ShieldOrbLocations[0][0] + sin(ShieldOrbLocations[i][0]);
                                 sy = ShieldOrbLocations[0][1] + sin(ShieldOrbLocations[i][1]);
-                                me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000);
+                                if (Creature* orb = me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000))
+                                    orb->getAI()->setZoneInCombat(true);
                             }
 
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
@@ -681,7 +673,7 @@ public:
                             break;
                         case EVENT_FLAME_DART:
                             doCast(NULL, SPELL_FLAME_DART);
-                            scheduleEvent(EVENT_SOUL_FLAY, 3000);
+                            scheduleEvent(EVENT_FLAME_DART, 3000);
                             break;
                         case EVENT_DARKNESS:
                             if (!IsInDarkness)
@@ -1366,6 +1358,7 @@ public:
                 {
                     resetEvent(EVENT_SHADOWBOLT_S, 500, 1000);
                 }
+                me->SetFullTauntImmunity(true);
             }
 
             void onMovementInform(uint32 type, uint32 /*id*/)
@@ -1423,6 +1416,9 @@ public:
                         CheckTimer -= diff;
                 }
 
+                if (!updateVictim())
+                    return;
+
                 updateEvents(diff);
 
                 while (executeEvent(diff, m_currEvent))
@@ -1472,8 +1468,23 @@ public:
                 Class = 0;
             }
 
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
             void update(uint32 const diff)
             {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                {
+                    me->DisappearAndDie();
+                    return;
+                }
+
+                if (!updateVictim())
+                    return;
+
                 if (Class == 0)
                 {
                     Class = me->getVictim()->getClass();
