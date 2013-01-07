@@ -573,7 +573,7 @@ public:
             {
                 talk(YELL_REFLECTION);
         
-                for (uint8 i = 0; i < 5; i++)
+                for (uint8 i = 0; i < 4; i++)
                 {
                     float x,y,z;
                     if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
@@ -930,11 +930,11 @@ public:
                     return;
                 }
 
-                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }
+                }*/
             }
     };
 
@@ -1021,11 +1021,11 @@ public:
                 if (!updateVictim())
                     return;
 
-                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }
+                }*/
 
                 // Gain Shadow Infusion
                 if (me->IsBetweenHPPercent(20, 25) && !me->HasAura(SPELL_SHADOW_INFUSION))
@@ -1454,18 +1454,26 @@ public:
 
             uint8 Class;
             uint32 Timer[3];
+            bool canAttack;
         public:
             mob_sinster_reflectionAI(Creature* creature) : CreatureAINew(creature)
             {
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
-            void onReset(bool /*onSpawn*/)
+            void onReset(bool onSpawn)
             {
                 Timer[0] = 0;
                 Timer[1] = 0;
                 Timer[2] = 0;
                 Class = 0;
+                canAttack = false;
+                if (onSpawn)
+                    addEvent(EVENT_STUN, 2000, 2000);
+                else
+                    resetEvent(EVENT_STUN, 2000);
+
+                me->addUnitState(UNIT_STAT_STUNNED);
             }
 
             void updateEM(uint32 const diff)
@@ -1483,6 +1491,24 @@ public:
                 }
 
                 if (!updateVictim())
+                    return;
+
+                updateEvents(diff);
+
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EVENT_STUN:
+                            canAttack = true;
+                            me->clearUnitState(UNIT_STAT_STUNNED);
+                            attackStart(me->getVictim());
+                            disableEvent(EVENT_STUN);
+                            break;
+                    }
+                }
+
+                if (!canAttack)
                     return;
 
                 if (Class == 0)
@@ -1511,7 +1537,7 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_MOONFIRE, false);
-                            Timer[1] = 3000;
+                            Timer[1] = urand(2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1520,13 +1546,13 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_MULTI_SHOT, false);
-                            Timer[1] = 9000;
+                            Timer[1] = urand(8000, 10000);
                         }
 
                         if (Timer[2] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_SHOOT, false);
-                            Timer[2] = 5000;
+                            Timer[2] = urand(4000, 6000);
                         }
 
                         if (me->IsWithinMeleeRange(me->getVictim(), 6))
@@ -1534,7 +1560,7 @@ public:
                             if (Timer[3] <= diff)
                             {
                                 doCast(me->getVictim(), SPELL_SR_MULTI_SHOT, false);
-                                Timer[3] = 7000;
+                                Timer[3] = urand(6000, 8000);
                             }
                 
                             doMeleeAttackIfReady();
@@ -1544,7 +1570,7 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_FIREBALL, false);
-                            Timer[1] = 3000;
+                            Timer[1] = (2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1553,13 +1579,13 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_SHADOW_BOLT, false);
-                            Timer[1] = 4000;
+                            Timer[1] = urand(3000, 5000);
                         }
 
                         if (Timer[2] <= diff)
                         {
                             doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100, true), SPELL_SR_CURSE_OF_AGONY, true);
-                            Timer[2] = 3000;
+                            Timer[2] = urand(2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1568,7 +1594,7 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_WHIRLWIND, false);
-                            Timer[1] = 10000;
+                            Timer[1] = urand(9000, 11000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1577,13 +1603,13 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HAMMER_OF_JUSTICE, false);
-                            Timer[1] = 7000;
+                            Timer[1] = urand(6000, 8000);
                         }
 
                         if (Timer[2] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HOLY_SHOCK, false);
-                            Timer[2] = 3000;
+                            Timer[2] = urand(2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1592,13 +1618,13 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HOLY_SMITE, false);
-                            Timer[1] = 5000;
+                            Timer[1] = urand(4000, 6000);
                         }
 
                         if (Timer[2] <= diff)
                         {
                             doCast(me,  SPELL_SR_RENEW, false);
-                            Timer[2] = 7000;
+                            Timer[2] = urand(6000, 8000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1607,7 +1633,7 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_EARTH_SHOCK, false);
-                            Timer[1] = 5000;
+                            Timer[1] = urand(4000, 6000);
                         }
 
                         doMeleeAttackIfReady();
@@ -1616,7 +1642,7 @@ public:
                         if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HEMORRHAGE, true);
-                            Timer[1] = 5000;
+                            Timer[1] = urand(4000, 6000);
                         }
 
                         doMeleeAttackIfReady();
