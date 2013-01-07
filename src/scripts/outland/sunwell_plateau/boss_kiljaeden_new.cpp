@@ -651,7 +651,7 @@ public:
                             break;
                         case EVENT_FIRE_BLOOM:
                             doCast(NULL, SPELL_FIRE_BLOOM);
-                            scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 22000 : 40000);
+                            scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 40000 : 20000);
                             break;
                         case EVENT_SUMMON_SHILEDORB:
                             for (uint8 i = 1; i < getPhase(); ++i)
