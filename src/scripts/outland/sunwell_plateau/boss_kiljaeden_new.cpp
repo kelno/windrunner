@@ -456,7 +456,7 @@ public:
                     // Phase 2
                     addEvent(EVENT_SOUL_FLAY, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_LEGION_LIGHTNING, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_FIRE_BLOOM, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_FIRE_BLOOM, 10000, 15000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
@@ -472,7 +472,7 @@ public:
                     // Phase 2
                     resetEvent(EVENT_SOUL_FLAY, 1000);
                     resetEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
-                    resetEvent(EVENT_FIRE_BLOOM, 20000, 25000);
+                    resetEvent(EVENT_FIRE_BLOOM, 10000, 15000);
                     resetEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                     // Phase 3
                     resetEvent(EVENT_SHADOW_SPIKE, 4000);
