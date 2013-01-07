@@ -930,11 +930,11 @@ public:
                     return;
                 }
 
-                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }*/
+                }
             }
     };
 
@@ -1021,11 +1021,11 @@ public:
                 if (!updateVictim())
                     return;
 
-                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }*/
+                }
 
                 // Gain Shadow Infusion
                 if (me->IsBetweenHPPercent(20, 25) && !me->HasAura(SPELL_SHADOW_INFUSION))
