@@ -488,18 +488,6 @@ struct boss_sathrovarrAI : public ScriptedAI
         UnitAI::DoMeleeAttackIfReady();
     }
 
-    void RemoveAura(Unit* target, Aura* Aur, AuraRemoveMode mode)
-    {
-        switch (Aur->GetSpellProto()->Id)
-        {
-            case 45032:
-            case 45034:
-                if (mode == AURA_REMOVE_BY_DISPEL)
-                    DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), 45034, true);
-                break;
-        }
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
@@ -712,14 +700,8 @@ struct boss_kalecAI : public ScriptedAI
         if(RevitalizeTimer < diff)
         {
             me->InterruptNonMeleeSpells(false);
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-            {
-                if (target->getPowerType() == POWER_MANA && target->HasAura(AURA_SPECTRAL_REALM))
-                {
-                    DoCast(target, SPELL_REVITALIZE);
-                    RevitalizeTimer = 5000;
-                }
-            }
+            DoCast(m_creature, SPELL_REVITALIZE);
+            RevitalizeTimer = 5000;
         }else RevitalizeTimer -= diff;
 
         if(HeroicStrikeTimer < diff)
