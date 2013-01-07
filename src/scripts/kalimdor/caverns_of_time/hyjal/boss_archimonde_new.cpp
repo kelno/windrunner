@@ -327,6 +327,9 @@ public:
                         float NewY = _CurrentY + sin(DegreeToRadian(NewAngle)) * 6;
                         float NewZ = me->GetMap()->GetHeight(NewX, NewY, _CurrentZ);
                         //me->UpdateGroundPositionZ(NewX, NewY, NewZ);
+                        //sLog.outString("Doomfire damage: %f %f %f", NewX, NewY, NewZ);
+                        if (NewZ < 1500.0f)
+                            NewZ = _CurrentZ;
 
                         Creature* Doomfire = me->SummonCreature(CREATURE_DOOMFIRE, NewX, NewY, NewZ, 0, TEMPSUMMON_TIMED_DESPAWN, DOOMFIRE_DESPAWNTIME);
                         if(Doomfire)
@@ -653,11 +656,13 @@ public:
                 case EV_FEAR:
                     doCast(me->getVictim(), SPELL_FEAR);
                     scheduleEvent(EV_FEAR, 42000);
+                    delayEvent(EV_AIR_BURST, 5000);
                     break;
                 case EV_AIR_BURST:
                     talk(YELL_AIR_BURST);
                     doCast(selectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true), SPELL_AIR_BURST);
                     scheduleEvent(EV_AIR_BURST, 25000, 40000);
+                    delayEvent(EV_FEAR, 5000);
                     break;
                 case EV_GRIP_LEGION:
                     doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION);
@@ -665,10 +670,20 @@ public:
                     break;
                 case EV_DOOMFIRE:
                     float x, y, z;
-                    x = me->GetPositionX() - 5 + rand()%15;
-                    y = me->GetPositionY() - 5 + rand()%15;
+                    if (rand()%2)
+                        x = me->GetPositionX() - 10 - rand()%5;
+                    else
+                        x = me->GetPositionX() + 10 + rand()%5;
+
+                    if (rand()%2)
+                        y = me->GetPositionY() - 10 - rand()%5;
+                    else
+                        y = me->GetPositionY() + 10 + rand()%5;
+                    //x = me->GetPositionX() - 5 + rand()%15;
+                    //y = me->GetPositionY() - 5 + rand()%15;
                     z = me->GetPositionZ() + 1.5f;
-//                    me->UpdateGroundPositionZ(x, y, z);
+                    me->UpdateGroundPositionZ(x, y, z);
+                    z += 1.0f;
                     if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000)))
                         sLog.outString("[ARCHIMONDE] Spawned Doomfire at %f %f %f", x, y, z);
                     else
