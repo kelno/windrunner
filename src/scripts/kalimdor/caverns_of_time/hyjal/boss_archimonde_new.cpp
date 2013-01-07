@@ -665,9 +665,8 @@ public:
                     break;
                 case EV_DOOMFIRE:
                     float x, y, z;
-                    /*x = me->GetPositionX() - 5 + rand()%15;
-                    y = me->GetPositionY() - 5 + rand()%15;*/
-                    me->GetRandomContactPoint(me, x, y, z, 8.0f, 30.0f);
+                    x = me->GetPositionX() - 5 + rand()%15;
+                    y = me->GetPositionY() - 5 + rand()%15;
                     z = me->GetPositionZ() + 1.5f;
 //                    me->UpdateGroundPositionZ(x, y, z);
                     if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000)))
