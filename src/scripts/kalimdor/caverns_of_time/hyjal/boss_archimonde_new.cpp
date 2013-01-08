@@ -582,10 +582,8 @@ public:
         
         void onCombatStart(Unit* /*victim*/)
         {
-            if (_instance) {
-                _instance->SendScriptInTestNoLootMessageToAll();
+            if (_instance)
                 _instance->SetData(DATA_ARCHIMONDEEVENT, IN_PROGRESS);
-            }
         }
 
         void attackStart(Unit* victim)
