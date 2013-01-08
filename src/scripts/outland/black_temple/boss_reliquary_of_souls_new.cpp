@@ -646,7 +646,7 @@ public:
                         doCast(me, SPELL_SELF_SEETHE, true);
                         tankGUID = me->getVictim()->GetGUID();
                     }
-                    scheduleEvent(EV_CHECK_TANK, 1000);
+                    scheduleEvent(EV_CHECK_TANK, 2000);
                     break;
                 case EV_SOUL_SCREAM:
                     doCast(me->getVictim(), SPELL_SOUL_SCREAM);
