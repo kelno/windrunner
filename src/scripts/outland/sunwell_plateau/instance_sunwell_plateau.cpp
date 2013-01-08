@@ -500,6 +500,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             Commander->GetRandomPoint(Commander->GetPositionX(), Commander->GetPositionY(), Commander->GetPositionZ(), 1.0f, x, y, z);
             if (Creature *Fiend = Commander->SummonCreature(CREATURE_VOLATILE_FELFIRE_FIEND, x, y, z, Commander->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0)) {
                 //Fiend->MonsterSay("[DEBUG] Fiend!", LANG_UNIVERSAL, NULL);
+                Fiend->SetSummoner(Commander);
                 Fiend->setActive(true);
                 Fiend->SetSpeed(MOVE_WALK, 5);
             }
