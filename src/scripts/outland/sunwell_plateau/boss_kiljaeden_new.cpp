@@ -489,6 +489,8 @@ public:
                 shadowSpike = false;
                 OrbActivated = false;
                 IsWaiting = false;
+                me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+                me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_LANGUAGE, true);
                 me->SetFullTauntImmunity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
