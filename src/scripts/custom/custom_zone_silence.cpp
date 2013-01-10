@@ -22,35 +22,45 @@ SDCategory: Custom
 EndScriptData */
 
 #include "precompiled.h"
-
-struct npc_zone_silenceAI : public Scripted_NoMovementAI
+ 
+#define SPELL_SILENCE 42201 //can only be cast on self
+ 
+struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
 {
-    npc_zone_silenceAI(Creature* c) : Scripted_NoMovementAI(c) {}
-    
-    void Aggro(Unit* who) {}
-    
-    void MoveInLineOfSight(Unit* who)
+    npc_zonedesilenceAI(Creature *c) : Scripted_NoMovementAI(c)
     {
-        if (who->ToPlayer() || (who->ToCreature() && who->ToCreature()->isPet())) {
-            if (who->IsWithinDistInMap(me, 30.0f))
-                DoCast(who, 42201, true);
-            else if (who->GetDistance(me) >= 30.0f && who->GetDistance(me) <= 40.0f)
-                who->RemoveAurasDueToSpell(42201);
+        me->SetVisibility(VISIBILITY_OFF);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        // me->SetReactState(REACT_PASSIVE);
+    }
+ 
+    void MoveInLineOfSight(Unit *who)
+    {
+        if (who->GetTypeId() == TYPEID_PLAYER || (who->GetTypeId() == TYPEID_UNIT && who->GetCreature(*me, who->GetGUID())->isPet())) {
+            if (who->GetDistance(me) < 30 ) {
+                if(!who->HasAura(SPELL_SILENCE, 0) && who->isAlive())
+                    who->AddAura(SPELL_SILENCE, who); //pas un cast sinon rendement décroissant qui s'applique
+            }
+            else if(who->HasAura(SPELL_SILENCE, 0)) {
+                who->RemoveAurasDueToSpell(SPELL_SILENCE);
+            }
         }
     }
+    
+    void Aggro(Unit* who) {}
 };
-
-CreatureAI* GetAI_npc_zone_silence(Creature* creature)
+ 
+CreatureAI* GetAI_npc_zonedesilence(Creature *_Creature)
 {
-    return new npc_zone_silenceAI(creature);
+    return new npc_zonedesilenceAI (_Creature);
 }
-
+ 
 void AddSC_zone_silence()
 {
-    Script* newscript;
-    
+    Script *newscript;
+ 
     newscript = new Script;
-    newscript->Name = "npc_zone_silence";
-    newscript->GetAI = &GetAI_npc_zone_silence;
+    newscript->Name="npc_zone_silence";
+    newscript->GetAI = &GetAI_npc_zonedesilence;
     newscript->RegisterSelf();
 }

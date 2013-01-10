@@ -492,7 +492,7 @@ public:
                 addEvent(EV_AIR_BURST, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_GRIP_LEGION, 5000, 25000, EVENT_FLAG_DELAY_IF_CASTING);
                 addEvent(EV_DOOMFIRE, 10000, 10000);
-                addEvent(EV_MELEE_CHECK, 2000, 2000);
+                addEvent(EV_MELEE_CHECK, 5000, 5000);
                 addEvent(EV_NORDRASSIL_CHECK, 3000, 3000);
                 addEvent(EV_ENRAGE, 600000, 600000);
                 addEvent(EV_ENRAGE_CAST, 2000, 2000, EVENT_FLAG_NONE, false);
@@ -505,7 +505,7 @@ public:
                 scheduleEvent(EV_AIR_BURST, 30000);
                 scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                 scheduleEvent(EV_DOOMFIRE, 10000);
-                scheduleEvent(EV_MELEE_CHECK, 2000);
+                scheduleEvent(EV_MELEE_CHECK, 5000);
                 scheduleEvent(EV_NORDRASSIL_CHECK, 3000);
                 enableEvent(EV_NORDRASSIL_CHECK);
                 scheduleEvent(EV_ENRAGE, 600000);
@@ -694,7 +694,7 @@ public:
                     if (_canUseFingerOfDeath())
                         doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_FINGER_OF_DEATH);
                         
-                    scheduleEvent(EV_MELEE_CHECK, 2000);
+                    scheduleEvent(EV_MELEE_CHECK, 5000);
                     break;
                 case EV_NORDRASSIL_CHECK:
                     if (me->GetDistance(NORDRASSIL_X, NORDRASSIL_Y, NORDRASSIL_Z) < 75.0f)
