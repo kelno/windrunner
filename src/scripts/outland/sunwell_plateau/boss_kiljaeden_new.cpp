@@ -666,13 +666,13 @@ public:
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
                             break;
                         case EVENT_SHADOW_SPIKE:
-                            doCast(NULL, SPELL_SHADOW_SPIKE);
+                            doCast(me, SPELL_SHADOW_SPIKE);
                             shadowSpike = true;
                             disableEvent(EVENT_SHADOW_SPIKE);
                             ChangeTimers(true, 30000);
                             break;
                         case EVENT_FLAME_DART:
-                            doCast(NULL, SPELL_FLAME_DART);
+                            doCast(me, SPELL_FLAME_DART);
                             scheduleEvent(EVENT_FLAME_DART, 3000);
                             break;
                         case EVENT_DARKNESS:
