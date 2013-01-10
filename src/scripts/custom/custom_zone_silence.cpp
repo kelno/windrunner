@@ -55,7 +55,7 @@ CreatureAI* GetAI_npc_zonedesilence(Creature *_Creature)
     return new npc_zonedesilenceAI (_Creature);
 }
  
-void AddSC_npc_zonedesilence()
+void AddSC_zone_silence()
 {
     Script *newscript;
  
