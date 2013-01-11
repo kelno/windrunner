@@ -158,6 +158,63 @@ CreatureAI* GetAI_npc_kaya_flathoofAI(Creature *pCreature)
 }
 
 /*######
+# npc_piznik
+######*/
+
+float spawns[3][4] = {
+    {941.866272, -255.601471, -2.403625, 6.070902},
+    {942.277771, -253.692307, -2.335533, 6.070902},
+    {942.529968, -252.522171, -2.293756, 6.070902}};
+
+struct npc_piznikAI : public ScriptedAI
+{
+    npc_piznikAI(Creature* c) : ScriptedAI(c) {}
+    
+    uint8 count;
+    uint64 pGUID;
+    
+    void Aggro(Unit* who) {}
+    
+    void Start(uint64 guid)
+    {
+        count = 0;
+        pGUID = guid;
+        for (uint8 i = 0; i < 3; ++i) {
+            if (Creature* summon = me->SummonCreature(3999, spawns[i][0], spawns[i][1], spawns[i][2], spawns[i][3], TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 30000))
+               summon->AI()->AttackStart(me);
+        }
+    }
+    
+    void SummonedCreatureDespawn(Creature* creature)
+    {
+        if (creature->GetEntry() == 3999)
+            ++count;
+        else
+            return;
+        
+        if (count == 3) {
+            if (Player* player = Unit::GetPlayer(pGUID)) {
+                player->AreaExploredOrEventHappens(1090);
+                player->AreaExploredOrEventHappens(1092);
+            }
+        }
+    }
+};
+
+bool QuestAccept_npc_piznik(Player* player, Creature* creature, Quest const* quest)
+{
+    if (quest->GetQuestId() == 1090 || quest->GetQuestId() == 1092)
+        ((npc_piznikAI*)(creature->AI()))->Start(player->GetGUID());
+
+    return true;
+}
+
+CreatureAI* GetAI_npc_piznik(Creature *pCreature)
+{
+    return new npc_piznikAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -175,6 +232,12 @@ void AddSC_stonetalon_mountains()
     newscript->Name="npc_kaya_flathoof";
     newscript->GetAI = &GetAI_npc_kaya_flathoofAI;
     newscript->pQuestAccept = &QuestAccept_npc_kaya_flathoof;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name="npc_piznik";
+    newscript->GetAI = &GetAI_npc_piznik;
+    newscript->pQuestAccept = &QuestAccept_npc_piznik;
     newscript->RegisterSelf();
 }
 
