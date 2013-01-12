@@ -40,15 +40,10 @@ enum SpellIds
     SPELL_FIRE_BLOOM                                    = 45641, // Places a debuff on 5 raid members, which causes them to deal 2k Fire damage to nearby allies and selves. MIGHT NOT WORK
 
     SPELL_SINISTER_REFLECTION                           = 45785, // Summon shadow copies of 5 raid members that fight against KJ's enemies
-    SPELL_COPY_WEAPON                                   = 41055, // }
-    SPELL_COPY_WEAPON2                                  = 41054, // }
-    SPELL_COPY_OFFHAND                                  = 45206, // }- Spells used in Sinister Reflection creation
-    SPELL_COPY_OFFHAND_WEAPON                           = 45205, // }
 
     SPELL_SHADOW_SPIKE                                  = 46680, // Bombard random raid members with Shadow Spikes (Very similar to Void Reaver orbs)
     SPELL_FLAME_DART                                    = 45737, // Bombards the raid with flames every 3(?) seconds
     SPELL_DARKNESS_OF_A_THOUSAND_SOULS                  = 46605, // Begins a 8-second channeling, after which he will deal 50'000 damage to the raid
-    SPELL_DARKNESS_OF_A_THOUSAND_SOULS_DAMAGE           = 45657,
 
     /* Armageddon spells wrong visual */
     SPELL_ARMAGEDDON_TRIGGER                            = 45909, // Meteor spell trigger missile should cast creature on himself
@@ -434,12 +429,8 @@ public:
     
             SummonList Summons;
 
-            uint32 WaitTimer;
             uint32 annimSpawnTimer;
-            bool IsInDarkness;
-            bool shadowSpike;
             bool OrbActivated;
-            bool IsWaiting;
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
 	    {
@@ -457,14 +448,14 @@ public:
                     addEvent(EVENT_SOUL_FLAY, 1000, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_LEGION_LIGHTNING, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FIRE_BLOOM, 10000, 15000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000, EVENT_FLAG_NONE, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_NONE, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_DARKNESS, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_NONE, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 4
-                    addEvent(EVENT_ARMAGEDDON, 2000, 2000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_ARMAGEDDON, 2000, 2000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 }
                 else
                 {
@@ -484,11 +475,7 @@ public:
                 }
 
                 annimSpawnTimer = 11000;
-                WaitTimer = 0;
-                IsInDarkness  = false;
-                shadowSpike = false;
                 OrbActivated = false;
-                IsWaiting = false;
                 me->SetFullTauntImmunity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -529,44 +516,6 @@ public:
             {
                 setZoneInCombat();
                 talk(YELL_EMERGE);
-            }
-
-            void ChangeTimers (bool status, uint32 WTimer)
-            {
-                if (status)
-                {
-                    disableEvent(EVENT_SOUL_FLAY);
-                    disableEvent(EVENT_LEGION_LIGHTNING);
-                    disableEvent(EVENT_FIRE_BLOOM);
-                    disableEvent(EVENT_SUMMON_SHILEDORB);
-                    disableEvent(EVENT_SHADOW_SPIKE);
-                    disableEvent(EVENT_FLAME_DART);
-                    disableEvent(EVENT_DARKNESS);
-                    disableEvent(EVENT_ORBS_EMPOWER);
-                    disableEvent(EVENT_ARMAGEDDON);
-                }
-                else
-                {
-                    enableEvent(EVENT_SOUL_FLAY);
-                    enableEvent(EVENT_LEGION_LIGHTNING);
-                    enableEvent(EVENT_FIRE_BLOOM);
-                    enableEvent(EVENT_FLAME_DART);
-                    enableEvent(EVENT_DARKNESS);
-                    enableEvent(EVENT_ARMAGEDDON);
-
-                    if (getPhase() != PHASE_SACRIFICE)
-                        enableEvent(EVENT_SUMMON_SHILEDORB);
-                    if (!shadowSpike)
-                        enableEvent(EVENT_SHADOW_SPIKE);
-                    if (!OrbActivated)
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                }
-
-                if (WTimer > 0)
-                {
-                    IsWaiting = true;
-                    WaitTimer = WTimer;
-                }
             }
 
             void CastSinisterReflection()
@@ -614,18 +563,10 @@ public:
                 if (!updateVictim())
                     return;
 
-                if (IsWaiting)
-                {
-                    if (WaitTimer <= diff)
-                    {
-                        IsWaiting = false;
-                        ChangeTimers(false, 0);
-                    }
-                    else
-                        WaitTimer -= diff;
-                }
-
                 updateEvents(diff);
+
+                if (me->hasUnitState(UNIT_STAT_CASTING))
+                    return;
             
                 while (executeEvent(diff, m_currEvent))
                 {
@@ -667,34 +608,16 @@ public:
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast(me, SPELL_SHADOW_SPIKE);
-                            shadowSpike = true;
-                            disableEvent(EVENT_SHADOW_SPIKE);
-                            ChangeTimers(true, 30000);
+                            scheduleEvent(EVENT_SHADOW_SPIKE, 60000);
                             break;
                         case EVENT_FLAME_DART:
                             doCast(me, SPELL_FLAME_DART);
-                            scheduleEvent(EVENT_FLAME_DART, 3000);
+                            scheduleEvent(EVENT_FLAME_DART, 60000);
                             break;
                         case EVENT_DARKNESS:
-                            if (!IsInDarkness)
-                            {
-                                ChangeTimers(true, 9000);
-                                talk(YELL_DARKNESS1);
-                                doCast(NULL, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
-                                scheduleEvent(EVENT_DARKNESS, 8750);
-                                enableEvent(EVENT_DARKNESS);
-                                if (getPhase() == PHASE_SACRIFICE)
-                                    enableEvent(EVENT_ARMAGEDDON);
-                                IsInDarkness = true;
-                            }
-                            else
-                            {
-                                scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? urand(20000, 35000) : urand(40000, 70000));
-                                IsInDarkness = false;
-                                doCast(NULL, SPELL_DARKNESS_OF_A_THOUSAND_SOULS_DAMAGE);
-                                talk(YELL_DARKNESS2);
-                            }
-                            scheduleEvent(EVENT_SOUL_FLAY, 9000);
+                            talk(YELL_DARKNESS1);
+                            doCast(me, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
+                            scheduleEvent(EVENT_DARKNESS, 45000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -770,7 +693,6 @@ public:
                         if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
                             Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, false);
                         OrbActivated = false;
-                        ChangeTimers(true, 10000);
                     }
                     else
                         return;
