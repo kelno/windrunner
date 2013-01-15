@@ -135,11 +135,22 @@ CreatureAI* GetAI_npc_professor_phizzlethorpeAI(Creature *pCreature)
 
 struct npc_myzraelAI : public ScriptedAI
 {
-    npc_myzraelAI(Creature* c) : ScriptedAI(c) {}
+    npc_myzraelAI(Creature* c) : ScriptedAI(c)
+    {
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        me->SetReactState(REACT_PASSIVE);
+        
+        intro = true;
+        introStep = 0;
+        introTimer = 1000;
+    }
     
     uint32 summon1Timer;
     uint32 summon2Timer;
     uint32 seismeTimer;
+    bool intro;
+    uint32 introTimer;
+    uint8 introStep;
     
     void Reset()
     {
@@ -152,6 +163,34 @@ struct npc_myzraelAI : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
+        if (intro) {
+            if (introTimer <= diff) {
+                switch (introStep) {
+                case 0:
+                    me->MonsterSay("Quoi ? Hé bien, vous m'avez servi avec dévotion, mais...", LANG_UNIVERSAL, 0);
+                    ++introStep;
+                    introTimer = 3000;
+                    break;
+                case 1:
+                    me->MonsterSay("Pourquoi m'avez-vous invoquée si tôt ? Je n'ai pas encore récupéré tout mon pouvoir !", LANG_UNIVERSAL, 0);
+                    ++introStep;
+                    introTimer = 3000;
+                    break;
+                case 2:
+                    me->MonsterSay("Aucune importance. Vous avez été fou de m'aider, et maintenant vous allez payer !", LANG_UNIVERSAL, 0);
+                    introTimer = 0;
+                    intro = false;
+                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                    me->SetReactState(REACT_AGGRESSIVE);
+                    break;
+                }
+            }
+            else
+                introTimer -= diff;
+            
+            return;
+        }
+        
         if (!UpdateVictim())
             return;
         
