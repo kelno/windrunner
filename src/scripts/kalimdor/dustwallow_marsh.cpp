@@ -31,6 +31,7 @@ npc_overlord_mokmorokk
 npc_private_hendel
 npc_stinky
 npc_cassa_crimsonwing
+npc_ogron
 EndContentData */
 
 #include "precompiled.h"
@@ -526,6 +527,217 @@ bool GossipSelect_npc_cassa_crimsonwing(Player* player, Creature* creature, uint
 }
 
 /*######
+## npc_ogron
+######*/
+
+enum eOgron
+{
+    QUEST_QUESTIONING_REETHE                     = 1273
+};
+
+struct npc_ogronAI : public npc_escortAI
+{
+    npc_ogronAI(Creature* pCreature) : npc_escortAI(pCreature)
+    {
+        completed = false;
+    }
+
+    bool completed;
+    uint32 step;
+    uint32 timer;
+
+    void WaypointReached(uint32 i)
+    {
+        Player* pPlayer = GetPlayerForEscort();
+        if (!pPlayer)
+            return;
+
+        switch (i) {
+        case 7:
+            me->MonsterSay("C'est Reethe ! Allons voir ce qu'il a à nous dire, hein ?", LANG_UNIVERSAL, 0);
+            break;
+        case 8:
+            step = 1;
+            timer = 500;
+            break;
+        }
+    }
+
+    void Aggro(Unit* pWho)
+    {
+        
+    }
+
+    void Reset()
+    {
+        step = 0;
+    }
+
+    void JustDied(Unit* /*pKiller*/)
+    {
+        if (completed)
+            return;
+
+        Player* pPlayer = GetPlayerForEscort();
+        if (HasEscortState(STATE_ESCORT_ESCORTING) && pPlayer)
+        {
+            if (pPlayer->GetQuestStatus(QUEST_QUESTIONING_REETHE))
+                pPlayer->FailQuest(QUEST_QUESTIONING_REETHE);
+        }
+    }
+
+   void UpdateAI(const uint32 uiDiff)
+    {
+        npc_escortAI::UpdateAI(uiDiff);
+        
+        if (step) {
+            if (timer <= uiDiff) {
+                Creature* reethe = me->FindCreatureInGrid(4980, 15.0f, true);
+                Creature* caldwell = me->FindCreatureInGrid(5046, 20.0f, true);
+                if (reethe && (caldwell || step < 8)) {
+                    switch (step) {
+                    case 1:
+                        reethe->MonsterSay("Je vous jure, je n'ai rien volé ! Tenez, servez-vous dans mes affaires, et allez-vous en !", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 2000;
+                        break;
+                    case 2:
+                        me->MonsterSay("Dis-nous simplement ce que tu sais de l'auberge du Repos Ombragé, et je ne vais pas t'exploser le crâne.", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 2000;
+                        break;
+                    case 3:
+                        reethe->MonsterSay("Hé bien... Il se pourrait que j'aie pris quelques trucs à l'auberge... Mais pourquoi un ogre s'en inquiéterait-il ?", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 2000;
+                        break;
+                    case 4:
+                        me->MonsterSay("Ecoute-moi bien, si tu ne m'en dis pas plus au sujet du feu...", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 800;
+                        break;
+                    case 5:
+                        reethe->MonsterSay("Pas un pas de plus, ogre !", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 1500;
+                        break;
+                    case 6:
+                        reethe->MonsterSay("Et je ne sais rien à propos de ton feu...", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 1000;
+                        break;
+                    case 7:
+                        if (Creature* caldspawn = me->SummonCreature(5046, -3376.830322, -3208.791260, 35.163025, 5.946863, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000)) {
+                            caldspawn->GetMotionMaster()->MovePoint(0, -3371.119385, -3212.487061, 34.137459);
+                            caldspawn->setFaction(35);
+                        }
+                        reethe->MonsterSay("Qu'est-ce que c'était ? Avez-vous entendu quelque chose ?", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 2000;
+                        break;
+                    case 8:
+                        if (Creature* add = me->SummonCreature(5044, -3373.989014, -3207.442871, 35.073441, 5.826434, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000))
+                            me->setFaction(35);
+                        if (Creature* add = me->SummonCreature(5044, -3374.850342, -3209.195557, 34.980534, 5.826434, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000))
+                            me->setFaction(35);
+                        if (Creature* add = me->SummonCreature(5045, -3375.389404, -3211.398682, 34.845543, 6.043204, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 60000))
+                            me->setFaction(35);
+                        caldwell->MonsterSay("Paval Reethe ! Enfin je vous trouve. Vous vous acoquinez avec des ogres maintenant ? N'ayez crainte, même les traîtres et les déserteurs méritent un peu de pitié.", LANG_UNIVERSAL, 0);
+                        reethe->SetFlag(UNIT_FIELD_FLAGS, 0);
+                        reethe->setFaction(me->getFaction());
+                        ++step;
+                        timer = 2000;
+                        break;
+                    case 9:
+                        caldwell->MonsterSay("Soldat, montrez au Lieutement Reethe un peu de votre pitié.", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 800;
+                        break;
+                    case 10:
+                        if (Creature* hallan = me->FindCreatureInGrid(5045, 20.0f, true))
+                            hallan->CastSpell(reethe, 7105 /* Fake Shot*/, true);
+                        ++step;
+                        timer = 500;
+                        break;
+                    case 11:
+                        reethe->MonsterSay("Hallan... Je ne pensais pas que tu avais ça en toi...", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 500;
+                        break;
+                    case 12:
+                        caldwell->MonsterSay("Bien, maintenant, nettoyez le reste, messieurs !", LANG_UNIVERSAL, 0);
+                        me->MonsterSay("Nom de... ! Tu ferais mieux de ne pas rendre l'âme devant moi, humain !", LANG_UNIVERSAL, 0);
+                        ++step;
+                        timer = 1000;
+                        break;
+                    case 13:
+                    {
+                        /*std::list<Creature*> skirms;
+                        me->GetCreatureListWithEntryInGrid(skirms, 5044, 30.0f);
+                        for (std::list<Creature*>::iterator it = skirms.begin(); it != skirms.end(); it++) {
+                            (*it)->setFaction(14);
+                            (*it)->AI()->AttackStart(reethe);
+                        }
+                        caldwell->setFaction(14);
+                        caldwell->AI()->AttackStart(reethe);
+                        if (Creature* hallan = me->FindCreatureInGrid(5045, 20.0f, true)) {
+                            hallan->setFaction(14);
+                            hallan->AI()->AttackStart(reethe);
+                        }*/
+                        ++step;
+                        timer = 5000;
+                        break;
+                    }
+                    case 14:
+                        if (Player* pPlayer = GetPlayerForEscort())
+                            pPlayer->AreaExploredOrEventHappens(QUEST_QUESTIONING_REETHE);
+                        ++step;
+                        timer = 999999;
+                    }
+                }
+            }
+            else
+                timer -= uiDiff;
+        }
+
+        if (!UpdateVictim()) {
+            if (step == 15) {
+                if (Player* pPlayer = GetPlayerForEscort())
+                    pPlayer->AreaExploredOrEventHappens(QUEST_QUESTIONING_REETHE);
+                
+                step = 0;
+                timer = 0;
+                completed = true;
+                
+                me->DisappearAndDie();
+                me->Respawn();
+            }
+            
+            return;
+        }
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+bool QuestAccept_npc_ogron(Player* pPlayer, Creature* pCreature, Quest const *quest)
+{
+    if (quest->GetQuestId() == QUEST_QUESTIONING_REETHE) {
+        pCreature->setFaction(pPlayer->getFaction());
+        pCreature->SetStandState(UNIT_STAND_STATE_STAND);
+        pCreature->MonsterSay("J'ai remarqué du feu sur cette île, là-bas. Et un humain, aussi. Allons vérifier.", LANG_UNIVERSAL, 0);
+        ((npc_escortAI*)(pCreature->AI()))->Start(true, true, false, pPlayer->GetGUID(), pCreature->GetEntry());
+        ((npc_escortAI*)(pCreature->AI()))->SetDespawnAtEnd(false);
+    }
+    return true;
+}
+
+CreatureAI* GetAI_npc_ogron(Creature* pCreature)
+{
+    return new npc_ogronAI(pCreature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -585,5 +797,11 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_cassa_crimsonwing";
     newscript->pGossipHello = &GossipHello_npc_cassa_crimsonwing;
     newscript->pGossipSelect = &GossipSelect_npc_cassa_crimsonwing;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_ogron";
+    newscript->GetAI = &GetAI_npc_ogron;
+    newscript->pQuestAccept = &QuestAccept_npc_ogron;
     newscript->RegisterSelf();
 }
