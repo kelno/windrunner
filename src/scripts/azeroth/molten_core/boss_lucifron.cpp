@@ -22,70 +22,176 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-#define SPELL_IMPENDINGDOOM 19702
-#define SPELL_LUCIFRONCURSE 19703
-#define SPELL_SHADOWSHOCK   20603
+enum {
+    SPELL_IMPENDINGDOOM = 19702,
+    SPELL_LUCIFRONCURSE = 19703,
+    SPELL_SHADOWSHOCK   = 20603,
+    
+    NPC_FLAMEWAKER_PROTECTOR    = 12119
+};
 
-struct boss_lucifronAI : public ScriptedAI
+class Boss_Lucifron : public CreatureScript
 {
-    boss_lucifronAI(Creature *c) : ScriptedAI(c) {}
-
-    uint32 ImpendingDoom_Timer;
-    uint32 LucifronCurse_Timer;
-    uint32 ShadowShock_Timer;
-
-    void Reset()
+public:
+    Boss_Lucifron() : CreatureScript("boss_lucifron") {}
+    
+    class Boss_LucifronAI : public CreatureAINew
     {
-        ImpendingDoom_Timer = 10000;                        //Initial cast after 10 seconds so the debuffs alternate
-        LucifronCurse_Timer = 20000;                        //Initial cast after 20 seconds
-        ShadowShock_Timer = 6000;                           //6 seconds
-    }
-
-    void Aggro(Unit *who)
+    public:
+        enum event {
+            EV_IMPENDINGDOOM    = 0,
+            EV_LUCIFRONCURSE    = 1,
+            EV_SHADOWSHOCK      = 2
+        };
+        
+        Boss_LucifronAI(Creature* creature) : CreatureAINew(creature)
+        {
+            _instance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+        
+        void onReset(bool onSpawn)
+        {
+            if (onSpawn) {
+                addEvent(EV_IMPENDINGDOOM, 15000, 15000);
+                addEvent(EV_LUCIFRONCURSE, 10000, 10000);
+                addEvent(EV_SHADOWSHOCK, 6000, 6000);
+            }
+            else {
+                scheduleEvent(EV_IMPENDINGDOOM, 15000, 15000);
+                scheduleEvent(EV_LUCIFRONCURSE, 10000, 10000);
+                scheduleEvent(EV_SHADOWSHOCK, 6000, 6000);
+            }
+            
+            if (_instance)
+                _instance->SetData(DATA_LUCIFRON, NOT_STARTED);
+            
+            // Respawn the adds if needed
+            std::list<Creature*> adds;
+            me->GetCreatureListWithEntryInGrid(adds, NPC_FLAMEWAKER_PROTECTOR, 100.0f);
+            for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++) {
+                if ((*it)->isDead()) {
+                    (*it)->DisappearAndDie();
+                    (*it)->Respawn();
+                }
+            }
+        }
+        
+        void onCombatStart(Unit* /*victim*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_LUCIFRON, IN_PROGRESS);
+        }
+        
+        void onDeath(Unit* /*killer*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_LUCIFRON, DONE);
+        }
+        
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+            
+            updateEvents(diff);
+            
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_IMPENDINGDOOM:
+                    doCast(me->getVictim(), SPELL_IMPENDINGDOOM);
+                    scheduleEvent(EV_IMPENDINGDOOM, urand(15000, 20000));
+                    break;
+                case EV_LUCIFRONCURSE:
+                    doCast(me->getVictim(), SPELL_LUCIFRONCURSE);
+                    scheduleEvent(EV_LUCIFRONCURSE, urand(15000, 20000));
+                    break;
+                case EV_SHADOWSHOCK:
+                    doCast(me->getVictim(), SPELL_SHADOWSHOCK);
+                    scheduleEvent(EV_SHADOWSHOCK, 4000);
+                    break;
+                }
+            }
+            
+            doMeleeAttackIfReady();
+        }
+        
+    private:
+        ScriptedInstance* _instance;
+    };
+    
+    CreatureAINew* getAI(Creature* creature)
     {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //Impending doom timer
-        if (ImpendingDoom_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_IMPENDINGDOOM);
-            ImpendingDoom_Timer = 20000;
-        }else ImpendingDoom_Timer -= diff;
-
-        //Lucifron's curse timer
-        if (LucifronCurse_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_LUCIFRONCURSE);
-            LucifronCurse_Timer = 15000;
-        }else LucifronCurse_Timer -= diff;
-
-        //Shadowshock
-        if (ShadowShock_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWSHOCK);
-            ShadowShock_Timer = 6000;
-        }else ShadowShock_Timer -= diff;
-
-        DoMeleeAttackIfReady();
+        return new Boss_LucifronAI(creature);
     }
 };
-CreatureAI* GetAI_boss_lucifron(Creature *_Creature)
+
+enum {
+    SPELL_DOMINATE_MIND = 20604,
+    SPELL_CLEAVE        = 20605
+};
+
+class Add_FlamewakerProtector : public CreatureScript
 {
-    return new boss_lucifronAI (_Creature);
-}
+public:
+    Add_FlamewakerProtector() : CreatureScript("add_flamewakerprotector") {}
+    
+    class Add_FlamewakerProtectorAI : public CreatureAINew
+    {
+    public:
+        enum event {
+            EV_DOMINATE_MIND    = 0,
+            EV_CLEAVE           = 1
+        };
+        
+        Add_FlamewakerProtectorAI(Creature* creature) : CreatureAINew(creature) {}
+        
+        void onReset(bool onSpawn)
+        {
+            if (onSpawn) {
+                addEvent(EV_DOMINATE_MIND, 15000, 15000);
+                addEvent(EV_CLEAVE, 6000, 6000);
+            }
+            else {
+                scheduleEvent(EV_DOMINATE_MIND, 15000, 15000);
+                scheduleEvent(EV_CLEAVE, 6000, 6000);
+            }
+        }
+        
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+            
+            updateEvents(diff);
+            
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_DOMINATE_MIND:
+                    doCast(me->getVictim(), SPELL_DOMINATE_MIND);
+                    scheduleEvent(EV_DOMINATE_MIND, 15000);
+                    break;
+                case EV_CLEAVE:
+                    doCast(me->getVictim(), SPELL_CLEAVE);
+                    scheduleEvent(EV_CLEAVE, 6000);
+                    break;
+                }
+            }
+            
+            doMeleeAttackIfReady();
+        }
+    };
+    
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Add_FlamewakerProtectorAI(creature);
+    }
+};
 
 void AddSC_boss_lucifron()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_lucifron";
-    newscript->GetAI = &GetAI_boss_lucifron;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Lucifron());
+    sScriptMgr.addScript(new Add_FlamewakerProtector());
 }
 

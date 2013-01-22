@@ -18,5 +18,11 @@
 #define DATA_SULFURON 11
 #define DATA_SULFURONISDEAD 12
 #define DATA_GOLEMAGG 13
+
+enum {
+    DATA_LUCIFRON       = 0,
+    // More to come as I'll rescript bosses
+};
+
 #endif
 
