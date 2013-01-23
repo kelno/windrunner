@@ -21,6 +21,7 @@
 
 enum {
     DATA_LUCIFRON       = 0,
+    DATA_MAGMADAR       = 1,
     // More to come as I'll rescript bosses
 };
 

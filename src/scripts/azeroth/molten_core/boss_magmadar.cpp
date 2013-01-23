@@ -14,87 +14,116 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Boss_Magmadar
-SD%Complete: 75
-SDComment: Conflag on ground nyi, fear causes issues without VMAPs
-SDCategory: Molten Core
-EndScriptData */
-
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-#define EMOTE_FRENZY                -1409001
+//#define EMOTE_FRENZY                -1409001
 
-#define SPELL_FRENZY                19451
-#define SPELL_MAGMASPIT             19449                   //This is actually a buff he gives himself
-#define SPELL_PANIC                 19408
-#define SPELL_LAVABOMB              19411                   //This calls a dummy server side effect that isn't implemented yet
-#define SPELL_LAVABOMB_ALT          19428                   //This is the spell that the lava bomb casts
+enum {
+        SPELL_FRENZY                = 19451,
+        SPELL_MAGMASPIT             = 19449,
+        SPELL_LAVABREATH            = 19272,
+        SPELL_PANIC                 = 19408,
+        SPELL_LAVABOMB              = 19411,                   //This calls a dummy server side effect that isn't implemented yet
+        SPELL_LAVABOMB_ALT          = 19428                   //This is the spell that the lava bomb casts
+};
 
-struct boss_magmadarAI : public ScriptedAI
+class Boss_Magmadar : public CreatureScript
 {
-    boss_magmadarAI(Creature *c) : ScriptedAI(c) {}
-
-    uint32 Frenzy_Timer;
-    uint32 Panic_Timer;
-    uint32 Lavabomb_Timer;
-
-    void Reset()
+public:
+    Boss_Magmadar() : CreatureScript("boss_magmadar") {}
+    
+    class Boss_MagmadarAI : public CreatureAINew
     {
-        Frenzy_Timer = 30000;
-        Panic_Timer = 20000;
-        Lavabomb_Timer = 12000;
-
-        m_creature->CastSpell(m_creature,SPELL_MAGMASPIT,true);
-    }
-
-    void Aggro(Unit *who)
+    public:
+        enum event {
+            EV_LAVABREATH       = 0,
+            EV_PANIC            = 1,
+            EV_LAVABOMB         = 2,
+            EV_FRENZY           = 3
+        };
+        
+        Boss_MagmadarAI(Creature* creature) : CreatureAINew(creature)
+        {
+            _instance = ((ScriptedInstance*)creature->GetInstanceData());
+        }
+        
+        void onReset(bool onSpawn)
+        {
+            if (onSpawn) {
+                addEvent(EV_LAVABREATH, 25000, 30000);
+                addEvent(EV_PANIC, 25000, 30000);
+                addEvent(EV_LAVABOMB, 8000, 12000);
+                addEvent(EV_FRENZY, 19000, 21000);
+            }
+            else {
+                scheduleEvent(EV_LAVABREATH, 25000, 30000);
+                scheduleEvent(EV_PANIC, 25000, 30000);
+                scheduleEvent(EV_LAVABOMB, 8000, 12000);
+                scheduleEvent(EV_FRENZY, 19000, 21000);
+            }
+            
+            if (_instance)
+                _instance->SetData(DATA_MAGMADAR, NOT_STARTED);
+            
+            doCast(me, SPELL_MAGMASPIT, true);
+        }
+        
+        void onCombatStart(Unit* /*victim*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_MAGMADAR, IN_PROGRESS);
+        }
+        
+        void onDeath(Unit* /*killer*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_MAGMADAR, DONE);
+        }
+        
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+            
+            updateEvents(diff);
+            
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_LAVABREATH:
+                    doCast(me->getVictim(), SPELL_LAVABREATH);
+                    scheduleEvent(EV_LAVABREATH, 25000, 30000);
+                    break;
+                case EV_PANIC:
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_PANIC);
+                    scheduleEvent(EV_PANIC, 25000, 30000);
+                    break;
+                case EV_LAVABOMB: // FIXME
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_LAVABOMB);
+                    scheduleEvent(EV_LAVABOMB, 8000, 12000);
+                    break;
+                case EV_FRENZY:
+                    doCast(me, SPELL_FRENZY);
+                    scheduleEvent(EV_FRENZY, 19000, 21000);
+                    break;
+                }
+            }
+            
+            doMeleeAttackIfReady();
+        }
+        
+    private:
+        ScriptedInstance* _instance;
+    };
+    
+    CreatureAINew* getAI(Creature* creature)
     {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //Frenzy_Timer
-        if (Frenzy_Timer < diff)
-        {
-            DoScriptText(EMOTE_FRENZY, m_creature);
-            DoCast(m_creature,SPELL_FRENZY);
-            Frenzy_Timer = 15000;
-        }else Frenzy_Timer -= diff;
-
-        //Panic_Timer
-        if (Panic_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_PANIC);
-            Panic_Timer = 35000;
-        }else Panic_Timer -= diff;
-
-        //Lavabomb_Timer
-        if (Lavabomb_Timer < diff)
-        {
-            if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0) )
-                DoCast(target,SPELL_LAVABOMB_ALT);
-
-            Lavabomb_Timer = 12000;
-        }else Lavabomb_Timer -= diff;
-
-        DoMeleeAttackIfReady();
+        return new Boss_MagmadarAI(creature);
     }
 };
-CreatureAI* GetAI_boss_magmadar(Creature *_Creature)
-{
-    return new boss_magmadarAI (_Creature);
-}
 
 void AddSC_boss_magmadar()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_magmadar";
-    newscript->GetAI = &GetAI_boss_magmadar;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Magmadar());
 }
 
