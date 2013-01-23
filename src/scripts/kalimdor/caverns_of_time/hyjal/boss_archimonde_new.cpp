@@ -43,7 +43,7 @@ enum {
     
     DOOMFIRE_REFRESHTIMER       = 1000,
     DOOMFIRE_SUMMONTIMER        = 1000, //aka speed of the trail
-    DOOMFIRE_DESPAWNTIME        = 20000
+    DOOMFIRE_DESPAWNTIME        = 18000
 };
 
 enum {
@@ -682,7 +682,7 @@ public:
                     z = me->GetPositionZ() + 1.5f;
                     me->UpdateGroundPositionZ(x, y, z);
                     z += 1.0f;
-                    if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%10000 + 15000)))
+                    if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%5000 + 15000)))
                         sLog.outString("[ARCHIMONDE] Spawned Doomfire at %f %f %f", x, y, z);
                     else
                         sLog.outString("[ARCHIMONDE] Failed to spawn Doomfire");
