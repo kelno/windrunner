@@ -15,14 +15,21 @@
 #define DATA_MAGMADARISDEAD 8
 #define DATA_MAJORDOMOISDEAD 9
 #define DATA_SHAZZRAHISDEAD 10
-#define DATA_SULFURON 11
+//#define DATA_SULFURON 11
 #define DATA_SULFURONISDEAD 12
-#define DATA_GOLEMAGG 13
+//#define DATA_GOLEMAGG 13
 
 enum {
     DATA_LUCIFRON       = 0,
     DATA_MAGMADAR       = 1,
-    // More to come as I'll rescript bosses
+    DATA_GEHENNAS       = 3,
+    DATA_GARR           = 4,
+    DATA_SHAZZRAH       = 5,
+    DATA_GEDDON         = 6,
+    DATA_GOLEMAGG       = 7,
+    DATA_SULFURON       = 8,
+    DATA_MAJORDOMO      = 9,
+    DATA_RAGNAROS       = 10
 };
 
 #endif

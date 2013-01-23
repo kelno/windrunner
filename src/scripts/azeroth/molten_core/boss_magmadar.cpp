@@ -20,12 +20,12 @@
 //#define EMOTE_FRENZY                -1409001
 
 enum {
-        SPELL_FRENZY                = 19451,
-        SPELL_MAGMASPIT             = 19449,
-        SPELL_LAVABREATH            = 19272,
-        SPELL_PANIC                 = 19408,
-        SPELL_LAVABOMB              = 19411,                   //This calls a dummy server side effect that isn't implemented yet
-        SPELL_LAVABOMB_ALT          = 19428                   //This is the spell that the lava bomb casts
+    SPELL_FRENZY                = 19451,
+    SPELL_MAGMASPIT             = 19449,
+    SPELL_LAVABREATH            = 19272,
+    SPELL_PANIC                 = 19408,
+    SPELL_LAVABOMB              = 19411,                   //This calls a dummy server side effect that isn't implemented yet
+    SPELL_LAVABOMB_ALT          = 19428                   //This is the spell that the lava bomb casts
 };
 
 class Boss_Magmadar : public CreatureScript
