@@ -24,7 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_molten_core.h"
 
-#define ENCOUNTERS      9
+#define ENCOUNTERS      10
 
 #define ID_LUCIFRON     12118
 #define ID_MAGMADAR     11982
@@ -44,9 +44,6 @@ struct instance_molten_core : public ScriptedInstance
 
         uint64 Lucifron, Magmadar, Gehennas, Garr, Geddon, Shazzrah, Sulfuron, Golemagg, Domo, Ragnaros, FlamewakerPriest;
         uint64 RuneKoro, RuneZeth, RuneMazj, RuneTheri, RuneBlaz, RuneKress, RuneMohn;
-
-        //If all Bosses are dead.
-        bool IsBossDied[9];
 
         uint32 Encounter[ENCOUNTERS];
 
@@ -72,25 +69,16 @@ struct instance_molten_core : public ScriptedInstance
             RuneKress = 0;
             RuneMohn = 0;
 
-            IsBossDied[0] = false;
-            IsBossDied[1] = false;
-            IsBossDied[2] = false;
-            IsBossDied[3] = false;
-            IsBossDied[4] = false;
-            IsBossDied[5] = false;
-            IsBossDied[6] = false;
-
-            IsBossDied[7] = false;
-            IsBossDied[8] = false;
-
              for(uint8 i = 0; i < ENCOUNTERS; i++)
                   Encounter[i] = NOT_STARTED;
-
-
         }
 
         bool IsEncounterInProgress() const
         {
+            for(uint8 i = 0; i < ENCOUNTERS; ++i)
+                if (Encounter[i] == IN_PROGRESS) 
+                    return true;
+
             return false;
         };
 
@@ -120,54 +108,44 @@ struct instance_molten_core : public ScriptedInstance
              case 176957:                                    //Gehennas
                  RuneMohn = go->GetGUID();
                  break;
-                 }
+             }
         }
 
 
-        void OnCreatureCreate(Creature *creature, uint32 creature_entry)
+        void OnCreatureCreate(Creature* creature, uint32 creature_entry)
         {
             switch (creature_entry)
             {
                 case ID_LUCIFRON:
                     Lucifron = creature->GetGUID();
                     break;
-
                 case ID_MAGMADAR:
                     Magmadar = creature->GetGUID();
                     break;
-
                 case ID_GEHENNAS:
                     Gehennas = creature->GetGUID();
                     break;
-
                 case ID_GARR:
                     Garr = creature->GetGUID();
                     break;
-
                 case ID_GEDDON:
                     Geddon = creature->GetGUID();
                     break;
-
                 case ID_SHAZZRAH:
                     Shazzrah = creature->GetGUID();
                     break;
-
                 case ID_SULFURON:
                     Sulfuron = creature->GetGUID();
                     break;
-
                 case ID_GOLEMAGG:
                     Golemagg = creature->GetGUID();
                     break;
-
                 case ID_DOMO:
                     Domo = creature->GetGUID();
                     break;
-
                 case ID_RAGNAROS:
                     Ragnaros = creature->GetGUID();
                     break;
-
                 case ID_FLAMEWAKERPRIEST:
                     FlamewakerPriest = creature->GetGUID();
                     break;
@@ -178,81 +156,84 @@ struct instance_molten_core : public ScriptedInstance
         {
             switch(identifier)
             {
-                case DATA_SULFURON:
-                    return Sulfuron;
-                case DATA_GOLEMAGG:
-                    return Sulfuron;
-
-                case DATA_FLAMEWAKERPRIEST:
-                    return FlamewakerPriest;
+            case DATA_LUCIFRON:
+                return Lucifron;
+            case DATA_MAGMADAR:
+                return Magmadar;
+            case DATA_GEHENNAS:
+                return Gehennas;
+            case DATA_GARR:
+                return Garr;
+            case DATA_SHAZZRAH:
+                return Shazzrah;
+            case DATA_GEDDON:
+                return Geddon;
+            case DATA_GOLEMAGG:
+                return Golemagg;
+            case DATA_SULFURON:
+                return Sulfuron;
+            case DATA_MAJORDOMO:
+                return Domo;
+            case DATA_RAGNAROS:  
+                return Ragnaros;
             }
-
+            
             return 0;
         }
 
         uint32 GetData(uint32 type)
         {
-            if (type >= DATA_LUCIFRON && type <= 9 /*TODO: probably DATA_RAGNAROS*/)
+            if (type >= DATA_LUCIFRON && type <= DATA_RAGNAROS)
                 return Encounter[type];
-            
-            switch(type)
-            {
-                case DATA_LUCIFRONISDEAD:
-                    if(IsBossDied[0])
-                        return 1;
-                    break;
-
-                case DATA_MAGMADARISDEAD:
-                    if(IsBossDied[1])
-                        return 1;
-                    break;
-
-                case DATA_GEHENNASISDEAD:
-                    if(IsBossDied[2])
-                        return 1;
-                    break;
-
-                case DATA_GARRISDEAD:
-                    if(IsBossDied[3])
-                        return 1;
-                    break;
-
-                case DATA_GEDDONISDEAD:
-                    if(IsBossDied[4])
-                        return 1;
-                    break;
-
-                case DATA_SHAZZRAHISDEAD:
-                    if(IsBossDied[5])
-                        return 1;
-                    break;
-
-                case DATA_SULFURONISDEAD:
-                    if(IsBossDied[6])
-                        return 1;
-                    break;
-
-                case DATA_GOLEMAGGISDEAD:
-                    if(IsBossDied[7])
-                        return 1;
-                    break;
-
-                case DATA_MAJORDOMOISDEAD:
-                    if(IsBossDied[8])
-                        return 1;
-                    break;
-            }
 
             return 0;
         }
 
         void SetData(uint32 type, uint32 data)
         {
-            if (type == DATA_GOLEMAGG_DEATH)
-                IsBossDied[7] = true;
-            
-            if (type >= DATA_LUCIFRON && type <= 9 /*TODO: probably DATA_RAGNAROS*/)
+            if (type >= DATA_LUCIFRON && type <= DATA_RAGNAROS)
                 Encounter[type] = data;
+        }
+        
+        const char* Save()
+        {
+            OUT_SAVE_INST_DATA;
+            std::ostringstream saveStream;
+
+            saveStream << Encounter[0] << " " << Encounter[1] << " " // TODO: Add "MC" in front of the saved data to check integrity
+                << Encounter[2] << " " << Encounter[3] << " " << Encounter[4]
+            << " " << Encounter[5] << " " << Encounter[6] << " " << Encounter[7]
+            << " " << Encounter[8] << " " << Encounter[9];
+
+            char* out = new char[saveStream.str().length() + 1];
+            strcpy(out, saveStream.str().c_str());
+            if (out) {
+                OUT_SAVE_INST_DATA_COMPLETE;
+                return out;
+            }
+
+            return NULL;
+        }
+        
+        void Load(const char* in)
+        {
+            if (!in) {
+                OUT_LOAD_INST_DATA_FAIL;
+                return;
+            }
+
+            OUT_LOAD_INST_DATA(in);
+
+            std::istringstream loadStream(in);
+            loadStream >> Encounter[0] >> Encounter[1] >> Encounter[2]
+            >> Encounter[3] >> Encounter[4] >> Encounter[5] >> Encounter[6]
+            >> Encounter[7] >> Encounter[8] >> Encounter[9];
+
+            for(uint8 i = 0; i < ENCOUNTERS; ++i)
+                if (Encounter[i] == IN_PROGRESS)
+                    Encounter[i] = NOT_STARTED;
+
+            OUT_LOAD_INST_DATA_COMPLETE;
         }
 };
 
