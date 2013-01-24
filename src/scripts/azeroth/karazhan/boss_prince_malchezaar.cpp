@@ -337,7 +337,8 @@ struct boss_malchezaarAI : public ScriptedAI
                 enfeeble_targets[i] = target->GetGUID();
                 enfeeble_health[i] = target->GetHealth();
 
-                target->CastSpell(target, SPELL_ENFEEBLE, true, 0, 0, m_creature->GetGUID());
+                //target->CastSpell(target, SPELL_ENFEEBLE, true, 0, 0, m_creature->GetGUID());
+                target->AddAura(SPELL_ENFEEBLE, target);
                 target->SetHealth(1);
             }
         }
