@@ -657,6 +657,34 @@ struct npc_kaliri_egg_triggerAI : public ScriptedAI
     }
 };
 
+bool EffectDummyCreature_npc_kaliri_egg_trigger(Unit* caster, uint32 spellId, uint32 effIndex, Creature* target)
+{
+    sLog.outString("pom %u %s", spellId, target->GetName());
+    if (spellId == 39844){
+        GameObject* eggGO = NULL;
+        CellPair pair(Trinity::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
+        Cell cell(pair);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+
+        Trinity::NearestGameObjectEntryInObjectRangeCheck go_check(*target, 185549, 1);
+        Trinity::GameObjectLastSearcher<Trinity::NearestGameObjectEntryInObjectRangeCheck> searcher(eggGO, go_check);
+
+        TypeContainerVisitor<Trinity::GameObjectLastSearcher<Trinity::NearestGameObjectEntryInObjectRangeCheck>, GridTypeMapContainer> go_searcher(searcher);
+
+        cell.Visit(pair, go_searcher, *target->GetMap());
+
+        if(eggGO)
+            eggGO->SetGoState(0);
+
+        caster->DealDamage(target, target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+
+        return true;
+    }
+    
+    return false;
+}
+
 CreatureAI* GetAI_npc_kaliri_egg_trigger(Creature *_Creature)
 {
     return new npc_kaliri_egg_triggerAI (_Creature);
@@ -1260,6 +1288,7 @@ void AddSC_terokkar_forest()
     
     newscript = new Script;
     newscript->Name="npc_kaliri_egg_trigger";
+    newscript->pEffectDummyCreature = &EffectDummyCreature_npc_kaliri_egg_trigger;
     newscript->GetAI =  &GetAI_npc_kaliri_egg_trigger;
     newscript->RegisterSelf();
     
