@@ -659,7 +659,6 @@ struct npc_kaliri_egg_triggerAI : public ScriptedAI
 
 bool EffectDummyCreature_npc_kaliri_egg_trigger(Unit* caster, uint32 spellId, uint32 effIndex, Creature* target)
 {
-    sLog.outString("pom %u %s", spellId, target->GetName());
     if (spellId == 39844){
         GameObject* eggGO = NULL;
         CellPair pair(Trinity::ComputeCellPair(target->GetPositionX(), target->GetPositionY()));
