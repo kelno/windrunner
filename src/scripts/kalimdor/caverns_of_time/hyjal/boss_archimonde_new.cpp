@@ -644,7 +644,7 @@ public:
                 _under10Percent = true;
                 enableEvent(EV_UNDER_10_PERCENT);
                 enableEvent(EV_UNDER_10_PERCENT2);
-                doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE);
+                doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE, true);
             }
                 
             updateEvents(diff);
