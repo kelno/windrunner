@@ -14,79 +14,118 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Boss_Gehennas
-SD%Complete: 90
-SDComment: Adds MC NYI
-SDCategory: Molten Core
-EndScriptData */
-
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-#define SPELL_SHADOWBOLT            19728
-#define SPELL_RAINOFFIRE            19717
-#define SPELL_GEHENNASCURSE         19716
-
-struct boss_gehennasAI : public ScriptedAI
+enum
 {
-    boss_gehennasAI(Creature *c) : ScriptedAI(c) {}
+    SPELL_SHADOWBOLT = 19728,
+    SPELL_RAINOFFIRE = 19717,
+    SPELL_GEHENNASCURSE = 19716
+};
 
-    uint32 ShadowBolt_Timer;
-    uint32 RainOfFire_Timer;
-    uint32 GehennasCurse_Timer;
+class Boss_Gehennas : public CreatureScript
+{
+public:
 
-    void Reset()
+    Boss_Gehennas() : CreatureScript("boss_gehennas")
     {
-        ShadowBolt_Timer = 6000;
-        RainOfFire_Timer = 10000;
-        GehennasCurse_Timer = 12000;
     }
 
-    void Aggro(Unit *who) { }
-
-    void UpdateAI(const uint32 diff)
+    class Boss_GehennasAI : public CreatureAINew
     {
-        if (!UpdateVictim())
-            return;
+    public:
 
-        //ShadowBolt_Timer
-        if (ShadowBolt_Timer < diff)
+        enum event
         {
-            if( Unit* bTarget = SelectUnit(SELECT_TARGET_RANDOM,1) )
-                DoCast(bTarget,SPELL_SHADOWBOLT);
-            ShadowBolt_Timer = 7000;
-        }else ShadowBolt_Timer -= diff;
+            EV_SHADOWBOLT = 0,
+            EV_RAINOFFIRE,
+            EV_CURSE
+        };
 
-        //RainOfFire_Timer
-        if (RainOfFire_Timer < diff)
+        Boss_GehennasAI(Creature* creature) : CreatureAINew(creature)
         {
-            if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0) )
-                DoCast(target,SPELL_RAINOFFIRE);
+            _instance = ((ScriptedInstance*) creature->GetInstanceData());
+        }
 
-            RainOfFire_Timer = 4000 + rand()%8000;
-        }else RainOfFire_Timer -= diff;
-
-        //GehennasCurse_Timer
-        if (GehennasCurse_Timer < diff)
+        void onReset(bool onSpawn)
         {
-            DoCast(m_creature->getVictim(),SPELL_GEHENNASCURSE);
-            GehennasCurse_Timer = 22000 + rand()%8000;
-        }else GehennasCurse_Timer -= diff;
+            if (onSpawn) {
+                addEvent(EV_SHADOWBOLT, 6000, 6000);
+                addEvent(EV_RAINOFFIRE, 8000, 8000);
+                addEvent(EV_CURSE, 15000, 15000);
+            }
+            else {
+                scheduleEvent(EV_SHADOWBOLT, 6000, 6000);
+                scheduleEvent(EV_RAINOFFIRE, 8000, 8000);
+                scheduleEvent(EV_CURSE, 15000, 15000);
+            }
 
-        DoMeleeAttackIfReady();
+            if (_instance)
+                _instance->SetData(DATA_GEHENNAS, NOT_STARTED);
+
+            // Respawn the adds if needed
+            std::list<Creature*> adds;
+            me->GetCreatureListWithEntryInGrid(adds, 11661, 50.0f);
+            for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++) {
+                if ((*it)->isDead()) {
+                    (*it)->DisappearAndDie();
+                    (*it)->Respawn();
+                }
+            }
+        }
+
+        void onCombatStart(Unit* /*victim*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_GEHENNAS, IN_PROGRESS);
+        }
+
+        void onDeath(Unit* /*killer*/)
+        {
+            if (_instance)
+                _instance->SetData(DATA_GEHENNAS, DONE);
+        }
+
+        void update(uint32 const diff)
+        {
+            if (!updateVictim())
+                return;
+
+            updateEvents(diff);
+
+            while (executeEvent(diff, m_currEvent)) {
+                switch (m_currEvent) {
+                case EV_SHADOWBOLT:
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SHADOWBOLT);
+                    scheduleEvent(EV_SHADOWBOLT, 6000);
+                    break;
+                case EV_RAINOFFIRE:
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_RAINOFFIRE);
+                    scheduleEvent(EV_RAINOFFIRE, urand(5000, 6000));
+                    break;
+                case EV_CURSE:
+                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_GEHENNASCURSE);
+                    scheduleEvent(EV_CURSE, urand(28000, 32000));
+                    break;
+                }
+            }
+
+            doMeleeAttackIfReady();
+        }
+
+    private:
+        ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Boss_GehennasAI(creature);
     }
 };
-CreatureAI* GetAI_boss_gehennas(Creature *_Creature)
-{
-    return new boss_gehennasAI (_Creature);
-}
 
 void AddSC_boss_gehennas()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_gehennas";
-    newscript->GetAI = &GetAI_boss_gehennas;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Gehennas());
 }
 
