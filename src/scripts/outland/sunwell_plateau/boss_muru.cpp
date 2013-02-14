@@ -258,7 +258,11 @@ public:
                                 if ((*i).second > diff)
                                     guidPlayerCD[(*i).first] = (*i).second - diff;
                                 else
+                                {
                                     guidPlayerCD[(*i).first] = 0;
+                                    if (Player* plr = itr->getSource())
+                                        plr->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_EFFECT);
+                                }
                             }
                         }
 
@@ -925,7 +929,7 @@ public:
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
-                    if (plr && !plr->HasAura(45996))
+                    if (plr && !plr->HasAura(45996) && !plr->HasAura(SPELL_BLACK_HOLE_EFFECT))
                     {
                         SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
                         if (spellInfo)
