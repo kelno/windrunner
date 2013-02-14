@@ -260,7 +260,7 @@ public:
                                 else
                                 {
                                     guidPlayerCD[(*i).first] = 0;
-                                    if (Player* plr = itr->getSource())
+                                    if (Player *plr = objmgr.GetPlayer((*i).first))
                                         plr->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_EFFECT);
                                 }
                             }
