@@ -54,6 +54,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
     uint64 Alythess;
     uint64 Sacrolash;
     uint64 Muru;
+    uint64 BlackHole;
     uint64 Entropius;
     uint64 KilJaeden;
     uint64 KilJaedenController;
@@ -99,6 +100,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         Alythess                = 0;
         Sacrolash               = 0;
         Muru                    = 0;
+        BlackHole               = 0;
         Entropius               = 0;
         KilJaeden               = 0;
         KilJaedenController     = 0;
@@ -197,6 +199,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25166: Alythess            = pCreature->GetGUID(); break;
             case 25165: Sacrolash           = pCreature->GetGUID(); break;
             case 25741: Muru                = pCreature->GetGUID(); break;
+            case 25855: BlackHole           = pCreature->GetGUID(); break;
             case 25840: Entropius           = pCreature->GetGUID(); break;
             case 25315: KilJaeden           = pCreature->GetGUID(); break;
             case 25608: KilJaedenController = pCreature->GetGUID(); break;
@@ -306,6 +309,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case DATA_ALYTHESS:             return Alythess;
             case DATA_SACROLASH:            return Sacrolash;
             case DATA_MURU:                 return Muru;
+            case DATA_BLACK_HOLE:           return BlackHole;
             case DATA_ENTROPIUS:            return Entropius;
             case DATA_KILJAEDEN:            return KilJaeden;
             case DATA_KILJAEDEN_CONTROLLER: return KilJaedenController;
