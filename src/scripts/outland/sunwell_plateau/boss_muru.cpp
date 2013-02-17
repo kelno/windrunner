@@ -170,6 +170,20 @@ public:
             guidPlayerCD.clear();
         }
 
+        bool getMessage(uint32 id, uint64 data)
+        {
+            uint32 time = 0;
+            switch (id)
+            {
+                case 1:
+                    time = guidPlayerCD[data];
+                    if (time > 0)
+                        return true;
+                    break;
+            }
+            return false;
+        }
+
         void update(const uint32 diff)
         {
             if (DespawnTimer <= diff)
@@ -929,23 +943,32 @@ public:
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
-                    if (plr && !plr->HasAura(45996) && !plr->HasAura(SPELL_BLACK_HOLE_EFFECT))
+                    if (plr && !plr->HasAura(45996))
                     {
-                        SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
-                        if (spellInfo)
-                        {
-                            for (uint8 i = 0; i < 3 ; ++i)
-                            {
-                                uint8 eff = spellInfo->Effect[i];
-                                if (eff>=TOTAL_SPELL_EFFECTS)
-                                    continue;
+                        bool isBumping = false;
+                        if (Creature* blackHole = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                            if (blackHole->getAI())
+                                if (blackHole->getAI()->getMessage(1, plr->GetGUID()))
+                                    isBumping = true;
 
-                                if (IsAreaAuraEffect(eff)
-                                    || eff == SPELL_EFFECT_APPLY_AURA
-                                    || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                        if (!isBumping)
+                        {
+                            SpellEntry const *spellInfo = spellmgr.LookupSpell(45996);
+                            if (spellInfo)
+                            {
+                                for (uint8 i = 0; i < 3 ; ++i)
                                 {
-                                    Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
-                                    plr->AddAura(Aur);
+                                    uint8 eff = spellInfo->Effect[i];
+                                    if (eff>=TOTAL_SPELL_EFFECTS)
+                                        continue;
+
+                                    if (IsAreaAuraEffect(eff)
+                                        || eff == SPELL_EFFECT_APPLY_AURA
+                                        || eff == SPELL_EFFECT_PERSISTENT_AREA_AURA)
+                                    {
+                                        Aura* Aur = CreateAura(spellInfo, i, NULL, plr);
+                                        plr->AddAura(Aur);
+                                    }
                                 }
                             }
                         }
@@ -1084,7 +1107,7 @@ class npc_void_sentinel : public CreatureScript
 
         void onDeath(Unit* killer)
         {
-            for (uint8 i = 0; i < 8; ++i)
+            for (uint8 i = 0; i < 6; ++i)
             {
                 me->CastSpell(me->GetPositionX() + ((2 * rand()%1000) / 1000.0f), me->GetPositionY() + ((2 * rand()%1000) / 1000.0f), me->GetPositionZ(), SPELL_SUMMON_VOID_SPAWN, false);
             }
