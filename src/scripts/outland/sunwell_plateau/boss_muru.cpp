@@ -946,7 +946,7 @@ public:
                     if (plr && !plr->HasAura(45996))
                     {
                         bool isBumping = false;
-                        if (Creature* blackHole = pInstance->instance->GetCreature(pInstance->GetData64(DATA_ENTROPIUS)))
+                        if (Creature* blackHole = pInstance->instance->GetCreature(pInstance->GetData64(DATA_BLACK_HOLE)))
                             if (blackHole->getAI())
                                 if (blackHole->getAI()->getMessage(1, plr->GetGUID()))
                                     isBumping = true;
