@@ -1407,7 +1407,6 @@ public:
                     resetEvent(EVENT_STUN, 2000);
 
                 me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
-                me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_LANGUAGE, true);
                 me->addUnitState(UNIT_STAT_STUNNED);
             }
 
