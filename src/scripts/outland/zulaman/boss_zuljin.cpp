@@ -413,7 +413,7 @@ public:
     }
 };
 
-void AddSC_boss_zuljin_new()
+void AddSC_boss_zuljin()
 {
     sScriptMgr.addScript(new Boss_zuljin());
 }
