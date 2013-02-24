@@ -749,7 +749,7 @@ bool GossipHello_npc_rogue_trainer(Player *player, Creature *_Creature)
     if( _Creature->isTrainer() )
         player->ADD_GOSSIP_ITEM(2, GOSSIP_TEXT_TRAIN, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_TRAIN);
 
-    if( _Creature->isCanTrainingAndResetTalentsOf(player) )
+    if( _Creature->canResetTalentsOf(player) )
         player->ADD_GOSSIP_ITEM(2, "I wish to unlearn my talents", GOSSIP_SENDER_MAIN, GOSSIP_OPTION_UNLEARNTALENTS);
 
     if( player->getClass() == CLASS_ROGUE && player->getLevel() >= 24 && !player->HasItemCount(17126,1) && !player->GetQuestRewardStatus(6681) )
