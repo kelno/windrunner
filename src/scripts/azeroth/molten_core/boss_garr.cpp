@@ -29,6 +29,7 @@ enum
     // Garr spells
     SPELL_ANTIMAGICPULSE     = 19492,
     SPELL_MAGMASHACKLES      = 19496,
+    SPELL_FRENZY             = 19516,
 
     //Add spells
     SPELL_ERUPTION           = 19497,
@@ -163,6 +164,12 @@ class Mob_FiresWorn : public CreatureScript
                     scheduleEvent(EV_ERUPTION, 200);
                     scheduleEvent(EV_IMMOLATE, 4000);
                 }
+            }
+
+            void onDeath(Unit* /*killer*/)
+            {
+                if (Creature* garr = _instance->instance->GetCreature(_instance->GetData64(DATA_GARR)))
+                    garr->CastSpell(garr, SPELL_FRENZY, false);
             }
         
             void update(uint32 const diff)
