@@ -22,122 +22,193 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-// Garr spells
-#define SPELL_ANTIMAGICPULSE        19492
-#define SPELL_MAGMASHACKLES         19496
-#define SPELL_ENRAGE                19516                   //Stacking enrage (stacks to 10 times)
-
-//Add spells
-#define SPELL_ERUPTION              19497
-#define SPELL_IMMOLATE              20294
-
-struct boss_garrAI : public ScriptedAI
+enum
 {
-    boss_garrAI(Creature *c) : ScriptedAI(c) {}
+    // Garr spells
+    SPELL_ANTIMAGICPULSE     = 19492,
+    SPELL_MAGMASHACKLES      = 19496,
 
-    uint32 AntiMagicPulse_Timer;
-    uint32 MagmaShackles_Timer;
-    uint32 CheckAdds_Timer;
-    uint64 Add[8];
-    bool Enraged[8];
+    //Add spells
+    SPELL_ERUPTION           = 19497,
+    SPELL_IMMOLATE           = 20294,
 
-    void Reset()
+    NPC_FIRE_WORN            = 12099
+};
+
+class Boss_Garr : public CreatureScript
+{
+    public:
+        Boss_Garr() : CreatureScript("Boss_Garr") {}
+    
+    class Boss_GarrAI : public CreatureAINew
     {
-        AntiMagicPulse_Timer = 25000;                       //These times are probably wrong
-        MagmaShackles_Timer = 15000;
-        CheckAdds_Timer = 2000;
-    }
+        public:
+            enum event
+            {
+                EV_ANTIMAGICPULSE   = 0,
+                EV_MAGMASHACKLES    = 1
+            };
 
-    void Aggro(Unit *who)
+            Boss_GarrAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_ANTIMAGICPULSE, 25000, 25000);
+                    addEvent(EV_MAGMASHACKLES, 15000, 15000);
+                }
+                else
+                {
+                    scheduleEvent(EV_ANTIMAGICPULSE, 25000, 25000);
+                    scheduleEvent(EV_MAGMASHACKLES, 15000, 15000);
+                }
+            
+                if (_instance)
+                    _instance->SetData(DATA_GARR, NOT_STARTED);
+            
+                // Respawn the adds if needed
+                std::list<Creature*> adds;
+                me->GetCreatureListWithEntryInGrid(adds, NPC_FIRE_WORN, 100.0f);
+                for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++)
+                {
+                    if ((*it)->isDead())
+                    {
+                        (*it)->DisappearAndDie();
+                        (*it)->Respawn();
+                    }
+                }
+            }
+
+            void onCombatStart(Unit* /*victim*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_GARR, IN_PROGRESS);
+            }
+        
+            void onDeath(Unit* /*killer*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_GARR, DONE);
+            }
+        
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+            
+                updateEvents(diff);
+            
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_ANTIMAGICPULSE:
+                            doCast(me, SPELL_ANTIMAGICPULSE);
+                            scheduleEvent(EV_ANTIMAGICPULSE, urand(10000, 15000));
+                            break;
+                        case EV_MAGMASHACKLES:
+                            doCast(me, SPELL_MAGMASHACKLES);
+                            scheduleEvent(EV_MAGMASHACKLES, urand(8000, 12000));
+                            break;
+                    }
+                }
+            
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
     {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //AntiMagicPulse_Timer
-        if (AntiMagicPulse_Timer < diff)
-        {
-            DoCast(m_creature,SPELL_ANTIMAGICPULSE);
-            AntiMagicPulse_Timer = 10000 + rand()%5000;
-        }else AntiMagicPulse_Timer -= diff;
-
-        //MagmaShackles_Timer
-        if (MagmaShackles_Timer < diff)
-        {
-            DoCast(m_creature,SPELL_MAGMASHACKLES);
-            MagmaShackles_Timer = 8000 + rand()%4000;
-        }else MagmaShackles_Timer -= diff;
-
-        DoMeleeAttackIfReady();
+        return new Boss_GarrAI(creature);
     }
 };
 
-struct mob_fireswornAI : public ScriptedAI
+class Mob_FiresWorn : public CreatureScript
 {
-    mob_fireswornAI(Creature *c) : ScriptedAI(c) {}
-
-    uint32 Immolate_Timer;
-
-    void Reset()
+    public:
+        Mob_FiresWorn() : CreatureScript("Mob_FiresWorn") {}
+    
+    class Mob_FiresWornAI : public CreatureAINew
     {
-        Immolate_Timer = 4000;                              //These times are probably wrong
-    }
+        public:
+            enum event
+            {
+                EV_ERUPTION         = 0,
+                EV_IMMOLATE         = 1
+            };
 
-    void Aggro(Unit *who)
+            Mob_FiresWornAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_ERUPTION, 200, 200, EVENT_FLAG_NONE, false);
+                    addEvent(EV_IMMOLATE, 4000, 4000);
+                }
+                else
+                {
+                    scheduleEvent(EV_ERUPTION, 200);
+                    scheduleEvent(EV_IMMOLATE, 4000);
+                }
+            }
+        
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+            
+                updateEvents(diff);
+            
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_ERUPTION:
+                            doCast(me->getVictim(), SPELL_ERUPTION);
+                            disableEvent(EV_ERUPTION);
+                            me->DisappearAndDie();
+                            break;
+                        case EV_IMMOLATE:
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_IMMOLATE);
+                            scheduleEvent(EV_IMMOLATE, urand(5000, 10000));
+                            break;
+                    }
+                }
+
+                if (me->GetHealth() <= me->GetMaxHealth() * 0.10)
+                {
+                    enableEvent(EV_ERUPTION);
+                }
+
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
     {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //Immolate_Timer
-        if (Immolate_Timer < diff)
-        {
-             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(target,SPELL_IMMOLATE);
-
-            Immolate_Timer = 5000 + rand()%5000;
-        }else Immolate_Timer -= diff;
-
-        //Cast Erruption and let them die
-        if (m_creature->GetHealth() <= m_creature->GetMaxHealth() * 0.10)
-        {
-            DoCast(m_creature->getVictim(),SPELL_ERUPTION);
-            m_creature->setDeathState(JUST_DIED);
-            m_creature->RemoveCorpse();
-        }
-
-        DoMeleeAttackIfReady();
+        return new Mob_FiresWornAI(creature);
     }
 };
-CreatureAI* GetAI_boss_garr(Creature *_Creature)
-{
-    return new boss_garrAI (_Creature);
-}
-
-CreatureAI* GetAI_mob_firesworn(Creature *_Creature)
-{
-    return new mob_fireswornAI (_Creature);
-}
 
 void AddSC_boss_garr()
 {
-    Script *newscript;
-
-    newscript = new Script;
-    newscript->Name="boss_garr";
-    newscript->GetAI = &GetAI_boss_garr;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name="mob_firesworn";
-    newscript->GetAI = &GetAI_mob_firesworn;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Garr());
+    sScriptMgr.addScript(new Mob_FiresWorn());
 }
 
