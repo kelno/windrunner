@@ -24,176 +24,222 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_molten_core.h"
 
-#define EMOTE_AEGIS                     -1409002
-
-#define SPELL_MAGMASPLASH               13879
-#define SPELL_PYROBLAST                 20228
-#define SPELL_EARTHQUAKE                19798
-#define SPELL_ENRAGE                    19953
-#define SPELL_BUFF                      20553
-
-//-- CoreRager Spells --
-#define SPELL_MANGLE                    19820
-#define SPELL_AEGIS                     20620               //This is self casted whenever we are below 50%
-
-struct boss_golemaggAI : public ScriptedAI
+enum
 {
-    boss_golemaggAI(Creature *c) : ScriptedAI(c)
+    EMOTE_AEGIS           = -1409002,
+
+    SPELL_MAGMASPLASH     = 13879,
+    SPELL_PYROBLAST       = 20228,
+    SPELL_EARTHQUAKE      = 19798,
+    SPELL_ENRAGE          = 19953,
+    SPELL_BUFF            = 20553,
+
+    //-- CoreRager Spells --
+    SPELL_MANGLE          = 19820,
+    SPELL_AEGIS           = 20620,               //This is self casted whenever we are below 50%
+
+    NPC_CORE_RAGER        = 11672
+};
+
+class Boss_Golemagg : public CreatureScript
+{
+    public:
+        Boss_Golemagg() : CreatureScript("Boss_Golemagg") {}
+
+    class Boss_GolemaggAI : public CreatureAINew
     {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-    }
-    ScriptedInstance *pInstance;
-
-    uint32 Pyroblast_Timer;
-    uint32 EarthQuake_Timer;
-    uint32 Enrage_Timer;
-    uint32 Buff_Timer;
-
-    void Reset()
-    {
-        Pyroblast_Timer = 7000;                             //These times are probably wrong
-        EarthQuake_Timer = 3000;
-        Buff_Timer = 2500;
-        Enrage_Timer = 0;
-
-        m_creature->CastSpell(m_creature,SPELL_MAGMASPLASH,true);
-    }
-
-    void Aggro(Unit *who)
-    {
-    }
-
-    void JustDied(Unit* Killer)
-    {
-        if(pInstance)
-            pInstance->SetData(DATA_GOLEMAGG_DEATH, 0);
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //Pyroblast_Timer
-        if (Pyroblast_Timer < diff)
-        {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(target,SPELL_PYROBLAST);
-
-            Pyroblast_Timer = 7000;
-        }else Pyroblast_Timer -= diff;
-
-        //Enrage_Timer
-        if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 11 )
-        {
-            if (Enrage_Timer < diff)
+        public:
+            enum event
             {
-                DoCast(m_creature,SPELL_ENRAGE);
-                Enrage_Timer = 62000;
-            }else Enrage_Timer -= diff;
-        }
+                EV_PYROBLAST     = 0,
+                EV_EARTHQUAKE    = 1,
+                EV_ENRAGE        = 2,
+                EV_BUFF          = 3
+            };
 
-        //EarthQuake_Timer
-        if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 11 )
-        {
-            if (EarthQuake_Timer < diff)
+            Boss_GolemaggAI(Creature* creature) : CreatureAINew(creature)
             {
-                DoCast(m_creature->getVictim(),SPELL_EARTHQUAKE);
-                EarthQuake_Timer = 3000;
-            }else EarthQuake_Timer -= diff;
-        }
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
 
-        //Casting Buff for Coreragers. Spell is not working right. Players get the buff...
-        //        if(Buff_Timer < diff)
-        //        {
-        //            DoCast(m_creature, SPELL_BUFF);
-        //            Buff_Timer = 2500;
-        //        }else Buff_Timer -= diff;
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_PYROBLAST, 4000, 4000);
+                    addEvent(EV_EARTHQUAKE, 3000, 3000);
+                    addEvent(EV_ENRAGE, 200, 200);
+                    addEvent(EV_BUFF, 2500, 2500);
+                }
+                else
+                {
+                    scheduleEvent(EV_PYROBLAST, 4000, 4000);
+                    scheduleEvent(EV_EARTHQUAKE, 3000, 3000);
+                    scheduleEvent(EV_ENRAGE, 200, 200);
+                    scheduleEvent(EV_BUFF, 2500, 2500);
+                }
+            
+                if (_instance)
+                    _instance->SetData(DATA_GOLEMAGG, NOT_STARTED);
 
-        DoMeleeAttackIfReady();
+                // Respawn the adds if needed
+                std::list<Creature*> adds;
+                me->GetCreatureListWithEntryInGrid(adds, NPC_CORE_RAGER, 100.0f);
+                for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++)
+                {
+                    if ((*it)->isDead())
+                    {
+                        (*it)->DisappearAndDie();
+                        (*it)->Respawn();
+                    }
+                }
+
+                doCast(me, SPELL_MAGMASPLASH, true);
+            }
+
+            void onCombatStart(Unit* /*victim*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_GOLEMAGG, IN_PROGRESS);
+            }
+        
+            void onDeath(Unit* /*killer*/)
+            {
+                std::list<Creature*> adds;
+                me->GetCreatureListWithEntryInGrid(adds, NPC_CORE_RAGER, 100.0f);
+                for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++)
+                {
+                    if ((*it)->isAlive())
+                        (*it)->DisappearAndDie();
+                }
+
+                if (_instance)
+                    _instance->SetData(DATA_GOLEMAGG, DONE);
+            }
+        
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+
+                updateEvents(diff);
+
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_PYROBLAST:
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_PYROBLAST);
+                            scheduleEvent(EV_PYROBLAST, urand(4000, 5000));
+                            break;
+                        case EV_EARTHQUAKE:
+                            doCast(me->getVictim(), SPELL_EARTHQUAKE);
+                            scheduleEvent(EV_EARTHQUAKE, urand(3000, 4000));
+                            break;
+                        case EV_ENRAGE:
+                            if (me->GetHealth()*100 / me->GetMaxHealth() < 10.0f)
+                                doCast(me, SPELL_ENRAGE);
+
+                            scheduleEvent(EV_ENRAGE, 62000);
+                            break;
+                        case EV_BUFF:
+                            doCast(me, SPELL_BUFF);
+                            scheduleEvent(EV_BUFF, urand(2500, 3000));
+                            break;
+                    }
+                }
+
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Boss_GolemaggAI(creature);
     }
 };
 
-struct mob_core_ragerAI : public ScriptedAI
+class Mob_Core_Rager : public CreatureScript
 {
-    mob_core_ragerAI(Creature *c) : ScriptedAI(c)
+    public:
+        Mob_Core_Rager() : CreatureScript("Mob_Core_Rager") {}
+
+    class Mob_Core_RagerAI : public CreatureAINew
     {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-    }
-
-    uint32 Mangle_Timer;
-    uint32 Check_Timer;
-    ScriptedInstance *pInstance;
-
-    void Reset()
-    {
-        Mangle_Timer = 7000;                                //These times are probably wrong
-        Check_Timer = 1000;
-    }
-
-    void Aggro(Unit *who)
-    {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //Mangle_Timer
-        if (Mangle_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_MANGLE);
-            Mangle_Timer = 10000;
-        }else Mangle_Timer -= diff;
-
-        //Cast AEGIS
-        if ( m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 50 )
-        {
-            DoCast(m_creature,SPELL_AEGIS);
-            DoScriptText(EMOTE_AEGIS, m_creature);
-        }
-
-        //Check_Timer
-        if(Check_Timer < diff)
-        {
-            if(pInstance)
+        public:
+            enum event
             {
-                Unit *pGolemagg = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_GOLEMAGG));
-                if(!pGolemagg || !pGolemagg->isAlive())
+                EV_MANGLE     = 0,
+                EV_AEGIS      = 1
+            };
+
+            Mob_Core_RagerAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
                 {
-                    m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, true);
+                    addEvent(EV_MANGLE, 7000, 7000);
+                    addEvent(EV_AEGIS, 200, 200, EVENT_FLAG_NONE, false);
+                }
+                else
+                {
+                    scheduleEvent(EV_MANGLE, 7000, 7000);
+                    scheduleEvent(EV_AEGIS, 200, 200);
                 }
             }
 
-            Check_Timer = 1000;
-        }else Check_Timer -= diff;
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
 
-        DoMeleeAttackIfReady();
+                updateEvents(diff);
+
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_MANGLE:
+                            doCast(me->getVictim(), SPELL_MANGLE);
+                            scheduleEvent(EV_MANGLE, urand(10000, 11000));
+                            break;
+                        case EV_AEGIS:
+                            doCast(me, SPELL_AEGIS);
+                            DoScriptText(EMOTE_AEGIS, me);
+                            disableEvent(EV_AEGIS);
+                            break;
+                    }
+                }
+
+                if (me->GetHealth()*100 / me->GetMaxHealth() < 50.0f)
+                {
+                    scheduleEvent(EV_AEGIS, 200);
+                    enableEvent(EV_AEGIS);
+                }
+
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Mob_Core_RagerAI(creature);
     }
 };
-CreatureAI* GetAI_boss_golemagg(Creature *_Creature)
-{
-    return new boss_golemaggAI (_Creature);
-}
-
-CreatureAI* GetAI_mob_core_rager(Creature *_Creature)
-{
-    return new mob_core_ragerAI (_Creature);
-}
 
 void AddSC_boss_golemagg()
 {
-    Script *newscript;
-
-    newscript = new Script;
-    newscript->Name="boss_golemagg";
-    newscript->GetAI = &GetAI_boss_golemagg;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name="mob_core_rager";
-    newscript->GetAI = &GetAI_mob_core_rager;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Golemagg());
+    sScriptMgr.addScript(new Mob_Core_Rager());
 }
 
