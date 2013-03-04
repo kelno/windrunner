@@ -59,19 +59,19 @@ class Boss_Shazzrah : public CreatureScript
             {
                 if (onSpawn)
                 {
-                    addEvent(EV_ARCANEEXPLOSION, 6000, 6000);
-                    addEvent(EV_SHAZZRAHCURSE, 10000, 10000);
+                    addEvent(EV_ARCANEEXPLOSION, 5000, 5000);
+                    addEvent(EV_SHAZZRAHCURSE, 20000, 25000);
                     addEvent(EV_DEADENMAGIC, 24000, 24000);
                     addEvent(EV_COUNTERSPELL, 15000, 15000);
-                    addEvent(EV_GATE_SHAZZRAH, 30000, 30000);
+                    addEvent(EV_GATE_SHAZZRAH, 45000, 45000);
                 }
                 else
                 {
-                    scheduleEvent(EV_ARCANEEXPLOSION, 6000, 6000);
-                    scheduleEvent(EV_SHAZZRAHCURSE, 10000, 10000);
+                    scheduleEvent(EV_ARCANEEXPLOSION, 5000, 5000);
+                    scheduleEvent(EV_SHAZZRAHCURSE, 20000, 25000);
                     scheduleEvent(EV_DEADENMAGIC, 24000, 24000);
                     scheduleEvent(EV_COUNTERSPELL, 15000, 15000);
-                    scheduleEvent(EV_GATE_SHAZZRAH, 30000, 30000);
+                    scheduleEvent(EV_GATE_SHAZZRAH, 45000, 45000);
                 }
             
                 if (_instance)
@@ -103,11 +103,11 @@ class Boss_Shazzrah : public CreatureScript
                     {
                         case EV_ARCANEEXPLOSION:
                             doCast(me->getVictim(), SPELL_ARCANEEXPLOSION);
-                            scheduleEvent(EV_ARCANEEXPLOSION, urand(5000, 9000));
+                            scheduleEvent(EV_ARCANEEXPLOSION, urand(5000, 6000));
                             break;
                         case EV_SHAZZRAHCURSE:
                             doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_SHAZZRAHCURSE);
-                            scheduleEvent(EV_SHAZZRAHCURSE, urand(25000, 30000));
+                            scheduleEvent(EV_SHAZZRAHCURSE, urand(20000, 25000));
                             break;
                         case EV_DEADENMAGIC:
                             doCast(me, SPELL_DEADENMAGIC);
