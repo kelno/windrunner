@@ -22,103 +22,123 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-#define SPELL_ARCANEEXPLOSION           19712
-#define SPELL_SHAZZRAHCURSE             19713
-#define SPELL_DEADENMAGIC               19714
-#define SPELL_COUNTERSPELL              19715
-
-struct boss_shazzrahAI : public ScriptedAI
+enum
 {
-    boss_shazzrahAI(Creature *c) : ScriptedAI(c) {}
+    SPELL_ARCANEEXPLOSION   = 19712,
+    SPELL_SHAZZRAHCURSE     = 19713,
+    SPELL_DEADENMAGIC       = 19714,
+    SPELL_COUNTERSPELL      = 19715,
+    SPELL_GATE_SHAZZRAH     = 23138
+};
 
-    uint32 ArcaneExplosion_Timer;
-    uint32 ShazzrahCurse_Timer;
-    uint32 DeadenMagic_Timer;
-    uint32 Countspell_Timer;
-    uint32 Blink_Timer;
-
-    void Reset()
+class Boss_Shazzrah : public CreatureScript
+{
+    public:
+        Boss_Shazzrah() : CreatureScript("Boss_Shazzrah") {}
+    
+    class Boss_ShazzrahAI : public CreatureAINew
     {
-        ArcaneExplosion_Timer = 6000;                       //These times are probably wrong
-        ShazzrahCurse_Timer = 10000;
-        DeadenMagic_Timer = 24000;
-        Countspell_Timer = 15000;
-        Blink_Timer = 30000;
-    }
-
-    void Aggro(Unit *who)
-    {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //ArcaneExplosion_Timer
-        if (ArcaneExplosion_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_ARCANEEXPLOSION);
-            ArcaneExplosion_Timer = 5000 + rand()%4000;
-        }else ArcaneExplosion_Timer -= diff;
-
-        //ShazzrahCurse_Timer
-        if (ShazzrahCurse_Timer < diff)
-        {
-            Unit* target = NULL;
-            target = SelectUnit(SELECT_TARGET_RANDOM,0);
-            if (target) DoCast(target,SPELL_SHAZZRAHCURSE);
-
-            ShazzrahCurse_Timer = 25000 + rand()%5000;
-        }else ShazzrahCurse_Timer -= diff;
-
-        //DeadenMagic_Timer
-        if (DeadenMagic_Timer < diff)
-        {
-            DoCast(m_creature,SPELL_DEADENMAGIC);
-            DeadenMagic_Timer = 35000;
-        }else DeadenMagic_Timer -= diff;
-
-        //Countspell_Timer
-        if (Countspell_Timer < diff)
-        {
-            DoCast(m_creature->getVictim(),SPELL_COUNTERSPELL);
-            Countspell_Timer = 16000 + rand()%4000;
-        }else Countspell_Timer -= diff;
-
-        //Blink_Timer
-        if (Blink_Timer < diff)
-        {
-            // Teleporting him to a random gamer and casting Arcane Explosion after that.
-            // Blink is not working cause of LoS System we need to do this hardcoded.
-            Unit* target = NULL;
-            target = SelectUnit(SELECT_TARGET_RANDOM,0);
-
-            if(target)
+        public:
+            enum event
             {
-            DoTeleportTo(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
-            DoCast(target,SPELL_ARCANEEXPLOSION);
-            DoResetThreat();
+                EV_ARCANEEXPLOSION   = 0,
+                EV_SHAZZRAHCURSE     = 1,
+                EV_DEADENMAGIC       = 2,
+                EV_COUNTERSPELL      = 3,
+                EV_GATE_SHAZZRAH     = 4
+            };
+
+            Boss_ShazzrahAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
-            Blink_Timer = 45000;
-        }else Blink_Timer -= diff;
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_ARCANEEXPLOSION, 6000, 6000);
+                    addEvent(EV_SHAZZRAHCURSE, 10000, 10000);
+                    addEvent(EV_DEADENMAGIC, 24000, 24000);
+                    addEvent(EV_COUNTERSPELL, 15000, 15000);
+                    addEvent(EV_GATE_SHAZZRAH, 30000, 30000);
+                }
+                else
+                {
+                    scheduleEvent(EV_ARCANEEXPLOSION, 6000, 6000);
+                    scheduleEvent(EV_SHAZZRAHCURSE, 10000, 10000);
+                    scheduleEvent(EV_DEADENMAGIC, 24000, 24000);
+                    scheduleEvent(EV_COUNTERSPELL, 15000, 15000);
+                    scheduleEvent(EV_GATE_SHAZZRAH, 30000, 30000);
+                }
+            
+                if (_instance)
+                    _instance->SetData(DATA_SHAZZRAH, NOT_STARTED);
+            }
 
-        DoMeleeAttackIfReady();
+            void onCombatStart(Unit* /*victim*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_SHAZZRAH, IN_PROGRESS);
+            }
+        
+            void onDeath(Unit* /*killer*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_SHAZZRAH, DONE);
+            }
+        
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+
+                updateEvents(diff);
+
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_ARCANEEXPLOSION:
+                            doCast(me->getVictim(), SPELL_ARCANEEXPLOSION);
+                            scheduleEvent(EV_ARCANEEXPLOSION, urand(5000, 9000));
+                            break;
+                        case EV_SHAZZRAHCURSE:
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_SHAZZRAHCURSE);
+                            scheduleEvent(EV_SHAZZRAHCURSE, urand(25000, 30000));
+                            break;
+                        case EV_DEADENMAGIC:
+                            doCast(me, SPELL_DEADENMAGIC);
+                            scheduleEvent(EV_DEADENMAGIC, 35000);
+                            break;
+                        case EV_COUNTERSPELL:
+                            doCast(me, SPELL_COUNTERSPELL);
+                            scheduleEvent(EV_COUNTERSPELL, urand(16000, 20000));
+                            break;
+                        case EV_GATE_SHAZZRAH:
+                            doCast(me, SPELL_GATE_SHAZZRAH);
+                            scheduleEvent(EV_GATE_SHAZZRAH, 45000);
+                            break;
+                    }
+                }
+            
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Boss_ShazzrahAI(creature);
     }
 };
-CreatureAI* GetAI_boss_shazzrah(Creature *_Creature)
-{
-    return new boss_shazzrahAI (_Creature);
-}
 
 void AddSC_boss_shazzrah()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_shazzrah";
-    newscript->GetAI = &GetAI_boss_shazzrah;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Shazzrah());
 }
 
