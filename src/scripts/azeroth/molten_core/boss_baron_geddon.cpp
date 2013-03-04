@@ -22,86 +22,124 @@ SDCategory: Molten Core
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_molten_core.h"
 
-#define EMOTE_SERVICE               -1409000
-
-#define SPELL_INFERNO               19695
-#define SPELL_IGNITEMANA            19659
-#define SPELL_LIVINGBOMB            20475
-#define SPELL_ARMAGEDDOM            20479
-
-struct boss_baron_geddonAI : public ScriptedAI
+enum
 {
-    boss_baron_geddonAI(Creature *c) : ScriptedAI(c) {}
+    EMOTE_SERVICE         = -1409000,
 
-    uint32 Inferno_Timer;
-    uint32 IgniteMana_Timer;
-    uint32 LivingBomb_Timer;
+    SPELL_INFERNO         = 19695,
+    SPELL_IGNITEMANA      = 19659,
+    SPELL_LIVINGBOMB      = 20475,
+    SPELL_ARMAGEDDOM      = 20479
+};
 
-    void Reset()
+class Boss_Baron_Geddon : public CreatureScript
+{
+    public:
+        Boss_Baron_Geddon() : CreatureScript("Boss_Baron_Geddon") {}
+    
+    class Boss_Baron_GeddonAI : public CreatureAINew
     {
-        Inferno_Timer = 45000;                              //These times are probably wrong
-        IgniteMana_Timer = 30000;
-        LivingBomb_Timer = 35000;
-    }
+        public:
+            enum event
+            {
+                EV_INFERNO        = 0,
+                EV_IGNITEMANA     = 1,
+                EV_LIVINGBOMB     = 2,
+                EV_ARMAGEDDOM     = 3
+            };
 
-    void Aggro(Unit *who)
+            Boss_Baron_GeddonAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_INFERNO, 15000, 15000);
+                    addEvent(EV_IGNITEMANA, 5000, 5000);
+                    addEvent(EV_LIVINGBOMB, 30000, 30000);
+                    addEvent(EV_ARMAGEDDOM, 200, 200, EVENT_FLAG_NONE, false);
+                }
+                else
+                {
+                    scheduleEvent(EV_INFERNO, 15000, 15000);
+                    scheduleEvent(EV_IGNITEMANA, 5000, 5000);
+                    scheduleEvent(EV_LIVINGBOMB, 30000, 30000);
+                    scheduleEvent(EV_ARMAGEDDOM, 200, 200);
+                }
+
+                if (_instance)
+                    _instance->SetData(DATA_GEDDON, NOT_STARTED);
+            }
+
+            void onCombatStart(Unit* /*victim*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_GEDDON, IN_PROGRESS);
+            }
+        
+            void onDeath(Unit* /*killer*/)
+            {
+                if (_instance)
+                    _instance->SetData(DATA_GEDDON, DONE);
+            }
+        
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+
+                updateEvents(diff);
+
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_INFERNO:
+                            doCast(me, SPELL_INFERNO);
+                            scheduleEvent(EV_INFERNO, urand(15000, 16000));
+                            break;
+                        case EV_IGNITEMANA:
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_IGNITEMANA);
+                            scheduleEvent(EV_IGNITEMANA, urand(5000, 6000));
+                            break;
+                        case EV_LIVINGBOMB:
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_LIVINGBOMB);
+                            scheduleEvent(EV_LIVINGBOMB, 30000);
+                            break;
+                        case EV_ARMAGEDDOM:
+                            me->InterruptNonMeleeSpells(true);
+                            doCast(me, SPELL_ARMAGEDDOM);
+                            DoScriptText(EMOTE_SERVICE, me);
+                            disableEvent(EV_ARMAGEDDOM);
+                            break;
+                    }
+                }
+
+                if (me->GetHealth()*100 / me->GetMaxHealth() <= 2.5f)
+                {
+                    enableEvent(EV_ARMAGEDDOM);
+                }
+
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
     {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (!UpdateVictim())
-            return;
-
-        //If we are <2% hp cast Armageddom
-        if (m_creature->GetHealth()*100 / m_creature->GetMaxHealth() <= 2)
-        {
-            m_creature->InterruptNonMeleeSpells(true);
-            DoCast(m_creature,SPELL_ARMAGEDDOM);
-            DoScriptText(EMOTE_SERVICE, m_creature);
-            return;
-        }
-
-        //Inferno_Timer
-        if (Inferno_Timer < diff)
-        {
-            DoCast(m_creature,SPELL_INFERNO);
-            Inferno_Timer = 45000;
-        }else Inferno_Timer -= diff;
-
-        //IgniteMana_Timer
-        if (IgniteMana_Timer < diff)
-        {
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-                DoCast(target,SPELL_IGNITEMANA);
-
-            IgniteMana_Timer = 30000;
-        }else IgniteMana_Timer -= diff;
-
-        //LivingBomb_Timer
-        if (LivingBomb_Timer < diff)
-        {
-           if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
-               DoCast(target,SPELL_LIVINGBOMB);
-
-            LivingBomb_Timer = 35000;
-        }else LivingBomb_Timer -= diff;
-
-        DoMeleeAttackIfReady();
+        return new Boss_Baron_GeddonAI(creature);
     }
 };
-CreatureAI* GetAI_boss_baron_geddon(Creature *_Creature)
-{
-    return new boss_baron_geddonAI (_Creature);
-}
 
 void AddSC_boss_baron_geddon()
 {
-    Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_baron_geddon";
-    newscript->GetAI = &GetAI_boss_baron_geddon;
-    newscript->RegisterSelf();
+    sScriptMgr.addScript(new Boss_Baron_Geddon());
 }
 
