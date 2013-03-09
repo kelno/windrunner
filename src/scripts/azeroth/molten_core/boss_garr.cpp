@@ -166,10 +166,18 @@ class Mob_FiresWorn : public CreatureScript
                 }
             }
 
+            void onCombatStart(Unit* victim)
+            {
+                if (Creature* garr = _instance->instance->GetCreature(_instance->GetData64(DATA_GARR)))
+                    if (!garr->getVictim())
+                        garr->getAI()->attackStart(victim);
+            }
+
             void onDeath(Unit* /*killer*/)
             {
                 if (Creature* garr = _instance->instance->GetCreature(_instance->GetData64(DATA_GARR)))
-                    garr->CastSpell(garr, SPELL_FRENZY, false);
+                    if (garr->isAlive())
+                        garr->CastSpell(garr, SPELL_FRENZY, false);
             }
         
             void update(uint32 const diff)
