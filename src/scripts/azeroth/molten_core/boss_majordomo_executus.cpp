@@ -129,7 +129,7 @@ class Boss_Majordomo : public CreatureScript
                     addEvent(EV_REFLECTION, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_TELEPORT, 30000, 30000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_BLASTWAVE, 3000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
-                    addEvent(EV_CHECK_PHASE, 33000, 33000, EVENT_FLAG_NONE, true, phaseMaskForPhase(DOWN));
+                    addEvent(EV_DOWN, 33000, 33000, EVENT_FLAG_NONE, true, phaseMaskForPhase(DOWN));
                     addEvent(EV_CHECK_PHASE, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(NOT_VISIBLE));
                 }
                 else
@@ -137,6 +137,7 @@ class Boss_Majordomo : public CreatureScript
                     scheduleEvent(EV_REFLECTION, 10000, 10000);
                     scheduleEvent(EV_TELEPORT, 30000, 30000);
                     scheduleEvent(EV_BLASTWAVE, 3000, 10000);
+                    scheduleEvent(EV_DOWN, 33000, 33000);
                     scheduleEvent(EV_CHECK_PHASE, 10000, 10000);
                 }
             
