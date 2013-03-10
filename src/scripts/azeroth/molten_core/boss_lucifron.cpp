@@ -63,7 +63,6 @@ public:
                 scheduleEvent(EV_LUCIFRONCURSE, 10000, 10000);
                 scheduleEvent(EV_SHADOWSHOCK, 6000, 6000);
             }
-            
             if (_instance)
                 _instance->SetData(DATA_LUCIFRON, NOT_STARTED);
             

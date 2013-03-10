@@ -170,10 +170,6 @@ class Boss_Ragnaros : public CreatureScript
                 Summons.Despawn(unit);
             }
 
-            void onEnterPhase(uint32 newPhase)
-            {
-            }
-
             void onKill(Unit* /*victim*/)
             {
                 if (rand()%5)

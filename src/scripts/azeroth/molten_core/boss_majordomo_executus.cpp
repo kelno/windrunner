@@ -140,11 +140,11 @@ class Boss_Majordomo : public CreatureScript
                     scheduleEvent(EV_DOWN, 33000, 33000);
                     scheduleEvent(EV_CHECK_PHASE, 10000, 10000);
                 }
-            
+
                 if (_instance)
                     _instance->SetData(DATA_MAJORDOMO, NOT_STARTED);
 
-                setPhase(NOT_VISIBLE);
+                setPhase(NOT_VISIBLE, true);
             }
 
             void onSummon(Creature* summoned)
@@ -187,6 +187,15 @@ class Boss_Majordomo : public CreatureScript
                             _instance->SetData(DATA_MAJORDOMO, DONE);
 
                         me->SummonGameObject(GOBJECT_CACHEOFTHEFIRELORD, CacheLocation.x, CacheLocation.y, CacheLocation.z, 0, 0, 0, 0, 0, 0);
+
+                        Map *map = me->GetMap();
+                        Map::PlayerList const &PlayerList = map->GetPlayers();
+
+		        for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+			    if (Player* i_pl = i->getSource())
+				if (i_pl->isAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
+                                    i_pl->CombatStop(true);
+
                         break;
                     }
                     case RAGNAGNA:
@@ -206,9 +215,15 @@ class Boss_Majordomo : public CreatureScript
                 if (_instance)
                 {
                     if (_instance->GetData(DATA_MAJORDOMO) == NOT_STARTED)
+                    {
                         for (int i = DATA_LUCIFRON; i <= DATA_SULFURON; i++)
+                        {
                             if (_instance->GetData(i) != DONE)
                                 return false;
+                        }
+                    }
+                    else
+                        return false;
                 }
                 return true;
             }
@@ -266,7 +281,7 @@ class Boss_Majordomo : public CreatureScript
         
             void update(uint32 const diff)
             {
-                updateEvents(diff);
+                updateEvents(diff, 24);
             
                 while (executeEvent(diff, m_currEvent))
                 {
@@ -277,6 +292,7 @@ class Boss_Majordomo : public CreatureScript
                                 setPhase(RAGNAGNA);
                             else if (isSpawnReady())
                                 setPhase(VISIBLE);
+
                             scheduleEvent(EV_CHECK_PHASE, 10000);
                             break;
                         case EV_REFLECTION:
@@ -286,7 +302,7 @@ class Boss_Majordomo : public CreatureScript
                             for (std::list<uint64>::iterator i = Summons.begin(); i!= Summons.end();++i)
                             {
                                 NagaFriend = me->GetCreature((*me), (*i));
-                                if (NagaFriend)       
+                                if (NagaFriend && NagaFriend->isAlive())       
                                     me->AddAura(spellID, NagaFriend); 
                             }
                             me->AddAura(spellID, me);
@@ -312,6 +328,8 @@ class Boss_Majordomo : public CreatureScript
 
                 if (!updateVictim())
                     return;
+
+                updateEvents(diff, 7);
 
                 if (me->GetDistance(RoomCenter.x, RoomCenter.y , RoomCenter.z) > 100) //room center
                     evade();
@@ -358,9 +376,7 @@ class Mob_FlameWalker_Healer : public CreatureScript
 
             void onReset(bool onSpawn)
             {
-                Creature* Master = me->GetCreature(*me, me->GetOwnerGUID());
-                if (Master)
-                    domoAI = (Boss_Majordomo::Boss_MajordomoAI*)Master->getAI();
+                domoAI = NULL;
 
                 if (onSpawn)
                 {
@@ -387,7 +403,12 @@ class Mob_FlameWalker_Healer : public CreatureScript
                 if (!updateVictim())
                     return;
 
-                if (domoAI)
+                if (!domoAI)
+                {
+                    if (Creature* domo = _instance->instance->GetCreature(_instance->GetData64(DATA_MAJORDOMO)))
+                        domoAI = (Boss_Majordomo::Boss_MajordomoAI*)domo->getAI();
+                }
+                else
                 {
                     if (domoAI->guardCount <= 4 && !me->HasAura(SPELL_SEPARATION_ANXIETY, 0))
                         enableEvent(EV_SEPARATION_ANX);
@@ -444,7 +465,6 @@ class Mob_FlameWalker_Elite : public CreatureScript
                 EV_SEPARATION_ANX     = 2
             };
             Boss_Majordomo::Boss_MajordomoAI* domoAI;
-            Creature* master;
 
             Mob_FlameWalker_EliteAI(Creature* creature) : CreatureAINew(creature)
             {
@@ -453,9 +473,7 @@ class Mob_FlameWalker_Elite : public CreatureScript
 
             void onReset(bool onSpawn)
             {
-                master = me->GetCreature(*me, me->GetOwnerGUID());
-                if (master)
-                    domoAI = (Boss_Majordomo::Boss_MajordomoAI*)master->getAI();
+                domoAI = NULL;
 
                 if (onSpawn)
                 {
@@ -482,13 +500,18 @@ class Mob_FlameWalker_Elite : public CreatureScript
                 if (!updateVictim())
                     return;
 
-                if (domoAI)
+                if (!domoAI)
+                {
+                    if (Creature* domo = _instance->instance->GetCreature(_instance->GetData64(DATA_MAJORDOMO)))
+                        domoAI = (Boss_Majordomo::Boss_MajordomoAI*)domo->getAI();
+                }
+                else
                 {
                     if (domoAI->guardCount <= 4 && !me->HasAura(SPELL_SEPARATION_ANXIETY, 0))
                         enableEvent(EV_SEPARATION_ANX);
 
-                    if (!master->isInCombat())
-                        master->AddThreat(me->getVictim(), 0);
+                    if (Creature* domo = _instance->instance->GetCreature(_instance->GetData64(DATA_MAJORDOMO)))
+                        domo->AddThreat(me->getVictim(), 0);
                 }
             
                 updateEvents(diff);
@@ -553,6 +576,7 @@ class Mob_Hot_Coal : public CreatureScript
                 {
                     scheduleEvent(EV_COAL, 1000, 1000);
                 }
+                me->SetVisibility(VISIBILITY_OFF);
             }
 
             void update(uint32 const diff)
@@ -570,8 +594,12 @@ class Mob_Hot_Coal : public CreatureScript
 		            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
 			        if (Player* i_pl = i->getSource())
 				    if (i_pl->isAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
+                                    {
 					doCast(i_pl, SPELL_HOTCOAL, true);
-                            evade();
+                                        i_pl->CombatStop(true);
+                                    }
+
+                            me->CombatStop(true);
                             scheduleEvent(EV_COAL, 1000);
                             break;
                     }
