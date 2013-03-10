@@ -22,14 +22,14 @@
 enum {
     DATA_LUCIFRON       = 0,
     DATA_MAGMADAR       = 1,
-    DATA_GEHENNAS       = 3,
-    DATA_GARR           = 4,
-    DATA_SHAZZRAH       = 5,
-    DATA_GEDDON         = 6,
-    DATA_GOLEMAGG       = 7,
-    DATA_SULFURON       = 8,
-    DATA_MAJORDOMO      = 9,
-    DATA_RAGNAROS       = 10
+    DATA_GEHENNAS       = 2,
+    DATA_GARR           = 3,
+    DATA_SHAZZRAH       = 4,
+    DATA_GEDDON         = 5,
+    DATA_GOLEMAGG       = 6,
+    DATA_SULFURON       = 7,
+    DATA_MAJORDOMO      = 8,
+    DATA_RAGNAROS       = 9
 };
 
 #endif
