@@ -24,6 +24,14 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_molten_core.h"
 
+#define TEXT_ID_SUMMON_1 4995
+#define TEXT_ID_SUMMON_2 5011
+#define TEXT_ID_SUMMON_3 5012
+ 
+#define GOSSIP_ITEM_SUMMON_1 "Dites m'en plus."
+#define GOSSIP_ITEM_SUMMON_2 "Qu'avez vous d'autre à dire?"
+#define GOSSIP_ITEM_SUMMON_3 "Vous nous avez défiés et nous sommes venus. Où est donc ce maître dont vous parlez?"
+
 enum
 {
     SAY_AGGRO                  = -1409003,
@@ -618,14 +626,37 @@ class Mob_Hot_Coal : public CreatureScript
 
 bool GossipHello_boss_majordomo(Player *player, Creature *_Creature)
 {
-    if (((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance) 
-        ((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance->SetData(DATA_RAGNAROS, SPECIAL); //tell Ragnaros to start event
-    _Creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);  
+    if (((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance)
+    {
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_SUMMON_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+        player->PlayerTalkClass->SendGossipMenu(TEXT_ID_SUMMON_1,_Creature->GetGUID());
+    }
+
     return true;
 }
 
 bool GossipSelect_boss_majordomo(Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_SUMMON_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+            player->SEND_GOSSIP_MENU(TEXT_ID_SUMMON_2, _Creature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 2:
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, GOSSIP_ITEM_SUMMON_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+            player->SEND_GOSSIP_MENU(TEXT_ID_SUMMON_3, _Creature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 3:
+            if (((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance)
+                ((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance->SetData(DATA_RAGNAROS, SPECIAL);
+
+            player->CLOSE_GOSSIP_MENU();
+            _Creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            break;
+    }
+
     return true;
 }
 
