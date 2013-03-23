@@ -50,7 +50,8 @@ struct npc_lazy_peonAI : public ScriptedAI
     void MovementInform(uint32, uint32 id)
     {
         if (id == 0) {
-            DoCast(m_creature, SPELL_BUFF_SLEEP);
+            if (!m_creature->HasAura(SPELL_BUFF_SLEEP))
+                DoCast(m_creature, SPELL_BUFF_SLEEP);
             workCount = 0;
         }
         else if (id == 1) {
