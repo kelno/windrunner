@@ -263,12 +263,8 @@ class Boss_Majordomo : public CreatureScript
             void onCombatStart(Unit* /*victim*/)
             {
                 if (_instance)
-                {
-                    if (_instance->GetData(DATA_RAGNAROS) == SPECIAL)
-                        return;
-
                     _instance->SetData(DATA_MAJORDOMO, IN_PROGRESS);
-                }
+
                 DoScriptText(SAY_AGGRO, me);
             }
 
@@ -649,9 +645,6 @@ bool GossipSelect_boss_majordomo(Player *player, Creature *_Creature, uint32 sen
             player->SEND_GOSSIP_MENU(TEXT_ID_SUMMON_3, _Creature->GetGUID());
             break;
         case GOSSIP_ACTION_INFO_DEF + 3:
-            if (((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance)
-                ((Boss_Majordomo::Boss_MajordomoAI*)_Creature->getAI())->_instance->SetData(DATA_RAGNAROS, SPECIAL);
-
             player->CLOSE_GOSSIP_MENU();
             _Creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             break;

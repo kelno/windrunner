@@ -24,68 +24,78 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_molten_core.h"
 
-enum
-{
-    SAY_SUMMON_DOMO             = -1409008,
-    SAY_ARRIVAL1_RAG            = -1409009,
-    SAY_ARRIVAL2_DOMO           = -1409010,
-    SAY_ARRIVAL3_RAG            = -1409011,
-    SAY_ARRIVAL4_RAG            = -1409012,
-
-    SAY_REINFORCEMENTS1         = -1409013,
-    SAY_REINFORCEMENTS2         = -1409014,
-    SAY_HAND                    = -1409015,
-    SAY_WRATH                   = -1409016,
-    SAY_KILL                    = -1409017,
-    SAY_MAGMABURST              = -1409018,
-
-    SPELL_HANDOFRAGNAROS        = 19780,
-    SPELL_WRATHOFRAGNAROS       = 20566,
-    SPELL_LAVABURST             = 21158,
-    SPELL_MAGMABURST            = 20565,
-
-    SPELL_SONSOFFLAME_DUMMY     = 21108,                   //Server side effect
-    SPELL_RAGSUBMERGE           = 21107,                   //Stealth aura
-    SPELL_RAGEMERGE             = 20568,
-    SPELL_MELTWEAPON            = 21388,
-    SPELL_ELEMENTALFIRE         = 20564,
-    SPELL_ERRUPTION             = 17731,
-
-    SPELL_SUMMON_RAGNAROS       = 19774,                   //for Domo
-};
-
-struct Locations
-{
-    float x, y, z, o;
-};
-
-static Locations DomoNewLocation =
-{
-    851.106262, -814.688660, -229.283966, 4.641055
-};
-
-static Locations DomoInvocLocation =
-{
-    829.947754, -814.614807, -228.950043, 5.6
-};
-
-static Locations AddLocations[] =
-{
-    { 848.740356, -816.103455, -229.74327, 2.615287 },
-    { 852.560791, -849.861511, -228.560974, 2.836073 },
-    { 808.710632, -852.845764, -227.914963, 0.964207 },
-    { 786.597107, -821.132874, -226.350128, 0.949377 },
-    { 796.219116, -800.948059, -226.010361, 0.560603 },
-    { 821.602539, -782.744109, -226.023575, 6.157440 },
-    { 844.924744, -769.453735, -225.521698, 4.4539958 },
-    { 839.823364, -810.869385, -229.683182, 4.693108 }
-};
+/* Missing feature
+ *   - Lava Splash Visual
+ */
 
 enum
 {
-    PHASE_INTRO,
-    PHASE_NORMAL,
-    PHASE_SUBMERGE
+    EMERGED_TIME =               180000,
+    SUBMERGING_TIME =             1000,
+    SUBMERGED_TIME =             90000,
+    EMERGING_TIME =               3000,
+
+    MELTWEAPON_CHANCE =             10, //%
+    MANABURN_RANGE =                 8,
+    ADDS_NUMBER =                    8,
+
+    SAY_SUMMON_DOMO =         -1409008,
+    SAY_ARRIVAL1_RAG =        -1409009,
+    SAY_ARRIVAL2_DOMO =       -1409010,
+    SAY_ARRIVAL3_RAG =        -1409011,
+    SAY_ARRIVAL4_RAG =        -1409012,
+ 
+    SAY_REINFORCEMENTS1 =     -1409013,
+    SAY_REINFORCEMENTS2 =     -1409014,
+    SAY_HAMMER =              -1409015,
+    SAY_WRATH =               -1409016,
+    SAY_KILL =                -1409017,
+    SAY_MAGMA_BLAST =         -1409018,
+ 
+    FACTION_FRIENDLY =              35,
+ 
+    CREATURE_SON_OF_FLAME =      12143,
+    CREATURE_FLAME_OF_RAGNAROS = 13148,
+ 
+    SPELL_WRATH_OF_RAGNAROS =    20566,
+   
+    SPELL_MAGMA_BLAST =          20565,
+    SPELL_MELT_WEAPON =          21388,
+    SPELL_ELEMENTAL_FIRE =       20564,
+ 
+    SPELL_SUBMERGE =             21107, //Stealth aura
+    SPELL_EMERGE =               20568,
+    SPELL_ELEMENTAL_FIRE_KILL =  19773, //instakill, used in intro only
+    SPELL_INTENSE_HEAT         = 21155,
+    SPELL_MIGHT_OF_RAGNAROS    = 21154,
+ 
+    SPELL_SUMMON_RAGNAROS =      19774, //for Domo, only visual
+    SPELL_MANABURN =             19665, //for adds
+ 
+    SPELL_LAVA_BURST_INVOC_A =   21886,
+    SPELL_LAVA_BURST_INVOC_B =   21900,
+    /* ... */
+    SPELL_LAVA_BURST_INVOC_I =   21907,
+ 
+    /* These used for something?
+    SPELL_LAVABURST =            21158,
+    SPELL_ERUPTION =             17731,
+    SPELL_SONSOFFLAME_DUMMY =    21108,
+    SPELL_HAMMER_OF_RAGNAROS =   19780,
+    */
+};
+
+struct Locations { float x, y, z, o; };
+static Locations DomoNewLocation   = { 851.106262, -814.688660, -229.283966, 4.641055 };
+static Locations DomoInvocLocation = { 829.947754, -814.614807, -228.950043, 5.6      };
+
+enum
+{
+    INTRO,
+    EMERGED,
+    SUBMERGING,
+    SUBMERGED,
+    EMERGING,
 };
 
 class Boss_Ragnaros : public CreatureScript
@@ -96,73 +106,128 @@ class Boss_Ragnaros : public CreatureScript
     class Boss_RagnarosAI : public CreatureAINew
     {
         public:
-            enum event
-            {
-                EV_INTRO            = 0,
-                EV_WRATHOFRAGNAROS  = 1,
-                EV_HANDOFRAGNAROS   = 2,
-                EV_LAVABURST        = 3,
-                EV_ERUPTION         = 4,
-                EV_ELEMENTALFIRE    = 5,
-                EV_SUBMERGE         = 6,
-                EV_EMERGE           = 7
-            };
             uint8 Intro_Phase;
+            uint32 Intro_Timer;
             Creature* Domo;
-            uint32 MagmaBurst_Timer;
-            bool HasYelledMagmaBurst;
-            bool HasSubmergedOnce;
+
+            uint32 WrathOfRagnaros_Timer;
+            uint32 HammerOfRagnaros_Timer;
+            uint32 MagmaBlast_Wait_Timer;
+            uint32 LavaSplash_Timer;
+            bool Said_MagmaBlast;
+            bool Emerging_Waited;
+
+            uint32 RagnaFaction;
+            uint8 AddCount;
+
+            uint32 Phase_Timer;
 
             Boss_RagnarosAI(Creature* creature) : CreatureAINew(creature), Summons(me)
             {
                 _instance = ((ScriptedInstance*)creature->GetInstanceData());
+                RagnaFaction = me->getFaction();
+                Domo = NULL;
             }
 
             void onReset(bool onSpawn)
             {
-                MagmaBurst_Timer = 2000;
-                HasYelledMagmaBurst = false;
-                HasSubmergedOnce = false;
-                Intro_Phase = 1;
-                Domo = NULL;
                 Summons.DespawnAll();
-                if (onSpawn)
-                {
-                    addEvent(EV_INTRO, 1, 1, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_INTRO));
-                    addEvent(EV_WRATHOFRAGNAROS, 30000, 30000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_HANDOFRAGNAROS, 25000, 25000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_LAVABURST, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_ERUPTION, 15000, 15000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_ELEMENTALFIRE, 3000, 3000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_SUBMERGE, 90000, 90000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_NORMAL));
-                    addEvent(EV_EMERGE, 90000, 90000, EVENT_FLAG_NONE, true, phaseMaskForPhase(PHASE_SUBMERGE));
-                }
-                else
-                {
-                    scheduleEvent(EV_INTRO, 1, 1);
-                    scheduleEvent(EV_WRATHOFRAGNAROS, 30000, 30000);
-                    scheduleEvent(EV_HANDOFRAGNAROS, 25000, 25000);
-                    scheduleEvent(EV_LAVABURST, 10000, 10000);
-                    scheduleEvent(EV_ERUPTION, 15000, 15000);
-                    scheduleEvent(EV_ELEMENTALFIRE, 3000, 3000);
-                    scheduleEvent(EV_SUBMERGE, 90000, 90000);
-                    scheduleEvent(EV_EMERGE, 90000, 90000);
-                }
-            
+                AddCount = 0;
+
+                setPhase(EMERGED);
+
                 if (_instance)
+                {
                     _instance->SetData(DATA_RAGNAROS, NOT_STARTED);
+                    if (Intro_Phase == 0)
+                        setPhase(INTRO);
+                }
+            }
 
-                setPhase(PHASE_INTRO);
+            void ResetAttacksTimers()
+            {
+                WrathOfRagnaros_Timer = 25000;
+                HammerOfRagnaros_Timer = urand(20000, 30000);
+                MagmaBlast_Wait_Timer = 2000 ;
+                LavaSplash_Timer = urand(500, 15000);
+                Said_MagmaBlast = false;
+            }
 
-                me->SetVisibility(VISIBILITY_OFF);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->setFaction(35);
-                doCast(me, SPELL_MELTWEAPON, true);
+            void NextPhase()
+            {
+                switch(getPhase())
+                {
+                    case INTRO:        setPhase(EMERGED); break;
+                    case EMERGED :     setPhase(SUBMERGING); break;
+                    case SUBMERGING :  setPhase(SUBMERGED); break;
+                    case SUBMERGED :   setPhase(EMERGING); break;
+                    case EMERGING :    setPhase(EMERGED); break;
+                }
+            }
+
+            void onEnterPhase(uint32 newPhase)
+            {
+                switch(newPhase)
+                {
+                    case INTRO:
+                        Intro_Timer = 0;
+                        Intro_Phase = 0;
+                        me->SetVisibility(VISIBILITY_OFF);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->setFaction(FACTION_FRIENDLY);
+                        me->AddAura(SPELL_SUBMERGE, me);
+                        if (Domo)
+                        {
+                            Domo->DisappearAndDie();
+                            Domo = NULL;
+                        }
+                        break;
+                    case EMERGED:
+                        Phase_Timer = EMERGED_TIME;
+                        ResetAttacksTimers();
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->setFaction(RagnaFaction);
+                        break;
+                    case SUBMERGING:
+                        Phase_Timer = SUBMERGING_TIME;
+                        doCast(me,SPELL_SUBMERGE);
+                        DoScriptText(rand()%2 ? SAY_REINFORCEMENTS1 : SAY_REINFORCEMENTS2, me);
+                        break;
+                    case SUBMERGED:
+                        Phase_Timer = SUBMERGED_TIME;
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        me->setFaction(FACTION_FRIENDLY);
+                        SummonAdds();
+                        break;
+                    case EMERGING:
+                        //submerge spell set this off, emerge set it back on but the animation is then skipped,
+                        //so we have to set on back ourselves and wait a world update before continuing
+                        me->SetVisibility(VISIBILITY_ON);
+                        Phase_Timer = EMERGING_TIME;
+                        Emerging_Waited = false;
+                        break;
+                }
             }
 
             void onSummon(Creature* summoned)
             {
                 Summons.Summon(summoned);
+
+                if (summoned->GetEntry() == CREATURE_SON_OF_FLAME)
+                {
+                    if (summoned->getAI())
+                    {
+                        if (Unit* pTarget = summoned->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 80, true))
+                            summoned->getAI()->attackStart(pTarget);
+                        else
+                            summoned->getAI()->attackStart(me->getVictim());
+                    }
+                    summoned->SetOwnerGUID(me->GetGUID());
+                    AddCount++;
+                }
+
+                if (summoned->getAI())
+                    summoned->getAI()->setZoneInCombat(true);
             }
 	
             void onSummonDespawn(Creature* unit)
@@ -172,7 +237,7 @@ class Boss_Ragnaros : public CreatureScript
 
             void onKill(Unit* /*victim*/)
             {
-                if (rand()%5)
+                if (rand()%4)
                     return;
 
                 DoScriptText(SAY_KILL, me);
@@ -180,204 +245,280 @@ class Boss_Ragnaros : public CreatureScript
 
             void onDeath(Unit* /*killer*/)
             {
+                Summons.DespawnAll();
+
                 if(_instance)
                     _instance->SetData(DATA_RAGNAROS, DONE);
             }
 
-            void update(uint32 const diff)
+            void onCombatStart(Unit* /*victim*/)
             {
                 if(_instance)
-                {   
-                    if (!Domo && _instance->GetData(DATA_MAJORDOMO) == DONE && Intro_Phase == 1)
+                    _instance->SetData(DATA_RAGNAROS, IN_PROGRESS);
+            }
+
+            void SummonAdds()
+            {
+                float fX, fY, fZ;
+                for(uint8 i = 0; i < ADDS_NUMBER; ++i)
+                {
+                    me->GetRandomPoint(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 30.0f, fX, fY, fZ);
+                    me->SummonCreature(CREATURE_SON_OF_FLAME, fX, fY, fZ, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 1000);
+                }
+            }
+
+            bool UpdateMeleeVictim()
+            {
+                if (me->IsWithinMeleeRange(me->getVictim()))
+                    return true;
+                else
+                {
+                    Unit* target = NULL;
+                    float MaxThreat = 0;
+                    std::list<HostilReference*>& m_threatlist = me->getThreatManager().getThreatList();
+                    for (std::list<HostilReference*>::iterator i = m_threatlist.begin(); i!= m_threatlist.end();++i)
                     {
-                        Domo = me->SummonCreature(12018, DomoNewLocation.x, DomoNewLocation.y, DomoNewLocation.z, DomoNewLocation.o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
-                        if (Domo)
-                            Domo->SetOwnerGUID(me->GetGUID());
+                        Unit* pUnit = Unit::GetUnit((*me), (*i)->getUnitGuid());
+                        if(pUnit && me->IsWithinMeleeRange(pUnit))
+                        {
+                            if ((*i)->getThreat() > MaxThreat)
+                            {
+                                target = pUnit;
+                                MaxThreat = (*i)->getThreat();
+                            }
+                        }
+                    }
+                    if (target)
+                    {
+                        attackStart(target);
+                        return true;
                     }
                 }
+                return false;
+            }
 
-                updateEvents(diff, 129);
-            
-                while (executeEvent(diff, m_currEvent))
+            void onDamageTaken(Unit* who, uint32& /* Damage */)
+            {  
+                if (who->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && rand()%100 < MELTWEAPON_CHANCE)
+                    doCast(who, SPELL_MELT_WEAPON, true);
+            }
+ 
+            void DoIntroEvent(uint8 Event)
+            {
+                switch(Event)
                 {
-                    switch (m_currEvent)
+                    case 1:
+                        Domo->CastSpell(Domo,SPELL_SUMMON_RAGNAROS,false); //only visual
+                        Domo->GetMotionMaster()->MovePoint(0, DomoInvocLocation.x, DomoInvocLocation.y, DomoInvocLocation.z);
+                        DoScriptText(SAY_SUMMON_DOMO, Domo);
+                        Intro_Timer = 10000;
+                        break;
+                    case 2:
+                        Domo->SetInFront(me);
+                        Domo->StopMoving();
+                        Intro_Timer = 4000;
+                        break;
+                    case 3:
+                        me->SetVisibility(VISIBILITY_ON);
+                        Intro_Timer = 0;
+                        break;
+                    case 4:
+                        me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                        doCast(me,SPELL_EMERGE);
+                        Intro_Timer = 3000;
+                        break;
+                    case 5:
+                        DoScriptText(SAY_ARRIVAL1_RAG, me);
+                        Intro_Timer = 14000;
+                        break;
+                    case 6:
+                        DoScriptText(SAY_ARRIVAL2_DOMO, Domo);
+                        Intro_Timer = 8000;
+                        break;
+                    case 7:
+                        DoScriptText(SAY_ARRIVAL3_RAG, me);
+                        Intro_Timer = 17000;
+                        break;
+                    case 8:
+                        doCast(Domo,SPELL_ELEMENTAL_FIRE_KILL,false);
+                        Intro_Timer = 1000;
+                        break;
+                    case 9:
+                        Domo->setDeathState(JUST_DIED); //to be sure
+                        Intro_Timer = 3000;
+                        break;        
+                    case 10:
+                        DoScriptText(SAY_ARRIVAL4_RAG, me);
+                        Intro_Timer = 8000;
+                        break;
+                    case 11:
+                        Domo = NULL;
+                        NextPhase();
+                        setZoneInCombat(true);
+                        break;
+                }
+            }
+
+            void update(uint32 const diff)
+            {
+                if (getPhase() != INTRO && updateVictim())
+                {
+                    if (Phase_Timer < diff)
                     {
-                        case EV_INTRO:
-                            if (_instance->GetData(DATA_RAGNAROS) == SPECIAL && Domo)
+                        if (!me->IsNonMeleeSpellCasted(false)) //wait to be ready to cast SetPhase spells
+                            NextPhase();
+                        else
+                            return;
+                    }
+                    else
+                        Phase_Timer -= diff;
+                }
+            
+                switch(getPhase())
+                {
+                    case INTRO:
+                        //Setting up Domo
+                        if (Intro_Phase == 0 && !Domo && _instance->GetData(DATA_MAJORDOMO) == DONE)
+                        {
+                            if (Domo = me->SummonCreature(12018, DomoNewLocation.x, DomoNewLocation.y, DomoNewLocation.z, DomoNewLocation.o, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 20000))
                             {
-                                switch(Intro_Phase)
-                                {
-                                    case 1:
-                                        Domo->CastSpell(Domo,SPELL_SUMMON_RAGNAROS,false); //visual
-                                        Domo->GetMotionMaster()->MovePoint(0, DomoInvocLocation.x, DomoInvocLocation.y, DomoInvocLocation.z);
-                                        DoScriptText(SAY_SUMMON_DOMO, Domo);
-                                        scheduleEvent(EV_INTRO, 10000);
-                                        break;
-                                    case 2:
-                                        Domo->SetInFront(me);
-                                        Domo->StopMoving();
-                                        scheduleEvent(EV_INTRO, 4000);
-                                        break;
-                                    case 3:
-                                        me->SetVisibility(VISIBILITY_ON);
-                                        doCast(me, SPELL_RAGEMERGE);
-                                        scheduleEvent(EV_INTRO, 3000);
-                                        break;
-                                    case 4:
-                                        DoScriptText(SAY_ARRIVAL1_RAG, me);
-                                        scheduleEvent(EV_INTRO, 14000);
-                                        break;
-                                    case 5:
-                                        DoScriptText(SAY_ARRIVAL2_DOMO, Domo);
-                                        scheduleEvent(EV_INTRO, 8000);
-                                        break;
-                                    case 6:
-                                        DoScriptText(SAY_ARRIVAL3_RAG, me);
-                                        scheduleEvent(EV_INTRO, 17000);
-                                        break;
-                                    case 7:
-                                        doCast(Domo, SPELL_MAGMABURST);
-                                        scheduleEvent(EV_INTRO, 1000);
-                                        break;
-                                    case 8:
-                                        Domo->setDeathState(JUST_DIED);
-                                        scheduleEvent(EV_INTRO, 3000);
-                                        break;        
-                                    case 9:
-                                        DoScriptText(SAY_ARRIVAL4_RAG, me);
-                                        scheduleEvent(EV_INTRO, 8000);
-                                        break;
-                                    case 10:
-                                        me->setFaction(91);
-                                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                                        if(_instance)
-                                            _instance->SetData(DATA_RAGNAROS, IN_PROGRESS);
-                                        setPhase(PHASE_NORMAL);
-                                        setZoneInCombat(true);
-                                        break;
-                                }
-                                Intro_Phase++;
+                                Domo->SetOwnerGUID(me->GetGUID());
+                                Domo->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
                             }
-                            break;
-                        case EV_WRATHOFRAGNAROS:
-                            doCast(me->getVictim(), SPELL_WRATHOFRAGNAROS);
-
-                            if (rand()%2 == 0)
-                                DoScriptText(SAY_WRATH, me);
-                            scheduleEvent(EV_WRATHOFRAGNAROS, 30000);
-                            break;
-                        case EV_HANDOFRAGNAROS:
-                            doCast(me, SPELL_HANDOFRAGNAROS);
-
-                            if (rand()%2==0)
-                                DoScriptText(SAY_HAND, me);
-                            scheduleEvent(EV_HANDOFRAGNAROS, 25000);
-                            break;
-                        case EV_LAVABURST:
-                            doCast(me->getVictim(), SPELL_LAVABURST);
-                            scheduleEvent(EV_LAVABURST, 10000);
-                            break;
-                        case EV_ERUPTION:
-                            doCast(me->getVictim(), SPELL_ERRUPTION);
-                            scheduleEvent(EV_ERUPTION, 20000, 45000);
-                            break;
-                        case EV_ELEMENTALFIRE:
-                            doCast(me->getVictim(), SPELL_ELEMENTALFIRE);
-                            scheduleEvent(EV_ELEMENTALFIRE, 10000, 14000);
-                            break;
-                        case EV_SUBMERGE:
-                            me->InterruptNonMeleeSpells(false);
-                            //Root self
-                            doCast(me, 23973);
-                            me->setFaction(35);
-                            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                            me->HandleEmoteCommand(EMOTE_ONESHOT_SUBMERGE);
-                            if (!HasSubmergedOnce)
+                            return;
+                        }
+ 
+                        if (Domo)
+                        {
+                            //Play Intro
+                            if (Intro_Phase)
                             {
-                                DoScriptText(SAY_REINFORCEMENTS1, me);
-
-                                // summon 10 elementals
-                                Unit* target = NULL;
-                                for(int i = 0; i < 9;i++)
+                                if (Intro_Timer < diff)
                                 {
-                                    Creature* summoned = NULL;
-                                    if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                                    DoIntroEvent(Intro_Phase);
+                                    Intro_Phase++;
+                                }
+                                else
+                                    Intro_Timer -= diff;
+
+                                return;
+                            }
+                            else if (!Domo->HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP))
+                                Intro_Phase = 1; //start intro
+                        }
+                        break;
+                    case EMERGED:
+                        if (!me->getVictim())
+                            return;
+ 
+                        //Wrath Of Ragnaros
+                        if (WrathOfRagnaros_Timer < diff)
+                        {  
+                            if (!me->IsNonMeleeSpellCasted(false))
+                            {
+                                DoScriptText(SAY_WRATH, me);
+                                doCast((Unit*)NULL, SPELL_WRATH_OF_RAGNAROS);
+                                WrathOfRagnaros_Timer = 25000;
+                            }
+                        }
+                        else
+                            WrathOfRagnaros_Timer -= diff;
+           
+                        //Hammer of Ragnaros
+                        if (HammerOfRagnaros_Timer < diff)
+                        {  
+                            if (!me->IsNonMeleeSpellCasted(false))
+                            {
+                                std::vector<Unit*> ValidTargets;
+                                std::list<HostilReference*>& m_threatlist = me->getThreatManager().getThreatList();
+                                for (std::list<HostilReference*>::iterator i = m_threatlist.begin(); i!= m_threatlist.end();++i)
+                                {
+                                    Unit* pTarget = me->GetUnit(*me,(*i)->getUnitGuid());
+                                    if (pTarget && pTarget->getPowerType() == POWER_MANA && pTarget->IsWithinLOSInMap(me)) //&& maxrange?
+                                        ValidTargets.push_back(pTarget);
+                                }
+                                if (!ValidTargets.empty())
+                                {
+                                    DoScriptText(SAY_HAMMER, me);
+                                    Unit* target = ValidTargets[urand(0, ValidTargets.size() -1)];
+                                    doCast(target,SPELL_MIGHT_OF_RAGNAROS, false);
+                                }
+                                HammerOfRagnaros_Timer = urand(20000, 30000);
+                            }
+                        }
+                        else
+                            HammerOfRagnaros_Timer -= diff;
+
+                        if (!UpdateMeleeVictim())
+                        {
+                            //Magma Blast
+                            if (MagmaBlast_Wait_Timer < diff)
+                            {
+                                if(!me->IsNonMeleeSpellCasted(false))
+                                {
+                                    Unit* target = NULL;
+                                    target = selectUnit(SELECT_TARGET_RANDOM, 0, 150,true);
+                                    if(target && target->IsWithinLOSInMap(me))
                                     {
-                                        summoned = me->SummonCreature(12143,target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),0,TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,900000);
-                                        if(summoned)
-                                            ((CreatureAI*)summoned->AI())->AttackStart(target);
+                                        doCast(target, SPELL_MAGMA_BLAST, false);
+                                        if (!Said_MagmaBlast)
+                                        {  
+                                            DoScriptText(SAY_MAGMA_BLAST, me);
+                                            Said_MagmaBlast = true;
+                                        }
                                     }
                                 }
-
-                                HasSubmergedOnce = true;
                             }
                             else
-                            {
-                                DoScriptText(SAY_REINFORCEMENTS2, me);
-
-                                Unit* target = NULL;
-                                for(int i = 0; i < 9;i++)
-                                {
-                                    Creature* summoned = NULL;
-                                    if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                                    {
-                                        summoned = me->SummonCreature(12143,target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(),0,TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN,900000);
-                                        if(summoned)
-                                            ((CreatureAI*)summoned->AI())->AttackStart(target);
-                                    }
-                                }
-                            }
-
-                            doCast(me, SPELL_RAGSUBMERGE);
-                            scheduleEvent(EV_SUBMERGE, 90000);
-                            setPhase(PHASE_SUBMERGE);
-                            break;
-                        case EV_EMERGE:
-                            me->setFaction(14);
-                            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                            doCast(me, SPELL_RAGEMERGE);
-                            scheduleEvent(EV_EMERGE, 90000);
-                            setPhase(PHASE_NORMAL);
-                            break;
-                    }
-                }
-
-                if (!updateVictim())
-                    return;
-
-                updateEvents(diff, 126);
-
-                if (getPhase() != PHASE_NORMAL)
-                {
-                    //If we are within range melee the target
-                    if(me->IsWithinMeleeRange(me->getVictim()))
-                    {
-                        //Make sure our attack is ready and we arn't currently casting
-                        if(me->isAttackReady() && !me->IsNonMeleeSpellCasted(false))
+                                MagmaBlast_Wait_Timer -= diff;
+                        }
+                        else
                         {
-                            me->AttackerStateUpdate(me->getVictim());
-                            me->resetAttackTimer();
+                            MagmaBlast_Wait_Timer = 2000;
+                            //Elemental Fire
+                            if (!me->getVictim()->HasAura(SPELL_ELEMENTAL_FIRE, 1)) //index 0 = damage, 1 = aura
+                                doCast(me->getVictim(),SPELL_ELEMENTAL_FIRE, false);
+                        }
+                        doMeleeAttackIfReady();
+                        break;
+                    case SUBMERGING:
+                        break;
+                    case SUBMERGED:
+                        if (AddCount == 0)
+                            Phase_Timer = 0;
+                        break;
+                    case EMERGING:
+                        if (Emerging_Waited)
+                        {
+                            if(me->HasAura(SPELL_SUBMERGE, 0))
+                            {
+                                me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
+                                doCast(me,SPELL_EMERGE);
+                            }
+                        }
+                        else
+                            Emerging_Waited = true;
+
+                        break;
+                }
+                //Lava Splash
+                if (me->isInCombat())
+                {
+                    if (LavaSplash_Timer < diff)
+                    {
+                        if (_instance)
+                        {
+                            uint8 SplashLoc = urand(0,8);
+                            if(SplashLoc == 0)
+                                doCast((Unit*)NULL, SPELL_LAVA_BURST_INVOC_A);
+                            else
+                                doCast((Unit*)NULL, (SPELL_LAVA_BURST_INVOC_B -1) + SplashLoc);
+ 
+                            LavaSplash_Timer -= urand(500, 15000);
                         }
                     }
                     else
-                    {
-                        //MagmaBurst_Timer
-                        if (MagmaBurst_Timer < diff)
-                        {
-                            doCast(me->getVictim(), SPELL_MAGMABURST);
-
-                            if (!HasYelledMagmaBurst)
-                            {
-                                //Say our dialog
-                                DoScriptText(SAY_MAGMABURST, me);
-                                HasYelledMagmaBurst = true;
-                            }
-
-                            MagmaBurst_Timer = 2500;
-                        }
-                        else 
-                            MagmaBurst_Timer -= diff;
-                    }
+                        LavaSplash_Timer -= diff;
                 }
             }
 
@@ -392,8 +533,88 @@ class Boss_Ragnaros : public CreatureScript
     }
 };
 
+class Son_Of_Flame : public CreatureScript
+{
+    public:
+        Son_Of_Flame() : CreatureScript("Son_Of_Flame") {}
+
+    class Son_Of_FlameAI : public CreatureAINew
+    {
+        public:
+            enum event
+            {
+                EV_MANABURN       = 0
+            };
+
+            Son_Of_FlameAI(Creature* creature) : CreatureAINew(creature)
+            {
+                _instance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool onSpawn)
+            {
+                if (onSpawn)
+                {
+                    addEvent(EV_MANABURN, 3000, 3000);
+                }
+                else
+                {
+                    scheduleEvent(EV_MANABURN, 3000, 3000);
+                }
+            }
+
+            void onDeath(Unit* /*killer*/)
+            {
+                if (Creature* ragnaros = _instance->instance->GetCreature(_instance->GetData64(DATA_RAGNAROS)))
+                    ((Boss_Ragnaros::Boss_RagnarosAI*)ragnaros->getAI())->AddCount--;
+            }
+
+            void DoAoEManaburn()
+            {
+                std::list<HostilReference*>& m_threatlist = me->getThreatManager().getThreatList();
+                std::list<HostilReference*>::iterator i = m_threatlist.begin();
+                for (i = m_threatlist.begin(); i!= m_threatlist.end();++i)
+                {
+                    Unit* pUnit = Unit::GetUnit((*me), (*i)->getUnitGuid());
+                    if(pUnit && pUnit->IsWithinDistInMap(me,MANABURN_RANGE))
+                        pUnit->CastSpell(pUnit, SPELL_MANABURN, true);
+                }
+            }
+
+            void update(uint32 const diff)
+            {
+                if (!updateVictim())
+                    return;
+
+                updateEvents(diff);
+            
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EV_MANABURN:
+                            DoAoEManaburn();
+                            scheduleEvent(EV_MANABURN, 3000);
+                            break;
+                    }
+                }
+
+                doMeleeAttackIfReady();
+            }
+
+        private:
+            ScriptedInstance* _instance;
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new Son_Of_FlameAI(creature);
+    }
+};
+
 void AddSC_boss_ragnaros()
 {
     sScriptMgr.addScript(new Boss_Ragnaros());
+    sScriptMgr.addScript(new Son_Of_Flame());
 }
 
