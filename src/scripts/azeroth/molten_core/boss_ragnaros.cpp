@@ -103,7 +103,7 @@ class Boss_Ragnaros : public CreatureScript
     public:
         Boss_Ragnaros() : CreatureScript("Boss_Ragnaros") {}
 
-    class Boss_RagnarosAI : public CreatureAINew
+    class Boss_RagnarosAI : public Creature_NoMovementAINew
     {
         public:
             uint8 Intro_Phase;
@@ -122,7 +122,7 @@ class Boss_Ragnaros : public CreatureScript
 
             uint32 Phase_Timer;
 
-            Boss_RagnarosAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+            Boss_RagnarosAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
             {
                 _instance = ((ScriptedInstance*)creature->GetInstanceData());
                 RagnaFaction = me->getFaction();
