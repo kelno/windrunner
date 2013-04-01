@@ -108,6 +108,11 @@ void npc_escortAI::EnterEvadeMode()
 void npc_escortAI::UpdateAI(const uint32 diff)
 {
     me->SetEscorted(IsBeingEscorted);
+    
+    if (InCombat) {
+        if (me->getAttackers().size() == 0)
+            EnterEvadeMode();
+    }
 
     //Waypoint Updating
     if (IsBeingEscorted && !InCombat && WaitTimer && !Returning)
@@ -171,8 +176,9 @@ void npc_escortAI::UpdateAI(const uint32 diff)
         }else WaitTimer -= diff;
     }
 
-    //Check if player is within range
-    if (IsBeingEscorted && !InCombat && PlayerGUID)
+    //Check if player is within range if he's a player
+    Player* player = Unit::GetPlayer(PlayerGUID);
+    if (IsBeingEscorted && !InCombat && PlayerGUID && player && player->GetSession()->GetSecurity() <= SEC_PLAYER)
     {
         if (PlayerTimer < diff)
         {
@@ -351,6 +357,8 @@ void npc_escortAI::Start(bool bAttack, bool bDefend, bool bRun, uint64 pGUID, ui
 
     //Disable questgiver flag
     m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
+    
+    AddEscortState(STATE_ESCORT_ESCORTING);
 }
 
 void npc_escortAI::SetEscortPaused(bool bPaused)
