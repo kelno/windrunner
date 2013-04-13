@@ -81,11 +81,10 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
     uint32 WaterCheckTimer;
     uint32 FrenzySpawnTimer;
     uint32 Water;
-    uint32 TrashCount;
+    uint32 TrashKills;
 
     bool ShieldGeneratorDeactivated[4];
     uint32 Encounters[ENCOUNTERS];
-    bool DoSpawnFrenzy;
 
     void Initialize()
     {
@@ -105,7 +104,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         BridgePart[1] = 0;
         BridgePart[2] = 0;
         StrangePool = 0;
-        Water = WATERSTATE_FRENZY;
+        Water = WATERSTATE_NONE;
 
         ShieldGeneratorDeactivated[0] = false;
         ShieldGeneratorDeactivated[1] = false;
@@ -115,8 +114,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         LurkerSubEvent = 0;
         WaterCheckTimer = 500;
         FrenzySpawnTimer = 2000;
-        DoSpawnFrenzy = false;
-        TrashCount = 0;
+        TrashKills = 0;
 
         for(uint8 i = 0; i < ENCOUNTERS; i++)
             Encounters[i] = NOT_STARTED;
@@ -144,10 +142,13 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         //Water checks
         if(WaterCheckTimer < diff)
         {
+            Water = WATERSTATE_NONE;
+
             if (GetData(DATA_THELURKERBELOWEVENT) != DONE)
             {
                 Water = WATERSTATE_FRENZY;
-                if(TrashCount >= MIN_KILLS)
+
+                if(TrashKills >= MIN_KILLS)
                 {
                     if(GameObject *Console = instance->GetGameObjectInMap(SerpentshrineConsole))
                         if (Console->HasFlag(GAMEOBJECT_FLAGS, GO_FLAG_IN_USE))
@@ -156,8 +157,10 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             }
                 
             Map::PlayerList const &PlayerList = instance->GetPlayers();
+
             if (PlayerList.isEmpty())
                 return;
+
             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* pPlayer = i->getSource())
@@ -171,32 +174,46 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                             {
                                 pPlayer->CastSpell(pPlayer, SPELL_SCALDINGWATER,true);
                             }
-                        }else if(Water == WATERSTATE_FRENZY)
-                        {
-                            //spawn frenzy
-                            if(DoSpawnFrenzy)
-                            {
-                                if(Creature* frenzy = pPlayer->SummonCreature(MOB_COILFANG_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
-                                {
-                                    frenzy->Attack(pPlayer,false);
-                                    frenzy->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                                }
-                                DoSpawnFrenzy = false;
-                            }
                         }
-                    }                
+                    }
                     if(!pPlayer->IsInWater())
                         pPlayer->RemoveAurasDueToSpell(SPELL_SCALDINGWATER);
                 }
                                     
             }
             WaterCheckTimer = 500;//remove stress from core
-        }else WaterCheckTimer -= diff;
+        }
+        else
+            WaterCheckTimer -= diff;
+
         if(FrenzySpawnTimer < diff)
         {
-            DoSpawnFrenzy = true;
+            if(Water == WATERSTATE_FRENZY)
+            {
+                Map::PlayerList const &PlayerList = instance->GetPlayers();
+
+                if (PlayerList.isEmpty())
+                    return;
+
+                for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                {
+                    if (Player* pPlayer = i->getSource())
+                    {
+                        if (pPlayer->isAlive() && pPlayer->IsInWater())
+                        {
+                            if(Creature* frenzy = pPlayer->SummonCreature(MOB_COILFANG_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
+                            {
+                                frenzy->Attack(pPlayer,false);
+                                frenzy->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
+                            }
+                        }
+                    }
+                }
+            }
             FrenzySpawnTimer = 2000;
-        }else FrenzySpawnTimer -= diff;
+        }
+        else
+            FrenzySpawnTimer -= diff;
     }
 
     void OnObjectCreate(GameObject *go)
@@ -258,11 +275,18 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             case 21965: Tidalvess = creature->GetGUID();            break;
             case 21964: Caribdis = creature->GetGUID();             break;
             case 21215: LeotherasTheBlind = creature->GetGUID();    break;
-            /*case TRASHMOB_COILFANG_PRIESTESS:
+        }
+    }
+
+    void OnCreatureDeath(Creature* creature)
+    {
+        switch (creature->GetEntry())
+        {
+            case TRASHMOB_COILFANG_PRIESTESS:
             case TRASHMOB_COILFANG_SHATTERER:
-                if(pCreature->isAlive())
-                    TrashCount++;
-                break;*/
+                TrashKills++;
+                SaveToDB();
+                break;
         }
     }
 
@@ -311,17 +335,9 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             }
             ControlConsole = data;
             break;
-        case DATA_TRASH :
-            {
-                if(data == 1 && TrashCount < MIN_KILLS)
-                    TrashCount++;//+1 died
-                SaveToDB();
-                break;
-            }
-        case DATA_WATER : Water = data; break;
         case DATA_HYDROSSTHEUNSTABLEEVENT:  Encounters[0] = data;   break;
         case DATA_LEOTHERASTHEBLINDEVENT:   Encounters[1] = data;   break;
-        case DATA_THELURKERBELOWEVENT:      Encounters[2] = data;   if (data == DONE) { Water == WATERSTATE_NONE; }   break;  // Water is not scalding or frenzy anymore when Lurker is dead
+        case DATA_THELURKERBELOWEVENT:      Encounters[2] = data;   break;
         case DATA_KARATHRESSEVENT:          Encounters[3] = data;   break;
         case DATA_MOROGRIMTIDEWALKEREVENT:  Encounters[4] = data;   break;
             //Lady Vashj
@@ -362,7 +378,6 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
             case DATA_CANSTARTPHASE3:
                 if(ShieldGeneratorDeactivated[0] && ShieldGeneratorDeactivated[1] && ShieldGeneratorDeactivated[2] && ShieldGeneratorDeactivated[3])return 1;break;
             case DATA_STRANGE_POOL:             return StrangePool;
-            case DATA_WATER:                    return Water;
         }
         return 0;
     }
@@ -371,7 +386,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         OUT_SAVE_INST_DATA;
         std::ostringstream stream;
         stream << Encounters[0] << " " << Encounters[1] << " " << Encounters[2] << " "
-            << Encounters[3] << " " << Encounters[4] << " " << Encounters[5] << " " << TrashCount;
+            << Encounters[3] << " " << Encounters[4] << " " << Encounters[5] << " " << TrashKills;
         char* out = new char[stream.str().length() + 1];
         strcpy(out, stream.str().c_str());
         if(out)
@@ -392,7 +407,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
         OUT_LOAD_INST_DATA(in);
         std::istringstream stream(in);
         stream >> Encounters[0] >> Encounters[1] >> Encounters[2] >> Encounters[3]
-        >> Encounters[4] >> Encounters[5] >> TrashCount;
+        >> Encounters[4] >> Encounters[5] >> TrashKills;
         for(uint8 i = 0; i < ENCOUNTERS; ++i)
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
                 Encounters[i] = NOT_STARTED;
