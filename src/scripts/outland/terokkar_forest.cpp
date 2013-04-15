@@ -383,6 +383,11 @@ struct npc_isla_starmaneAI : public npc_escortAI
     npc_isla_starmaneAI(Creature* c) : npc_escortAI(c) {}
 
     bool Completed;
+    
+    void Reset()
+    {
+        
+    }
 
     void WaypointReached(uint32 i)
     {
@@ -417,7 +422,7 @@ struct npc_isla_starmaneAI : public npc_escortAI
         }
     }
 
-    void Reset()
+    void JustRespawned()
     {
         Completed = false;
         m_creature->setFaction(1660);
