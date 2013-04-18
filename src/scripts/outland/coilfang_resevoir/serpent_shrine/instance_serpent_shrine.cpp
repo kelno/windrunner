@@ -195,18 +195,29 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 if (PlayerList.isEmpty())
                     return;
 
+                std::list<Player*> targetList;
+
                 for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 {
                     if (Player* pPlayer = i->getSource())
                     {
                         if (pPlayer->isAlive() && pPlayer->IsInWater())
-                        {
-                            if(Creature* frenzy = pPlayer->SummonCreature(MOB_COILFANG_FRENZY,pPlayer->GetPositionX(),pPlayer->GetPositionY(),pPlayer->GetPositionZ(),pPlayer->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT,2000))
-                            {
-                                frenzy->Attack(pPlayer,false);
-                                frenzy->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-                            }
-                        }
+                            targetList.push_back(pPlayer);
+                    }
+                }
+
+                if (targetList.empty())
+                    return;
+
+                Trinity::Containers::RandomResizeList(targetList, 25);
+                std::list<Player*>::const_iterator i = targetList.begin();
+
+                if (i != targetList.end())
+                {
+                    if(Creature* frenzy = (*i)->SummonCreature(MOB_COILFANG_FRENZY, (*i)->GetPositionX(), (*i)->GetPositionY(), (*i)->GetPositionZ(), (*i)->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000))
+                    {
+                        frenzy->Attack((*i), false);
+                        frenzy->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
                     }
                 }
             }
