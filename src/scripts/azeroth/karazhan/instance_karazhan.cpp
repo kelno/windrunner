@@ -62,6 +62,7 @@ struct instance_karazhan : public ScriptedInstance
     uint64 GamesmansDoor;                                   // Door before Chess
     uint64 GamesmansExitDoor;                               // Door after Chess
     uint64 NetherspaceDoor;                                // Door at Malchezaar
+    uint64 SideEntranceDoor;                                // Inside top entrance door
     uint64 MastersTerraceDoor[2];
     uint64 ImageGUID;
     
@@ -91,6 +92,7 @@ struct instance_karazhan : public ScriptedInstance
         GamesmansDoor       = 0;
         GamesmansExitDoor   = 0;
         NetherspaceDoor     = 0;
+        SideEntranceDoor    = 0;
         MastersTerraceDoor[0]= 0;
         MastersTerraceDoor[1]= 0;
         ImageGUID = 0;
@@ -206,7 +208,11 @@ struct instance_karazhan : public ScriptedInstance
                 break;
             case DATA_MAIDENOFVIRTUE_EVENT:    Encounters[2]  = data; break;
             case DATA_OPTIONAL_BOSS_EVENT:     Encounters[3]  = data; break;
-            case DATA_OPERA_EVENT:             Encounters[4]  = data; break;
+            case DATA_OPERA_EVENT:             
+                Encounters[4]  = data; 
+                if(data == DONE)
+                    HandleGameObject(SideEntranceDoor,true);
+                break;
             case DATA_CURATOR_EVENT:           Encounters[5]  = data; break;
             case DATA_SHADEOFARAN_EVENT:       Encounters[6]  = data; break;
             case DATA_TERESTIAN_EVENT:         Encounters[7]  = data; break;
@@ -279,16 +285,19 @@ struct instance_karazhan : public ScriptedInstance
     {
         switch(go->GetEntry())
         {
-            case 183932:   CurtainGUID          = go->GetGUID();         break;
-            case 184278:   StageDoorLeftGUID    = go->GetGUID();         break;
-            case 184279:   StageDoorRightGUID   = go->GetGUID();         break;
-            case 184517:   LibraryDoor          = go->GetGUID();         break;
-            case 185521:   MassiveDoor          = go->GetGUID();         break;
-            case 184276:   GamesmansDoor        = go->GetGUID();         break;
-            case 184277:   GamesmansExitDoor    = go->GetGUID();         break;
-            case 185134:   NetherspaceDoor      = go->GetGUID();         break;
-            case 184274:    MastersTerraceDoor[0] = go->GetGUID();  break;
-            case 184280:    MastersTerraceDoor[1] = go->GetGUID();  break;
+            case 183932:   CurtainGUID           = go->GetGUID();         break;
+            case 184278:   StageDoorLeftGUID     = go->GetGUID();         break;
+            case 184279:   StageDoorRightGUID    = go->GetGUID();         break;
+            case 184517:   LibraryDoor           = go->GetGUID();         break;
+            case 185521:   MassiveDoor           = go->GetGUID();         break;
+            case 184276:   GamesmansDoor         = go->GetGUID();         break;
+            case 184277:   GamesmansExitDoor     = go->GetGUID();         break;
+            case 185134:   NetherspaceDoor       = go->GetGUID();         break;
+            case 184274:   MastersTerraceDoor[0] = go->GetGUID();         break;
+            case 184280:   MastersTerraceDoor[1] = go->GetGUID();         break;
+            case 184275:   SideEntranceDoor      = go->GetGUID();         
+                           if(DATA_OPERA_EVENT == DONE)
+                               HandleGameObject(SideEntranceDoor,true);   break;
         }
 
         switch(OperaEvent)
