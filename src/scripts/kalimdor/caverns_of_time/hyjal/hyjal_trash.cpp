@@ -1358,6 +1358,7 @@ struct alliance_riflemanAI : public Scripted_NoMovementAI
 
     void Reset()
     {
+        m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_RANGED);
         ExplodeTimer = 5000+rand()%5000;
     }
 
