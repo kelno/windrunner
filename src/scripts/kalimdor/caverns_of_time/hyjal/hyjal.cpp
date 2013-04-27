@@ -58,7 +58,7 @@ CreatureAI* GetAI_npc_jaina_proudmoore(Creature *_Creature)
     ai->Spell[1].TargetType = TARGETTYPE_RANDOM;
 
     ai->Spell[2].SpellId = SPELL_SUMMON_ELEMENTALS;
-    ai->Spell[2].Cooldown = 15000 + rand()%30000;
+    ai->Spell[2].Cooldown = 90000;
     ai->Spell[2].TargetType = TARGETTYPE_SELF;
 
     return ai;
@@ -128,7 +128,7 @@ CreatureAI* GetAI_npc_thrall(Creature *_Creature)
     ai->Spell[0].TargetType = TARGETTYPE_VICTIM;
 
     ai->Spell[1].SpellId = SPELL_SUMMON_DIRE_WOLF;
-    ai->Spell[1].Cooldown = 6000 + rand()%35000;
+    ai->Spell[1].Cooldown = 60000;
     ai->Spell[1].TargetType = TARGETTYPE_RANDOM;
 
     return ai;

@@ -327,6 +327,9 @@ hyjalAI::hyjalAI(Creature *c) : npc_escortAI(c), Summons(m_creature)
     MassTeleportTimer = 0;
     DoMassTeleport = false;
     Wipe = false;
+    
+     //Initialize spells
+    memset(Spell, 0, sizeof(Spell));
 }
 
 void hyjalAI::JustSummoned(Creature *summoned)
@@ -390,11 +393,6 @@ void hyjalAI::Reset()
 
     //Flags
     m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-
-    //Initialize spells
-    memset(Spell, 0, sizeof(Spell));
-
-
 
     //Reset Instance Data for trash count
     if(pInstance)
@@ -873,7 +871,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
             ++WaveCount;
         }else NextWaveTimer -= diff;
     }
-
+         
     if(CheckTimer < diff)
     {
         for(uint8 i = 0; i < 2; ++i)
@@ -906,7 +904,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
     if(!UpdateVictim())
         return;
-
+    
     for(uint8 i = 0; i < 3; ++i)
     {
         if(Spell[i].SpellId)
