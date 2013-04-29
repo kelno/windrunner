@@ -720,7 +720,7 @@ enum EventRemulos
     EVENT_TYRANDE_SPAWN,
     EVENT_ERANIKUS_REDEEMED,
     EVENT_FAILURE,
-    EVENT_MAX,
+    EVENT_COUNT,
 };
 
 struct npc_keeper_remulosAI : public ScriptedAI
@@ -735,7 +735,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
     bool newWP;
     uint32 WPId;
     uint32 TalkId;
-    uint32 Timer[EVENT_MAX];
+    uint32 Timer[EVENT_COUNT];
 
     uint32 WaveId;
     uint32 KilledNightmares;
@@ -766,7 +766,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
         RedeemedGUID = 0;
         TyrandeGUID = 0;
 
-        for (int i = 0; i < EVENT_MAX; i++)
+        for (int i = 0; i < EVENT_COUNT; i++)
             Timer[i] = 0;
         for (int i = 0; i < 8; i ++)
             PriestessGUIDs[i] = 0;
@@ -1231,7 +1231,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
             newWP = false;
         }
 
-        for (uint32 i = 1; i <= EVENT_MAX; i++)
+        for (uint32 i = 1; i <= EVENT_COUNT; i++)
         {
             if (Timer[i])
                 if (Timer[i] <= diff)

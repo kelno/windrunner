@@ -525,7 +525,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         int8 deltaRow = pieceRow - targetRow;
         int8 deltaCol = pieceCol - targetCol;
         
-        if (fabs(deltaRow) + fabs(deltaCol) > 1)
+        if (fabs((float)deltaRow) + fabs((float)deltaCol) > 1)
             return -1;
 
         if (deltaRow == 1 && deltaCol == 0)
@@ -564,8 +564,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         }
         
         if (res) {
-            uint8 deltaRow = fabs(oldRow - newRow);
-            uint8 deltaCol = fabs(oldCol - newCol);
+            uint8 deltaRow = fabs((float)oldRow - newRow);
+            uint8 deltaCol = fabs((float)oldCol - newCol);
             switch (piece->GetEntry()) {
             case NPC_PAWN_H:
             case NPC_PAWN_A:
