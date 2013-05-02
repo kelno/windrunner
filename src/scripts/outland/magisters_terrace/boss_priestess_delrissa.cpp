@@ -148,11 +148,14 @@ struct boss_priestess_delrissaAI : public ScriptedAI
     void Aggro(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
-
-        for(uint8 i = 0; i < Adds.size(); ++i)
-            if(Unit* pAdd = Unit::GetUnit(*m_creature, Adds[i]->guid))
-                pAdd->AddThreat(who, 1.0f);
     }
+
+	void SetAddsInCombat(Unit* who)
+	{
+		for(uint8 i = 0; i < Adds.size(); ++i)
+            if(Creature* pAdd = Unit::GetCreature(*m_creature, Adds[i]->guid))
+				pAdd->AI()->AttackStart(who);
+	}
 
     void SummonAdds()
     {
@@ -424,7 +427,7 @@ struct boss_priestess_guestAI : public ScriptedAI
     {
         Creature* Delrissa = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_DELRISSA)));
         if(Delrissa)
-            ((boss_priestess_delrissaAI*)Delrissa->AI())->Aggro(who);
+            ((boss_priestess_delrissaAI*)Delrissa->AI())->SetAddsInCombat(who);
     }
 
     void JustDied(Unit* killer)
