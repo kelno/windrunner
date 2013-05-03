@@ -148,6 +148,7 @@ struct boss_priestess_delrissaAI : public ScriptedAI
     void Aggro(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
+        SetAddsInCombat(who);
     }
 
 	void SetAddsInCombat(Unit* who)
