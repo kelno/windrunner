@@ -1,11 +1,9 @@
 #include "precompiled.h"
 
-struct linformeAI : public ScriptedAI
+struct theinformAI : public ScriptedAI
 {
-    linformeAI(Creature *c) : ScriptedAI(c) 
-    {
-        RandomizeDisplayID();
-    }
+    theinformAI(Creature *c) : ScriptedAI(c) 
+    {}
 
     void DamageTaken(Unit* who, uint32& damage) 
     {
@@ -21,17 +19,17 @@ struct linformeAI : public ScriptedAI
     void Aggro(Unit* /* who */) {}
 };
 
-CreatureAI* GetAI_linforme(Creature *_Creature)
+CreatureAI* GetAI_theinform(Creature *_Creature)
 {
-    return new linformeAI (_Creature);
+    return new theinformAI (_Creature);
 }
  
-void AddSC_linforme()
+void AddSC_theinform()
 {
     Script *newscript; 
  
     newscript = new Script;
-    newscript->Name="linforme";
-    newscript->GetAI = &GetAI_linforme;
+    newscript->Name="custom_theinform";
+    newscript->GetAI = &GetAI_theinform;
     newscript->RegisterSelf();
 }
