@@ -197,6 +197,7 @@ SET(scripts_STAT_SRCS
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
     custom/custom_npc_teleporter.cpp
+	custom/custom_theinform.cpp
     custom/custom_training_dummy.cpp
     custom/custom_zone_silence.cpp
     custom/on_events.cpp
