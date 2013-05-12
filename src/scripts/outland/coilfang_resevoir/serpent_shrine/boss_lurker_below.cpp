@@ -56,12 +56,12 @@ enum
 
 float AddPos[9][3] =
 {
-    {-6.21f , -491.38f, -22.16f},   //MOVE_AMBUSHER_1 X, Y, Z
-    {0.90f  , -495.27f, -22.20f},   //MOVE_AMBUSHER_2 X, Y, Z
-    {60.38f , -494.72f, -22.16f},   //MOVE_AMBUSHER_3 X, Y, Z
-    {71.14f , -493.37f, -22.54f},   //MOVE_AMBUSHER_4 X, Y, Z
-    {82.11f , -349.43f, -22.21f},   //MOVE_AMBUSHER_5 X, Y, Z
-    {93.45f , -355.93f, -21.59f},   //MOVE_AMBUSHER_6 X, Y, Z
+    {0.17f  , -468.30f, -19.79f},   //MOVE_AMBUSHER_1 X, Y, Z
+    {8.43f  , -471.48f, -19.79f},   //MOVE_AMBUSHER_2 X, Y, Z
+    {56.75f , -466.73f, -19.79f},   //MOVE_AMBUSHER_3 X, Y, Z
+    {63.88f , -464.75f, -19.79f},   //MOVE_AMBUSHER_4 X, Y, Z
+    {65.88f , -374.74f, -19.79f},   //MOVE_AMBUSHER_5 X, Y, Z
+    {78.52f , -381.99f, -19.72f},   //MOVE_AMBUSHER_6 X, Y, Z
     {47.60f , -364.82f, -21.68f},   //MOVE_GUARDIAN_1 X, Y, Z
     {-14.71f, -446.60f, -21.85f},   //MOVE_GUARDIAN_2 X, Y, Z
     {94.24f , -400.72f, -21.65f}    //MOVE_GUARDIAN_3 X, Y, Z
@@ -69,6 +69,7 @@ float AddPos[9][3] =
 
 enum Phases
 {
+    NONE,
     INTRO,
     SUBMERGED,
     EMERGED,
@@ -127,10 +128,7 @@ class Boss_Lurker_Below : public CreatureScript
                     _instance->SetData(DATA_STRANGE_POOL, NOT_STARTED);
                 }
 
-                setPhase(SUBMERGED);
-                me->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
-                me->setFaction(35);
-                me->SetReactState(REACT_PASSIVE);
+                setPhase(INTRO);
 
                 introState = 0;
                 introPhaseTimer = 0;
@@ -168,6 +166,17 @@ class Boss_Lurker_Below : public CreatureScript
             {
                 switch(newPhase)
                 {
+                    case INTRO:
+                        me->InterruptNonMeleeSpells(false);
+                        me->RemoveAllAuras();
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                        me->SetFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
+                        doCast(me, SPELL_SUBMERGE);
+                        me->SetVisibility(VISIBILITY_OFF);
+                        me->setFaction(35);
+                        me->SetReactState(REACT_PASSIVE);
+                        break;
                     case EMERGED:
                         me->InterruptNonMeleeSpells(false);
                         me->RemoveAllAuras();
@@ -178,7 +187,6 @@ class Boss_Lurker_Below : public CreatureScript
                         break;
                     case SUBMERGED:
                         me->InterruptNonMeleeSpells(false);
-                        me->RemoveAllAuras();
                         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                         me->SetFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
@@ -186,6 +194,7 @@ class Boss_Lurker_Below : public CreatureScript
                         submergeState = 1;
                         break;
                     case IN_ROTATE:
+                        me->InterruptNonMeleeSpells(false);
                         me->MonsterTextEmote(EMOTE_SPOUT, 0, true);
                         doCast(me, SPELL_SPOUT_BREATH);
                         rotateState = 1;
@@ -204,24 +213,6 @@ class Boss_Lurker_Below : public CreatureScript
                 nbPops++;
                 switch (nbPops)
                 {
-                    case 1:
-                        summoned->GetMotionMaster()->MovePoint(0, 0.17f, -468.30f, -19.79f);
-                        break;
-                    case 2:
-                        summoned->GetMotionMaster()->MovePoint(0, 8.43f, -471.48f, -19.79f);
-                        break;
-                    case 3:
-                        summoned->GetMotionMaster()->MovePoint(0, 56.75f, -466.73f, -19.79f);
-                        break;
-                    case 4:
-                        summoned->GetMotionMaster()->MovePoint(0, 63.88f, -464.75f, -19.79f);
-                        break;
-                    case 5:
-                        summoned->GetMotionMaster()->MovePoint(0, 65.88f, -374.74f, -19.79f);
-                        break;
-                    case 6:
-                        summoned->GetMotionMaster()->MovePoint(0, 78.52f, -381.99f, -19.72f);
-                        break;
                     case 7:
                         summoned->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
                         break;
@@ -229,7 +220,6 @@ class Boss_Lurker_Below : public CreatureScript
                         summoned->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
                         break;
                     case 9:
-                        nbPops = 0;
                         summoned->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
                         break;
                 }
@@ -289,9 +279,15 @@ class Boss_Lurker_Below : public CreatureScript
                     return;
                 }
 
+                if (!updateCombat())
+                    return;
+
                 switch (getPhase())
                 {
                     case EMERGED:
+                        if (!updateVictim())
+                            return;
+
                         if (spoutTimer < diff)
                         {
                             spoutTimer = 22000;
@@ -337,9 +333,6 @@ class Boss_Lurker_Below : public CreatureScript
                                 waterboltTimer -= diff;
                         }
 
-                        if (!updateVictim())
-                            return;
-
                         doMeleeAttackIfReady();
                         break;
                     case IN_ROTATE:
@@ -348,6 +341,8 @@ class Boss_Lurker_Below : public CreatureScript
                             rotTimer = 0;
                             rotateState = 0;
                             m_phase = EMERGED;
+                            if (me->getVictim())
+                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
                             return;
                         }
                         else
@@ -403,6 +398,8 @@ class Boss_Lurker_Below : public CreatureScript
                     case SUBMERGED:
                         if (submergeState == 1)
                         {
+                            nbPops = 0;
+
                             for (uint8 i = 0; i < 9; ++i)
                             {
                                 if (i < 6)
@@ -544,7 +541,7 @@ class Mob_Coilfang_Ambusher : public CreatureScript
     public:
         Mob_Coilfang_Ambusher() : CreatureScript("Mob_Coilfang_Ambusher") {}
 
-    class Mob_Coilfang_AmbusherAI : public CreatureAINew
+    class Mob_Coilfang_AmbusherAI : public Creature_NoMovementAINew
     {
         public:
             enum event
@@ -554,7 +551,7 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                 EV_SHOOTBOW       = 2
             };
 
-            Mob_Coilfang_AmbusherAI(Creature* creature) : CreatureAINew(creature)
+            Mob_Coilfang_AmbusherAI(Creature* creature) : Creature_NoMovementAINew(creature)
             {
                 SpellEntry *TempSpell = GET_SPELL(SPELL_SPREAD_SHOT);
                 if (TempSpell)
