@@ -98,6 +98,7 @@ class Boss_Lurker_Below : public CreatureScript
             uint32 rotTimer;
             uint32 submergeState;
             uint32 nbPops;
+            float lastOrientation;
 
             Boss_Lurker_BelowAI(Creature* creature) : Creature_NoMovementAINew(creature), summons(me)
             {
@@ -144,6 +145,7 @@ class Boss_Lurker_Below : public CreatureScript
                 rotTimer = 0;
                 submergeState = 0;
                 nbPops = 0;
+                lastOrientation = 0.0f;
             }
 
             void attackStart(Unit *pTarget)
@@ -180,6 +182,7 @@ class Boss_Lurker_Below : public CreatureScript
                     case EMERGED:
                         me->InterruptNonMeleeSpells(false);
                         me->RemoveAllAuras();
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                         me->RemoveFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         doCast(me, SPELL_EMERGE, true);
@@ -196,6 +199,7 @@ class Boss_Lurker_Below : public CreatureScript
                     case IN_ROTATE:
                         me->InterruptNonMeleeSpells(false);
                         me->MonsterTextEmote(EMOTE_SPOUT, 0, true);
+                        lastOrientation = me->GetOrientation();
                         doCast(me, SPELL_SPOUT_BREATH);
                         rotateState = 1;
                         rotateStateTimer = 3000;
@@ -293,7 +297,6 @@ class Boss_Lurker_Below : public CreatureScript
                             spoutTimer = 22000;
                             whirlTimer = 100;//whirl directly after spout
                             rotTimer = 23000;
-                            rotateState = 1;
                             setPhase(IN_ROTATE);
                             return;
                         }
@@ -320,18 +323,18 @@ class Boss_Lurker_Below : public CreatureScript
                         else
                             geyserTimer -= diff;
 
-                        if (!isInMeleeRange())
+                        if (waterboltTimer < diff)
                         {
-                            if (waterboltTimer < diff)
+                            if (!isInMeleeRange())
                             {
                                 if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
                                     doCast(target, SPELL_WATERBOLT);
 
                                 waterboltTimer = 3000;
                             }
-                            else
-                                waterboltTimer -= diff;
                         }
+                        else
+                            waterboltTimer -= diff;
 
                         doMeleeAttackIfReady();
                         break;
@@ -341,8 +344,6 @@ class Boss_Lurker_Below : public CreatureScript
                             rotTimer = 0;
                             rotateState = 0;
                             m_phase = EMERGED;
-                            if (me->getVictim())
-                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
                             return;
                         }
                         else
@@ -354,9 +355,9 @@ class Boss_Lurker_Below : public CreatureScript
                             {
                                 case 1:
                                     if(rand()%2)
-                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000);
+                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000, lastOrientation);
                                     else
-                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000);
+                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000, lastOrientation);
 
                                     rotateState = 2;
                                     break;
@@ -365,10 +366,15 @@ class Boss_Lurker_Below : public CreatureScript
                         else
                             rotateStateTimer -= diff;
 
-                        if (rotateState == 2)
-                        {
-                            me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+                        me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
+                        if (rotateState == 1)
+                        {
+                            me->SetOrientation(lastOrientation);
+                            me->StopMoving();
+                        }
+                        else if (rotateState == 2)
+                        {
                             Map* pMap = me->GetMap();
                             Map::PlayerList const &PlayerList = pMap->GetPlayers();
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
@@ -388,8 +394,10 @@ class Boss_Lurker_Below : public CreatureScript
 
                             if(spoutAnimTimer < diff)
                             {
-                                doCast(me, SPELL_SPOUT_ANIM, true);
-                                spoutAnimTimer = 1000;
+                            	if (rotTimer >= 1000)
+                                    doCast(me, SPELL_SPOUT_ANIM, true);
+
+                            	spoutAnimTimer = 1000;
                             }
                             else
                                 spoutAnimTimer -= diff;
@@ -586,20 +594,6 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                     scheduleEvent(EV_SHOOTBOW, 4000, 4000);
                 }
                 me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-            }
-
-            void onMovementInform(uint32 type, uint32 id)
-            {
-                if(type == POINT_MOTION_TYPE)
-                {
-                    switch (id)
-                    {
-                        case 0:
-                            setZoneInCombat(true);
-                            attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-                            break;
-                    }
-                }
             }
 
             void onSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
