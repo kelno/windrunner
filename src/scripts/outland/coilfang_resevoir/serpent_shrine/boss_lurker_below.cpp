@@ -341,10 +341,20 @@ class Boss_Lurker_Below : public CreatureScript
                     case IN_ROTATE:
                         if(rotTimer < diff)
                         {
-                            rotTimer = 0;
-                            rotateState = 0;
-                            m_phase = EMERGED;
-                            return;
+                        	if (!me->IsUnitRotating())
+                        	{
+                                rotTimer = 0;
+                                rotateState = 0;
+                                m_phase = EMERGED;
+
+                                if(me->getVictim())
+                                {
+                            	    me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
+                            	    me->SetInFront(me->getVictim());
+                            	    me->StopMoving();
+                                }
+                        	}
+                        	return;
                         }
                         else
                             rotTimer -= diff;
