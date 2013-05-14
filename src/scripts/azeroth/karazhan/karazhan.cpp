@@ -150,7 +150,12 @@ struct npc_barnesAI : public npc_escortAI
             Event = pInstance->GetData(DATA_OPERA_PERFORMANCE);
 
              if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-                Door->SetGoState(1);
+             {
+                if (RaidWiped)
+                    Door->SetGoState(0);
+                else
+                    Door->SetGoState(1);
+             }
 
              if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
                 Curtain->SetGoState(1);
@@ -255,17 +260,17 @@ struct npc_barnesAI : public npc_escortAI
             if(CurtainTimer)
             {
                 if(CurtainTimer <= diff)
-            {
-                PrepareEncounter();
+                {
+                    PrepareEncounter();
 
-                if(!pInstance)
-                    return;
+                    if(!pInstance)
+                        return;
 
-                if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                    Curtain->SetGoState(0);
+                    if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
+                        Curtain->SetGoState(0);
 
-                CurtainTimer = 0;
-            }else CurtainTimer -= diff;
+                    CurtainTimer = 0;
+                }else CurtainTimer -= diff;
             }
 
             if(!RaidWiped)
