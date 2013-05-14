@@ -616,6 +616,7 @@ extern void AddSC_boss_skeram();
 extern void AddSC_boss_twinemperors();
 extern void AddSC_mob_anubisath_sentinel();
 extern void AddSC_instance_temple_of_ahnqiraj();
+extern void AddSC_boss_ouro();
 
 //Terokkar Forest
 extern void AddSC_terokkar_forest();
@@ -2015,6 +2016,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_twinemperors();
     AddSC_mob_anubisath_sentinel();
     AddSC_instance_temple_of_ahnqiraj();
+    AddSC_boss_ouro();
 
     //Terokkar Forest
     AddSC_terokkar_forest();
