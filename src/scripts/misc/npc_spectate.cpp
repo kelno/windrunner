@@ -29,6 +29,7 @@ EndScriptData */
 #include "ObjectMgr.h"
 #include "BattleGroundMgr.h"
 #include "ArenaTeam.h"
+#include "World.h"
 
 enum NpcSpectatorAtions
 {
@@ -149,8 +150,14 @@ void ShowPage(Player *player, uint16 page, bool isTop)
 
 bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LIST_TOP_GAMES);
-    pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LIST_GAMES);
+	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+	{
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LIST_TOP_GAMES);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LIST_GAMES);
+	}
+	else
+		pCreature->Say('Arena spectator désactivé', LANG_UNIVERSAL, pPlayer->GetGUID());
+
     pPlayer->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, pCreature->GetGUID());
     return true;
 }
