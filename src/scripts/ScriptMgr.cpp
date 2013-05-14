@@ -108,6 +108,7 @@ extern void AddSC_npc_xp_blocker();
 extern void AddSC_SmartSCripts();
 
 // -- Misc --
+extern void AddSC_arena_spectator_script();
 extern void AddSC_hallows_end();
 
 //--------------------
@@ -1508,6 +1509,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_SmartSCripts();
     
     // -- Misc --
+    AddSC_arena_spectator_script();
     AddSC_hallows_end();
 
     //--------------------

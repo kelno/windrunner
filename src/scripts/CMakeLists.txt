@@ -310,6 +310,7 @@ SET(scripts_STAT_SRCS
     misc/item_test.cpp
     misc/npc_innkeeper.cpp
     misc/npc_professions.cpp
+    misc/npc_spectate.cpp
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
     outdoor/boss_azuregos.cpp
