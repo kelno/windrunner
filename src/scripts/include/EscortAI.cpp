@@ -109,10 +109,11 @@ void npc_escortAI::UpdateAI(const uint32 diff)
 {
     me->SetEscorted(IsBeingEscorted);
     
+    /*
     if (InCombat) {
         if (me->getAttackers().size() == 0)
             EnterEvadeMode();
-    }
+    }*/
 
     //Waypoint Updating
     if (IsBeingEscorted && !InCombat && WaitTimer && !Returning)
