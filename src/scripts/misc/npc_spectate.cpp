@@ -114,6 +114,9 @@ void ShowPage(Player *player, uint16 page, bool isTop)
             if (!arena->GetPlayersSize())
                continue;
 
+            if (arena->GetStatus() != STATUS_IN_PROGRESS)
+                continue;
+
             /*if (isTop && mmr >= TopGamesRating)
             {*/
                 highGames++;
@@ -227,6 +230,16 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
                 chH.PSendSysMessage("Cant do that while you are on battleground.");
                 chH.SetSentErrorMessage(true);
                 return false;
+            }
+
+            if (BattleGround* bg = target->GetBattleGround())
+            {
+                if (bg->GetStatus() != STATUS_IN_PROGRESS)
+                {
+                    chH.PSendSysMessage("Can't do that. Arena didn`t started.");
+                    chH.SetSentErrorMessage(true);
+                    return false;
+                }
             }
 
             // all's well, set bg id
