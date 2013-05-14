@@ -101,6 +101,7 @@ void npc_escortAI::EnterEvadeMode()
         m_creature->GetMotionMaster()->MovementExpired();
         m_creature->GetMotionMaster()->MoveTargetedHome();
     }
+    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
     Reset();
 }
