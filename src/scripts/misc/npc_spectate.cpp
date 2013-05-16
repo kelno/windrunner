@@ -33,13 +33,14 @@ EndScriptData */
 
 enum NpcSpectatorAtions
 {
-    HIGH_RATING         = 1,
-    LOW_RATING          = 2,
+    HIGH_RATING         = 2000,
+    LOW_RATING          = 3000,
 
-    NPC_SPECTATOR_ACTION_SELECTED_PLAYER    = 1500
+    NPC_SPECTATOR_ACTION_SELECTED_PLAYER    = 4000
 };
 
 const uint16 TopGamesRating = 1800;
+const uint8  GamesOnPage    = 1;
 
 std::string GetClassNameById(uint8 id)
 {
@@ -93,8 +94,12 @@ uint64 GetFirstPlayerGuid(BattleGround *arena)
     return 0;
 }
 
-void ShowPage(Player *player, uint16 type)
+void ShowPage(Player *player, uint32 page, bool isHigh)
 {
+	uint16 highGames  = 0;
+	uint16 lowGames   = 0;
+	bool haveNextPage = false;
+
     for (uint8 i = BATTLEGROUND_AV; i <= BATTLEGROUND_RL; ++i)
     {
         if (!sBattleGroundMgr.IsArenaType((BattleGroundTypeId)i))
@@ -121,16 +126,51 @@ void ShowPage(Player *player, uint16 type)
                 rating /= 2;
             }
 
-            if (type == HIGH_RATING && rating > TopGamesRating)
+            if (isHigh && rating > TopGamesRating)
             {
-            	player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            	highGames++;
+            	if (highGames > (page + 1) * GamesOnPage)
+            	{
+            	    haveNextPage = true;
+            	    break;
+            	}
+
+            	if (highGames > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
             }
-            else if (type == LOW_RATING && rating < TopGamesRating)
+            else if (!isHigh && rating < TopGamesRating)
             {
-            	player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            	lowGames++;
+            	if (lowGames > (page + 1) * GamesOnPage)
+            	{
+            	    haveNextPage = true;
+            	    break;
+            	}
+
+            	if (lowGames > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
             }
         }
     }
+
+    if (isHigh)
+    {
+        if (page > 0)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prev...", GOSSIP_SENDER_MAIN, HIGH_RATING + page - 1);
+
+        if (haveNextPage)
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Next...", GOSSIP_SENDER_MAIN, HIGH_RATING + page + 1);
+    }
+    else
+    {
+    	if (page > 0)
+    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prev...", GOSSIP_SENDER_MAIN, LOW_RATING + page - 1);
+
+    	if (haveNextPage)
+    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Next...", GOSSIP_SENDER_MAIN, LOW_RATING + page + 1);
+    }
+
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
 }
 
 void spectate(Player* player, uint64 targetGuid)
@@ -263,20 +303,33 @@ void spectate(Player* player, uint64 targetGuid)
 	    float x, y, z;
 	    target->GetContactPoint(player, x, y, z);
 
-	    player->SetSpectate(true);
-	    player->SetInTeleport(true);
-	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
-	    player->SetInTeleport(false);
 	    target->GetBattleGround()->AddSpectator(player->GetGUID());
+	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
+	    player->SetSpectate(true);
     }
+}
+
+void ShowDefaultPage(Player* player, Creature* creature)
+{
+	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+    {
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, HIGH_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, LOW_RATING);
+		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+    }
+	else
+	{
+		player->CLOSE_GOSSIP_MENU();
+		creature->Say('Arena spectator désactivé', LANG_UNIVERSAL, player->GetGUID());
+	}
 }
 
 bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
 	{
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, HIGH_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, LOW_RATING);
 	}
 	else
 	{
@@ -290,20 +343,20 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 
 bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*sender*/, uint32 action)
 {
-    switch (action)
-    {
-        case GOSSIP_ACTION_INFO_DEF + 1:
-            ShowPage(player, HIGH_RATING);
-            player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
-            return true;
-        case GOSSIP_ACTION_INFO_DEF + 2:
-            ShowPage(player, LOW_RATING);
-            player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
-            return true;
-    }
-
-    if (action >= NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
-    {
+	if (action == GOSSIP_ACTION_INFO_DEF + 3)
+		ShowDefaultPage(player, creature);
+	else if (action >= HIGH_RATING && action < LOW_RATING)
+	{
+		ShowPage(player, action - HIGH_RATING, true);
+		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+	}
+	else if (action >= LOW_RATING && action < NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
+	{
+		ShowPage(player, action - LOW_RATING, false);
+		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+	}
+	else if (action >= NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
+	{
     	player->CLOSE_GOSSIP_MENU();
     	uint64 targetGuid = action - NPC_SPECTATOR_ACTION_SELECTED_PLAYER;
     	spectate(player, targetGuid);
