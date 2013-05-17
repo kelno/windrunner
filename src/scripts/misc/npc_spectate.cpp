@@ -40,7 +40,7 @@ enum NpcSpectatorAtions
 };
 
 const uint16 TopGamesRating = 1800;
-const uint8  GamesOnPage    = 1;
+const uint8  GamesOnPage    = 15;
 
 std::string GetClassNameById(uint8 id)
 {
