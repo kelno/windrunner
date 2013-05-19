@@ -62,9 +62,9 @@ float AddPos[9][3] =
     {63.88f , -464.75f, -19.79f},   //MOVE_AMBUSHER_4 X, Y, Z
     {65.88f , -374.74f, -19.79f},   //MOVE_AMBUSHER_5 X, Y, Z
     {78.52f , -381.99f, -19.72f},   //MOVE_AMBUSHER_6 X, Y, Z
-    {47.60f , -364.82f, -21.68f},   //MOVE_GUARDIAN_1 X, Y, Z
-    {-14.71f, -446.60f, -21.85f},   //MOVE_GUARDIAN_2 X, Y, Z
-    {94.24f , -400.72f, -21.65f}    //MOVE_GUARDIAN_3 X, Y, Z
+    {42.88f , -391.15f, -18.97f},   //MOVE_GUARDIAN_1 X, Y, Z
+    {13.63f , -430.81f, -19.46f},   //MOVE_GUARDIAN_2 X, Y, Z
+    {62.66f , -413.97f, -19.27f}    //MOVE_GUARDIAN_3 X, Y, Z
 };
 
 enum Phases
@@ -97,7 +97,6 @@ class Boss_Lurker_Below : public CreatureScript
             uint32 spoutAnimTimer;
             uint32 rotTimer;
             uint32 submergeState;
-            uint32 nbPops;
             float lastOrientation;
 
             Boss_Lurker_BelowAI(Creature* creature) : Creature_NoMovementAINew(creature), summons(me)
@@ -144,7 +143,6 @@ class Boss_Lurker_Below : public CreatureScript
                 spoutAnimTimer = 0;
                 rotTimer = 0;
                 submergeState = 0;
-                nbPops = 0;
                 lastOrientation = 0.0f;
             }
 
@@ -213,20 +211,6 @@ class Boss_Lurker_Below : public CreatureScript
 
                 if (summoned->getAI())
                     summoned->getAI()->setZoneInCombat(true);
-
-                nbPops++;
-                switch (nbPops)
-                {
-                    case 7:
-                        summoned->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
-                        break;
-                    case 8:
-                        summoned->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
-                        break;
-                    case 9:
-                        summoned->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
-                        break;
-                }
             }
 	
             void onSummonDespawn(Creature* unit)
@@ -416,8 +400,6 @@ class Boss_Lurker_Below : public CreatureScript
                     case SUBMERGED:
                         if (submergeState == 1)
                         {
-                            nbPops = 0;
-
                             for (uint8 i = 0; i < 9; ++i)
                             {
                                 if (i < 6)
@@ -441,6 +423,7 @@ class Boss_Lurker_Below : public CreatureScript
                     {
                         phaseTimer = 90000;
                         setPhase(EMERGED);
+                        spoutTimer = 2000;
                         return;
                     }
                 }
