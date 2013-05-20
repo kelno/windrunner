@@ -279,8 +279,8 @@ class Boss_Lurker_Below : public CreatureScript
                         if (spoutTimer < diff)
                         {
                             spoutTimer = 22000;
-                            whirlTimer = 100;//whirl directly after spout
-                            rotTimer = 23000;
+                            whirlTimer = 1000;//whirl directly after spout
+                            rotTimer = 24500;
                             setPhase(IN_ROTATE);
                             return;
                         }
@@ -325,20 +325,18 @@ class Boss_Lurker_Below : public CreatureScript
                     case IN_ROTATE:
                         if(rotTimer < diff)
                         {
-                        	if (!me->IsUnitRotating())
-                        	{
-                                rotTimer = 0;
-                                rotateState = 0;
-                                m_phase = EMERGED;
+                            rotTimer = 0;
+                            rotateState = 0;
+                            rotateStateTimer = 0;
+                            m_phase = EMERGED;
 
-                                if(me->getVictim())
-                                {
-                            	    me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
-                            	    me->SetInFront(me->getVictim());
-                            	    me->StopMoving();
-                                }
-                        	}
-                        	return;
+                            if(me->getVictim())
+                            {
+                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
+                                me->SetInFront(me->getVictim());
+                                me->StopMoving();
+                            }
+                            return;
                         }
                         else
                             rotTimer -= diff;
@@ -349,12 +347,15 @@ class Boss_Lurker_Below : public CreatureScript
                             {
                                 case 1:
                                     if(rand()%2)
-                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000, lastOrientation);
+                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000, lastOrientation, false);
                                     else
-                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000, lastOrientation);
+                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000, lastOrientation, false);
 
                                     rotateState = 2;
                                     break;
+                                case 2:
+                                case 3:
+                                	break;
                             }
                         }
                         else
@@ -388,13 +389,25 @@ class Boss_Lurker_Below : public CreatureScript
 
                             if(spoutAnimTimer < diff)
                             {
-                            	if (rotTimer >= 1000)
+                            	if (rotTimer >= 2000)
                                     doCast(me, SPELL_SPOUT_ANIM, true);
 
                             	spoutAnimTimer = 1000;
                             }
                             else
                                 spoutAnimTimer -= diff;
+
+                            if (!me->IsUnitRotating())
+                            {
+                            	rotateState = 3;
+                            	rotateStateTimer = 1000;
+                            	lastOrientation = me->GetOrientation();
+                            }
+                        }
+                        else if (rotateState == 3)
+                        {
+                        	me->SetOrientation(lastOrientation);
+                        	me->StopMoving();
                         }
                         break;
                     case SUBMERGED:
