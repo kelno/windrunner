@@ -320,7 +320,7 @@ void ShowDefaultPage(Player* player, Creature* creature)
 	else
 	{
 		player->CLOSE_GOSSIP_MENU();
-		creature->Say('Arena spectator désactivé', LANG_UNIVERSAL, player->GetGUID());
+		creature->Say("Arena spectator désactivé", LANG_UNIVERSAL, player->GetGUID());
 	}
 }
 
@@ -333,7 +333,7 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 	}
 	else
 	{
-		pCreature->Say('Arena spectator désactivé', LANG_UNIVERSAL, pPlayer->GetGUID());
+		pCreature->Say("Arena spectator désactivé", LANG_UNIVERSAL, pPlayer->GetGUID());
 		return true;
 	}
 
