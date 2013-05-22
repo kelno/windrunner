@@ -177,8 +177,9 @@ struct boss_felmystAI : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
         }
         else {
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetFlying(true);
             me->GetMotionMaster()->MovePath(25038, true);
+            m_creature->SendMovementFlagUpdate();
         }
 
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
@@ -311,7 +312,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-            me->SendMovementFlagUpdate();
+            me->SendMovementFlagUpdate(300.f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
         }
         else
@@ -361,8 +362,9 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetFlying(true);
             m_creature->StopMoving();
+            m_creature->SendMovementFlagUpdate();
             DoScriptText(YELL_TAKEOFF, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
@@ -451,18 +453,20 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MovePoint(1, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
                 m_creature->GetMotionMaster()->MovePoint(1, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
+            me->SendMovementFlagUpdate(300.f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
             break;
         }
         case 7:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            if (BreathCount == 1)       // Right
-                //m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
-                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
+            if (!goingLeft)       // Right
+                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
+                //m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
             else
-                //m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
+                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
+                //m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
             m_creature->StopMoving();
+            me->SendMovementFlagUpdate(300.f);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2500;
             break;
@@ -508,9 +512,10 @@ struct boss_felmystAI : public ScriptedAI
             break;
         case 11:
         {
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetFlying(false);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+            m_creature->SendMovementFlagUpdate();
             EnterPhase(PHASE_GROUND);
             Unit *target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
             m_creature->AI()->AttackStart(target);
@@ -549,7 +554,8 @@ struct boss_felmystAI : public ScriptedAI
                 case 2:
                     me->GetMotionMaster()->Clear(false);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-                    me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    me->SetFlying(true);
+                    me->SendMovementFlagUpdate();
                     IntroTimer = 500;
                     IntroPhase++;
                     break;
@@ -613,8 +619,9 @@ struct boss_felmystAI : public ScriptedAI
             
         if (justPulled && m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             justPulled = false;
-            //m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+            m_creature->SetFlying(false);
+            m_creature->SendMovementFlagUpdate();
             float x, y, z;
             m_creature->GetPosition(x, y, z);
             m_creature->UpdateGroundPositionZ(x, y, z);
@@ -788,6 +795,11 @@ struct mob_felmyst_vaporAI : public ScriptedAI
     {
         if(!m_creature->getVictim())
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+        
+        if (ScriptedInstance* instance = ((ScriptedInstance*)me->GetInstanceData())) {
+            if (instance->GetData(DATA_FELMYST_EVENT) != IN_PROGRESS)
+                me->DisappearAndDie();
+        }
     }
 };
 
