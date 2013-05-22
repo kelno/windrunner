@@ -311,9 +311,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-            WorldPacket data;
-            m_creature->BuildHeartBeatMsg(&data);
-            m_creature->SendMessageToSet(&data,true);
+            me->SendMovementFlagUpdate();
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
         }
         else
@@ -697,9 +695,9 @@ struct boss_felmystAI : public ScriptedAI
                 {
                     if (pInstance) {
                         switch (randomPoint) {
-                        case 0: pInstance->SetData(DATA_ACTIVATE_NORTH, DONE); break;
-                        case 1: pInstance->SetData(DATA_ACTIVATE_CENTER, DONE); break;
-                        case 2: pInstance->SetData(DATA_ACTIVATE_SOUTH, DONE); break;
+                        case 0: pInstance->SetData((goingLeft ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY()); break;
+                        case 1: pInstance->SetData((goingLeft ? DATA_ACTIVATE_CENTER_TO_LEFT : DATA_ACTIVATE_CENTER_TO_RIGHT), (uint32) me->GetPositionY()); break;
+                        case 2: pInstance->SetData((goingLeft ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY()); break;
                         }
                     }
                     float x, y, z;
@@ -713,7 +711,7 @@ struct boss_felmystAI : public ScriptedAI
                             trigger->CastSpell(trigger, SPELL_FOG_TRIGGER, true);*/
                     }
                 }
-                Timer[EVENT_SUMMON_FOG] = 1000;
+                Timer[EVENT_SUMMON_FOG] = 500;
                 break;
             default:
                 break;
