@@ -384,15 +384,20 @@ bool GossipHello_npc_barnes(Player* player, Creature* _Creature)
 {
     // Check for death of Moroes.
     ScriptedInstance* pInstance = ((ScriptedInstance*)_Creature->GetInstanceData());
-    if(pInstance && (pInstance->GetData(DATA_MOROES_EVENT) >= DONE))
+    if (pInstance && (pInstance->GetData(DATA_OPERA_EVENT) < DONE))
     {
-        player->ADD_GOSSIP_ITEM(0, OZ_GOSSIP1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        if(pInstance->GetData(DATA_MOROES_EVENT) >= DONE)
+        {
+            player->ADD_GOSSIP_ITEM(0, OZ_GOSSIP1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
-        if(!((npc_barnesAI*)_Creature->AI())->RaidWiped)
-            player->SEND_GOSSIP_MENU(8970, _Creature->GetGUID());
-        else
-            player->SEND_GOSSIP_MENU(8975, _Creature->GetGUID());
-    }else player->SEND_GOSSIP_MENU(8978, _Creature->GetGUID());
+            if(!((npc_barnesAI*)_Creature->AI())->RaidWiped)
+                player->SEND_GOSSIP_MENU(8970, _Creature->GetGUID()); //try again text
+            else
+                player->SEND_GOSSIP_MENU(8975, _Creature->GetGUID());
+        }else {
+            player->SEND_GOSSIP_MENU(8978, _Creature->GetGUID()); //Someone should take care of Moroes
+        }
+    }
 
     return true;
 }
