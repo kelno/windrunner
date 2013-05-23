@@ -569,9 +569,6 @@ struct boss_croneAI : public ScriptedAI
         if(pInstance)
         {
             pInstance->SetData(DATA_OPERA_EVENT, DONE);
-            GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT));
-            if(Door)
-                Door->UseDoorOrButton();
         }
     }
 
@@ -762,9 +759,6 @@ struct boss_bigbadwolfAI : public ScriptedAI
         if(pInstance)
         {
             pInstance->SetData(DATA_OPERA_EVENT, DONE);
-            GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT));
-            if(Door)
-                Door->UseDoorOrButton();
         }
     }
 
@@ -996,9 +990,6 @@ struct boss_julianneAI : public ScriptedAI
         if(pInstance)
         {
             pInstance->SetData(DATA_OPERA_EVENT, DONE);
-            GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORRIGHT));
-            if(Door)
-                Door->UseDoorOrButton();
         }
     }
 
