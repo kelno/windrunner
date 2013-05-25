@@ -639,7 +639,8 @@ public:
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast(me, SPELL_SHADOW_SPIKE);
-                            scheduleEvent(EVENT_SHADOW_SPIKE, 60000);
+                            scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
+                            disableEvent(EVENT_SHADOW_SPIKE);
                             break;
                         case EVENT_FLAME_DART:
                             doCast(me, SPELL_FLAME_DART);
@@ -701,7 +702,6 @@ public:
                     if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
                     {
                         talk(SAY_KJ_PHASE3);
-                        enableEvent(EVENT_ORBS_EMPOWER);
                         setPhase(PHASE_DARKNESS);
                     }
                     else
@@ -716,6 +716,7 @@ public:
                         talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
                         enableEvent(EVENT_ORBS_EMPOWER);
+                        enableEvent(EVENT_SHADOW_SPIKE);
                     }
                     else
                         return;
@@ -731,6 +732,7 @@ public:
                         if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
                             Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, false);
                         enableEvent(EVENT_ORBS_EMPOWER);
+                        enableEvent(EVENT_SHADOW_SPIKE);
                     }
                     else
                         return;
@@ -821,7 +823,7 @@ public:
 
                 for(uint8 i = 0; i < 3; ++i)
                 {
-                    Creature *hand = me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_DEAD_DESPAWN, 0);
+                    Creature *hand = me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
                     handDeceiver[i] = hand->GetGUID();
                 }
 
@@ -964,6 +966,7 @@ public:
 
             void onDeath(Unit* /*killer*/)
             {
+            	me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
                 Summons.DespawnAll();
 
                 if(pInstance)
