@@ -87,6 +87,7 @@ enum SpellIds
     SPELL_SR_MOONFIRE                                   = 47072,
 
     /*** Other Spells (used by players, etc) ***/
+    SPELL_SUMMON_DRAGON                                 = 45836,
     SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT                  = 45839, // Possess the blue dragon from the orb to help the raid.
     SPELL_ENTROPIUS_BODY                                = 46819, // Visual for Entropius at the Epilogue
     SPELL_RING_OF_BLUE_FLAMES                           = 45825  //Cast this spell when the go is activated
@@ -124,9 +125,10 @@ enum KilJaedenEvents
     EVENT_FLAME_DART            = 6,
     EVENT_DARKNESS              = 7,
     EVENT_ORBS_EMPOWER          = 8,
+    EVENT_SINISTER_REFLECTION   = 9,
 
     //Phase 4
-    EVENT_ARMAGEDDON            = 9
+    EVENT_ARMAGEDDON            = 10
 };
 
 enum KilJaedenControllerEvents
@@ -155,9 +157,8 @@ enum FelfireFiend
 enum Armageddontarget
 {
     EVENT_VISUAL1               = 0,
-    EVENT_VISUAL2               = 1,
-    EVENT_TRIGGER               = 2,
-    EVENT_DIE                   = 3
+    EVENT_TRIGGER               = 1,
+    EVENT_DIE                   = 2
 };
 
 enum ShieldOrb
@@ -195,23 +196,31 @@ struct Speech
     uint32 creature, timer;
 };
 
-enum
+enum Controller
 {
-    YELL_AGGRO  = 0,
-    YELL_SLAY,
-    YELL_DEATH,
-    YELL_KALEC,
-    YELL_REFLECTION,
-    YELL_PHASE3,
-    YELL_PHASE4,
-    YELL_KJ_OFFCOMBAT,
-    YELL_KALEC_ORB_READY1,
-    YELL_KALEC_ORB_READY2,
-    YELL_KALEC_ORB_READY3,
-    YELL_KALEC_ORB_READY4,
-    YELL_EMERGE,
-    YELL_DARKNESS1,
-    YELL_DARKNESS2,
+	SAY_KJ_OFFCOMBAT = 0,
+};
+
+enum KilJaeden
+{
+	SAY_KJ_EMERGE = 0,
+	SAY_KJ_SLAY,
+	SAY_KJ_REFLECTION,
+	EMOTE_KJ_DARKNESS,
+	SAY_KJ_DARKNESS,
+	SAY_KJ_PHASE3,
+	SAY_KJ_PHASE4,
+	SAY_KJ_PHASE5,
+	SAY_KJ_DEATH,
+};
+
+enum Kalecgos
+{
+	SAY_KALEC_JOIN = 0,
+	SAY_KALEC_ORB_READY1,
+	SAY_KALEC_ORB_READY2,
+	SAY_KALEC_ORB_READY3,
+	SAY_KALEC_ORB_READY4,
 };
 
 class AllOrbsInGrid
@@ -231,13 +240,15 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
     if (go->GetUInt32Value(GAMEOBJECT_FACTION) == 35) {
         ScriptedInstance* pInstance = ((ScriptedInstance*)go->GetInstanceData());
 
-        float x,y,z, dx,dy,dz;
-        go->SummonCreature(CREATURE_POWER_OF_THE_BLUE_DRAGONFLIGHT, plr->GetPositionX(), plr->GetPositionY(), plr->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 121000);
-        plr->CastSpell(plr, SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT, true);
+        plr->CastSpell(plr, SPELL_SUMMON_DRAGON, true);
+        if (Creature* dragon = plr->FindNearestCreature(CREATURE_POWER_OF_THE_BLUE_DRAGONFLIGHT, 100.0f, true))
+            plr->CastSpell(dragon, SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT, true);
+
         go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
         Creature* Kalec = (Creature*)(Unit::GetUnit(*plr, pInstance->GetData64(DATA_KALECGOS_KJ)));
 
+        float x,y,z, dx,dy,dz;
         go->GetPosition(x,y,z);
         for (uint8 i = 0; i < 4; ++i) {
             DynamicObject* Dyn = Kalec->GetDynObject(SPELL_RING_OF_BLUE_FLAMES);
@@ -374,16 +385,16 @@ public:
                 switch (EmpowerCount)
                 {
                     case 1:
-                        talk(YELL_KALEC_ORB_READY1);
+                        talk(SAY_KALEC_ORB_READY1);
                         break;
                     case 2:
-                        talk(YELL_KALEC_ORB_READY2);
+                        talk(SAY_KALEC_ORB_READY2);
                         break;
                     case 3:
-                        talk(YELL_KALEC_ORB_READY3);
+                        talk(SAY_KALEC_ORB_READY3);
                         break;
                     case 4:
-                        talk(YELL_KALEC_ORB_READY4);
+                        talk(SAY_KALEC_ORB_READY4);
                         break;
                 }
             }
@@ -430,7 +441,6 @@ public:
             SummonList Summons;
 
             uint32 annimSpawnTimer;
-            bool OrbActivated;
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
 	    {
@@ -454,8 +464,9 @@ public:
                     addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_DARKNESS, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_SINISTER_REFLECTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 4
-                    addEvent(EVENT_ARMAGEDDON, 2000, 2000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_ARMAGEDDON, 21000, 21000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 }
                 else
                 {
@@ -470,12 +481,12 @@ public:
                     resetEvent(EVENT_FLAME_DART, 3000);
                     resetEvent(EVENT_DARKNESS, 45000);
                     resetEvent(EVENT_ORBS_EMPOWER, 35000);
+                    resetEvent(EVENT_SINISTER_REFLECTION, 500);
                     // Phase 4
-                    resetEvent(EVENT_ARMAGEDDON, 2000);
+                    resetEvent(EVENT_ARMAGEDDON, 21000);
                 }
 
                 annimSpawnTimer = 11000;
-                OrbActivated = false;
                 me->SetFullTauntImmunity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -490,7 +501,12 @@ public:
                     case CREATURE_ARMAGEDDON_TARGET:
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                        summoned->getAI()->setZoneInCombat(true);
                         break;
+                    case CREATURE_SHIELD_ORB:
+                    	summoned->SetFlying(true);
+                    	summoned->SendMovementFlagUpdate();
+                    	break;
                 }
             }
 	
@@ -501,7 +517,7 @@ public:
 
             void onDeath(Unit* /*killer*/)
             {
-                talk(YELL_DEATH);
+                talk(SAY_KJ_DEATH);
 
                 if (pInstance)
                     pInstance->SetData(DATA_KILJAEDEN_EVENT, DONE);
@@ -509,31 +525,39 @@ public:
 
             void onKill(Unit* /*victim*/)
             {
-                talk(YELL_SLAY);
+                talk(SAY_KJ_SLAY);
             }
 
             void onCombatStart(Unit* /*who*/)
             {
                 setZoneInCombat();
-                talk(YELL_EMERGE);
+                talk(SAY_KJ_EMERGE);
             }
 
             void CastSinisterReflection()
             {
-                talk(YELL_REFLECTION);
+                talk(SAY_KJ_REFLECTION);
         
-                for (uint8 i = 0; i < 4; i++)
+                if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                 {
-                    float x,y,z;
-                    if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
+                    for (uint8 i = 0; i < 4; i++)
                     {
+                        float x,y,z;
                         target->GetPosition(x,y,z);
             
                         if(Creature* SinisterReflection = me->SummonCreature(CREATURE_SINISTER_REFLECTION, x,y,z,0, TEMPSUMMON_CORPSE_DESPAWN, 0))
                             SinisterReflection->getAI()->attackStart(target);
                     }
+                    target->CastSpell(target, SPELL_SINISTER_REFLECTION, true);
                 }
-                me->getVictim()->CastSpell(me->getVictim(), SPELL_SINISTER_REFLECTION, true);
+            }
+
+            void onSpellPrepare(SpellEntry const* spell, Unit* /*target*/)
+            {
+            	if (spell->Id == 45657)
+            	{
+            		talk(SAY_KJ_DARKNESS);
+            	}
             }
 
             void update(const uint32 diff)
@@ -575,19 +599,26 @@ public:
                         case EVENT_KALEC_JOIN:
                             disableEvent(EVENT_KALEC_JOIN);
                             if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                                kalec->getAI()->talk(YELL_KALEC);
+                                kalec->getAI()->talk(SAY_KALEC_JOIN);
                             break;
                         case EVENT_SOUL_FLAY:
                             doCast(me->getVictim(), SPELL_SOUL_FLAY);
                             scheduleEvent(EVENT_SOUL_FLAY, 4000, 5000);
                             break;
                         case EVENT_LEGION_LIGHTNING:
-                            if (Unit *randomPlayer = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                            {
-                                /*if (!randomPlayer->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                                    break;*/
-                                doCast(randomPlayer, SPELL_LEGION_LIGHTNING);
-                            }
+                        	Unit *target;
+                        	for (uint8 i = 0; i < 6; ++i)
+                        	{
+                        	    target = NULL;
+                        	    if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                        	    {
+                        	        if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                        	            break;
+                        	    }
+                        	}
+                        	if (target)
+                                doCast(target, SPELL_LEGION_LIGHTNING);
+
                             scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
                             break;
                         case EVENT_FIRE_BLOOM:
@@ -615,7 +646,7 @@ public:
                             scheduleEvent(EVENT_FLAME_DART, 60000);
                             break;
                         case EVENT_DARKNESS:
-                            talk(YELL_DARKNESS1);
+                            talk(EMOTE_KJ_DARKNESS);
                             doCast(me, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
                             scheduleEvent(EVENT_DARKNESS, 45000);
                             break;
@@ -630,29 +661,37 @@ public:
                                 if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
                                     ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
 
-                                scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
                             }
-                            OrbActivated = true;
+                            scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
+                            scheduleEvent(EVENT_DARKNESS, 30000);
                             disableEvent(EVENT_ORBS_EMPOWER);
                             break;
+                        case EVENT_SINISTER_REFLECTION:
+                        	CastSinisterReflection();
+                        	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
+                        	break;
                         case EVENT_ARMAGEDDON:
-                            Unit *target;
-                            for (uint8 i = 0; i < 6; ++i)
-                            {
-                                target = NULL;
-                                if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
-                                    if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                                        break;
-                            }
+                        {
+                        	Unit *target;
+                        	for (uint8 i = 0; i < 6; ++i)
+                        	{
+                        		target = NULL;
+                        		if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
+                        		{
+                        			if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
+                        			    break;
+                        		}
+                        	}
+                        	if (target)
+                        	{
+                        		float x, y, z;
+                        		target->GetPosition(x, y, z);
+                        		me->SummonCreature(CREATURE_ARMAGEDDON_TARGET, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 2000);
+                        	}
 
-                            if (target)
-                            {
-                                float x, y, z;
-                                target->GetPosition(x, y, z);
-                                me->SummonCreature(CREATURE_ARMAGEDDON_TARGET, x,y,z,0, TEMPSUMMON_TIMED_DESPAWN,15000);
-                            }
                             scheduleEvent(EVENT_ARMAGEDDON, 2000);
                             break;
+                        }
                     }
                 }
 
@@ -661,9 +700,8 @@ public:
                 {
                     if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
                     {
-                        CastSinisterReflection();
-                        talk(YELL_PHASE3);
-                        OrbActivated = false;
+                        talk(SAY_KJ_PHASE3);
+                        enableEvent(EVENT_ORBS_EMPOWER);
                         setPhase(PHASE_DARKNESS);
                     }
                     else
@@ -675,9 +713,9 @@ public:
                 {
                     if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
                     {
-                        talk(YELL_PHASE4);
+                        talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
-                        OrbActivated = false;
+                        enableEvent(EVENT_ORBS_EMPOWER);
                     }
                     else
                         return;
@@ -692,7 +730,7 @@ public:
 
                         if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
                             Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, false);
-                        OrbActivated = false;
+                        enableEvent(EVENT_ORBS_EMPOWER);
                     }
                     else
                         return;
@@ -739,12 +777,10 @@ public:
                         break;
                     case CREATURE_ANVEENA:
                     {
-                        summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
-                        WorldPacket data;
-                        summoned->BuildHeartBeatMsg(&data);
-                        summoned->SendMessageToSet(&data, true);
-                        summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        summoned->SetFlying(true);
+                        summoned->SendMovementFlagUpdate();
+                        summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
                         break;
                     }
                     case CREATURE_KILJAEDEN:
@@ -789,7 +825,7 @@ public:
                     handDeceiver[i] = hand->GetGUID();
                 }
 
-                me->SummonCreature(CREATURE_ANVEENA,  0, 0, 40, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
+                me->SummonCreature(CREATURE_ANVEENA,  me->GetPositionX(), me->GetPositionY(), 60, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
 
                 if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
                 {
@@ -813,7 +849,7 @@ public:
                     {
                         case EVENT_SAY:
                             if (pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
-                                talk(YELL_KJ_OFFCOMBAT);
+                                talk(SAY_KJ_OFFCOMBAT);
 
                             scheduleEvent(EVENT_SAY, 45000, 75000);
                             break;
@@ -852,11 +888,11 @@ public:
                     return;
                 }
 
-                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }
+                }*/
             }
     };
 
@@ -943,11 +979,11 @@ public:
                 if (!updateVictim())
                     return;
 
-                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                /*if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
                     evade();
                     return;
-                }
+                }*/
 
                 // Gain Shadow Infusion
                 if (me->IsBetweenHPPercent(20, 25) && !me->HasAura(SPELL_SHADOW_INFUSION))
@@ -1177,18 +1213,15 @@ public:
 
             void onReset(bool onSpawn)
             {
-                setPhase(1);
                 if (onSpawn)
                 {
-                    addEvent(EVENT_VISUAL1, 0, 0, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(1));
-                    addEvent(EVENT_VISUAL2, 0, 0, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(2));
-                    addEvent(EVENT_TRIGGER, 9000, 9000, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(3));
-                    addEvent(EVENT_DIE, 5000, 5000, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(4));
+                    addEvent(EVENT_VISUAL1, 0, 0, EVENT_FLAG_DELAY_IF_CASTING, true);
+                    addEvent(EVENT_TRIGGER, 9000, 9000, EVENT_FLAG_DELAY_IF_CASTING, false);
+                    addEvent(EVENT_DIE, 5000, 5000, EVENT_FLAG_DELAY_IF_CASTING, false);
                 }
                 else
                 {
                     resetEvent(EVENT_VISUAL1, 0);
-                    resetEvent(EVENT_VISUAL2, 0);
                     resetEvent(EVENT_TRIGGER, 9000);
                     resetEvent(EVENT_DIE, 5000);
                 }
@@ -1213,21 +1246,15 @@ public:
                     {
                         case EVENT_VISUAL1:
                             doCast(me, SPELL_ARMAGEDDON_VISUAL, true);
-                            incrPhase();
-                            enableEvent(EVENT_VISUAL2);
-                            break;
-                        case EVENT_VISUAL2:
-                            doCast(me, SPELL_ARMAGEDDON_VISUAL2, true);
-                            incrPhase();
+                            disableEvent(EVENT_VISUAL1);
                             enableEvent(EVENT_TRIGGER);
                             break;
                         case EVENT_TRIGGER:
                             doCast(me, SPELL_ARMAGEDDON_TRIGGER, true);
-                            incrPhase();
+                            disableEvent(EVENT_TRIGGER);
                             enableEvent(EVENT_DIE);
                             break;
                         case EVENT_DIE:
-                            incrPhase();
                             disableEvent(EVENT_DIE);
                             me->DisappearAndDie();
                             break;
@@ -1266,8 +1293,6 @@ public:
 
             void onReset(bool onSpawn)
             {
-                me->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
-        
                 PointReached = true;
 
                 CheckTimer = 1000;
