@@ -235,6 +235,9 @@ void spectate(Player* player, uint64 targetGuid)
 	    	}
 	    }
 
+	    if (player->getSpectateCooldown() > 0)
+	        return;
+
 	    // all's well, set bg id
 	    // when porting out from the bg, it will be reset to 0
 	    player->SetBattleGroundId(target->GetBattleGroundId());
