@@ -185,28 +185,24 @@ void spectate(Player* player, uint64 targetGuid)
 	    if (player->isInCombat())
 	    {
 	        chH.SendSysMessage(LANG_YOU_IN_COMBAT);
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
 	    if (!target)
 	    {
 	    	chH.SendSysMessage(LANG_PLAYER_NOT_EXIST_OR_OFFLINE);
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
 	    if (player->GetPet())
 	    {
 	    	chH.PSendSysMessage("You must hide your pet.");
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGroundOrArena() && !player->isSpectator())
 	    {
 	    	chH.PSendSysMessage("You are already on battleground or arena.");
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
@@ -214,14 +210,12 @@ void spectate(Player* player, uint64 targetGuid)
 	    if (!cMap->IsBattleArena())
 	    {
 	    	chH.PSendSysMessage("Player didnt found in arena.");
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGround())
 	    {
 	    	chH.PSendSysMessage("Cant do that while you are on battleground.");
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
@@ -230,7 +224,6 @@ void spectate(Player* player, uint64 targetGuid)
 	    	if (bg->GetStatus() != STATUS_IN_PROGRESS)
 	    	{
 	    	    chH.PSendSysMessage("Can't do that. Arena didn`t started.");
-	    	    chH.SetSentErrorMessage(true);
 	    	    return;
 	    	}
 	    }
@@ -248,7 +241,6 @@ void spectate(Player* player, uint64 targetGuid)
 	    if (target->isSpectator())
 	    {
 	    	chH.PSendSysMessage("Can`t do that. Your target is spectator.");
-	    	chH.SetSentErrorMessage(true);
 	    	return;
 	    }
 
