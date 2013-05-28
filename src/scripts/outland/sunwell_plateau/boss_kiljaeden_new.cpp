@@ -650,6 +650,7 @@ public:
                             talk(EMOTE_KJ_DARKNESS);
                             doCast(me, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
                             scheduleEvent(EVENT_DARKNESS, 45000);
+                            scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -1416,23 +1417,31 @@ public:
             uint8 Class;
             uint32 Timer[3];
             bool canAttack;
+            Creature *m_kj;
         public:
             mob_sinster_reflectionAI(Creature* creature) : CreatureAINew(creature)
             {
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+                m_kj = NULL;
             }
 
             void onReset(bool onSpawn)
             {
+            	if(pInstance)
+            	{
+            	    if (Creature* kj = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN)))
+            	    	m_kj = kj;
+            	}
+
                 Timer[0] = 0;
                 Timer[1] = 0;
                 Timer[2] = 0;
                 Class = 0;
                 canAttack = false;
                 if (onSpawn)
-                    addEvent(EVENT_STUN, 2000, 2000);
+                    addEvent(EVENT_STUN, 3000, 3000);
                 else
-                    resetEvent(EVENT_STUN, 2000);
+                    resetEvent(EVENT_STUN, 3000);
 
                 me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
                 me->addUnitState(UNIT_STAT_STUNNED);
@@ -1496,115 +1505,116 @@ public:
                 switch (Class)
                 {
                     case CLASS_DRUID:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_MOONFIRE, false);
-                            Timer[1] = urand(2000, 4000);
+                        	if (Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                                doCast(random, SPELL_SR_MOONFIRE, false);
+                            Timer[0] = urand(5000, 7000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_HUNTER:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_MULTI_SHOT, false);
-                            Timer[1] = urand(8000, 10000);
+                            Timer[0] = urand(8000, 10000);
                         }
 
-                        if (Timer[2] <= diff)
+                        if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_SHOOT, false);
-                            Timer[2] = urand(4000, 6000);
+                            Timer[1] = urand(4000, 6000);
                         }
 
                         if (me->IsWithinMeleeRange(me->getVictim(), 6))
                         {
-                            if (Timer[3] <= diff)
+                            if (Timer[2] <= diff)
                             {
-                                doCast(me->getVictim(), SPELL_SR_MULTI_SHOT, false);
-                                Timer[3] = urand(6000, 8000);
+                                doCast(me->getVictim(), SPELL_SR_WING_CLIP, false);
+                                Timer[2] = urand(6000, 8000);
                             }
                 
                             doMeleeAttackIfReady();
                         }
                         break;
                     case CLASS_MAGE:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_FIREBALL, false);
-                            Timer[1] = (2000, 4000);
+                            Timer[0] = (2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_WARLOCK:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_SHADOW_BOLT, false);
-                            Timer[1] = urand(3000, 5000);
+                            Timer[0] = urand(3000, 5000);
                         }
 
-                        if (Timer[2] <= diff)
+                        if (Timer[1] <= diff)
                         {
-                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100, true), SPELL_SR_CURSE_OF_AGONY, true);
-                            Timer[2] = urand(2000, 4000);
+                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100, true), SPELL_SR_CURSE_OF_AGONY, false);
+                            Timer[1] = urand(15000, 17000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_WARRIOR:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_WHIRLWIND, false);
-                            Timer[1] = urand(9000, 11000);
+                            Timer[0] = urand(9000, 11000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_PALADIN:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HAMMER_OF_JUSTICE, false);
-                            Timer[1] = urand(6000, 8000);
+                            Timer[0] = urand(6000, 8000);
                         }
 
-                        if (Timer[2] <= diff)
+                        if (Timer[1] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HOLY_SHOCK, false);
-                            Timer[2] = urand(2000, 4000);
+                            Timer[1] = urand(2000, 4000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_PRIEST:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_HOLY_SMITE, false);
-                            Timer[1] = urand(4000, 6000);
+                            Timer[0] = urand(4000, 6000);
                         }
 
-                        if (Timer[2] <= diff)
+                        if (Timer[1] <= diff)
                         {
-                            doCast(me,  SPELL_SR_RENEW, false);
-                            Timer[2] = urand(6000, 8000);
+                            doCast(urand(0, 1) ? me : m_kj,  SPELL_SR_RENEW, false);
+                            Timer[1] = urand(6000, 8000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_SHAMAN:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
                             doCast(me->getVictim(), SPELL_SR_EARTH_SHOCK, false);
-                            Timer[1] = urand(4000, 6000);
+                            Timer[0] = urand(4000, 6000);
                         }
 
                         doMeleeAttackIfReady();
                         break;
                     case CLASS_ROGUE:
-                        if (Timer[1] <= diff)
+                        if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_HEMORRHAGE, true);
-                            Timer[1] = urand(4000, 6000);
+                            doCast(me->getVictim(), SPELL_SR_HEMORRHAGE, false);
+                            Timer[0] = urand(4000, 6000);
                         }
 
                         doMeleeAttackIfReady();
