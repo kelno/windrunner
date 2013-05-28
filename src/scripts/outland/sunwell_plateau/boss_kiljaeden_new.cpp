@@ -1433,9 +1433,9 @@ public:
             	    	m_kj = kj;
             	}
 
-                Timer[0] = 0;
-                Timer[1] = 0;
-                Timer[2] = 0;
+                Timer[0] = urand(1000, 4000);
+                Timer[1] = urand(1000, 4000);
+                Timer[2] = urand(1000, 4000);
                 Class = 0;
                 canAttack = false;
                 if (onSpawn)
