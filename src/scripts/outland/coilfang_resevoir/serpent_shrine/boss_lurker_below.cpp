@@ -567,13 +567,6 @@ class Mob_Coilfang_Ambusher : public CreatureScript
 
             Mob_Coilfang_AmbusherAI(Creature* creature) : Creature_NoMovementAINew(creature)
             {
-            	SpellEntry *TempSpell = GET_SPELL(SPELL_SHOOT);
-            	if (TempSpell)
-            	{
-            	    TempSpell->Effect[0] = 0;
-            	    TempSpell->Effect[1] = 0;
-            	    TempSpell->Effect[2] = 0;
-            	}
                 _instance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
@@ -592,25 +585,6 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                     scheduleEvent(EV_SHOOTBOW, 4000, 4000);
                 }
                 me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-            }
-
-            void onSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
-            {
-            	if (spellId == 37770)
-            	{
-            		if (caster->ToCreature())
-            		{
-            			if (me == caster->ToCreature())
-            			{
-            				uint32 damage = 0;
-            				uint32 absorb, resist;
-            				damage = target->CalcArmorReducedDamage(target, 3500);
-            				target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SHOOT);
-            				uint32 damageTaken = me->DealDamage(target, damage - absorb - resist);
-            				me->SendSpellNonMeleeDamageLog(target, SPELL_SHOOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
-            			}
-            		}
-            	}
             }
 
             void update(uint32 const diff)
