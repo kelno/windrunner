@@ -1517,13 +1517,15 @@ public:
                     case CLASS_HUNTER:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_MULTI_SHOT, false);
+                        	if (Unit *random = selectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                                doCast(random, SPELL_SR_MULTI_SHOT, false);
                             Timer[0] = urand(8000, 10000);
                         }
 
                         if (Timer[1] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_SHOOT, false);
+                        	if (Unit *random = selectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                                doCast(random, SPELL_SR_SHOOT, false);
                             Timer[1] = urand(4000, 6000);
                         }
 
