@@ -1556,7 +1556,8 @@ public:
 
                         if (Timer[1] <= diff)
                         {
-                            doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100, true), SPELL_SR_CURSE_OF_AGONY, false);
+                        	if (Unit *random = selectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true))
+                                doCast(random, SPELL_SR_CURSE_OF_AGONY, false);
                             Timer[1] = urand(15000, 17000);
                         }
 
