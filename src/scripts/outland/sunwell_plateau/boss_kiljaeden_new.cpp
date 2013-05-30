@@ -39,6 +39,7 @@ enum SpellIds
     SPELL_LEGION_LIGHTNING                              = 45664, // Chain Lightning, 4 targets, ~3k Shadow damage, 1.5k mana burn
     SPELL_FIRE_BLOOM                                    = 45641, // Places a debuff on 5 raid members, which causes them to deal 2k Fire damage to nearby allies and selves. MIGHT NOT WORK
 
+    SPELL_SUMMON_REFLECTION                             = 45891,
     SPELL_SINISTER_REFLECTION                           = 45785, // Summon shadow copies of 5 raid members that fight against KJ's enemies
 
     SPELL_SHADOW_SPIKE                                  = 46680, // Bombard random raid members with Shadow Spikes (Very similar to Void Reaver orbs)
@@ -537,16 +538,15 @@ public:
             void CastSinisterReflection()
             {
                 talk(SAY_KJ_REFLECTION);
-        
+
                 if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
                 {
                     for (uint8 i = 0; i < 4; i++)
                     {
                         float x,y,z;
                         target->GetPosition(x,y,z);
-            
-                        if(Creature* SinisterReflection = me->SummonCreature(CREATURE_SINISTER_REFLECTION, x,y,z,0, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                            SinisterReflection->getAI()->attackStart(target);
+
+                        target->CastSpell(target, SPELL_SUMMON_REFLECTION, false);
                     }
                     target->CastSpell(target, SPELL_SINISTER_REFLECTION, true);
                 }
@@ -842,6 +842,15 @@ public:
                 }
             }
 
+            void onCombatStart(Unit* victim)
+            {
+            	for(uint8 i = 0; i < 3; ++i)
+            	{
+            	    if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
+            	        hand->getAI()->attackStart(victim);
+            	}
+            }
+
             void update(uint32 const diff)
             {
                 updateEvents(diff);
@@ -866,30 +875,23 @@ public:
                     me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
                 }
 
-                if (!updateVictim())
-                {
-                    Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                    if (!players.isEmpty())
-                    {
-                        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                        {
-                            Player* plr = itr->getSource();
-                            if (plr && !plr->isGameMaster())
-                            {
-                                if (me->GetDistance(plr) <= 50.0f)
-                                {
-                                    for(uint8 i = 0; i < 3; ++i)
-                                    {
-                                        if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
-                                            hand->getAI()->attackStart(plr);
-                                    }
-                                }
-                            }
-                        }
-                    }
+                if (me->FindNearestCreature(CREATURE_POWER_OF_THE_BLUE_DRAGONFLIGHT, 100.0f))
+                	return;
 
-                    return;
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                if (!players.isEmpty())
+                {
+                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    {
+                        Player* plr = itr->getSource();
+                        if (plr && me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
+                            if (!me->isInCombat())
+                        	    attackStart(plr);
+                    }
                 }
+
+                if (!updateVictim())
+                	return;
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
@@ -1069,7 +1071,10 @@ public:
             void update(uint32 const diff)
             {
                 if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                {
                     me->DisappearAndDie();
+                    return;
+                }
 
                 updateEvents(diff);
 
@@ -1134,11 +1139,18 @@ public:
 
             void updateEM(uint32 const diff)
             {
-                me->DisappearAndDie();
+            	if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
             }
 
             void update(uint32 const diff)
             {
+            	if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+            	{
+            	    me->DisappearAndDie();
+            	    return;
+            	}
+
                 updateEvents(diff, 5);
 
                 while (executeEvent(diff, m_currEvent))
@@ -1239,8 +1251,11 @@ public:
 
             void update(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
-                    me->DisappearAndDie();
+            	if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+            	{
+            	    me->DisappearAndDie();
+            	    return;
+            	}
 
                 updateEvents(diff);
 
@@ -1439,9 +1454,9 @@ public:
                 Class = 0;
                 canAttack = false;
                 if (onSpawn)
-                    addEvent(EVENT_STUN, 3000, 3000);
+                    addEvent(EVENT_STUN, 4000, 4000);
                 else
-                    resetEvent(EVENT_STUN, 3000);
+                    resetEvent(EVENT_STUN, 4000);
 
                 me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
                 me->addUnitState(UNIT_STAT_STUNNED);
@@ -1473,7 +1488,6 @@ public:
                         case EVENT_STUN:
                             canAttack = true;
                             me->clearUnitState(UNIT_STAT_STUNNED);
-                            attackStart(me->getVictim());
                             disableEvent(EVENT_STUN);
                             break;
                     }
