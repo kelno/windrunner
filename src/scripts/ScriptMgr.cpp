@@ -9,6 +9,7 @@
 #include "ObjectMgr.h"
 #include "EventAI.h"
 #include "Policies/SingletonImp.h"
+#include "Spell.h"
 
 class CreatureScript;
 
@@ -2447,13 +2448,16 @@ CreatureAINew* ScriptMgr::getAINew(Creature* creature)
     return iter->second->getAI(creature);
 }
 
-SpellScript* ScriptMgr::getSpellScript(uint32 spellId)
+SpellScript* ScriptMgr::getSpellScript(Spell* spell)
 {
-    SpellScriptMap::const_iterator iter = m_spellScripts.find(objmgr.getSpellScriptName(spellId));
+    if (!spell)
+        return NULL;
+    
+    SpellScriptMap::const_iterator iter = m_spellScripts.find(objmgr.getSpellScriptName(spell->m_spellInfo->Id));
     if (iter == m_spellScripts.end())
         return NULL;
         
-    return iter->second->getSpellScript();
+    return iter->second->getScript(spell);
 }
 
 bool ScriptMgr::ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)
