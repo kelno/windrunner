@@ -299,7 +299,6 @@ void spectate(Player* player, uint64 targetGuid)
 	    target->GetContactPoint(player, x, y, z);
 
 	    target->GetBattleGround()->AddSpectator(player->GetGUID());
-        player->SetBattleGroundEntryPoint(player->GetMapId(), player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation());
 	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
 	    player->SetSpectate(true);
     }
