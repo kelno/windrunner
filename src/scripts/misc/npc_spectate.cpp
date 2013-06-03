@@ -47,16 +47,16 @@ std::string GetClassNameById(uint8 id)
     std::string sClass = "";
     switch (id)
     {
-        case CLASS_WARRIOR:         sClass = "Warrior ";        break;
-        case CLASS_PALADIN:         sClass = "Pala ";           break;
-        case CLASS_HUNTER:          sClass = "Hunt ";           break;
-        case CLASS_ROGUE:           sClass = "Rogue ";          break;
-        case CLASS_PRIEST:          sClass = "Priest ";         break;
+        case CLASS_WARRIOR:         sClass = "Guerrier ";       break;
+        case CLASS_PALADIN:         sClass = "Paladin ";        break;
+        case CLASS_HUNTER:          sClass = "Chasseur ";       break;
+        case CLASS_ROGUE:           sClass = "Voleur ";         break;
+        case CLASS_PRIEST:          sClass = "Pretre ";         break;
         case CLASS_DEATH_KNIGHT:    sClass = "DK ";             break;
-        case CLASS_SHAMAN:          sClass = "Shama ";          break;
+        case CLASS_SHAMAN:          sClass = "Chaman ";         break;
         case CLASS_MAGE:            sClass = "Mage ";           break;
-        case CLASS_WARLOCK:         sClass = "Warlock ";        break;
-        case CLASS_DRUID:           sClass = "Druid ";          break;
+        case CLASS_WARLOCK:         sClass = "Démoniste ";      break;
+        case CLASS_DRUID:           sClass = "Druide ";         break;
     }
     return sClass;
 }
@@ -116,11 +116,14 @@ void ShowPage(Player *player, uint32 page, bool isHigh)
             if (arena->GetStatus() != STATUS_IN_PROGRESS)
                 continue;
 
+            if (arena->isRated())
+            	continue;
+
             ArenaTeam *first =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(0));
             ArenaTeam *second =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(1));
 
             uint32 rating = 0;
-            if (!sBattleGroundMgr.isArenaTesting())
+            if (!sBattleGroundMgr.isArenaTesting() && arena->isRated())
             {
                 uint32 rating = first->GetRating() + second->GetRating();
                 rating /= 2;
@@ -156,18 +159,18 @@ void ShowPage(Player *player, uint32 page, bool isHigh)
     if (isHigh)
     {
         if (page > 0)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prev...", GOSSIP_SENDER_MAIN, HIGH_RATING + page - 1);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, HIGH_RATING + page - 1);
 
         if (haveNextPage)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Next...", GOSSIP_SENDER_MAIN, HIGH_RATING + page + 1);
+            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prochain...", GOSSIP_SENDER_MAIN, HIGH_RATING + page + 1);
     }
     else
     {
     	if (page > 0)
-    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prev...", GOSSIP_SENDER_MAIN, LOW_RATING + page - 1);
+    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, LOW_RATING + page - 1);
 
     	if (haveNextPage)
-    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Next...", GOSSIP_SENDER_MAIN, LOW_RATING + page + 1);
+    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Prochain...", GOSSIP_SENDER_MAIN, LOW_RATING + page + 1);
     }
 
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
@@ -196,26 +199,26 @@ void spectate(Player* player, uint64 targetGuid)
 
 	    if (player->GetPet())
 	    {
-	    	chH.PSendSysMessage("You must hide your pet.");
+	    	chH.PSendSysMessage("Vous devea chacher votre pet.");
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGroundOrArena() && !player->isSpectator())
 	    {
-	    	chH.PSendSysMessage("You are already on battleground or arena.");
+	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela. Vous etes deja dans un champ de bataille ou une arene.");
 	    	return;
 	    }
 
 	    Map* cMap = target->GetMap();
 	    if (!cMap->IsBattleArena())
 	    {
-	    	chH.PSendSysMessage("Player didnt found in arena.");
+	    	chH.PSendSysMessage("Ce joueur n'est pas dans une arene.");
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGround())
 	    {
-	    	chH.PSendSysMessage("Cant do that while you are on battleground.");
+	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela. Vous etes deja dans un champ de bataille.");
 	    	return;
 	    }
 
@@ -223,7 +226,13 @@ void spectate(Player* player, uint64 targetGuid)
 	    {
 	    	if (bg->GetStatus() != STATUS_IN_PROGRESS)
 	    	{
-	    	    chH.PSendSysMessage("Can't do that. Arena didn`t started.");
+	    	    chH.PSendSysMessage("Vous ne pouvez pas faire cela. L'arene n'a pas commencé.");
+	    	    return;
+	    	}
+
+	    	if (bg->isRated())
+	    	{
+	    		chH.PSendSysMessage("Le mode spectateur est désactivé pour les arenes cotés.");
 	    	    return;
 	    	}
 	    }
@@ -240,7 +249,7 @@ void spectate(Player* player, uint64 targetGuid)
 
 	    if (target->isSpectator())
 	    {
-	    	chH.PSendSysMessage("Can`t do that. Your target is spectator.");
+	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela, ce joueur est déjà spectateur.");
 	    	return;
 	    }
 
@@ -286,8 +295,8 @@ void spectate(Player* player, uint64 targetGuid)
 	    	    ArenaTeam *secondTeam = objmgr.GetArenaTeamById(secondTeamID);
 	    	    if (firstTeam && secondTeam)
 	    	    {
-	    	        chH.PSendSysMessage("You entered to rated arena.");
-	    	        chH.PSendSysMessage("Teams:");
+	    	        chH.PSendSysMessage("Vous entrez dans une arenes cotée.");
+	    	        chH.PSendSysMessage("Equipes:");
 	    	        chH.PSendSysMessage("%s - %s", firstTeam->GetName().c_str(), secondTeam->GetName().c_str());
 	    	        chH.PSendSysMessage("%u - %u", firstTeam->GetRating(), secondTeam->GetRating());
 	    	    }
@@ -308,8 +317,8 @@ void ShowDefaultPage(Player* player, Creature* creature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
     {
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, HIGH_RATING);
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, LOW_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arenes avec une grande côte...", GOSSIP_SENDER_MAIN, HIGH_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arenes avec une petite côte...", GOSSIP_SENDER_MAIN, LOW_RATING);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
     }
 	else
@@ -323,8 +332,8 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
 	{
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with high rating...", GOSSIP_SENDER_MAIN, HIGH_RATING);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "View games with low rating...", GOSSIP_SENDER_MAIN, LOW_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arenes avec une grande côte...", GOSSIP_SENDER_MAIN, HIGH_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arenes avec une petite côte...", GOSSIP_SENDER_MAIN, LOW_RATING);
 	}
 	else
 	{
