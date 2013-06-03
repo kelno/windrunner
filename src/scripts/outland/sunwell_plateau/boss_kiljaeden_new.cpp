@@ -606,17 +606,7 @@ public:
                             scheduleEvent(EVENT_SOUL_FLAY, 4000, 5000);
                             break;
                         case EVENT_LEGION_LIGHTNING:
-                        	Unit *target;
-                        	for (uint8 i = 0; i < 6; ++i)
-                        	{
-                        	    target = NULL;
-                        	    if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                        	    {
-                        	        if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                        	            break;
-                        	    }
-                        	}
-                        	if (target)
+                        	if (Unit *target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
                                 doCast(target, SPELL_LEGION_LIGHTNING);
 
                             scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
@@ -674,17 +664,7 @@ public:
                         	break;
                         case EVENT_ARMAGEDDON:
                         {
-                        	Unit *target;
-                        	for (uint8 i = 0; i < 6; ++i)
-                        	{
-                        		target = NULL;
-                        		if (target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                        		{
-                        			if (!target->HasAura(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT))
-                        			    break;
-                        		}
-                        	}
-                        	if (target)
+                        	if (Unit *target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
                         	{
                         		float x, y, z;
                         		target->GetPosition(x, y, z);
