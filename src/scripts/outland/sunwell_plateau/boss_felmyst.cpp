@@ -459,14 +459,15 @@ struct boss_felmystAI : public ScriptedAI
         }
         case 7:
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            if (!goingLeft)       // Right
+            if (!goingLeft) {      // Right
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
-                //m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
-            else
+                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
+            } else {
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-                //m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
+                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
+            }
             m_creature->StopMoving();
-            me->SendMovementFlagUpdate(300.f);
+            //me->SendMovementFlagUpdate(300.f);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2500;
             break;
