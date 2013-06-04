@@ -31,12 +31,19 @@ EndScriptData */
 #include "ArenaTeam.h"
 #include "World.h"
 
-enum NpcSpectatorAtions
+enum NpcSpectatorActions
 {
-    HIGH_RATING         = 2000,
-    LOW_RATING          = 3000,
+	NPC_SPECTATOR_ACTION_HIGH_RATING         = 2000,
+	NPC_SPECTATOR_ACTION_LOW_RATING          = 3000,
+	NPC_SPECTATOR_ACTION_NO_RATED            = 4000,
+    NPC_SPECTATOR_ACTION_SELECTED_PLAYER     = 5000
+};
 
-    NPC_SPECTATOR_ACTION_SELECTED_PLAYER    = 4000
+enum ArenaRate
+{
+	NO_RATED       = 0,
+	LOW_RATING     = 1,
+	HIGH_RATING    = 2
 };
 
 const uint16 TopGamesRating = 1800;
@@ -60,7 +67,7 @@ std::string GetClassNameById(uint8 id)
     return sClass;
 }
 
-std::string GetGamesStringData(BattleGround *arena, uint32 rating)
+std::string GetGamesStringData(BattleGround *arena, uint32 rating, bool isRated)
 {
     std::string teamsMember[2];
     uint32 firstTeamId = 0;
@@ -77,11 +84,19 @@ std::string GetGamesStringData(BattleGround *arena, uint32 rating)
             teamsMember[firstTeamId == team] += GetClassNameById(player->getClass());
         }
 
-    std::string data = teamsMember[0] + " - ";
-    std::stringstream ss;
-    ss << rating;
-    data += ss.str();
-    data += " - " + teamsMember[1];
+    std::string data = "";
+    if (isRated)
+    {
+        data = teamsMember[0] + " - ";
+        std::stringstream ss;
+        ss << rating;
+        data += ss.str();
+        data += " - " + teamsMember[1];
+    }
+    else
+    {
+    	data = teamsMember[0] + " - " + teamsMember[1];
+    }
     return data;
 }
 
@@ -93,10 +108,11 @@ uint64 GetFirstPlayerGuid(BattleGround *arena)
     return 0;
 }
 
-void ShowPage(Player *player, uint32 page, bool isHigh)
+void ShowPage(Player *player, uint32 page, ArenaRate rate)
 {
 	uint16 highGames  = 0;
 	uint16 lowGames   = 0;
+	uint16 noRated = 0;
 	bool haveNextPage = false;
 
     for (uint8 i = BATTLEGROUND_AV; i <= BATTLEGROUND_RL; ++i)
@@ -115,61 +131,81 @@ void ShowPage(Player *player, uint32 page, bool isHigh)
             if (arena->GetStatus() != STATUS_IN_PROGRESS)
                 continue;
 
-            if (arena->isRated())
-            	continue;
-
             ArenaTeam *first =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(0));
             ArenaTeam *second =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(1));
 
             uint32 rating = 0;
-            if (!sBattleGroundMgr.isArenaTesting() && arena->isRated())
+            if (arena->isRated())
             {
                 uint32 rating = first->GetRating() + second->GetRating();
                 rating /= 2;
             }
 
-            if (isHigh && rating > TopGamesRating)
+            if (arena->isRated())
             {
-            	highGames++;
-            	if (highGames > (page + 1) * GamesOnPage)
-            	{
-            	    haveNextPage = true;
-            	    break;
-            	}
+                if (rate == HIGH_RATING && rating > TopGamesRating)
+                {
+            	    highGames++;
+            	    if (highGames > (page + 1) * GamesOnPage)
+            	    {
+            	        haveNextPage = true;
+            	        break;
+            	    }
 
-            	if (highGames > page * GamesOnPage)
-            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            	    if (highGames > page * GamesOnPage)
+            	        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, true), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+                }
+                else if (rate == LOW_RATING && rating < TopGamesRating)
+                {
+            	    lowGames++;
+            	    if (lowGames > (page + 1) * GamesOnPage)
+            	    {
+            	        haveNextPage = true;
+            	        break;
+            	    }
+
+            	    if (lowGames > page * GamesOnPage)
+            	        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, true), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+                }
             }
-            else if (!isHigh && rating < TopGamesRating)
+            else if (rate == NO_RATED)
             {
-            	lowGames++;
-            	if (lowGames > (page + 1) * GamesOnPage)
+            	noRated++;
+            	if (noRated > (page + 1) * GamesOnPage)
             	{
             	    haveNextPage = true;
             	    break;
             	}
 
-            	if (lowGames > page * GamesOnPage)
-            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            	if (noRated > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, false), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
             }
         }
     }
 
-    if (isHigh)
+    switch (rate)
     {
-        if (page > 0)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, HIGH_RATING + page - 1);
+        case NO_RATED:
+        	if (page > 0)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED + page - 1);
 
-        if (haveNextPage)
-            player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, HIGH_RATING + page + 1);
-    }
-    else
-    {
-    	if (page > 0)
-    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, LOW_RATING + page - 1);
+        	if (haveNextPage)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED + page + 1);
+        	break;
+        case LOW_RATING:
+        	if (page > 0)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING + page - 1);
 
-    	if (haveNextPage)
-    	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, LOW_RATING + page + 1);
+        	if (haveNextPage)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING + page + 1);
+        	break;
+        case HIGH_RATING:
+        	if (page > 0)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING + page - 1);
+
+        	if (haveNextPage)
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING + page + 1);
+            break;
     }
 
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
@@ -316,8 +352,9 @@ void ShowDefaultPage(Player* player, Creature* creature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
     {
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, HIGH_RATING);
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, LOW_RATING);
+		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
+		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
     }
 	else
@@ -331,8 +368,9 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
 	{
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, HIGH_RATING);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, LOW_RATING);
+        //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
+        //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
 	}
 	else
 	{
@@ -348,14 +386,19 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
 {
 	if (action == GOSSIP_ACTION_INFO_DEF + 3)
 		ShowDefaultPage(player, creature);
-	else if (action >= HIGH_RATING && action < LOW_RATING)
+	else if (action >= NPC_SPECTATOR_ACTION_HIGH_RATING && action < NPC_SPECTATOR_ACTION_LOW_RATING)
 	{
-		ShowPage(player, action - HIGH_RATING, true);
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_HIGH_RATING, HIGH_RATING);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
 	}
-	else if (action >= LOW_RATING && action < NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
+	else if (action >= NPC_SPECTATOR_ACTION_LOW_RATING && action < NPC_SPECTATOR_ACTION_NO_RATED)
 	{
-		ShowPage(player, action - LOW_RATING, false);
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_LOW_RATING, LOW_RATING);
+		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+	}
+	else if (action >= NPC_SPECTATOR_ACTION_NO_RATED && action < NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
+	{
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_NO_RATED, NO_RATED);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
 	}
 	else if (action >= NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
