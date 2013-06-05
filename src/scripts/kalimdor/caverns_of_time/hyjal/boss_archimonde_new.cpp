@@ -209,7 +209,7 @@ public:
             {
                 if (Player* i_pl = i->getSource())
                 {
-                    if (i_pl->isAlive() && i_pl->GetDistance(me) <= 3)
+                    if (i_pl->isAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(me) <= 3)
                     {
                         //i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
                         i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true);
@@ -364,7 +364,7 @@ public:
             {
                 if (Player* i_pl = i->getSource())
                 {	
-                    if  (i_pl->isAlive() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
+                    if  (i_pl->isAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
                     {
                         float AngleWithTarget = GetAngleWithTarget(i_pl);
                         float AngularDifference = GetAngularDifference(_CurrentAngle, AngleWithTarget);
