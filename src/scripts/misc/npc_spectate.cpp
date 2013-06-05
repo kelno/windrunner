@@ -208,7 +208,7 @@ void ShowPage(Player *player, uint32 page, ArenaRate rate)
             break;
     }
 
-    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 }
 
 void spectate(Player* player, uint64 targetGuid)
@@ -355,6 +355,7 @@ void ShowDefaultPage(Player* player, Creature* creature)
 		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
 		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
 		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
+		player->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
     }
 	else
@@ -371,6 +372,7 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
         //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
         //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
+        pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 	}
 	else
 	{
@@ -384,7 +386,7 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 
 bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*sender*/, uint32 action)
 {
-	if (action == GOSSIP_ACTION_INFO_DEF + 3)
+	if (action == GOSSIP_ACTION_INFO_DEF + 1)
 		ShowDefaultPage(player, creature);
 	else if (action >= NPC_SPECTATOR_ACTION_HIGH_RATING && action < NPC_SPECTATOR_ACTION_LOW_RATING)
 	{
@@ -411,6 +413,42 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
     return true;
 }
 
+bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
+{
+    if(sender == GOSSIP_SENDER_MAIN)
+    {
+        if(action == GOSSIP_ACTION_INFO_DEF + 2)
+        {
+        	std::string name = sCode;
+        	if(!name.empty())
+        	{
+        	    if(!normalizePlayerName(name))
+        	    {
+        	    	_Creature->Say("Nom incorrect!", LANG_UNIVERSAL, 0);
+        	    	player->CLOSE_GOSSIP_MENU();
+        	    	return true;
+        	    }
+
+        	    Player* target = objmgr.GetPlayer(sCode);
+        	    if (!target)
+        	    {
+        	    	_Creature->Say("Impossible de trouver le joueur!", LANG_UNIVERSAL, 0);
+        	    	player->CLOSE_GOSSIP_MENU();
+        	    	return true;
+        	    }
+
+        	    spectate(player, target->GetGUID());
+        	}
+        	else
+        		_Creature->Say("Champ vide!", LANG_UNIVERSAL, 0);
+
+        	player->CLOSE_GOSSIP_MENU();
+        	return true;
+        }
+    }
+    return false;
+}
+
 void AddSC_arena_spectator_script()
 {
 	Script* newscript;
@@ -419,5 +457,6 @@ void AddSC_arena_spectator_script()
 	newscript->Name = "npc_spectate";
 	newscript->pGossipHello = &GossipHello_npc_spectate;
 	newscript->pGossipSelect = &GossipSelect_npc_spectate;
+	newscript->pGossipSelectWithCode = &GossipSelectWithCode_npc_spectate;
 	newscript->RegisterSelf();
 }
