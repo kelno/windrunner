@@ -39,8 +39,10 @@ enum SpellIds
     SPELL_LEGION_LIGHTNING                              = 45664, // Chain Lightning, 4 targets, ~3k Shadow damage, 1.5k mana burn
     SPELL_FIRE_BLOOM                                    = 45641, // Places a debuff on 5 raid members, which causes them to deal 2k Fire damage to nearby allies and selves. MIGHT NOT WORK
 
-    SPELL_SUMMON_REFLECTION                             = 45891,
-    SPELL_SINISTER_REFLECTION                           = 45785, // Summon shadow copies of 5 raid members that fight against KJ's enemies
+
+    SPELL_SINISTER_REFLECTION                           = 45892,
+    SPELL_SINISTER_REFLECTION_CLONE                     = 45785, // Summon shadow copies of 5 raid members that fight against KJ's enemies
+    SPELL_SINISTER_REFLECTION_CLASS                     = 45893, // Increase the size of the clones
 
     SPELL_SHADOW_SPIKE                                  = 46680, // Bombard random raid members with Shadow Spikes (Very similar to Void Reaver orbs)
     SPELL_FLAME_DART                                    = 45737, // Bombards the raid with flames every 3(?) seconds
@@ -88,8 +90,9 @@ enum SpellIds
     SPELL_SR_MOONFIRE                                   = 47072,
 
     /*** Other Spells (used by players, etc) ***/
-    SPELL_SUMMON_DRAGON                                 = 45836,
     SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT                  = 45839, // Possess the blue dragon from the orb to help the raid.
+    SPELL_POWER_OF_THE_BLUE_FLIGHT                      = 45833,
+    SPELL_POSSESS_DRAKE_IMMUNE                          = 45838, // immunity while the player possesses the dragon
     SPELL_ENTROPIUS_BODY                                = 46819, // Visual for Entropius at the Epilogue
     SPELL_RING_OF_BLUE_FLAMES                           = 45825  //Cast this spell when the go is activated
 };
@@ -241,13 +244,11 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
     if (go->GetUInt32Value(GAMEOBJECT_FACTION) == 35) {
         ScriptedInstance* pInstance = ((ScriptedInstance*)go->GetInstanceData());
 
-        plr->CastSpell(plr, SPELL_SUMMON_DRAGON, true);
-        if (Creature* dragon = plr->FindNearestCreature(CREATURE_POWER_OF_THE_BLUE_DRAGONFLIGHT, 100.0f, true))
-            plr->CastSpell(dragon, SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT, true);
+        Creature* Kalec = (Creature*)(Unit::GetUnit(*plr, pInstance->GetData64(DATA_KALECGOS_KJ)));
+
+        Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, false);
 
         go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
-
-        Creature* Kalec = (Creature*)(Unit::GetUnit(*plr, pInstance->GetData64(DATA_KALECGOS_KJ)));
 
         float x,y,z, dx,dy,dz;
         go->GetPosition(x,y,z);
@@ -535,23 +536,6 @@ public:
                 talk(SAY_KJ_EMERGE);
             }
 
-            void CastSinisterReflection()
-            {
-                talk(SAY_KJ_REFLECTION);
-
-                if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
-                {
-                    for (uint8 i = 0; i < 4; i++)
-                    {
-                        float x,y,z;
-                        target->GetPosition(x,y,z);
-
-                        target->CastSpell(target, SPELL_SUMMON_REFLECTION, false);
-                    }
-                    target->CastSpell(target, SPELL_SINISTER_REFLECTION, true);
-                }
-            }
-
             void onSpellPrepare(SpellEntry const* spell, Unit* /*target*/)
             {
             	if (spell->Id == 45657)
@@ -659,17 +643,17 @@ public:
                             disableEvent(EVENT_ORBS_EMPOWER);
                             break;
                         case EVENT_SINISTER_REFLECTION:
-                        	CastSinisterReflection();
+                        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
+                        	{
+                        		target->CastSpell(target, SPELL_SINISTER_REFLECTION, true);
+                        		target->CastSpell(target, SPELL_SINISTER_REFLECTION_CLONE, true);
+                        	}
+
                         	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
                         	break;
                         case EVENT_ARMAGEDDON:
                         {
-                        	if (Unit *target = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true))
-                        	{
-                        		float x, y, z;
-                        		target->GetPosition(x, y, z);
-                        		me->SummonCreature(CREATURE_ARMAGEDDON_TARGET, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 2000);
-                        	}
+                        	doCast(me, SPELL_ARMAGEDDON_SUMMON_TRIGGER, true);
 
                             scheduleEvent(EVENT_ARMAGEDDON, 2000);
                             break;
@@ -1628,6 +1612,51 @@ public:
     }
 };
 
+//AI for Power of the Blue Flight
+class npc_power_blue_flight : public CreatureScript
+{
+public:
+	npc_power_blue_flight() : CreatureScript("npc_power_blue_flight") {}
+
+    class npc_power_blue_flightAI : public CreatureAINew
+    {
+        private:
+            ScriptedInstance *pInstance;
+
+        public:
+            npc_power_blue_flightAI(Creature* creature) : CreatureAINew(creature)
+            {
+                pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onDeath(Unit* /*killer*/)
+            {
+                if (Unit* summoner = me->GetSummoner())
+                	summoner->RemoveAurasDueToSpell(SPELL_POSSESS_DRAKE_IMMUNE);
+            }
+
+            void updateEM(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                    me->DisappearAndDie();
+            }
+
+            void update(uint32 const diff)
+            {
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                {
+                    me->DisappearAndDie();
+                    return;
+                }
+            }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new npc_power_blue_flightAI(creature);
+    }
+};
+
 void AddSC_boss_kiljaeden_new()
 {
     Script* newscript;
@@ -1646,4 +1675,5 @@ void AddSC_boss_kiljaeden_new()
     sScriptMgr.addScript(new mob_armageddon());
     sScriptMgr.addScript(new mob_shield_orb());
     sScriptMgr.addScript(new mob_sinster_reflection());
+    sScriptMgr.addScript(new npc_power_blue_flight());
 }
