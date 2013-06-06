@@ -2701,14 +2701,14 @@ struct npc_grullocAI : public ScriptedAI
             burningRageTimer -= diff;
             
         if (crushArmorTimer <= diff) {
-            DoCast(me, SPELL_CRUSH_ARMOR, true);
+            DoCast(me->getVictim(),SPELL_CRUSH_ARMOR);
             crushArmorTimer = 12000 + rand() % 4000;
         }
         else
             crushArmorTimer -= diff;
             
         if (grievousWoundTimer <= diff) {
-            DoCast(me, SPELL_GRIEVOUS_WOUND, true);
+            DoCast(me->getVictim(),SPELL_GRIEVOUS_WOUND);
             grievousWoundTimer = 45000;
         }
         else
@@ -2716,7 +2716,11 @@ struct npc_grullocAI : public ScriptedAI
             
         DoMeleeAttackIfReady();
     }
-    
+
+    void JustDied(Unit* killer)
+    {
+        me->SummonGameObject(185567, 2694.32, 5525.05, 1.18, 0, 0, 0, 0, 0, 60000);
+    }
 };
 
 CreatureAI* GetAI_npc_grulloc(Creature* creature)
