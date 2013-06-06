@@ -2719,7 +2719,7 @@ struct npc_grullocAI : public ScriptedAI
 
     void JustDied(Unit* killer)
     {
-        me->SummonGameObject(185567, 2694.32, 5525.05, 1.18, 0, 0, 0, 0, 0, 60000);
+        killer->SummonGameObject(185567, 2694.32, 5525.05, 1.18, 0, 0, 0, 0, 0, 60000);
     }
 };
 
