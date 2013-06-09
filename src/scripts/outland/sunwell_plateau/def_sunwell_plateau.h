@@ -106,8 +106,6 @@ enum Creatures
     /* Kil'Jaeden */
     CREATURE_ANVEENA                                = 26046, // Embodiment of the Sunwell
     CREATURE_KALECGOS                               = 25319, // Helps the raid throughout the fight
-    CREATURE_PROPHET                                = 26246, // Outro
-    CREATURE_LIADRIN                                = 26247, // Outro
     CREATURE_KILJAEDEN                              = 25315, // Give it to 'em KJ!
     CREATURE_HAND_OF_THE_DECEIVER                   = 25588, // Adds found before KJ emerges
     CREATURE_FELFIRE_PORTAL                         = 25603, // Portal spawned be Hand of the Deceivers
@@ -121,6 +119,8 @@ enum Creatures
     CREATURE_SINISTER_REFLECTION                    = 25708, // Sinister Relection spawnd on Phase swichtes
 
     /* Outro */
+    CREATURE_PROPHET                                = 26246,
+    CREATURE_LIADRIN                                = 26247,
     NPC_BOSS_PORTAL                                 = 24925,
     NPC_CORE_ENTROPIUS                              = 26262,
     NPC_SOLDIER                                     = 26259, // summoned in 2 waves before Velen. Should move into 2 circle formations
