@@ -21,9 +21,6 @@ class ScriptedInstance : public InstanceData
         ScriptedInstance(Map *map) : InstanceData(map) {}
         ~ScriptedInstance() {}
 
-        // Default accessor functions
-        Creature* GetSingleCreatureFromStorage(uint32 uiEntry, bool bSkipDebugLog = false);
-
         //All-purpose data storage 64 bit
         virtual uint64 GetData64(uint32 Data) { return 0; }
         virtual void SetData64(uint32 Data, uint64 Value) { }
@@ -43,10 +40,6 @@ class ScriptedInstance : public InstanceData
         
         void SendScriptInTestNoLootMessageToAll();
 
-    protected:
-        // Storage for GO-Guids and NPC-Guids
-        typedef std::map<uint32, uint64> EntryGuidMap;
-        EntryGuidMap m_mNpcEntryGuidStore;                  ///< Store unique NPC-Guids by entry
 };
 
 /// A static const array of this structure must be handled to DialogueHelper
@@ -72,9 +65,9 @@ class DialogueHelper
 {
     public:
         // The array MUST be terminated by {0,0,0}
-        DialogueHelper(DialogueEntry const* pDialogueArray);
+        DialogueHelper(DialogueEntry const* pDialogueArray, Creature *origin);
         // The array MUST be terminated by {0,0,0,0,0}
-        DialogueHelper(DialogueEntryTwoSide const* aDialogueTwoSide);
+        DialogueHelper(DialogueEntryTwoSide const* aDialogueTwoSide, Creature *origin);
 
         /// Function to initialize the dialogue helper for instances. If not used with instances, GetSpeakerByEntry MUST be overwritten to obtain the speakers
         void InitializeDialogueHelper(ScriptedInstance* pInstance) { m_pInstance = pInstance; }
@@ -95,6 +88,8 @@ class DialogueHelper
         void DoNextDialogueStep();
 
         ScriptedInstance* m_pInstance;
+
+        Creature *m_origin;
 
         DialogueEntry const* m_pDialogueArray;
         DialogueEntry const* m_pCurrentEntry;
