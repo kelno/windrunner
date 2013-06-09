@@ -93,8 +93,16 @@ enum SpellIds
     SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT                  = 45839, // Possess the blue dragon from the orb to help the raid.
     SPELL_POWER_OF_THE_BLUE_FLIGHT                      = 45833,
     SPELL_POSSESS_DRAKE_IMMUNE                          = 45838, // immunity while the player possesses the dragon
+    SPELL_RING_OF_BLUE_FLAMES                           = 45825, //Cast this spell when the go is activated
+    SPELL_DESTROY_DRAKES                                = 46707,
+
+    // outro
+    SPELL_TELEPORT_VISUAL                               = 41232,
+    SPELL_KALEC_TELEPORT                                = 46473, // teleports and transforms Kalec in human form
+    SPELL_CALL_ENTROPIUS                                = 46818,
     SPELL_ENTROPIUS_BODY                                = 46819, // Visual for Entropius at the Epilogue
-    SPELL_RING_OF_BLUE_FLAMES                           = 45825  //Cast this spell when the go is activated
+    SPELL_BLAZE_TO_LIGHT                                = 46821,
+    SPELL_SUNWELL_IGNITION                              = 46822
 };
 
 /*** GameObjects ***/
@@ -227,6 +235,74 @@ enum Kalecgos
 	SAY_KALEC_ORB_READY4,
 };
 
+// outro
+enum Outro
+{
+	SAY_KALECGOS_GOODBYE        = -1580089,
+    SAY_OUTRO_1                 = -1580095,         // Velen
+    SAY_OUTRO_2                 = -1580096,
+    SAY_OUTRO_3                 = -1580097,
+    SAY_OUTRO_4                 = -1580098,
+    SAY_OUTRO_5                 = -1580099,         // Liadrin
+    SAY_OUTRO_6                 = -1580100,         // Velen
+    SAY_OUTRO_7                 = -1580101,         // Liadrin
+    SAY_OUTRO_8                 = -1580102,         // Velen
+    SAY_OUTRO_9                 = -1580103,
+    SAY_OUTRO_10                = -1580104,         // Liadrin
+    SAY_OUTRO_11                = -1580105,         // Velen
+    SAY_OUTRO_12                = -1580106,
+};
+
+enum
+{
+	POINT_SUMMON_SOLDIERS       = 1,
+	POINT_MOVE_LIADRIN          = 2,
+	POINT_EVENT_EXIT            = 3,
+};
+
+// Epilogue dialogue
+static const DialogueEntry aOutroDialogue[] =
+{
+	{CREATURE_KILJAEDEN,    0,                  15000},
+    {CREATURE_KALECGOS,     0,                  15000},
+    {SAY_KALECGOS_GOODBYE,  CREATURE_KALECGOS,  40000},
+    {NPC_BOSS_PORTAL,       0,                  10000},
+    {POINT_SUMMON_SOLDIERS, 0,                  18000},
+    {CREATURE_PROPHET,      0,                  1000},
+    {CREATURE_LIADRIN,      0,                  4000},
+    {SAY_OUTRO_1,           CREATURE_PROPHET,   25000},
+    {SAY_OUTRO_2,           CREATURE_PROPHET,   15000},
+    {SAY_OUTRO_3,           CREATURE_PROPHET,   13000},
+    {SPELL_CALL_ENTROPIUS,  0,                  10000},
+    {SAY_OUTRO_4,           CREATURE_PROPHET,   20000},
+    {POINT_MOVE_LIADRIN,    0,                  5000},
+    {SAY_OUTRO_5,           CREATURE_LIADRIN,   10000},
+    {SAY_OUTRO_6,           CREATURE_PROPHET,   15000},
+    {SAY_OUTRO_7,           CREATURE_LIADRIN,   3000},
+    {SAY_OUTRO_8,           CREATURE_PROPHET,   4000},
+    {SPELL_BLAZE_TO_LIGHT,  0,                  13000},
+    {SAY_OUTRO_9,           CREATURE_PROPHET,   14000},
+    {SAY_OUTRO_10,          CREATURE_LIADRIN,   20000},
+    {SAY_OUTRO_11,          CREATURE_PROPHET,   8000},
+    {SAY_OUTRO_12,          CREATURE_PROPHET,   4000},
+    {POINT_EVENT_EXIT,      0,                  0},
+    {0, 0, 0},
+};
+
+struct EventLocations
+{
+    float m_fX, m_fY, m_fZ, m_fO;
+};
+
+static const EventLocations aOutroLocations[] =
+{
+    {1727.854f, 656.060f, 28.31f, 3.86f},       // portal summon loc
+    {1716.969f, 646.407f, 28.05f, 3.91f},       // velen summon loc
+    {1718.862f, 644.528f, 28.05f, 3.87f},       // liadrin summon loc
+    {1712.110f, 641.044f, 27.80f},              // velen move forward
+    {1711.537f, 637.600f, 27.34f}               // liadrin move forward
+};
+
 class AllOrbsInGrid
 {
     public:
@@ -241,29 +317,33 @@ class AllOrbsInGrid
 
 bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
 {
-    if (go->GetUInt32Value(GAMEOBJECT_FACTION) == 35) {
+    if (go->GetUInt32Value(GAMEOBJECT_FACTION) == 35)
+    {
         ScriptedInstance* pInstance = ((ScriptedInstance*)go->GetInstanceData());
 
-        Creature* Kalec = (Creature*)(Unit::GetUnit(*plr, pInstance->GetData64(DATA_KALECGOS_KJ)));
+        if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+        {
+            Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, false);
 
-        Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, false);
+            go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
-        go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
-
-        float x,y,z, dx,dy,dz;
-        go->GetPosition(x,y,z);
-        for (uint8 i = 0; i < 4; ++i) {
-            DynamicObject* Dyn = Kalec->GetDynObject(SPELL_RING_OF_BLUE_FLAMES);
-            if (Dyn) {
-                Dyn->GetPosition(dx,dy,dz);
-                if (x == dx && dy == y && dz == z) {
-                    Dyn->RemoveFromWorld();
-                    break;
+            float x,y,z, dx,dy,dz;
+            go->GetPosition(x,y,z);
+            for (uint8 i = 0; i < 4; ++i)
+            {
+                DynamicObject* Dyn = Kalec->GetDynObject(SPELL_RING_OF_BLUE_FLAMES);
+                if (Dyn)
+                {
+                    Dyn->GetPosition(dx,dy,dz);
+                    if (x == dx && dy == y && dz == z)
+                    {
+                        Dyn->RemoveFromWorld();
+                        break;
+                    }
                 }
             }
+            go->Refresh();
         }
-        
-        go->Refresh();
     }
 
     return true;
@@ -429,17 +509,332 @@ public:
     }
 };
 
+//AI for Kil'Jaeden Event Controller
+class mob_kiljaeden_controller : public CreatureScript
+{
+public:
+    mob_kiljaeden_controller() : CreatureScript("mob_kiljaeden_controller") {}
+	
+    class mob_kiljaeden_controllerAI : public Creature_NoMovementAINew, private DialogueHelper
+    {
+        private:
+            ScriptedInstance* pInstance;
+
+            SummonList Summons;
+
+            bool KiljaedenDeath;
+            uint64 handDeceiver[3];
+            uint64 m_EntropiusGuid;
+            uint64 m_PortalGuid;
+        public:
+	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue, me)
+	        {
+	            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+	            InitializeDialogueHelper(pInstance);
+	        }
+
+            uint8 DeceiverDeathCount;
+
+            void onReset(bool onSpawn)
+            {
+            	if (pInstance)
+            	{
+            	    if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == DONE)
+            	    	return;
+
+            		pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
+            	}
+
+                if (onSpawn)
+                {
+                    addEvent(EVENT_SAY, 45000, 75000, EVENT_FLAG_DELAY_IF_CASTING);
+                }
+                else
+                {
+                    resetEvent(EVENT_SAY, 45000, 75000);
+                }
+
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+
+                setPhase(PHASE_DECEIVERS);
+
+                if (Creature *KalecKJ = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)KalecKJ->getAI())->ResetOrbs();
+
+                DeceiverDeathCount = 0;
+                KiljaedenDeath = false;
+
+                Summons.DespawnAll();
+
+                for(uint8 i = 0; i < 3; ++i)
+                {
+                    if (Creature *hand = me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000))
+                    {
+                    	hand->SetSummoner(me);
+                        handDeceiver[i] = hand->GetGUID();
+                    }
+                }
+
+                if (Creature *anveena = me->SummonCreature(CREATURE_ANVEENA,  me->GetPositionX(), me->GetPositionY(), 60, 0, TEMPSUMMON_DEAD_DESPAWN, 0))
+                	anveena->SetSummoner(me);
+
+                if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
+                {
+                    SpellEntry const *spellInfo = spellmgr.LookupSpell(SPELL_ANVEENA_ENERGY_DRAIN);
+                    if (spellInfo)
+                    {
+                        uint8 eff = 0;
+                        Aura* Aur = CreateAura(spellInfo, eff, NULL, me);
+                        me->AddAura(Aur);
+                    }
+                }
+            }
+
+            void onSummon(Creature* summoned)
+            {
+                Summons.Summon(summoned);
+                switch(summoned->GetEntry())
+                {
+                    case CREATURE_HAND_OF_THE_DECEIVER:
+                        summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
+                        break;
+                    case CREATURE_ANVEENA:
+                    {
+                        summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        summoned->SetFlying(true);
+                        summoned->SendMovementFlagUpdate();
+                        summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
+                        break;
+                    }
+                    case CREATURE_KILJAEDEN:
+                        summoned->CastSpell(summoned, SPELL_REBIRTH, false);
+                        summoned->getAI()->setPhase(PHASE_NORMAL);
+                        break;
+                    case CREATURE_PROPHET:
+                        summoned->GetMotionMaster()->MovePoint(0, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ);
+                        // no break here
+                    case CREATURE_LIADRIN:
+                        summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
+                        break;
+                    case NPC_CORE_ENTROPIUS:
+                        summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
+                        summoned->SetFlying(true);
+                        summoned->SendMovementFlagUpdate();
+                        m_EntropiusGuid = summoned->GetGUID();
+                        break;
+                    case NPC_BOSS_PORTAL:
+                        m_PortalGuid = summoned->GetGUID();
+                        break;
+                }
+            }
+
+            void onSummonDespawn(Creature* unit)
+            {
+                Summons.Despawn(unit);
+            }
+
+            void startDialogueText()
+            {
+            	StartNextDialogueText(CREATURE_KILJAEDEN);
+            }
+
+            void JustDidDialogueStep(int32 iEntry)
+            {
+                if (!pInstance)
+                    return;
+
+                switch (iEntry)
+                {
+                    case CREATURE_KILJAEDEN:
+                    	// While Kil'Jaeden die
+                    	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                    		((boss_kalecgos_kj::boss_kalecgos_kjAI*)pKalec->getAI())->ResetOrbs();
+                    	break;
+                    case CREATURE_KALECGOS:
+                    	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                    	{
+                            pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
+                            pKalec->SetFlying(false);
+                            pKalec->SendMovementFlagUpdate();
+                        }
+                        if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        	core->SetSummoner(me);
+                        break;
+                    case NPC_BOSS_PORTAL:
+                        // ToDo: summon soldiers to the right
+                        if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                        	portal->SetSummoner(me);
+                        break;
+                    case POINT_SUMMON_SOLDIERS:
+                        // ToDo: summon soldiers to the left
+                        break;
+                    case CREATURE_PROPHET:
+                    	if (Creature *prophet = me->SummonCreature(CREATURE_PROPHET, aOutroLocations[1].m_fX, aOutroLocations[1].m_fY, aOutroLocations[1].m_fZ, aOutroLocations[1].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    		prophet->SetSummoner(me);
+                        break;
+                    case CREATURE_LIADRIN:
+                    	if (Creature *liadrin = me->SummonCreature(CREATURE_LIADRIN, aOutroLocations[2].m_fX, aOutroLocations[2].m_fY, aOutroLocations[2].m_fZ, aOutroLocations[2].m_fO, TEMPSUMMON_TIMED_DESPAWN, 4 * MINUTE * IN_MILLISECONDS))
+                    		liadrin->SetSummoner(me);
+                        break;
+                    case SPELL_CALL_ENTROPIUS:
+                        if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
+                            pVelen->CastSpell(pVelen, SPELL_CALL_ENTROPIUS, true);
+
+                        // Set point id = 1 for movement event
+                        if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
+                        {
+                            pEntropius->SetWalk(false);
+                            pEntropius->GetMotionMaster()->MovePoint(1, me->GetPositionX(), me->GetPositionY(), 35.0f);
+                        }
+                        break;
+                    case SAY_OUTRO_4:
+                    	// Interrupt Velen's casting when entropius has reached the ground
+                    	if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
+                    	{
+                    		pVelen->InterruptNonMeleeSpells(false);
+                    		pVelen->SetToNotify();
+                    	}
+                    	break;
+                    case POINT_MOVE_LIADRIN:
+                        if (Creature* pLiadrin = SelectCreatureInGrid(me, CREATURE_LIADRIN, 100.0f))
+                            pLiadrin->GetMotionMaster()->MovePoint(0, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ);
+                        break;
+                    case SPELL_BLAZE_TO_LIGHT:
+                        if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
+                        {
+                            pEntropius->CastSpell(pEntropius, SPELL_BLAZE_TO_LIGHT, true);
+                            pEntropius->RemoveAurasDueToSpell(SPELL_ENTROPIUS_BODY);
+                            pEntropius->SetWalk(true);
+                            pEntropius->GetMotionMaster()->MovePoint(2, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
+                        }
+                        break;
+                    case POINT_EVENT_EXIT:
+                        // Set point id = 1 for the despawn event
+                        if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
+                            pVelen->GetMotionMaster()->MovePoint(1, aOutroLocations[1].m_fX, aOutroLocations[1].m_fY, aOutroLocations[1].m_fZ);
+                        break;
+                }
+            }
+
+            void summonedMovementInform(Creature* pSummoned, uint32 uiType, uint32 uiPointId)
+            {
+                if (uiType != POINT_MOTION_TYPE)
+                    return;
+
+                if (uiPointId == 1)
+                {
+                    if (pSummoned->GetEntry() == CREATURE_PROPHET)
+                    {
+                        // Cast teleport and despawn Velen, the portal and Kalec; Liadrin will despawn on timer
+                        pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
+                        pSummoned->ForcedDespawn(1000);
+
+                        // Note: portal should despawn only after all the soldiers have reached this point and "teleported" outside
+                        if (Creature* pPortal = me->GetMap()->GetCreature(m_PortalGuid))
+                           pPortal->ForcedDespawn(5000);
+
+                        if (Creature* pKalec = SelectCreatureInGrid(me, CREATURE_KALECGOS, 100.0f))
+                            pKalec->ForcedDespawn(1000);
+
+                        me->ForcedDespawn();
+                    }
+                }
+                else if (uiPointId == 2 && pSummoned->GetEntry() == NPC_CORE_ENTROPIUS)
+                {
+                    // When the purified Muru reaches the ground the sunwell ignites and Muru despawns
+                    doCast(me, SPELL_SUNWELL_IGNITION);
+
+                    if (Creature* pLiadrin = SelectCreatureInGrid(me, CREATURE_LIADRIN, 100.0f))
+                        pLiadrin->SetStandState(UNIT_STAND_STATE_KNEEL);
+
+                    pSummoned->ForcedDespawn();
+                }
+            }
+
+            void onCombatStart(Unit* victim)
+            {
+                for (uint8 i = 0; i < 3; i++)
+                {
+                    if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
+                    {
+                        if (!hand->isInCombat())
+                            hand->getAI()->attackStart(victim);
+                    }
+                }
+            }
+
+            void update(uint32 const diff)
+            {
+            	DialogueUpdate(diff);
+
+                updateEvents(diff);
+            
+                while (executeEvent(diff, m_currEvent))
+                {
+                    switch (m_currEvent)
+                    {
+                        case EVENT_SAY:
+                            if (pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                                talk(SAY_KJ_OFFCOMBAT);
+
+                            scheduleEvent(EVENT_SAY, 45000, 75000);
+                            break;
+                    }
+                }
+
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                if (!players.isEmpty())
+                {
+                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    {
+                        if (Player* plr = itr->getSource())
+                        {
+                            if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
+                        	{
+                            	if (!me->isInCombat())
+                            		attackStart(plr);
+                        	}
+                        }
+                    }
+                }
+
+                if (!updateVictim())
+                    return;
+
+                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
+                {
+                    evade();
+                    return;
+                }
+
+                if (DeceiverDeathCount > 2 && getPhase() == PHASE_DECEIVERS)
+                {
+                    me->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN);
+                    setPhase(PHASE_NORMAL);
+                    if (Creature *kiljaeden = me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0))
+                    	kiljaeden->SetSummoner(me);
+                }
+            }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new mob_kiljaeden_controllerAI(creature);
+    }
+};
+
 //AI for Kil'jaeden
 class boss_kiljaeden : public CreatureScript
 {
 public:
     boss_kiljaeden() : CreatureScript("boss_kiljaeden") {}
-	
+
     class boss_kiljaedenAI : public Creature_NoMovementAINew
     {
         private:
             ScriptedInstance* pInstance;
-    
+
             SummonList Summons;
 
             uint32 annimSpawnTimer;
@@ -511,7 +906,7 @@ public:
                     	break;
                 }
             }
-	
+
             void onSummonDespawn(Creature* unit)
             {
                 Summons.Despawn(unit);
@@ -523,6 +918,15 @@ public:
 
                 if (pInstance)
                     pInstance->SetData(DATA_KILJAEDEN_EVENT, DONE);
+
+                if (Creature *controller = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KILJAEDEN_CONTROLLER)))
+                {
+                	controller->setFaction(35);
+                	controller->RemoveAllAuras();
+                	controller->DeleteThreatList();
+                	controller->CombatStop();
+                	((mob_kiljaeden_controller::mob_kiljaeden_controllerAI*)controller->getAI())->startDialogueText();
+                }
             }
 
             void onKill(Unit* /*victim*/)
@@ -539,9 +943,7 @@ public:
             void onSpellPrepare(SpellEntry const* spell, Unit* /*target*/)
             {
             	if (spell->Id == 45657)
-            	{
             		talk(SAY_KJ_DARKNESS);
-            	}
             }
 
             void update(const uint32 diff)
@@ -575,7 +977,7 @@ public:
 
                 if (me->hasUnitState(UNIT_STAT_CASTING))
                     return;
-            
+
                 while (executeEvent(diff, m_currEvent))
                 {
                     switch (m_currEvent)
@@ -583,7 +985,10 @@ public:
                         case EVENT_KALEC_JOIN:
                             disableEvent(EVENT_KALEC_JOIN);
                             if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                            {
                                 kalec->getAI()->talk(SAY_KALEC_JOIN);
+                                kalec->SetVisibility(VISIBILITY_ON);
+                            }
                             break;
                         case EVENT_SOUL_FLAY:
                             doCast(me->getVictim(), SPELL_SOUL_FLAY);
@@ -606,7 +1011,10 @@ public:
                                 sx = ShieldOrbLocations[0][0] + sin(ShieldOrbLocations[i][0]);
                                 sy = ShieldOrbLocations[0][1] + sin(ShieldOrbLocations[i][1]);
                                 if (Creature* orb = me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000))
-                                    orb->getAI()->setZoneInCombat(true);
+                                {
+                                	orb->SetSummoner(me);
+                                	orb->getAI()->setZoneInCombat(true);
+                                }
                             }
 
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
@@ -643,11 +1051,7 @@ public:
                             disableEvent(EVENT_ORBS_EMPOWER);
                             break;
                         case EVENT_SINISTER_REFLECTION:
-                        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 100, true))
-                        	{
-                        		target->CastSpell(target, SPELL_SINISTER_REFLECTION, true);
-                        		target->CastSpell(target, SPELL_SINISTER_REFLECTION_CLONE, true);
-                        	}
+                            doCast(me, SPELL_SINISTER_REFLECTION, true);
 
                         	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
                         	break;
@@ -678,6 +1082,7 @@ public:
                 {
                     if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
                     {
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
                         talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
                         enableEvent(EVENT_ORBS_EMPOWER);
@@ -692,10 +1097,15 @@ public:
                 {
                     if (getPhase() == PHASE_ARMAGEDDON && me->IsBelowHPPercent(25))
                     {
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
                         setPhase(PHASE_SACRIFICE);
 
                         if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
-                            Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, false);
+                        {
+                        	Anveena->RemoveAurasDueToSpell(SPELL_ANVEENA_PRISON);
+                        	Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, true);
+                        	Anveena->ForcedDespawn(3000);
+                        }
                         enableEvent(EVENT_ORBS_EMPOWER);
                         enableEvent(EVENT_SHADOW_SPIKE);
                     }
@@ -708,166 +1118,6 @@ public:
     CreatureAINew* getAI(Creature* creature)
     {
         return new boss_kiljaedenAI(creature);
-    }
-};
-
-//AI for Kil'Jaeden Event Controller
-class mob_kiljaeden_controller : public CreatureScript
-{
-public:
-    mob_kiljaeden_controller() : CreatureScript("mob_kiljaeden_controller") {}
-	
-    class mob_kiljaeden_controllerAI : public Creature_NoMovementAINew
-    {
-        private:
-            ScriptedInstance* pInstance;
-
-            SummonList Summons;
-
-            bool KiljaedenDeath;
-            uint64 handDeceiver[3];
-        public:
-	    mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
-	    {
-	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-	    }
-
-            uint8 DeceiverDeathCount;
-
-            void onSummon(Creature* summoned)
-            {
-                Summons.Summon(summoned);
-                switch(summoned->GetEntry())
-                {
-                    case CREATURE_HAND_OF_THE_DECEIVER:
-                        summoned->CastSpell(summoned, SPELL_SHADOW_CHANNELING, false);
-                        break;
-                    case CREATURE_ANVEENA:
-                    {
-                        summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        summoned->SetFlying(true);
-                        summoned->SendMovementFlagUpdate();
-                        summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
-                        break;
-                    }
-                    case CREATURE_KILJAEDEN:
-                        summoned->CastSpell(summoned, SPELL_REBIRTH, false);
-                        summoned->getAI()->setPhase(PHASE_NORMAL);
-                        break;
-                }
-            }
-
-            void onSummonDespawn(Creature* unit)
-            {
-                Summons.Despawn(unit);
-            }
-
-            void onReset(bool onSpawn)
-            {
-                if (onSpawn)
-                {
-                    addEvent(EVENT_SAY, 45000, 75000, EVENT_FLAG_DELAY_IF_CASTING);
-                }
-                else
-                {
-                    resetEvent(EVENT_SAY, 45000, 75000);
-                }
-
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-
-                setPhase(PHASE_DECEIVERS);
-
-                if (Creature *KalecKJ = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)KalecKJ->getAI())->ResetOrbs();
-
-                DeceiverDeathCount = 0;
-                KiljaedenDeath = false;
-
-                Summons.DespawnAll();
-
-                for(uint8 i = 0; i < 3; ++i)
-                {
-                    Creature *hand = me->SummonCreature(CREATURE_HAND_OF_THE_DECEIVER, DeceiverLocations[i][0], DeceiverLocations[i][1], FLOOR_Z, DeceiverLocations[i][2], TEMPSUMMON_CORPSE_TIMED_DESPAWN, 30000);
-                    handDeceiver[i] = hand->GetGUID();
-                }
-
-                me->SummonCreature(CREATURE_ANVEENA,  me->GetPositionX(), me->GetPositionY(), 60, 0, TEMPSUMMON_DEAD_DESPAWN, 0);
-
-                if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
-                {
-                    SpellEntry const *spellInfo = spellmgr.LookupSpell(SPELL_ANVEENA_ENERGY_DRAIN);
-                    if (spellInfo)
-                    {
-                        uint8 eff = 0;
-                        Aura* Aur = CreateAura(spellInfo, eff, NULL, me);
-                        me->AddAura(Aur);
-                    }
-                }
-            }
-
-            void onCombatStart(Unit* victim)
-            {
-            	for(uint8 i = 0; i < 3; ++i)
-            	{
-            	    if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
-            	        hand->getAI()->attackStart(victim);
-            	}
-            }
-
-            void update(uint32 const diff)
-            {
-                updateEvents(diff);
-            
-                while (executeEvent(diff, m_currEvent))
-                {
-                    switch (m_currEvent)
-                    {
-                        case EVENT_SAY:
-                            if (pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
-                                talk(SAY_KJ_OFFCOMBAT);
-
-                            scheduleEvent(EVENT_SAY, 45000, 75000);
-                            break;
-                    }
-                }
-
-                if (DeceiverDeathCount > 2 && getPhase() == PHASE_DECEIVERS)
-                {
-                    me->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN);
-                    setPhase(PHASE_NORMAL);
-                    me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0);
-                }
-
-                if (me->FindNearestCreature(CREATURE_POWER_OF_THE_BLUE_DRAGONFLIGHT, 100.0f))
-                	return;
-
-                Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                if (!players.isEmpty())
-                {
-                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    {
-                        Player* plr = itr->getSource();
-                        if (plr && me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
-                            if (!me->isInCombat())
-                        	    attackStart(plr);
-                    }
-                }
-
-                if (!updateVictim())
-                	return;
-
-                if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
-                {
-                    evade();
-                    return;
-                }
-            }
-    };
-
-    CreatureAINew* getAI(Creature* creature)
-    {
-        return new mob_kiljaeden_controllerAI(creature);
     }
 };
 
@@ -911,9 +1161,6 @@ public:
                     resetEvent(EVENT_SHADOWBOLT, 2000, 3000);
                     resetEvent(EVENT_FELFIRE, 5000, 10000);
                 }
-
-                if (pInstance)
-                    pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
 
                 Summons.DespawnAll();
             }
@@ -1424,6 +1671,8 @@ public:
 
                 me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
                 me->addUnitState(UNIT_STAT_STUNNED);
+
+                me->CastSpell(me, 45893, true);
             }
 
             void updateEM(uint32 const diff)
@@ -1452,6 +1701,8 @@ public:
                         case EVENT_STUN:
                             canAttack = true;
                             me->clearUnitState(UNIT_STAT_STUNNED);
+                            if (Unit* summoner = me->GetSummoner())
+                            	attackStart(summoner);
                             disableEvent(EVENT_STUN);
                             break;
                     }
@@ -1627,6 +1878,15 @@ public:
             npc_power_blue_flightAI(Creature* creature) : CreatureAINew(creature)
             {
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+            }
+
+            void onReset(bool /*onSpawn*/)
+            {
+                if (Unit* summoner = me->GetSummoner())
+            	{
+            		summoner->CastSpell(me, 45839, true);
+            		summoner->CastSpell(summoner, 45838, true);
+            	}
             }
 
             void onDeath(Unit* /*killer*/)
