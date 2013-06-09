@@ -55,20 +55,33 @@ void ScriptedInstance::SendScriptInTestNoLootMessageToAll()
     }
 }
 
+/// Returns a pointer to a loaded Creature that was stored in m_mNpcEntryGuidStore. Can return NULL
+Creature* ScriptedInstance::GetSingleCreatureFromStorage(uint32 uiEntry, bool bSkipDebugLog /*=false*/)
+{
+    EntryGuidMap::iterator find = m_mNpcEntryGuidStore.find(uiEntry);
+    if (find != m_mNpcEntryGuidStore.end())
+        return instance->GetCreature(find->second);
+
+    // Output log, possible reason is not added GO to map, or not yet loaded;
+    if (!bSkipDebugLog)
+        error_log("Script requested creature with entry %u, but no npc of this entry was created yet, or it was not stored by script for map %u.", uiEntry, instance->GetId());
+
+    return NULL;
+}
+
 /**
    Constructor for DialogueHelper
 
    @param   pDialogueArray The static const array of DialogueEntry holding the information about the dialogue. This array MUST be terminated by {0,0,0}
  */
-DialogueHelper::DialogueHelper(DialogueEntry const* pDialogueArray, Creature *origin) :
+DialogueHelper::DialogueHelper(DialogueEntry const* pDialogueArray) :
     m_pInstance(NULL),
     m_pDialogueArray(pDialogueArray),
     m_pCurrentEntry(NULL),
     m_pDialogueTwoSideArray(NULL),
     m_pCurrentEntryTwoSide(NULL),
     m_uiTimer(0),
-    m_bIsFirstSide(true),
-    m_origin(origin)
+    m_bIsFirstSide(true)
 {}
 
 /**
@@ -76,15 +89,14 @@ DialogueHelper::DialogueHelper(DialogueEntry const* pDialogueArray, Creature *or
 
    @param   pDialogueTwoSideArray The static const array of DialogueEntryTwoSide holding the information about the dialogue. This array MUST be terminated by {0,0,0,0,0}
  */
-DialogueHelper::DialogueHelper(DialogueEntryTwoSide const* pDialogueTwoSideArray, Creature *origin) :
+DialogueHelper::DialogueHelper(DialogueEntryTwoSide const* pDialogueTwoSideArray) :
     m_pInstance(NULL),
     m_pDialogueArray(NULL),
     m_pCurrentEntry(NULL),
     m_pDialogueTwoSideArray(pDialogueTwoSideArray),
     m_pCurrentEntryTwoSide(NULL),
     m_uiTimer(0),
-    m_bIsFirstSide(true),
-    m_origin(origin)
+    m_bIsFirstSide(true)
 {}
 
 /**
@@ -167,8 +179,7 @@ void DialogueHelper::DoNextDialogueStep()
         // Use Speaker if directly provided
         Creature* pSpeaker = GetSpeakerByEntry(uiSpeakerEntry);
         if (m_pInstance && !pSpeaker)                       // Get Speaker from instance
-        	if (Creature *speaker = SelectCreatureInGrid(m_origin, uiSpeakerEntry, 100.0f))
-                pSpeaker = speaker;
+        	pSpeaker = m_pInstance->GetSingleCreatureFromStorage(uiSpeakerEntry);
 
         if (pSpeaker)
             DoScriptText(iTextEntry, pSpeaker);
