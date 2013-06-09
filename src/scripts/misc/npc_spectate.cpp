@@ -361,7 +361,7 @@ void ShowDefaultPage(Player* player, Creature* creature)
 	else
 	{
 		player->CLOSE_GOSSIP_MENU();
-		creature->Say("Arena spectator désactivé", LANG_UNIVERSAL, player->GetGUID());
+		creature->Whisper("Arena spectator désactivé", player->GetGUID());
 	}
 }
 
@@ -376,7 +376,7 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 	}
 	else
 	{
-		pCreature->Say("Arena spectator désactivé", LANG_UNIVERSAL, pPlayer->GetGUID());
+		pCreature->Whisper("Arena spectator désactivé", pPlayer->GetGUID());
 		return true;
 	}
 
@@ -424,7 +424,7 @@ bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uin
         	{
         	    if(!normalizePlayerName(name))
         	    {
-        	    	_Creature->Say("Nom incorrect!", LANG_UNIVERSAL, 0);
+        	    	_Creature->Whisper("Nom incorrect!", player->GetGUID());
         	    	player->CLOSE_GOSSIP_MENU();
         	    	return true;
         	    }
@@ -432,7 +432,7 @@ bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uin
         	    Player* target = objmgr.GetPlayer(sCode);
         	    if (!target)
         	    {
-        	    	_Creature->Say("Impossible de trouver le joueur!", LANG_UNIVERSAL, 0);
+        	    	_Creature->Whisper("Impossible de trouver le joueur!", player->GetGUID());
         	    	player->CLOSE_GOSSIP_MENU();
         	    	return true;
         	    }
@@ -440,7 +440,7 @@ bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uin
         	    spectate(player, target->GetGUID());
         	}
         	else
-        		_Creature->Say("Champ vide!", LANG_UNIVERSAL, 0);
+        		_Creature->Whisper("Champ vide!", player->GetGUID());
 
         	player->CLOSE_GOSSIP_MENU();
         	return true;
