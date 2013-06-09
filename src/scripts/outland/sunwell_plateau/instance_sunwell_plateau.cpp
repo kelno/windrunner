@@ -219,19 +219,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     southList.push_back(pCreature->GetGUID());
                 //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
-            case 25708:
-            	// Sinister Reflection Class
-            	pCreature->CastSpell(pCreature, 45893, true);
-            	if (Unit* summoner = pCreature->GetSummoner())
-            		pCreature->getAI()->attackStart(summoner);
-            	break;
-            case 25653:
-            	if (Unit* summoner = pCreature->GetSummoner())
-            	{
-            		summoner->CastSpell(pCreature, 45839, true);
-            		summoner->CastSpell(summoner, 45838, true);
-            	}
-            	break;
         }
     }
 

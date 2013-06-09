@@ -107,6 +107,7 @@ enum Creatures
     CREATURE_ANVEENA                                = 26046, // Embodiment of the Sunwell
     CREATURE_KALECGOS                               = 25319, // Helps the raid throughout the fight
     CREATURE_PROPHET                                = 26246, // Outro
+    CREATURE_LIADRIN                                = 26247, // Outro
     CREATURE_KILJAEDEN                              = 25315, // Give it to 'em KJ!
     CREATURE_HAND_OF_THE_DECEIVER                   = 25588, // Adds found before KJ emerges
     CREATURE_FELFIRE_PORTAL                         = 25603, // Portal spawned be Hand of the Deceivers
@@ -118,6 +119,12 @@ enum Creatures
     CREATURE_SPIKE_TARGET1                          = 30598, // Should summon these under Shadow Spike Channel on targets place
     CREATURE_SPIKE_TARGET2                          = 30614,
     CREATURE_SINISTER_REFLECTION                    = 25708, // Sinister Relection spawnd on Phase swichtes
+
+    /* Outro */
+    NPC_BOSS_PORTAL                                 = 24925,
+    NPC_CORE_ENTROPIUS                              = 26262,
+    NPC_SOLDIER                                     = 26259, // summoned in 2 waves before Velen. Should move into 2 circle formations
+    NPC_RIFTWALKER                                  = 26289,
 
     /* Muru */
     CREATURE_DARKNESS                               = 25879,
