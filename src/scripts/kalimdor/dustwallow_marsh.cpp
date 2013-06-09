@@ -32,6 +32,7 @@ npc_private_hendel
 npc_stinky
 npc_cassa_crimsonwing
 npc_ogron
+npc_captured_totem
 EndContentData */
 
 #include "precompiled.h"
@@ -738,6 +739,37 @@ CreatureAI* GetAI_npc_ogron(Creature* pCreature)
 }
 
 /*######
+## npc_captured_totem
+######*/
+
+struct npc_captured_totemAI : public Scripted_NoMovementAI
+{
+    npc_captured_totemAI(Creature* creature) : Scripted_NoMovementAI(creature)
+    {
+        me->SetReactState(REACT_PASSIVE);
+        me->setFaction(35);
+    }
+
+    void Aggro(Unit* pWho)
+    {
+    }
+    
+    void MasterKilledUnit(Unit* victim)
+    {
+        if (!me->GetOwner())
+            return;
+        
+        if (victim->GetEntry() == 4344 || victim->GetEntry() == 4345)
+            me->GetOwner()->ToPlayer()->KilledMonster(23811, victim->GetGUID());
+    }
+};
+
+CreatureAI* GetAI_npc_captured_totem(Creature* creature)
+{
+    return new npc_captured_totemAI(creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -803,5 +835,10 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_ogron";
     newscript->GetAI = &GetAI_npc_ogron;
     newscript->pQuestAccept = &QuestAccept_npc_ogron;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_captured_totem";
+    newscript->GetAI = &GetAI_npc_captured_totem;
     newscript->RegisterSelf();
 }
