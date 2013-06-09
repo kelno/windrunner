@@ -102,7 +102,9 @@ enum SpellIds
     SPELL_CALL_ENTROPIUS                                = 46818,
     SPELL_ENTROPIUS_BODY                                = 46819, // Visual for Entropius at the Epilogue
     SPELL_BLAZE_TO_LIGHT                                = 46821,
-    SPELL_SUNWELL_IGNITION                              = 46822
+    SPELL_SUNWELL_IGNITION                              = 46822,
+    SPELL_OPEN_PORTAL                                   = 46801
+
 };
 
 /*** GameObjects ***/
@@ -255,38 +257,53 @@ enum Outro
 
 enum
 {
-	POINT_SUMMON_SOLDIERS       = 1,
-	POINT_MOVE_LIADRIN          = 2,
-	POINT_EVENT_EXIT            = 3,
+	POINT_KILJAEDEN_DIE         = 1,
+	POINT_TELEPORT_KALECGOS     = 2,
+	POINT_SUMMON_SHATTERED      = 3,
+	POINT_SUMMON_PORTAL         = 4,
+	POINT_SUMMON_SOLDIERS_RIGHT = 5,
+	POINT_SUMMON_SOLDIERS_LEFT  = 6,
+	POINT_SUMMON_PROPHET        = 7,
+	POINT_SUMMON_LIADRIN        = 8,
+	POINT_CALL_ENTROPIUS        = 9,
+	POINT_MOVE_LIADRIN          = 10,
+	POINT_BLAZE                 = 11,
+	POINT_IGNITE                = 12,
+	POINT_EVENT_SOLDIER_EXIT    = 13,
+	POINT_EVENT_VELEN_EXIT      = 14,
 };
 
 // Epilogue dialogue
 static const DialogueEntry aOutroDialogue[] =
 {
-	{CREATURE_KILJAEDEN,    0,                  15000},
-    {CREATURE_KALECGOS,     0,                  15000},
-    {SAY_KALECGOS_GOODBYE,  CREATURE_KALECGOS,  40000},
-    {NPC_BOSS_PORTAL,       0,                  10000},
-    {POINT_SUMMON_SOLDIERS, 0,                  18000},
-    {CREATURE_PROPHET,      0,                  1000},
-    {CREATURE_LIADRIN,      0,                  4000},
-    {SAY_OUTRO_1,           CREATURE_PROPHET,   25000},
-    {SAY_OUTRO_2,           CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_3,           CREATURE_PROPHET,   13000},
-    {SPELL_CALL_ENTROPIUS,  0,                  10000},
-    {SAY_OUTRO_4,           CREATURE_PROPHET,   20000},
-    {POINT_MOVE_LIADRIN,    0,                  5000},
-    {SAY_OUTRO_5,           CREATURE_LIADRIN,   10000},
-    {SAY_OUTRO_6,           CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_7,           CREATURE_LIADRIN,   3000},
-    {SAY_OUTRO_8,           CREATURE_PROPHET,   4000},
-    {SPELL_BLAZE_TO_LIGHT,  0,                  13000},
-    {SAY_OUTRO_9,           CREATURE_PROPHET,   14000},
-    {SAY_OUTRO_10,          CREATURE_LIADRIN,   20000},
-    {SAY_OUTRO_11,          CREATURE_PROPHET,   8000},
-    {SAY_OUTRO_12,          CREATURE_PROPHET,   4000},
-    {POINT_EVENT_EXIT,      0,                  0},
-    {0, 0, 0},
+	{POINT_KILJAEDEN_DIE,         0,                  15000},
+    {POINT_TELEPORT_KALECGOS,     0,                  15000},
+    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  40000},
+    {POINT_SUMMON_SHATTERED,      0,                  10000},
+    {POINT_SUMMON_PORTAL,         0,                  10000},
+    {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
+    {POINT_SUMMON_SOLDIERS_LEFT,  0,                  18000},
+    {POINT_SUMMON_PROPHET,        0,                  1000},
+    {POINT_SUMMON_LIADRIN,        0,                  4000},
+    {SAY_OUTRO_1,                 CREATURE_PROPHET,   25000},
+    {SAY_OUTRO_2,                 CREATURE_PROPHET,   15000},
+    {SAY_OUTRO_3,                 CREATURE_PROPHET,   13000},
+    {POINT_CALL_ENTROPIUS,        0,                  10000},
+    {SAY_OUTRO_4,                 CREATURE_PROPHET,   20000},
+    {POINT_MOVE_LIADRIN,          0,                  5000},
+    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   10000},
+    {SAY_OUTRO_6,                 CREATURE_PROPHET,   15000},
+    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   3000},
+    {SAY_OUTRO_8,                 CREATURE_PROPHET,   4000},
+    {POINT_BLAZE,                 0,                  12000},
+    {POINT_IGNITE,                0,                  1000},
+    {SAY_OUTRO_9,                 CREATURE_PROPHET,   14000},
+    {SAY_OUTRO_10,                CREATURE_LIADRIN,   20000},
+    {SAY_OUTRO_11,                CREATURE_PROPHET,   8000},
+    {SAY_OUTRO_12,                CREATURE_PROPHET,   4000},
+    {POINT_EVENT_SOLDIER_EXIT,    0,                  10000},
+    {POINT_EVENT_VELEN_EXIT,      0,                  0},
+    {0,                           0,                  0},
 };
 
 struct EventLocations
@@ -297,10 +314,38 @@ struct EventLocations
 static const EventLocations aOutroLocations[] =
 {
     {1727.854f, 656.060f, 28.31f, 3.86f},       // portal summon loc
+    {1703.159f, 654.043f, 28.05f, 1.06f},       // first shattered summon loc
+    {1723.888f, 631.342f, 28.05f, 0.16f},       // second shattered summon loc
     {1716.969f, 646.407f, 28.05f, 3.91f},       // velen summon loc
     {1718.862f, 644.528f, 28.05f, 3.87f},       // liadrin summon loc
     {1712.110f, 641.044f, 27.80f},              // velen move forward
-    {1711.537f, 637.600f, 27.34f}               // liadrin move forward
+    {1711.537f, 637.600f, 27.34f},              // liadrin move forward
+    {1718.573f, 657.106f, 28.05f},              // first shattered move
+    {1727.445f, 647.280f, 28.05f}               // second shattered move
+};
+
+static const EventLocations SoldierLocations[] =
+{
+	{1679.549f, 653.661f, 28.05f}, // summon right
+    {1674.939f, 652.070f, 28.05f}, // summon right
+    {1676.378f, 650.079f, 28.05f}, // summon right
+    {1678.809f, 647.216f, 28.05f}, // summon right
+    {1678.312f, 642.230f, 28.05f}, // summon right
+    {1675.944f, 644.898f, 28.05f}, // summon right
+    {1672.359f, 649.935f, 28.05f}, // summon right
+    {1670.122f, 646.541f, 28.05f}, // summon right
+    {1672.180f, 642.203f, 28.05f}, // summon right
+    {1674.428f, 638.711f, 28.05f}, // summon right
+    {1720.619f, 616.779f, 28.17f}, // summon left
+    {1724.183f, 615.504f, 28.05f}, // summon left
+    {1726.926f, 615.555f, 28.05f}, // summon left
+    {1730.367f, 614.919f, 28.05f}, // summon left
+    {1729.388f, 610.591f, 28.05f}, // summon left
+    {1726.126f, 610.573f, 28.05f}, // summon left
+    {1722.911f, 610.801f, 28.05f}, // summon left
+    {1719.209f, 612.264f, 28.05f}, // summon left
+    {1718.508f, 608.996f, 28.05f}, // summon left
+    {1723.283f, 608.411f, 28.05f}  // summon left
 };
 
 class AllOrbsInGrid
@@ -524,6 +569,8 @@ public:
 
             bool KiljaedenDeath;
             uint64 handDeceiver[3];
+            uint64 riftGuid[2];
+            uint64 soldiersGuid[20];
             uint64 m_EntropiusGuid;
             uint64 m_PortalGuid;
         public:
@@ -611,8 +658,16 @@ public:
                         summoned->CastSpell(summoned, SPELL_REBIRTH, false);
                         summoned->getAI()->setPhase(PHASE_NORMAL);
                         break;
+                    case NPC_RIFTWALKER:
+                    	summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
+                    	break;
+                    case NPC_SOLDIER:
+                    	summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
+                    	summoned->SetWalk(false);
+                    	summoned->SetSpeed(MOVE_RUN, 1.5f);
+                    	break;
                     case CREATURE_PROPHET:
-                        summoned->GetMotionMaster()->MovePoint(0, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ);
+                        summoned->GetMotionMaster()->MovePoint(0, aOutroLocations[5].m_fX, aOutroLocations[5].m_fY, aOutroLocations[5].m_fZ);
                         // no break here
                     case CREATURE_LIADRIN:
                         summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
@@ -636,7 +691,7 @@ public:
 
             void startDialogueText()
             {
-            	StartNextDialogueText(CREATURE_KILJAEDEN);
+            	StartNextDialogueText(POINT_KILJAEDEN_DIE);
             }
 
             void JustDidDialogueStep(int32 iEntry)
@@ -646,12 +701,12 @@ public:
 
                 switch (iEntry)
                 {
-                    case CREATURE_KILJAEDEN:
+                    case POINT_KILJAEDEN_DIE:
                     	// While Kil'Jaeden die
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
                     		((boss_kalecgos_kj::boss_kalecgos_kjAI*)pKalec->getAI())->ResetOrbs();
                     	break;
-                    case CREATURE_KALECGOS:
+                    case POINT_TELEPORT_KALECGOS:
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
                     	{
                             pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
@@ -661,23 +716,55 @@ public:
                         if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
                         	core->SetSummoner(me);
                         break;
-                    case NPC_BOSS_PORTAL:
-                        // ToDo: summon soldiers to the right
+                    case POINT_SUMMON_SHATTERED:
+                    	for (uint8 i = 1; i < 3; i++)
+                    	{
+                            if (Creature * rift = me->SummonCreature(NPC_RIFTWALKER, aOutroLocations[i].m_fX, aOutroLocations[i].m_fY, aOutroLocations[i].m_fZ, aOutroLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                            {
+                            	riftGuid[i - 1] = rift->GetGUID();
+                            	rift->SetSummoner(me);
+                            	if (i == 1)
+                            		rift->GetMotionMaster()->MovePoint(0, aOutroLocations[7].m_fX, aOutroLocations[7].m_fY, aOutroLocations[7].m_fZ);
+                            	else
+                            		rift->GetMotionMaster()->MovePoint(0, aOutroLocations[8].m_fX, aOutroLocations[8].m_fY, aOutroLocations[8].m_fZ);
+                            }
+                    	}
+                    	break;
+                    case POINT_SUMMON_PORTAL:
                         if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                         	portal->SetSummoner(me);
                         break;
-                    case POINT_SUMMON_SOLDIERS:
-                        // ToDo: summon soldiers to the left
+                    case POINT_SUMMON_SOLDIERS_RIGHT:
+                    	for (uint8 i = 0; i < 10; i++)
+                    	{
+                    		if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, 1715.0f + rand()%5, 657.0f + rand()%7, 28.05f, 3.55f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    		{
+                    			soldier->SetSummoner(me);
+                    			soldiersGuid[i] = soldier->GetGUID();
+                    			soldier->GetMotionMaster()->MovePoint(0, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ);
+                    		}
+                    	}
                         break;
-                    case CREATURE_PROPHET:
-                    	if (Creature *prophet = me->SummonCreature(CREATURE_PROPHET, aOutroLocations[1].m_fX, aOutroLocations[1].m_fY, aOutroLocations[1].m_fZ, aOutroLocations[1].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    case POINT_SUMMON_SOLDIERS_LEFT:
+                    	for (uint8 i = 10; i < 20; i++)
+                    	{
+                    	    if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, 1725.0f + rand()%5, 657.0f + rand()%7, 28.05f, 3.55f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    	    {
+                    	        soldier->SetSummoner(me);
+                    	        soldiersGuid[i] = soldier->GetGUID();
+                    	        soldier->GetMotionMaster()->MovePoint(1, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ);
+                    	    }
+                    	}
+                        break;
+                    case POINT_SUMMON_PROPHET:
+                    	if (Creature *prophet = me->SummonCreature(CREATURE_PROPHET, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ, aOutroLocations[3].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                     		prophet->SetSummoner(me);
                         break;
-                    case CREATURE_LIADRIN:
-                    	if (Creature *liadrin = me->SummonCreature(CREATURE_LIADRIN, aOutroLocations[2].m_fX, aOutroLocations[2].m_fY, aOutroLocations[2].m_fZ, aOutroLocations[2].m_fO, TEMPSUMMON_TIMED_DESPAWN, 4 * MINUTE * IN_MILLISECONDS))
+                    case POINT_SUMMON_LIADRIN:
+                    	if (Creature *liadrin = me->SummonCreature(CREATURE_LIADRIN, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ, aOutroLocations[4].m_fO, TEMPSUMMON_TIMED_DESPAWN, 4 * MINUTE * IN_MILLISECONDS))
                     		liadrin->SetSummoner(me);
                         break;
-                    case SPELL_CALL_ENTROPIUS:
+                    case POINT_CALL_ENTROPIUS:
                         if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
                             pVelen->CastSpell(pVelen, SPELL_CALL_ENTROPIUS, false);
 
@@ -685,26 +772,46 @@ public:
                         if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
                         {
                             pEntropius->SetWalk(false);
-                            pEntropius->GetMotionMaster()->MovePoint(1, me->GetPositionX(), me->GetPositionY(), 35.0f);
+                            pEntropius->GetMotionMaster()->MovePoint(1, me->GetPositionX(), me->GetPositionY(), 40.0f);
                         }
                         break;
                     case POINT_MOVE_LIADRIN:
                         if (Creature* pLiadrin = pInstance->GetSingleCreatureFromStorage(CREATURE_LIADRIN))
-                            pLiadrin->GetMotionMaster()->MovePoint(0, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ);
+                            pLiadrin->GetMotionMaster()->MovePoint(0, aOutroLocations[6].m_fX, aOutroLocations[6].m_fY, aOutroLocations[6].m_fZ);
                         break;
-                    case SPELL_BLAZE_TO_LIGHT:
+                    case POINT_BLAZE:
                         if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
                         {
                             pEntropius->CastSpell(pEntropius, SPELL_BLAZE_TO_LIGHT, true);
                             pEntropius->RemoveAurasDueToSpell(SPELL_ENTROPIUS_BODY);
-                            pEntropius->SetWalk(true);
-                            pEntropius->GetMotionMaster()->MovePoint(2, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
                         }
                         break;
-                    case POINT_EVENT_EXIT:
+                    case POINT_IGNITE:
+                    	// When the purified Muru reaches the ground the sunwell ignites and Muru despawns
+                    	doCast(me, SPELL_SUNWELL_IGNITION);
+
+                    	if (Creature* pLiadrin = pInstance->GetSingleCreatureFromStorage(CREATURE_LIADRIN))
+                    	    pLiadrin->SetStandState(UNIT_STAND_STATE_KNEEL);
+
+                    	if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
+                    		pEntropius->ForcedDespawn();
+                    	break;
+                    case POINT_EVENT_SOLDIER_EXIT:
+                    	for (uint8 i = 0; i < 10; i++)
+                    	{
+                    	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
+                    	    	soldier->GetMotionMaster()->MovePoint(2, 1715.0f + rand()%5, 657.0f + rand()%7, 28.05f);
+                    	}
+                    	for (uint8 i = 10; i < 20; i++)
+                    	{
+                    	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
+                    	        soldier->GetMotionMaster()->MovePoint(3, 1725.0f + rand()%5, 657.0f + rand()%7, 28.05f);
+                    	}
+                    	break;
+                    case POINT_EVENT_VELEN_EXIT:
                         // Set point id = 1 for the despawn event
                         if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
-                            pVelen->GetMotionMaster()->MovePoint(1, aOutroLocations[1].m_fX, aOutroLocations[1].m_fY, aOutroLocations[1].m_fZ);
+                            pVelen->GetMotionMaster()->MovePoint(1, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ);
                         break;
                 }
             }
@@ -714,7 +821,18 @@ public:
                 if (uiType != POINT_MOTION_TYPE)
                     return;
 
-                if (uiPointId == 1)
+                if (uiPointId == 0)
+                {
+                	if (pSummoned->GetEntry() == NPC_RIFTWALKER)
+                		pSummoned->CastSpell(pSummoned, SPELL_OPEN_PORTAL, true);
+                	else if (pSummoned->GetEntry() == NPC_SOLDIER)
+                	{
+                		pSummoned->SetOrientation(0.21f);
+                		pSummoned->SendMovementFlagUpdate();
+                		pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                	}
+                }
+                else if (uiPointId == 1)
                 {
                 	if (pSummoned->GetEntry() == NPC_CORE_ENTROPIUS)
                 	{
@@ -734,18 +852,31 @@ public:
                         if (Creature* pKalec = pInstance->GetSingleCreatureFromStorage(CREATURE_KALECGOS))
                             pKalec->ForcedDespawn(1000);
 
+                        for (uint8 i = 0; i < 2; i++)
+                        {
+                            if (Creature* rift = pInstance->instance->GetCreatureInMap(riftGuid[i]))
+                            {
+                            	pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
+                            	rift->ForcedDespawn(1000);
+                            }
+                        }
+
                         me->ForcedDespawn();
                     }
+                	else if (pSummoned->GetEntry() == NPC_SOLDIER)
+                	{
+                	    pSummoned->SetOrientation(1.36f);
+                	    pSummoned->SendMovementFlagUpdate();
+                	    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                	}
                 }
-                else if (uiPointId == 2 && pSummoned->GetEntry() == NPC_CORE_ENTROPIUS)
+                else if (uiPointId == 2 || uiPointId == 3)
                 {
-                    // When the purified Muru reaches the ground the sunwell ignites and Muru despawns
-                    doCast(me, SPELL_SUNWELL_IGNITION);
-
-                    if (Creature* pLiadrin = pInstance->GetSingleCreatureFromStorage(CREATURE_LIADRIN))
-                        pLiadrin->SetStandState(UNIT_STAND_STATE_KNEEL);
-
-                    pSummoned->ForcedDespawn();
+                	if (pSummoned->GetEntry() == NPC_SOLDIER)
+                	{
+                		pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
+                		pSummoned->ForcedDespawn(1000);
+                	}
                 }
             }
 
