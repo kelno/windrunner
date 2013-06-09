@@ -527,7 +527,7 @@ public:
             uint64 m_EntropiusGuid;
             uint64 m_PortalGuid;
         public:
-	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue, me)
+	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue)
 	        {
 	            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	            InitializeDialogueHelper(pInstance);
@@ -547,7 +547,7 @@ public:
 
                 if (onSpawn)
                 {
-                    addEvent(EVENT_SAY, 45000, 75000, EVENT_FLAG_DELAY_IF_CASTING);
+                    addEvent(EVENT_SAY, 45000, 75000);
                 }
                 else
                 {
@@ -678,8 +678,8 @@ public:
                     		liadrin->SetSummoner(me);
                         break;
                     case SPELL_CALL_ENTROPIUS:
-                        if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
-                            pVelen->CastSpell(pVelen, SPELL_CALL_ENTROPIUS, true);
+                        if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
+                            pVelen->CastSpell(pVelen, SPELL_CALL_ENTROPIUS, false);
 
                         // Set point id = 1 for movement event
                         if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
@@ -688,16 +688,8 @@ public:
                             pEntropius->GetMotionMaster()->MovePoint(1, me->GetPositionX(), me->GetPositionY(), 35.0f);
                         }
                         break;
-                    case SAY_OUTRO_4:
-                    	// Interrupt Velen's casting when entropius has reached the ground
-                    	if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
-                    	{
-                    		pVelen->InterruptNonMeleeSpells(false);
-                    		pVelen->SetToNotify();
-                    	}
-                    	break;
                     case POINT_MOVE_LIADRIN:
-                        if (Creature* pLiadrin = SelectCreatureInGrid(me, CREATURE_LIADRIN, 100.0f))
+                        if (Creature* pLiadrin = pInstance->GetSingleCreatureFromStorage(CREATURE_LIADRIN))
                             pLiadrin->GetMotionMaster()->MovePoint(0, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ);
                         break;
                     case SPELL_BLAZE_TO_LIGHT:
@@ -711,7 +703,7 @@ public:
                         break;
                     case POINT_EVENT_EXIT:
                         // Set point id = 1 for the despawn event
-                        if (Creature* pVelen = SelectCreatureInGrid(me, CREATURE_PROPHET, 100.0f))
+                        if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
                             pVelen->GetMotionMaster()->MovePoint(1, aOutroLocations[1].m_fX, aOutroLocations[1].m_fY, aOutroLocations[1].m_fZ);
                         break;
                 }
@@ -724,7 +716,12 @@ public:
 
                 if (uiPointId == 1)
                 {
-                    if (pSummoned->GetEntry() == CREATURE_PROPHET)
+                	if (pSummoned->GetEntry() == NPC_CORE_ENTROPIUS)
+                	{
+                		if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
+                			pVelen->InterruptNonMeleeSpells(false);
+                	}
+                	else if (pSummoned->GetEntry() == CREATURE_PROPHET)
                     {
                         // Cast teleport and despawn Velen, the portal and Kalec; Liadrin will despawn on timer
                         pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
@@ -734,7 +731,7 @@ public:
                         if (Creature* pPortal = me->GetMap()->GetCreature(m_PortalGuid))
                            pPortal->ForcedDespawn(5000);
 
-                        if (Creature* pKalec = SelectCreatureInGrid(me, CREATURE_KALECGOS, 100.0f))
+                        if (Creature* pKalec = pInstance->GetSingleCreatureFromStorage(CREATURE_KALECGOS))
                             pKalec->ForcedDespawn(1000);
 
                         me->ForcedDespawn();
@@ -745,7 +742,7 @@ public:
                     // When the purified Muru reaches the ground the sunwell ignites and Muru despawns
                     doCast(me, SPELL_SUNWELL_IGNITION);
 
-                    if (Creature* pLiadrin = SelectCreatureInGrid(me, CREATURE_LIADRIN, 100.0f))
+                    if (Creature* pLiadrin = pInstance->GetSingleCreatureFromStorage(CREATURE_LIADRIN))
                         pLiadrin->SetStandState(UNIT_STAND_STATE_KNEEL);
 
                     pSummoned->ForcedDespawn();

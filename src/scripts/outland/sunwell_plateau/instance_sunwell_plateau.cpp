@@ -220,6 +220,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
         }
+        m_mNpcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetGUID();
     }
 
     void OnObjectCreate(GameObject* pGo)
