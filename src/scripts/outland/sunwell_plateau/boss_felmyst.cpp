@@ -312,7 +312,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-            me->SendMovementFlagUpdate(300.f);
+//            me->SendMovementFlagUpdate(300.f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 1;
         }
         else
@@ -453,7 +453,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->GetMotionMaster()->MovePoint(1, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
             else
                 m_creature->GetMotionMaster()->MovePoint(1, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
-            me->SendMovementFlagUpdate(300.f);
+//            me->SendMovementFlagUpdate(300.f);
             Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
             break;
         }
