@@ -464,9 +464,8 @@ class Mob_Coilfang_Guardian : public CreatureScript
         public:
             enum event
             {
-                EV_TEMP           = 0,
-                EV_ARCINGSMASH    = 1,
-                EV_HAMSTRING      = 2
+                EV_ARCINGSMASH    = 0,
+                EV_HAMSTRING      = 1
             };
 
             Mob_Coilfang_GuardianAI(Creature* creature) : CreatureAINew(creature)
@@ -478,30 +477,13 @@ class Mob_Coilfang_Guardian : public CreatureScript
             {
                 if (onSpawn)
                 {
-                    addEvent(EV_TEMP, 11000, 11000);
                     addEvent(EV_ARCINGSMASH, 5000, 5000);
                     addEvent(EV_HAMSTRING, 2000, 2000);
                 }
                 else
                 {
-                    scheduleEvent(EV_TEMP, 11000, 11000);
                     scheduleEvent(EV_ARCINGSMASH, 5000, 5000);
                     scheduleEvent(EV_HAMSTRING, 2000, 2000);
-                }
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-            }
-
-            void onMovementInform(uint32 type, uint32 id)
-            {
-                if(type == POINT_MOTION_TYPE)
-                {
-                    switch (id)
-                    {
-                        case 0:
-                            setZoneInCombat(true);
-                            attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-                            break;
-                    }
                 }
             }
 
@@ -516,16 +498,6 @@ class Mob_Coilfang_Guardian : public CreatureScript
                 {
                     switch (m_currEvent)
                     {
-                        case EV_TEMP:
-                            setZoneInCombat(true);
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
-                            {
-                                attackStart(target);
-                                disableEvent(EV_TEMP);
-                            }
-                            else
-                                scheduleEvent(EV_TEMP, 500);
-                            break;
                         case EV_ARCINGSMASH:
                             doCast(me->getVictim(), SPELL_ARCINGSMASH);
                             scheduleEvent(EV_ARCINGSMASH, urand(10000, 15000));
@@ -560,9 +532,8 @@ class Mob_Coilfang_Ambusher : public CreatureScript
         public:
             enum event
             {
-                EV_TEMP           = 0,
-                EV_MULTISHOT      = 1,
-                EV_SHOOTBOW       = 2
+                EV_MULTISHOT      = 0,
+                EV_SHOOTBOW       = 1
             };
 
             Mob_Coilfang_AmbusherAI(Creature* creature) : Creature_NoMovementAINew(creature)
@@ -574,17 +545,14 @@ class Mob_Coilfang_Ambusher : public CreatureScript
             {
                 if (onSpawn)
                 {
-                    addEvent(EV_TEMP, 11000, 11000);
                     addEvent(EV_MULTISHOT, 10000, 10000);
                     addEvent(EV_SHOOTBOW, 4000, 4000);
                 }
                 else
                 {
-                    scheduleEvent(EV_TEMP, 11000, 11000);
                     scheduleEvent(EV_MULTISHOT, 10000, 10000);
                     scheduleEvent(EV_SHOOTBOW, 4000, 4000);
                 }
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
             }
 
             void update(uint32 const diff)
@@ -598,28 +566,14 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                 {
                     switch (m_currEvent)
                     {
-                        case EV_TEMP:
-                            setZoneInCombat(true);
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
-                            {
-                                attackStart(target);
-                                disableEvent(EV_TEMP);
-                            }
-                            else
-                                scheduleEvent(EV_TEMP, 500);
-                            break;
                         case EV_MULTISHOT:
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
-                                doCast(target, SPELL_SPREAD_SHOT);
+                            doCast(me->getVictim(), SPELL_SPREAD_SHOT);
 
                             scheduleEvent(EV_MULTISHOT, urand(5000, 15000));
                             break;
                         case EV_SHOOTBOW:
                             if (!me->hasUnitState(UNIT_STAT_CASTING))
-                            {
-                                if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
-                                    doCast(target, SPELL_SHOOT);
-                            }
+                                doCast(me->getVictim(), SPELL_SHOOT);
 
                             scheduleEvent(EV_SHOOTBOW, urand(2000, 5000));
                             break;
