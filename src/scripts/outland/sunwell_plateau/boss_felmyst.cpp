@@ -308,7 +308,7 @@ struct boss_felmystAI : public ScriptedAI
     void MovementInform(uint32, uint32)
     {
         if (FlightCount == 6 || FlightCount == 7) {
-            if (BreathCount == 1)
+            if (!goingLeft)
                 m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
             else
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
@@ -466,7 +466,7 @@ struct boss_felmystAI : public ScriptedAI
                 m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
                 m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
             }
-            m_creature->StopMoving();
+            //m_creature->StopMoving();
             //me->SendMovementFlagUpdate(300.f);
             DoScriptText(EMOTE_DEEP_BREATH, m_creature);
             Timer[EVENT_FLIGHT_SEQUENCE] = 2500;
