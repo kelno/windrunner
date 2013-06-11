@@ -313,6 +313,7 @@ SET(scripts_STAT_SRCS
     misc/npc_spectate.cpp
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
+    misc/npc_mylittlebombling.cpp
     outdoor/boss_azuregos.cpp
     outdoor/boss_doomwalker.cpp
     outdoor/boss_doomlord_kazzak.cpp
