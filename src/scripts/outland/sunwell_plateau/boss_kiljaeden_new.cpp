@@ -766,7 +766,7 @@ public:
                         break;
                     case POINT_CALL_ENTROPIUS:
                         if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
-                            pVelen->CastSpell(pVelen, SPELL_CALL_ENTROPIUS, false);
+                            pVelen->CastSpell((Unit*)NULL, SPELL_CALL_ENTROPIUS, false);
 
                         // Set point id = 1 for movement event
                         if (Creature* pEntropius = me->GetMap()->GetCreature(m_EntropiusGuid))
