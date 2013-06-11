@@ -279,8 +279,8 @@ static const DialogueEntry aOutroDialogue[] =
 	{POINT_KILJAEDEN_DIE,         0,                  15000},
     {POINT_TELEPORT_KALECGOS,     0,                  15000},
     {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  40000},
-    {POINT_SUMMON_SHATTERED,      0,                  10000},
-    {POINT_SUMMON_PORTAL,         0,                  10000},
+    {POINT_SUMMON_SHATTERED,      0,                  8000},
+    {POINT_SUMMON_PORTAL,         0,                  6000},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
     {POINT_SUMMON_SOLDIERS_LEFT,  0,                  18000},
     {POINT_SUMMON_PROPHET,        0,                  1000},
@@ -655,7 +655,7 @@ public:
                         break;
                     }
                     case CREATURE_KILJAEDEN:
-                        summoned->CastSpell(summoned, SPELL_REBIRTH, false);
+                        summoned->CastSpell((Unit*)NULL, SPELL_REBIRTH, false);
                         summoned->getAI()->setPhase(PHASE_NORMAL);
                         break;
                     case NPC_RIFTWALKER:
@@ -717,6 +717,9 @@ public:
                         	core->SetSummoner(me);
                         break;
                     case POINT_SUMMON_SHATTERED:
+                    	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    	    portal->SetSummoner(me);
+
                     	for (uint8 i = 1; i < 3; i++)
                     	{
                             if (Creature * rift = me->SummonCreature(NPC_RIFTWALKER, aOutroLocations[i].m_fX, aOutroLocations[i].m_fY, aOutroLocations[i].m_fZ, aOutroLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -731,8 +734,6 @@ public:
                     	}
                     	break;
                     case POINT_SUMMON_PORTAL:
-                        if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        	portal->SetSummoner(me);
                         break;
                     case POINT_SUMMON_SOLDIERS_RIGHT:
                     	for (uint8 i = 0; i < 10; i++)
@@ -824,7 +825,13 @@ public:
                 if (uiPointId == 0)
                 {
                 	if (pSummoned->GetEntry() == NPC_RIFTWALKER)
-                		pSummoned->CastSpell(pSummoned, SPELL_OPEN_PORTAL, true);
+                	{
+                		if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                		{
+                			pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
+                			portal->SetDisplayId(22742);
+                		}
+                	}
                 	else if (pSummoned->GetEntry() == NPC_SOLDIER)
                 	{
                 		pSummoned->SetOrientation(0.21f);
@@ -1231,7 +1238,7 @@ public:
                         if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
                         {
                         	Anveena->RemoveAurasDueToSpell(SPELL_ANVEENA_PRISON);
-                        	Anveena->CastSpell(me, SPELL_SACRIFICE_OF_ANVEENA, true);
+                        	Anveena->CastSpell((Unit*)NULL, SPELL_SACRIFICE_OF_ANVEENA, true);
                         	Anveena->ForcedDespawn(3000);
                         }
                         enableEvent(EVENT_ORBS_EMPOWER);
