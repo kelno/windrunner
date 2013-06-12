@@ -211,49 +211,47 @@ void ShowPage(Player *player, uint32 page, ArenaRate rate)
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 }
 
-void spectate(Player* player, uint64 targetGuid)
+void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 {
 	if (Player* target = ObjectAccessor::FindPlayer(targetGuid))
 	{
-	    ChatHandler chH = ChatHandler(player);
-
 	    if (target == player || targetGuid == player->GetGUID())
 	        return;
 
 	    if (player->isInCombat())
 	    {
-	        chH.SendSysMessage(LANG_YOU_IN_COMBAT);
+	    	mobArena->Whisper("Vous êtes en combat!", player->GetGUID());
 	    	return;
 	    }
 
 	    if (!target)
 	    {
-	    	chH.SendSysMessage(LANG_PLAYER_NOT_EXIST_OR_OFFLINE);
+	    	mobArena->Whisper("Le joueur n'existe pas ou n'est pas en ligne", player->GetGUID());
 	    	return;
 	    }
 
 	    if (player->GetPet())
 	    {
-	    	chH.PSendSysMessage("Vous devez d'abord renvoyer votre familier.");
+	    	mobArena->Whisper("Vous devez d'abord renvoyer votre familier.", player->GetGUID());
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGroundOrArena() && !player->isSpectator())
 	    {
-	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille ou une arène.");
+	    	mobArena->Whisper("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille ou une arène.", player->GetGUID());
 	    	return;
 	    }
 
 	    Map* cMap = target->GetMap();
 	    if (!cMap->IsBattleArena())
 	    {
-	    	chH.PSendSysMessage("Ce joueur n'est pas dans une arène.");
+	    	mobArena->Whisper("Ce joueur n'est pas dans une arène.", player->GetGUID());
 	    	return;
 	    }
 
 	    if (player->GetMap()->IsBattleGround())
 	    {
-	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille.");
+	    	mobArena->Whisper("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille.", player->GetGUID());
 	    	return;
 	    }
 
@@ -261,13 +259,13 @@ void spectate(Player* player, uint64 targetGuid)
 	    {
 	    	if (bg->GetStatus() != STATUS_IN_PROGRESS)
 	    	{
-	    	    chH.PSendSysMessage("Vous ne pouvez pas faire cela car l'arène n'a pas encore commencé.");
+	    		mobArena->Whisper("Vous ne pouvez pas faire cela car l'arène n'a pas encore commencé.", player->GetGUID());
 	    	    return;
 	    	}
 
 	    	if (bg->isRated())
 	    	{
-	    		chH.PSendSysMessage("Le mode spectateur est actuellement désactivé pour les arènes cotées.");
+	    		mobArena->Whisper("Le mode spectateur est actuellement désactivé pour les arènes cotées.", player->GetGUID());
 	    	    return;
 	    	}
 	    }
@@ -284,7 +282,7 @@ void spectate(Player* player, uint64 targetGuid)
 
 	    if (target->isSpectator())
 	    {
-	    	chH.PSendSysMessage("Vous ne pouvez pas faire cela car le joueur ciblé est aussi spectateur.");
+	    	mobArena->Whisper("Vous ne pouvez pas faire cela car le joueur ciblé est aussi spectateur.", player->GetGUID());
 	    	return;
 	    }
 
@@ -330,6 +328,7 @@ void spectate(Player* player, uint64 targetGuid)
 	    	    ArenaTeam *secondTeam = objmgr.GetArenaTeamById(secondTeamID);
 	    	    if (firstTeam && secondTeam)
 	    	    {
+                    ChatHandler chH = ChatHandler(player);
 	    	        chH.PSendSysMessage("Vous entrez dans une arène cotée.");
 	    	        chH.PSendSysMessage("Equipes :");
 	    	        chH.PSendSysMessage("%s - %s", firstTeam->GetName().c_str(), secondTeam->GetName().c_str());
@@ -345,6 +344,8 @@ void spectate(Player* player, uint64 targetGuid)
 	    target->GetBattleGround()->AddSpectator(player->GetGUID());
 	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
 	    player->SetSpectate(true);
+	    player->SendDataForSpectator();
+	    mobArena->Whisper("Le mode spectateur démarrera dans 10 secondes", player->GetGUID());
     }
 }
 
@@ -407,7 +408,7 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
 	{
     	player->CLOSE_GOSSIP_MENU();
     	uint64 targetGuid = action - NPC_SPECTATOR_ACTION_SELECTED_PLAYER;
-    	spectate(player, targetGuid);
+    	spectate(player, targetGuid, creature);
     }
 
     return true;
@@ -437,7 +438,7 @@ bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uin
         	    	return true;
         	    }
 
-        	    spectate(player, target->GetGUID());
+        	    spectate(player, target->GetGUID(), _Creature);
         	}
         	else
         		_Creature->Whisper("Champ vide!", player->GetGUID());
