@@ -120,7 +120,7 @@ struct mylittlebomblingAI : public ScriptedAI
 
 bool GossipHello_mylittlebombling(Player *player, Creature *_Creature)
 {    
-	if (((mylittlebomblingAI*)_Creature->AI())->phase == mylittlebomblingAI::PHASES::IDLE)
+	if (((mylittlebomblingAI*)_Creature->AI())->phase == mylittlebomblingAI::IDLE)
 		player->ADD_GOSSIP_ITEM_EXTENDED( 0, TEXT_GIMME_TARGET, GOSSIP_SENDER_MAIN, 1, "", 0, true);
         
 		player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
