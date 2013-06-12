@@ -271,7 +271,10 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    }
 
 	    if (player->getSpectateCooldown() > 0)
-	        return;
+	    {
+	    	mobArena->Whisper("Un cooldown de 10 secondes est appliqué entre chaque mode spectateur.", player->GetGUID());
+	    	return;
+	    }
 
 	    // all's well, set bg id
 	    // when porting out from the bg, it will be reset to 0
@@ -344,7 +347,6 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    target->GetBattleGround()->AddSpectator(player->GetGUID());
 	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
 	    player->SetSpectate(true);
-	    player->SendDataForSpectator();
 	    mobArena->Whisper("Le mode spectateur démarrera dans 10 secondes", player->GetGUID());
     }
 }
@@ -430,7 +432,7 @@ bool GossipSelectWithCode_npc_spectate( Player *player, Creature *_Creature, uin
         	    	return true;
         	    }
 
-        	    Player* target = objmgr.GetPlayer(sCode);
+        	    Player* target = objmgr.GetPlayer(name.c_str());
         	    if (!target)
         	    {
         	    	_Creature->Whisper("Impossible de trouver le joueur!", player->GetGUID());
