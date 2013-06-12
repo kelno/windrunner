@@ -240,7 +240,7 @@ enum Kalecgos
 // outro
 enum Outro
 {
-	SAY_KALECGOS_GOODBYE        = -1580089,
+	SAY_KALECGOS_GOODBYE        = -1580090,
     SAY_OUTRO_1                 = -1580099,
     SAY_OUTRO_2                 = -1580100,
     SAY_OUTRO_3                 = -1580111,
@@ -277,8 +277,8 @@ enum
 static const DialogueEntry aOutroDialogue[] =
 {
 	{POINT_KILJAEDEN_DIE,         0,                  15000},
-    {POINT_TELEPORT_KALECGOS,     0,                  6000},
-    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  20000},
+    {POINT_TELEPORT_KALECGOS,     0,                  2000},
+    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  17000},
     {POINT_SUMMON_SHATTERED,      0,                  10000},
     {POINT_SUMMON_PORTAL,         0,                  5000},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
@@ -714,8 +714,6 @@ public:
                             pKalec->SetFlying(false);
                             pKalec->SendMovementFlagUpdate();
                         }
-                        if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        	core->SetSummoner(me);
                         break;
                     case POINT_SUMMON_SHATTERED:
                     	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -739,6 +737,12 @@ public:
                     	    portal->SetDisplayId(22742);
                         break;
                     case POINT_SUMMON_SOLDIERS_RIGHT:
+                    	for (uint8 i = 0; i < 2; i++)
+                    	{
+                    	    if (Creature* rift = pInstance->instance->GetCreatureInMap(riftGuid[i]))
+                    	    	rift->RemoveAurasDueToSpell(SPELL_OPEN_PORTAL);
+                    	}
+
                     	for (uint8 i = 0; i < 10; i++)
                     	{
                     		if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, 1715.0f + rand()%5, 657.0f + rand()%7, 28.05f, 3.55f, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -763,6 +767,9 @@ public:
                     case POINT_SUMMON_PROPHET:
                     	if (Creature *prophet = me->SummonCreature(CREATURE_PROPHET, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ, aOutroLocations[3].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                     		prophet->SetSummoner(me);
+
+                    	if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    	    core->SetSummoner(me);
                         break;
                     case POINT_SUMMON_LIADRIN:
                     	if (Creature *liadrin = me->SummonCreature(CREATURE_LIADRIN, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ, aOutroLocations[4].m_fO, TEMPSUMMON_TIMED_DESPAWN, 4 * MINUTE * IN_MILLISECONDS))
