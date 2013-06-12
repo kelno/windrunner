@@ -486,7 +486,10 @@ public:
         void onDamageTaken(Unit* attacker, uint32& damage)
         {
             if (attacker == me)
+            {
+                damage = 0;
                 return;
+            }
                 
             if (damage >= me->GetHealth()) {
                 damage = 0;
