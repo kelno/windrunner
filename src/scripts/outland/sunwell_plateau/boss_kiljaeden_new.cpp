@@ -241,17 +241,17 @@ enum Kalecgos
 enum Outro
 {
 	SAY_KALECGOS_GOODBYE        = -1580089,
-    SAY_OUTRO_1                 = -1580095,         // Velen
-    SAY_OUTRO_2                 = -1580096,
-    SAY_OUTRO_3                 = -1580097,
-    SAY_OUTRO_4                 = -1580098,
-    SAY_OUTRO_5                 = -1580099,         // Liadrin
-    SAY_OUTRO_6                 = -1580100,         // Velen
-    SAY_OUTRO_7                 = -1580101,         // Liadrin
-    SAY_OUTRO_8                 = -1580102,         // Velen
-    SAY_OUTRO_9                 = -1580103,
-    SAY_OUTRO_10                = -1580104,         // Liadrin
-    SAY_OUTRO_11                = -1580105,         // Velen
+    SAY_OUTRO_1                 = -1580099,
+    SAY_OUTRO_2                 = -1580100,
+    SAY_OUTRO_3                 = -1580111,
+    SAY_OUTRO_4                 = -1580101,
+    SAY_OUTRO_5                 = -1580107,
+    SAY_OUTRO_6                 = -1580102,
+    SAY_OUTRO_7                 = -1580108,
+    SAY_OUTRO_8                 = -1580103,
+    SAY_OUTRO_9                 = -1580104,
+    SAY_OUTRO_10                = -1580109,
+    SAY_OUTRO_11                = -1580105,
     SAY_OUTRO_12                = -1580106,
 };
 
@@ -277,31 +277,31 @@ enum
 static const DialogueEntry aOutroDialogue[] =
 {
 	{POINT_KILJAEDEN_DIE,         0,                  15000},
-    {POINT_TELEPORT_KALECGOS,     0,                  15000},
-    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  40000},
-    {POINT_SUMMON_SHATTERED,      0,                  8000},
-    {POINT_SUMMON_PORTAL,         0,                  6000},
+    {POINT_TELEPORT_KALECGOS,     0,                  6000},
+    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  20000},
+    {POINT_SUMMON_SHATTERED,      0,                  10000},
+    {POINT_SUMMON_PORTAL,         0,                  5000},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
-    {POINT_SUMMON_SOLDIERS_LEFT,  0,                  18000},
-    {POINT_SUMMON_PROPHET,        0,                  1000},
+    {POINT_SUMMON_SOLDIERS_LEFT,  0,                  10000},
+    {POINT_SUMMON_PROPHET,        0,                  2000},
     {POINT_SUMMON_LIADRIN,        0,                  4000},
-    {SAY_OUTRO_1,                 CREATURE_PROPHET,   25000},
-    {SAY_OUTRO_2,                 CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_3,                 CREATURE_PROPHET,   13000},
+    {SAY_OUTRO_1,                 CREATURE_PROPHET,   27000},
+    {SAY_OUTRO_2,                 CREATURE_PROPHET,   16000},
+    {SAY_OUTRO_3,                 CREATURE_PROPHET,   12000},
     {POINT_CALL_ENTROPIUS,        0,                  10000},
-    {SAY_OUTRO_4,                 CREATURE_PROPHET,   20000},
-    {POINT_MOVE_LIADRIN,          0,                  5000},
-    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   10000},
-    {SAY_OUTRO_6,                 CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   3000},
+    {SAY_OUTRO_4,                 CREATURE_PROPHET,   22000},
+    {POINT_MOVE_LIADRIN,          0,                  6000},
+    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   11000},
+    {SAY_OUTRO_6,                 CREATURE_PROPHET,   17000},
+    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   4000},
     {SAY_OUTRO_8,                 CREATURE_PROPHET,   4000},
-    {POINT_BLAZE,                 0,                  12000},
-    {POINT_IGNITE,                0,                  1000},
-    {SAY_OUTRO_9,                 CREATURE_PROPHET,   14000},
-    {SAY_OUTRO_10,                CREATURE_LIADRIN,   20000},
+    {POINT_BLAZE,                 0,                  10000},
+    {POINT_IGNITE,                0,                  500},
+    {SAY_OUTRO_9,                 CREATURE_PROPHET,   17000},
+    {SAY_OUTRO_10,                CREATURE_LIADRIN,   22000},
     {SAY_OUTRO_11,                CREATURE_PROPHET,   8000},
     {SAY_OUTRO_12,                CREATURE_PROPHET,   4000},
-    {POINT_EVENT_SOLDIER_EXIT,    0,                  10000},
+    {POINT_EVENT_SOLDIER_EXIT,    0,                  8000},
     {POINT_EVENT_VELEN_EXIT,      0,                  0},
     {0,                           0,                  0},
 };
@@ -318,10 +318,10 @@ static const EventLocations aOutroLocations[] =
     {1723.888f, 631.342f, 28.05f, 0.16f},       // second shattered summon loc
     {1716.969f, 646.407f, 28.05f, 3.91f},       // velen summon loc
     {1718.862f, 644.528f, 28.05f, 3.87f},       // liadrin summon loc
-    {1712.110f, 641.044f, 27.80f},              // velen move forward
+    {1709.719f, 639.359f, 27.28f},              // velen move forward
     {1711.537f, 637.600f, 27.34f},              // liadrin move forward
-    {1718.573f, 657.106f, 28.05f},              // first shattered move
-    {1727.445f, 647.280f, 28.05f}               // second shattered move
+    {1716.962f, 661.839f, 28.05f},              // first shattered move
+    {1736.478f, 640.552f, 28.23f}               // second shattered move
 };
 
 static const EventLocations SoldierLocations[] =
@@ -673,6 +673,7 @@ public:
                         summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
                         break;
                     case NPC_CORE_ENTROPIUS:
+                    	summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
                         summoned->SetFlying(true);
                         summoned->SendMovementFlagUpdate();
@@ -734,6 +735,8 @@ public:
                     	}
                     	break;
                     case POINT_SUMMON_PORTAL:
+                    	if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                    	    portal->SetDisplayId(22742);
                         break;
                     case POINT_SUMMON_SOLDIERS_RIGHT:
                     	for (uint8 i = 0; i < 10; i++)
@@ -827,10 +830,7 @@ public:
                 	if (pSummoned->GetEntry() == NPC_RIFTWALKER)
                 	{
                 		if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
-                		{
                 			pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
-                			portal->SetDisplayId(22742);
-                		}
                 	}
                 	else if (pSummoned->GetEntry() == NPC_SOLDIER)
                 	{
