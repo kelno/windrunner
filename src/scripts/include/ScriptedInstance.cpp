@@ -55,6 +55,22 @@ void ScriptedInstance::SendScriptInTestNoLootMessageToAll()
     }
 }
 
+Player* ScriptedInstance::GetPlayerInMap()
+{
+    Map::PlayerList const& players = instance->GetPlayers();
+
+    if (!players.isEmpty()) {
+        for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
+            Player* plr = itr->getSource();
+            if (plr)
+                return plr;
+        }
+    }
+
+    sLog.outError("ScriptedInstance: GetPlayerInMap (map: %u) called, and no player found!", (instance ? instance->GetId() : 0));
+    return NULL;
+}
+
 /// Returns a pointer to a loaded Creature that was stored in m_mNpcEntryGuidStore. Can return NULL
 Creature* ScriptedInstance::GetSingleCreatureFromStorage(uint32 uiEntry, bool bSkipDebugLog /*=false*/)
 {

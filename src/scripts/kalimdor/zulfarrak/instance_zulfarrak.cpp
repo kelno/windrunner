@@ -140,23 +140,6 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
                 break;
         }
     }
-    
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("TSCR: Instance Zul'farrak: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
 
     uint32 GetData(uint32 type)
     {

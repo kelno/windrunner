@@ -88,23 +88,6 @@ struct instance_steam_vault : public ScriptedInstance
         return false;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("TSCR: Instance Steamvault: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void OnCreatureCreate(Creature *creature, uint32 creature_entry)
     {
           switch(creature->GetEntry())

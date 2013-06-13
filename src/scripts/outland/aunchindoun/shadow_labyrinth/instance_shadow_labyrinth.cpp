@@ -91,23 +91,6 @@ struct instance_shadow_labyrinth : public ScriptedInstance
         }
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Shadow Labyrinth: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void HandleGameObject(uint64 guid, uint32 state)
     {
         Player *player = GetPlayerInMap();

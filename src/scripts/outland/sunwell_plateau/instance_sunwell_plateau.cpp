@@ -150,7 +150,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
         return false;
     }
-
+    
+    // Override ScriptedInstance::GetPlayerInMap because of aura 45839 check
     Player* GetPlayerInMap()
     {
         Map::PlayerList const& players = instance->GetPlayers();
@@ -160,12 +161,12 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr)
-                    return plr;
+                if (plr && !plr->HasAura(45839))
+                        return plr;
             }
         }
 
-        sLog.outError("Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Sunwell Plateau: GetPlayerInMap called, and not player found!");
         return NULL;
     }
     

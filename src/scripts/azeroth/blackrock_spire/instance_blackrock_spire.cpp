@@ -151,23 +151,6 @@ struct instance_blackrock_spire : public ScriptedInstance
         OUT_LOAD_INST_DATA_COMPLETE;
     }
     
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-    
     bool CheckRunes()
     {
         Player* player = GetPlayerInMap();

@@ -116,23 +116,6 @@ struct instance_shattered_halls : public ScriptedInstance
         }
     }
     
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("TSCR: Instance Shattered Halls: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-    
     // This is a hack. Actually, LootMgr should be able to dynamically change loot table depending on the amount of prisoners killed.
     void RewardAllPlayersInMapForQuest()
     {

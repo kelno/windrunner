@@ -122,23 +122,6 @@ struct instance_stratholme : public ScriptedInstance
         abomnationGUID.clear();
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Stratholme: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     bool StartSlaugtherSquare()
     {
         //change to DONE when crystals implemented

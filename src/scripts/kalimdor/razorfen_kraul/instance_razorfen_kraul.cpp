@@ -40,22 +40,6 @@ struct instance_razorfen_kraul : public ScriptedInstance
         DoorWardGUID = 0;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-        sLog.outError("TSCR: Instance Razorfen Kraul: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void OnObjectCreate(GameObject *go)
     {
         switch(go->GetEntry())
