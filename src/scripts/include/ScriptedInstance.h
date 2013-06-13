@@ -42,6 +42,8 @@ class ScriptedInstance : public InstanceData
         virtual void PlayerDied(Player* player);
         
         void SendScriptInTestNoLootMessageToAll();
+        
+        Player* GetPlayerInMap();
 
     protected:
         // Storage for GO-Guids and NPC-Guids

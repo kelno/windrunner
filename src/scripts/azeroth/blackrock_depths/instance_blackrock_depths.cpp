@@ -140,23 +140,6 @@ struct instance_blackrock_depths : public ScriptedInstance
             TombBossGUIDs[i] = 0;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void OnCreatureCreate(Creature *pCreature, uint32 creature_entry)
     {
         switch(pCreature->GetEntry())

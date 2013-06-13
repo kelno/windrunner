@@ -100,23 +100,6 @@ struct instance_dark_portal : public ScriptedInstance
         NextPortal_Timer    = 0;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Black Portal: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void UpdateBMWorldState(uint32 id, uint32 state)
     {
         Map::PlayerList const& players = instance->GetPlayers();

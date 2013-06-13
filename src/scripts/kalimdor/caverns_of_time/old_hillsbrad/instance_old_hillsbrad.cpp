@@ -53,29 +53,12 @@ struct instance_old_hillsbrad : public ScriptedInstance
         mThrallEventCount   = 0;
         ThrallGUID          = 0;
         TarethaGUID         = 0;
-    EpochGUID        = 0;
+        EpochGUID        = 0;
 
         for(uint8 i = 0; i < ENCOUNTERS; i++) {
             if (Encounter[i] != DONE)
                 Encounter[i] = NOT_STARTED;
         }
-    }
-
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("TSCR: Instance Old Hillsbrad: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
     }
 
     void UpdateOHWorldState()

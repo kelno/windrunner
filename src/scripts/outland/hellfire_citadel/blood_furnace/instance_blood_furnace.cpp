@@ -152,23 +152,6 @@ struct instance_blood_furnace : public ScriptedInstance
         }
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        sLog.outError("Instance Blood Furnace: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void SetData(uint32 type, uint32 data)
     {
         switch(type)
