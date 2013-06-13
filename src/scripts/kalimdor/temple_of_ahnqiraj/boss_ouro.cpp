@@ -75,13 +75,15 @@ struct boss_ouroAI : public Scripted_NoMovementAI
     uint8 Phase;
     uint16 Morphed_Timer;
     bool Morphed;
-    uint16 OuroHomeArea;
     const CreatureInfo* cinfo;
+    float homeX, homeY, homeZ;
  
-    boss_ouroAI(Creature *c) : Scripted_NoMovementAI(c), Summons(m_creature)
+    boss_ouroAI(Creature *c) : 
+        Scripted_NoMovementAI(c), 
+        Summons(m_creature),
+        cinfo(me->GetCreatureInfo())
     {
-        OuroHomeArea = me->GetAreaId();
-        cinfo = me->GetCreatureInfo();
+        me->GetHomePosition(homeX,homeY,homeZ,*new float());
     }
  
     void Reset()
@@ -189,7 +191,7 @@ struct boss_ouroAI : public Scripted_NoMovementAI
                 } else Morphed_Timer -= diff;
             }
  
-            if (me->GetAreaId() != OuroHomeArea) //maybe to change later if the area bug is fixed?
+            if (me->GetDistance(homeX,homeY,homeZ) > 150)
             {
                 //DoTeleportTo(x,y,z);  //Don't EVER use this again
                 EnterEvadeMode();
