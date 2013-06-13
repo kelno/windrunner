@@ -228,7 +228,7 @@ struct instance_zulaman : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Zul'Aman: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Zul'Aman: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 

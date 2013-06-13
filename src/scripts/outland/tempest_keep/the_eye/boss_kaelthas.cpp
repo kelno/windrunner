@@ -818,7 +818,6 @@ struct boss_kaelthasAI : public ScriptedAI
 
                             Unit* target =SelectUnit(SELECT_TARGET_RANDOM, 1, 70, true);
                             if(!target) target = m_creature->getVictim();
-                            debug_log("TSCR: Kael'Thas mind control not supported.");
                             if(target)
                                 DoCast(target, SPELL_MIND_CONTROL);
                         }

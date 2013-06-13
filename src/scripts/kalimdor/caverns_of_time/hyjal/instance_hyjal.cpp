@@ -245,8 +245,6 @@ struct instance_mount_hyjal : public ScriptedInstance
                 break;
         }
 
-         debug_log("TSCR: Instance Hyjal: Instance data updated for event %u (Data=%u)",type,data);
-
         if(data == DONE)
             SaveToDB();
     }
@@ -280,7 +278,7 @@ struct instance_mount_hyjal : public ScriptedInstance
                     if (Player* player = itr->getSource())
                         player->SendUpdateWorldState(id,state);
                 }
-        }else debug_log("TSCR: Instance Hyjal: UpdateWorldState, but PlayerList is empty!");
+        }else sLog.outError("Instance Hyjal: UpdateWorldState, but PlayerList is empty!");
     }
 
     const char* Save()

@@ -1201,7 +1201,7 @@ void ScriptMgr::LoadDatabase()
                                 {
                                     //output as debug for now, also because there's no general rule all spells have RecoveryTime
                                     if (temp.event_param3 < spell->RecoveryTime)
-                                        debug_log("TSCR: Event %u Action %u uses SpellID %u but cooldown is longer(%u) than minumum defined in event param3(%u).", i, j+1,temp.action[j].param1, spell->RecoveryTime, temp.event_param3);
+                                        sLog.outError("Event %u Action %u uses SpellID %u but cooldown is longer (%u) than minumum defined in event param3 (%u).", i, j+1,temp.action[j].param1, spell->RecoveryTime, temp.event_param3);
                                 }
                             }
 
@@ -2135,8 +2135,6 @@ void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target)
         return;
     }
 
-    debug_log("TSCR: DoScriptText: text entry=%i, Sound=%u, Type=%u, Language=%u, Emote=%u",textEntry,(*i).second.SoundId,(*i).second.Type,(*i).second.Language,(*i).second.Emote);
-
     if((*i).second.SoundId)
     {
         if( GetSoundEntriesStore()->LookupEntry((*i).second.SoundId) )
@@ -2265,8 +2263,6 @@ bool ScriptMgr::GossipHello ( Player * player, Creature *_Creature )
 
 bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
-
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelect) return false;
 
@@ -2277,8 +2273,6 @@ bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender
 
 bool ScriptMgr::GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
 {
-    debug_log("TSCR: Gossip selection with code, sender: %d, action: %d",sender, action);
-
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelectWithCode) return false;
 
@@ -2291,7 +2285,6 @@ bool ScriptMgr::GOSelect( Player *player, GameObject *_GO, uint32 sender, uint32
 {
     if(!_GO)
     return false;
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
 
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if(!tmpscript || !tmpscript->pGOSelect) return false;
@@ -2305,7 +2298,6 @@ bool ScriptMgr::GOSelectWithCode( Player *player, GameObject *_GO, uint32 sender
 {
     if(!_GO)
     return false;
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
 
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if(!tmpscript || !tmpscript->pGOSelectWithCode) return false;

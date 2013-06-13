@@ -154,7 +154,7 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Zul'farrak: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("TSCR: Instance Zul'farrak: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 

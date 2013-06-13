@@ -103,7 +103,7 @@ struct boss_brutallusAI : public ScriptedAI
             }
         }
 
-        debug_log("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 

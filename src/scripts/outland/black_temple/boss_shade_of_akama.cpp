@@ -307,13 +307,12 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         if(reseting)
             return;
 
-        debug_log("TSCR: Increasing Death Count for Shade of Akama encounter");
         ++DeathCount;
         m_creature->RemoveSingleAuraFromStack(SPELL_SHADE_SOUL_CHANNEL_2, 0);
         if(guid)
         {
             if(Sorcerers.empty())
-                error_log("SD2 ERROR: Shade of Akama - attempt to remove guid %u from Sorcerers list but list is already empty", guid);
+                sLog.outError("Shade of Akama - attempt to remove guid %u from Sorcerers list but list is already empty", guid);
             else  Sorcerers.remove(guid);
         }
     }
@@ -375,17 +374,16 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             {
                 ((mob_ashtongue_channelerAI*)(*itr)->AI())->ShadeGUID = m_creature->GetGUID();
                 Channelers.push_back((*itr)->GetGUID());
-                debug_log("TSCR: Shade of Akama Grid Search found channeler %u. Adding to list", (*itr)->GetGUID());
             }
         }
-        else error_log("SD2 ERROR: Grid Search was unable to find any channelers. Shade of Akama encounter will be buggy");
+        else sLog.outError("Grid Search was unable to find any channelers. Shade of Akama encounter will be buggy");
     }
 
     void SetSelectableChannelers()
     {
         if(Channelers.empty())
         {
-            error_log("SD2 ERROR: Channeler List is empty, Shade of Akama encounter will be buggy");
+            sLog.outError("Channeler List is empty, Shade of Akama encounter will be buggy");
             return;
         }
 

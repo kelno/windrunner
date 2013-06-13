@@ -52,7 +52,7 @@ struct instance_razorfen_kraul : public ScriptedInstance
                     return plr;
             }
         }
-        debug_log("TSCR: Instance Razorfen Kraul: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("TSCR: Instance Razorfen Kraul: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 
