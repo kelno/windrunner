@@ -79,7 +79,7 @@ struct instance_dire_maul : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Dire Maul: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Dire Maul: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
     

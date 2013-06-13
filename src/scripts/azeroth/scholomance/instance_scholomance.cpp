@@ -70,7 +70,7 @@ struct instance_scholomance : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Scholomance: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("TSCR: Instance Scholomance: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
 

@@ -331,7 +331,6 @@ struct npc_barnesAI : public npc_escortAI
 
     void PrepareEncounter()
     {
-        debug_log("TSCR: Barnes Opera Event - Introduction complete - preparing encounter %d", Event);
         uint8 index = 0;
         uint8 count = 0;
         switch(Event)

@@ -164,7 +164,7 @@ struct instance_blackrock_spire : public ScriptedInstance
             }
         }
 
-        debug_log("TSCR: Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
         return NULL;
     }
     
