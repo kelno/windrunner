@@ -2217,7 +2217,7 @@ void Script::RegisterSelf()
         ++num_sc_scripts;
     }
     else
-        sLog.outDebug("CRASH ALERT! TrinityScript: RegisterSelf, but script named %s does not have ScriptName assigned in database.",(this)->Name.c_str());
+        sLog.outError("CRASH ALERT! TrinityScript: RegisterSelf, but script named %s does not have ScriptName assigned in database.",(this)->Name.c_str());
 }
 
 //********************************
