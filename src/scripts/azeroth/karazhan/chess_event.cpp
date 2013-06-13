@@ -436,6 +436,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_H:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+                me->RemoveAurasDueToSpell(39331);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 pInstance->SetData(DATA_CHESS_GAME_PHASE, NOTSTARTED);
                 break;
@@ -443,12 +444,14 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
                 if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    me->RemoveAurasDueToSpell(39331);
                     pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                     me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 }
                 else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    me->RemoveAurasDueToSpell(39331);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                     pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 }
@@ -473,6 +476,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_A:
                 DoScriptText(SCRIPTTEXT_MEDIVH_WIN, me);
                 pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
+                me->RemoveAurasDueToSpell(39331);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 pInstance->SetData(DATA_CHESS_GAME_PHASE, NOTSTARTED);
                 break;
@@ -480,12 +484,14 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 DoScriptText(SCRIPTTEXT_PLAYER_WIN, me);
                 if (pInstance->GetData(DATA_CHESS_EVENT) == IN_PROGRESS) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    me->RemoveAurasDueToSpell(39331);
                     pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                     me->SummonGameObject(DUST_COVERED_CHEST, -11058, -1903, 221, 2.24, 0, 0, 0, 0, 7200000);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 }
                 else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL) {
                     pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                    me->RemoveAurasDueToSpell(39331);
                     pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                     pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 }
@@ -498,6 +504,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_H:
             case NPC_KING_A:
                 pInstance->SetData(DATA_CHESS_EVENT, DONE);
+                me->RemoveAurasDueToSpell(39331);
                 pInstance->SetData(DATA_CHESS_REINIT_PIECES, 0);
                 pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_FINISHED);
                 break;
@@ -1284,6 +1291,7 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
         pInstance->SetData(DATA_CHESS_GAME_PHASE, PVE_WARMUP);
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
         pInstance->SetData(DATA_CHESS_EVENT, IN_PROGRESS);
+        creature->CastSpell(creature, 39331, true);
         DoScriptText(SCRIPTTEXT_AT_EVENT_START, creature);
         break;
     case MEDIVH_GOSSIP_RESTART:
@@ -1296,11 +1304,13 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
             pInstance->SetData(DATA_CHESS_EVENT, NOT_STARTED);
         else if (pInstance->GetData(DATA_CHESS_EVENT) == SPECIAL)
             pInstance->SetData(DATA_CHESS_EVENT, DONE);
+        creature->RemoveAurasDueToSpell(39331);
         break;
     case MEDIVH_GOSSIP_START_PVP:
         pInstance->SetData(DATA_CHESS_GAME_PHASE, PVP_WARMUP);
         ((npc_echo_of_medivhAI*)(creature->AI()))->SetupBoard();
         pInstance->SetData(DATA_CHESS_EVENT, SPECIAL);
+        creature->CastSpell(creature, 39331, true);
         break;
     default:
         sLog.outError("Chess event: unknown action %u", action);
