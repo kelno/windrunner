@@ -269,14 +269,17 @@ public:
                         {
                             for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
                             {
-                                if ((*i).second > diff)
-                                    guidPlayerCD[(*i).first] = (*i).second - diff;
-                                else
-                                {
-                                    guidPlayerCD[(*i).first] = 0;
-                                    if (Player *plr = objmgr.GetPlayer((*i).first))
-                                        plr->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_EFFECT);
-                                }
+                            	if ((*i).second > 0)
+                            	{
+                                    if ((*i).second > diff)
+                                        guidPlayerCD[(*i).first] = (*i).second - diff;
+                                    else
+                                    {
+                                        guidPlayerCD[(*i).first] = 0;
+                                        if (Player *plr = objmgr.GetPlayer((*i).first))
+                                            plr->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_EFFECT);
+                                    }
+                            	}
                             }
                         }
 
