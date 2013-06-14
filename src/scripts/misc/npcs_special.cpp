@@ -1777,6 +1777,72 @@ CreatureAI* GetAI_npc_egbert(Creature* creature)
     return new npc_egbertAI(creature);
 }
 
+/*######
+## npc_babypanda
+######*/
+
+#define SPELL_SLEEP 32951
+#define SLEEP_TIMER urand(5000, 30000)
+
+struct npc_babypandaAI : public PetAI
+{
+    npc_babypandaAI(Creature* c) : 
+        PetAI(c), 
+        owner(me->GetOwner())
+    {}
+    
+    Unit* owner;
+    uint32 restingTimer;
+    bool sleeping;
+    
+    void Reset()
+    {
+        restingTimer = SLEEP_TIMER;
+        sleeping = false;
+        if(owner)
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {   
+        PetAI::Minipet_DistanceCheck(diff);
+
+        //stop sleeping if too far
+        if(owner && sleeping && me->GetDistance(owner) > 20)
+        {
+            sleeping = false;
+            me->RemoveAurasDueToSpell(SPELL_SLEEP);
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        }
+
+        if(!sleeping)
+        {
+            //reset timer if moving
+            if(me->isMoving())     
+            {
+                if(restingTimer < 5000)
+                    restingTimer = SLEEP_TIMER;
+
+                return;
+            }   
+        
+            //sleep if waited enough
+            if(restingTimer <= diff)
+            {           
+                sleeping = true;
+                me->GetMotionMaster()->MoveIdle();
+                me->CastSpell(me,SPELL_SLEEP,true);
+                restingTimer = SLEEP_TIMER;
+            } else restingTimer -= diff;
+        }     
+    }
+};
+
+CreatureAI* GetAI_npc_babypanda(Creature* creature)
+{
+    return new npc_babypandaAI(creature);
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
@@ -1920,6 +1986,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_egbert";
     newscript->GetAI = &GetAI_npc_egbert;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_babypanda";
+    newscript->GetAI = &GetAI_npc_babypanda;
     newscript->RegisterSelf();
 }
 
