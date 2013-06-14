@@ -1851,6 +1851,7 @@ CreatureAI* GetAI_npc_babypanda(Creature* creature)
 #define SLEEP_TIMER urand(15000, 40000)
 #define DEATHRAY_TIMER 180000
 #define DEATHRAY_CHECK_TIMER 10000
+#define DEATHRAY_DURATION 800
 #define SPELL_DEATHRAY 40639 //not the right spell. Only visual
 #define SPELL_DEATHTOUCH 5
 
@@ -1862,17 +1863,24 @@ struct npc_willyAI : public PetAI
     {}
     
     Unit* owner;
+
+    bool sleeping;
     uint32 restingTimer;
+
+    Unit* target;
+    uint32 deathRayDurationTimer;
     uint32 deathRayTimer;
     uint32 deathRayCheckTimer;
-    bool sleeping;
     
     void Reset()
     {
+        sleeping = false;
+        me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
         restingTimer = SLEEP_TIMER;
+        deathRayDurationTimer = DEATHRAY_DURATION;
         deathRayTimer = 0;
         deathRayCheckTimer = DEATHRAY_CHECK_TIMER;
-        sleeping = false;
+        target = NULL;
         if(owner)
             me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
@@ -1892,25 +1900,27 @@ struct npc_willyAI : public PetAI
 
         if(!sleeping)
         {
-            //reset timer if moving
             if(me->isMoving())     
             {
+                //reset timer if moving
                 if(restingTimer < 5000)
                     restingTimer = SLEEP_TIMER;
-
-                return;
-            }   
+            } else {
+                //sleep if waited enough
+                if(!target)
+                {
+                    if(restingTimer <= diff)
+                    {           
+                        sleeping = true;
+                        me->GetMotionMaster()->MoveIdle();
+                        me->CastSpell(me,SPELL_SLEEP,true);
+                        //death anim is used for willy's sleep
+                        me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH); 
+                        restingTimer = SLEEP_TIMER;
+                    } else restingTimer -= diff;
+                }
+            }
         
-            //sleep if waited enough
-            if(restingTimer <= diff)
-            {           
-                sleeping = true;
-                me->GetMotionMaster()->MoveIdle();
-                me->CastSpell(me,SPELL_SLEEP,true);
-                me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH); //death anim is used for willy's sleep
-                restingTimer = SLEEP_TIMER;
-            } else restingTimer -= diff;
-
             if(deathRayTimer <= diff) //ray ready
             {
                 if(deathRayCheckTimer <= diff)
@@ -1918,13 +1928,25 @@ struct npc_willyAI : public PetAI
                     if (Unit* critter = FindACritterToNuke())
                     {
                         me->CastSpell(critter,SPELL_DEATHRAY,false);
-                        me->CastSpell(critter,SPELL_DEATHTOUCH,true);
+                        target = critter;
                         deathRayTimer = DEATHRAY_TIMER;
                         restingTimer = SLEEP_TIMER;
                     }
                     deathRayCheckTimer = DEATHRAY_CHECK_TIMER;
                 } else deathRayCheckTimer -= diff;
             } else deathRayTimer -= diff;
+
+            
+            //kill target if any (having target = started casting ray). This has to be delayed for the ray to be visible.
+            if(target)
+            {
+                if(deathRayDurationTimer <= diff)
+                {
+                    me->CastSpell(target,SPELL_DEATHTOUCH,true);
+                    target = NULL;
+                    deathRayDurationTimer = DEATHRAY_DURATION;
+                } else deathRayDurationTimer -= diff;
+            }
         }     
     }
 
@@ -1944,20 +1966,14 @@ struct npc_willyAI : public PetAI
 
         cell.Visit(pair, unit_searcher, *me->GetMap());
 
-        //remove non critter
+        //return first critter if any
         for (std::list<Unit*>::iterator it = list.begin(); it != list.end(); it++)
         {
-            if ((*it)->GetCreatureType() != CREATURE_TYPE_CRITTER)
-                list.erase(it);
+            if ((*it)->GetCreatureType() == CREATURE_TYPE_CRITTER)
+                return *it;
         }
-    
-        if(!list.empty())
-        {
-            std::list<Unit*>::iterator itr = list.begin();
-            return *itr;
-        } else {
-            return NULL;
-        }
+
+        return NULL;
     }
 };
 
