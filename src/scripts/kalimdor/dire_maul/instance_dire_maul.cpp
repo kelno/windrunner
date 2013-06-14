@@ -66,23 +66,6 @@ struct instance_dire_maul : public ScriptedInstance
         return false;
     }
     
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Dire Maul: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-    
     void OnCreatureCreate(Creature* creature, uint32 entry)
     {
         switch (entry) {

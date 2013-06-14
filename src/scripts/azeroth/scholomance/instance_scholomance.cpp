@@ -55,24 +55,6 @@ struct instance_scholomance : public ScriptedInstance
         //not active in scholomance
         return false;
     }
-    
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                Player* plr = itr->getSource();
-                if (plr && !plr->HasAura(45839,0))
-                        return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Scholomance: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
 
     uint32 GetData(uint32 type)
     {

@@ -140,23 +140,6 @@ struct instance_blackrock_depths : public ScriptedInstance
             TombBossGUIDs[i] = 0;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Blackrock Depths: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void OnCreatureCreate(Creature *pCreature, uint32 creature_entry)
     {
         switch(pCreature->GetEntry())
@@ -206,8 +189,6 @@ struct instance_blackrock_depths : public ScriptedInstance
 
     void SetData64(uint32 type, uint64 data)
     {
-        debug_log("TSCR: Instance Blackrock Depths: SetData64 update (Type: %u Data %u)", type, data);
-
         switch(type)
         {
         case DATA_EVENSTARTER:
@@ -226,11 +207,9 @@ struct instance_blackrock_depths : public ScriptedInstance
 
         if (!player)
         {
-            debug_log("TSCR: Instance Blackrock Depths: SetData (Type: %u Data %u) cannot find any player.", type, data);
+            sLog.outError("TSCR: Instance Blackrock Depths: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
         }
-
-        debug_log("TSCR: Instance Blackrock Depths: SetData update (Type: %u Data %u)", type, data);
 
         switch(type)
         {

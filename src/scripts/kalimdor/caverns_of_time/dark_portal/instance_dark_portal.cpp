@@ -100,23 +100,6 @@ struct instance_dark_portal : public ScriptedInstance
         NextPortal_Timer    = 0;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Black Portal: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void UpdateBMWorldState(uint32 id, uint32 state)
     {
         Map::PlayerList const& players = instance->GetPlayers();
@@ -128,7 +111,7 @@ struct instance_dark_portal : public ScriptedInstance
                 if (Player* player = itr->getSource())
                     player->SendUpdateWorldState(id,state);
             }
-        }else debug_log("TSCR: Instance Black Portal: UpdateBMWorldState, but PlayerList is empty!");
+        }else sLog.outError("TSCR: Instance Black Portal: UpdateBMWorldState, but PlayerList is empty!");
     }
 
     void InitWorldState(bool Enable = true)
@@ -192,7 +175,7 @@ struct instance_dark_portal : public ScriptedInstance
 
         if (!player)
         {
-            debug_log("TSCR: Instance Black Portal: SetData (Type: %u Data %u) cannot find any player.", type, data);
+            sLog.outError("Instance Black Portal: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
         }
 
@@ -226,7 +209,6 @@ struct instance_dark_portal : public ScriptedInstance
             {
                 if (data == IN_PROGRESS)
                 {
-                    debug_log("TSCR: Instance Dark Portal: Starting event.");
                     InitWorldState();
                     //prevent players from complete quest during event
                     if (Unit *medivh = Unit::GetUnit(*player,MedivhGUID))
@@ -238,7 +220,6 @@ struct instance_dark_portal : public ScriptedInstance
                 if (data == DONE)
                 {
                     //this may be completed further out in the post-event
-                    debug_log("TSCR: Instance Dark Portal: Event completed.");
                     Map::PlayerList const& players = instance->GetPlayers();
 
                     //setting Quest Giver flag back after event
@@ -358,8 +339,6 @@ struct instance_dark_portal : public ScriptedInstance
         //normalize Z-level if we can, if rift is not at ground level.
         z = std::max(instance->GetHeight(x, y, MAX_HEIGHT), instance->GetWaterLevel(x, y));
 
-        debug_log("TSCR: Instance Dark Portal: Summoning rift boss entry %u.",entry);
-
         Unit *Summon = source->SummonCreature(entry,x,y,z,source->GetOrientation(),
             TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000);
 
@@ -368,7 +347,7 @@ struct instance_dark_portal : public ScriptedInstance
             return Summon;
         }
 
-        debug_log("TSCR: Instance Dark Portal: what just happened there? No boss, no loot, no fun...");
+        sLog.outError("Instance Dark Portal: what just happened there? No boss, no loot, no fun...");
         return NULL;
     }
 
@@ -384,7 +363,6 @@ struct instance_dark_portal : public ScriptedInstance
 
             if (tmp >= CurrentRiftId)
                 tmp++;
-            debug_log("TSCR: Instance Dark Portal: Creating Time Rift at locationId %i (old locationId was %u).",tmp,CurrentRiftId);
 
             CurrentRiftId = tmp;
 

@@ -240,18 +240,18 @@ enum Kalecgos
 // outro
 enum Outro
 {
-	SAY_KALECGOS_GOODBYE        = -1580089,
-    SAY_OUTRO_1                 = -1580095,         // Velen
-    SAY_OUTRO_2                 = -1580096,
-    SAY_OUTRO_3                 = -1580097,
-    SAY_OUTRO_4                 = -1580098,
-    SAY_OUTRO_5                 = -1580099,         // Liadrin
-    SAY_OUTRO_6                 = -1580100,         // Velen
-    SAY_OUTRO_7                 = -1580101,         // Liadrin
-    SAY_OUTRO_8                 = -1580102,         // Velen
-    SAY_OUTRO_9                 = -1580103,
-    SAY_OUTRO_10                = -1580104,         // Liadrin
-    SAY_OUTRO_11                = -1580105,         // Velen
+	SAY_KALECGOS_GOODBYE        = -1580090,
+    SAY_OUTRO_1                 = -1580099,
+    SAY_OUTRO_2                 = -1580100,
+    SAY_OUTRO_3                 = -1580111,
+    SAY_OUTRO_4                 = -1580101,
+    SAY_OUTRO_5                 = -1580107,
+    SAY_OUTRO_6                 = -1580102,
+    SAY_OUTRO_7                 = -1580108,
+    SAY_OUTRO_8                 = -1580103,
+    SAY_OUTRO_9                 = -1580104,
+    SAY_OUTRO_10                = -1580109,
+    SAY_OUTRO_11                = -1580105,
     SAY_OUTRO_12                = -1580106,
 };
 
@@ -277,31 +277,31 @@ enum
 static const DialogueEntry aOutroDialogue[] =
 {
 	{POINT_KILJAEDEN_DIE,         0,                  15000},
-    {POINT_TELEPORT_KALECGOS,     0,                  15000},
-    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  40000},
-    {POINT_SUMMON_SHATTERED,      0,                  8000},
-    {POINT_SUMMON_PORTAL,         0,                  6000},
+    {POINT_TELEPORT_KALECGOS,     0,                  2000},
+    {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  15000},
+    {POINT_SUMMON_SHATTERED,      0,                  10000},
+    {POINT_SUMMON_PORTAL,         0,                  5000},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
-    {POINT_SUMMON_SOLDIERS_LEFT,  0,                  18000},
-    {POINT_SUMMON_PROPHET,        0,                  1000},
+    {POINT_SUMMON_SOLDIERS_LEFT,  0,                  10000},
+    {POINT_SUMMON_PROPHET,        0,                  2000},
     {POINT_SUMMON_LIADRIN,        0,                  4000},
     {SAY_OUTRO_1,                 CREATURE_PROPHET,   25000},
-    {SAY_OUTRO_2,                 CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_3,                 CREATURE_PROPHET,   13000},
+    {SAY_OUTRO_2,                 CREATURE_PROPHET,   14000},
+    {SAY_OUTRO_3,                 CREATURE_PROPHET,   10000},
     {POINT_CALL_ENTROPIUS,        0,                  10000},
-    {SAY_OUTRO_4,                 CREATURE_PROPHET,   20000},
-    {POINT_MOVE_LIADRIN,          0,                  5000},
-    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   10000},
+    {SAY_OUTRO_4,                 CREATURE_PROPHET,   22000},
+    {POINT_MOVE_LIADRIN,          0,                  6000},
+    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   9000},
     {SAY_OUTRO_6,                 CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   3000},
+    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   2000},
     {SAY_OUTRO_8,                 CREATURE_PROPHET,   4000},
-    {POINT_BLAZE,                 0,                  12000},
-    {POINT_IGNITE,                0,                  1000},
-    {SAY_OUTRO_9,                 CREATURE_PROPHET,   14000},
+    {POINT_BLAZE,                 0,                  10000},
+    {POINT_IGNITE,                0,                  500},
+    {SAY_OUTRO_9,                 CREATURE_PROPHET,   15000},
     {SAY_OUTRO_10,                CREATURE_LIADRIN,   20000},
-    {SAY_OUTRO_11,                CREATURE_PROPHET,   8000},
-    {SAY_OUTRO_12,                CREATURE_PROPHET,   4000},
-    {POINT_EVENT_SOLDIER_EXIT,    0,                  10000},
+    {SAY_OUTRO_11,                CREATURE_PROPHET,   6000},
+    {SAY_OUTRO_12,                CREATURE_PROPHET,   2000},
+    {POINT_EVENT_SOLDIER_EXIT,    0,                  8000},
     {POINT_EVENT_VELEN_EXIT,      0,                  0},
     {0,                           0,                  0},
 };
@@ -318,34 +318,40 @@ static const EventLocations aOutroLocations[] =
     {1723.888f, 631.342f, 28.05f, 0.16f},       // second shattered summon loc
     {1716.969f, 646.407f, 28.05f, 3.91f},       // velen summon loc
     {1718.862f, 644.528f, 28.05f, 3.87f},       // liadrin summon loc
-    {1712.110f, 641.044f, 27.80f},              // velen move forward
+    {1709.719f, 639.359f, 27.28f},              // velen move forward
     {1711.537f, 637.600f, 27.34f},              // liadrin move forward
-    {1718.573f, 657.106f, 28.05f},              // first shattered move
-    {1727.445f, 647.280f, 28.05f}               // second shattered move
+    {1716.962f, 661.839f, 28.05f},              // first shattered move
+    {1736.478f, 640.552f, 28.23f}               // second shattered move
 };
 
 static const EventLocations SoldierLocations[] =
 {
-	{1679.549f, 653.661f, 28.05f}, // summon right
-    {1674.939f, 652.070f, 28.05f}, // summon right
-    {1676.378f, 650.079f, 28.05f}, // summon right
-    {1678.809f, 647.216f, 28.05f}, // summon right
-    {1678.312f, 642.230f, 28.05f}, // summon right
-    {1675.944f, 644.898f, 28.05f}, // summon right
-    {1672.359f, 649.935f, 28.05f}, // summon right
-    {1670.122f, 646.541f, 28.05f}, // summon right
-    {1672.180f, 642.203f, 28.05f}, // summon right
-    {1674.428f, 638.711f, 28.05f}, // summon right
-    {1720.619f, 616.779f, 28.17f}, // summon left
-    {1724.183f, 615.504f, 28.05f}, // summon left
-    {1726.926f, 615.555f, 28.05f}, // summon left
-    {1730.367f, 614.919f, 28.05f}, // summon left
-    {1729.388f, 610.591f, 28.05f}, // summon left
-    {1726.126f, 610.573f, 28.05f}, // summon left
-    {1722.911f, 610.801f, 28.05f}, // summon left
-    {1719.209f, 612.264f, 28.05f}, // summon left
-    {1718.508f, 608.996f, 28.05f}, // summon left
-    {1723.283f, 608.411f, 28.05f}  // summon left
+	{1722.709f, 640.308f, 28.05f, 3.774}, // summon first
+    {1727.329f, 639.419f, 28.05f, 3.721}, // summon first
+    {1724.606f, 645.376f, 28.05f, 3.755}, // summon first
+    {1719.543f, 644.635f, 28.05f, 3.718}, // summon first
+    {1720.937f, 649.376f, 28.05f, 3.859}, // summon first
+    {1715.420f, 648.200f, 28.05f, 4.507}, // summon first
+    {1715.948f, 653.606f, 28.05f, 3.892}, // summon first
+    {1710.871f, 651.645f, 28.05f, 4.252}, // summon first
+    {1709.924f, 656.442f, 28.05f, 4.035}, // summon first
+    {1705.944f, 654.201f, 28.05f, 4.290}, // summon first
+    {1707.783f, 653.139f, 28.05f, 4.375}, // summon second
+    {1712.047f, 655.015f, 28.05f, 4.208}, // summon second
+    {1712.432f, 650.853f, 28.05f, 4.166}, // summon second
+    {1717.019f, 652.191f, 28.05f, 3.986}, // summon second
+    {1716.611f, 647.399f, 28.05f, 4.060}, // summon second
+    {1721.737f, 648.310f, 28.05f, 3.893}, // summon second
+    {1720.509f, 643.163f, 28.05f, 3.851}, // summon second
+    {1725.338f, 643.300f, 28.05f, 3.634}, // summon second
+    {1723.557f, 638.104f, 28.05f, 3.401}, // summon second
+    {1728.344f, 636.061f, 28.05f, 3.305}  // summon second
+};
+
+static const EventLocations SoldierMiddle[] =
+{
+	{1718.604f, 608.202f, 28.05f, 1.090}, // first
+    {1679.347f, 648.365f, 28.05f, 0.368}, // second
 };
 
 class AllOrbsInGrid
@@ -573,6 +579,8 @@ public:
             uint64 soldiersGuid[20];
             uint64 m_EntropiusGuid;
             uint64 m_PortalGuid;
+            uint32 m_currentAngleFirst;
+            uint32 m_currentAngleSecond;
         public:
 	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue)
 	        {
@@ -636,6 +644,8 @@ public:
                         me->AddAura(Aur);
                     }
                 }
+                m_currentAngleFirst = 0;
+                m_currentAngleSecond = 0;
             }
 
             void onSummon(Creature* summoned)
@@ -664,7 +674,7 @@ public:
                     case NPC_SOLDIER:
                     	summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
                     	summoned->SetWalk(false);
-                    	summoned->SetSpeed(MOVE_RUN, 1.5f);
+                    	summoned->SetSpeed(MOVE_RUN, 1.0f);
                     	break;
                     case CREATURE_PROPHET:
                         summoned->GetMotionMaster()->MovePoint(0, aOutroLocations[5].m_fX, aOutroLocations[5].m_fY, aOutroLocations[5].m_fZ);
@@ -673,6 +683,7 @@ public:
                         summoned->CastSpell(summoned, SPELL_TELEPORT_VISUAL, true);
                         break;
                     case NPC_CORE_ENTROPIUS:
+                    	summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
                         summoned->SetFlying(true);
                         summoned->SendMovementFlagUpdate();
@@ -713,8 +724,6 @@ public:
                             pKalec->SetFlying(false);
                             pKalec->SendMovementFlagUpdate();
                         }
-                        if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                        	core->SetSummoner(me);
                         break;
                     case POINT_SUMMON_SHATTERED:
                     	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -734,32 +743,46 @@ public:
                     	}
                     	break;
                     case POINT_SUMMON_PORTAL:
+                    	if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                    	    portal->SetDisplayId(22742);
                         break;
                     case POINT_SUMMON_SOLDIERS_RIGHT:
+                    	for (uint8 i = 0; i < 2; i++)
+                    	{
+                    	    if (Creature* rift = pInstance->instance->GetCreatureInMap(riftGuid[i]))
+                    	    {
+                    	    	rift->RemoveAurasDueToSpell(SPELL_OPEN_PORTAL);
+                    	    	rift->InterruptNonMeleeSpells(false);
+                    	    }
+                    	}
+
                     	for (uint8 i = 0; i < 10; i++)
                     	{
-                    		if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, 1715.0f + rand()%5, 657.0f + rand()%7, 28.05f, 3.55f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    		if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, SoldierLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                     		{
                     			soldier->SetSummoner(me);
                     			soldiersGuid[i] = soldier->GetGUID();
-                    			soldier->GetMotionMaster()->MovePoint(0, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ);
+                    			soldier->GetMotionMaster()->MovePoint(0, SoldierMiddle[0].m_fX, SoldierMiddle[0].m_fY, SoldierMiddle[0].m_fZ, false);
                     		}
                     	}
                         break;
                     case POINT_SUMMON_SOLDIERS_LEFT:
                     	for (uint8 i = 10; i < 20; i++)
                     	{
-                    	    if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, 1725.0f + rand()%5, 657.0f + rand()%7, 28.05f, 3.55f, TEMPSUMMON_CORPSE_DESPAWN, 0))
-                    	    {
+                    		if (Creature *soldier = me->SummonCreature(NPC_SOLDIER, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, SoldierLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    		{
                     	        soldier->SetSummoner(me);
                     	        soldiersGuid[i] = soldier->GetGUID();
-                    	        soldier->GetMotionMaster()->MovePoint(1, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ);
+                    	        soldier->GetMotionMaster()->MovePoint(1, SoldierMiddle[1].m_fX, SoldierMiddle[1].m_fY, SoldierMiddle[1].m_fZ, false);
                     	    }
                     	}
                         break;
                     case POINT_SUMMON_PROPHET:
                     	if (Creature *prophet = me->SummonCreature(CREATURE_PROPHET, aOutroLocations[3].m_fX, aOutroLocations[3].m_fY, aOutroLocations[3].m_fZ, aOutroLocations[3].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                     		prophet->SetSummoner(me);
+
+                    	if (Creature * core = me->SummonCreature(NPC_CORE_ENTROPIUS, me->GetPositionX(), me->GetPositionY(), 85.0f, 0, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                    	    core->SetSummoner(me);
                         break;
                     case POINT_SUMMON_LIADRIN:
                     	if (Creature *liadrin = me->SummonCreature(CREATURE_LIADRIN, aOutroLocations[4].m_fX, aOutroLocations[4].m_fY, aOutroLocations[4].m_fZ, aOutroLocations[4].m_fO, TEMPSUMMON_TIMED_DESPAWN, 4 * MINUTE * IN_MILLISECONDS))
@@ -798,15 +821,10 @@ public:
                     		pEntropius->ForcedDespawn();
                     	break;
                     case POINT_EVENT_SOLDIER_EXIT:
-                    	for (uint8 i = 0; i < 10; i++)
+                    	for (uint8 i = 0; i < 20; i++)
                     	{
                     	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
-                    	    	soldier->GetMotionMaster()->MovePoint(2, 1715.0f + rand()%5, 657.0f + rand()%7, 28.05f);
-                    	}
-                    	for (uint8 i = 10; i < 20; i++)
-                    	{
-                    	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
-                    	        soldier->GetMotionMaster()->MovePoint(3, 1725.0f + rand()%5, 657.0f + rand()%7, 28.05f);
+                    	    	soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
                     	}
                     	break;
                     case POINT_EVENT_VELEN_EXIT:
@@ -827,16 +845,29 @@ public:
                 	if (pSummoned->GetEntry() == NPC_RIFTWALKER)
                 	{
                 		if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
-                		{
                 			pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
-                			portal->SetDisplayId(22742);
-                		}
                 	}
                 	else if (pSummoned->GetEntry() == NPC_SOLDIER)
                 	{
-                		pSummoned->SetOrientation(0.21f);
-                		pSummoned->SendMovementFlagUpdate();
-                		pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                		if (pSummoned->GetGUID() == soldiersGuid[0])
+                		{
+                			pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                		    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
+                		    pSummoned->SendMovementFlagUpdate();
+                		}
+                		else
+                		{
+                			if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[0]))
+                			{
+                				float sx, sy;
+                				float angle = m_currentAngleFirst * (2*M_PI) / 360;
+                				float rayon = 5;
+                				sx = bigBoss->GetPositionX() + cos(angle) * rayon;
+                				sy = bigBoss->GetPositionY() + sin(angle) * rayon;
+                				pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, bigBoss->GetPositionZ(), false);
+                				m_currentAngleFirst = m_currentAngleFirst + 36;
+                			}
+                		}
                 	}
                 }
                 else if (uiPointId == 1)
@@ -847,14 +878,12 @@ public:
                 			pVelen->InterruptNonMeleeSpells(false);
                 	}
                 	else if (pSummoned->GetEntry() == CREATURE_PROPHET)
-                    {
-                        // Cast teleport and despawn Velen, the portal and Kalec; Liadrin will despawn on timer
-                        pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
+                	{
                         pSummoned->ForcedDespawn(1000);
 
                         // Note: portal should despawn only after all the soldiers have reached this point and "teleported" outside
                         if (Creature* pPortal = me->GetMap()->GetCreature(m_PortalGuid))
-                           pPortal->ForcedDespawn(5000);
+                           pPortal->ForcedDespawn(30000);
 
                         if (Creature* pKalec = pInstance->GetSingleCreatureFromStorage(CREATURE_KALECGOS))
                             pKalec->ForcedDespawn(1000);
@@ -862,27 +891,53 @@ public:
                         for (uint8 i = 0; i < 2; i++)
                         {
                             if (Creature* rift = pInstance->instance->GetCreatureInMap(riftGuid[i]))
-                            {
-                            	pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
                             	rift->ForcedDespawn(1000);
-                            }
                         }
 
-                        me->ForcedDespawn();
+                        me->ForcedDespawn(300000);
                     }
                 	else if (pSummoned->GetEntry() == NPC_SOLDIER)
                 	{
-                	    pSummoned->SetOrientation(1.36f);
-                	    pSummoned->SendMovementFlagUpdate();
-                	    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                		if (pSummoned->GetGUID() == soldiersGuid[10])
+                		{
+                		    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                	        pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
+                	        pSummoned->SendMovementFlagUpdate();
+                		}
+                		else
+                		{
+                		    if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[10]))
+                		    {
+                		        float sx, sy;
+                		        float angle = m_currentAngleSecond * (2*M_PI) / 360;
+                		        float rayon = 5;
+                		        sx = bigBoss->GetPositionX() + cos(angle) * rayon;
+                		        sy = bigBoss->GetPositionY() + sin(angle) * rayon;
+                		        pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, bigBoss->GetPositionZ(), false);
+                		        m_currentAngleSecond = m_currentAngleSecond + 36;
+                		    }
+                		}
                 	}
                 }
-                else if (uiPointId == 2 || uiPointId == 3)
+                else if (uiPointId == 2)
+                {
+                	if (pSummoned->GetEntry() == NPC_SOLDIER)
+                		pSummoned->ForcedDespawn(1000);
+                }
+                else if (uiPointId == 10)
                 {
                 	if (pSummoned->GetEntry() == NPC_SOLDIER)
                 	{
-                		pSummoned->CastSpell(pSummoned, SPELL_TELEPORT_VISUAL, true);
-                		pSummoned->ForcedDespawn(1000);
+                	    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
+                	    pSummoned->SendMovementFlagUpdate();
+                	}
+                }
+                else if (uiPointId == 11)
+                {
+                	if (pSummoned->GetEntry() == NPC_SOLDIER)
+                	{
+                	    pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
+                	    pSummoned->SendMovementFlagUpdate();
                 	}
                 }
             }

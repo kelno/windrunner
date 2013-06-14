@@ -88,23 +88,6 @@ struct instance_steam_vault : public ScriptedInstance
         return false;
     }
 
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Steamvault: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-
     void OnCreatureCreate(Creature *creature, uint32 creature_entry)
     {
           switch(creature->GetEntry())
@@ -130,10 +113,7 @@ struct instance_steam_vault : public ScriptedInstance
         Player *player = GetPlayerInMap();
 
         if (!player)
-        {
-            debug_log("TSCR: Instance Steamvault: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
-        }
 
         switch(type)
         {
@@ -148,7 +128,6 @@ struct instance_steam_vault : public ScriptedInstance
                         if (GameObject *_go = GameObject::GetGameObject(*player,MainChambersDoor))
                             _go->SetGoState(0);
                     }
-                    debug_log("TSCR: Instance Steamvault: Access panel used.");
                 }
                 Encounter[0] = data;
                 break;
@@ -163,7 +142,6 @@ struct instance_steam_vault : public ScriptedInstance
                      if (GameObject *_go = GameObject::GetGameObject(*player,MainChambersDoor))
                       _go->SetGoState(0);
                     }
-                    debug_log("TSCR: Instance Steamvault: Access panel used.");
                 }
                 Encounter[1] = data;
                 break;

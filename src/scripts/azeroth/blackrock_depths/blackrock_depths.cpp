@@ -178,8 +178,6 @@ struct npc_grimstoneAI : public npc_escortAI
     {
         if (GameObject *go = GameObject::GetGameObject(*m_creature,pInstance->GetData64(id)))
             go->SetGoState(state);
-
-        debug_log("TSCR: npc_grimstone, arena gate update state.");
     }
 
     //TODO: move them to center
@@ -232,7 +230,6 @@ struct npc_grimstoneAI : public npc_escortAI
             if (pInstance)
             {
                 pInstance->SetData(TYPE_RING_OF_LAW,DONE);
-                debug_log("TSCR: npc_grimstone: event reached end and set complete.");
             }
             break;
         }
