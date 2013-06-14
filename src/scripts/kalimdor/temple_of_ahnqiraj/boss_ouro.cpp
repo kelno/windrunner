@@ -418,9 +418,8 @@ struct boss_ouro_moundAI : public Scripted_NoMovementAI
  
     void UpdateAI(const uint32 diff)    
     {
-        float x, y ,z;
         Unit* target = NULL;
-        if (NewTarget_Timer < diff || !me->GetMotionMaster()->GetDestination(x,y,z))
+        if (NewTarget_Timer < diff || !me->isMoving())
         {
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200,true);
             NewTarget_Timer = NEWTARGET_TIMER;
@@ -430,6 +429,7 @@ struct boss_ouro_moundAI : public Scripted_NoMovementAI
         {
             if (target)
             {
+                float x, y ,z;
                 //me->GetMotionMaster()->MoveChase(target); //buggy
                 target->GetPosition(x,y,z);
                 me->GetMotionMaster()->MovePoint(0,x,y,z);
