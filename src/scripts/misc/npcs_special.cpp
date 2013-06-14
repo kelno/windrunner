@@ -46,6 +46,7 @@ npc_midsummer_bonfire
 EndContentData */
 
 #include "precompiled.h"
+#include "PetAI.h"
 
 /*########
 # npc_chicken_cluck
@@ -1211,9 +1212,9 @@ CreatureAI* GetAI_npc_goblin_land_mine(Creature* pCreature)
 #define SPELL_FEELING_FROGGY    43906
 #define SPELL_HEARTS            20372
 
-struct npc_mojoAI : public ScriptedAI
+struct npc_mojoAI : public PetAI
 {
-    npc_mojoAI(Creature *c) : ScriptedAI(c) {}
+    npc_mojoAI(Creature *c) : PetAI(c) {}
     
     uint32 MorphTimer;      /* new hooks OwnerGainedAura and OwnerLostAura? Useless in this case, as morphed player may not be owner, but keep the idea. */
     uint64 PlayerGUID;
@@ -1221,19 +1222,20 @@ struct npc_mojoAI : public ScriptedAI
     void Aggro(Unit *pWho) {}
     void Reset()
     {
-        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
         MorphTimer = 0;
         PlayerGUID = 0;
     }
     
     void UpdateAI(uint32 const diff)
     {
+        PetAI::Minipet_DistanceCheck(diff);
         if (MorphTimer) {
             if (Player *plr = Unit::GetPlayer(PlayerGUID))
-                m_creature->SetInFront(plr);
+                me->SetInFront(plr);
             if (MorphTimer <= diff) {
-                m_creature->RemoveAurasDueToSpell(SPELL_HEARTS);
-                m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                me->RemoveAurasDueToSpell(SPELL_HEARTS);
+                me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
                 MorphTimer = 0;
                 PlayerGUID = 0;
             }
@@ -1315,26 +1317,27 @@ CreatureAI *GetAI_npc_explosive_sheep(Creature *pCreature)
 
 #define SPELL_MALFUNCTION_EXPLOSION       13261
 
-struct npc_pet_bombAI : public ScriptedAI
+struct npc_pet_bombAI : public PetAI
 {
-    npc_pet_bombAI(Creature *c) : ScriptedAI(c) {}
+    npc_pet_bombAI(Creature *c) : PetAI(c) {}
     
     void Reset()
     {
-        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
     
     void Aggro(Unit *pWho)
     {
-        m_creature->GetMotionMaster()->MoveChase(pWho);
+        me->GetMotionMaster()->MoveChase(pWho);
     }
     
     void UpdateAI(uint32 const diff)
-    {            
-        if (m_creature->getVictim()) {
-            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
-                DoCast(m_creature->getVictim(), SPELL_MALFUNCTION_EXPLOSION);
-                m_creature->DisappearAndDie();
+    {        
+        PetAI::Minipet_DistanceCheck(diff);
+        if (me->getVictim()) {
+            if (me->IsWithinDistInMap(me->getVictim(), 3.0f)) {
+                me->CastSpell(me->getVictim(), SPELL_MALFUNCTION_EXPLOSION, false);
+                me->DisappearAndDie();
             }
         }
     }
@@ -1401,9 +1404,9 @@ bool GossipSelect_npc_metzen(Player* player, Creature* creature, uint32 sender, 
 ## npc_clockwork_rocket_bot
 ######*/
 
-struct npc_clockwork_rocket_botAI : public ScriptedAI
+struct npc_clockwork_rocket_botAI : public PetAI
 {
-    npc_clockwork_rocket_botAI(Creature* c) : ScriptedAI(c) {}
+    npc_clockwork_rocket_botAI(Creature* c) : PetAI(c) {}
     
     void Reset()
     {
@@ -1419,7 +1422,7 @@ struct npc_clockwork_rocket_botAI : public ScriptedAI
             return;
             
         if (who->ToCreature() && who->GetEntry() == me->GetEntry() && who->IsWithinDistInMap(me, 15.0f))
-            DoCast(who, 45269, false);
+            me->CastSpell(who, 45269, false);
     }
 };
 
@@ -1625,9 +1628,9 @@ CreatureAI* GetAI_lunar_large_spotlight(Creature* creature)
 ## npc_rocket_chicken
 ######*/
 
-struct npc_rocket_chickenAI : public ScriptedAI
+struct npc_rocket_chickenAI : public PetAI
 {
-    npc_rocket_chickenAI(Creature* c) : ScriptedAI(c) {}
+    npc_rocket_chickenAI(Creature* c) : PetAI(c) {}
     
     uint32 animTimer;
     
@@ -1649,9 +1652,10 @@ struct npc_rocket_chickenAI : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
+        PetAI::Minipet_DistanceCheck(diff);
         if (animTimer <= diff) {
             me->GetMotionMaster()->MoveIdle();
-            DoCast(me, 45255);
+            me->CastSpell(me, 45255, false);
             animTimer = 20000 + rand()%10000;
         }
         else
@@ -1718,6 +1722,59 @@ struct npc_midsummer_bonfireAI : public ScriptedAI
 CreatureAI* GetAI_npc_midsummer_bonfire(Creature* creature)
 {
     return new npc_midsummer_bonfireAI(creature);
+}
+
+/*######
+## npc_egbert
+######*/
+
+struct npc_egbertAI : public PetAI
+{
+    npc_egbertAI(Creature* c) : 
+        PetAI(c), 
+        following(true),
+        owner(me->GetOwner())
+    {}
+    
+    bool following;
+    Unit* owner;
+    
+    void Reset()
+    {
+        if(owner)
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        PetAI::Minipet_DistanceCheck(diff);
+        if (owner && following && me->GetDistance(owner) < 10)
+            following = false;
+
+        if(!following)
+        {
+            if (owner && me->GetDistance(owner) > 20)
+            {
+                me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                following = true;
+                return;
+            }
+
+            float x, y, z;
+            if (!me->GetMotionMaster()->GetDestination(x,y,z)) //has no destination
+            {
+                me->GetPosition(x,y,z,*new float);
+                float newX, newY, newZ;
+                me->GetRandomPoint(x,y,z,10,newX,newY,newZ);
+                me->GetMotionMaster()->MovePoint(0,newX,newY,newZ);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_egbert(Creature* creature)
+{
+    return new npc_egbertAI(creature);
 }
 
 void AddSC_npcs_special()
@@ -1858,6 +1915,11 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_midsummer_bonfire";
     newscript->GetAI = &GetAI_npc_midsummer_bonfire;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_egbert";
+    newscript->GetAI = &GetAI_npc_egbert;
     newscript->RegisterSelf();
 }
 
