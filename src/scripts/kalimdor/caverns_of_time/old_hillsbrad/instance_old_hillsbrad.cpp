@@ -53,29 +53,12 @@ struct instance_old_hillsbrad : public ScriptedInstance
         mThrallEventCount   = 0;
         ThrallGUID          = 0;
         TarethaGUID         = 0;
-    EpochGUID        = 0;
+        EpochGUID        = 0;
 
         for(uint8 i = 0; i < ENCOUNTERS; i++) {
             if (Encounter[i] != DONE)
                 Encounter[i] = NOT_STARTED;
         }
-    }
-
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Old Hillsbrad: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
     }
 
     void UpdateOHWorldState()
@@ -95,7 +78,7 @@ struct instance_old_hillsbrad : public ScriptedInstance
                 }
             }
         }else
-            debug_log("TSCR: Instance Old Hillsbrad: UpdateOHWorldState, but PlayerList is empty!");
+            sLog.outError("TSCR: Instance Old Hillsbrad: UpdateOHWorldState, but PlayerList is empty!");
     }
 
     void OnCreatureCreate(Creature *creature, uint32 creature_entry)
@@ -119,10 +102,7 @@ struct instance_old_hillsbrad : public ScriptedInstance
         Player *player = GetPlayerInMap();
 
         if (!player)
-        {
-            debug_log("TSCR: Instance Old Hillsbrad: SetData (Type: %u Data %u) cannot find any player.", type, data);
             return;
-        }
 
         switch(type)
         {
@@ -135,8 +115,6 @@ struct instance_old_hillsbrad : public ScriptedInstance
 
                     ++mBarrelCount;
                     UpdateOHWorldState();
-
-                    debug_log("TSCR: Instance Old Hillsbrad: go_barrel_old_hillsbrad count %u",mBarrelCount);
 
                     Encounter[0] = IN_PROGRESS;
 
@@ -156,7 +134,6 @@ struct instance_old_hillsbrad : public ScriptedInstance
                     {
                         mThrallEventCount++;
                         Encounter[1] = NOT_STARTED;
-                        debug_log("TSCR: Instance Old Hillsbrad: Thrall event failed %u times. Resetting all sub-events.",mThrallEventCount);
                         Encounter[2] = NOT_STARTED;
                         Encounter[3] = NOT_STARTED;
                         Encounter[4] = NOT_STARTED;
@@ -169,29 +146,23 @@ struct instance_old_hillsbrad : public ScriptedInstance
                         Encounter[3] = data;
                         Encounter[4] = data;
                         Encounter[5] = data;
-                        debug_log("TSCR: Instance Old Hillsbrad: Thrall event failed %u times. Resetting all sub-events.",mThrallEventCount);
                     }
                 }
                 else
                     Encounter[1] = data;
-                debug_log("TSCR: Instance Old Hillsbrad: Thrall escort event adjusted to data %u.",data);
                 break;
             }
             case TYPE_THRALL_PART1:
                 Encounter[2] = data;
-                debug_log("TSCR: Instance Old Hillsbrad: Thrall event part I adjusted to data %u.",data);
                 break;
             case TYPE_THRALL_PART2:
                 Encounter[3] = data;
-                debug_log("TSCR: Instance Old Hillsbrad: Thrall event part II adjusted to data %u.",data);
                 break;
             case TYPE_THRALL_PART3:
                 Encounter[4] = data;
-                debug_log("TSCR: Instance Old Hillsbrad: Thrall event part III adjusted to data %u.",data);
                 break;
             case TYPE_THRALL_PART4:
                 Encounter[5] = data;
-                 debug_log("TSCR: Instance Old Hillsbrad: Thrall event part IV adjusted to data %u.",data);
                 break;
         }
     }

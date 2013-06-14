@@ -229,8 +229,8 @@ struct instance_karazhan : public ScriptedInstance
                 Encounters[9]  = data;
                 if (data == FAIL || data == DONE || data == NOT_STARTED)
                     RemoveAuraOnAllPlayers(39331);
-                else if (data == IN_PROGRESS || data == SPECIAL)
-                    CastOnAllPlayers(39331);
+                /*else if (data == IN_PROGRESS || data == SPECIAL)
+                    CastOnAllPlayers(39331);*/
                 break;
             case DATA_MALCHEZZAR_EVENT:        Encounters[10] = data; break;
             case DATA_NIGHTBANE_EVENT:

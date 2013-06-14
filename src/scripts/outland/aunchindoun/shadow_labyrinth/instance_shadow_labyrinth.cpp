@@ -87,26 +87,8 @@ struct instance_shadow_labyrinth : public ScriptedInstance
                 break;
             case 18796:
                 ++FelOverseerCount;
-                debug_log("TSCR: Shadow Labyrinth: counting %u Fel Overseers.",FelOverseerCount);
                 break;
         }
-    }
-
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Shadow Labyrinth: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
     }
 
     void HandleGameObject(uint64 guid, uint32 state)
@@ -115,7 +97,7 @@ struct instance_shadow_labyrinth : public ScriptedInstance
 
         if (!player || !guid)
         {
-            debug_log("TSCR: Shadow Labyrinth: HandleGameObject fail");
+            sLog.outError("Shadow Labyrinth: HandleGameObject fail");
             return;
         }
 
@@ -137,12 +119,10 @@ struct instance_shadow_labyrinth : public ScriptedInstance
                 if( FelOverseerCount )
                 {
                     --FelOverseerCount;
-                    debug_log("TSCR: Shadow Labyrinth: %u Fel Overseers left to kill.",FelOverseerCount);
                 }
                 if( FelOverseerCount == 0 )
                 {
                     Encounter[1] = DONE;
-                    debug_log("TSCR: Shadow Labyrinth: TYPE_OVERSEER == DONE");
                 }
                 break;
 
