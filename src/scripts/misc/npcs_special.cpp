@@ -1212,6 +1212,10 @@ CreatureAI* GetAI_npc_goblin_land_mine(Creature* pCreature)
 #define SPELL_FEELING_FROGGY    43906
 #define SPELL_HEARTS            20372
 
+#define INDECENT_WHISPER1 -1999926
+//...
+#define INDECENT_WHISPER7 -1999932
+
 struct npc_mojoAI : public PetAI
 {
     npc_mojoAI(Creature *c) : PetAI(c) {}
@@ -1259,6 +1263,7 @@ bool ReceiveEmote_npc_mojo(Player *pPlayer, Creature *pCreature, uint32 emote)
         pCreature->AddAura(SPELL_HEARTS, pCreature);
         if (!pPlayer->isInCombat())
             pPlayer->CastSpell(pPlayer, SPELL_FEELING_FROGGY, true);
+        pCreature->Whisper(urand(INDECENT_WHISPER7,INDECENT_WHISPER1), pPlayer->GetGUID(), false);
         pCreature->SetInFront(pPlayer);
         pCreature->GetMotionMaster()->MoveFollow(pPlayer, PET_FOLLOW_DIST/3.0f, M_PI/4);
     }
