@@ -42,7 +42,7 @@ EndScriptData */
 //missing hole visual
  
 #define SWEEP_TIMER             15000 + rand()%5000
-#define SANDBLAST_TIMER         20000 + rand()%5000
+#define SANDBLAST_TIMER         25000 + rand()%10000
 #define EMERGED_TIMER           90000
 #define SUBMERGED_TIMER         35000 + rand()%10000
 #define SCARABS_SPAWN_TIMER     15000
@@ -286,6 +286,7 @@ struct boss_ouroAI : public Scripted_NoMovementAI
             break;
         case PHASE_SUBMERGED:
             Morphed = false;
+            me->RemoveAllAuras();
             DoCast(me,SPELL_SUBMERGE,false);
             Submerged_Timer = SUBMERGED_TIMER;
             SummonMounds(4);
