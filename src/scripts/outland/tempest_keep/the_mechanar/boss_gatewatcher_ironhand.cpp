@@ -57,8 +57,11 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
     uint32 Jackhammer_Timer;
     uint32 Stream_of_Machine_Fluid_Timer;
 
+    uint8 Jackhammer_count;
+
     void Reset()
     {
+        Jackhammer_count = 0;
         Shadow_Power_Timer = 25000;
         Jackhammer_Timer = 45000;
         Stream_of_Machine_Fluid_Timer = 55000;
@@ -104,20 +107,16 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         //Jack Hammer
         if(Jackhammer_Timer < diff)
         {
-            //TODO: expect cast this about 5 times in a row (?), announce it by emote only once
-            DoScriptText(EMOTE_HAMMER, m_creature);
-            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
-
-            //chance to yell, but not same time as emote (after spell in fact casted)
-            if (rand()%2)
-                return;
-
-            switch(rand()%2)
+            switch(Jackhammer_count)
             {
-            case 0: DoScriptText(SAY_HAMMER_1, m_creature); break;
-            case 1: DoScriptText(SAY_HAMMER_2, m_creature); break;
-            }
-            Jackhammer_Timer = 30000;
+            case 0: DoScriptText(EMOTE_HAMMER, m_creature); break;
+            case 2: DoScriptText(SAY_HAMMER_1, m_creature); break;
+            case 5: DoScriptText(SAY_HAMMER_2, m_creature); break;
+            case 8: Jackhammer_Timer = 30000; break;
+            }            
+
+            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
+            Jackhammer_count++;
         }else Jackhammer_Timer -= diff;
 
         //Stream of Machine Fluid
