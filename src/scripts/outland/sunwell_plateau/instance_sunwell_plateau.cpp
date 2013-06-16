@@ -161,8 +161,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr && !plr->HasAura(45839))
-                        return plr;
+                if (plr)
+                    return plr;
             }
         }
 
@@ -224,7 +224,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             	if (pCreature->GetSummoner())
             	{
             		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45838, true);
-            		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45839, true);
+            		pCreature->GetSummoner()->CastSpell(pCreature, 45839, true);
             	}
             	break;
         }
