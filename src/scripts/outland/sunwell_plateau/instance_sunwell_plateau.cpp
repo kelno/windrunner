@@ -224,7 +224,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             	if (pCreature->GetSummoner())
             	{
             		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45838, true);
-            		pCreature->GetSummoner()->CastSpell(pCreature, 45839, true);
+            		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45839, true);
             	}
             	break;
         }
