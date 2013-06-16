@@ -1776,7 +1776,6 @@ struct npc_egbertAI : public PetAI
                 if (me->GetDistance(homeX,homeY,homeZ) > 20)
                 {
                     me->GetMotionMaster()->MovePoint(0,homeX,homeY,homeZ,true);
-                    following = true;
                     return;
                 }
             }
