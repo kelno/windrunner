@@ -1737,17 +1737,23 @@ struct npc_egbertAI : public PetAI
 {
     npc_egbertAI(Creature* c) : 
         PetAI(c), 
-        following(true),
+        following(false),
         owner(me->GetOwner())
     {}
     
     bool following;
     Unit* owner;
+    float homeX, homeY, homeZ;
     
     void Reset()
     {
         if(owner)
+        {
             me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+            following = true;
+        } else {
+            me->GetPosition(homeX,homeY,homeZ,*new float);
+        }
     }
     
     void UpdateAI(uint32 const diff)
@@ -1758,11 +1764,21 @@ struct npc_egbertAI : public PetAI
 
         if(!following)
         {
-            if (owner && me->GetDistance(owner) > 20)
+            if(owner)
             {
-                me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
-                following = true;
-                return;
+                if (me->GetDistance(owner) > 20)
+                {
+                    me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                    following = true;
+                    return;
+                }
+            } else {
+                if (me->GetDistance(homeX,homeY,homeZ) > 20)
+                {
+                    me->GetMotionMaster()->MovePoint(0,homeX,homeY,homeZ,true);
+                    following = true;
+                    return;
+                }
             }
 
             float x, y, z;
