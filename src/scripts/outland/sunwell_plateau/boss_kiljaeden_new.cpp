@@ -235,6 +235,20 @@ enum Kalecgos
 	SAY_KALEC_ORB_READY2,
 	SAY_KALEC_ORB_READY3,
 	SAY_KALEC_ORB_READY4,
+	SAY_KALEC_1    = -1580082,
+	SAY_KALEC_2    = -1580084,
+	SAY_KALEC_3    = -1580086,
+	SAY_KALEC_4    = -1580088,
+	SAY_KALEC_5    = -1580091,
+
+};
+
+enum Anveena
+{
+	SAY_ANVEENA_1  = -1580083,
+	SAY_ANVEENA_2  = -1580085,
+	SAY_ANVEENA_3  = -1580087,
+	SAY_ANVEENA_4  = -1580089,
 };
 
 // outro
@@ -271,6 +285,33 @@ enum
 	POINT_IGNITE                = 12,
 	POINT_EVENT_SOLDIER_EXIT    = 13,
 	POINT_EVENT_VELEN_EXIT      = 14,
+	POINT_END_STUN              = 15,
+};
+
+static const DialogueEntry firstDialogue[] =
+{
+	{SAY_KALEC_1,                 CREATURE_KALECGOS,  5000},
+    {SAY_ANVEENA_1,               CREATURE_ANVEENA,   3000},
+    {0,                           0,                  0},
+};
+
+static const DialogueEntry secondDialogue[] =
+{
+    {SAY_KALEC_2,                 CREATURE_KALECGOS,  7000},
+    {SAY_ANVEENA_2,               CREATURE_ANVEENA,   5000},
+    {0,                           0,                  0},
+};
+
+static const DialogueEntry thirdDialogue[] =
+{
+    {SAY_KALEC_3,                 CREATURE_KALECGOS,  10000},
+    {SAY_ANVEENA_3,               CREATURE_ANVEENA,   3000},
+    {SAY_KALEC_4,                 CREATURE_KALECGOS,  5000},
+    {SAY_ANVEENA_4,               CREATURE_ANVEENA,   6000},
+    {SAY_KALEC_5,                 CREATURE_KALECGOS,  5000},
+    {SAY_KJ_PHASE5,               CREATURE_KILJAEDEN, 5000},
+    {POINT_END_STUN,              0,                  0},
+    {0,                           0,                  0},
 };
 
 // Epilogue dialogue
@@ -1020,7 +1061,7 @@ class boss_kiljaeden : public CreatureScript
 public:
     boss_kiljaeden() : CreatureScript("boss_kiljaeden") {}
 
-    class boss_kiljaedenAI : public Creature_NoMovementAINew
+    class boss_kiljaedenAI : public Creature_NoMovementAINew, private DialogueHelper
     {
         private:
             ScriptedInstance* pInstance;
@@ -1028,10 +1069,14 @@ public:
             SummonList Summons;
 
             uint32 annimSpawnTimer;
+            bool firstDialogueStep;
+            bool secondDialogueStep;
+            bool thirdDialogueStep;
         public:
-	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
+	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
 	    {
 	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+	        InitializeDialogueHelper(pInstance);
 	    }
 
             void onReset(bool onSpawn)
@@ -1073,6 +1118,9 @@ public:
                     resetEvent(EVENT_ARMAGEDDON, 21000);
                 }
 
+                firstDialogueStep = false;
+                secondDialogueStep = false;
+                thirdDialogueStep = false;
                 annimSpawnTimer = 11000;
                 me->SetFullTauntImmunity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -1136,6 +1184,32 @@ public:
             		talk(SAY_KJ_DARKNESS);
             }
 
+            void JustDidDialogueStep(int32 iEntry)
+            {
+                if (!pInstance)
+                    return;
+
+                switch (iEntry)
+                {
+                    case SAY_ANVEENA_4:
+                        if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
+                    	{
+                    	    Anveena->RemoveAurasDueToSpell(SPELL_ANVEENA_PRISON);
+                    	    Anveena->CastSpell((Unit*)NULL, SPELL_SACRIFICE_OF_ANVEENA, true);
+                    	    Anveena->ForcedDespawn(3000);
+                    	}
+                        break;
+                    case SAY_KJ_PHASE5:
+                    	talk(SAY_KJ_PHASE5);
+                    	setPhase(PHASE_SACRIFICE);
+                    	me->SetControlled(true, UNIT_STAT_STUNNED);
+                    	break;
+                    case POINT_END_STUN:
+                    	me->SetControlled(false, UNIT_STAT_STUNNED);
+                    	break;
+                }
+            }
+
             void update(const uint32 diff)
             {
                 if (annimSpawnTimer)
@@ -1160,10 +1234,44 @@ public:
                     return;
                 }
 
+                DialogueUpdate(diff);
+
                 if (!updateVictim())
                     return;
 
                 updateEvents(diff);
+
+                if (!firstDialogueStep)
+                {
+                    if (me->IsBelowHPPercent(80))
+                    {
+                    	firstDialogueStep = true;
+                    	StartNextDialogueText(SAY_KALEC_1);
+                    }
+                }
+
+                if (!secondDialogueStep)
+                {
+                    if (me->IsBelowHPPercent(50))
+                    {
+                    	SetNewArray(secondDialogue);
+                    	secondDialogueStep = true;
+                        StartNextDialogueText(SAY_KALEC_2);
+                    }
+                }
+
+                if (!thirdDialogueStep)
+                {
+                    if (me->IsBelowHPPercent(25))
+                    {
+                    	SetNewArray(thirdDialogue);
+                        thirdDialogueStep = true;
+                        StartNextDialogueText(SAY_KALEC_3);
+                        doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                        enableEvent(EVENT_ORBS_EMPOWER);
+                        enableEvent(EVENT_SHADOW_SPIKE);
+                    }
+                }
 
                 if (me->hasUnitState(UNIT_STAT_CASTING))
                     return;
@@ -1221,7 +1329,7 @@ public:
                         case EVENT_DARKNESS:
                             talk(EMOTE_KJ_DARKNESS);
                             doCast(me, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
-                            scheduleEvent(EVENT_DARKNESS, 45000);
+                            scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? 25000 : 45000);
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             break;
                         case EVENT_ORBS_EMPOWER:
@@ -1241,6 +1349,7 @@ public:
                             disableEvent(EVENT_ORBS_EMPOWER);
                             break;
                         case EVENT_SINISTER_REFLECTION:
+                        	talk(SAY_KJ_REFLECTION);
                             doCast(me, SPELL_SINISTER_REFLECTION, true);
 
                         	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
@@ -1275,27 +1384,6 @@ public:
                     	doCast(NULL, SPELL_DESTROY_DRAKES, true);
                         talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                        enableEvent(EVENT_SHADOW_SPIKE);
-                    }
-                    else
-                        return;
-                }
-
-                //Phase 5
-                if (getPhase() <= PHASE_ARMAGEDDON)
-                {
-                    if (getPhase() == PHASE_ARMAGEDDON && me->IsBelowHPPercent(25))
-                    {
-                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        setPhase(PHASE_SACRIFICE);
-
-                        if (Creature* Anveena = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_ANVEENA)))
-                        {
-                        	Anveena->RemoveAurasDueToSpell(SPELL_ANVEENA_PRISON);
-                        	Anveena->CastSpell((Unit*)NULL, SPELL_SACRIFICE_OF_ANVEENA, true);
-                        	Anveena->ForcedDespawn(3000);
-                        }
                         enableEvent(EVENT_ORBS_EMPOWER);
                         enableEvent(EVENT_SHADOW_SPIKE);
                     }

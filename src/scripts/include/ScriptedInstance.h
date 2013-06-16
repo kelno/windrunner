@@ -87,6 +87,9 @@ class DialogueHelper
 
         void DialogueUpdate(uint32 uiDiff);
 
+        void SetNewArray(DialogueEntry const* pDialogueArray) { m_pDialogueArray = pDialogueArray; }
+        void SetNewArray(DialogueEntryTwoSide const* aDialogueTwoSide) { m_pDialogueTwoSideArray = aDialogueTwoSide; }
+
     protected:
         /// Will be called when a dialogue step was done
         virtual void JustDidDialogueStep(int32 /*iEntry*/) {}
