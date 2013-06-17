@@ -519,7 +519,7 @@ class Boss_Ragnaros : public CreatureScript
                             else
                                 doCast((Unit*)NULL, (SPELL_LAVA_BURST_INVOC_B -1) + SplashLoc);
  
-                            LavaSplash_Timer -= urand(500, 15000);
+                            LavaSplash_Timer = urand(500, 15000);
                         }
                     }
                     else
