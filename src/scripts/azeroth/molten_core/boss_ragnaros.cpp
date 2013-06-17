@@ -14,23 +14,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Boss_Ragnaros
-SD%Complete: 75
-SDComment: Intro Dialog and event NYI
-SDCategory: Molten Core
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_molten_core.h"
 
 /* Missing feature
- *   - Lava Splash Visual
+ *   - Lava Splash Visual. Spells SPELL_LAVA_BURST_INVOC_A to SPELL_LAVA_BURST_INVOC_I correctly spawns gobjects at random location but we need to find the correct visual before adding damages.
  */
 
 enum
 {
-    EMERGED_TIME =               180000,
+    EMERGED_TIME =              180000,
     SUBMERGING_TIME =             1000,
     SUBMERGED_TIME =             90000,
     EMERGING_TIME =               3000,
@@ -217,10 +210,17 @@ class Boss_Ragnaros : public CreatureScript
                 {
                     if (summoned->getAI())
                     {
+                        Unit* target = NULL;
                         if (Unit* pTarget = summoned->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 80, true))
-                            summoned->getAI()->attackStart(pTarget);
+                            target = pTarget;
                         else
-                            summoned->getAI()->attackStart(me->getVictim());
+                            target = me->getVictim();
+
+                        if(target)
+                        {
+                            summoned->getAI()->attackStart(target);
+                            summoned->AddThreat(target, 4000.0);
+                        }
                     }
                     summoned->SetOwnerGUID(me->GetGUID());
                     AddCount++;
@@ -309,7 +309,7 @@ class Boss_Ragnaros : public CreatureScript
                 {
                     case 1:
                         Domo->CastSpell(Domo,SPELL_SUMMON_RAGNAROS,false); //only visual
-                        Domo->GetMotionMaster()->MovePoint(0, DomoInvocLocation.x, DomoInvocLocation.y, DomoInvocLocation.z);
+                        Domo->GetMotionMaster()->MovePoint(0, DomoInvocLocation.x, DomoInvocLocation.y, DomoInvocLocation.z, false);
                         DoScriptText(SAY_SUMMON_DOMO, Domo);
                         Intro_Timer = 10000;
                         break;
@@ -348,6 +348,11 @@ class Boss_Ragnaros : public CreatureScript
                         Intro_Timer = 3000;
                         break;        
                     case 10:
+                        if(Player* faceMe = me->FindNearestPlayer(50.0f))
+                        {
+                            me->SetInFront(faceMe);
+                            me->StopMoving();
+                        }
                         DoScriptText(SAY_ARRIVAL4_RAG, me);
                         Intro_Timer = 8000;
                         break;
@@ -461,7 +466,7 @@ class Boss_Ragnaros : public CreatureScript
                                     if(target && target->IsWithinLOSInMap(me))
                                     {
                                         doCast(target, SPELL_MAGMA_BLAST, false);
-                                        if (!Said_MagmaBlast)
+                                        if (!Said_MagmaBlast && Phase_Timer < EMERGED_TIME - 20000) //we dont want to say we're tired just after aggro
                                         {  
                                             DoScriptText(SAY_MAGMA_BLAST, me);
                                             Said_MagmaBlast = true;
