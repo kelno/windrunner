@@ -301,6 +301,9 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 
 	    // search for two teams
 	    BattleGround *bGround = target->GetBattleGround();
+        if (!bGround)
+            return;
+        
 	    if (bGround->isRated())
 	    {
 	        uint32 slot = bGround->GetArenaType() - 2;
