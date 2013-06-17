@@ -135,7 +135,7 @@ class Boss_Majordomo : public CreatureScript
                 if (onSpawn)
                 {
                     addEvent(EV_REFLECTION, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
-                    addEvent(EV_TELEPORT, 30000, 30000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
+                    addEvent(EV_TELEPORT, 25000, 25000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_BLASTWAVE, 3000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_DOWN, 33000, 33000, EVENT_FLAG_NONE, true, phaseMaskForPhase(DOWN));
                     addEvent(EV_CHECK_PHASE, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(NOT_VISIBLE));
