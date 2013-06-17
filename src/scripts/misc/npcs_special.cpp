@@ -1753,6 +1753,7 @@ struct npc_egbertAI : public PetAI
             following = true;
         } else {
             me->GetPosition(homeX,homeY,homeZ,*new float);
+            me->SetWalk(false);
         }
     }
     
@@ -1764,28 +1765,27 @@ struct npc_egbertAI : public PetAI
 
         if(!following)
         {
-            if(owner)
-            {
-                if (me->GetDistance(owner) > 20)
-                {
-                    me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
-                    following = true;
-                    return;
-                }
-            } else {
-                if (me->GetDistance(homeX,homeY,homeZ) > 20)
-                {
-                    me->GetMotionMaster()->MovePoint(0,homeX,homeY,homeZ,true);
-                    return;
-                }
-            }
-
             float x, y, z;
             if (!me->GetMotionMaster()->GetDestination(x,y,z)) //has no destination
             {
+                if(!owner)
+                {
+                    if (me->GetDistance(homeX,homeY,homeZ) > 25)
+                    {
+                        me->GetMotionMaster()->MovePoint(0,homeX,homeY,homeZ,true);
+                        return;
+                    }
+                } else {
+                    if (me->GetDistance(owner) > 20)
+                    {
+                        me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                        following = true;
+                        return;
+                    }
+                }
                 me->GetPosition(x,y,z,*new float);
                 float newX, newY, newZ;
-                me->GetRandomPoint(x,y,z,10,newX,newY,newZ);
+                me->GetRandomPoint(x,y,z,10.0f,newX,newY,newZ);
                 me->GetMotionMaster()->MovePoint(0,newX,newY,newZ);
             }
         }
