@@ -43,6 +43,9 @@ trigger_omen
 lunar_large_spotlight
 npc_rocket_chicken
 npc_midsummer_bonfire
+npc_egbert
+npc_babypanda
+npc_willy
 EndContentData */
 
 #include "precompiled.h"
@@ -1765,7 +1768,7 @@ struct npc_egbertAI : public PetAI
 
         if(!following)
         {
-            float x, y, z;
+            float x, y, z, o;
             if (!me->GetMotionMaster()->GetDestination(x,y,z)) //has no destination
             {
                 if(!owner)
@@ -1783,7 +1786,7 @@ struct npc_egbertAI : public PetAI
                         return;
                     }
                 }
-                me->GetPosition(x,y,z,*new float);
+                me->GetPosition(x,y,z,o);
                 float newX, newY, newZ;
                 me->GetRandomPoint(x,y,z,10.0f,newX,newY,newZ);
                 me->GetMotionMaster()->MovePoint(0,newX,newY,newZ);
