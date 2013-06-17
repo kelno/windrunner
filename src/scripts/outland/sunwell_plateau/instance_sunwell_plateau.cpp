@@ -220,13 +220,6 @@ struct instance_sunwell_plateau : public ScriptedInstance
                     southList.push_back(pCreature->GetGUID());
                 //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
-            case 25653:
-            	if (pCreature->GetSummoner())
-            	{
-            		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45838, true);
-            		pCreature->GetSummoner()->CastSpell((Unit*)NULL, 45839, true);
-            	}
-            	break;
         }
         m_mNpcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetGUID();
     }

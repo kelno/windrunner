@@ -415,7 +415,7 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
 
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
-        	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+        	Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -985,10 +985,12 @@ public:
 
             void onCombatStart(Unit* victim)
             {
+            	setZoneInCombat(true);
                 for (uint8 i = 0; i < 3; i++)
                 {
                     if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
                     {
+                    	hand->getAI()->setZoneInCombat(true);
                         if (!hand->isInCombat())
                             hand->getAI()->attackStart(victim);
                     }
@@ -2163,21 +2165,9 @@ public:
             void onDeath(Unit* /*killer*/)
             {
                 if (Unit* summoner = me->GetSummoner())
-                	summoner->RemoveAurasDueToSpell(SPELL_POSSESS_DRAKE_IMMUNE);
-            }
-
-            void updateEM(uint32 const diff)
-            {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
-                    me->DisappearAndDie();
-            }
-
-            void update(uint32 const diff)
-            {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                 {
-                    me->DisappearAndDie();
-                    return;
+                	summoner->RemoveAurasDueToSpell(SPELL_POSSESS_DRAKE_IMMUNE);
+                	summoner->RemoveAurasDueToSpell(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT);
                 }
             }
     };
