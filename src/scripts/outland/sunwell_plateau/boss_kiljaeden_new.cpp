@@ -1202,9 +1202,11 @@ public:
                     case SAY_KJ_PHASE5:
                     	talk(SAY_KJ_PHASE5);
                     	setPhase(PHASE_SACRIFICE);
+                    	me->addUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(true, UNIT_STAT_STUNNED);
                     	break;
                     case POINT_END_STUN:
+                    	me->clearUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(false, UNIT_STAT_STUNNED);
                     	break;
                 }
@@ -1273,7 +1275,7 @@ public:
                     }
                 }
 
-                if (me->hasUnitState(UNIT_STAT_CASTING))
+                if (me->hasUnitState(UNIT_STAT_CASTING) || me->hasUnitState(UNIT_STAT_STUNNED))
                     return;
 
                 while (executeEvent(diff, m_currEvent))
