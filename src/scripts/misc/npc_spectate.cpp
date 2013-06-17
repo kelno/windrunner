@@ -268,6 +268,12 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    		mobArena->Whisper("Le mode spectateur est actuellement désactivé pour les arènes cotées.", player->GetGUID());
 	    	    return;
 	    	}
+
+	    	if (!bg->canEnterSpectator(player))
+	    	{
+	    		mobArena->Whisper("Il n'y a plus de places pour ce match.", player->GetGUID());
+	    		return;
+	    	}
 	    }
 
 	    if (player->getSpectateCooldown() > 0)
@@ -350,7 +356,6 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    target->GetBattleGround()->AddSpectator(player->GetGUID());
 	    player->TeleportTo(target->GetMapId(), x, y, z, player->GetAngle(target), TELE_TO_GM_MODE);
 	    player->SetSpectate(true);
-	    mobArena->Whisper("Le mode spectateur démarrera dans 10 secondes", player->GetGUID());
     }
 }
 
