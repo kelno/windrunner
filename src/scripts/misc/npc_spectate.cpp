@@ -263,12 +263,6 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	    return;
 	    	}
 
-	    	if (bg->isRated())
-	    	{
-	    		mobArena->Whisper("Le mode spectateur est actuellement désactivé pour les arènes cotées.", player->GetGUID());
-	    	    return;
-	    	}
-
 	    	if (!bg->canEnterSpectator(player))
 	    	{
 	    		mobArena->Whisper("Il n'y a plus de places pour ce match.", player->GetGUID());
@@ -363,8 +357,8 @@ void ShowDefaultPage(Player* player, Creature* creature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
     {
-		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
-		//player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
 		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
 		player->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
@@ -380,8 +374,8 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
 	{
-        //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
-        //pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
+        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
         pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
         pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 	}
