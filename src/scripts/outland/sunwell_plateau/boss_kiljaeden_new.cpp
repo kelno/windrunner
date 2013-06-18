@@ -416,6 +416,7 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
         	Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+        	plr->CastSpell((Unit*)NULL, SPELL_POSSESS_DRAKE_IMMUNE, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
