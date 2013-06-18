@@ -261,6 +261,7 @@ public:
                             vortex->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             vortex->SetSpeed(MOVE_RUN, 1.0f);
                             vortex->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0)); // FIXME: when converting vortex AI, change this
+                            vortex->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED);
                             setZoneInCombat();
                         }
                     }
