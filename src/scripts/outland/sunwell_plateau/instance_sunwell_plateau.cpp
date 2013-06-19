@@ -224,6 +224,20 @@ struct instance_sunwell_plateau : public ScriptedInstance
         m_mNpcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetGUID();
     }
 
+    void OnCreatureDeath(Creature* creature)
+    {
+    	switch(creature->GetEntry())
+    	{
+    	    case 25653:
+    	    	if (Unit* summoner = creature->GetSummoner())
+    	    	{
+    	    	    summoner->RemoveAurasDueToSpell(45838);
+    	    	    summoner->RemoveAurasDueToSpell(45839);
+    	    	}
+    		    break;
+    	}
+    }
+
     void OnObjectCreate(GameObject* pGo)
     {
         switch(pGo->GetEntry())
