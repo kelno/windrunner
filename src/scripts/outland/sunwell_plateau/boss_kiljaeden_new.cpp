@@ -416,7 +416,6 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
         	Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
-        	plr->CastSpell((Unit*)NULL, SPELL_POSSESS_DRAKE_IMMUNE, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -2161,15 +2160,6 @@ public:
             npc_power_blue_flightAI(Creature* creature) : CreatureAINew(creature)
             {
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-            }
-
-            void onDeath(Unit* /*killer*/)
-            {
-                if (Unit* summoner = me->GetSummoner())
-                {
-                	summoner->RemoveAurasDueToSpell(SPELL_POSSESS_DRAKE_IMMUNE);
-                	summoner->RemoveAurasDueToSpell(SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT);
-                }
             }
     };
 
