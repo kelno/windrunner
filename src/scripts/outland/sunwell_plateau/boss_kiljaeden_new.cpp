@@ -1557,13 +1557,13 @@ public:
 
             void updateEM(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                     me->DisappearAndDie();
             }
 
             void update(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                 {
                     me->DisappearAndDie();
                     return;
@@ -1959,13 +1959,13 @@ public:
 
             void updateEM(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                     me->DisappearAndDie();
             }
 
             void update(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                 {
                     me->DisappearAndDie();
                     return;
