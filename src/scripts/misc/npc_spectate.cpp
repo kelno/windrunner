@@ -33,20 +33,12 @@ EndScriptData */
 
 enum NpcSpectatorActions
 {
-	NPC_SPECTATOR_ACTION_HIGH_RATING         = 2000,
-	NPC_SPECTATOR_ACTION_LOW_RATING          = 3000,
-	NPC_SPECTATOR_ACTION_NO_RATED            = 4000,
+	NPC_SPECTATOR_ACTION_2                   = 2000,
+	NPC_SPECTATOR_ACTION_3                   = 3000,
+	NPC_SPECTATOR_ACTION_5                   = 4000,
     NPC_SPECTATOR_ACTION_SELECTED_PLAYER     = 5000
 };
 
-enum ArenaRate
-{
-	NO_RATED       = 0,
-	LOW_RATING     = 1,
-	HIGH_RATING    = 2
-};
-
-const uint16 TopGamesRating = 1800;
 const uint8  GamesOnPage    = 15;
 
 std::string GetClassNameById(uint8 id)
@@ -54,49 +46,49 @@ std::string GetClassNameById(uint8 id)
     std::string sClass = "";
     switch (id)
     {
-        case CLASS_WARRIOR:         sClass = "Guerrier ";       break;
-        case CLASS_PALADIN:         sClass = "Paladin ";        break;
-        case CLASS_HUNTER:          sClass = "Chasseur ";       break;
-        case CLASS_ROGUE:           sClass = "Voleur ";         break;
-        case CLASS_PRIEST:          sClass = "Prêtre ";         break;
-        case CLASS_SHAMAN:          sClass = "Chaman ";         break;
-        case CLASS_MAGE:            sClass = "Mage ";           break;
-        case CLASS_WARLOCK:         sClass = "Démoniste ";      break;
-        case CLASS_DRUID:           sClass = "Druide ";         break;
+        case CLASS_WARRIOR:         sClass = "War";       break;
+        case CLASS_PALADIN:         sClass = "Pal";       break;
+        case CLASS_HUNTER:          sClass = "Hunt";      break;
+        case CLASS_ROGUE:           sClass = "Rogue";     break;
+        case CLASS_PRIEST:          sClass = "Priest";    break;
+        case CLASS_SHAMAN:          sClass = "Cham";      break;
+        case CLASS_MAGE:            sClass = "Mage";      break;
+        case CLASS_WARLOCK:         sClass = "Demo";      break;
+        case CLASS_DRUID:           sClass = "Druide";    break;
     }
     return sClass;
 }
 
-std::string GetGamesStringData(BattleGround *arena, uint32 rating, bool isRated)
+std::string GetGamesStringData(BattleGround *arena)
 {
-    std::string teamsMember[2];
-    uint32 firstTeamId = 0;
-    for (BattleGround::BattleGroundPlayerMap::const_iterator itr = arena->GetPlayers().begin(); itr != arena->GetPlayers().end(); ++itr)
-        if (Player* player = ObjectAccessor::FindPlayer(itr->first))
-        {
-            if (player->isSpectator())
-                continue;
+	std::string data = "";
 
-            uint32 team = itr->second.Team;
-            if (!firstTeamId)
-                firstTeamId = team;
-
-            teamsMember[firstTeamId == team] += GetClassNameById(player->getClass());
-        }
-
-    std::string data = "";
-    if (isRated)
+    for (uint8 i = 0; i < arena->GetArenaType(); i++)
     {
-        data = teamsMember[0] + " - ";
-        std::stringstream ss;
-        ss << rating;
-        data += ss.str();
-        data += " - " + teamsMember[1];
-    }
-    else
-    {
-    	data = teamsMember[0] + " - " + teamsMember[1];
-    }
+	    ArenaTeam *team =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(i));
+
+	    std::list<ArenaTeamMember>::iterator begin = team->membersBegin();
+	    std::list<ArenaTeamMember>::iterator end = team->membersEnd();
+
+	    for (std::list<ArenaTeamMember>::iterator itr = begin; begin != end; itr++)
+	    {
+	        data += GetClassNameById(itr->Class);
+	        if (itr != end)
+	            data += "/";
+	    }
+
+	    if (arena->isRated())
+	    {
+	    	std::stringstream ss;
+	    	ss << team->GetRating();
+	    	data += "(" + ss.str() + ")";
+	    }
+	    else
+	        data += "(0)";
+
+	    data += " - ";
+	}
+
     return data;
 }
 
@@ -108,11 +100,11 @@ uint64 GetFirstPlayerGuid(BattleGround *arena)
     return 0;
 }
 
-void ShowPage(Player *player, uint32 page, ArenaRate rate)
+void ShowPage(Player *player, uint32 page, ArenaType type)
 {
-	uint16 highGames  = 0;
-	uint16 lowGames   = 0;
-	uint16 noRated = 0;
+	uint16 type2V2  = 0;
+	uint16 type3V3  = 0;
+	uint16 type5V5  = 0;
 	bool haveNextPage = false;
 
     for (uint8 i = BATTLEGROUND_AV; i <= BATTLEGROUND_RL; ++i)
@@ -131,80 +123,67 @@ void ShowPage(Player *player, uint32 page, ArenaRate rate)
             if (arena->GetStatus() != STATUS_IN_PROGRESS)
                 continue;
 
-            ArenaTeam *first =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(0));
-            ArenaTeam *second =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(1));
-
-            uint32 rating = 0;
-            if (arena->isRated())
+            if (type == ARENA_TYPE_2v2 && arena->GetArenaType() == ARENA_TYPE_2v2)
             {
-                uint32 rating = first->GetRating() + second->GetRating();
-                rating /= 2;
-            }
-
-            if (arena->isRated())
-            {
-                if (rate == HIGH_RATING && rating > TopGamesRating)
-                {
-            	    highGames++;
-            	    if (highGames > (page + 1) * GamesOnPage)
-            	    {
-            	        haveNextPage = true;
-            	        break;
-            	    }
-
-            	    if (highGames > page * GamesOnPage)
-            	        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, true), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
-                }
-                else if (rate == LOW_RATING && rating < TopGamesRating)
-                {
-            	    lowGames++;
-            	    if (lowGames > (page + 1) * GamesOnPage)
-            	    {
-            	        haveNextPage = true;
-            	        break;
-            	    }
-
-            	    if (lowGames > page * GamesOnPage)
-            	        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, true), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
-                }
-            }
-            else if (rate == NO_RATED)
-            {
-            	noRated++;
-            	if (noRated > (page + 1) * GamesOnPage)
+            	type2V2++;
+            	if (type2V2 > (page + 1) * GamesOnPage)
             	{
             	    haveNextPage = true;
             	    break;
             	}
 
-            	if (noRated > page * GamesOnPage)
-            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena, rating, false), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            	if (type2V2 > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            }
+            else if (type == ARENA_TYPE_3v3 && arena->GetArenaType() == ARENA_TYPE_3v3)
+            {
+            	type3V3++;
+            	if (type3V3 > (page + 1) * GamesOnPage)
+            	{
+            	    haveNextPage = true;
+            	    break;
+            	}
+
+            	if (type3V3 > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
+            }
+            else if (type == ARENA_TYPE_5v5 && arena->GetArenaType() == ARENA_TYPE_5v5)
+            {
+            	type5V5++;
+            	if (type5V5 > (page + 1) * GamesOnPage)
+            	{
+            	    haveNextPage = true;
+            	    break;
+            	}
+
+            	if (type5V5 > page * GamesOnPage)
+            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
             }
         }
     }
 
-    switch (rate)
+    switch (type)
     {
-        case NO_RATED:
+        case ARENA_TYPE_2v2:
         	if (page > 0)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED + page - 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_2 + page - 1);
 
         	if (haveNextPage)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED + page + 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_2 + page + 1);
         	break;
-        case LOW_RATING:
+        case ARENA_TYPE_3v3:
         	if (page > 0)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING + page - 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_3 + page - 1);
 
         	if (haveNextPage)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING + page + 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_3 + page + 1);
         	break;
-        case HIGH_RATING:
+        case ARENA_TYPE_5v5:
         	if (page > 0)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING + page - 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Précédent...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_5 + page - 1);
 
         	if (haveNextPage)
-        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING + page + 1);
+        	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_DOT, "Suivant...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_5 + page + 1);
             break;
     }
 
@@ -357,9 +336,9 @@ void ShowDefaultPage(Player* player, Creature* creature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
     {
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
-		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 2V2", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_2);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 3V3", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_3);
+		player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 5V5", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_5);
 		player->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
     }
@@ -374,9 +353,9 @@ bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
 	{
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une grande cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_HIGH_RATING);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes avec une petite cote...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_LOW_RATING);
-        pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Voir les arènes non cotées...", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_NO_RATED);
+		pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 2V2", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_2);
+		pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 3V3", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_3);
+		pPlayer->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Arènes 5V5", GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_5);
         pPlayer->ADD_GOSSIP_ITEM_EXTENDED(GOSSIP_ICON_CHAT, "Voir un joueur...", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2, "", 0, true);
 	}
 	else
@@ -393,19 +372,19 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
 {
 	if (action == GOSSIP_ACTION_INFO_DEF + 1)
 		ShowDefaultPage(player, creature);
-	else if (action >= NPC_SPECTATOR_ACTION_HIGH_RATING && action < NPC_SPECTATOR_ACTION_LOW_RATING)
+	else if (action >= NPC_SPECTATOR_ACTION_2 && action < NPC_SPECTATOR_ACTION_3)
 	{
-		ShowPage(player, action - NPC_SPECTATOR_ACTION_HIGH_RATING, HIGH_RATING);
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_2, ARENA_TYPE_2v2);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
 	}
-	else if (action >= NPC_SPECTATOR_ACTION_LOW_RATING && action < NPC_SPECTATOR_ACTION_NO_RATED)
+	else if (action >= NPC_SPECTATOR_ACTION_3 && action < NPC_SPECTATOR_ACTION_5)
 	{
-		ShowPage(player, action - NPC_SPECTATOR_ACTION_LOW_RATING, LOW_RATING);
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_3, ARENA_TYPE_3v3);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
 	}
-	else if (action >= NPC_SPECTATOR_ACTION_NO_RATED && action < NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
+	else if (action >= NPC_SPECTATOR_ACTION_5 && action < NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
 	{
-		ShowPage(player, action - NPC_SPECTATOR_ACTION_NO_RATED, NO_RATED);
+		ShowPage(player, action - NPC_SPECTATOR_ACTION_5, ARENA_TYPE_5v5);
 		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
 	}
 	else if (action >= NPC_SPECTATOR_ACTION_SELECTED_PLAYER)
