@@ -70,7 +70,7 @@ std::string GetGamesStringData(BattleGround *arena)
 	    std::list<ArenaTeamMember>::iterator begin = team->membersBegin();
 	    std::list<ArenaTeamMember>::iterator end = team->membersEnd();
 
-	    for (std::list<ArenaTeamMember>::iterator itr = begin; begin != end; itr++)
+	    for (std::list<ArenaTeamMember>::iterator itr = begin; itr != end; itr++)
 	    {
 	        data += GetClassNameById(itr->Class);
 	        if (itr != end)
@@ -102,9 +102,7 @@ uint64 GetFirstPlayerGuid(BattleGround *arena)
 
 void ShowPage(Player *player, uint32 page, ArenaType type)
 {
-	uint16 type2V2  = 0;
-	uint16 type3V3  = 0;
-	uint16 type5V5  = 0;
+	uint16 nbArenas  = 0;
 	bool haveNextPage = false;
 
     for (uint8 i = BATTLEGROUND_AV; i <= BATTLEGROUND_RL; ++i)
@@ -123,40 +121,16 @@ void ShowPage(Player *player, uint32 page, ArenaType type)
             if (arena->GetStatus() != STATUS_IN_PROGRESS)
                 continue;
 
-            if (type == ARENA_TYPE_2v2 && arena->GetArenaType() == ARENA_TYPE_2v2)
+            if (type == arena->GetArenaType())
             {
-            	type2V2++;
-            	if (type2V2 > (page + 1) * GamesOnPage)
+            	nbArenas++;
+            	if (nbArenas > (page + 1) * GamesOnPage)
             	{
             	    haveNextPage = true;
             	    break;
             	}
 
-            	if (type2V2 > page * GamesOnPage)
-            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
-            }
-            else if (type == ARENA_TYPE_3v3 && arena->GetArenaType() == ARENA_TYPE_3v3)
-            {
-            	type3V3++;
-            	if (type3V3 > (page + 1) * GamesOnPage)
-            	{
-            	    haveNextPage = true;
-            	    break;
-            	}
-
-            	if (type3V3 > page * GamesOnPage)
-            	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
-            }
-            else if (type == ARENA_TYPE_5v5 && arena->GetArenaType() == ARENA_TYPE_5v5)
-            {
-            	type5V5++;
-            	if (type5V5 > (page + 1) * GamesOnPage)
-            	{
-            	    haveNextPage = true;
-            	    break;
-            	}
-
-            	if (type5V5 > page * GamesOnPage)
+            	if (nbArenas > page * GamesOnPage)
             	    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_BATTLE, GetGamesStringData(arena), GOSSIP_SENDER_MAIN, NPC_SPECTATOR_ACTION_SELECTED_PLAYER + GetFirstPlayerGuid(arena));
             }
         }
