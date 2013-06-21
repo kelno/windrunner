@@ -256,6 +256,8 @@ Unit::Unit()
     
     _focusSpell = NULL;
     _targetLocked = false;
+
+    m_rootTimes = 0;
 }
 
 Unit::~Unit()
@@ -12355,36 +12357,51 @@ void Unit::SetStunned(bool apply)
 
 void Unit::SetRooted(bool apply)
 {
-    uint32 apply_stat = UNIT_STAT_ROOT;
     if(apply)
     {
-        SetFlag(UNIT_FIELD_FLAGS,(apply_stat<<16)); // probably wrong
+    	if (m_rootTimes > 0) // blizzard internal check?
+    	    m_rootTimes++;
+
+    	// MOVEMENTFLAG_ROOT cannot be used in conjunction with MOVEMENTFLAG_MASK_MOVING (tested 3.3.5a)
+    	// this will freeze clients. That's why we remove MOVEMENTFLAG_MASK_MOVING before
+    	// setting MOVEMENTFLAG_ROOT
+    	RemoveUnitMovementFlag(MOVEMENTFLAG_MOVING);
+    	AddUnitMovementFlag(MOVEMENTFLAG_ROOT);
 
         if(GetTypeId() == TYPEID_PLAYER)
         {
-            SetUnitMovementFlags(0);
-
             WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
             data.append(GetPackGUID());
-            data << (uint32)2;
+            data << m_rootTimes;
             SendMessageToSet(&data,true);
         }
         else
+        {
+        	WorldPacket data(SMSG_SPLINE_MOVE_ROOT, 8);
+        	data.append(GetPackGUID());
+        	SendMessageToSet(&data, true);
             (this->ToCreature())->StopMoving();
+        }
     }
     else
     {
-        RemoveFlag(UNIT_FIELD_FLAGS,(apply_stat<<16)); // probably wrong
-
         if(!hasUnitState(UNIT_STAT_STUNNED))      // prevent allow move if have also stun effect
         {
             if(GetTypeId() == TYPEID_PLAYER)
             {
                 WorldPacket data(SMSG_FORCE_MOVE_UNROOT, 10);
                 data.append(GetPackGUID());
-                data << (uint32)2;
+                data << ++m_rootTimes;
                 SendMessageToSet(&data,true);
             }
+            else
+            {
+            	WorldPacket data(SMSG_SPLINE_MOVE_UNROOT, 8);
+            	data.append(GetPackGUID());
+            	SendMessageToSet(&data, true);
+            }
+
+            RemoveUnitMovementFlag(MOVEMENTFLAG_ROOT);
         }
     }
 }

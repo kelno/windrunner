@@ -1754,6 +1754,8 @@ class Unit : public WorldObject
         Spell const* _focusSpell;
         bool _targetLocked; // locks the target during spell cast for proper facing
         time_t _lastDamagedTime; // Part of Evade mechanic
+
+        uint32 m_rootTimes;
 };
 
 namespace Trinity
