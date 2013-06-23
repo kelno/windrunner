@@ -2161,10 +2161,13 @@ class Player : public Unit
         bool isMoving() const { return HasUnitMovementFlag(movementFlagsMask); }
         bool isMovingOrTurning() const { return HasUnitMovementFlag(movementOrTurningFlagsMask); }
 
-        //bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
-        bool CanFly() const { return m_CanFly;  }
-        void SetCanFly(bool CanFly) { m_CanFly=CanFly; }
+        bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
+
         bool IsFlying() const { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING); }
+
+        bool SetCanFly(bool apply);
+        bool SetWaterWalking(bool apply, bool packetOnly = false);
+        bool SetFeatherFall(bool apply, bool packetOnly = false);
 
         void HandleDrowning(uint32 time_diff);
         void HandleFallDamage(MovementInfo& movementInfo);
@@ -2349,6 +2352,8 @@ class Player : public Unit
         void addSpamReport(uint64 reporterGUID, std::string message);
         
         time_t lastLagReport;
+
+        void SendTeleportAckPacket();
 
     protected:
 
@@ -2559,7 +2564,6 @@ class Player : public Unit
         uint32 m_anti_lastalarmtime;    //last time when alarm generated
         uint32 m_anti_alarmcount;       //alarm counter
         uint32 m_anti_TeleTime;
-        bool m_CanFly;
 
         // Transports
         Transport * m_transport;

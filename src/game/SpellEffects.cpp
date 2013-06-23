@@ -2702,17 +2702,10 @@ void Spell::EffectTeleportUnits(uint32 i)
         orientation = m_targets.getUnitTarget() ? m_targets.getUnitTarget()->GetOrientation() : unitTarget->GetOrientation();
 
     // Teleport
-    if(unitTarget->GetTypeId() == TYPEID_PLAYER)
-        (unitTarget->ToPlayer())->TeleportTo(mapid, x, y, z, orientation, TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET | (unitTarget==m_caster ? TELE_TO_SPELL : 0));
-    else
-    {
-        MapManager::Instance().GetMap(mapid, m_caster)->CreatureRelocation(unitTarget->ToCreature(), x, y, z, orientation);
-        WorldPacket data;
-        unitTarget->BuildTeleportAckMsg(&data, x, y, z, orientation);
-        unitTarget->SendMessageToSet(&data, false);
-        unitTarget->BuildHeartBeatMsg(&data);
-        unitTarget->SendMessageToSet(&data,true);
-    }
+    if (mapid == unitTarget->GetMapId())
+        unitTarget->NearTeleportTo(x, y, z, orientation, unitTarget == m_caster);
+    else if (unitTarget->GetTypeId() == TYPEID_PLAYER)
+        unitTarget->ToPlayer()->TeleportTo(mapid, x, y, z, orientation, unitTarget == m_caster ? TELE_TO_SPELL : 0);
 
     // post effects for TARGET_DST_DB
     switch ( m_spellInfo->Id )
@@ -4627,10 +4620,7 @@ void Spell::EffectTeleUnitsFaceCaster(uint32 i)
     float fx,fy,fz;
     m_caster->GetClosePoint(fx,fy,fz,unitTarget->GetObjectSize(),dis);
 
-    if(unitTarget->GetTypeId() == TYPEID_PLAYER)
-        (unitTarget->ToPlayer())->TeleportTo(mapid, fx, fy, fz, -m_caster->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET | (unitTarget==m_caster ? TELE_TO_SPELL : 0));
-    else
-        unitTarget->GetMap()->CreatureRelocation(unitTarget->ToCreature(), fx, fy, fz, -m_caster->GetOrientation());
+    unitTarget->NearTeleportTo(fx, fy, fz, -m_caster->GetOrientation(), unitTarget == m_caster);
 }
 
 void Spell::EffectLearnSkill(uint32 i)
@@ -4940,8 +4930,9 @@ void Spell::EffectSummonPet(uint32 i)
             float px, py, pz;
             owner->GetClosePoint(px, py, pz, OldSummon->GetObjectSize());
 
-            OldSummon->Relocate(px, py, pz, OldSummon->GetOrientation());
-            owner->GetMap()->Add(OldSummon->ToCreature());
+            OldSummon->NearTeleportTo(px, py, pz, OldSummon->GetOrientation());
+            //OldSummon->Relocate(px, py, pz, OldSummon->GetOrientation());
+            //owner->GetMap()->Add(OldSummon->ToCreature());
             if(m_spellInfo->Id == 688 /*imp*/ || m_spellInfo->Id == 697 /*void walker*/ || m_spellInfo->Id == 691 /*felhunter*/ || m_spellInfo->Id == 712 /*succubus*/)
                 OldSummon->SetHealth(OldSummon->GetMaxHealth());
 
@@ -6957,30 +6948,7 @@ void Spell::EffectMomentMove(uint32 i)
         return;
     }
 
-    if(unitTarget->GetTypeId() == TYPEID_PLAYER)
-      (unitTarget->ToPlayer())->TeleportTo(mapid, destx, desty, destz/*+0.07531f*/, unitTarget->GetOrientation(), TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET | (unitTarget==m_caster ? TELE_TO_SPELL : 0));
-    else if (unitTarget->ToCreature())
-    {
-    	switch (m_spellInfo->Id)
-    	{
-    	    case 45862:
-    	    {
-    	    	MapManager::Instance().GetMap(mapid, m_caster)->CreatureRelocation(unitTarget->ToCreature(), destx, desty, destz, orientation);
-    	    	WorldPacket data;
-    	    	unitTarget->BuildTeleportAckMsg(&data, destx, desty, destz, orientation);
-    	    	unitTarget->SendMessageToSet(&data, false);
-    	    	break;
-    	    }
-    	    default:
-    	    	unitTarget->ToCreature()->Relocate(destx,desty,destz+0.07531f);
-    	    	unitTarget->ToCreature()->SendMonsterMove(x, y, z, 0);
-    	    	break;
-    	}
-        //unitTarget->GetMap()->CreatureRelocation(unitTarget->ToCreature(), destx, desty, destz,unitTarget->GetOrientation());
-        //unitTarget->ToCreature()->Relocate(destx,desty,destz+0.07531f);
-        //unitTarget->ToCreature()->SendMonsterMove(x, y, z, 0);
-    }
-
+    unitTarget->NearTeleportTo(destx, desty, destz, orientation, unitTarget == m_caster);
 }
 
 void Spell::EffectReputation(uint32 i)

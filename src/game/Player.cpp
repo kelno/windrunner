@@ -1724,6 +1724,15 @@ uint8 Player::chatTag() const
         return 0;
 }
 
+void Player::SendTeleportAckPacket()
+{
+    WorldPacket data(MSG_MOVE_TELEPORT_ACK, 41);
+    data.append(GetPackGUID());
+    data << uint32(0);                                     // this value increments every time
+    BuildMovementPacket(&data);
+    GetSession()->SendPacket(&data);
+}
+
 bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientation, uint32 options)
 {
     if(!MapManager::IsValidMapCoord(mapid, x, y, z, orientation))
@@ -1807,10 +1816,11 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // near teleport
         if(!GetSession()->PlayerLogout())
         {
-            WorldPacket data;
-            BuildTeleportAckMsg(&data, x, y, z, orientation);
-            GetSession()->SendPacket(&data);
-            SetPosition( x, y, z, orientation, true);
+        	Position oldPos;
+        	GetPosition(&oldPos);
+        	Relocate(x, y, z, orientation);
+        	SendTeleportAckPacket();
+            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
         }
         else
             // this will be used instead of the current location in SaveToDB
@@ -20969,4 +20979,55 @@ void Player::addSpamReport(uint64 reporterGUID, std::string message)
         sIRCMgr.onReportSpam(GetName(), GetGUIDLow());
         _lastSpamAlert = now;
     }
+}
+
+bool Player::SetCanFly(bool apply)
+{
+    if (!Unit::SetCanFly(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_CAN_FLY : SMSG_MOVE_UNSET_CAN_FLY, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_UPDATE_CAN_FLY, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetWaterWalking(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_WATER_WALK : SMSG_MOVE_LAND_WALK, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_WATER_WALK, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetFeatherFall(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_FEATHER_FALL : SMSG_MOVE_NORMAL_FALL, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_FEATHER_FALL, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
 }

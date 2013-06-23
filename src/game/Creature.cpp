@@ -2768,20 +2768,71 @@ void Creature::SetFlying(bool apply)
     }
 }
 
-void Creature::SetWalk(bool enable, bool asDefault)
+bool Creature::SetWalk(bool enable)
 {
-    // Nothing changed?
-    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE))
-        return;
-
-    if (enable)
-    	AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-    else
-    	RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+    if (!Unit::SetWalk(enable))
+        return false;
 
     WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_WALK_MODE : SMSG_SPLINE_MOVE_SET_RUN_MODE, 9);
     data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Creature::SetSwim(bool enable)
+{
+    if (!Unit::SetSwim(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_START_SWIM : SMSG_SPLINE_MOVE_STOP_SWIM);
+    data.append(GetPackGUID());
     SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetCanFly(bool enable)
+{
+    if (!Unit::SetCanFly(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_FLYING : SMSG_SPLINE_MOVE_UNSET_FLYING, 9);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Creature::SetWaterWalking(bool enable, bool packetOnly /* = false */)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_WATER_WALK : SMSG_SPLINE_MOVE_LAND_WALK);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetFeatherFall(bool enable, bool packetOnly /* = false */)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_FEATHER_FALL : SMSG_SPLINE_MOVE_NORMAL_FALL);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, true);
+    return true;
 }
 
 bool Creature::isMoving()

@@ -617,7 +617,10 @@ enum MovementFlags
             MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_FALLING | MOVEMENTFLAG_SPLINE_ELEVATION |
             MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING2,
 
-    MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT
+    MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT,
+
+    MOVEMENTFLAG_MASK_MOVING_FLY =
+            MOVEMENTFLAG_FLYING | MOVEMENTFLAG_ASCENDING
 };
 
 enum UnitTypeMask
@@ -1647,6 +1650,20 @@ class Unit : public WorldObject
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
 
+        virtual bool SetWalk(bool enable);
+        virtual bool SetDisableGravity(bool disable, bool packetOnly = false);
+        virtual bool SetSwim(bool enable);
+        virtual bool SetCanFly(bool enable);
+        virtual bool SetWaterWalking(bool enable, bool packetOnly = false);
+        virtual bool SetFeatherFall(bool enable, bool packetOnly = false);
+
+        void BuildMovementPacket(ByteBuffer *data) const;
+        void BuildHeartBeatMsg(WorldPacket* data) const;
+
+        void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false);
+        void SendTeleportPacket(Position& pos);
+        bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
+
         // Movement info
         Movement::MoveSpline * movespline;
 
@@ -1714,6 +1731,8 @@ class Unit : public WorldObject
         uint64 m_summoner;
         
         uint8 m_justCCed; // Set to 2 when getting CC aura, decremented (if > 0) every update - used to stop pet combat on target
+
+        void DisableSpline();
 
     private:
         void SendAttackStop(Unit* victim);                  // only from AttackStop(Unit*)
