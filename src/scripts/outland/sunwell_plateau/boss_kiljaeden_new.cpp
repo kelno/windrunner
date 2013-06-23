@@ -415,7 +415,8 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
 
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
-        	Kalec->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+        	plr->CastSpell((Unit*)NULL, SPELL_POSSESS_DRAKE_IMMUNE, true);
+        	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -1322,17 +1323,17 @@ public:
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
                             break;
                         case EVENT_SHADOW_SPIKE:
-                            doCast(me, SPELL_SHADOW_SPIKE);
+                            doCast((Unit*)NULL, SPELL_SHADOW_SPIKE);
                             scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
                             disableEvent(EVENT_SHADOW_SPIKE);
                             break;
                         case EVENT_FLAME_DART:
-                            doCast(me, SPELL_FLAME_DART);
+                            doCast((Unit*)NULL, SPELL_FLAME_DART);
                             scheduleEvent(EVENT_FLAME_DART, 60000);
                             break;
                         case EVENT_DARKNESS:
                             talk(EMOTE_KJ_DARKNESS);
-                            doCast(me, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
+                            doCast((Unit*)NULL, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
                             scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? 25000 : 45000);
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             break;
@@ -1354,13 +1355,13 @@ public:
                             break;
                         case EVENT_SINISTER_REFLECTION:
                         	talk(SAY_KJ_REFLECTION);
-                            doCast(me, SPELL_SINISTER_REFLECTION, true);
+                            doCast((Unit*)NULL, SPELL_SINISTER_REFLECTION, true);
 
                         	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
                         	break;
                         case EVENT_ARMAGEDDON:
                         {
-                        	doCast(me, SPELL_ARMAGEDDON_SUMMON_TRIGGER, true);
+                        	doCast((Unit*)NULL, SPELL_ARMAGEDDON_SUMMON_TRIGGER, true);
 
                             scheduleEvent(EVENT_ARMAGEDDON, 2000);
                             break;
