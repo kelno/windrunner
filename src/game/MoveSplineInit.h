@@ -20,7 +20,7 @@
 #define TRINITYSERVER_MOVESPLINEINIT_H
 
 #include "MoveSplineInitArgs.h"
-#include "PathGenerator.h"
+#include "PathFinder.h"
 
 class Unit;
 
@@ -82,7 +82,7 @@ namespace Movement
          * @param path - array of points, shouldn't be empty
          * @param pointId - Id of fisrt point of the path. Example: when third path point will be done it will notify that pointId + 3 done
          */
-        void MovebyPath(const PointsArray& path, int32 pointId = 0);
+        void MovebyPath(const PointPath& path, int32 pointId = 0);
 
         /* Initializes simple A to B motion, A is current unit's position, B is destination
          */
@@ -152,7 +152,7 @@ namespace Movement
     inline void MoveSplineInit::SetTransportExit() { args.flags.EnableTransportExit(); }
     inline void MoveSplineInit::SetOrientationFixed(bool enable) { args.flags.orientationFixed = enable; }
 
-    inline void MoveSplineInit::MovebyPath(const PointsArray& controls, int32 path_offset)
+    inline void MoveSplineInit::MovebyPath(const PointPath& controls, int32 path_offset)
     {
         args.path_Idx_offset = path_offset;
         args.path.resize(controls.size());

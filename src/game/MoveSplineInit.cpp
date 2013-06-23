@@ -20,8 +20,6 @@
 #include "MoveSpline.h"
 #include "MovementPacketBuilder.h"
 #include "Unit.h"
-#include "Transport.h"
-#include "Vehicle.h"
 #include "WorldPacket.h"
 #include "Opcodes.h"
 
@@ -43,7 +41,7 @@ namespace Movement
             else
                 return MOVE_SWIM;
         }
-        else if (moveFlags & MOVEMENTFLAG_WALKING)
+        else if (moveFlags & MOVEMENTFLAG_WALK_MODE)
         {
             //if (speed_obj.run > speed_obj.walk)
             return MOVE_WALK;
@@ -61,16 +59,7 @@ namespace Movement
         MoveSpline& move_spline = *unit->movespline;
 
         bool transport = false;
-        Location real_position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZMinusOffset(), unit->GetOrientation());
-        // Elevators also use MOVEMENTFLAG_ONTRANSPORT but we do not keep track of their position changes
-        if (unit->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT) && unit->GetTransGUID())
-        {
-            transport = true;
-            real_position.x = unit->GetTransOffsetX();
-            real_position.y = unit->GetTransOffsetY();
-            real_position.z = unit->GetTransOffsetZ();
-            real_position.orientation = unit->GetTransOffsetO();
-        }
+        Location real_position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation());
 
         // there is a big chance that current position is unknown if current state is not finalized, need compute it
         // this also allows CalculatePath spline position and update map position in much greater intervals
@@ -87,11 +76,11 @@ namespace Movement
         args.initialOrientation = real_position.orientation;
         move_spline.onTransport = transport;
 
-        uint32 moveFlags = unit->m_movementInfo.GetMovementFlags();
+        uint32 moveFlags = unit->GetUnitMovementFlags();
         moveFlags |= (MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
 
         if (moveFlags & MOVEMENTFLAG_ROOT)
-            moveFlags &= ~MOVEMENTFLAG_MASK_MOVING;
+            moveFlags &= ~MOVEMENTFLAG_MOVING;
 
         if (!args.HasVelocity)
         {
@@ -99,9 +88,9 @@ namespace Movement
             // walk move speed for it but not add walk flag to unit
             uint32 moveFlagsForSpeed = moveFlags;
             if (args.flags.walkmode)
-                moveFlagsForSpeed |= MOVEMENTFLAG_WALKING;
+                moveFlagsForSpeed |= MOVEMENTFLAG_WALK_MODE;
             else
-                moveFlagsForSpeed &= ~MOVEMENTFLAG_WALKING;
+                moveFlagsForSpeed &= ~MOVEMENTFLAG_WALK_MODE;
 
             args.velocity = unit->GetSpeed(SelectSpeedType(moveFlagsForSpeed));
         }
@@ -109,16 +98,11 @@ namespace Movement
         if (!args.Validate(unit))
             return 0;
 
-        unit->m_movementInfo.SetMovementFlags((MovementFlags)moveFlags);
+        unit->SetUnitMovementFlags((MovementFlags)moveFlags);
         move_spline.Initialize(args);
 
-        WorldPacket data(!transport ? SMSG_MONSTER_MOVE : SMSG_MONSTER_MOVE_TRANSPORT, 64);
+        WorldPacket data(SMSG_MONSTER_MOVE, 64);
         data.append(unit->GetPackGUID());
-        if (transport)
-        {
-            data.appendPackGUID(unit->GetTransGUID());
-            data << int8(unit->GetTransSeat());
-        }
 
         PacketBuilder::WriteMonsterMove(move_spline, data);
         unit->SendMessageToSet(&data, true);
@@ -130,10 +114,12 @@ namespace Movement
     {
         args.splineId = splineIdGen.NewId();
         // Elevators also use MOVEMENTFLAG_ONTRANSPORT but we do not keep track of their position changes
-        args.TransformForTransport = unit->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT) && unit->GetTransGUID();
+
+        args.TransformForTransport = unit->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+
         // mix existing state into new
-        args.flags.walkmode = unit->m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALKING);
-        args.flags.flying = unit->m_movementInfo.HasMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_DISABLE_GRAVITY));
+        args.flags.walkmode = unit->HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        args.flags.flying = unit->HasUnitMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING));
     }
 
     void MoveSplineInit::SetFacing(const Unit* target)
@@ -144,14 +130,6 @@ namespace Movement
 
     void MoveSplineInit::SetFacing(float angle)
     {
-        if (args.TransformForTransport)
-        {
-            if (Unit* vehicle = unit->GetVehicleBase())
-                angle -= vehicle->GetOrientation();
-            else if (Transport* transport = unit->GetTransport())
-                angle -= transport->GetOrientation();
-        }
-
         args.facing.angle = G3D::wrap(angle, 0.f, (float)G3D::twoPi());
         args.flags.EnableFacingAngle();
     }
@@ -160,11 +138,11 @@ namespace Movement
     {
         if (generatePath)
         {
-            PathGenerator path(unit);
-            bool result = path.CalculatePath(dest.x, dest.y, dest.z, forceDestination);
-            if (result && !(path.GetPathType() & PATHFIND_NOPATH))
+        	PathInfo path(unit);
+            bool result = path.Update(dest.x, dest.y, dest.z, false, forceDestination);
+            if (result && !(path.getPathType() & PATHFIND_NOPATH))
             {
-                MovebyPath(path.GetPath());
+                MovebyPath(path.getFullPath());
                 return;
             }
         }
@@ -177,10 +155,6 @@ namespace Movement
 
     Vector3 TransportPathTransform::operator()(Vector3 input)
     {
-        if (_transformForTransport)
-            if (TransportBase* transport = _owner->GetDirectTransport())
-                transport->CalculatePassengerOffset(input.x, input.y, input.z);
-
         return input;
     }
 }

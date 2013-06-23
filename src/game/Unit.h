@@ -614,8 +614,9 @@ enum MovementFlags
     
     MOVEMENTFLAG_MOVING =
             MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_BACKWARD | MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT |
-            MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_ROOT | MOVEMENTFLAG_JUMPING | MOVEMENTFLAG_FALLING |
-            MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING2 | MOVEMENTFLAG_SPLINE_ELEVATION,
+            MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_FALLING | MOVEMENTFLAG_SPLINE_ELEVATION |
+            MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING2,
+
     MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT
 };
 
@@ -1645,6 +1646,9 @@ class Unit : public WorldObject
         // Part of Evade mechanics
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
+
+        // Movement info
+        Movement::MoveSpline * movespline;
 
     protected:
         explicit Unit ();

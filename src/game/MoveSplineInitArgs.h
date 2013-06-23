@@ -47,10 +47,10 @@ namespace Movement
             parabolic_amplitude(0.f), time_perc(0.f), splineId(0), initialOrientation(0.f),
             HasVelocity(false), TransformForTransport(true)
         {
-            path.reserve(path_capacity);
+            path.resize(path_capacity);
         }
 
-        PointsArray path;
+        PointPath path;
         FacingInfo facing;
         MoveSplineFlag flags;
         int32 path_Idx_offset;
