@@ -157,6 +157,16 @@ SET(game_STAT_SRCS
    MovementGenerator.h
    MovementGeneratorImpl.h
    MovementHandler.cpp
+   MovementPacketBuilder.cpp
+   MovementPacketBuilder.h
+   MovementTypedefs.h
+   MovementUtil.cpp
+   MoveSpline.cpp
+   MoveSpline.h
+   MoveSplineFlag.h
+   MoveSplineInit.cpp
+   MoveSplineInit.h
+   MoveSplineInitArgs.h
    NPCHandler.cpp
    NPCHandler.h
    NullCreatureAI.cpp
@@ -244,6 +254,9 @@ SET(game_STAT_SRCS
    SpellMgr.cpp
    SpellMgr.h
    SpellScript.h
+   Spline.cpp
+   Spline.h
+   SplineImpl.h
    StatSystem.cpp
    TargetedMovementGenerator.cpp
    TargetedMovementGenerator.h
@@ -321,3 +334,4 @@ scripts
 detour
 recast
 )
+
