@@ -18846,8 +18846,6 @@ void Player::SendInitialVisiblePackets(Unit* target)
 
     if(target->isAlive())
     {
-        if(target->GetMotionMaster()->GetCurrentMovementGeneratorType() != IDLE_MOTION_TYPE)
-            target->SendMonsterMoveWithSpeedToCurrentDestination(this);
         if(target->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && target->getVictim())
             target->SendAttackStart(target->getVictim());
     }
