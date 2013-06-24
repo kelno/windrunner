@@ -115,8 +115,6 @@ namespace Movement
         args.splineId = splineIdGen.NewId();
         // Elevators also use MOVEMENTFLAG_ONTRANSPORT but we do not keep track of their position changes
 
-        args.TransformForTransport = unit->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
-
         // mix existing state into new
         args.flags.walkmode = unit->HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
         args.flags.flying = unit->HasUnitMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING));
@@ -149,12 +147,6 @@ namespace Movement
 
         args.path_Idx_offset = 0;
         args.path.resize(2);
-        TransportPathTransform transform(unit, args.TransformForTransport);
-        args.path[1] = transform(dest);
-    }
-
-    Vector3 TransportPathTransform::operator()(Vector3 input)
-    {
-        return input;
+        args.path[1] = dest;
     }
 }

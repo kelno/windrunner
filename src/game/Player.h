@@ -2168,6 +2168,7 @@ class Player : public Unit
         bool SetCanFly(bool apply);
         bool SetWaterWalking(bool apply, bool packetOnly = false);
         bool SetFeatherFall(bool apply, bool packetOnly = false);
+        bool SetHover(bool enable, bool packetOnly = false);
 
         void HandleDrowning(uint32 time_diff);
         void HandleFallDamage(MovementInfo& movementInfo);

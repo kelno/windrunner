@@ -9510,14 +9510,6 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
     }
 }
 
-void Unit::SetHover(bool on)
-{
-    if(on)
-        CastSpell(this,11010,true);
-    else
-        RemoveAurasDueToSpell(11010);
-}
-
 void Unit::setDeathState(DeathState s)
 {
     if (s != ALIVE && s!= JUST_ALIVED)
@@ -12337,12 +12329,15 @@ void Unit::SetConfused(bool apply)
 {
     if(apply)
     {
+    	SetTarget(0);
         GetMotionMaster()->MoveConfused();
     }
     else
     {
         if(isAlive() && GetMotionMaster()->GetCurrentMovementGeneratorType() == CONFUSED_MOTION_TYPE)
             GetMotionMaster()->MovementExpired();
+        if (GetVictim())
+            SetTarget(GetVictim()->GetGUID());
     }
 
     if(GetTypeId() == TYPEID_PLAYER)
@@ -12755,19 +12750,19 @@ bool Unit::SetWalk(bool enable)
     return true;
 }
 
-bool Unit::SetDisableGravity(bool disable, bool /*packetOnly = false*/)
+bool Unit::SetDisableGravity(bool disable)
 {
-    if (disable == HasUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY))
+    if (disable == IsLevitating())
         return false;
 
     if (disable)
     {
-        AddUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY);
+        AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
         RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
     }
     else
     {
-        RemoveUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY);
+        RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
         if (!HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
             AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
     }
@@ -12832,6 +12827,36 @@ bool Unit::SetFeatherFall(bool enable, bool /*packetOnly = false */)
         RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW);
 
     return true;
+}
+
+bool Unit::SetHover(bool enable, bool /*packetOnly = false*/)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+        return false;
+
+    if (enable)
+    {
+        //! No need to check height on ascent
+        AddUnitMovementFlag(MOVEMENTFLAG_HOVER);
+        // Hack value (can be sniff, in creature_template for tc2)
+        UpdateHeight(GetPositionZ() + 1.0f);
+    }
+    else
+    {
+        RemoveUnitMovementFlag(MOVEMENTFLAG_HOVER);
+        // Hack value (can be sniff, in creature_template for tc2)
+        float newZ = GetPositionZ() - 1.0f;
+        UpdateAllowedPositionZ(GetPositionX(), GetPositionY(), newZ);
+        UpdateHeight(newZ);
+    }
+
+    return true;
+}
+
+//! Only server-side height update, does not broadcast to client
+void Unit::UpdateHeight(float newZ)
+{
+    Relocate(GetPositionX(), GetPositionY(), newZ);
 }
 
 void Unit::BuildMovementPacket(ByteBuffer *data) const
@@ -12995,6 +13020,11 @@ void Unit::DisableSpline()
 {
 	RemoveUnitMovementFlag(MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
     movespline->_Interrupt();
+}
+
+bool Unit::IsFalling() const
+{
+    return HasUnitMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
 }
 
 // From MaNGOS

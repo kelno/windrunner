@@ -4263,23 +4263,11 @@ void Spell::EffectDistract(uint32 /*i*/)
     if( unitTarget->hasUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING ) )
         return;
 
-    float angle = unitTarget->GetAngle(m_targets.m_destX, m_targets.m_destY);
+    unitTarget->SetFacingTo(unitTarget->GetAngle(destTarget));
+    unitTarget->ClearUnitState(UNIT_STATE_MOVING);
 
-    if ( unitTarget->GetTypeId() == TYPEID_PLAYER )
-    {
-        // For players just turn them
-        WorldPacket data;
-        (unitTarget->ToPlayer())->BuildTeleportAckMsg(&data, unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), angle);
-        (unitTarget->ToPlayer())->GetSession()->SendPacket( &data );
-        (unitTarget->ToPlayer())->SetPosition(unitTarget->GetPositionX(), unitTarget->GetPositionY(), unitTarget->GetPositionZ(), angle, false);
-    }
-    else
-    {
-        // Set creature Distracted, Stop it, And turn it
-        unitTarget->SetOrientation(angle);
-        unitTarget->StopMoving();
+    if (unitTarget->GetTypeId() == TYPEID_UNIT)
         unitTarget->GetMotionMaster()->MoveDistract(damage*1000);
-    }
 }
 
 void Spell::EffectPickPocket(uint32 /*i*/)
@@ -6908,47 +6896,10 @@ void Spell::EffectMomentMove(uint32 i)
     floor = unitTarget->GetMap()->GetHeight(destx,desty,z, true);
     destz = fabs(ground - z) <= fabs(floor - z) ? ground:floor;
 
-    bool col = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(mapid,x,y,z+1.5f,destx,desty,destz+1.5f,destx,desty,destz,-0.5f);
-    if(col)    // We had a collision!
-    {
-        destx -= 0.6 * cos(orientation);
-        desty -= 0.6 * sin(orientation);
-        dist = sqrt((x-destx)*(x-destx) + (y-desty)*(y-desty));
-    }
-    
-    // Check dynamic collision
-    col = unitTarget->GetMap()->getObjectHitPos(0, x, y, z+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
-
-    // Collided with a gameobject
-    if (col)
-    {
-        destx -= CONTACT_DISTANCE * cos(orientation);
-        desty -= CONTACT_DISTANCE * sin(orientation);
-        dist = sqrt((x - destx)*(x - destx) + (y - desty)*(y - desty));
-    }
-
-    step = dist/10.0f;
-    
-    int j = 0;
-    for(j; j<10 ;j++)
-    {
-        if(fabs(z - destz) > 6)
-        {
-            destx -= step * cos(orientation);
-            desty -= step * sin(orientation);
-            ground = unitTarget->GetMap()->GetHeight(destx,desty,MAX_HEIGHT,true);
-            floor = unitTarget->GetMap()->GetHeight(destx,desty,z, true);
-            destz = fabs(ground - z) <= fabs(floor - z) ? ground:floor;
-        }
-        else
-            break;
-    }
-    if(j == 9)
-    {
-        return;
-    }
-
-    unitTarget->NearTeleportTo(destx, desty, destz, orientation, unitTarget == m_caster);
+    Position pos;
+    pos.Relocate(destx, desty, destz, orientation);
+    unitTarget->GetFirstCollisionPosition(pos, unitTarget->GetDistance(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ() + 2.0f), 0.0f);
+    unitTarget->NearTeleportTo(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation, unitTarget == m_caster);
 }
 
 void Spell::EffectReputation(uint32 i)
@@ -7084,13 +7035,16 @@ void Spell::EffectCharge(uint32 i)
         break;
     }
 
-    /*if (sWorld.getConfig(CONFIG_CHARGEMOVEGEN))
-        m_caster->GetMotionMaster()->MoveCharge(target, triggeredSpellId, triggeredSpellId2);
-    else {*/
-        float x, y, z;
-        target->GetContactPoint(m_caster, x, y, z);
-        m_caster->GetMotionMaster()->MoveCharge(x, y, z);
-    //}
+    // Spell is not using explicit target - no generated path
+    if (m_preGeneratedPath.GetPathType() == PATHFIND_BLANK)
+    {
+        Position pos;
+        target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+        target->GetFirstCollisionPosition(pos, unitTarget->GetObjectSize(), unitTarget->GetRelativeAngle(m_caster));
+        m_caster->GetMotionMaster()->MoveCharge(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+    }
+    else
+        m_caster->GetMotionMaster()->MoveCharge(m_preGeneratedPath);
 
     // not all charge effects used in negative spells
     if ( !IsPositiveSpell(m_spellInfo->Id) && m_caster->GetTypeId() == TYPEID_PLAYER)

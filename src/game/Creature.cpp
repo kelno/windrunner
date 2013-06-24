@@ -434,6 +434,7 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
         ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
+    UpdateMovementFlags();
     return true;
 }
 
@@ -468,6 +469,7 @@ void Creature::Update(uint32 diff)
     }
 
     UpdateProhibitedSchools(diff);
+    UpdateMovementFlags();
 
     switch( m_deathState )
     {
@@ -642,6 +644,36 @@ void Creature::Update(uint32 diff)
         default:
             break;
     }
+}
+
+void Creature::UpdateMovementFlags()
+{
+    // Do not update movement flags if creature is controlled by a player
+    if (isPossessed())
+        return;
+
+    // Set the movement flags if the creature is in that mode. (Only fly if actually in air, only swim if in water, etc)
+    float ground = GetMap()->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ());
+
+    bool isInAir = (G3D::fuzzyGt(GetPositionZ(), ground + 0.05f) || G3D::fuzzyLt(GetPositionZ(), ground - 0.05f)); // Can be underground too, prevent the falling
+
+    if (GetCreatureInfo()->InhabitType & INHABIT_AIR && isInAir && !IsFalling())
+    {
+        if (GetCreatureInfo()->InhabitType & INHABIT_GROUND)
+            SetCanFly(true);
+        else
+            SetDisableGravity(true);
+    }
+    else
+    {
+        SetCanFly(false);
+        SetDisableGravity(false);
+    }
+
+    if (!isInAir)
+        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
+
+    SetSwim(GetCreatureInfo()->InhabitType & INHABIT_WATER && IsInWater());
 }
 
 void Creature::RegenerateMana()
@@ -1831,6 +1863,9 @@ void Creature::setDeathState(DeathState s)
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
         ResetPlayerDamageReq();
+
+        UpdateMovementFlags();
+
         Unit::setDeathState(ALIVE);
         CreatureInfo const *cinfo = GetCreatureInfo();
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
@@ -2752,22 +2787,6 @@ bool Creature::IsBetweenHPPercent(float minPercent, float maxPercent)
     return GetHealth() > minHealthAtPercent && GetHealth() < maxHealthAtPercent;
 }
 
-void Creature::SetFlying(bool apply)
-{
-    if (apply)
-    {
-        SetByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
-        AddUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-//        addUnitState(UNIT_STAT_IN_FLIGHT);
-    }
-    else
-    {
-        RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
-        RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-//        clearUnitState(UNIT_STAT_IN_FLIGHT);
-    }
-}
-
 bool Creature::SetWalk(bool enable)
 {
     if (!Unit::SetWalk(enable))
@@ -2832,6 +2851,27 @@ bool Creature::SetFeatherFall(bool enable, bool packetOnly /* = false */)
     WorldPacket data(enable ? SMSG_SPLINE_MOVE_FEATHER_FALL : SMSG_SPLINE_MOVE_NORMAL_FALL);
     data.append(GetPackGUID());
     SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetHover(bool enable, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(enable))
+        return false;
+
+    //! Unconfirmed for players:
+    if (enable)
+    	SetByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
+    else
+    	RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
+
+    if (!movespline->Initialized())
+        return true;
+
+    //! Not always a packet is sent
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_HOVER : SMSG_SPLINE_MOVE_UNSET_HOVER, 9);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
     return true;
 }
 

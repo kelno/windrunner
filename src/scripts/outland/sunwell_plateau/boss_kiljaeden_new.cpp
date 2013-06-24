@@ -700,7 +700,7 @@ public:
                     case CREATURE_ANVEENA:
                     {
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        summoned->SetFlying(true);
+                        summoned->SetHover(true);
                         summoned->SendMovementFlagUpdate();
                         summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
                         break;
@@ -762,7 +762,7 @@ public:
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
                     	{
                             pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
-                            pKalec->SetFlying(false);
+                            pKalec->SetHover(false);
                             pKalec->SendMovementFlagUpdate();
                         }
                         break;
@@ -1141,7 +1141,7 @@ public:
                         summoned->getAI()->setZoneInCombat(true);
                         break;
                     case CREATURE_SHIELD_ORB:
-                    	summoned->SetFlying(true);
+                    	summoned->SetHover(true);
                     	summoned->SendMovementFlagUpdate();
                     	break;
                 }

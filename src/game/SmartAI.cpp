@@ -721,7 +721,7 @@ void SmartAI::SetRun(bool run)
 
 void SmartAI::SetFly(bool bFly)
 {
-    me->SetFlying(bFly);
+	me->SetDisableGravity(bFly);
 }
 
 void SmartAI::SetSwimm(bool bSwimm)

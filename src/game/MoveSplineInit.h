@@ -34,19 +34,6 @@ namespace Movement
         FlyToGround = 3  // 463 = FlyToGround
     };
 
-    // Transforms coordinates from global to transport offsets
-    class TransportPathTransform
-    {
-    public:
-        TransportPathTransform(Unit* owner, bool transformForTransport)
-            : _owner(owner), _transformForTransport(transformForTransport) { }
-        Vector3 operator()(Vector3 input);
-
-    private:
-        Unit* _owner;
-        bool _transformForTransport;
-    };
-
     /*  Initializes and launches spline movement
      */
     class MoveSplineInit
@@ -82,7 +69,7 @@ namespace Movement
          * @param path - array of points, shouldn't be empty
          * @param pointId - Id of fisrt point of the path. Example: when third path point will be done it will notify that pointId + 3 done
          */
-        void MovebyPath(const PointPath& path, int32 pointId = 0);
+        void MovebyPath(const PointsArray& path, int32 pointId = 0);
 
         /* Initializes simple A to B motion, A is current unit's position, B is destination
          */
@@ -152,11 +139,11 @@ namespace Movement
     inline void MoveSplineInit::SetTransportExit() { args.flags.EnableTransportExit(); }
     inline void MoveSplineInit::SetOrientationFixed(bool enable) { args.flags.orientationFixed = enable; }
 
-    inline void MoveSplineInit::MovebyPath(const PointPath& controls, int32 path_offset)
+    inline void MoveSplineInit::MovebyPath(const PointsArray& controls, int32 path_offset)
     {
         args.path_Idx_offset = path_offset;
         args.path.resize(controls.size());
-        std::transform(controls.begin(), controls.end(), args.path.begin(), TransportPathTransform(unit, args.TransformForTransport));
+        args.path = controls;
     }
 
     inline void MoveSplineInit::MoveTo(float x, float y, float z, bool generatePath, bool forceDestination)
@@ -179,14 +166,11 @@ namespace Movement
 
     inline void MoveSplineInit::SetFacing(Vector3 const& spot)
     {
-        TransportPathTransform transform(unit, args.TransformForTransport);
-        Vector3 finalSpot = transform(spot);
+        Vector3 finalSpot = spot;
         args.facing.f.x = finalSpot.x;
         args.facing.f.y = finalSpot.y;
         args.facing.f.z = finalSpot.z;
         args.flags.EnableFacingPoint();
     }
-
-    inline void MoveSplineInit::DisableTransportPathTransformations() { args.TransformForTransport = false; }
 }
 #endif // TRINITYSERVER_MOVESPLINEINIT_H

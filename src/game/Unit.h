@@ -395,7 +395,8 @@ enum UnitState
     UNIT_STAT_CHARGE_MOVE           = 0x00200000,
     UNIT_STAT_ROTATING              = 0x00400000,
     UNIT_STAT_FORCEROOT             = 0x00800000,
-    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STAT_CHARGE_MOVE),
+    UNIT_STATE_CONFUSED_MOVE        = 0x01000000,
+    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STAT_CHARGE_MOVE | UNIT_STATE_CONFUSED_MOVE),
     UNIT_STAT_LOST_CONTROL          = (UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING | UNIT_STAT_CHARGING),
     UNIT_STAT_SIGHTLESS             = (UNIT_STAT_LOST_CONTROL),
     UNIT_STAT_CANNOT_AUTOATTACK     = (UNIT_STAT_LOST_CONTROL | UNIT_STAT_CASTING),
@@ -1514,7 +1515,6 @@ class Unit : public WorldObject
         float GetSpeedRate( UnitMoveType mtype ) const { return m_speed_rate[mtype]; }
         void SetSpeed(UnitMoveType mtype, float rate, bool forced = false, bool withPet = true);
 
-        void SetHover(bool on);
         bool isHover() const { return HasAuraType(SPELL_AURA_HOVER); }
 
         void _RemoveAllAuraMods();
@@ -1535,6 +1535,8 @@ class Unit : public WorldObject
 
         bool IsStopped() const { return !(hasUnitState(UNIT_STAT_MOVING)); }
         void StopMoving();
+
+        bool IsFalling() const;
 
         void AddUnitMovementFlag(uint32 f) { m_unit_movement_flags |= f; }
         void RemoveUnitMovementFlag(uint32 f)
@@ -1649,12 +1651,16 @@ class Unit : public WorldObject
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
 
+        bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING); }
+        bool IsWalking() const { return HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
+
         virtual bool SetWalk(bool enable);
-        virtual bool SetDisableGravity(bool disable, bool packetOnly = false);
+        bool SetDisableGravity(bool disable);
         virtual bool SetSwim(bool enable);
         virtual bool SetCanFly(bool enable);
         virtual bool SetWaterWalking(bool enable, bool packetOnly = false);
         virtual bool SetFeatherFall(bool enable, bool packetOnly = false);
+        virtual bool SetHover(bool enable, bool packetOnly = false);
 
         void BuildMovementPacket(ByteBuffer *data) const;
         void BuildHeartBeatMsg(WorldPacket* data) const;
@@ -1662,6 +1668,7 @@ class Unit : public WorldObject
         void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false);
         void SendTeleportPacket(Position& pos);
         bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
+        void UpdateHeight(float newZ);
 
         // Movement info
         Movement::MoveSpline * movespline;

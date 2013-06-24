@@ -18806,6 +18806,18 @@ void Player::UpdateVisibilityOf(WorldObject* target)
 
 void Player::SendInitialVisiblePackets(Unit* target)
 {
+	if (target->HasAuraType(SPELL_AURA_FEATHER_FALL))
+		target->SetFeatherFall(true, true);
+
+	if (target->HasAuraType(SPELL_AURA_WATER_WALK))
+		target->SetWaterWalking(true, true);
+
+	if(target->HasAuraType(SPELL_AURA_MOD_STUN))
+		target->SetRooted(true);
+
+	if (target->HasAuraType(SPELL_AURA_HOVER))
+	    target->SetHover(true, true);
+
     SendAuraDurationsForTarget(target);
 
     if (BattleGround *bg = GetBattleGround())
@@ -19113,17 +19125,17 @@ void Player::SendInitialPacketsAfterAddToMap()
             auraList.front()->ApplyModifier(true,true);
     }
 
-    if(HasAuraType(SPELL_AURA_MOD_STUN))
-        SetMovement(MOVE_ROOT);
+    if (HasAuraType(SPELL_AURA_FEATHER_FALL))
+        SetFeatherFall(true, true);
 
-    // manual send package (have code in ApplyModifier(true,true); that don't must be re-applied.
-    if(HasAuraType(SPELL_AURA_MOD_ROOT))
-    {
-        WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
-        data.append(GetPackGUID());
-        data << (uint32)2;
-        SendMessageToSet(&data,true);
-    }
+    if (HasAuraType(SPELL_AURA_WATER_WALK))
+        SetWaterWalking(true, true);
+
+    if(HasAuraType(SPELL_AURA_MOD_STUN))
+    	SetRooted(true);
+
+    if (HasAuraType(SPELL_AURA_HOVER))
+    	SetHover(true, true);
 
     // setup BG group membership if need
     if(BattleGround* currentBg = GetBattleGround())
@@ -21024,6 +21036,23 @@ bool Player::SetFeatherFall(bool apply, bool packetOnly /*= false*/)
     SendDirectMessage(&data);
 
     data.Initialize(MSG_MOVE_FEATHER_FALL, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetHover(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_HOVER : SMSG_MOVE_UNSET_HOVER, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_HOVER, 64);
     data.append(GetPackGUID());
     BuildMovementPacket(&data);
     SendMessageToSet(&data, false);
