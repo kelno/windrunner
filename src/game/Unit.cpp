@@ -256,6 +256,8 @@ Unit::Unit()
     
     _focusSpell = NULL;
     _targetLocked = false;
+
+    m_rootTimes = 0;
 }
 
 Unit::~Unit()
@@ -362,6 +364,7 @@ void Unit::Update( uint32 p_time )
     ModifyAuraState(AURA_STATE_HEALTHLESS_20_PERCENT, GetHealth() < GetMaxHealth()*0.20f);
     ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, GetHealth() < GetMaxHealth()*0.35f);
 
+    UpdateSplineMovement(p_time);
     if(!IsUnitRotating())
         i_motionMaster.UpdateMotion(p_time);
     else
@@ -376,47 +379,12 @@ bool Unit::haveOffhandWeapon() const
         return m_canDualWield;
 }
 
-void Unit::SendMonsterMoveWithSpeedToCurrentDestination(Player* player)
+void Unit::MonsterMoveWithSpeed(float x, float y, float z, float speed, bool generatePath, bool forceDestination)
 {
-    float x, y, z;
-    if(GetMotionMaster()->GetDestination(x, y, z))
-        SendMonsterMoveWithSpeed(x, y, z, GetUnitMovementFlags(), 0, player);
-}
-
-void Unit::SendMonsterMoveWithSpeed(float x, float y, float z, uint32 MovementFlags, uint32 transitTime, Player* player)
-{
-    if (!transitTime)
-    {
-        float dx = x - GetPositionX();
-        float dy = y - GetPositionY();
-        float dz = z - GetPositionZ();
-
-        float dist = ((dx*dx) + (dy*dy) + (dz*dz));
-        if(dist<0)
-            dist = 0;
-        else
-            dist = sqrt(dist);
-
-        double speed = GetSpeed((MovementFlags & MOVEMENTFLAG_WALK_MODE) ? MOVE_WALK : MOVE_RUN);
-        if(speed<=0)
-            speed = 2.5f;
-        speed *= 0.001f;
-        transitTime = static_cast<uint32>(dist / speed + 0.5);
-    }
-    //float orientation = (float)atan2((double)dy, (double)dx);
-    SendMonsterMove(x, y, z, transitTime, player);
-}
-
-void Unit::SendMonsterStop()
-{
-    WorldPacket data( SMSG_MONSTER_MOVE, (17 + GetPackGUID().size()) );
-    data.append(GetPackGUID());
-    data << GetPositionX() << GetPositionY() << GetPositionZ();
-    data << getMSTime();
-    data << uint8(1);
-    SendMessageToSet(&data, true);
-
-    clearUnitState(UNIT_STAT_MOVE);
+	Movement::MoveSplineInit init(this);
+	init.MoveTo(x, y, z, generatePath, forceDestination);
+	init.SetVelocity(speed);
+	init.Launch();
 }
 
 void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint32 Time, Player* player)
@@ -442,72 +410,23 @@ void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint32 T
     addUnitState(UNIT_STAT_MOVE);
 }
 
-void Unit::SetFacing(float ori, WorldObject* obj)
+void Unit::SetFacingTo(float ori)
 {
-    SetOrientation(obj ? GetAngle(obj) : ori);
-
-    WorldPacket data(SMSG_MONSTER_MOVE, (1+12+4+1+(obj ? 8 : 4)+4+4+4+12+GetPackGUID().size()));
-    data.append(GetPackGUID());
-    data << uint8(0);//unk
-    data << GetPositionX() << GetPositionY() << GetPositionZ();
-    data << getMSTime();
-    if (obj)
-    {
-        data << uint8(SPLINETYPE_FACING_TARGET);
-        data << uint64(obj->GetGUID());
-    }
-    else
-    {
-        data << uint8(SPLINETYPE_FACING_ANGLE);
-        data << ori;
-    }
-    data << uint32(SPLINEFLAG_NONE);
-    data << uint32(0);//move time 0
-    data << uint32(1);//one point
-    data << GetPositionX() << GetPositionY() << GetPositionZ();
-    SendMessageToSet(&data, true);
+    Movement::MoveSplineInit init(this);
+    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
+    init.SetFacing(ori);
+    init.Launch();
 }
 
-/*void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint8 type, uint32 MovementFlags, uint32 Time, Player* player)
+void Unit::SetFacingToObject(WorldObject* object)
 {
-    WorldPacket data( SMSG_MONSTER_MOVE, (41 + GetPackGUID().size()) );
-    data.append(GetPackGUID());
+    // never face when already moving
+    if (!IsStopped())
+        return;
 
-    // Point A, starting location
-    data << GetPositionX() << GetPositionY() << GetPositionZ();
-    // unknown field - unrelated to orientation
-    // seems to increment about 1000 for every 1.7 seconds
-    // for now, we'll just use mstime
-    data << getMSTime();
-
-    data << uint8(type);                                    // unknown
-    switch(type)
-    {
-        case 0:                                             // normal packet
-            break;
-        case 1:                                             // stop packet
-            SendMessageToSet( &data, true );
-            return;
-        case 3:                                             // not used currently
-            data << uint64(0);                              // probably target guid
-            break;
-        case 4:                                             // not used currently
-            data << float(0);                               // probably orientation
-            break;
-    }
-
-    //Movement Flags (0x0 = walk, 0x100 = run, 0x200 = fly/swim)
-    data << uint32((MovementFlags & MOVEMENTFLAG_LEVITATING) ? MOVEFLAG_FLY : MOVEFLAG_WALK);
-
-    data << Time;                                           // Time in between points
-    data << uint32(1);                                      // 1 single waypoint
-    data << NewPosX << NewPosY << NewPosZ;                  // the single waypoint Point B
-
-    if(player)
-        player->GetSession()->SendPacket(&data);
-    else
-        SendMessageToSet( &data, true );
-}*/
+    /// @todo figure out under what conditions creature will move towards object instead of facing it where it currently is.
+    SetFacingTo(GetAngle(object));
+}
 
 void Unit::SendMonsterMoveByPath(Path const& path, uint32 start, uint32 end, SplineFlags flags, uint32 traveltime)
 {
@@ -9539,14 +9458,7 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
         }
 
         data.append(GetPackGUID());
-        data << uint32(0);                                  //movement flags
-        data << uint8(0);                                   //unk
-        data << uint32(getMSTime());
-        data << float(GetPositionX());
-        data << float(GetPositionY());
-        data << float(GetPositionZ());
-        data << float(GetOrientation());
-        data << uint32(0);                                  //flag unk
+        BuildMovementPacket(&data);
         data << float(GetSpeed(mtype));
         SendMessageToSet( &data, true );
     }
@@ -9602,14 +9514,6 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
                 minipet->SetSpeed(mtype, m_speed_rate[mtype], forced);
         }
     }
-}
-
-void Unit::SetHover(bool on)
-{
-    if(on)
-        CastSpell(this,11010,true);
-    else
-        RemoveAurasDueToSpell(11010);
 }
 
 void Unit::setDeathState(DeathState s)
@@ -11326,21 +11230,16 @@ void Unit::SendPetAIReaction(uint64 guid)
 
 void Unit::StopMoving()
 {
-    clearUnitState(UNIT_STAT_MOVING);
+	ClearUnitState(UNIT_STATE_MOVING);
 
-    // send explicit stop packet
-    // rely on vmaps here because for example stormwind is in air
-    //float z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ(), true);
-    //if (fabs(GetPositionZ() - z) < 2.0f)
-    //    Relocate(GetPositionX(), GetPositionY(), z);
-    Relocate(GetPositionX(), GetPositionY(),GetPositionZ());
+	// not need send any packets if not in world
+	if (!IsInWorld())
+	    return;
 
-    SendMonsterStop();
-
-    // update position and orientation;
-    WorldPacket data;
-    BuildHeartBeatMsg(&data);
-    SendMessageToSet(&data,false);
+	Movement::MoveSplineInit init(this);
+	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
+	init.SetFacing(GetOrientation());
+	init.Launch();
 }
 
 void Unit::SendMovementFlagUpdate()
@@ -12361,36 +12260,51 @@ void Unit::SetStunned(bool apply)
 
 void Unit::SetRooted(bool apply)
 {
-    uint32 apply_stat = UNIT_STAT_ROOT;
     if(apply)
     {
-        SetFlag(UNIT_FIELD_FLAGS,(apply_stat<<16)); // probably wrong
+    	if (m_rootTimes > 0) // blizzard internal check?
+    	    m_rootTimes++;
+
+    	// MOVEMENTFLAG_ROOT cannot be used in conjunction with MOVEMENTFLAG_MASK_MOVING (tested 3.3.5a)
+    	// this will freeze clients. That's why we remove MOVEMENTFLAG_MASK_MOVING before
+    	// setting MOVEMENTFLAG_ROOT
+    	RemoveUnitMovementFlag(MOVEMENTFLAG_MOVING);
+    	AddUnitMovementFlag(MOVEMENTFLAG_ROOT);
 
         if(GetTypeId() == TYPEID_PLAYER)
         {
-            SetUnitMovementFlags(0);
-
             WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
             data.append(GetPackGUID());
-            data << (uint32)2;
+            data << m_rootTimes;
             SendMessageToSet(&data,true);
         }
         else
+        {
+        	WorldPacket data(SMSG_SPLINE_MOVE_ROOT, 8);
+        	data.append(GetPackGUID());
+        	SendMessageToSet(&data, true);
             (this->ToCreature())->StopMoving();
+        }
     }
     else
     {
-        RemoveFlag(UNIT_FIELD_FLAGS,(apply_stat<<16)); // probably wrong
-
         if(!hasUnitState(UNIT_STAT_STUNNED))      // prevent allow move if have also stun effect
         {
             if(GetTypeId() == TYPEID_PLAYER)
             {
                 WorldPacket data(SMSG_FORCE_MOVE_UNROOT, 10);
                 data.append(GetPackGUID());
-                data << (uint32)2;
+                data << ++m_rootTimes;
                 SendMessageToSet(&data,true);
             }
+            else
+            {
+            	WorldPacket data(SMSG_SPLINE_MOVE_UNROOT, 8);
+            	data.append(GetPackGUID());
+            	SendMessageToSet(&data, true);
+            }
+
+            RemoveUnitMovementFlag(MOVEMENTFLAG_ROOT);
         }
     }
 }
@@ -12421,12 +12335,15 @@ void Unit::SetConfused(bool apply)
 {
     if(apply)
     {
+    	SetTarget(0);
         GetMotionMaster()->MoveConfused();
     }
     else
     {
         if(isAlive() && GetMotionMaster()->GetCurrentMovementGeneratorType() == CONFUSED_MOTION_TYPE)
             GetMotionMaster()->MovementExpired();
+        if (GetVictim())
+            SetTarget(GetVictim()->GetGUID());
     }
 
     if(GetTypeId() == TYPEID_PLAYER)
@@ -12826,36 +12743,294 @@ void Unit::SetFullTauntImmunity(bool apply)
     ApplySpellImmune(0, IMMUNITY_ID, 53477, apply);
 }
 
-void Unit::MonsterMoveByPath(float x, float y, float z, uint32 speed, bool smoothPath)
+bool Unit::SetWalk(bool enable)
 {
-    PathInfo path(this, x, y, z, !smoothPath, true);
-    PointPath pointPath = path.getFullPath();
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE))
+        return false;
 
-    uint32 traveltime = uint32(pointPath.GetTotalLength()/float(speed));
-    MonsterMoveByPath(pointPath, 1, pointPath.size(), traveltime);
+    if (enable)
+        AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+    else
+        RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
+    return true;
 }
 
-void Unit::MonsterMoveByPath(Path const& path, uint32 start, uint32 end, uint32 transitTime)
+bool Unit::SetDisableGravity(bool disable)
 {
-    SplineFlags flags = GetTypeId() == TYPEID_PLAYER ? SPLINEFLAG_WALKMODE : ((SplineFlags)this->GetUnitMovementFlags());
-    SendMonsterMoveByPath(path, start, end, flags, transitTime);
+    if (disable == IsLevitating())
+        return false;
 
-    /*if (GetTypeId() != TYPEID_PLAYER)
+    if (disable)
     {
-        Creature* c = (Creature*)this;
-        // Creature relocation acts like instant movement generator, so current generator expects interrupt/reset calls to react properly
-        if (!c->GetMotionMaster()->empty())
-            if (MovementGenerator *movgen = c->GetMotionMaster()->top())
-                movgen->Interrupt(*c);
+        AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
+    }
+    else
+    {
+        RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+        if (!HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
+            AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+    }
 
-        GetMap()->CreatureRelocation((Creature*)this, path[end-1].x, path[end-1].y, path[end-1].z, 0.0f);
+    return true;
+}
 
-        // finished relocation, movegen can different from top before creature relocation,
-        // but apply Reset expected to be safe in any case
-        if (!c->GetMotionMaster()->empty())
-            if (MovementGenerator *movgen = c->GetMotionMaster()->top())
-                movgen->Reset(*c);
-    }*/
+bool Unit::SetSwim(bool enable)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING))
+        return false;
+
+    if (enable)
+        AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+    else
+        RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+
+    return true;
+}
+
+bool Unit::SetCanFly(bool enable)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
+        return false;
+
+    if (enable)
+    {
+        AddUnitMovementFlag(MOVEMENTFLAG_CAN_FLY);
+        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
+    }
+    else
+    {
+        RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_MASK_MOVING_FLY);
+        if (!HasUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY))
+            AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+    }
+
+    return true;
+}
+
+bool Unit::SetWaterWalking(bool enable, bool /*packetOnly = false */)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_WATERWALKING))
+        return false;
+
+    if (enable)
+        AddUnitMovementFlag(MOVEMENTFLAG_WATERWALKING);
+    else
+        RemoveUnitMovementFlag(MOVEMENTFLAG_WATERWALKING);
+
+    return true;
+}
+
+bool Unit::SetFeatherFall(bool enable, bool /*packetOnly = false */)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW))
+        return false;
+
+    if (enable)
+        AddUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW);
+    else
+        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW);
+
+    return true;
+}
+
+bool Unit::SetHover(bool enable, bool /*packetOnly = false*/)
+{
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+        return false;
+
+    if (enable)
+    {
+        //! No need to check height on ascent
+        AddUnitMovementFlag(MOVEMENTFLAG_HOVER);
+        // Hack value (can be sniff, in creature_template for tc2)
+        UpdateHeight(GetPositionZ() + 1.0f);
+    }
+    else
+    {
+        RemoveUnitMovementFlag(MOVEMENTFLAG_HOVER);
+        // Hack value (can be sniff, in creature_template for tc2)
+        float newZ = GetPositionZ() - 1.0f;
+        UpdateAllowedPositionZ(GetPositionX(), GetPositionY(), newZ);
+        UpdateHeight(newZ);
+    }
+
+    return true;
+}
+
+//! Only server-side height update, does not broadcast to client
+void Unit::UpdateHeight(float newZ)
+{
+    Relocate(GetPositionX(), GetPositionY(), newZ);
+}
+
+void Unit::BuildMovementPacket(ByteBuffer *data) const
+{
+    data << GetUnitMovementFlags();
+    data << uint8(0);
+    data << getMSTime();
+    data << GetPositionX();
+    data << GetPositionY();
+    data << GetPositionZ();
+    data << GetOrientation();
+
+    if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
+    {
+    	if(GetTypeId() == TYPEID_PLAYER)
+    	{
+    	    *data << (uint64)(this->ToPlayer())->GetTransport()->GetGUID();
+    	    *data << (float)(this->ToPlayer())->GetTransOffsetX();
+    	    *data << (float)(this->ToPlayer())->GetTransOffsetY();
+    	    *data << (float)(this->ToPlayer())->GetTransOffsetZ();
+    	    *data << (float)(this->ToPlayer())->GetTransOffsetO();
+    	    *data << (uint32)(this->ToPlayer())->GetTransTime();
+    	}
+    	//Windrunner currently not have support for other than player on transport
+
+    }
+    if (HasMovementFlag(MovementFlags(MOVEFLAG_SWIMMING | MOVEFLAG_FLYING2)))
+    {
+        if(GetTypeId() == TYPEID_PLAYER)
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.s_pitch;
+    	else
+    	    *data << (float)0;                          // is't part of movement packet, we must store and send it...
+    }
+
+    if(GetTypeId() == TYPEID_PLAYER)
+        *data << (uint32)(this->ToPlayer())->m_movementInfo.fallTime;
+    else
+        *data << (uint32)0;                             // last fall time
+
+    // 0x00001000
+    if (GetUnitMovementFlags() & MOVEMENTFLAG_FALLING)
+    {
+    	if(GetTypeId() == TYPEID_PLAYER)
+    	{
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_unk;
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_sinAngle;
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_cosAngle;
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_xyspeed;
+    	}
+    	else
+    	{
+    	    *data << (float)0;
+    	    *data << (float)0;
+    	    *data << (float)0;
+    	    *data << (float)0;
+    	}
+    }
+
+    // 0x04000000
+    if (GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ELEVATION)
+    {
+    	if(GetTypeId() == TYPEID_PLAYER)
+    	    *data << (float)(this->ToPlayer())->m_movementInfo.u_unk1;
+    	else
+    	    *data << (float)0;
+    }
+}
+
+bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool teleport)
+{
+    // prevent crash when a bad coord is sent by the client
+    if (!Trinity::IsValidMapCoord(x, y, z, orientation))
+    {
+        TC_LOG_DEBUG(LOG_FILTER_UNITS, "Unit::UpdatePosition(%f, %f, %f) .. bad coordinates!", x, y, z);
+        return false;
+    }
+
+    bool turn = (GetOrientation() != orientation);
+    bool relocated = (teleport || GetPositionX() != x || GetPositionY() != y || GetPositionZ() != z);
+
+    if (turn)
+        RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+
+    if (relocated)
+    {
+        RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE);
+
+        // move and update visible state if need
+        if (GetTypeId() == TYPEID_PLAYER)
+            GetMap()->PlayerRelocation(ToPlayer(), x, y, z, orientation);
+        else
+            GetMap()->CreatureRelocation(ToCreature(), x, y, z, orientation);
+    }
+    else if (turn)
+        UpdateOrientation(orientation);
+
+    // code block for underwater state update
+    if (ToPlayer())
+    	ToPlayer()->UpdateUnderwaterState(GetMap(), x, y, z);
+
+    return (relocated || turn);
+}
+
+void Unit::SendTeleportPacket(Position& pos)
+{
+    Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
+    if (GetTypeId() == TYPEID_UNIT)
+        Relocate(&pos);
+
+    WorldPacket data2(MSG_MOVE_TELEPORT, 38);
+    data2.append(GetPackGUID());
+    BuildMovementPacket(&data2);
+    if (GetTypeId() == TYPEID_UNIT)
+        Relocate(&oldPos);
+    if (GetTypeId() == TYPEID_PLAYER)
+        Relocate(&pos);
+    SendMessageToSet(&data2, false);
+}
+
+void Unit::NearTeleportTo(float x, float y, float z, float orientation, bool casting /*= false*/)
+{
+    DisableSpline();
+    if (GetTypeId() == TYPEID_PLAYER)
+        ToPlayer()->TeleportTo(GetMapId(), x, y, z, orientation, TELE_TO_NOT_LEAVE_TRANSPORT | TELE_TO_NOT_LEAVE_COMBAT | TELE_TO_NOT_UNSUMMON_PET | (casting ? TELE_TO_SPELL : 0));
+    else
+    {
+        Position pos = {x, y, z, orientation};
+        SendTeleportPacket(pos);
+        UpdatePosition(x, y, z, orientation, true);
+        ObjectAccessor::UpdateObjectVisibility(this);
+    }
+}
+
+void Unit::UpdateSplineMovement(uint32 t_diff)
+{
+    uint32 const positionUpdateDelay = 400;
+
+    if (movespline->Finalized())
+        return;
+
+    movespline->updateState(t_diff);
+    bool arrived = movespline->Finalized();
+
+    if (arrived)
+        DisableSpline();
+
+    m_movesplineTimer.Update(t_diff);
+    if (m_movesplineTimer.Passed() || arrived)
+    {
+        m_movesplineTimer.Reset(positionUpdateDelay);
+        Movement::Location loc = movespline->ComputePosition();
+
+        if (HasUnitState(UNIT_STATE_CANNOT_TURN))
+            loc.orientation = GetOrientation();
+
+        UpdatePosition(loc.x, loc.y, loc.z, loc.orientation);
+    }
+}
+
+void Unit::DisableSpline()
+{
+	RemoveUnitMovementFlag(MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
+    movespline->_Interrupt();
+}
+
+bool Unit::IsFalling() const
+{
+    return HasUnitMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
 }
 
 // From MaNGOS

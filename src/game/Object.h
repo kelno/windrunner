@@ -529,6 +529,8 @@ class WorldObject : public Object, public WorldLocation
             // angle to face `obj` to `this` using distance includes size of `obj`
             GetNearPoint(obj,x,y,z,obj->GetObjectSize(),distance2d,GetAngle( obj ));
         }
+        void MovePositionToFirstCollision(uint32 mapId, Position &pos, float dist, float angle);
+        void GetFirstCollisionPosition(uint32 mapId, Position &pos, float dist, float angle);
 
         float GetObjectSize() const
         {
@@ -536,6 +538,7 @@ class WorldObject : public Object, public WorldLocation
         }
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
+        void UpdateAllowedPositionZ(float x, float y, float &z) const;
 
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 
@@ -576,8 +579,6 @@ class WorldObject : public Object, public WorldLocation
 
         virtual void SendMessageToSet(WorldPacket *data, bool self, bool to_possessor = true);
         virtual void SendMessageToSetInRange(WorldPacket *data, float dist, bool self, bool to_possessor = true);
-        void BuildHeartBeatMsg( WorldPacket *data ) const;
-        void BuildTeleportAckMsg( WorldPacket *data, float x, float y, float z, float ang) const;
         bool IsBeingTeleported() { return mSemaphoreTeleport; }
         void SetSemaphoreTeleport(bool semphsetting) { mSemaphoreTeleport = semphsetting; }
 

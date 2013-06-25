@@ -177,7 +177,7 @@ struct boss_felmystAI : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
         }
         else {
-            m_creature->SetFlying(true);
+            m_creature->SetHover(true);
             me->GetMotionMaster()->MovePath(25038, true);
             m_creature->SendMovementFlagUpdate();
         }
@@ -362,7 +362,7 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetFlying(true);
+            m_creature->SetHover(true);
             m_creature->StopMoving();
             m_creature->SendMovementFlagUpdate();
             DoScriptText(YELL_TAKEOFF, m_creature);
@@ -555,7 +555,7 @@ struct boss_felmystAI : public ScriptedAI
                 case 2:
                     me->GetMotionMaster()->Clear(false);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-                    me->SetFlying(true);
+                    me->SetHover(true);
                     me->SendMovementFlagUpdate();
                     IntroTimer = 500;
                     IntroPhase++;

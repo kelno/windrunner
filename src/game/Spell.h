@@ -614,6 +614,8 @@ class Spell
         bool m_skipCheck;
 
         SpellScript* m_script;
+
+        PathInfo m_preGeneratedPath;
 };
 
 namespace Trinity

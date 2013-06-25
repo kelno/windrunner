@@ -343,16 +343,16 @@ MotionMaster::MoveCharge(float x, float y, float z)
     }
 }
 
-void
-MotionMaster::MoveCharge(Unit* target, uint32 triggeredSpellId/* = 0*/, uint32 triggeredSpellId2/* = 0*/)
+void MotionMaster::MoveCharge(PathInfo const& path)
 {
-    if (!target)
-        return;
+	G3D::Vector3 dest = path.getActualEndPosition();
 
-    if (i_owner->GetTypeId() == TYPEID_PLAYER)
-        Mutate(new ChargeMovementGenerator<Player>(target->GetGUID(), triggeredSpellId, triggeredSpellId2), MOTION_SLOT_CONTROLLED);
-    else
-        Mutate(new ChargeMovementGenerator<Creature>(target->GetGUID(), triggeredSpellId, triggeredSpellId2), MOTION_SLOT_CONTROLLED);
+    MoveCharge(dest.x, dest.y, dest.z);
+
+    Movement::MoveSplineInit init(i_owner);
+    init.MovebyPath(path.getFullPath());
+    init.SetVelocity(SPEED_CHARGE);
+    init.Launch();
 }
 
 void

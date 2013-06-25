@@ -1724,6 +1724,15 @@ uint8 Player::chatTag() const
         return 0;
 }
 
+void Player::SendTeleportAckPacket()
+{
+    WorldPacket data(MSG_MOVE_TELEPORT_ACK, 41);
+    data.append(GetPackGUID());
+    data << uint32(0);                                     // this value increments every time
+    BuildMovementPacket(&data);
+    GetSession()->SendPacket(&data);
+}
+
 bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientation, uint32 options)
 {
     if(!MapManager::IsValidMapCoord(mapid, x, y, z, orientation))
@@ -1807,10 +1816,11 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // near teleport
         if(!GetSession()->PlayerLogout())
         {
-            WorldPacket data;
-            BuildTeleportAckMsg(&data, x, y, z, orientation);
-            GetSession()->SendPacket(&data);
-            SetPosition( x, y, z, orientation, true);
+        	Position oldPos;
+        	GetPosition(&oldPos);
+        	Relocate(x, y, z, orientation);
+        	SendTeleportAckPacket();
+            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
         }
         else
             // this will be used instead of the current location in SaveToDB
@@ -18800,6 +18810,18 @@ void Player::UpdateVisibilityOf(WorldObject* target)
 
 void Player::SendInitialVisiblePackets(Unit* target)
 {
+	if (target->HasAuraType(SPELL_AURA_FEATHER_FALL))
+		target->SetFeatherFall(true, true);
+
+	if (target->HasAuraType(SPELL_AURA_WATER_WALK))
+		target->SetWaterWalking(true, true);
+
+	if(target->HasAuraType(SPELL_AURA_MOD_STUN))
+		target->SetRooted(true);
+
+	if (target->HasAuraType(SPELL_AURA_HOVER))
+	    target->SetHover(true, true);
+
     SendAuraDurationsForTarget(target);
 
     if (BattleGround *bg = GetBattleGround())
@@ -18840,8 +18862,6 @@ void Player::SendInitialVisiblePackets(Unit* target)
 
     if(target->isAlive())
     {
-        if(target->GetMotionMaster()->GetCurrentMovementGeneratorType() != IDLE_MOTION_TYPE)
-            target->SendMonsterMoveWithSpeedToCurrentDestination(this);
         if(target->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && target->getVictim())
             target->SendAttackStart(target->getVictim());
     }
@@ -19109,17 +19129,17 @@ void Player::SendInitialPacketsAfterAddToMap()
             auraList.front()->ApplyModifier(true,true);
     }
 
-    if(HasAuraType(SPELL_AURA_MOD_STUN))
-        SetMovement(MOVE_ROOT);
+    if (HasAuraType(SPELL_AURA_FEATHER_FALL))
+        SetFeatherFall(true, true);
 
-    // manual send package (have code in ApplyModifier(true,true); that don't must be re-applied.
-    if(HasAuraType(SPELL_AURA_MOD_ROOT))
-    {
-        WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
-        data.append(GetPackGUID());
-        data << (uint32)2;
-        SendMessageToSet(&data,true);
-    }
+    if (HasAuraType(SPELL_AURA_WATER_WALK))
+        SetWaterWalking(true, true);
+
+    if(HasAuraType(SPELL_AURA_MOD_STUN))
+    	SetRooted(true);
+
+    if (HasAuraType(SPELL_AURA_HOVER))
+    	SetHover(true, true);
 
     // setup BG group membership if need
     if(BattleGround* currentBg = GetBattleGround())
@@ -20973,4 +20993,72 @@ void Player::addSpamReport(uint64 reporterGUID, std::string message)
         sIRCMgr.onReportSpam(GetName(), GetGUIDLow());
         _lastSpamAlert = now;
     }
+}
+
+bool Player::SetCanFly(bool apply)
+{
+    if (!Unit::SetCanFly(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_CAN_FLY : SMSG_MOVE_UNSET_CAN_FLY, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_UPDATE_CAN_FLY, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetWaterWalking(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_WATER_WALK : SMSG_MOVE_LAND_WALK, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_WATER_WALK, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetFeatherFall(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_FEATHER_FALL : SMSG_MOVE_NORMAL_FALL, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_FEATHER_FALL, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetHover(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_HOVER : SMSG_MOVE_UNSET_HOVER, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_HOVER, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
 }
