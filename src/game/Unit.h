@@ -392,11 +392,12 @@ enum UnitState
     UNIT_STAT_MOVE                  = 0x00040000,
     UNIT_STAT_IGNORE_PATHFINDING    = 0x00080000,                     // do not use pathfinding in any MovementGenerator
     UNIT_STAT_CHARGE                = 0x00100000,                     // ChargeMovementGenerator active
-    UNIT_STAT_CHARGE_MOVE           = 0x00200000,
-    UNIT_STAT_ROTATING              = 0x00400000,
+    UNIT_STAT_ROTATING              = 0x00200000,
+    UNIT_STAT_EVADE                 = 0x00400000,
     UNIT_STAT_FORCEROOT             = 0x00800000,
     UNIT_STATE_CONFUSED_MOVE        = 0x01000000,
-    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STAT_CHARGE_MOVE | UNIT_STATE_CONFUSED_MOVE),
+    UNIT_STATE_FLEEING_MOVE         = 0x02000000,
+    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STATE_CONFUSED_MOVE),
     UNIT_STAT_LOST_CONTROL          = (UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING | UNIT_STAT_CHARGING),
     UNIT_STAT_SIGHTLESS             = (UNIT_STAT_LOST_CONTROL),
     UNIT_STAT_CANNOT_AUTOATTACK     = (UNIT_STAT_LOST_CONTROL | UNIT_STAT_CASTING),
@@ -1128,6 +1129,7 @@ class Unit : public WorldObject
         bool isGuard() const  { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GUARD); }
 
         bool isInFlight()  const { return hasUnitState(UNIT_STAT_IN_FLIGHT); }
+        bool IsFlying() const   { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING); }
 
         bool isInCombat()  const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT); }
         void CombatStart(Unit* target);
@@ -1669,6 +1671,8 @@ class Unit : public WorldObject
         void SendTeleportPacket(Position& pos);
         bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
         void UpdateHeight(float newZ);
+
+        void KnockbackFrom(float x, float y, float speedXY, float speedZ);
 
         // Movement info
         Movement::MoveSpline * movespline;

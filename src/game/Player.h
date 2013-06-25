@@ -2163,8 +2163,6 @@ class Player : public Unit
 
         bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
 
-        bool IsFlying() const { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING); }
-
         bool SetCanFly(bool apply);
         bool SetWaterWalking(bool apply, bool packetOnly = false);
         bool SetFeatherFall(bool apply, bool packetOnly = false);

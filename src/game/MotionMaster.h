@@ -40,15 +40,19 @@ enum MovementGeneratorType
     MAX_DB_MOTION_TYPE    = 3,                              // *** this and below motion types can't be set in DB.
     ANIMAL_RANDOM_MOTION_TYPE = MAX_DB_MOTION_TYPE,         // AnimalRandomMovementGenerator.h
     CONFUSED_MOTION_TYPE  = 4,                              // ConfusedMovementGenerator.h
-    TARGETED_MOTION_TYPE  = 5,                              // TargetedMovementGenerator.h
+    CHASE_MOTION_TYPE     = 5,                              // TargetedMovementGenerator.h
     HOME_MOTION_TYPE      = 6,                              // HomeMovementGenerator.h
     FLIGHT_MOTION_TYPE    = 7,                              // WaypointMovementGenerator.h
     POINT_MOTION_TYPE     = 8,                              // PointMovementGenerator.h
     FLEEING_MOTION_TYPE   = 9,                              // FleeingMovementGenerator.h
     DISTRACT_MOTION_TYPE  = 10,                             // IdleMovementGenerator.h
-    ROTATE_MOTION_TYPE    = 11, 
-    NULL_MOTION_TYPE      = 12,
-    CHARGE_MOTION_TYPE    = 13,                             // ChargeMovementGenerator.h (handles SpellEffect charge)
+    ASSISTANCE_MOTION_TYPE= 11,                             // PointMovementGenerator.h (first part of flee for assistance)
+    ASSISTANCE_DISTRACT_MOTION_TYPE = 12,                   // IdleMovementGenerator.h (second part of flee for assistance)
+    TIMED_FLEEING_MOTION_TYPE = 13,                         // FleeingMovementGenerator.h (alt.second part of flee for assistance)
+    FOLLOW_MOTION_TYPE    = 14,
+    ROTATE_MOTION_TYPE    = 15,
+    EFFECT_MOTION_TYPE    = 16,
+    NULL_MOTION_TYPE      = 17
 };
 
 enum MovementSlot
@@ -142,15 +146,29 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         void MoveIdle(MovementSlot slot = MOTION_SLOT_ACTIVE);
         void MoveTargetedHome();
         void MoveRandom(float spawndist = 0.0f);
-        void MoveFollow(Unit* target, float dist, float angle);
+        void MoveFollow(Unit* target, float dist, float angle, MovementSlot slot = MOTION_SLOT_ACTIVE);
         void MoveChase(Unit* target, float dist = 0.0f, float angle = 0.0f);
         void MoveConfused();
-        void MoveFleeing(Unit* enemy);
-        void MovePoint(uint32 id, const Position &pos)
-            { MovePoint(id, pos.m_positionX, pos.m_positionY, pos.m_positionZ); }
+        void MoveFleeing(Unit* enemy, uint32 time = 0);
+        void MovePoint(uint32 id, const Position &pos, bool usePathfinding = true)
+            { MovePoint(id, pos.m_positionX, pos.m_positionY, pos.m_positionZ, usePathfinding); }
         void MovePoint(uint32 id, float x, float y, float z, bool usePathfinding = true);
-        void MoveCharge(float x, float y, float z);
+
+        // These two movement types should only be used with creatures having landing/takeoff animations
+        void MoveLand(uint32 id, Position const& pos);
+        void MoveTakeoff(uint32 id, Position const& pos);
+
+        void MoveCharge(float x, float y, float z, float speed = 42.0f);
         void MoveCharge(PathInfo const& path);
+        void MoveKnockbackFrom(float srcX, float srcY, float speedXY, float speedZ);
+        void MoveJumpTo(float angle, float speedXY, float speedZ);
+        void MoveJump(Position const& pos, float speedXY, float speedZ, uint32 id)
+            { MoveJump(pos.m_positionX, pos.m_positionY, pos.m_positionZ, speedXY, speedZ, id); };
+        void MoveJump(float x, float y, float z, float speedXY, float speedZ, uint32 id);
+        void MoveFall(uint32 id = 0);
+
+        void MoveSeekAssistance(float x, float y, float z);
+        void MoveSeekAssistanceDistract(uint32 timer);
         void MoveTaxiFlight(uint32 path, uint32 pathnode);
         void MoveDistract(uint32 time);
         void MovePath(uint32 path_id, bool repeatable);

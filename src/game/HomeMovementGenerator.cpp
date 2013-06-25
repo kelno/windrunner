@@ -28,85 +28,63 @@
 #include "CreatureAINew.h"
 
 void
-HomeMovementGenerator<Creature>::Initialize(Creature & owner)
+HomeMovementGenerator<Creature>::Initialize(Creature* owner)
 {
-    owner.RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
     _setTargetLocation(owner);
 }
 
 void
-HomeMovementGenerator<Creature>::Finalize(Creature & owner)
+HomeMovementGenerator<Creature>::Finalize(Creature* owner)
 {
-    if (owner.GetTypeId() == TYPEID_UNIT) {
-        owner.LoadCreaturesAddon(true);
-        if (owner.IsAIEnabled) {
-            owner.AI()->JustReachedHome();
-            if (owner.getAI())
-                owner.getAI()->onReachedHome();
+	if (arrived)
+	{
+		owner->clearUnitState(UNIT_STAT_EVADE);
+		owner->SetWalk(true);
+		owner->LoadCreaturesAddon(true);
+        if (owner->IsAIEnabled)
+        {
+            owner->AI()->JustReachedHome();
+            if (owner->getAI())
+                owner->getAI()->onReachedHome();
         }
     }
 }
 
 void
-HomeMovementGenerator<Creature>::Reset(Creature &)
+HomeMovementGenerator<Creature>::Reset(Creature*)
 {
 }
 
 void
-HomeMovementGenerator<Creature>::_setTargetLocation(Creature & owner)
+HomeMovementGenerator<Creature>::_setTargetLocation(Creature* owner)
 {
-    if( !&owner )
+    if( !owner )
         return;
 
-    if( owner.hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED) )
+    if( owner->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED) )
         return;
 
-    float x, y, z;
-    owner.GetHomePosition(x, y, z, ori);
+    Movement::MoveSplineInit init(owner);
+    float x, y, z, o;
+    // at apply we can select more nice return points base at current movegen
+    if (owner->GetMotionMaster()->empty() || !owner->GetMotionMaster()->top()->GetResetPosition(owner, x, y, z))
+    {
+        owner->GetHomePosition(x, y, z, o);
+        init.SetFacing(o);
+    }
+    init.MoveTo(x, y, z);
+    init.SetWalk(false);
+    init.Launch();
 
-    CreatureTraveller traveller(owner);
-    i_destinationHolder.SetDestination(traveller, x, y, z, false);
+    arrived = false;
 
-    PathInfo path(&owner, x, y, z);
-    PointPath pointPath = path.getFullPath();
-
-    float speed = traveller.Speed() * 0.001f; // in ms
-    uint32 traveltime = uint32(pointPath.GetTotalLength() / speed);
-    modifyTravelTime(traveltime);
-
-    owner.SendMonsterMoveByPath(pointPath, 1, pointPath.size(), ((SplineFlags)owner.GetUnitMovementFlags()), traveltime);    // TODOMMAPS
-    owner.clearUnitState(UNIT_STAT_ALL_STATE);
+    owner->clearUnitState(uint32(UNIT_STAT_ALL_STATE & ~UNIT_STAT_EVADE));
 }
 
 bool
-HomeMovementGenerator<Creature>::Update(Creature &owner, const uint32& time_diff)
+HomeMovementGenerator<Creature>::Update(Creature* owner, const uint32& time_diff)
 {
-    CreatureTraveller traveller( owner);
-    
-    i_destinationHolder.UpdateTraveller(traveller, time_diff, false);
-    /*if (i_destinationHolder.UpdateTraveller(traveller, time_diff, false))
-    {
-        if (!owner.IsActive(owner))                               // force stop processing (movement can move out active zone with cleanup movegens list)
-            return true;                                    // not expire now, but already lost
-    }*/
-
-    if (time_diff > i_travel_time)
-    {
-        owner.AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-
-        // restore orientation of not moving creature at returning to home
-        if(owner.GetDefaultMovementType()==IDLE_MOTION_TYPE)
-        {
-            owner.SetOrientation(ori);
-            WorldPacket packet;
-            owner.BuildHeartBeatMsg(&packet);
-            owner.SendMessageToSet(&packet, false);
-        }
-        return false;
-    }
-
-    i_travel_time -= time_diff;
-
-    return true;
+	arrived = owner->movespline->Finalized();
+	return !arrived;
 }
 

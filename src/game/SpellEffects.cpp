@@ -7141,36 +7141,39 @@ void Spell::EffectKnockBack(uint32 i)
     if(!unitTarget)
         return;
 
-    // Effect only works on players
-    if(unitTarget->GetTypeId()!=TYPEID_PLAYER)
+    if (Creature* creatureTarget = unitTarget->ToCreature())
+        if (creatureTarget->isWorldBoss())
+            return;
+
+    // Spells with SPELL_EFFECT_KNOCK_BACK (like Thunderstorm) can't knockback target if target has ROOT/STUN
+    if (unitTarget->HasUnitState(UNIT_STATE_ROOT | UNIT_STATE_STUNNED))
         return;
 
-    float x, y;
-    if(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
-    {
-        x = m_targets.m_destX;
-        y = m_targets.m_destY;
-    }
-    else
-    {
-        x = m_caster->GetPositionX();
-        y = m_caster->GetPositionY();
-    }
+    // Instantly interrupt non melee spells being casted
+    if (unitTarget->IsNonMeleeSpellCasted(true))
+        unitTarget->InterruptNonMeleeSpells(true);
 
-    float dx = unitTarget->GetPositionX() - x;
-    float dy = unitTarget->GetPositionY() - y;
-    float vcos, vsin;
-    if(dx < 0.001f && dy < 0.001f)
+    float x, y;
+    float ratio = 0.1f;
+    float speedxy = float(m_spellInfo->EffectMiscValue[i]) * ratio;
+    float speedz = float(damage) * ratio;
+    if (speedxy < 0.1f && speedz < 0.1f)
+        return;
+
+    if (m_spellInfo->Effect[i] == SPELL_EFFECT_KNOCK_BACK_2)
     {
-        float angle = m_caster->GetMap()->rand_norm()*2*M_PI;
-        vcos = cos(angle);
-        vsin = sin(angle);
+    	if(m_targets.m_targetMask & TARGET_FLAG_DEST_LOCATION)
+    	{
+    	    x = m_targets.m_destX;
+    	    y = m_targets.m_destY;
+    	}
+    	else
+    		return;
     }
     else
     {
-        float dist = sqrt((dx*dx) + (dy*dy));
-        vcos = dx / dist;
-        vsin = dy / dist;
+    	x = m_caster->GetPositionX();
+    	y = m_caster->GetPositionY();
     }
 
     switch (m_spellInfo->Id)
@@ -7184,15 +7187,7 @@ void Spell::EffectKnockBack(uint32 i)
         }
     }
 
-    WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
-    data.append(unitTarget->GetPackGUID());
-    data << uint32(0);                                      // Sequence
-    data << float(vcos);                                    // x direction
-    data << float(vsin);                                    // y direction
-    data << float(m_spellInfo->EffectMiscValue[i])/10;      // Horizontal speed
-    data << float(damage/-10);                              // Z Movement speed (vertical)
-
-    (unitTarget->ToPlayer())->GetSession()->SendPacket(&data);
+    unitTarget->KnockbackFrom(x, y, speedxy, speedz);
 }
 
 void Spell::EffectSendTaxi(uint32 i)

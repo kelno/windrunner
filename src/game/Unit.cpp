@@ -159,7 +159,7 @@ Unit::Unit()
 : WorldObject(), i_motionMaster(this), m_ThreatManager(this), m_HostilRefManager(this)
 , m_IsInNotifyList(false), m_Notified(false), IsAIEnabled(false), NeedChangeAI(false)
 , i_AI(NULL), i_disabledAI(NULL), m_removedAurasCount(0), m_procDeep(0), m_unitTypeMask(UNIT_MASK_NONE)
-, _lastDamagedTime(0)
+, _lastDamagedTime(0), movespline(new Movement::MoveSpline())
 {
     m_objectType |= TYPEMASK_UNIT;
     m_objectTypeId = TYPEID_UNIT;
@@ -290,6 +290,7 @@ Unit::~Unit()
     }
 
     if(m_charmInfo) delete m_charmInfo;
+    delete movespline;
 
     assert(!m_attacking);
     assert(m_attackers.empty());
@@ -9541,6 +9542,9 @@ void Unit::setDeathState(DeathState s)
         ClearDiminishings();
         GetMotionMaster()->Clear(false);
         GetMotionMaster()->MoveIdle();
+
+        StopMoving();
+        DisableSpline();
         //without this when removing IncreaseMaxHealth aura player may stuck with 1 hp
         //do not why since in IncreaseMaxHealth currenthealth is checked
         SetHealth(0);
@@ -12223,9 +12227,8 @@ void Unit::SetStunned(bool apply)
 {
     if(apply)
     {
-        SetUInt64Value(UNIT_FIELD_TARGET, 0);
+    	SetTarget(0);
         SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
-        CastStop();
 
         // Creature specific
         if(GetTypeId() != TYPEID_PLAYER)
@@ -12237,11 +12240,13 @@ void Unit::SetStunned(bool apply)
         data.append(GetPackGUID());
         data << uint32(0);
         SendMessageToSet(&data,true);
+
+        CastStop();
     }
     else
     {
         if(isAlive() && getVictim())
-            SetUInt64Value(UNIT_FIELD_TARGET, getVictim()->GetGUID());
+        	SetTarget(getVictim()->GetGUID());
 
         // don't remove UNIT_FLAG_DISABLE_ROTATE for pet when owner is mounted (disabled pet's interface)
         Unit *pOwner = GetOwner();
@@ -12254,6 +12259,8 @@ void Unit::SetStunned(bool apply)
             data.append(GetPackGUID());
             data << uint32(0);
             SendMessageToSet(&data,true);
+
+            RemoveUnitMovementFlag(MOVEMENTFLAG_ROOT);
         }
     }
 }
@@ -12313,18 +12320,25 @@ void Unit::SetFeared(bool apply)
 {
     if(apply)
     {
+    	SetTarget(0);
+
         Unit *caster = NULL;
         Unit::AuraList const& fearAuras = GetAurasByType(SPELL_AURA_MOD_FEAR);
         if(!fearAuras.empty())
             caster = ObjectAccessor::GetUnit(*this, fearAuras.front()->GetCasterGUID());
         if(!caster)
             caster = getAttackerForHelper();
-        GetMotionMaster()->MoveFleeing(caster);             // caster==NULL processed in MoveFleeing
+        GetMotionMaster()->MoveFleeing(caster, fearAuras.empty() ? sWorld->getIntConfig(CONFIG_CREATURE_FAMILY_FLEE_DELAY) : 0);             // caster==NULL processed in MoveFleeing
     }
     else
     {
-        if(isAlive() && GetMotionMaster()->GetCurrentMovementGeneratorType() == FLEEING_MOTION_TYPE)
-            GetMotionMaster()->MovementExpired();
+        if (isAlive())
+        {
+        	if (GetMotionMaster()->GetCurrentMovementGeneratorType() == FLEEING_MOTION_TYPE)
+                GetMotionMaster()->MovementExpired();
+        	if (getVictim())
+        	    SetTarget(getVictim()->GetGUID());
+        }
     }
 
     if (GetTypeId() == TYPEID_PLAYER)
@@ -12340,10 +12354,13 @@ void Unit::SetConfused(bool apply)
     }
     else
     {
-        if(isAlive() && GetMotionMaster()->GetCurrentMovementGeneratorType() == CONFUSED_MOTION_TYPE)
-            GetMotionMaster()->MovementExpired();
-        if (GetVictim())
-            SetTarget(GetVictim()->GetGUID());
+    	if (isAlive())
+    	{
+            if (GetMotionMaster()->GetCurrentMovementGeneratorType() == CONFUSED_MOTION_TYPE)
+                GetMotionMaster()->MovementExpired();
+            if (getVictim())
+                SetTarget(getVictim()->GetGUID());
+    	}
     }
 
     if(GetTypeId() == TYPEID_PLAYER)
@@ -13031,6 +13048,39 @@ void Unit::DisableSpline()
 bool Unit::IsFalling() const
 {
     return HasUnitMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
+}
+
+void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)
+{
+    Player* player = NULL;
+    if (GetTypeId() == TYPEID_PLAYER)
+        player = (Player*)this;
+    else if (Unit* charmer = GetCharmer())
+    {
+        player = charmer->ToPlayer();
+        if (player && player->m_mover != this)
+            player = NULL;
+    }
+
+    if (!player)
+    {
+        GetMotionMaster()->MoveKnockbackFrom(x, y, speedXY, speedZ);
+    }
+    else
+    {
+        float vcos, vsin;
+        GetSinCos(x, y, vsin, vcos);
+
+        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+        data.append(GetPackGUID());
+        data << uint32(0);                                      // counter
+        data << float(vcos);                                    // x direction
+        data << float(vsin);                                    // y direction
+        data << float(speedXY);                                 // Horizontal speed
+        data << float(-speedZ);                                 // Z Movement speed (vertical)
+
+        player->GetSession()->SendPacket(&data);
+    }
 }
 
 // From MaNGOS
