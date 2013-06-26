@@ -849,6 +849,8 @@ struct TaxiPathNodeEntry
     float     z;
     uint32    actionFlag;
     uint32    delay;
+    uint32    arrivalEventID;
+    uint32    departureEventID;
 };
 
 struct TotemCategoryEntry

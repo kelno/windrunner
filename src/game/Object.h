@@ -557,6 +557,14 @@ class WorldObject : public Object, public WorldLocation
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
+        bool IsWithinDist3d(float x, float y, float z, float dist) const
+            { return IsInDist(x, y, z, dist + GetObjectSize()); }
+        bool IsWithinDist3d(Position const* pos, float dist) const
+            { return IsInDist(pos, dist + GetObjectSize()); }
+        bool IsWithinDist2d(float x, float y, float dist) const
+            { return IsInDist2d(x, y, dist + GetObjectSize()); }
+        bool IsWithinDist2d(Position const* pos, float dist) const
+            { return IsInDist2d(pos, dist + GetObjectSize()); }
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(const float x, const float y, const float z) const;
         float GetDistanceSqr(float x, float y, float z) const;

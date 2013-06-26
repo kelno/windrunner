@@ -80,13 +80,12 @@ MotionMaster::~MotionMaster()
 void
 MotionMaster::UpdateMotion(uint32 diff)
 {
-    if( i_owner->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED) ) {
-        // cancel charge if owner is not dead
-        if (!i_owner->hasUnitState(UNIT_STAT_DIED) && top()->GetMovementGeneratorType() == CHARGE_MOTION_TYPE)
-            DirectExpire(true);
-        
-        return;
-    }
+	if (!i_owner)
+	    return;
+
+    if( i_owner->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED) )
+    	return;
+
     assert( !empty() );
     m_cleanFlag |= MMCF_UPDATE;
     if (!top()->Update(i_owner, diff))
@@ -372,7 +371,7 @@ void MotionMaster::MoveFall(uint32 id /*=0*/)
 }
 
 void
-MotionMaster::MoveCharge(float x, float y, float z, float speed)
+MotionMaster::MoveCharge(float x, float y, float z, float speed, uint32 id)
 {
     if(Impl[MOTION_SLOT_CONTROLLED] && Impl[MOTION_SLOT_CONTROLLED]->GetMovementGeneratorType() != DISTRACT_MOTION_TYPE)
         return;
@@ -381,18 +380,18 @@ MotionMaster::MoveCharge(float x, float y, float z, float speed)
     {
         DEBUG_LOG("Player (GUID: %u) charge point (X: %f Y: %f Z: %f)", i_owner->GetGUIDLow(), x, y, z );
         if (sWorld.getConfig(CONFIG_CHARGEMOVEGEN))
-            Mutate(new PointMovementGenerator<Player>(0, x, y, z, true, speed), MOTION_SLOT_CONTROLLED);
+            Mutate(new PointMovementGenerator<Player>(id, x, y, z, true, speed), MOTION_SLOT_CONTROLLED);
         else
-            Mutate(new PointMovementGenerator<Player>(0, x, y, z, false, speed), MOTION_SLOT_CONTROLLED);
+            Mutate(new PointMovementGenerator<Player>(id, x, y, z, false, speed), MOTION_SLOT_CONTROLLED);
     }
     else
     {
         DEBUG_LOG("Creature (Entry: %u GUID: %u) charge point (X: %f Y: %f Z: %f)",
             i_owner->GetEntry(), i_owner->GetGUIDLow(), x, y, z );
         if (sWorld.getConfig(CONFIG_CHARGEMOVEGEN))
-            Mutate(new PointMovementGenerator<Creature>(0, x, y, z, true, speed), MOTION_SLOT_CONTROLLED);
+            Mutate(new PointMovementGenerator<Creature>(id, x, y, z, true, speed), MOTION_SLOT_CONTROLLED);
         else
-            Mutate(new PointMovementGenerator<Creature>(0, x, y, z, false, speed), MOTION_SLOT_CONTROLLED);
+            Mutate(new PointMovementGenerator<Creature>(id, x, y, z, false, speed), MOTION_SLOT_CONTROLLED);
     }
 }
 
@@ -400,7 +399,7 @@ void MotionMaster::MoveCharge(PathInfo const& path)
 {
 	G3D::Vector3 dest = path.getActualEndPosition();
 
-    MoveCharge(dest.x, dest.y, dest.z);
+    MoveCharge(dest.x, dest.y, dest.z, 42.0f, 1005);
 
     Movement::MoveSplineInit init(i_owner);
     init.MovebyPath(path.getFullPath());

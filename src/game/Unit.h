@@ -394,10 +394,12 @@ enum UnitState
     UNIT_STAT_CHARGE                = 0x00100000,                     // ChargeMovementGenerator active
     UNIT_STAT_ROTATING              = 0x00200000,
     UNIT_STAT_EVADE                 = 0x00400000,
-    UNIT_STAT_FORCEROOT             = 0x00800000,
-    UNIT_STATE_CONFUSED_MOVE        = 0x01000000,
-    UNIT_STATE_FLEEING_MOVE         = 0x02000000,
-    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STATE_CONFUSED_MOVE),
+    UNIT_STAT_ROAMING_MOVE          = 0x00800000,
+    UNIT_STAT_CONFUSED_MOVE         = 0x01000000,
+    UNIT_STAT_FLEEING_MOVE          = 0x02000000,
+    UNIT_STAT_CHASE_MOVE            = 0x04000000,
+    UNIT_STAT_FOLLOW_MOVE           = 0x08000000,
+    UNIT_STAT_MOVING                = (UNIT_STAT_ROAMING | UNIT_STAT_CHASE | UNIT_STAT_CONFUSED_MOVE),
     UNIT_STAT_LOST_CONTROL          = (UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING | UNIT_STAT_CHARGING),
     UNIT_STAT_SIGHTLESS             = (UNIT_STAT_LOST_CONTROL),
     UNIT_STAT_CANNOT_AUTOATTACK     = (UNIT_STAT_LOST_CONTROL | UNIT_STAT_CASTING),
@@ -1152,7 +1154,7 @@ class Unit : public WorldObject
         bool HasStealthAura()      const { return HasAuraType(SPELL_AURA_MOD_STEALTH); }
         bool HasInvisibilityAura() const { return HasAuraType(SPELL_AURA_MOD_INVISIBILITY); }
         bool isFeared()  const { return HasAuraType(SPELL_AURA_MOD_FEAR); }
-        bool isInRoots() const { return hasUnitState(UNIT_STAT_FORCEROOT) || HasAuraType(SPELL_AURA_MOD_ROOT); }
+        bool isInRoots() const { return HasAuraType(SPELL_AURA_MOD_ROOT); }
         bool IsPolymorphed() const;
 
         bool isFrozen() const;
