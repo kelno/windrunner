@@ -196,7 +196,7 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    }
 
 	    Map* cMap = target->GetMap();
-	    if (!cMap->IsBattleArena())
+	    if (!cmap || !cMap->IsBattleArena())
 	    {
 	    	mobArena->Whisper("Ce joueur n'est pas dans une arène.", player->GetGUID());
 	    	return;
