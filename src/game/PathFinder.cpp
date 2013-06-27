@@ -25,6 +25,24 @@
 #include "../recastnavigation/Detour/Include/DetourCommon.h"
 
 ////////////////// PathInfo //////////////////
+PathInfo::PathInfo(const Unit* owner, bool useStraightPath, bool forceDest) :
+    m_polyLength(0), m_type(PATHFIND_BLANK),
+    m_useStraightPath(useStraightPath), m_forceDestination(forceDest),
+    m_pointPathLimit(MAX_POINT_PATH_LENGTH), m_sourceUnit(owner), m_navMesh(NULL), m_navMeshQuery(NULL)
+{
+    uint32 mapId = m_sourceUnit->GetMapId();
+    if (MMAP::MMapFactory::IsPathfindingEnabled(mapId))
+    {
+        MMAP::MMapManager* mmap = MMAP::MMapFactory::createOrGetMMapManager();
+        m_navMesh = mmap->GetNavMesh(mapId);
+        m_navMeshQuery = mmap->GetNavMeshQuery(mapId, m_sourceUnit->GetInstanceId());
+        if (m_navMesh != m_navMeshQuery->getNavMesh())
+            sLog.outError("NAVMESH: navmesh from pathinfo and from nmquery don't match. MapId %d, instanceId %d", mapId, m_sourceUnit->GetInstanceId());
+    }
+
+    createFilter();
+}
+
 PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, const float destZ,
                    bool useStraightPath, bool forceDest) :
     m_polyLength(0), m_type(PATHFIND_BLANK),
@@ -68,15 +86,14 @@ PathInfo::~PathInfo() {}
 bool PathInfo::Update(const float destX, const float destY, const float destZ,
                       bool useStraightPath, bool forceDest)
 {
+	float x, y, z;
+	m_sourceUnit->GetPosition(x, y, z);
+	G3D::Vector3 newStart(x, y, z);
+	setStartPosition(newStart);
+
 	G3D::Vector3 newDest(destX, destY, destZ);
 	G3D::Vector3 oldDest = getEndPosition();
     setEndPosition(newDest);
-
-    float x, y, z;
-    m_sourceUnit->GetPosition(x, y, z);
-    G3D::Vector3 newStart(x, y, z);
-    G3D::Vector3 oldStart = getStartPosition();
-    setStartPosition(newStart);
 
     m_useStraightPath = useStraightPath;
     m_forceDestination = forceDest;
@@ -121,7 +138,7 @@ bool PathInfo::Update(const float destX, const float destY, const float destZ,
         // our target is not moving - we just coming closer
         // we are moving on precalculated path - enjoy the ride
 
-        m_pathPoints.crop(1, 0);
+        crop(1, 0);
         setNextPosition(m_pathPoints[1]);
 
         return false;

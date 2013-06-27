@@ -19,8 +19,11 @@
  */
 
 #include "PointMovementGenerator.h"
+#include "MoveSplineInit.h"
+#include "MoveSpline.h"
 #include "Errors.h"
 #include "CreatureAINew.h"
+#include "Player.h"
 #include "Creature.h"
 #include "CreatureAI.h"
 #include "MapManager.h"
@@ -33,15 +36,15 @@ void PointMovementGenerator<T>::Initialize(T* unit)
 	if (!unit->IsStopped())
 	    unit->StopMoving();
 
-	unit->AddUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+	unit->addUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
 
 	if (id == 1005)
 	    return;
 
 	Movement::MoveSplineInit init(unit);
-	init.MoveTo(i_x, i_y, i_z, m_generatePath);
-	if (speed > 0.0f)
-	    init.SetVelocity(speed);
+	init.MoveTo(i_x, i_y, i_z, m_usePathfinding);
+	if (m_speed > 0.0f)
+	    init.SetVelocity(m_speed);
 	init.Launch();
 
 	// Call for creature group update
@@ -58,19 +61,19 @@ bool PointMovementGenerator<T>::Update(T* unit, const uint32 &diff)
 
     if(unit->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED))
     {
-    	unit->ClearUnitState(UNIT_STAT_ROAMING_MOVE);
+    	unit->clearUnitState(UNIT_STAT_ROAMING_MOVE);
         return true;
     }
 
-    unit->AddUnitState(UNIT_STAT_ROAMING_MOVE);
+    unit->addUnitState(UNIT_STAT_ROAMING_MOVE);
 
     if (id != 1005 && i_recalculateSpeed && !unit->movespline->Finalized())
     {
         i_recalculateSpeed = false;
         Movement::MoveSplineInit init(unit);
-        init.MoveTo(i_x, i_y, i_z, m_generatePath);
-        if (speed > 0.0f) // Default value for point motion type is 0.0, if 0.0 spline will use GetSpeed on unit
-            init.SetVelocity(speed);
+        init.MoveTo(i_x, i_y, i_z, m_usePathfinding);
+        if (m_speed > 0.0f) // Default value for point motion type is 0.0, if 0.0 spline will use GetSpeed on unit
+            init.SetVelocity(m_speed);
         init.Launch();
 
         // Call for creature group update
@@ -85,8 +88,8 @@ bool PointMovementGenerator<T>::Update(T* unit, const uint32 &diff)
 template<class T>
 void PointMovementGenerator<T>:: Finalize(T* unit)
 {
-	if (unit->HasUnitState(UNIT_STAT_CHARGING))
-	    unit->ClearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+	if (unit->hasUnitState(UNIT_STAT_CHARGING))
+	    unit->clearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
 
 	if (unit->movespline->Finalized())
 	    MovementInform(unit);
@@ -98,7 +101,7 @@ void PointMovementGenerator<T>::Reset(T* unit)
     if (!unit->IsStopped())
         unit->StopMoving();
 
-    unit->AddUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    unit->addUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
 }
 
 template<class T>
@@ -139,7 +142,7 @@ void AssistanceMovementGenerator::Finalize(Unit* unit)
         unit->GetMotionMaster()->MoveSeekAssistanceDistract(sWorld.getConfig(CONFIG_CREATURE_FAMILY_ASSISTANCE_DELAY));
 }
 
-bool EffectMovementGenerator::Update(Unit* unit, uint32)
+bool EffectMovementGenerator::Update(Unit* unit, const uint32 &diff)
 {
     return !unit->movespline->Finalized();
 }

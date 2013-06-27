@@ -19,10 +19,10 @@
 #ifndef MANGOS_PATH_FINDER_H
 #define MANGOS_PATH_FINDER_H
 
-#include "Path.h"
 #include "MoveMapSharedDefines.h"
 #include "../recastnavigation/Detour/Include/DetourNavMesh.h"
 #include "../recastnavigation/Detour/Include/DetourNavMeshQuery.h"
+#include "MoveSplineInitArgs.h"
 
 class Unit;
 
@@ -52,6 +52,7 @@ enum PathType
 class PathInfo
 {
     public:
+	    PathInfo(Unit const* owner, bool useStraightPath = false, bool forceDest = false);
         PathInfo(Unit const* owner, const float destX, const float destY, const float destZ,
                  bool useStraightPath = false, bool forceDest = false);
         ~PathInfo();
@@ -72,7 +73,7 @@ class PathInfo
         G3D::Vector3 const& getEndPosition() const { return m_endPosition; }
         G3D::Vector3 const& getActualEndPosition() const { return m_actualEndPosition; }
 
-        Movement::PointsArray const& getFullPath() { return m_pathPoints; }
+        Movement::PointsArray const& getFullPath() const { return m_pathPoints; }
         inline PathType getPathType() const { return m_type; }
         
         void BuildShortcut();
@@ -109,6 +110,21 @@ class PathInfo
         {
             m_polyLength = 0;
             m_pathPoints.clear();
+        }
+
+        void crop(unsigned int start, unsigned int end)
+        {
+        	while(start && !m_pathPoints.empty())
+        	{
+        	    m_pathPoints.erase(m_pathPoints.begin());
+        	    --start;
+        	}
+
+        	while(end && !m_pathPoints.empty())
+        	{
+        	    m_pathPoints.pop_back();
+        	    --end;
+        	}
         }
 
         dtPolyRef getPathPolyByPosition(dtPolyRef *polyPath, uint32 polyPathSize, const float* point, float *distance = NULL);

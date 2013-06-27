@@ -22,9 +22,6 @@
 #define TRINITY_FLEEINGMOVEMENTGENERATOR_H
 
 #include "MovementGenerator.h"
-#include "DestinationHolder.h"
-#include "Traveller.h"
-#include "MapManager.h"
 
 template<class T>
 class FleeingMovementGenerator

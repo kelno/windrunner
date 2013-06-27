@@ -27,6 +27,7 @@
 
 class MovementGenerator;
 class Unit;
+class PathInfo;
 
 // Creature Entry ID used for waypoints show, visible only for GMs
 #define VISUAL_WAYPOINT 1
@@ -86,7 +87,6 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         typedef std::vector<_Ty> ExpireList;
         int i_top;
 
-        bool empty() const { return i_top < 0; }
         void pop() { Impl[i_top] = NULL; --i_top; }
         void push(_Ty _Val) { ++i_top; Impl[i_top] = _Val; }
 
@@ -110,6 +110,7 @@ class MotionMaster //: private std::stack<MovementGenerator *>
 
         int size() const { return i_top + 1; }
         _Ty top() const { return Impl[i_top]; }
+        bool empty() const { return i_top < 0; }
         _Ty GetMotionSlot(int slot) const { return Impl[slot]; }
 
         void DirectDelete(_Ty curr);
@@ -158,7 +159,7 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         void MoveLand(uint32 id, Position const& pos);
         void MoveTakeoff(uint32 id, Position const& pos);
 
-        void MoveCharge(float x, float y, float z, float speed = 42.0f, uint32 id);
+        void MoveCharge(float x, float y, float z, uint32 id, float speed = 42.0f);
         void MoveCharge(PathInfo const& path);
         void MoveKnockbackFrom(float srcX, float srcY, float speedXY, float speedZ);
         void MoveJumpTo(float angle, float speedXY, float speedZ);

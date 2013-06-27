@@ -109,14 +109,6 @@ void MapManager::checkAndCorrectGridStatesArray()
         assert(false);                                      // force a crash. Too many errors
 }
 
-Map* MapManager::FindBaseNonInstanceMap(uint32 mapId) const
-{
-    Map* map = GetBaseMap(mapId);
-    if (map && map->Instanceable())
-        return NULL;
-    return map;
-}
-
 Map*
 MapManager::_GetBaseMap(uint32 id)
 {

@@ -307,7 +307,7 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                 if(map)
                 {
                     map->CreatureRelocation(m_creature, 3706.39, -3969.15, 35.9118, 0);
-                    m_creature->AI_SendMoveToPacket(3706.39, -3969.15, 35.9118, 0, 0, 0);
+                    m_creature->MonsterMoveWithSpeed(3706.39, -3969.15, 35.9118, 0);
                 }
                 //begin swimming and summon depth charges
                 Player* player = Unit::GetPlayer(PlayerGUID);

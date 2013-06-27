@@ -1247,7 +1247,7 @@ void Spell::EffectDummy(uint32 i)
                     float z = unitTarget->GetPositionZ();
 
                     m_caster->Relocate(x, y, z);
-                    m_caster->SendMonsterMove(x, y, z, 0);
+                    m_caster->MonsterMoveWithSpeed(x, y, z, 0);
                     m_caster->CastSpell(unitTarget, 19712, false);
                     if (m_caster->ToCreature())
                         if (m_caster->ToCreature()->getAI())
@@ -1754,7 +1754,7 @@ void Spell::EffectDummy(uint32 i)
                     
                     if (unitTarget->GetEntry() != 3976 && unitTarget->GetEntry() != 4542) {
                         unitTarget->GetMotionMaster()->MoveIdle();
-                        unitTarget->SetFacing(0, m_caster);
+                        unitTarget->SetFacingToObject(m_caster);
                         unitTarget->SendMovementFlagUpdate();
                         unitTarget->ToCreature()->SetReactState(REACT_PASSIVE);
                         unitTarget->CastSpell(unitTarget, 39656, true);
@@ -4263,8 +4263,8 @@ void Spell::EffectDistract(uint32 /*i*/)
     if( unitTarget->hasUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_STUNNED | UNIT_STAT_FLEEING ) )
         return;
 
-    unitTarget->SetFacingTo(unitTarget->GetAngle(destTarget));
-    unitTarget->ClearUnitState(UNIT_STATE_MOVING);
+    unitTarget->SetFacingTo(unitTarget->GetAngle(m_targets.m_destX, m_targets.m_destY));
+    unitTarget->clearUnitState(UNIT_STAT_MOVING);
 
     if (unitTarget->GetTypeId() == TYPEID_UNIT)
         unitTarget->GetMotionMaster()->MoveDistract(damage*1000);
@@ -6901,7 +6901,7 @@ void Spell::EffectMomentMove(uint32 i)
 
     Position pos;
     pos.Relocate(destx, desty, destz, orientation);
-    unitTarget->GetFirstCollisionPosition(pos, unitTarget->GetDistance(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ() + 2.0f), 0.0f);
+    unitTarget->GetFirstCollisionPosition(unitTarget->GetMapId(), pos, unitTarget->GetDistance(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ() + 2.0f), 0.0f);
     unitTarget->NearTeleportTo(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation, unitTarget == m_caster);
 }
 
@@ -7001,10 +7001,7 @@ void Spell::EffectCharge(uint32 i)
 {
     if(!m_caster)
         return;
-        
-    if (m_caster->hasUnitState(UNIT_STAT_CHARGE|UNIT_STAT_CHARGE_MOVE))
-        return;
-    
+
     if (m_caster->ToPlayer()) {    
         if (BattleGround * bg = (m_caster->ToPlayer())->GetBattleGround()) {
             if (bg->GetStatus() == STATUS_WAIT_JOIN)
@@ -7016,7 +7013,7 @@ void Spell::EffectCharge(uint32 i)
     if(!target)
         return;
         
-    uint32 triggeredSpellId = 0, triggeredSpellId2 = 0;
+    /*uint32 triggeredSpellId = 0, triggeredSpellId2 = 0;
     switch (i) {
     case 0:
         if (m_spellInfo->Effect[1] == SPELL_EFFECT_TRIGGER_SPELL)
@@ -7036,15 +7033,15 @@ void Spell::EffectCharge(uint32 i)
         if (m_spellInfo->Effect[1] == SPELL_EFFECT_TRIGGER_SPELL)
             triggeredSpellId = m_spellInfo->EffectTriggerSpell[1];
         break;
-    }
+    }*/
 
     // Spell is not using explicit target - no generated path
-    if (m_preGeneratedPath.GetPathType() == PATHFIND_BLANK)
+    if (m_preGeneratedPath.getPathType() == PATHFIND_BLANK)
     {
         Position pos;
         target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
-        target->GetFirstCollisionPosition(pos, unitTarget->GetObjectSize(), unitTarget->GetRelativeAngle(m_caster));
-        m_caster->GetMotionMaster()->MoveCharge(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+        target->GetFirstCollisionPosition(target->GetMapId(), pos, unitTarget->GetObjectSize(), unitTarget->GetRelativeAngle(m_caster));
+        m_caster->GetMotionMaster()->MoveCharge(pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0);
     }
     else
         m_caster->GetMotionMaster()->MoveCharge(m_preGeneratedPath);
@@ -7146,7 +7143,7 @@ void Spell::EffectKnockBack(uint32 i)
             return;
 
     // Spells with SPELL_EFFECT_KNOCK_BACK (like Thunderstorm) can't knockback target if target has ROOT/STUN
-    if (unitTarget->HasUnitState(UNIT_STATE_ROOT | UNIT_STATE_STUNNED))
+    if (unitTarget->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED))
         return;
 
     // Instantly interrupt non melee spells being casted

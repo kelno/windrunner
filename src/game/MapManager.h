@@ -40,7 +40,6 @@ class MapManager : public Trinity::Singleton<MapManager, Trinity::ClassLevelLock
     public:
 
         Map* GetMap(uint32, const WorldObject* obj);
-        Map* FindBaseNonInstanceMap(uint32 mapId) const;
         Map* FindMap(uint32 mapid) { return _findMap(mapid); }
         Map* FindMap(uint32 mapid, uint32 instanceId);
 

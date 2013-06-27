@@ -405,7 +405,6 @@ Player::Player (WorldSession *session): Unit()
     m_anti_lastalarmtime = 0;    //last time when alarm generated
     m_anti_alarmcount = 0;       //alarm counter
     m_anti_TeleTime = 0;
-    m_CanFly=false;
     /////////////////////////////////
 
     m_mailsLoaded = false;
@@ -1816,9 +1815,15 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // near teleport
         if(!GetSession()->PlayerLogout())
         {
-        	Position oldPos;
-        	GetPosition(&oldPos);
+        	float oldX, oldY, oldZ, oldO;
+        	oldX = GetPositionX();
+        	oldY = GetPositionY();
+        	oldZ = GetPositionZ();
+        	oldO = GetOrientation();
+        	Position oldPos = { oldX, oldY, oldZ, oldO };
+
         	Relocate(x, y, z, orientation);
+
         	SendTeleportAckPacket();
             SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
         }

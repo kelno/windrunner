@@ -23,6 +23,8 @@
 
 #include "MovementGenerator.h"
 #include "FollowerReference.h"
+#include "Timer.h"
+#include "Unit.h"
 #include "PathFinder.h"
 
 class TargetedMovementGeneratorBase
@@ -53,7 +55,7 @@ class TargetedMovementGeneratorMedium
 
         void unitSpeedChanged() { i_recalculateTravel=true; }
         bool IsReachable() const { return (i_path) ? (i_path->getPathType() & PATHFIND_NORMAL) : true; }
-    private:
+    protected:
 
         void _setTargetLocation(T* owner, bool updateDestination);
 

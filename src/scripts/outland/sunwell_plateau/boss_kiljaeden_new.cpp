@@ -727,7 +727,7 @@ public:
                     case NPC_CORE_ENTROPIUS:
                     	summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
-                        summoned->SetFlying(true);
+                        summoned->SetHover(true);
                         summoned->SendMovementFlagUpdate();
                         m_EntropiusGuid = summoned->GetGUID();
                         break;

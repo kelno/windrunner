@@ -35,6 +35,8 @@
 #include "Group.h"
 #include "SpellAuras.h"
 #include "MapManager.h"
+#include "MoveSpline.h"
+#include "MoveSplineInit.h"
 #include "ObjectAccessor.h"
 #include "CreatureAI.h"
 #include "CreatureAINew.h"
@@ -388,29 +390,6 @@ void Unit::MonsterMoveWithSpeed(float x, float y, float z, float speed, bool gen
 	init.Launch();
 }
 
-void Unit::SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint32 Time, Player* player)
-{
-    WorldPacket data( SMSG_MONSTER_MOVE, (41 + GetPackGUID().size()) );
-    data.append(GetPackGUID());
-
-    data << GetPositionX() << GetPositionY() << GetPositionZ();
-    data << getMSTime();
-
-    data << uint8(0);
-    data << uint32((GetUnitMovementFlags() & MOVEMENTFLAG_LEVITATING) ? MOVEFLAG_FLY : MOVEFLAG_WALK);
-
-    data << Time;                                           // Time in between points
-    data << uint32(1);                                      // 1 single waypoint
-    data << NewPosX << NewPosY << NewPosZ;                  // the single waypoint Point B
-
-    if(player)
-        player->GetSession()->SendPacket(&data);
-    else
-        SendMessageToSet( &data, true );
-
-    addUnitState(UNIT_STAT_MOVE);
-}
-
 void Unit::SetFacingTo(float ori)
 {
     Movement::MoveSplineInit init(this);
@@ -427,58 +406,6 @@ void Unit::SetFacingToObject(WorldObject* object)
 
     /// @todo figure out under what conditions creature will move towards object instead of facing it where it currently is.
     SetFacingTo(GetAngle(object));
-}
-
-void Unit::SendMonsterMoveByPath(Path const& path, uint32 start, uint32 end, SplineFlags flags, uint32 traveltime)
-{
-    if (!traveltime)
-        traveltime = uint32(path.GetTotalLength(start, end) * 32);
-
-    uint32 pathSize = end - start;
-
-    uint32 packSize = (flags & SPLINEFLAG_FLYING) ? pathSize*4*3 : 4*3 + (pathSize-1)*4;
-    WorldPacket data( SMSG_MONSTER_MOVE, (GetPackGUID().size()+4+4+4+4+1+4+4+4+packSize) );
-    data.append(GetPackGUID());
-    data << GetPositionX();
-    data << GetPositionY();
-    data << GetPositionZ();
-    data << uint32(getMSTime());
-    data << uint8(0);
-    data << uint32(flags);
-    data << uint32(traveltime);
-    data << uint32(pathSize);
-
-    if (flags & SPLINEFLAG_FLYING)
-    {
-        // sending a taxi flight path
-        for (uint32 i = start; i < end; ++i)
-        {
-            data << float(((Path)path)[i].x);
-            data << float(((Path)path)[i].y);
-            data << float(((Path)path)[i].z);
-        }
-    }
-    else
-    {
-        // sending a series of points
-
-        // destination
-        data << ((Path)path)[end-1].x;
-        data << ((Path)path)[end-1].y;
-        data << ((Path)path)[end-1].z;
-
-        // all other points are relative to the center of the path
-        float mid_X = (GetPositionX() + ((Path)path)[end-1].x) * 0.5f;
-        float mid_Y = (GetPositionY() + ((Path)path)[end-1].y) * 0.5f;
-        float mid_Z = (GetPositionZ() + ((Path)path)[end-1].z) * 0.5f;
-
-        for (uint32 i = start; i < end - 1; ++i)
-            data.appendPackXYZ(mid_X - ((Path)path)[i].x, mid_Y - ((Path)path)[i].y, mid_Z - ((Path)path)[i].z);
-    }
-
-    SendMessageToSet(&data, true);
-
-    addUnitState(UNIT_STAT_MOVE);
 }
 
 void Unit::resetAttackTimer(WeaponAttackType type)
@@ -13032,7 +12959,7 @@ void Unit::UpdateSplineMovement(uint32 t_diff)
         m_movesplineTimer.Reset(positionUpdateDelay);
         Movement::Location loc = movespline->ComputePosition();
 
-        if (HasUnitState(UNIT_STATE_CANNOT_TURN))
+        if (hasUnitState(UNIT_STAT_CANNOT_TURN))
             loc.orientation = GetOrientation();
 
         UpdatePosition(loc.x, loc.y, loc.z, loc.orientation);
@@ -13058,7 +12985,7 @@ void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)
     else if (Unit* charmer = GetCharmer())
     {
         player = charmer->ToPlayer();
-        if (player && player->m_mover != this)
+        if (player && player != this)
             player = NULL;
     }
 

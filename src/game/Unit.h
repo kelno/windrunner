@@ -1194,9 +1194,6 @@ class Unit : public WorldObject
         void SetFacingToObject(WorldObject* obj = NULL);
         void SetFacingTo(float ori);
 
-        void SendMonsterMove(float NewPosX, float NewPosY, float NewPosZ, uint32 Time, Player* player = NULL);
-        void SendMonsterMoveByPath(Path const& path, uint32 start, uint32 end, SplineFlags flags = SPLINEFLAG_NONE, uint32 traveltime = 0);
-
         void MonsterMoveWithSpeed(float x, float y, float z, float speed, bool generatePath = false, bool forceDestination = false);
         void SendMovementFlagUpdate();
         void SendMovementFlagUpdate(float dist);
@@ -1793,6 +1790,8 @@ class Unit : public WorldObject
         time_t _lastDamagedTime; // Part of Evade mechanic
 
         uint32 m_rootTimes;
+
+        TimeTrackerSmall m_movesplineTimer;
 };
 
 namespace Trinity

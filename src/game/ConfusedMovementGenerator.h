@@ -22,22 +22,20 @@
 #define TRINITY_CONFUSEDGENERATOR_H
 
 #include "MovementGenerator.h"
-#include "DestinationHolder.h"
-#include "Traveller.h"
+#include "Timer.h"
 
 #define MAX_CONF_WAYPOINTS 24
 
 template<class T>
-class ConfusedMovementGenerator
-: public MovementGeneratorMedium< T, ConfusedMovementGenerator<T> >
+class ConfusedMovementGenerator : public MovementGeneratorMedium< T, ConfusedMovementGenerator<T> >
 {
     public:
-        explicit ConfusedMovementGenerator() : i_nextMoveTime(0), i_x(0), i_y(0), i_z(0) {}
+	    explicit ConfusedMovementGenerator() : i_nextMoveTime(0) {}
 
-        void Initialize(T &);
-        void Finalize(T &);
-        void Reset(T &);
-        bool Update(T &, const uint32 &);
+        void Initialize(T*);
+        void Finalize(T*);
+        void Reset(T*);
+        bool Update(T*, const uint32 &);
 
         MovementGeneratorType GetMovementGeneratorType() { return CONFUSED_MOTION_TYPE; }
     private:
@@ -45,4 +43,3 @@ class ConfusedMovementGenerator
         TimeTracker i_nextMoveTime;
 };
 #endif
-

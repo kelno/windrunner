@@ -48,8 +48,6 @@ SET(game_STAT_SRCS
    ChannelHandler.cpp
    ChannelMgr.h
    CharacterHandler.cpp
-   ChargeMovementGenerator.cpp
-   ChargeMovementGenerator.h
    Chat.cpp
    Chat.h
    ChatHandler.cpp
@@ -77,9 +75,6 @@ SET(game_STAT_SRCS
    CreatureTextMgr.h
    CreatureScript.h
    Debugcmds.cpp
-   DestinationHolder.cpp
-   DestinationHolder.h
-   DestinationHolderImp.h
    DuelHandler.cpp
    DynamicObject.cpp
    DynamicObject.h
@@ -200,7 +195,6 @@ SET(game_STAT_SRCS
    OutdoorPvPTF.h
    OutdoorPvPZM.cpp
    OutdoorPvPZM.h
-   Path.h
    PathFinder.cpp
    PathFinder.h
    PetAI.cpp
@@ -275,7 +269,6 @@ SET(game_STAT_SRCS
    Transports.h
    ThreatManager.cpp
    ThreatManager.h
-   Traveller.h
    Unit.cpp
    Unit.h
    UnitEvents.h

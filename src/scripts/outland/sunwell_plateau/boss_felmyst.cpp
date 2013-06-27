@@ -513,7 +513,7 @@ struct boss_felmystAI : public ScriptedAI
             break;
         case 11:
         {
-            m_creature->SetFlying(false);
+            m_creature->SetHover(false);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             m_creature->SendMovementFlagUpdate();
@@ -621,7 +621,7 @@ struct boss_felmystAI : public ScriptedAI
         if (justPulled && m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             justPulled = false;
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->SetFlying(false);
+            m_creature->SetHover(false);
             m_creature->SendMovementFlagUpdate();
             float x, y, z;
             m_creature->GetPosition(x, y, z);

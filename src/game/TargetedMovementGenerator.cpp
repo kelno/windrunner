@@ -22,8 +22,12 @@
 #include "TargetedMovementGenerator.h"
 #include "Errors.h"
 #include "Creature.h"
+#include "CreatureAINew.h"
 #include "MapManager.h"
 #include "World.h"
+#include "MoveSplineInit.h"
+#include "MoveSpline.h"
+#include "Player.h"
 
 #include <cmath>
 
@@ -59,7 +63,7 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
             //  be (GetCombatReach() + i_offset) away.
             // Only applies when i_target is pet's owner otherwise pets and mobs end up
             //   doing a "dance" while fighting
-            if (owner->IsPet() && i_target->GetTypeId() == TYPEID_PLAYER)
+            if (owner->isPet() && i_target->GetTypeId() == TYPEID_PLAYER)
             {
                 dist = i_target->GetCombatReach();
                 size = i_target->GetCombatReach() - i_target->GetObjectSize();
@@ -90,8 +94,8 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
         i_path = new PathInfo(owner);
 
     // allow pets to use shortcut if no path found when following their master
-    bool forceDest = (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->IsPet()
-        && owner->HasUnitState(UNIT_STATE_FOLLOW));
+    bool forceDest = (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->isPet()
+        && owner->hasUnitState(UNIT_STAT_FOLLOW));
 
     bool result = i_path->Update(x, y, z, false, forceDest);
     if (!result || (i_path->getPathType() & PATHFIND_NOPATH))
@@ -123,7 +127,7 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time
 	if (!i_target.isValid() || !i_target->IsInWorld())
 	    return false;
 
-	if (!owner || !owner->IsAlive())
+	if (!owner || !owner->isAlive())
 	    return false;
 
 	if (owner->hasUnitState(UNIT_STAT_NOT_MOVE))
@@ -156,7 +160,7 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time
 	    float allowed_dist = owner->GetCombatReach() + sWorld.getRate(RATE_TARGET_POS_RECALCULATION_RANGE);
 	    G3D::Vector3 dest = owner->movespline->FinalDestination();
 
-	    if (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->CanFly())
+	    if (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->canFly())
 	        targetMoved = !i_target->IsWithinDist3d(dest.x, dest.y, dest.z, allowed_dist);
 	    else
 	        targetMoved = !i_target->IsWithinDist2d(dest.x, dest.y, allowed_dist);
@@ -289,7 +293,7 @@ void FollowMovementGenerator<T>::Finalize(T* owner)
 template<class T>
 void FollowMovementGenerator<T>::Reset(T* owner)
 {
-    DoInitialize(owner);
+    Initialize(owner);
 }
 
 template<class T>

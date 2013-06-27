@@ -26,7 +26,8 @@
 #include "CreatureAI.h"
 //Player-specific
 #include "Player.h"
-#include "PathFinder.h"
+#include "MoveSplineInit.h"
+#include "MoveSpline.h"
 
 void WaypointMovementGenerator<Creature>::LoadPath(Creature* creature)
 {
@@ -282,7 +283,7 @@ FlightPathMovementGenerator::SetCurrentNodeAfterTeleport()
 	}
 }
 
-void FlightPathMovementGenerator::DoEventIfAny(Player* player, TaxiPathNodeEntry const& node, bool departure)
+void FlightPathMovementGenerator::DoEventIfAny(Player* player, TaxiPathNode const& node, bool departure)
 {
     if (uint32 eventid = departure ? node.departureEventID : node.arrivalEventID)
     {
@@ -312,7 +313,7 @@ void FlightPathMovementGenerator::InitEndGridInfo()
 void FlightPathMovementGenerator::PreloadEndGrid()
 {
     // used to preload the final grid where the flightmaster is
-    Map* endMap = MapManager::Instance().FindBaseNonInstanceMap(_endMapId);
+    Map* endMap = MapManager::Instance().GetBaseMap(_endMapId);
 
     // Load the grid
     if (endMap)

@@ -3926,7 +3926,7 @@ void Aura::HandleAuraModIncreaseFlightSpeed(bool apply, bool Real)
     {
     	m_target->SetCanFly(apply);
 
-    	if (!m_target && target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
+    	if (!m_target && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
     		m_target->GetMotionMaster()->MoveFall();
 
         //Players on flying mounts must be immune to polymorph

@@ -48,6 +48,8 @@
 #include "TemporarySummon.h"
 #include "DynamicTree.h"
 
+#include "MovementPacketBuilder.h"
+
 uint32 GuidHigh2TypeId(uint32 guid_hi)
 {
     switch(guid_hi)
@@ -382,7 +384,7 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2 
         if(flags2 & MOVEMENTFLAG_SPLINE_ENABLED)
         {
         	if (ToUnit())
-        	    Movement::PacketBuilder::WriteCreate(ToUnit()->movespline, *data);
+        	    Movement::PacketBuilder::WriteCreate(*ToUnit()->movespline, *data);
         }
     }
 

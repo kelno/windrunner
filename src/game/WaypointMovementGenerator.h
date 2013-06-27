@@ -130,7 +130,7 @@ class FlightPathMovementGenerator : public MovementGeneratorMedium< Player, Flig
         bool HasArrived() const { return (i_currentNode >= i_path->size()); }
         void SetCurrentNodeAfterTeleport();
         void SkipCurrentNode() { ++i_currentNode; }
-        void DoEventIfAny(Player* player, TaxiPathNodeEntry const& node, bool departure);
+        void DoEventIfAny(Player* player, TaxiPathNode const& node, bool departure);
 
         bool GetResetPos(Player*, float& x, float& y, float& z);
 

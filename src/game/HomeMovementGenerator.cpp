@@ -20,12 +20,10 @@
 
 #include "HomeMovementGenerator.h"
 #include "Creature.h"
-#include "Traveller.h"
-#include "MapManager.h"
-#include "ObjectAccessor.h"
-#include "DestinationHolderImp.h"
-#include "WorldPacket.h"
 #include "CreatureAINew.h"
+#include "WorldPacket.h"
+#include "MoveSplineInit.h"
+#include "MoveSpline.h"
 
 void
 HomeMovementGenerator<Creature>::Initialize(Creature* owner)

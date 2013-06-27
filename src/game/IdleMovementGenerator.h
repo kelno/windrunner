@@ -43,7 +43,7 @@ class RotateMovementGenerator : public MovementGenerator
         
         void Initialize(Unit*);
         void Finalize(Unit*);
-        void Reset(Unit*) {Initialize(owner); }
+        void Reset(Unit* owner) {Initialize(owner); }
         bool Update(Unit*, const uint32& diff);
         MovementGeneratorType GetMovementGeneratorType() { return ROTATE_MOTION_TYPE; }
         
@@ -59,7 +59,7 @@ class DistractMovementGenerator : public MovementGenerator
 
         void Initialize(Unit*);
         void Finalize(Unit*);
-        void Reset(Unit*) { Initialize(owner); }
+        void Reset(Unit* owner) { Initialize(owner); }
         bool Update(Unit*, const uint32& time_diff);
         MovementGeneratorType GetMovementGeneratorType() { return DISTRACT_MOTION_TYPE; }
 
