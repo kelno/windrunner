@@ -307,6 +307,8 @@ struct boss_ouroAI : public Scripted_NoMovementAI
             ResetAllTimers();
             break;
         case PHASE_BERSERK:
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->setFaction(14);
             IWantATank_Timer = IWANTATANK_TIMER2;
             DoCast(me, SPELL_BERSERK);
             //hack +100% melee damage.
