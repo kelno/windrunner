@@ -1281,7 +1281,8 @@ struct Mob_EventAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //Check if we are in combat (also updates calls threat update code)
-        bool Combat = InCombat ? UpdateVictim() : false;
+        //bool Combat = InCombat ? UpdateVictim() : false;
+        bool Combat = UpdateVictim();
 
         //Must return if creature isn't alive. Normally select hostil target and get victim prevent this
         if (!m_creature->isAlive())
