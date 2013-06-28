@@ -48,6 +48,8 @@ class MovementGenerator
 
         // used by Evade code for select point to evade with expected restart default movement
         virtual bool GetResetPosition(Unit*, float& /*x*/, float& /*y*/, float& /*z*/) { return false; }
+
+        virtual bool IsReachable() const { return true; }
 };
 
 template<class T, class D>
