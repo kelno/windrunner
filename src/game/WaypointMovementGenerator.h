@@ -135,7 +135,7 @@ class FlightPathMovementGenerator : public MovementGeneratorMedium< Player, Flig
         bool GetResetPos(Player*, float& x, float& y, float& z);
 
         void InitEndGridInfo();
-        void PreloadEndGrid();
+        void PreloadEndGrid(Player *owner);
 
     private:
         float _endGridX;                //! X coord of last node location

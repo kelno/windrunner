@@ -44,6 +44,7 @@
 #include "Pet.h"
 #include "Util.h"
 #include "Totem.h"
+#include "Transports.h"
 #include "BattleGround.h"
 #include "OutdoorPvP.h"
 #include "InstanceSaveMgr.h"
@@ -161,7 +162,7 @@ Unit::Unit()
 : WorldObject(), i_motionMaster(this), m_ThreatManager(this), m_HostilRefManager(this)
 , m_IsInNotifyList(false), m_Notified(false), IsAIEnabled(false), NeedChangeAI(false)
 , i_AI(NULL), i_disabledAI(NULL), m_removedAurasCount(0), m_procDeep(0), m_unitTypeMask(UNIT_MASK_NONE)
-, _lastDamagedTime(0), movespline(new Movement::MoveSpline())
+, _lastDamagedTime(0), movespline(new Movement::MoveSpline()), m_movesplineTimer(400)
 {
     m_objectType |= TYPEMASK_UNIT;
     m_objectTypeId = TYPEID_UNIT;
@@ -393,7 +394,7 @@ void Unit::MonsterMoveWithSpeed(float x, float y, float z, float speed, bool gen
 void Unit::SetFacingTo(float ori)
 {
     Movement::MoveSplineInit init(this);
-    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
+    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZ(), false);
     init.SetFacing(ori);
     init.Launch();
 }
@@ -11161,14 +11162,14 @@ void Unit::SendPetAIReaction(uint64 guid)
 
 void Unit::StopMoving()
 {
-	ClearUnitState(UNIT_STATE_MOVING);
+	clearUnitState(UNIT_STAT_MOVING);
 
 	// not need send any packets if not in world
 	if (!IsInWorld())
 	    return;
 
 	Movement::MoveSplineInit init(this);
-	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
+	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZ(), false);
 	init.SetFacing(GetOrientation());
 	init.Launch();
 }
@@ -12746,7 +12747,7 @@ bool Unit::SetCanFly(bool enable)
     else
     {
         RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_MASK_MOVING_FLY);
-        if (!HasUnitMovementFlag(MOVEMENTFLAG_DISABLE_GRAVITY))
+        if (!HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
             AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
     }
 
@@ -12768,13 +12769,13 @@ bool Unit::SetWaterWalking(bool enable, bool /*packetOnly = false */)
 
 bool Unit::SetFeatherFall(bool enable, bool /*packetOnly = false */)
 {
-    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW))
+    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_SAFE_FALL))
         return false;
 
     if (enable)
-        AddUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW);
+        AddUnitMovementFlag(MOVEMENTFLAG_SAFE_FALL);
     else
-        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING_SLOW);
+        RemoveUnitMovementFlag(MOVEMENTFLAG_SAFE_FALL);
 
     return true;
 }
@@ -12811,13 +12812,13 @@ void Unit::UpdateHeight(float newZ)
 
 void Unit::BuildMovementPacket(ByteBuffer *data) const
 {
-    data << GetUnitMovementFlags();
-    data << uint8(0);
-    data << getMSTime();
-    data << GetPositionX();
-    data << GetPositionY();
-    data << GetPositionZ();
-    data << GetOrientation();
+    *data << GetUnitMovementFlags();
+    *data << uint8(0);
+    *data << getMSTime();
+    *data << GetPositionX();
+    *data << GetPositionY();
+    *data << GetPositionZ();
+    *data << GetOrientation();
 
     if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
     {
@@ -12833,7 +12834,7 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
     	//Windrunner currently not have support for other than player on transport
 
     }
-    if (HasMovementFlag(MovementFlags(MOVEFLAG_SWIMMING | MOVEFLAG_FLYING2)))
+    if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
     {
         if(GetTypeId() == TYPEID_PLAYER)
     	    *data << (float)(this->ToPlayer())->m_movementInfo.s_pitch;
@@ -12880,7 +12881,7 @@ bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool tel
     // prevent crash when a bad coord is sent by the client
     if (!Trinity::IsValidMapCoord(x, y, z, orientation))
     {
-        TC_LOG_DEBUG(LOG_FILTER_UNITS, "Unit::UpdatePosition(%f, %f, %f) .. bad coordinates!", x, y, z);
+    	DEBUG_LOG("Unit::UpdatePosition(%f, %f, %f) .. bad coordinates!", x, y, z);
         return false;
     }
 
@@ -12901,7 +12902,7 @@ bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool tel
             GetMap()->CreatureRelocation(ToCreature(), x, y, z, orientation);
     }
     else if (turn)
-        UpdateOrientation(orientation);
+        SetOrientation(orientation);
 
     // code block for underwater state update
     if (ToPlayer())
@@ -12914,15 +12915,15 @@ void Unit::SendTeleportPacket(Position& pos)
 {
     Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
     if (GetTypeId() == TYPEID_UNIT)
-        Relocate(&pos);
+        Relocate(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation);
 
     WorldPacket data2(MSG_MOVE_TELEPORT, 38);
     data2.append(GetPackGUID());
     BuildMovementPacket(&data2);
     if (GetTypeId() == TYPEID_UNIT)
-        Relocate(&oldPos);
+        Relocate(oldPos.m_positionX, oldPos.m_positionY, oldPos.m_positionZ, oldPos.m_orientation);
     if (GetTypeId() == TYPEID_PLAYER)
-        Relocate(&pos);
+        Relocate(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation);
     SendMessageToSet(&data2, false);
 }
 

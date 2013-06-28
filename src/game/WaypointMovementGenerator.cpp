@@ -29,6 +29,8 @@
 #include "MoveSplineInit.h"
 #include "MoveSpline.h"
 
+#include "MapManager.h"
+
 void WaypointMovementGenerator<Creature>::LoadPath(Creature* creature)
 {
     if (!path_id)
@@ -256,7 +258,7 @@ bool FlightPathMovementGenerator::Update(Player* player, const uint32 &diff)
 	        if (pointId == i_currentNode)
 	            break;
 	        if (i_currentNode == _preloadTargetNode)
-	            PreloadEndGrid();
+	            PreloadEndGrid(player);
 	        i_currentNode += (uint32)departureEvent;
 	        departureEvent = !departureEvent;
 	    }
@@ -294,7 +296,7 @@ void FlightPathMovementGenerator::DoEventIfAny(Player* player, TaxiPathNode cons
 
 bool FlightPathMovementGenerator::GetResetPos(Player*, float& x, float& y, float& z)
 {
-    const TaxiPathNodeEntry& node = (*i_path)[i_currentNode];
+    const TaxiPathNode& node = (*i_path)[i_currentNode];
     x = node.x; y = node.y; z = node.z;
     return true;
 }
@@ -310,10 +312,10 @@ void FlightPathMovementGenerator::InitEndGridInfo()
     _endGridY = (*i_path)[nodeCount - 1].y;
 }
 
-void FlightPathMovementGenerator::PreloadEndGrid()
+void FlightPathMovementGenerator::PreloadEndGrid(Player *owner)
 {
     // used to preload the final grid where the flightmaster is
-    Map* endMap = MapManager::Instance().GetBaseMap(_endMapId);
+    Map* endMap = MapManager::Instance().GetMap(_endMapId, owner);
 
     // Load the grid
     if (endMap)

@@ -1815,12 +1815,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // near teleport
         if(!GetSession()->PlayerLogout())
         {
-        	float oldX, oldY, oldZ, oldO;
-        	oldX = GetPositionX();
-        	oldY = GetPositionY();
-        	oldZ = GetPositionZ();
-        	oldO = GetOrientation();
-        	Position oldPos = { oldX, oldY, oldZ, oldO };
+        	Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
 
         	Relocate(x, y, z, orientation);
 
