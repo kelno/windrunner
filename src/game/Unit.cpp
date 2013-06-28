@@ -12904,10 +12904,6 @@ bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool tel
     else if (turn)
         SetOrientation(orientation);
 
-    // code block for underwater state update
-    if (ToPlayer())
-    	ToPlayer()->UpdateUnderwaterState(GetMap(), x, y, z);
-
     return (relocated || turn);
 }
 
