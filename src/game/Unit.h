@@ -277,7 +277,6 @@ class Pet;
 class Totem;
 class Path;
 class PetAura;
-class Transport;
 
 struct SpellImmune
 {
@@ -1679,16 +1678,6 @@ class Unit : public WorldObject
 
         void KnockbackFrom(float x, float y, float speedXY, float speedZ);
 
-        // Transports
-        Transport * GetTransport() const { return m_transport; }
-        void SetTransport(Transport * t) { m_transport = t; }
-
-        float GetTransOffsetX() const { return m_movementInfo.transport.pos.GetPositionX(); }
-        float GetTransOffsetY() const { return m_movementInfo.transport.pos.GetPositionY(); }
-        float GetTransOffsetZ() const { return m_movementInfo.transport.pos.GetPositionZ(); }
-        float GetTransOffsetO() const { return m_movementInfo.transport.pos.GetOrientation(); }
-        uint32 GetTransTime() const { return m_movementInfo.transport.time; }
-
         // Movement info
         Movement::MoveSpline * movespline;
 
@@ -1757,9 +1746,6 @@ class Unit : public WorldObject
         uint8 m_justCCed; // Set to 2 when getting CC aura, decremented (if > 0) every update - used to stop pet combat on target
 
         void DisableSpline();
-
-        // Transports
-        Transport * m_transport;
 
     private:
         void SendAttackStop(Unit* victim);                  // only from AttackStop(Unit*)

@@ -267,29 +267,22 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
     *data << (uint8)flags;                                  // update flags
 
     uint32 mouvementFlag = MOVEMENTFLAG_NONE;
+    uint8 mouvementExtraFlag = 0;
 
     // 0x20
     if (flags & UPDATEFLAG_LIVING)
     {
     	Unit *unit = ((Unit*)this);
-
-    	if (GetTypeId() == TYPEID_UNIT)
-    	{
+    	if (unit->GetTransport())
+    		unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	else
     		unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
-    	}
-    	else if (GetTypeId() == TYPEID_PLAYER)
-    	{
-    	    Player* player = ((Player*)unit);
-    	    if (player->GetTransport())
-    	        player->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
-    	    else
-    	        player->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
-    	}
 
     	mouvementFlag = unit->GetUnitMovementFlags();
+    	mouvementExtraFlag = unit->GetExtraUnitMovementFlags();
 
     	*data << uint32(mouvementFlag);
-    	*data << uint8(0);
+    	*data << uint8(mouvementExtraFlag);
     	*data << uint32(getMSTime());
     }
 
@@ -320,15 +313,14 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
         if(mouvementFlag & MOVEMENTFLAG_ONTRANSPORT)
         {
         	if (GetTypeId() == TYPEID_PLAYER)
-        	{
-        	    *data << (uint64)ToUnit()->GetTransport()->GetGUID();
-        	    *data << (float)(ToUnit()->GetTransOffsetX());
-        	    *data << (float)(ToUnit()->GetTransOffsetY());
-        	    *data << (float)(ToUnit()->GetTransOffsetZ());
-        	    *data << (float)(ToUnit()->GetTransOffsetO());
-        	    *data << (uint32)(ToUnit()->GetTransTime());
-        	}
-        	//TrinIty currently not have support for other than player on transport
+                *data << (uint64)((WorldObject*)this)->GetTransport()->GetGUID();
+        	else
+        		*data << (uint8)0;
+        	*data << (float)((WorldObject*)this)->GetTransOffsetX();
+        	*data << (float)((WorldObject*)this)->GetTransOffsetY();
+        	*data << (float)((WorldObject*)this)->GetTransOffsetZ();
+        	*data << (float)((WorldObject*)this)->GetTransOffsetO();
+        	*data << (uint32)((WorldObject*)this)->GetTransTime();
         }
 
         if (mouvementFlag & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
@@ -978,6 +970,7 @@ WorldObject::WorldObject()
 
     m_isActive          = false;
     IsTempWorldObject   = false;
+    m_transport         = NULL;
 }
 
 void WorldObject::SetWorldObject(bool on)
@@ -1120,6 +1113,22 @@ bool WorldObject::IsWithinDistInMap(const WorldObject* obj, const float dist2com
 {
     if (!obj || !IsInMap(obj)) return false;
 
+    float sizefactor = GetObjectSize() + obj->GetObjectSize();
+    float maxdist = dist2compare + sizefactor;
+
+    if (m_transport && obj->GetTransport() &&  obj->GetTransport()->GetGUIDLow() == m_transport->GetGUIDLow())
+    {
+        float dtx = m_movementInfo.transport.pos.m_positionX - obj->m_movementInfo.transport.pos.m_positionX;
+        float dty = m_movementInfo.transport.pos.m_positionY - obj->m_movementInfo.transport.pos.m_positionY;
+        float disttsq = dtx * dtx + dty * dty;
+        if (is3D)
+        {
+            float dtz = m_movementInfo.transport.pos.m_positionZ - obj->m_movementInfo.transport.pos.m_positionZ;
+            disttsq += dtz * dtz;
+        }
+        return disttsq < (maxdist * maxdist);
+    }
+
     float dx = GetPositionX() - obj->GetPositionX();
     float dy = GetPositionY() - obj->GetPositionY();
     float distsq = dx*dx + dy*dy;
@@ -1128,8 +1137,6 @@ bool WorldObject::IsWithinDistInMap(const WorldObject* obj, const float dist2com
         float dz = GetPositionZ() - obj->GetPositionZ();
         distsq += dz*dz;
     }
-    float sizefactor = GetObjectSize() + obj->GetObjectSize();
-    float maxdist = dist2compare + sizefactor;
 
     return distsq < maxdist * maxdist;
 }

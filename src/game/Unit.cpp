@@ -164,8 +164,6 @@ Unit::Unit()
 , i_AI(NULL), i_disabledAI(NULL), m_removedAurasCount(0), m_procDeep(0), m_unitTypeMask(UNIT_MASK_NONE)
 , _lastDamagedTime(0), movespline(new Movement::MoveSpline()), m_movesplineTimer(400)
 {
-	m_transport = 0;
-
     m_objectType |= TYPEMASK_UNIT;
     m_objectTypeId = TYPEID_UNIT;
                                                             // 2.3.2 - 0x70
@@ -12827,19 +12825,20 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
     *data << GetPositionY();
     *data << GetPositionZ();
     *data << GetOrientation();
-    *data << uint32(0);
-    /*if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
+    *data << (uint8)0;
+
+    if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
     {
-    	if (GetTypeId() == TYPEID_PLAYER)
-    	{
-    	    *data << (uint64)GetTransport()->GetGUID();
-    	    *data << float (GetTransOffsetX());
-    	    *data << float (GetTransOffsetY());
-    	    *data << float (GetTransOffsetZ());
-    	    *data << float (GetTransOffsetO());
-    	    *data << uint32(GetTransTime());
-    	}
-    	//TrinIty currently not have support for other than player on transport
+    	if (GetTypeId() == TYPEID_PLAYER && GetTransport())
+    	    data->append(GetTransport()->GetPackGUID());
+    	else
+    	    *data << (uint8)0;
+
+    	*data << float (GetTransOffsetX());
+    	*data << float (GetTransOffsetY());
+    	*data << float (GetTransOffsetZ());
+    	*data << float (GetTransOffsetO());
+    	*data << uint32 (GetTransTime());
     }
 
     if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
@@ -12858,7 +12857,7 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
 
     // 0x04000000
     if (GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ELEVATION)
-    	*data << (float)m_movementInfo.splineElevation;*/
+    	*data << (float)m_movementInfo.splineElevation;
 }
 
 bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool teleport)

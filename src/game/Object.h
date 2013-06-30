@@ -100,6 +100,7 @@ class Player;
 class UpdateMask;
 class InstanceData;
 class GameObject;
+class Transport;
 
 typedef UNORDERED_MAP<Player*, UpdateData> UpdateDataMapType;
 
@@ -706,10 +707,24 @@ class WorldObject : public Object, public WorldLocation
         float m_positionX;
 
         MovementInfo m_movementInfo;
+
+        // Transports
+        Transport * GetTransport() const { return m_transport; }
+        void SetTransport(Transport * t) { m_transport = t; }
+
+        float GetTransOffsetX() const { return m_movementInfo.transport.pos.GetPositionX(); }
+        float GetTransOffsetY() const { return m_movementInfo.transport.pos.GetPositionY(); }
+        float GetTransOffsetZ() const { return m_movementInfo.transport.pos.GetPositionZ(); }
+        float GetTransOffsetO() const { return m_movementInfo.transport.pos.GetOrientation(); }
+        uint32 GetTransTime() const { return m_movementInfo.transport.time; }
+
     protected:
         explicit WorldObject();
         std::string m_name;
         bool m_isActive;
+
+        // Transports
+        Transport * m_transport;
 
     private:
         uint32 m_mapId;
