@@ -65,9 +65,9 @@ float baseMoveSpeed[MAX_MOVE_TYPE] =
 {
     2.5f,                                                   // MOVE_WALK
     7.0f,                                                   // MOVE_RUN
-    1.25f,                                                  // MOVE_RUN_BACK
+    2.5f,                                                   // MOVE_RUN_BACK
     4.722222f,                                              // MOVE_SWIM
-    4.5f,                                                   // MOVE_SWIM_BACK
+    2.5f,                                                   // MOVE_SWIM_BACK
     3.141594f,                                              // MOVE_TURN_RATE
     7.0f,                                                   // MOVE_FLIGHT
     4.5f,                                                   // MOVE_FLIGHT_BACK
@@ -164,6 +164,8 @@ Unit::Unit()
 , i_AI(NULL), i_disabledAI(NULL), m_removedAurasCount(0), m_procDeep(0), m_unitTypeMask(UNIT_MASK_NONE)
 , _lastDamagedTime(0), movespline(new Movement::MoveSpline()), m_movesplineTimer(400)
 {
+	m_transport = 0;
+
     m_objectType |= TYPEMASK_UNIT;
     m_objectTypeId = TYPEID_UNIT;
                                                             // 2.3.2 - 0x70
@@ -245,7 +247,6 @@ Unit::Unit()
         m_speed_rate[i] = 1.0f;
 
     m_charmInfo = NULL;
-    m_unit_movement_flags = 0;
     m_reducedThreatPercent = 0;
     m_misdirectionTargetGUID = 0;
     m_misdirectionLastTargetGUID = 0;
@@ -12715,7 +12716,10 @@ bool Unit::SetDisableGravity(bool disable)
     {
         RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
         if (!HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
-            AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+        {
+        	m_movementInfo.SetFallTime(0);
+        	AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+        }
     }
 
     return true;
@@ -12748,7 +12752,10 @@ bool Unit::SetCanFly(bool enable)
     {
         RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_MASK_MOVING_FLY);
         if (!HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
-            AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+        {
+        	m_movementInfo.SetFallTime(0);
+        	AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+        }
     }
 
     return true;
@@ -12813,67 +12820,45 @@ void Unit::UpdateHeight(float newZ)
 void Unit::BuildMovementPacket(ByteBuffer *data) const
 {
     *data << GetUnitMovementFlags();
-    *data << uint8(0);
+    *data << GetExtraUnitMovementFlags();
     *data << getMSTime();
+
     *data << GetPositionX();
     *data << GetPositionY();
     *data << GetPositionZ();
     *data << GetOrientation();
-
-    if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
+    *data << uint32(0);
+    /*if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
     {
-    	if(GetTypeId() == TYPEID_PLAYER)
+    	if (GetTypeId() == TYPEID_PLAYER)
     	{
-    	    *data << (uint64)(this->ToPlayer())->GetTransport()->GetGUID();
-    	    *data << (float)(this->ToPlayer())->GetTransOffsetX();
-    	    *data << (float)(this->ToPlayer())->GetTransOffsetY();
-    	    *data << (float)(this->ToPlayer())->GetTransOffsetZ();
-    	    *data << (float)(this->ToPlayer())->GetTransOffsetO();
-    	    *data << (uint32)(this->ToPlayer())->GetTransTime();
+    	    *data << (uint64)GetTransport()->GetGUID();
+    	    *data << float (GetTransOffsetX());
+    	    *data << float (GetTransOffsetY());
+    	    *data << float (GetTransOffsetZ());
+    	    *data << float (GetTransOffsetO());
+    	    *data << uint32(GetTransTime());
     	}
-    	//Windrunner currently not have support for other than player on transport
-
+    	//TrinIty currently not have support for other than player on transport
     }
+
     if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-    {
-        if(GetTypeId() == TYPEID_PLAYER)
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.s_pitch;
-    	else
-    	    *data << (float)0;                          // is't part of movement packet, we must store and send it...
-    }
+    	*data << (float)m_movementInfo.pitch;
 
-    if(GetTypeId() == TYPEID_PLAYER)
-        *data << (uint32)(this->ToPlayer())->m_movementInfo.fallTime;
-    else
-        *data << (uint32)0;                             // last fall time
+    *data << (uint32)m_movementInfo.fallTime;
 
     // 0x00001000
     if (GetUnitMovementFlags() & MOVEMENTFLAG_FALLING)
     {
-    	if(GetTypeId() == TYPEID_PLAYER)
-    	{
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_unk;
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_sinAngle;
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_cosAngle;
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.j_xyspeed;
-    	}
-    	else
-    	{
-    	    *data << (float)0;
-    	    *data << (float)0;
-    	    *data << (float)0;
-    	    *data << (float)0;
-    	}
+    	*data << (float)m_movementInfo.jump.zspeed;
+    	*data << (float)m_movementInfo.jump.sinAngle;
+    	*data << (float)m_movementInfo.jump.cosAngle;
+    	*data << (float)m_movementInfo.jump.xyspeed;
     }
 
     // 0x04000000
     if (GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ELEVATION)
-    {
-    	if(GetTypeId() == TYPEID_PLAYER)
-    	    *data << (float)(this->ToPlayer())->m_movementInfo.u_unk1;
-    	else
-    	    *data << (float)0;
-    }
+    	*data << (float)m_movementInfo.splineElevation;*/
 }
 
 bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool teleport)
@@ -12971,7 +12956,7 @@ void Unit::DisableSpline()
 
 bool Unit::IsFalling() const
 {
-    return HasUnitMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
+    return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
 }
 
 void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)

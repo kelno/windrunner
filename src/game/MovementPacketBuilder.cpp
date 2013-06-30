@@ -72,19 +72,7 @@ namespace Movement
         splineflags.enter_cycle = move_spline.isCyclic();
         data << uint32(splineflags & uint32(~MoveSplineFlag::Mask_No_Monster_Move));
 
-        if (splineflags.animation)
-        {
-            data << splineflags.getAnimationId();
-            data << move_spline.effect_start_time;
-        }
-
         data << move_spline.Duration();
-
-        if (splineflags.parabolic)
-        {
-            data << move_spline.vertical_acceleration;
-            data << move_spline.effect_start_time;
-        }
     }
 
     void WriteLinearPath(const Spline<int32>& spline, ByteBuffer& data)
@@ -168,26 +156,8 @@ namespace Movement
 
             uint32 nodes = move_spline.getPath().size();
             data << nodes;
-            for(uint32 i = 0; i < nodes; i++)
-            {
-            	data << move_spline.getPath()[i].x;
-            	data << move_spline.getPath()[i].y;
-            	data << move_spline.getPath()[i].z;
-            }
-
-            if (move_spline.isCyclic())
-            {
-            	data << float(0);
-            	data << float(0);
-            	data << float(0);
-            }
-            else
-            {
-            	Vector3 final = move_spline.FinalDestination();
-            	data << final.x;
-            	data << final.y;
-            	data << final.z;
-            }
+            data.append<Vector3>(&move_spline.getPath()[0], nodes);
+            data << (move_spline.isCyclic() ? Vector3::zero() : move_spline.FinalDestination());
         }
     }
 }

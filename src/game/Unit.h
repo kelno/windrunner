@@ -277,6 +277,7 @@ class Pet;
 class Totem;
 class Path;
 class PetAura;
+class Transport;
 
 struct SpellImmune
 {
@@ -1539,15 +1540,17 @@ class Unit : public WorldObject
 
         bool IsFalling() const;
 
-        void AddUnitMovementFlag(uint32 f) { m_unit_movement_flags |= f; }
-        void RemoveUnitMovementFlag(uint32 f)
-        {
-            uint32 oldval = m_unit_movement_flags;
-            m_unit_movement_flags = oldval & ~f;
-        }
-        uint32 HasUnitMovementFlag(uint32 f) const { return m_unit_movement_flags & f; }
-        uint32 GetUnitMovementFlags() const { return m_unit_movement_flags; }
-        void SetUnitMovementFlags(uint32 f) { m_unit_movement_flags = f; }
+        void AddUnitMovementFlag(uint32 f) { m_movementInfo.flags |= f; }
+        void RemoveUnitMovementFlag(uint32 f) { m_movementInfo.flags &= ~f; }
+        bool HasUnitMovementFlag(uint32 f) const { return (m_movementInfo.flags & f) == f; }
+        uint32 GetUnitMovementFlags() const { return m_movementInfo.flags; }
+        void SetUnitMovementFlags(uint32 f) { m_movementInfo.flags = f; }
+
+        void AddExtraUnitMovementFlag(uint8 f) { m_movementInfo.flags2 |= f; }
+        void RemoveExtraUnitMovementFlag(uint8 f) { m_movementInfo.flags2 &= ~f; }
+        uint8 HasExtraUnitMovementFlag(uint8 f) const { return m_movementInfo.flags2 & f; }
+        uint8 GetExtraUnitMovementFlags() const { return m_movementInfo.flags2; }
+        void SetExtraUnitMovementFlags(uint8 f) { m_movementInfo.flags2 = f; }
 
         void SetControlled(bool apply, UnitState state);
         void SetFeared(bool apply/*, uint64 casterGUID = 0, uint32 spellID = 0*/);
@@ -1652,8 +1655,8 @@ class Unit : public WorldObject
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
 
-        bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING); }
-        bool IsWalking() const { return HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
+        bool IsLevitating() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_LEVITATING); }
+        bool IsWalking() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALK_MODE); }
 
         virtual bool SetWalk(bool enable);
         bool SetDisableGravity(bool disable);
@@ -1672,6 +1675,16 @@ class Unit : public WorldObject
         void UpdateHeight(float newZ);
 
         void KnockbackFrom(float x, float y, float speedXY, float speedZ);
+
+        // Transports
+        Transport * GetTransport() const { return m_transport; }
+        void SetTransport(Transport * t) { m_transport = t; }
+
+        float GetTransOffsetX() const { return m_movementInfo.transport.pos.GetPositionX(); }
+        float GetTransOffsetY() const { return m_movementInfo.transport.pos.GetPositionY(); }
+        float GetTransOffsetZ() const { return m_movementInfo.transport.pos.GetPositionZ(); }
+        float GetTransOffsetO() const { return m_movementInfo.transport.pos.GetOrientation(); }
+        uint32 GetTransTime() const { return m_movementInfo.transport.time; }
 
         // Movement info
         Movement::MoveSpline * movespline;
@@ -1727,7 +1740,6 @@ class Unit : public WorldObject
         virtual SpellSchoolMask GetMeleeDamageSchoolMask() const;
 
         MotionMaster i_motionMaster;
-        uint32 m_unit_movement_flags;
 
         uint32 m_reactiveTimer[MAX_REACTIVE];
 
@@ -1742,6 +1754,9 @@ class Unit : public WorldObject
         uint8 m_justCCed; // Set to 2 when getting CC aura, decremented (if > 0) every update - used to stop pet combat on target
 
         void DisableSpline();
+
+        // Transports
+        Transport * m_transport;
 
     private:
         void SendAttackStop(Unit* victim);                  // only from AttackStop(Unit*)

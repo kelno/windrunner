@@ -173,7 +173,6 @@ m_isBeingEscorted(false)
     m_CreatureSpellCooldowns.clear();
     m_CreatureCategoryCooldowns.clear();
     m_GlobalCooldown = 0;
-    m_unit_movement_flags = MOVEMENTFLAG_WALK_MODE;
     DisableReputationGain = false;
     TriggerJustRespawned = false;
 }
@@ -471,7 +470,7 @@ void Creature::Update(uint32 diff)
     }
 
     UpdateProhibitedSchools(diff);
-    UpdateMovementFlags();
+    //UpdateMovementFlags();
 
     switch( m_deathState )
     {

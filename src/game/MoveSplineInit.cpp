@@ -76,8 +76,8 @@ namespace Movement
         args.initialOrientation = real_position.orientation;
         move_spline.onTransport = transport;
 
-        uint32 moveFlags = unit->GetUnitMovementFlags();
-        moveFlags |= (MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
+        uint32 moveFlags = unit->m_movementInfo.GetMovementFlags();
+        moveFlags |= (MOVEMENTFLAG_SPLINE_ENABLED | MOVEMENTFLAG_FORWARD);
 
         if (moveFlags & MOVEMENTFLAG_ROOT)
             moveFlags &= ~MOVEMENTFLAG_MOVING;
@@ -98,7 +98,7 @@ namespace Movement
         if (!args.Validate(unit))
             return 0;
 
-        unit->SetUnitMovementFlags((MovementFlags)moveFlags);
+        unit->m_movementInfo.SetMovementFlags((MovementFlags)moveFlags);
         move_spline.Initialize(args);
 
         WorldPacket data(SMSG_MONSTER_MOVE, 64);
@@ -116,8 +116,8 @@ namespace Movement
         // Elevators also use MOVEMENTFLAG_ONTRANSPORT but we do not keep track of their position changes
 
         // mix existing state into new
-        args.flags.walkmode = unit->HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-        args.flags.flying = unit->HasUnitMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING));
+        args.flags.walkmode = unit->m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        args.flags.flying = unit->m_movementInfo.HasMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING));
     }
 
     void MoveSplineInit::SetFacing(const Unit* target)
