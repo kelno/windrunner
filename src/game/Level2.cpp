@@ -47,6 +47,7 @@
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
 #include "MoveMap.h"                                        // for mmap manager
 #include "PathFinder.h"                                     // for mmap commands
+#include "MoveSplineInitArgs.h"
 
 static uint32 ReputationRankStrIndex[MAX_REPUTATION_RANK] =
 {
@@ -3830,17 +3831,16 @@ bool ChatHandler::HandleNpcUnFollowCommand(const char* /*args*/)
     }
 
     if (/*creature->GetMotionMaster()->empty() ||*/
-        creature->GetMotionMaster()->GetCurrentMovementGeneratorType ()!=TARGETED_MOTION_TYPE)
+        creature->GetMotionMaster()->GetCurrentMovementGeneratorType () != FOLLOW_MOTION_TYPE)
     {
         PSendSysMessage(LANG_CREATURE_NOT_FOLLOW_YOU, creature->GetName());
         SetSentErrorMessage(true);
         return false;
     }
 
-    TargetedMovementGenerator<Creature> const* mgen
-        = static_cast<TargetedMovementGenerator<Creature> const*>((creature->GetMotionMaster()->top()));
+    TargetedMovementGeneratorMedium<Creature, FollowMovementGenerator<Creature> > const* mgen = static_cast<TargetedMovementGeneratorMedium<Creature, FollowMovementGenerator<Creature> > const*>((creature->GetMotionMaster()->top()));
 
-    if(mgen->GetTarget()!=player)
+    if(mgen->GetTarget() != player)
     {
         PSendSysMessage(LANG_CREATURE_NOT_FOLLOW_YOU, creature->GetName());
         SetSentErrorMessage(true);
@@ -4355,15 +4355,15 @@ bool ChatHandler::HandleMmapPathCommand(const char* args)
 
     // path
     PathInfo path(target, x, y, z, useStraightPath);
-    PointPath pointPath = path.getFullPath();
+    Movement::PointsArray const&  pointPath = path.getFullPath();
     PSendSysMessage("%s's path to %s:", target->GetName(), player->GetName());
     PSendSysMessage("Building %s", useStraightPath ? "StraightPath" : "SmoothPath");
     PSendSysMessage("length %i type %u", pointPath.size(), path.getPathType());
 
-    PathNode start = path.getStartPosition();
-    PathNode next = path.getNextPosition();
-    PathNode end = path.getEndPosition();
-    PathNode actualEnd = path.getActualEndPosition();
+    G3D::Vector3 const& start = path.getStartPosition();
+    G3D::Vector3 const& next = path.getNextPosition();
+    G3D::Vector3 const& end = path.getEndPosition();
+    G3D::Vector3 const& actualEnd = path.getActualEndPosition();
 
     PSendSysMessage("start      (%.3f, %.3f, %.3f)", start.x, start.y, start.z);
     PSendSysMessage("next       (%.3f, %.3f, %.3f)", next.x, next.y, next.z);

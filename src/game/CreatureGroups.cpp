@@ -235,9 +235,9 @@ void CreatureGroup::LeaderMoveTo(float x, float y, float z)
             member->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);*/
             
         if (member->GetDistance(m_leader) < dist_min)               // Too close... Slow down buddy!
-            member->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        	member->SetWalk(true);
         else if (member->GetDistance(m_leader) > dist_max)          // HURRY UP, HE'S LEAVING WITHOUT YA!
-            member->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        	member->SetWalk(false);
         else                                                        // We're good, synchronize with leader
             member->SetUnitMovementFlags(m_leader->GetUnitMovementFlags());
 

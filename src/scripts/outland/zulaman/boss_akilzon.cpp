@@ -333,7 +333,7 @@ struct boss_akilzonAI : public ScriptedAI
             if (target)
             {
                 target->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
-                target->SendMonsterMove(x,y,m_creature->GetPositionZ()+15,0);
+                target->MonsterMoveWithSpeed(x, y, m_creature->GetPositionZ() + 15.0f, 0);
             }
             Unit *Cloud = m_creature->SummonCreature(WORLD_TRIGGER, x, y, m_creature->GetPositionZ()+16, 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
             if(Cloud)

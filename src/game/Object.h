@@ -439,7 +439,7 @@ class Object
         virtual void _SetUpdateBits(UpdateMask *updateMask, Player *target) const;
 
         virtual void _SetCreateBits(UpdateMask *updateMask, Player *target) const;
-        void _BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2 ) const;
+        void _BuildMovementUpdate(ByteBuffer * data, uint8 flags) const;
         void _BuildValuesUpdate(uint8 updatetype, ByteBuffer *data, UpdateMask *updateMask, Player *target ) const;
 
         uint16 m_objectType;
@@ -469,6 +469,71 @@ class Object
         bool PrintIndexError(uint32 index, bool set) const;
         Object(const Object&);                              // prevent generation copy constructor
         Object& operator=(Object const&);                   // prevent generation assigment operator
+};
+
+struct MovementInfo
+{
+    // common
+    uint32 flags;
+    uint8 flags2;
+    Position pos;
+    uint32 time;
+
+    // transport
+    struct TransportInfo
+    {
+        void Reset()
+        {
+            guid = 0;
+            pos.Relocate(0.0f, 0.0f, 0.0f, 0.0f);
+            time = 0;
+        }
+
+        uint64 guid;
+        Position pos;
+        uint32 time;
+    } transport;
+
+    // swimming/flying
+    float pitch;
+
+    // falling
+    uint32 fallTime;
+
+        // jumping
+    struct JumpInfo
+    {
+        void Reset()
+        {
+            zspeed = sinAngle = cosAngle = xyspeed = 0.0f;
+        }
+
+        float zspeed, sinAngle, cosAngle, xyspeed;
+
+    } jump;
+
+    // spline
+    float splineElevation;
+
+    MovementInfo() :
+        flags(0), flags2(0), time(0), pitch(0.0f)
+    {
+        pos.Relocate(0.0f, 0.0f, 0.0f, 0.0f);
+        transport.Reset();
+        jump.Reset();
+    }
+
+    uint32 GetMovementFlags() const { return flags; }
+    void SetMovementFlags(uint32 flag) { flags = flag; }
+    void AddMovementFlag(uint32 flag) { flags |= flag; }
+    void RemoveMovementFlag(uint32 flag) { flags &= ~flag; }
+    bool HasMovementFlag(uint32 flag) const { return flags & flag; }
+
+    uint8 GetExtraMovementFlags() const { return flags2; }
+    void AddExtraMovementFlag(uint8 flag) { flags2 |= flag; }
+    bool HasExtraMovementFlag(uint8 flag) const { return flags2 & flag; }
+
+    void SetFallTime(uint32 time) { fallTime = time; }
 };
 
 class WorldObject : public Object, public WorldLocation
@@ -529,6 +594,8 @@ class WorldObject : public Object, public WorldLocation
             // angle to face `obj` to `this` using distance includes size of `obj`
             GetNearPoint(obj,x,y,z,obj->GetObjectSize(),distance2d,GetAngle( obj ));
         }
+        void MovePositionToFirstCollision(uint32 mapId, Position &pos, float dist, float angle);
+        void GetFirstCollisionPosition(uint32 mapId, Position &pos, float dist, float angle);
 
         float GetObjectSize() const
         {
@@ -536,6 +603,7 @@ class WorldObject : public Object, public WorldLocation
         }
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
+        void UpdateAllowedPositionZ(float x, float y, float &z) const;
 
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 
@@ -554,6 +622,14 @@ class WorldObject : public Object, public WorldLocation
 
         virtual const char* GetNameForLocaleIdx(int32 /*locale_idx*/) const { return GetName(); }
 
+        bool IsWithinDist3d(float x, float y, float z, float dist) const
+            { return IsInDist(x, y, z, dist + GetObjectSize()); }
+        bool IsWithinDist3d(Position const* pos, float dist) const
+            { return IsInDist(pos, dist + GetObjectSize()); }
+        bool IsWithinDist2d(float x, float y, float dist) const
+            { return IsInDist2d(x, y, dist + GetObjectSize()); }
+        bool IsWithinDist2d(Position const* pos, float dist) const
+            { return IsInDist2d(pos, dist + GetObjectSize()); }
         float GetDistance( const WorldObject* obj ) const;
         float GetDistance(const float x, const float y, const float z) const;
         float GetDistanceSqr(float x, float y, float z) const;
@@ -576,8 +652,6 @@ class WorldObject : public Object, public WorldLocation
 
         virtual void SendMessageToSet(WorldPacket *data, bool self, bool to_possessor = true);
         virtual void SendMessageToSetInRange(WorldPacket *data, float dist, bool self, bool to_possessor = true);
-        void BuildHeartBeatMsg( WorldPacket *data ) const;
-        void BuildTeleportAckMsg( WorldPacket *data, float x, float y, float z, float ang) const;
         bool IsBeingTeleported() { return mSemaphoreTeleport; }
         void SetSemaphoreTeleport(bool semphsetting) { mSemaphoreTeleport = semphsetting; }
 
@@ -630,6 +704,8 @@ class WorldObject : public Object, public WorldLocation
         uint64 lootingGroupLeaderGUID;                      // used to find group which is looting corpse
 
         float m_positionX;
+
+        MovementInfo m_movementInfo;
     protected:
         explicit WorldObject();
         std::string m_name;

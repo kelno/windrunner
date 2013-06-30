@@ -60,7 +60,7 @@
 #include "SmartAI.h"
 
 #include "MoveMap.h"                                        // for mmap manager
-#include "PathFinder.h"                                     // for mmap commands                                
+#include "PathFinder.h"                                     // for mmap commands
 
 //reload commands
 bool ChatHandler::HandleReloadCommand(const char* arg)
@@ -5834,25 +5834,16 @@ bool ChatHandler::HandleFlyModeCommand(const char* args)
     if (!unit || (unit->GetTypeId() != TYPEID_PLAYER))
         unit = m_session->GetPlayer();
 
-    WorldPacket data(12);
     if (strncmp(args, "on", 3) == 0)
-    {
-        data.SetOpcode(SMSG_MOVE_SET_CAN_FLY);
         ((Player*)(unit))->SetCanFly(true);
-    }
     else if (strncmp(args, "off", 4) == 0)
-    {
-        data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
         ((Player*)(unit))->SetCanFly(false);
-    }
     else
     {
         SendSysMessage(LANG_USE_BOL);
         return false;
     }
-    data.append(unit->GetPackGUID());
-    data << uint32(0);                                      // unknown
-    unit->SendMessageToSet(&data, true);
+
     PSendSysMessage(LANG_COMMAND_FLYMODE_STATUS, unit->GetName(), args);
     return true;
 }
@@ -6074,7 +6065,7 @@ bool ChatHandler::HandleMovegensCommand(const char* /*args*/)
             case WAYPOINT_MOTION_TYPE:      SendSysMessage(LANG_MOVEGENS_WAYPOINT);      break;
             case ANIMAL_RANDOM_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_ANIMAL_RANDOM); break;
             case CONFUSED_MOTION_TYPE:      SendSysMessage(LANG_MOVEGENS_CONFUSED);      break;
-            case TARGETED_MOTION_TYPE:
+            /*case TARGETED_MOTION_TYPE:
             {
                 if(unit->GetTypeId()==TYPEID_PLAYER)
                 {
@@ -6115,7 +6106,7 @@ bool ChatHandler::HandleMovegensCommand(const char* /*args*/)
                 break;
             }
             case FLEEING_MOTION_TYPE:  SendSysMessage(LANG_MOVEGENS_FEAR);    break;
-            case DISTRACT_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_DISTRACT);  break;
+            case DISTRACT_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_DISTRACT);  break;*/
             default:
                 PSendSysMessage(LANG_MOVEGENS_UNKNOWN,mg->GetMovementGeneratorType());
                 break;
