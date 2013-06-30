@@ -212,7 +212,7 @@ class Boss_Majordomo : public CreatureScript
                         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);  
                         me->SetSpeed(MOVE_WALK, 0.9);
-                        me->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                        me->SetWalk(true);
                         me->UpdateSpeed(MOVE_WALK, true);
                         break;
                 }

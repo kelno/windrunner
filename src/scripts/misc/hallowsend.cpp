@@ -144,10 +144,9 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
         flamesCount = 0;
         despawnTimer = 900000; // 15 minutes
         flightPhase = true;
-        
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        me->AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
-        
+
+        me->SetCanFly(true);
+
         me->SetReactState(REACT_PASSIVE);
         
         yelled5Throws = false;
@@ -266,8 +265,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
     
     void Aggro(Unit* who)
     {
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+        me->SetCanFly(false);
         me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
         me->SetReactState(REACT_AGGRESSIVE);
         me->Unmount();
@@ -300,8 +298,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
     void MovementInform(uint32 type, uint32 id)
     {
         if (id == 0 && !flightPhase) {
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+        	me->SetCanFly(false);
             me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
             me->SetReactState(REACT_AGGRESSIVE);
             me->Unmount();

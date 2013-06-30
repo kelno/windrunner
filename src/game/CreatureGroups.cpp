@@ -273,12 +273,12 @@ void CreatureGroup::CheckLeaderDistance(Creature* member)
         
         
     if (member->GetDistance(m_leader) < dist_min) {
-        member->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+    	member->SetWalk(true);
         return;
         //member->GetMotionMaster()->MovePoint(0, m_leaderX, m_leaderY, m_leaderZ);
     }
     else if (member->GetDistance(m_leader) > dist_max) {
-        member->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+    	member->SetWalk(false);
         //member->GetMotionMaster()->MovePoint(0, m_leaderX, m_leaderY, m_leaderZ);
     }
     else

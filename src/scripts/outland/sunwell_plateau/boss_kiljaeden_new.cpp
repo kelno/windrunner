@@ -464,7 +464,7 @@ public:
                 FindOrbs();
                 OrbsEmpowered = 0;
                 EmpowerCount = 0;
-                me->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                me->SetCanFly(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->setActive(true);
                 Searched = false;
@@ -701,7 +701,7 @@ public:
                     case CREATURE_ANVEENA:
                     {
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        summoned->SetHover(true);
+                        summoned->SetDisableGravity(true);
                         summoned->SendMovementFlagUpdate();
                         summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
                         break;
@@ -727,7 +727,7 @@ public:
                     case NPC_CORE_ENTROPIUS:
                     	summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
-                        summoned->SetHover(true);
+                        summoned->SetCanFly(true);
                         summoned->SendMovementFlagUpdate();
                         m_EntropiusGuid = summoned->GetGUID();
                         break;
@@ -761,11 +761,7 @@ public:
                     	break;
                     case POINT_TELEPORT_KALECGOS:
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                    	{
                             pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
-                            pKalec->SetHover(false);
-                            pKalec->SendMovementFlagUpdate();
-                        }
                         break;
                     case POINT_SUMMON_SHATTERED:
                     	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -1142,7 +1138,7 @@ public:
                         summoned->getAI()->setZoneInCombat(true);
                         break;
                     case CREATURE_SHIELD_ORB:
-                    	summoned->SetHover(true);
+                    	summoned->SetCanFly(true);
                     	summoned->SendMovementFlagUpdate();
                     	break;
                 }

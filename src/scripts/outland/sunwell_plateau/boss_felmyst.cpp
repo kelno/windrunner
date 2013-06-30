@@ -177,7 +177,7 @@ struct boss_felmystAI : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
         }
         else {
-            m_creature->SetHover(true);
+            m_creature->SetCanFly(true);
             me->GetMotionMaster()->MovePath(25038, true);
             m_creature->SendMovementFlagUpdate();
         }
@@ -362,7 +362,7 @@ struct boss_felmystAI : public ScriptedAI
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetHover(true);
+            m_creature->SetCanFly(true);
             m_creature->StopMoving();
             m_creature->SendMovementFlagUpdate();
             DoScriptText(YELL_TAKEOFF, m_creature);
@@ -513,7 +513,7 @@ struct boss_felmystAI : public ScriptedAI
             break;
         case 11:
         {
-            m_creature->SetHover(false);
+            m_creature->SetCanFly(false);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             m_creature->SendMovementFlagUpdate();
@@ -555,7 +555,7 @@ struct boss_felmystAI : public ScriptedAI
                 case 2:
                     me->GetMotionMaster()->Clear(false);
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-                    me->SetHover(true);
+                    me->SetCanFly(true);
                     me->SendMovementFlagUpdate();
                     IntroTimer = 500;
                     IntroPhase++;
@@ -621,7 +621,7 @@ struct boss_felmystAI : public ScriptedAI
         if (justPulled && m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
             justPulled = false;
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->SetHover(false);
+            m_creature->SetCanFly(false);
             m_creature->SendMovementFlagUpdate();
             float x, y, z;
             m_creature->GetPosition(x, y, z);

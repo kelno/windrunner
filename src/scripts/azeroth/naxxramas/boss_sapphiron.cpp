@@ -63,7 +63,7 @@ struct boss_sapphironAI : public ScriptedAI
         Icebolt_Count = 0;
         IsInFly = false;
 
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        m_creature->SetCanFly(false);
     }
 
     void Aggro(Unit *who)
@@ -103,10 +103,9 @@ struct boss_sapphironAI : public ScriptedAI
                     {
                         phase = 2;
                         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-                        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
                         m_creature->GetMotionMaster()->Clear(false);
                         m_creature->GetMotionMaster()->MoveIdle();
-                        m_creature->SetHover(true);
+                        m_creature->SetCanFly(true);
                         Icebolt_Timer = 4000;
                         Icebolt_Count = 0;
                         IsInFly = true;
@@ -141,10 +140,9 @@ struct boss_sapphironAI : public ScriptedAI
                     {
                         phase = 1;
                         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-                        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                        m_creature->SetCanFly(false);
                         m_creature->GetMotionMaster()->Clear(false);
                         m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
-                        m_creature->SetHover(true);
                         land_Timer = 0;
                         Fly_Timer = 67000;
                     }else land_Timer -= diff;

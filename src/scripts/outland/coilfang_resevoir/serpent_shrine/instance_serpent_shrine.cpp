@@ -217,7 +217,8 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                     if(Creature* frenzy = (*i)->SummonCreature(MOB_COILFANG_FRENZY, (*i)->GetPositionX(), (*i)->GetPositionY(), (*i)->GetPositionZ(), (*i)->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000))
                     {
                         frenzy->Attack((*i), false);
-                        frenzy->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
+                        frenzy->SetCanFly(true);
+                        frenzy->SetSwim(true);
                     }
                 }
             }
