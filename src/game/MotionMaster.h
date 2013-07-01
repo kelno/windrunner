@@ -157,17 +157,8 @@ class MotionMaster //: private std::stack<MovementGenerator *>
             { MovePoint(id, pos.m_positionX, pos.m_positionY, pos.m_positionZ, usePathfinding); }
         void MovePoint(uint32 id, float x, float y, float z, bool usePathfinding = true);
 
-        // These two movement types should only be used with creatures having landing/takeoff animations
-        void MoveLand(uint32 id, Position const& pos);
-        void MoveTakeoff(uint32 id, Position const& pos);
-
         void MoveCharge(float x, float y, float z, uint32 id, float speed = 42.0f);
         void MoveCharge(PathInfo const& path);
-        void MoveKnockbackFrom(float srcX, float srcY, float speedXY, float speedZ);
-        void MoveJumpTo(float angle, float speedXY, float speedZ);
-        void MoveJump(Position const& pos, float speedXY, float speedZ, uint32 id)
-            { MoveJump(pos.m_positionX, pos.m_positionY, pos.m_positionZ, speedXY, speedZ, id); };
-        void MoveJump(float x, float y, float z, float speedXY, float speedZ, uint32 id);
         void MoveFall(uint32 id = 0);
 
         void MoveSeekAssistance(float x, float y, float z);

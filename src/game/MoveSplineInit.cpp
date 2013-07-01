@@ -58,23 +58,21 @@ namespace Movement
     {
         MoveSpline& move_spline = *unit->movespline;
 
-        bool transport = false;
-        Location real_position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation());
+        Location position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation());
 
         // there is a big chance that current position is unknown if current state is not finalized, need compute it
         // this also allows CalculatePath spline position and update map position in much greater intervals
         // Don't compute for transport movement if the unit is in a motion between two transports
-        if (!move_spline.Finalized() && move_spline.onTransport == transport)
-            real_position = move_spline.ComputePosition();
+        if (!move_spline.Finalized())
+        	position = move_spline.ComputePosition();
 
         // should i do the things that user should do? - no.
         if (args.path.empty())
             return 0;
 
         // corrent first vertex
-        args.path[0] = real_position;
-        args.initialOrientation = real_position.orientation;
-        move_spline.onTransport = transport;
+        args.path[0] = position;
+        args.initialOrientation = position.orientation;
 
         uint32 moveFlags = unit->m_movementInfo.GetMovementFlags();
         moveFlags |= (MOVEMENTFLAG_SPLINE_ENABLED | MOVEMENTFLAG_FORWARD);
@@ -87,10 +85,10 @@ namespace Movement
             // If spline is initialized with SetWalk method it only means we need to select
             // walk move speed for it but not add walk flag to unit
             uint32 moveFlagsForSpeed = moveFlags;
-            if (args.flags.walkmode)
-                moveFlagsForSpeed |= MOVEMENTFLAG_WALK_MODE;
+            if (args.flags.runmode)
+            	moveFlagsForSpeed &= ~MOVEMENTFLAG_WALK_MODE;
             else
-                moveFlagsForSpeed &= ~MOVEMENTFLAG_WALK_MODE;
+            	moveFlags |= MOVEMENTFLAG_WALK_MODE;
 
             args.velocity = unit->GetSpeed(SelectSpeedType(moveFlagsForSpeed));
         }
@@ -116,7 +114,7 @@ namespace Movement
         // Elevators also use MOVEMENTFLAG_ONTRANSPORT but we do not keep track of their position changes
 
         // mix existing state into new
-        args.flags.walkmode = unit->m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        args.flags.runmode = !unit->m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALK_MODE);
         args.flags.flying = unit->m_movementInfo.HasMovementFlag((MovementFlags)(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING));
     }
 

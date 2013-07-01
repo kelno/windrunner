@@ -12960,35 +12960,23 @@ bool Unit::IsFalling() const
 
 void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)
 {
-    Player* player = NULL;
-    if (GetTypeId() == TYPEID_PLAYER)
-        player = (Player*)this;
-    else if (Unit* charmer = GetCharmer())
-    {
-        player = charmer->ToPlayer();
-        if (player && player != this)
-            player = NULL;
-    }
+	if (GetTypeId() != TYPEID_PLAYER)
+		return;
 
-    if (!player)
-    {
-        GetMotionMaster()->MoveKnockbackFrom(x, y, speedXY, speedZ);
-    }
-    else
-    {
-        float vcos, vsin;
-        GetSinCos(x, y, vsin, vcos);
+    Player* player = (Player*)this;
 
-        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
-        data.append(GetPackGUID());
-        data << uint32(0);                                      // counter
-        data << float(vcos);                                    // x direction
-        data << float(vsin);                                    // y direction
-        data << float(speedXY);                                 // Horizontal speed
-        data << float(-speedZ);                                 // Z Movement speed (vertical)
+    float vcos, vsin;
+    GetSinCos(x, y, vsin, vcos);
 
-        player->GetSession()->SendPacket(&data);
-    }
+    WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+    data.append(GetPackGUID());
+    data << uint32(0);                                      // counter
+    data << float(vcos);                                    // x direction
+    data << float(vsin);                                    // y direction
+    data << float(speedXY);                                 // Horizontal speed
+    data << float(-speedZ);                                 // Z Movement speed (vertical)
+
+    player->GetSession()->SendPacket(&data);
 }
 
 // From MaNGOS
