@@ -146,7 +146,7 @@ struct npc_razormawAI : public ScriptedAI
 {
     npc_razormawAI(Creature* c) : ScriptedAI(c)
     {
-        me->SetCanFly(true);
+        me->SetDisableGravity(true);
         me->GetMotionMaster()->MovePoint(1, -1204.845581, -12465.271484, 94.779945, false);
         landed = false;
     }
@@ -161,7 +161,7 @@ struct npc_razormawAI : public ScriptedAI
     void MovementInform(uint32 type, uint32 id)
     {
         if (id == 1) {
-            me->SetCanFly(false);
+            me->SetDisableGravity(false);
             landed = true;
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
@@ -170,7 +170,7 @@ struct npc_razormawAI : public ScriptedAI
     
     void Aggro(Unit* who)
     {
-        me->SetCanFly(false);
+        me->SetDisableGravity(false);
         me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
         landed = true;

@@ -63,7 +63,7 @@ struct boss_sapphironAI : public ScriptedAI
         Icebolt_Count = 0;
         IsInFly = false;
 
-        m_creature->SetCanFly(false);
+        m_creature->SetDisableGravity(false);
     }
 
     void Aggro(Unit *who)
@@ -105,7 +105,7 @@ struct boss_sapphironAI : public ScriptedAI
                         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                         m_creature->GetMotionMaster()->Clear(false);
                         m_creature->GetMotionMaster()->MoveIdle();
-                        m_creature->SetCanFly(true);
+                        m_creature->SetDisableGravity(true);
                         Icebolt_Timer = 4000;
                         Icebolt_Count = 0;
                         IsInFly = true;
@@ -140,7 +140,7 @@ struct boss_sapphironAI : public ScriptedAI
                     {
                         phase = 1;
                         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-                        m_creature->SetCanFly(false);
+                        m_creature->SetDisableGravity(false);
                         m_creature->GetMotionMaster()->Clear(false);
                         m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
                         land_Timer = 0;

@@ -768,7 +768,7 @@ struct mob_toxic_sporebatAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->SetCanFly(true);
+        m_creature->SetDisableGravity(true);
         m_creature->setFaction(14);
         movement_timer = 0;
         ToxicSpore_Timer = 5000;

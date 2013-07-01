@@ -311,7 +311,7 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
                 Player* player = Unit::GetPlayer(PlayerGUID);
                 SendText(MSG_ESCAPE_NOTICE, player);
                 DoCast(m_creature, SPELL_PERIODIC_DEPTH_CHARGE);
-                m_creature->SetCanFly(true);
+                m_creature->SetDisableGravity(true);
                 m_creature->SetSwim(true);
                 m_creature->SetSpeed(MOVE_RUN, 0.85f, true);
                 m_creature->GetMotionMaster()->MovementExpired();
@@ -443,7 +443,7 @@ struct mob_depth_chargeAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->SetCanFly(true);
+        m_creature->SetDisableGravity(true);
         m_creature->SetSwim(true);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         we_must_die = false;

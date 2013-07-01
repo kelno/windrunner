@@ -169,7 +169,7 @@ struct npc_dancing_flamesAI : public ScriptedAI
         float x, y, z;
         m_creature->GetPosition(x,y,z);
         m_creature->Relocate(x,y,z + 0.94f);
-        m_creature->SetCanFly(true);
+        m_creature->SetDisableGravity(true);
         m_creature->HandleEmoteCommand(EMOTE_ONESHOT_DANCE);
         WorldPacket data;                       //send update position to client
         m_creature->BuildHeartBeatMsg(&data);

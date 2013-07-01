@@ -253,7 +253,7 @@ struct boss_brutallusAI : public ScriptedAI
         {
             Madrigosa->GetMotionMaster()->Clear(false);
             Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetCanFly(true);
+            m_creature->SetDisableGravity(true);
             IntroPhaseTimer = 500;
             ++IntroPhase;
             break;
@@ -300,7 +300,7 @@ struct boss_brutallusAI : public ScriptedAI
         }
         case 13:
         {
-        	m_creature->SetCanFly(false);
+        	m_creature->SetDisableGravity(false);
             Madrigosa->StopMoving();
             Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             IntroPhaseTimer = 1000;

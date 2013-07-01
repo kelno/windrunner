@@ -1133,7 +1133,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
 {
     npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
     {
-        me->SetCanFly(true);
+        me->SetDisableGravity(true);
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     

@@ -1445,7 +1445,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
             case 12:me->RemoveAllAuras();
             case 13:me->CastSpell(me, SPELL_EXORCIM2 , false);
             case 14:pColonel->CastSpell(pColonel, SPELL_COLONEL1, false);
-            case 15:pColonel->SetCanFly(true);
+            case 15:pColonel->SetDisableGravity(true);
                     pColonel->SetSpeed(MOVE_RUN, 0.17f);
                     pColonel->GetMotionMaster()->MovePoint(0, -710.611f, 2753.435f, 103.774f);
                     pColonel->CastSpell(pColonel, SPELL_COLONEL3, false);return 14000;
@@ -1590,7 +1590,7 @@ struct npc_darkness_releasedAI : public ScriptedAI
 
         DoCast(me, SPELL_AURA_ME);
 
-        me->SetCanFly(true);
+        me->SetDisableGravity(true);
         me->SetSpeed(MOVE_RUN, 0.10f);
 
         switch(urand(0,3))

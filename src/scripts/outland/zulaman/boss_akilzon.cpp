@@ -332,14 +332,14 @@ struct boss_akilzonAI : public ScriptedAI
             target->GetPosition(x,y,z);
             if (target)
             {
-            	target->SetCanFly(true);
+            	target->SetDisableGravity(true);
                 target->MonsterMoveWithSpeed(x, y, m_creature->GetPositionZ() + 15.0f, 0);
             }
             Unit *Cloud = m_creature->SummonCreature(WORLD_TRIGGER, x, y, m_creature->GetPositionZ()+16, 0, TEMPSUMMON_TIMED_DESPAWN, 15000);
             if(Cloud)
             {
                 CloudGUID = Cloud->GetGUID();
-                target->SetCanFly(true);
+                target->SetDisableGravity(true);
                 Cloud->StopMoving();
                 Cloud->SetFloatValue(OBJECT_FIELD_SCALE_X, 1.0f);
                 Cloud->setFaction(35);
@@ -401,7 +401,7 @@ struct mob_soaring_eagleAI : public ScriptedAI
         EagleSwoop_Timer = 5000 + rand()%5000;
         arrived = true;
         TargetGUID = 0;
-        m_creature->SetCanFly(true);
+        m_creature->SetDisableGravity(true);
     }
 
     void Aggro(Unit *who) {DoZoneInCombat();}
@@ -456,9 +456,9 @@ struct mob_soaring_eagleAI : public ScriptedAI
                     m_creature->SetSpeed(MOVE_RUN, 5.0f);
                     TargetGUID = target->GetGUID();
                 }
-                m_creature->SetCanFly(true);
+                m_creature->SetDisableGravity(true);
                 m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
-                m_creature->SetCanFly(false);
+                m_creature->SetDisableGravity(false);
                 arrived = false;
             }
         }

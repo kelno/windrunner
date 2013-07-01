@@ -117,7 +117,7 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
                 summoned->CastSpell(target, SPELL_RIBBON_OF_SOULS, false);
             }
 
-            summoned->SetCanFly(true);
+            summoned->SetDisableGravity(true);
             targetGUID = summoned->GetGUID();
         }
     }
@@ -255,7 +255,7 @@ struct npc_highborne_lamenterAI : public ScriptedAI
         {
             if( EventMove_Timer < diff )
             {
-                m_creature->SetCanFly(true);
+                m_creature->SetDisableGravity(true);
                 m_creature->MonsterMoveWithSpeed(m_creature->GetPositionX(), m_creature->GetPositionY(), HIGHBORNE_LOC_Y_NEW, 5000);
                 m_creature->GetMap()->CreatureRelocation(m_creature,m_creature->GetPositionX(),m_creature->GetPositionY(),HIGHBORNE_LOC_Y_NEW,m_creature->GetOrientation());
                 EventMove = false;

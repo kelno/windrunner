@@ -5832,7 +5832,7 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
             
             uint32 health = m_target->GetHealth();
 
-            ghost->SetCanFly(true);
+            ghost->SetDisableGravity(true);
 
             // immunity for body
             m_target->CastSpell(m_target, 40282, true);
@@ -5849,13 +5849,13 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                 }
             }*/
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-            	construct->SetCanFly(true);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-            	construct->SetCanFly(true);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-            	construct->SetCanFly(true);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-            	construct->SetCanFly(true);
+            	construct->SetDisableGravity(true);
         }
         
         return;

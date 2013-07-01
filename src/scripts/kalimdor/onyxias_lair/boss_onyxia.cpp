@@ -126,7 +126,7 @@ struct boss_onyxiaAI : public ScriptedAI
         {
             Phase = 2;
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetCanFly(true);
+            m_creature->SetDisableGravity(true);
             m_creature->GetMotionMaster()->Clear(false);
             m_creature->GetMotionMaster()->MoveIdle();
             DoScriptText(SAY_PHASE_2_TRANS, m_creature);
@@ -136,7 +136,7 @@ struct boss_onyxiaAI : public ScriptedAI
         {
             Phase = 3;
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->SetCanFly(false);
+            m_creature->SetDisableGravity(false);
             m_creature->GetMotionMaster()->MovePoint(0, -10.6155, -219.357, -87.7344);
             DoStartMovement(m_creature->getVictim());
             m_creature->SetWalk(false);

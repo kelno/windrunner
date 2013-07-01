@@ -145,7 +145,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
         despawnTimer = 900000; // 15 minutes
         flightPhase = true;
 
-        me->SetCanFly(true);
+        me->SetDisableGravity(true);
 
         me->SetReactState(REACT_PASSIVE);
         
@@ -265,7 +265,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
     
     void Aggro(Unit* who)
     {
-        me->SetCanFly(false);
+        me->SetDisableGravity(false);
         me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
         me->SetReactState(REACT_AGGRESSIVE);
         me->Unmount();
@@ -298,7 +298,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
     void MovementInform(uint32 type, uint32 id)
     {
         if (id == 0 && !flightPhase) {
-        	me->SetCanFly(false);
+        	me->SetDisableGravity(false);
             me->SetHomePosition(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation());
             me->SetReactState(REACT_AGGRESSIVE);
             me->Unmount();

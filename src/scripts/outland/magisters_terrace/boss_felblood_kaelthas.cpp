@@ -616,7 +616,7 @@ struct mob_arcane_sphereAI : public ScriptedAI
     void Reset()
     {
         me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-        m_creature->SetCanFly(true);
+        m_creature->SetDisableGravity(true);
         DespawnTimer = 30000;
         ChangeTargetTimer = 5000;
         CheckTimer = 1000;

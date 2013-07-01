@@ -295,7 +295,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                             SetRun();
                             m_creature->SetStandState(UNIT_STAND_STATE_STAND);
                             m_creature->AddAura(SPELL_FLIGHT_FORM, m_creature);
-                            m_creature->SetCanFly(true);
+                            m_creature->SetDisableGravity(true);
                         }
                         else
                         if (eventProgress == 9)
