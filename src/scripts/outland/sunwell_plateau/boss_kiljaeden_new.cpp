@@ -761,7 +761,11 @@ public:
                     	break;
                     case POINT_TELEPORT_KALECGOS:
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                            pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
+                    	{
+                    		pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
+                    		pKalec->SetDisableGravity(false);
+                    		pKalec->SendMovementFlagUpdate();
+                    	}
                         break;
                     case POINT_SUMMON_SHATTERED:
                     	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -862,7 +866,7 @@ public:
                     	for (uint8 i = 0; i < 20; i++)
                     	{
                     	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
-                    	    	soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
+                    	        soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
                     	}
                     	break;
                     case POINT_EVENT_VELEN_EXIT:
@@ -899,7 +903,7 @@ public:
                 			{
                 				float sx, sy;
                 				float angle = m_currentAngleFirst * (2*M_PI) / 360;
-                				float rayon = 5;
+                				float rayon = 5.0f;
                 				sx = bigBoss->GetPositionX() + cos(angle) * rayon;
                 				sy = bigBoss->GetPositionY() + sin(angle) * rayon;
                 				pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, bigBoss->GetPositionZ(), false);
@@ -948,7 +952,7 @@ public:
                 		    {
                 		        float sx, sy;
                 		        float angle = m_currentAngleSecond * (2*M_PI) / 360;
-                		        float rayon = 5;
+                		        float rayon = 5.0f;
                 		        sx = bigBoss->GetPositionX() + cos(angle) * rayon;
                 		        sy = bigBoss->GetPositionY() + sin(angle) * rayon;
                 		        pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, bigBoss->GetPositionZ(), false);
@@ -1139,6 +1143,7 @@ public:
                         break;
                     case CREATURE_SHIELD_ORB:
                     	summoned->SetDisableGravity(true);
+                    	summoned->SetCanFly(true);
                     	summoned->SendMovementFlagUpdate();
                     	break;
                 }

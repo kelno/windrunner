@@ -475,9 +475,9 @@ class Creature : public Unit
         bool isRacialLeader() const { return GetCreatureInfo()->RacialLeader; }
         bool isCivilian() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_CIVILIAN; }
         bool isTrigger() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_TRIGGER; }
-        bool canWalk() const { return GetCreatureInfo()->InhabitType & INHABIT_GROUND; }
-        bool canSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
-        bool canFly()  const { return GetCreatureInfo()->InhabitType & INHABIT_AIR; }
+        bool canWalk() const { return (GetCreatureInfo()->InhabitType & INHABIT_GROUND) || HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
+        bool canSwim() const { return (GetCreatureInfo()->InhabitType & INHABIT_WATER) || HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING); }
+        bool canFly()  const { return (GetCreatureInfo()->InhabitType & INHABIT_AIR) || HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
 
         bool SetWalk(bool enable);
         bool SetSwim(bool enable);
