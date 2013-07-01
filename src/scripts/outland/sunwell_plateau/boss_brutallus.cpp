@@ -253,7 +253,7 @@ struct boss_brutallusAI : public ScriptedAI
         {
             Madrigosa->GetMotionMaster()->Clear(false);
             Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            Madrigosa->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetCanFly(true);
             IntroPhaseTimer = 500;
             ++IntroPhase;
             break;
@@ -300,7 +300,7 @@ struct boss_brutallusAI : public ScriptedAI
         }
         case 13:
         {
-            Madrigosa->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        	m_creature->SetCanFly(false);
             Madrigosa->StopMoving();
             Madrigosa->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             IntroPhaseTimer = 1000;

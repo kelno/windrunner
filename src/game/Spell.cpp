@@ -285,7 +285,7 @@ void SpellCastTargets::write ( WorldPacket * data )
 }
 
 Spell::Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID, Spell** triggeringContainer, bool skipCheck )
-: m_spellInfo(info), m_spellValue(new SpellValue(m_spellInfo))
+: m_spellInfo(info), m_spellValue(new SpellValue(m_spellInfo)), m_preGeneratedPath(PathInfo(m_caster))
 , m_caster(Caster)
 {
     m_customAttr = spellmgr.GetSpellCustomAttr(m_spellInfo->Id);
@@ -4069,8 +4069,24 @@ uint8 Spell::CanCast(bool strict)
             }
             case SPELL_EFFECT_CHARGE:
             {
+            	if (!target)
+            		return SPELL_FAILED_BAD_TARGETS;
+
                 if (m_caster->hasUnitState(UNIT_STAT_ROOT))
                     return SPELL_FAILED_ROOTED;
+
+                Position pos;
+                target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+                target->GetFirstCollisionPosition(target->GetMapId(), pos, CONTACT_DISTANCE, target->GetRelativeAngle(m_caster));
+
+                SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex);
+                float max_range = GetSpellMaxRange(srange); // + range_mod;
+                m_preGeneratedPath.SetPathLengthLimit(max_range * 1.5f);
+                bool result = m_preGeneratedPath.Update(pos.m_positionX, pos.m_positionY, pos.m_positionZ + target->GetObjectSize());
+                if (m_preGeneratedPath.getPathType() & PATHFIND_SHORT)
+                    return SPELL_FAILED_OUT_OF_RANGE;
+                else if (!result || m_preGeneratedPath.getPathType() & PATHFIND_NOPATH)
+                    return SPELL_FAILED_NOPATH;
 
                 break;
             }

@@ -56,7 +56,7 @@ struct npc_defias_traitorAI : public npc_escortAI
             return;
 
         if (IsWalking && !m_creature->HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE))
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            m_creature->SetWalk(true);
 
         switch (i)
         {
@@ -90,7 +90,7 @@ struct npc_defias_traitorAI : public npc_escortAI
     {
         if (IsWalking && !m_creature->HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE))
         {
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            m_creature->SetWalk(true);
             return;
         }
         IsWalking = false;

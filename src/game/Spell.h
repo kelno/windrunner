@@ -22,6 +22,7 @@
 #define __SPELL_H
 
 #include "GridDefines.h"
+#include "PathFinder.h"
 
 class Unit;
 class Player;
@@ -614,6 +615,8 @@ class Spell
         bool m_skipCheck;
 
         SpellScript* m_script;
+
+        PathInfo m_preGeneratedPath;
 };
 
 namespace Trinity

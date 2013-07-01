@@ -740,7 +740,7 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         //    pCurrChar->SetSpeed(MOVE_RUN,  1.5f, true);
         //    pCurrChar->SetSpeed(MOVE_SWIM, 1.5f, true);
         //}
-        pCurrChar->SetMovement(MOVE_WATER_WALK);
+        pCurrChar->SetWaterWalking(true);
     }
 
     if(uint32 sourceNode = pCurrChar->m_taxi.GetTaxiSource())

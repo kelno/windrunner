@@ -568,7 +568,7 @@ void CreatureAINew::deleteFromThreatList(Unit* target)
 void CreatureAINew::doTeleportTo(float x, float y, float z, uint32 time)
 {
     me->Relocate(x,y,z);
-    me->SendMonsterMove(x, y, z, time);
+    me->MonsterMoveWithSpeed(x, y, z, time);
 }
 
 void CreatureAINew::doResetThreat()

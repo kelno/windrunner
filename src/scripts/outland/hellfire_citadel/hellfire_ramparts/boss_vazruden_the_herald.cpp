@@ -136,8 +136,8 @@ struct boss_nazanAI : public ScriptedAI
                 flight = false;
                 BellowingRoar_Timer = 6000;
                 ConeOfFire_Timer = 12000;
-                m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
-                m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                m_creature->SetCanFly(false);
+                m_creature->SetWalk(true);
                 m_creature->GetMotionMaster()->Clear();
                 if(Unit *victim = SelectUnit(SELECT_TARGET_NEAREST,0))
                     m_creature->AI()->AttackStart(victim);
@@ -265,7 +265,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
         waypoint = 0;
         check = 0;
         UnsummonAdds();
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetCanFly(true);
         m_creature->SetSpeed(MOVE_FLIGHT, 2.5);
         m_creature->GetMotionMaster()->MovePath(PATH_ENTRY, true);
         lootSpawned = false;
@@ -327,7 +327,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
         Unit *victim = m_creature->getVictim();
         if(summoned->GetEntry() == ENTRY_NAZAN) {
             ((boss_nazanAI *)summoned->AI())->VazrudenGUID = VazrudenGUID;
-            summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetCanFly(true);
             summoned->SetSpeed(MOVE_FLIGHT, 2.5);
             if (victim)
                 ((ScriptedAI*)summoned->AI())->AttackStart(victim,false);
