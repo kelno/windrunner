@@ -898,16 +898,13 @@ public:
                 		}
                 		else
                 		{
-                			if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[0]))
-                			{
-                				float sx, sy;
-                				float angle = m_currentAngleFirst * (2*M_PI) / 360;
-                				float rayon = 5.0f;
-                				sx = bigBoss->GetPositionX() + cos(angle) * rayon;
-                				sy = bigBoss->GetPositionY() + sin(angle) * rayon;
-                				pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, bigBoss->GetPositionZ(), false);
-                				m_currentAngleFirst = m_currentAngleFirst + 36;
-                			}
+                	        float sx, sy;
+                			float angle = m_currentAngleFirst * (2*M_PI) / 360;
+                			float rayon = 5.0f;
+                			sx = SoldierMiddle[0].m_fX + cos(angle) * rayon;
+                			sy = SoldierMiddle[0].m_fY + sin(angle) * rayon;
+                			pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, SoldierMiddle[0].m_fZ, false);
+                			m_currentAngleFirst = m_currentAngleFirst + 36;
                 		}
                 	}
                 }
@@ -947,16 +944,13 @@ public:
                 		}
                 		else
                 		{
-                		    if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[10]))
-                		    {
-                		        float sx, sy;
-                		        float angle = m_currentAngleSecond * (2*M_PI) / 360;
-                		        float rayon = 5.0f;
-                		        sx = bigBoss->GetPositionX() + cos(angle) * rayon;
-                		        sy = bigBoss->GetPositionY() + sin(angle) * rayon;
-                		        pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, bigBoss->GetPositionZ(), false);
-                		        m_currentAngleSecond = m_currentAngleSecond + 36;
-                		    }
+                		    float sx, sy;
+                		    float angle = m_currentAngleSecond * (2*M_PI) / 360;
+                		    float rayon = 5.0f;
+                		    sx = SoldierMiddle[1].m_fX + cos(angle) * rayon;
+                		    sy = SoldierMiddle[1].m_fY + sin(angle) * rayon;
+                		    pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, SoldierMiddle[1].m_fZ, false);
+                		    m_currentAngleSecond = m_currentAngleSecond + 36;
                 		}
                 	}
                 }
@@ -1788,7 +1782,7 @@ public:
         private:
             bool PointReached;
             bool Clockwise;
-            uint32 CheckTimer;
+            bool checkTimer;
     
             ScriptedInstance *pInstance;
     
@@ -1803,10 +1797,9 @@ public:
             {
                 PointReached = true;
 
-                CheckTimer = 1000;
-        
                 r = 17;
                 c = 0;
+                checkTimer = 2000;
         
                 mx = ShieldOrbLocations[0][0];
                 my = ShieldOrbLocations[0][1];
@@ -1825,6 +1818,23 @@ public:
                     resetEvent(EVENT_SHADOWBOLT_S, 500, 1000);
                 }
                 me->SetFullTauntImmunity(true);
+            }
+
+            void onCombatStart(Unit* /*victim*/)
+            {
+            	setZoneInCombat(true);
+            }
+
+            void attackStart(Unit* victim)
+            {
+            	if (me->Attack(victim, false))
+            	{
+            	    if (!aiInCombat())
+            	    {
+            	        setAICombat(true);
+            	        onCombatStart(victim);
+            	    }
+            	}
             }
 
             void onMovementInform(uint32 type, uint32 /*id*/)
@@ -1863,7 +1873,7 @@ public:
                     }
             
                     PointReached = false;
-                    CheckTimer = 1000;
+                    checkTimer = 2000;
             
                     me->GetMotionMaster()->MovePoint(1,x, y, SHIELD_ORB_Z);
             
@@ -1873,13 +1883,10 @@ public:
                 }
                 else
                 {
-                    if (CheckTimer <= diff)
-                    {
-                        doTeleportTo(x, y, SHIELD_ORB_Z);
-                        PointReached = true;
-                    }
-                    else
-                        CheckTimer -= diff;
+                    if (checkTimer <= diff)
+                	    PointReached = true;
+                	else
+                		checkTimer -= diff;
                 }
 
                 if (!updateVictim())
