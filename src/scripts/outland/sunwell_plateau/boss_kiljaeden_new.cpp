@@ -464,7 +464,6 @@ public:
                 FindOrbs();
                 OrbsEmpowered = 0;
                 EmpowerCount = 0;
-                me->SetDisableGravity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->setActive(true);
                 Searched = false;
@@ -1141,11 +1140,6 @@ public:
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         summoned->getAI()->setZoneInCombat(true);
                         break;
-                    case CREATURE_SHIELD_ORB:
-                    	summoned->SetDisableGravity(true);
-                    	summoned->SetCanFly(true);
-                    	summoned->SendMovementFlagUpdate();
-                    	break;
                 }
             }
 
