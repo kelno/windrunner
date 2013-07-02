@@ -94,7 +94,8 @@ std::string GetGamesStringData(BattleGround *arena)
 	    else
 	        data += "(0)";
 
-	    data += " - ";
+	    if (i == 0)
+	        data += " - ";
 	}
 
     return data;
