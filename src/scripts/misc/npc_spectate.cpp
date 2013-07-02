@@ -65,6 +65,8 @@ std::string GetGamesStringData(BattleGround *arena)
 
     for (uint8 i = 0; i < 2; i++)
     {
+		if(arena->GetArenaTeamIdForIndex(i) == 0)
+			continue;
 	    ArenaTeam *team =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(i));
 
 	    std::list<ArenaTeamMember>::iterator begin = team->membersBegin();
