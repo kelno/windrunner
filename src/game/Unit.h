@@ -1752,7 +1752,7 @@ class Unit : public WorldObject
         void DisableSpline();
 
     private:
-        void SendAttackStop(Unit* victim);                  // only from AttackStop(Unit*)
+        void SendAttackStop(Unit* victim = NULL);             // only from AttackStop(Unit*)
         //void SendAttackStart(Unit* pVictim);                // only from Unit::AttackStart(Unit*)
 
         bool IsTriggeredAtSpellProcEvent( Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );

@@ -865,7 +865,11 @@ public:
                     	for (uint8 i = 0; i < 20; i++)
                     	{
                     	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
-                    	        soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
+                    	    {
+                    	    	soldier->SetWalk(false);
+                    	    	soldier->SetSpeed(MOVE_RUN, 1.0f);
+                    	    	soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
+                    	    }
                     	}
                     	break;
                     case POINT_EVENT_VELEN_EXIT:
@@ -898,12 +902,15 @@ public:
                 		}
                 		else
                 		{
+                			pSummoned->SetWalk(true);
+                			pSummoned->SetSpeed(MOVE_WALK, 1.0f);
+
                 	        float sx, sy;
                 			float angle = m_currentAngleFirst * (2*M_PI) / 360;
                 			float rayon = 5.0f;
                 			sx = SoldierMiddle[0].m_fX + cos(angle) * rayon;
                 			sy = SoldierMiddle[0].m_fY + sin(angle) * rayon;
-                			pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, SoldierMiddle[0].m_fZ, false);
+                			pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, SoldierMiddle[0].m_fZ, false, 300);
                 			m_currentAngleFirst = m_currentAngleFirst + 36;
                 		}
                 	}
@@ -944,12 +951,15 @@ public:
                 		}
                 		else
                 		{
+                			pSummoned->SetWalk(true);
+                			pSummoned->SetSpeed(MOVE_WALK, 1.0f);
+
                 		    float sx, sy;
                 		    float angle = m_currentAngleSecond * (2*M_PI) / 360;
                 		    float rayon = 5.0f;
                 		    sx = SoldierMiddle[1].m_fX + cos(angle) * rayon;
                 		    sy = SoldierMiddle[1].m_fY + sin(angle) * rayon;
-                		    pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, SoldierMiddle[1].m_fZ, false);
+                		    pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, SoldierMiddle[1].m_fZ, false, 300);
                 		    m_currentAngleSecond = m_currentAngleSecond + 36;
                 		}
                 	}
@@ -1194,11 +1204,9 @@ public:
                     case SAY_KJ_PHASE5:
                     	talk(SAY_KJ_PHASE5);
                     	setPhase(PHASE_SACRIFICE);
-                    	me->addUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(true, UNIT_STAT_STUNNED);
                     	break;
                     case POINT_END_STUN:
-                    	me->clearUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(false, UNIT_STAT_STUNNED);
                     	break;
                 }
@@ -1842,6 +1850,7 @@ public:
                 if(type != POINT_MOTION_TYPE)
                     return;
 
+
                 PointReached = true;
             }
 
@@ -1875,7 +1884,7 @@ public:
                     PointReached = false;
                     checkTimer = 2000;
             
-                    me->GetMotionMaster()->MovePoint(1,x, y, SHIELD_ORB_Z);
+                    me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z, true, 100);
             
                     c += 3.1415926535/32;
                     if (c > 2*3.1415926535)

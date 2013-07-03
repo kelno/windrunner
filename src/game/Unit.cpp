@@ -2408,7 +2408,7 @@ void Unit::SendAttackStop(Unit* victim)
 
     WorldPacket data( SMSG_ATTACKSTOP, (4+16) );            // we guess size
     data.append(GetPackGUID());
-    data.append(victim->GetPackGUID());                     // can be 0x00...
+    data.append(victim ? victim->GetPackGUID() : 0);
     data << uint32(0);                                      // can be 0x1
     SendMessageToSet(&data, true);
     sLog.outDetail("%s %u stopped attacking %s %u", (GetTypeId()==TYPEID_PLAYER ? "player" : "creature"), GetGUIDLow(), (victim->GetTypeId()==TYPEID_PLAYER ? "player" : "creature"),victim->GetGUIDLow());
@@ -7119,18 +7119,33 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
     if (GetTypeId() == TYPEID_UNIT && getStandState() == UNIT_STAND_STATE_DEAD)
         SetStandState(UNIT_STAND_STATE_STAND);
 
-    if (m_attacking) {
-        if (m_attacking == victim) {
+    if (m_attacking)
+    {
+        if (m_attacking == victim)
+        {
             // switch to melee attack from ranged/magic
-            if (meleeAttack && !hasUnitState(UNIT_STAT_MELEE_ATTACKING)) {
-                addUnitState(UNIT_STAT_MELEE_ATTACKING);
-                SendAttackStart(victim);
-                return true;
+            if (meleeAttack)
+            {
+            	if (!hasUnitState(UNIT_STAT_MELEE_ATTACKING))
+                {
+                    addUnitState(UNIT_STAT_MELEE_ATTACKING);
+                    SendAttackStart(victim);
+                    return true;
+                }
             }
-
+            else if (hasUnitState(UNIT_STAT_MELEE_ATTACKING))
+            {
+            	clearUnitState(UNIT_STAT_MELEE_ATTACKING);
+            	SendAttackStop(victim);
+            	return true;
+            }
             return false;
         }
-        AttackStop();
+
+        // switch target
+        InterruptSpell(CURRENT_MELEE_SPELL);
+        if (!meleeAttack)
+        	clearUnitState(UNIT_STAT_MELEE_ATTACKING);
     }
 
     //Set our target
@@ -12104,18 +12119,31 @@ void Unit::SetControlled(bool apply, UnitState state)
         {
         case UNIT_STAT_STUNNED:
             SetStunned(true);
+            CastStop();
             break;
         case UNIT_STAT_ROOT:
             if(!hasUnitState(UNIT_STAT_STUNNED))
                 SetRooted(true);
             break;
         case UNIT_STAT_CONFUSED:
-            if(!hasUnitState(UNIT_STAT_STUNNED))
-                SetConfused(true);
+        	if (!hasUnitState(UNIT_STAT_STUNNED))
+        	{
+        		clearUnitState(UNIT_STAT_MELEE_ATTACKING);
+        		SendAttackStop();
+        	    // SendAutoRepeatCancel ?
+        	    SetConfused(true);
+        	    CastStop();
+        	}
             break;
         case UNIT_STAT_FLEEING:
-            if(!hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_CONFUSED))
-                SetFeared(true);
+        	if (!hasUnitState(UNIT_STAT_STUNNED | UNIT_STAT_CONFUSED))
+        	{
+        		clearUnitState(UNIT_STAT_MELEE_ATTACKING);
+        		SendAttackStop();
+        	    // SendAutoRepeatCancel ?
+        	    SetFeared(true);
+        	    CastStop();
+        	}
             break;
         default:
             break;
@@ -12125,15 +12153,32 @@ void Unit::SetControlled(bool apply, UnitState state)
     {
         switch(state)
         {
-            case UNIT_STAT_STUNNED: if(HasAuraType(SPELL_AURA_MOD_STUN))    return;
-                                    else    SetStunned(false);    break;
-            case UNIT_STAT_ROOT:    if(HasAuraType(SPELL_AURA_MOD_ROOT))    return;
-                                    else    SetRooted(false);     break;
-            case UNIT_STAT_CONFUSED:if(HasAuraType(SPELL_AURA_MOD_CONFUSE)) return;
-                                    else    SetConfused(false);   break;
-            case UNIT_STAT_FLEEING: if(HasAuraType(SPELL_AURA_MOD_FEAR))    return;
-                                    else    SetFeared(false);     break;
-            default: return;
+            case UNIT_STAT_STUNNED:
+            	if(HasAuraType(SPELL_AURA_MOD_STUN))
+            		return;
+
+                SetStunned(false);
+            	break;
+            case UNIT_STAT_ROOT:
+            	if(HasAuraType(SPELL_AURA_MOD_ROOT))
+            		return;
+
+                SetRooted(false);
+            	break;
+            case UNIT_STAT_CONFUSED:
+            	if(HasAuraType(SPELL_AURA_MOD_CONFUSE))
+            		return;
+
+                SetConfused(false);
+            	break;
+            case UNIT_STAT_FLEEING:
+            	if(HasAuraType(SPELL_AURA_MOD_FEAR))
+            		return;
+
+                SetFeared(false);
+            	break;
+            default:
+            	return;
         }
 
         clearUnitState(state);
@@ -12160,11 +12205,17 @@ void Unit::SetStunned(bool apply)
     	SetTarget(0);
         SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
 
+        // MOVEMENTFLAG_ROOT cannot be used in conjunction with MOVEMENTFLAG_MASK_MOVING (tested 3.3.5a)
+        // this will freeze clients. That's why we remove MOVEMENTFLAG_MASK_MOVING before
+        // setting MOVEMENTFLAG_ROOT
+        RemoveUnitMovementFlag(MOVEMENTFLAG_MOVING);
+        AddUnitMovementFlag(MOVEMENTFLAG_ROOT);
+
         // Creature specific
         if(GetTypeId() != TYPEID_PLAYER)
             (this->ToCreature())->StopMoving();
         else
-            SetUnitMovementFlags(0);    //Clear movement flags
+        	SetStandState(UNIT_STAND_STATE_STAND);
 
         WorldPacket data(SMSG_FORCE_MOVE_ROOT, 8);
         data.append(GetPackGUID());

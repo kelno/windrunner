@@ -36,6 +36,15 @@
 
 #include <cassert>
 
+bool MotionDelayEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/)
+{
+	if (!m_owner)
+		return true;
+
+	m_owner->GetMotionMaster()->MovePoint(m_id, m_x, m_y, m_z, m_usePathfinding);
+    return true;
+}
+
 inline bool isStatic(MovementGenerator *mv)
 {
     return (mv == &si_idleMovement);
@@ -71,6 +80,7 @@ void MotionMaster::InitDefault()
 
 MotionMaster::~MotionMaster()
 {
+	m_Events.KillAllEvents(false);
 	// clear ALL movement generators (including default)
 	while (!empty())
 	{
@@ -84,6 +94,8 @@ void MotionMaster::UpdateMotion(uint32 diff)
 {
 	if (!_owner)
 	    return;
+
+	m_Events.Update( diff );
 
 	if (_owner->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED)) // what about UNIT_STATE_DISTRACTED? Why is this not included?
 	    return;
@@ -289,9 +301,20 @@ void MotionMaster::MoveFollow(Unit* target, float dist, float angle, MovementSlo
     }
 }
 
-void MotionMaster::MovePoint(uint32 id, float x, float y, float z, bool usePathfinding)
+void MotionMaster::MovePoint(uint32 id, float x, float y, float z, bool usePathfinding, uint32 delay)
 {
-    if(_owner->GetTypeId()==TYPEID_PLAYER)
+	if (delay > 0)
+	{
+		if (_owner->GetTypeId() != TYPEID_UNIT)
+			return;
+
+		MotionDelayEvent* pEvent = new MotionDelayEvent(_owner, id, x, y, z, usePathfinding);
+
+		m_Events.AddEvent(pEvent, m_Events.CalculateTime(delay));
+		return;
+	}
+
+    if(_owner->GetTypeId() == TYPEID_PLAYER)
     {
         DEBUG_LOG("Player (GUID: %u) targeted point (Id: %u X: %f Y: %f Z: %f)", _owner->GetGUIDLow(), id, x, y, z );
         Mutate(new PointMovementGenerator<Player>(id,x,y,z,usePathfinding), MOTION_SLOT_ACTIVE);

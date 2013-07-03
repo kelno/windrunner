@@ -23,6 +23,7 @@
 
 #include "Common.h"
 #include "Object.h"
+#include "Utilities/EventProcessor.h"
 #include <vector>
 
 class MovementGenerator;
@@ -153,9 +154,9 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         void MoveChase(Unit* target, float dist = 0.0f, float angle = 0.0f);
         void MoveConfused();
         void MoveFleeing(Unit* enemy, uint32 time = 0);
-        void MovePoint(uint32 id, const Position &pos, bool usePathfinding = true)
-            { MovePoint(id, pos.m_positionX, pos.m_positionY, pos.m_positionZ, usePathfinding); }
-        void MovePoint(uint32 id, float x, float y, float z, bool usePathfinding = true);
+        void MovePoint(uint32 id, const Position &pos, bool usePathfinding = true, uint32 delay = 0)
+            { MovePoint(id, pos.m_positionX, pos.m_positionY, pos.m_positionZ, usePathfinding, delay); }
+        void MovePoint(uint32 id, float x, float y, float z, bool usePathfinding = true, uint32 delay = 0);
 
         void MoveCharge(float x, float y, float z, uint32 id, float speed = 42.0f);
         void MoveCharge(PathInfo const& path);
@@ -174,6 +175,10 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         void propagateSpeedChange();
 
         bool GetDestination(float &x, float &y, float &z);
+
+        // Event handler
+        EventProcessor m_Events;
+
     private:
         void Mutate(MovementGenerator *m, MovementSlot slot);                  // use Move* functions instead
 
@@ -191,5 +196,28 @@ class MotionMaster //: private std::stack<MovementGenerator *>
         bool _needInit[MAX_MOTION_SLOT];
         uint8 _cleanFlag;
 };
+
+class MotionDelayEvent : public BasicEvent
+{
+    public:
+	MotionDelayEvent(Unit* owner, uint32 id, float x, float y, float z, bool usePathfinding)
+    {
+		BasicEvent();
+		m_owner = owner;
+		m_x = x;
+		m_y = y;
+		m_z = z;
+		m_id = id;
+		m_usePathfinding = usePathfinding;
+    }
+        bool Execute(uint64 e_time, uint32 p_time);
+
+    private:
+        Unit* m_owner;
+        float m_x, m_y, m_z;
+        uint32 m_id;
+        bool m_usePathfinding;
+};
+
 #endif
 
