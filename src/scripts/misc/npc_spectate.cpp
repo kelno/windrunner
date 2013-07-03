@@ -79,8 +79,7 @@ std::string GetGamesStringData(BattleGround *arena)
 			    if (arena->IsPlayerInBattleGround(itr->guid))
 				{
 	                data += GetClassNameById(itr->Class);
-	                if (itr != end)
-	                    data += "/";
+	                data += "/";
 				}
 			}
 	    }
