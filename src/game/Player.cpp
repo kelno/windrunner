@@ -20803,16 +20803,13 @@ void Player::SetSpectate(bool on)
         uint32 morphs = 10045;
         SetDisplayId(morphs);
 
-        SetVisibility(VISIBILITY_OFF);
+        // imune (from kj encounter :D)
+        CastSpell((Unit*)NULL, 45838, true);
 
-        SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED);
+        SetVisibility(VISIBILITY_OFF);
     }
     else
     {
-    	RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-    	RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED);
-
         setFactionForRace(getRace());
 
         if (spectateFrom)
@@ -20830,6 +20827,8 @@ void Player::SetSpectate(bool on)
         spectatorFlag = false;
         SetDisplayId(GetNativeDisplayId());
         UpdateSpeed(MOVE_RUN, true);
+
+        RemoveAurasDueToSpell(45838);
 
         SetVisibility(VISIBILITY_ON);
 

@@ -65,6 +65,8 @@ std::string GetGamesStringData(BattleGround *arena)
 
     for (uint8 i = 0; i < 2; i++)
     {
+		if(arena->GetArenaTeamIdForIndex(i) == 0)
+			continue;
 	    ArenaTeam *team =  objmgr.GetArenaTeamById(arena->GetArenaTeamIdForIndex(i));
 
 	    std::list<ArenaTeamMember>::iterator begin = team->membersBegin();
@@ -77,8 +79,7 @@ std::string GetGamesStringData(BattleGround *arena)
 			    if (arena->IsPlayerInBattleGround(itr->guid))
 				{
 	                data += GetClassNameById(itr->Class);
-	                if (itr != end)
-	                    data += "/";
+	                data += "/";
 				}
 			}
 	    }
@@ -92,7 +93,8 @@ std::string GetGamesStringData(BattleGround *arena)
 	    else
 	        data += "(0)";
 
-	    data += " - ";
+	    if (i == 0)
+	        data += " - ";
 	}
 
     return data;
