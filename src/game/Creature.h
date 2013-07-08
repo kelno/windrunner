@@ -457,7 +457,7 @@ class Creature : public Unit
         
         void DisappearAndDie();
 
-        bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data = NULL);
+        bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data = NULL);
         bool LoadCreaturesAddon(bool reload = false);
         void SelectLevel(const CreatureInfo *cinfo);
         void LoadEquipment(uint32 equip_entry, bool force=false);
@@ -543,8 +543,6 @@ class Creature : public Unit
         bool HasCategoryCooldown(uint32 spell_id) const;
 
         bool HasSpell(uint32 spellID) const;
-
-        void UpdateMovementFlags();
 
         bool UpdateEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
         bool UpdateStats(Stats stat);

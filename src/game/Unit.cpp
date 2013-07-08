@@ -394,7 +394,7 @@ void Unit::MonsterMoveWithSpeed(float x, float y, float z, float speed, bool gen
 void Unit::SetFacingTo(float ori)
 {
     Movement::MoveSplineInit init(this);
-    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZ(), false);
+    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
     init.SetFacing(ori);
     init.Launch();
 }
@@ -7148,14 +7148,16 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
         	clearUnitState(UNIT_STAT_MELEE_ATTACKING);
     }
 
-    //Set our target
-    SetUInt64Value(UNIT_FIELD_TARGET, victim->GetGUID());
-
-    if (meleeAttack)
-        addUnitState(UNIT_STAT_MELEE_ATTACKING);
+    if (m_attacking)
+        m_attacking->_removeAttacker(this);
 
     m_attacking = victim;
     m_attacking->_addAttacker(this);
+
+    //Set our target
+    SetTarget(victim->GetGUID());
+    if (meleeAttack)
+        addUnitState(UNIT_STAT_MELEE_ATTACKING);
 
     //if(m_attacking->GetTypeId()==TYPEID_UNIT && (m->ToCreature()_attacking)->IsAIEnabled)
     //    (m->ToCreature()_attacking)->AI()->AttackedBy(this);
@@ -8887,7 +8889,7 @@ void Unit::CombatStart(Unit* target)
     
     // check if currently selected target is reachable
     // NOTE: path already generated from AttackStart()
-    if(!GetMotionMaster()->IsReachable())
+    /*if(!GetMotionMaster()->IsReachable())
     {
         //sLog.outString("Not Reachable (%u : %s)", GetGUIDLow(), GetName());
         // remove all taunts
@@ -8911,7 +8913,7 @@ void Unit::CombatStart(Unit* target)
             _removeAttacker(target);
         }
     }
-    /*else
+    else
         sLog.outString("Reachable (%u : %s)", GetGUIDLow(), GetName());*/
 
     Unit *who = target->GetCharmerOrOwnerOrSelf();
@@ -11186,7 +11188,7 @@ void Unit::StopMoving()
 	    return;
 
 	Movement::MoveSplineInit init(this);
-	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZ(), false);
+	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
 	init.SetFacing(GetOrientation());
 	init.Launch();
 }
@@ -12877,7 +12879,7 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
 
     *data << GetPositionX();
     *data << GetPositionY();
-    *data << GetPositionZ();
+    *data << GetPositionZMinusOffset();
     *data << GetOrientation();
     *data << (uint8)0;
 
@@ -12947,7 +12949,7 @@ bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool tel
 
 void Unit::SendTeleportPacket(Position& pos)
 {
-    Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
+    Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), GetOrientation() };
     if (GetTypeId() == TYPEID_UNIT)
         Relocate(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation);
 
@@ -13031,6 +13033,15 @@ void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)
     data << float(-speedZ);                                 // Z Movement speed (vertical)
 
     player->GetSession()->SendPacket(&data);
+}
+
+float Unit::GetPositionZMinusOffset() const
+{
+    float offset = 0.0f;
+    if (HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+        offset = 1.0f;
+
+    return GetPositionZ() - offset;
 }
 
 // From MaNGOS

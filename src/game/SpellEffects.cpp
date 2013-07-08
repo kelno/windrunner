@@ -6489,12 +6489,6 @@ void Spell::EffectSummonTotem(uint32 i)
 
     Totem* pTotem = new Totem;
 
-    if(!pTotem->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), m_caster->GetMap(), m_spellInfo->EffectMiscValue[i], team ))
-    {
-        delete pTotem;
-        return;
-    }
-
     float angle = slot < MAX_TOTEM ? M_PI/MAX_TOTEM - (slot*2*M_PI/MAX_TOTEM) : 0;
 
     float cx,cy,cz;
@@ -6527,7 +6521,7 @@ void Spell::EffectSummonTotem(uint32 i)
             Trinity::NormalizeMapCoord(dx);
             Trinity::NormalizeMapCoord(dy);
             dz = MapManager::Instance().GetMap(mapid, unitTarget)->GetHeight(dx, dy, cz, useVmap);
-           
+
             //Prevent climbing and go around object maybe 2.0f is to small? use 3.0f?
             if( (dz-cz) < 5.0f && (dz-cz) > -5.0f && (unitTarget->IsWithinLOS(dx, dy, dz)))
             {
@@ -6561,7 +6555,8 @@ void Spell::EffectSummonTotem(uint32 i)
         dx -= _dx;
         dy -= _dy;
     }
-    else {
+    else
+    {
         if (m_caster->ToPlayer() && m_caster->ToPlayer()->InArena())
             m_caster->GetClosePoint(dx,dy,dz,pTotem->GetObjectSize()/10,0.1f,angle);
         else
@@ -6571,7 +6566,11 @@ void Spell::EffectSummonTotem(uint32 i)
     if( fabs( dz - m_caster->GetPositionZ() ) > 5 )
         dz = m_caster->GetPositionZ();
 
-    pTotem->Relocate(dx, dy, dz, m_caster->GetOrientation());
+    if(!pTotem->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), m_caster->GetMap(), m_spellInfo->EffectMiscValue[i], team, dx, dy, dz, m_caster->GetOrientation() ))
+    {
+        delete pTotem;
+        return;
+    }
 
     if(slot < MAX_TOTEM)
         m_caster->m_TotemSlot[slot] = pTotem->GetGUID();

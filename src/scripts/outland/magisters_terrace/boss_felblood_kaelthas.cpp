@@ -255,14 +255,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                 {
                     // Also needs an exception in spell system.
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_FLY, true, 0, 0, m_creature->GetGUID());
-                    // Use packet hack
-                    WorldPacket data(12);
-                    data.SetOpcode(SMSG_MOVE_SET_CAN_FLY);
-                    data.append(i_pl->GetPackGUID());
-                    data << uint32(0);
-                    i_pl->SendMessageToSet(&data, true);
-                    i_pl->SetSpeed(MOVE_FLIGHT, 2.0f);
-					i_pl->SetCanFly(true);
+					i_pl->SetCanFly(true, true);
                 }
             }
         }
@@ -279,12 +272,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
             {
                 i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_FLY);
                 i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_DOT);
-                WorldPacket data(12);
-                data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
-                data.append(i_pl->GetPackGUID());
-                data << uint32(0);
-                i_pl->SendMessageToSet(&data, true);
-				i_pl->SetCanFly(false);
+				i_pl->SetCanFly(false, true);
             }
         }
     }

@@ -18797,18 +18797,6 @@ void Player::UpdateVisibilityOf(WorldObject* target)
 
 void Player::SendInitialVisiblePackets(Unit* target)
 {
-	if (target->HasAuraType(SPELL_AURA_FEATHER_FALL))
-		target->SetFeatherFall(true, true);
-
-	if (target->HasAuraType(SPELL_AURA_WATER_WALK))
-		target->SetWaterWalking(true, true);
-
-	if(target->HasAuraType(SPELL_AURA_MOD_STUN))
-		target->SetRooted(true);
-
-	if (target->HasAuraType(SPELL_AURA_HOVER))
-	    target->SetHover(true, true);
-
     SendAuraDurationsForTarget(target);
 
     if (BattleGround *bg = GetBattleGround())
@@ -20992,9 +20980,9 @@ void Player::RemoveAllCurrentPetAuras()
         CharacterDatabase.PQuery("DELETE FROM pet_aura WHERE guid = ( SELECT id FROM character_pet WHERE owner = %u AND slot = %u )", GetGUIDLow(), PET_SAVE_NOT_IN_SLOT);
 }
 
-bool Player::SetCanFly(bool apply)
+bool Player::SetCanFly(bool apply, bool packetOnly)
 {
-    if (!Unit::SetCanFly(apply))
+    if (!packetOnly && !Unit::SetCanFly(apply))
         return false;
 
     WorldPacket data(apply ? SMSG_MOVE_SET_CAN_FLY : SMSG_MOVE_UNSET_CAN_FLY, 12);

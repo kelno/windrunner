@@ -36,7 +36,7 @@ PathInfo::PathInfo(const Unit* owner, bool useStraightPath, bool forceDest) :
         MMAP::MMapManager* mmap = MMAP::MMapFactory::createOrGetMMapManager();
         m_navMesh = mmap->GetNavMesh(mapId);
         m_navMeshQuery = mmap->GetNavMeshQuery(mapId, m_sourceUnit->GetInstanceId());
-        if (m_navMesh != m_navMeshQuery->getNavMesh())
+        if (m_navMeshQuery && m_navMesh != m_navMeshQuery->getNavMesh())
             sLog.outError("NAVMESH: navmesh from pathinfo and from nmquery don't match. MapId %d, instanceId %d", mapId, m_sourceUnit->GetInstanceId());
     }
 
@@ -63,7 +63,7 @@ PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, cons
         MMAP::MMapManager* mmap = MMAP::MMapFactory::createOrGetMMapManager();
         m_navMesh = mmap->GetNavMesh(mapId);
         m_navMeshQuery = mmap->GetNavMeshQuery(mapId, m_sourceUnit->GetInstanceId());
-        if (m_navMesh != m_navMeshQuery->getNavMesh())
+        if (m_navMeshQuery && m_navMesh != m_navMeshQuery->getNavMesh())
             sLog.outError("NAVMESH: navmesh from pathinfo and from nmquery don't match. MapId %d, instanceId %d", mapId, m_sourceUnit->GetInstanceId());
     }
 

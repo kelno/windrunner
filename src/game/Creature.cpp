@@ -435,7 +435,6 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
         ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    UpdateMovementFlags();
     return true;
 }
 
@@ -470,7 +469,6 @@ void Creature::Update(uint32 diff)
     }
 
     UpdateProhibitedSchools(diff);
-    //UpdateMovementFlags();
 
     switch( m_deathState )
     {
@@ -647,36 +645,6 @@ void Creature::Update(uint32 diff)
     }
 }
 
-void Creature::UpdateMovementFlags()
-{
-    // Do not update movement flags if creature is controlled by a player
-    if (isPossessed())
-        return;
-
-    // Set the movement flags if the creature is in that mode. (Only fly if actually in air, only swim if in water, etc)
-    float ground = GetMap()->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ());
-
-    bool isInAir = (G3D::fuzzyGt(GetPositionZ(), ground + 0.05f) || G3D::fuzzyLt(GetPositionZ(), ground - 0.05f)); // Can be underground too, prevent the falling
-
-    if (GetCreatureInfo()->InhabitType & INHABIT_AIR && isInAir && !IsFalling())
-    {
-        if (GetCreatureInfo()->InhabitType & INHABIT_GROUND)
-            SetCanFly(true);
-        else
-            SetDisableGravity(true);
-    }
-    else
-    {
-        SetCanFly(false);
-        SetDisableGravity(false);
-    }
-
-    if (!isInAir)
-        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
-
-    SetSwim(GetCreatureInfo()->InhabitType & INHABIT_WATER && IsInWater());
-}
-
 void Creature::RegenerateMana()
 {
     uint32 curValue = GetPower(POWER_MANA);
@@ -776,38 +744,76 @@ void Creature::Motion_Initialize()
         i_motionMaster.Initialize();
 }
 
-bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data)
+bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data)
 {
+	ASSERT(map);
     SetMapId(map->GetId());
     SetInstanceId(map->GetInstanceId());
-    //m_DBTableGuid = guidlow;
 
-    //oX = x;     oY = y;    dX = x;    dY = y;    m_moveTime = 0;    m_startMove = 0;
-    const bool bResult = CreateFromProto(guidlow, Entry, team, data);
-
-    if (bResult)
+    CreatureInfo const* cinfo = objmgr.GetCreatureTemplate(Entry);
+    if (!cinfo)
     {
-        switch (GetCreatureInfo()->rank)
-        {
-            case CREATURE_ELITE_RARE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RARE);
-                break;
-            case CREATURE_ELITE_ELITE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_ELITE);
-                break;
-            case CREATURE_ELITE_RAREELITE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RAREELITE);
-                break;
-            case CREATURE_ELITE_WORLDBOSS:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_WORLDBOSS);
-                break;
-            default:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_NORMAL);
-                break;
-        }
-        LoadCreaturesAddon();
+    	sLog.outError("Creature::Create(): creature template (guidlow: %u, entry: %u) does not exist.", guidlow, Entry);
+        return false;
     }
-    return bResult;
+
+    //! Relocate before CreateFromProto, to initialize coords and allow
+    //! returning correct zone id for selecting OutdoorPvP/Battlefield script
+    Relocate(x, y, z, ang);
+
+    if (!CreateFromProto(guidlow, Entry, team, data))
+    	return false;
+
+    if (!IsPositionValid())
+    {
+        sLog.outError("Creature::Create(): given coordinates for creature (guidlow %d, entry %d) are not valid (X: %f, Y: %f, Z: %f, O: %f)", guidlow, Entry, data->posX, data->posY, data->posZ, data->orientation);
+        return false;
+    }
+
+    switch (GetCreatureInfo()->rank)
+    {
+        case CREATURE_ELITE_RARE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RARE);
+            break;
+        case CREATURE_ELITE_ELITE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_ELITE);
+            break;
+        case CREATURE_ELITE_RAREELITE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RAREELITE);
+            break;
+        case CREATURE_ELITE_WORLDBOSS:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_WORLDBOSS);
+            break;
+        default:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_NORMAL);
+            break;
+    }
+
+    LoadCreaturesAddon();
+
+    //! Need to be called after LoadCreaturesAddon - MOVEMENTFLAG_HOVER is set there
+    if (HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+    {
+    	float z = data->posZ;
+        z += 1.0f;
+
+        //! Relocate again with updated Z coord
+        Relocate(data->posX, data->posY, z, data->orientation);
+    }
+
+    uint32 displayID = GetNativeDisplayId();
+    CreatureModelInfo const* minfo = objmgr.GetCreatureModelRandomGender(displayID);
+    if (minfo && !isTotem())                               // Cancel load if no model defined or if totem
+    {
+        SetDisplayId(displayID);
+        SetNativeDisplayId(displayID);
+        SetByteValue(UNIT_FIELD_BYTES_0, 2, minfo->gender);
+    }
+
+    if (Entry == VISUAL_WAYPOINT)
+    	SetVisibility(VISIBILITY_OFF);
+
+    return true;
 }
 
 bool Creature::isTrainerFor(Player* pPlayer, bool msg) const
@@ -1389,7 +1395,7 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
     data.equipmentId = GetEquipmentId();
     data.posX = GetPositionX();
     data.posY = GetPositionY();
-    data.posZ = GetPositionZ();
+    data.posZ = GetPositionZMinusOffset();
     data.orientation = GetOrientation();
     data.spawntimesecs = m_respawnDelay;
     // prevent add data integrity problems
@@ -1568,12 +1574,7 @@ bool Creature::CreateFromProto(uint32 guidlow, uint32 Entry, uint32 team, const 
     //Normally non-players do not teleport to other maps.
     Map *map = FindMap();
     if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-    {
-        // Workaround, I need position_x in OnCreatureCreate for Felmyst. I'll rewrite the hook with data as third parameter later
-        if (data)
-            m_positionX = data->posX;
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this, Entry);
-    }
 
     return true;
 }
@@ -1596,19 +1597,18 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     }
 
     m_DBTableGuid = guid;
-    if (map->GetInstanceId() != 0) guid = objmgr.GenerateLowGuid(HIGHGUID_UNIT);
+    if (map->GetInstanceId() != 0)
+    	guid = objmgr.GenerateLowGuid(HIGHGUID_UNIT);
+    else
+    {
+    	if (map->GetCreature(MAKE_NEW_GUID(guid, data->id, HIGHGUID_UNIT)))
+    	    return false;
+    }
 
     uint16 team = 0;
-    if(!Create(guid,map,data->id,team,data))
+    if(!Create(guid, map, data->id, team, data->posX, data->posY, data->posZ, data->orientation, data))
         return false;
 
-    Relocate(data->posX,data->posY,data->posZ,data->orientation);
-
-    if(!IsPositionValid())
-    {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not loaded. Suggested coordinates isn't valid (X: %f Y: %f)",GetGUIDLow(),GetEntry(),GetPositionX(),GetPositionY());
-        return false;
-    }
     //We should set first home position, because then AI calls home movement
     SetHomePosition(data->posX,data->posY,data->posZ,data->orientation);
 
@@ -1645,6 +1645,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     m_defaultMovementType = MovementGeneratorType(data->movementType);
 
     AIM_Initialize();
+
     return true;
 }
 
@@ -1858,8 +1859,6 @@ void Creature::setDeathState(DeathState s)
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
         ResetPlayerDamageReq();
-
-        UpdateMovementFlags();
 
         Unit::setDeathState(ALIVE);
         CreatureInfo const *cinfo = GetCreatureInfo();

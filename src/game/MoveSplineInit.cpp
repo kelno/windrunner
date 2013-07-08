@@ -58,7 +58,7 @@ namespace Movement
     {
         MoveSpline& move_spline = *unit->movespline;
 
-        Location position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ(), unit->GetOrientation());
+        Location position(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZMinusOffset(), unit->GetOrientation());
 
         // there is a big chance that current position is unknown if current state is not finalized, need compute it
         // this also allows CalculatePath spline position and update map position in much greater intervals

@@ -2125,7 +2125,7 @@ class Player : public Unit
 
         bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
 
-        bool SetCanFly(bool apply);
+        bool SetCanFly(bool apply, bool packetOnly = false);
         bool SetWaterWalking(bool apply, bool packetOnly = false);
         bool SetFeatherFall(bool apply, bool packetOnly = false);
         bool SetHover(bool enable, bool packetOnly = false);

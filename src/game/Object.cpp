@@ -264,6 +264,12 @@ void Object::DestroyForPlayer(Player *target) const
 
 void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
 {
+	Unit* unit = NULL;
+	WorldObject* object = ((WorldObject*)this);
+
+	if (isType(TYPEMASK_UNIT))
+	    unit = object->ToUnit();
+
     *data << (uint8)flags;                                  // update flags
 
     uint32 mouvementFlag = MOVEMENTFLAG_NONE;
@@ -272,7 +278,6 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
     // 0x20
     if (flags & UPDATEFLAG_LIVING)
     {
-    	Unit *unit = ((Unit*)this);
     	if (unit->GetTransport())
     		unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
     	else
@@ -295,14 +300,18 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
             *data << float(0);
             *data << float(0);
             *data << float(0);
-            *data << float(((WorldObject*)this)->GetOrientation());
+            *data << object->GetOrientation();
         }
         else
         {
-            *data << float(((WorldObject*)this)->GetPositionX());
-            *data << float(((WorldObject*)this)->GetPositionY());
-            *data << float(((WorldObject*)this)->GetPositionZ());
-            *data << float(((WorldObject*)this)->GetOrientation());
+            *data << object->GetPositionX();
+            *data << object->GetPositionY();
+            if (isType(TYPEMASK_UNIT))
+                *data << unit->GetPositionZMinusOffset();
+            else
+            	*data << object->GetPositionZ();
+
+            *data << object->GetOrientation();
         }
     }
 
@@ -313,42 +322,42 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
         if(mouvementFlag & MOVEMENTFLAG_ONTRANSPORT)
         {
         	if (GetTypeId() == TYPEID_PLAYER)
-                *data << (uint64)((WorldObject*)this)->GetTransport()->GetGUID();
+                *data << object->GetTransport()->GetGUID();
         	else
         		*data << (uint8)0;
-        	*data << (float)((WorldObject*)this)->GetTransOffsetX();
-        	*data << (float)((WorldObject*)this)->GetTransOffsetY();
-        	*data << (float)((WorldObject*)this)->GetTransOffsetZ();
-        	*data << (float)((WorldObject*)this)->GetTransOffsetO();
-        	*data << (uint32)((WorldObject*)this)->GetTransTime();
+        	*data << object->GetTransOffsetX();
+        	*data << object->GetTransOffsetY();
+        	*data << object->GetTransOffsetZ();
+        	*data << object->GetTransOffsetO();
+        	*data << object->GetTransTime();
         }
 
         if (mouvementFlag & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-        	*data << (float)((WorldObject*)this)->m_movementInfo.pitch;
+        	*data << object->m_movementInfo.pitch;
 
-        *data << (uint32)((WorldObject*)this)->m_movementInfo.fallTime;
+        *data << object->m_movementInfo.fallTime;
 
         // 0x00001000
         if (mouvementFlag & MOVEMENTFLAG_FALLING)
         {
-            *data << (float)((WorldObject*)this)->m_movementInfo.jump.zspeed;
-            *data << (float)((WorldObject*)this)->m_movementInfo.jump.sinAngle;
-            *data << (float)((WorldObject*)this)->m_movementInfo.jump.cosAngle;
-            *data << (float)((WorldObject*)this)->m_movementInfo.jump.xyspeed;
+            *data << object->m_movementInfo.jump.zspeed;
+            *data << object->m_movementInfo.jump.sinAngle;
+            *data << object->m_movementInfo.jump.cosAngle;
+            *data << object->m_movementInfo.jump.xyspeed;
         }
 
         // 0x04000000
         if (mouvementFlag & MOVEMENTFLAG_SPLINE_ELEVATION)
-        	*data << (float)((WorldObject*)this)->m_movementInfo.splineElevation;
+        	*data << object->m_movementInfo.splineElevation;
 
-        *data << ((Unit*)this)->GetSpeed( MOVE_WALK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_RUN );
-        *data << ((Unit*)this)->GetSpeed( MOVE_RUN_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_SWIM );
-        *data << ((Unit*)this)->GetSpeed( MOVE_SWIM_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_FLIGHT );
-        *data << ((Unit*)this)->GetSpeed( MOVE_FLIGHT_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_TURN_RATE );
+        *data << unit->GetSpeed( MOVE_WALK );
+        *data << unit->GetSpeed( MOVE_RUN );
+        *data << unit->GetSpeed( MOVE_RUN_BACK );
+        *data << unit->GetSpeed( MOVE_SWIM );
+        *data << unit->GetSpeed( MOVE_SWIM_BACK );
+        *data << unit->GetSpeed( MOVE_FLIGHT );
+        *data << unit->GetSpeed( MOVE_FLIGHT_BACK );
+        *data << unit->GetSpeed( MOVE_TURN_RATE );
 
         // 0x08000000
         if(mouvementFlag & MOVEMENTFLAG_SPLINE_ENABLED)
@@ -406,8 +415,8 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
     // 0x4
     if(flags & UPDATEFLAG_FULLGUID)
     {
-    	if (((Unit*)this)->getVictim())
-    		data->append(((Unit*)this)->getVictim()->GetPackGUID());
+    	if (unit->getVictim())
+    		data->append(unit->getVictim()->GetPackGUID());
     	else
     		*data << uint8(0);
     }
@@ -1582,20 +1591,11 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     if (GetTypeId()==TYPEID_PLAYER)
         team = (this->ToPlayer())->GetTeam();
 
-    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), GetMap(), id, team))
-    {
-        delete pCreature;
-        return NULL;
-    }
-
     if (x == 0.0f && y == 0.0f && z == 0.0f)
-        GetClosePoint(x, y, z, pCreature->GetObjectSize());
+    	GetPosition(x, y, z);
 
-    pCreature->Relocate(x, y, z, ang);
-
-    if(!pCreature->IsPositionValid())
+    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), GetMap(), id, team, x, y, z, ang))
     {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
         delete pCreature;
         return NULL;
     }

@@ -936,15 +936,11 @@ class Unit : public WorldObject
 
         void _addAttacker(Unit *pAttacker)                  // must be called only from Unit::Attack(Unit*)
         {
-            AttackerSet::iterator itr = m_attackers.find(pAttacker);
-            if(itr == m_attackers.end())
-                m_attackers.insert(pAttacker);
+        	m_attackers.insert(pAttacker);
         }
         void _removeAttacker(Unit *pAttacker)               // must be called only from Unit::AttackStop()
         {
-            AttackerSet::iterator itr = m_attackers.find(pAttacker);
-            if(itr != m_attackers.end())
-                m_attackers.erase(itr);
+        	m_attackers.erase(pAttacker);
         }
         Unit * getAttackerForHelper()                       // If someone wants to help, who to give them
         {
@@ -1553,6 +1549,8 @@ class Unit : public WorldObject
         uint8 HasExtraUnitMovementFlag(uint8 f) const { return m_movementInfo.flags2 & f; }
         uint8 GetExtraUnitMovementFlags() const { return m_movementInfo.flags2; }
         void SetExtraUnitMovementFlags(uint8 f) { m_movementInfo.flags2 = f; }
+
+        float GetPositionZMinusOffset() const;
 
         void SetControlled(bool apply, UnitState state);
         void SetFeared(bool apply/*, uint64 casterGUID = 0, uint32 spellID = 0*/);
