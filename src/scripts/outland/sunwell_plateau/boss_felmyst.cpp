@@ -195,11 +195,7 @@ struct boss_felmystAI : public ScriptedAI
 
         if(pInstance)
             pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
-            
-        WorldPacket data;                       //send update position to client
-        m_creature->BuildHeartBeatMsg(&data);
-        m_creature->SendMessageToSet(&data,true);
-        
+
         goingLeft = false;
         
         encapsTarget = NULL;
@@ -592,7 +588,7 @@ struct boss_felmystAI : public ScriptedAI
             if (!players.isEmpty()) {
                 for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                     if (Player* plr = itr->getSource())
-                        plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
+                        plr->RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
                 }
             }
 
@@ -622,15 +618,12 @@ struct boss_felmystAI : public ScriptedAI
             justPulled = false;
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             m_creature->SetDisableGravity(false);
-            m_creature->SendMovementFlagUpdate();
             float x, y, z;
             m_creature->GetPosition(x, y, z);
             m_creature->UpdateGroundPositionZ(x, y, z);
             m_creature->Relocate(x, y, z);
-            
-            WorldPacket data;                       //send update position to client
-            m_creature->BuildHeartBeatMsg(&data);
-            m_creature->SendMessageToSet(&data,true);
+
+            m_creature->SendMovementFlagUpdate();
         }
 
         if (Phase == PHASE_GROUND) {
@@ -738,7 +731,7 @@ struct boss_felmystAI : public ScriptedAI
         if (!players.isEmpty()) {
             for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                 if (Player* plr = itr->getSource())
-                    plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
+                    plr->RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
             }
         }
     }

@@ -395,7 +395,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
 
     recv_data >> movementInfo.fallTime;                     // duration of last jump (when in jump duration from jump begin to now)
 
-    if(movementInfo.flags & MOVEMENTFLAG_JUMPING)
+    if(movementInfo.flags & MOVEMENTFLAG_FALLING)
     {
         // recheck
         CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4+4+4+4);
@@ -563,7 +563,7 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
         // Check for waterwalking
         if (((movementInfo.flags & MOVEMENTFLAG_WATERWALKING) != 0) &&
                 ((movementInfo.flags ^ MOVEMENTFLAG_WATERWALKING) != 0) && // Client sometimes set waterwalk where it shouldn't do that...
-                ((movementInfo.flags & MOVEMENTFLAG_JUMPING) == 0) &&
+                ((movementInfo.flags & MOVEMENTFLAG_FALLING) == 0) &&
                 GetPlayer()->GetBaseMap()->IsUnderWater(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ - 6.0f) &&
                 !(GetPlayer()->HasAuraType(SPELL_AURA_WATER_WALK) || GetPlayer()->HasAuraType(SPELL_AURA_GHOST))) {
             Anti__CheatOccurred(CurTime, "Water walking", 0.0f, NULL, 0.0f, (uint32) (movementInfo.flags));
@@ -741,7 +741,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
 
     recv_data >> fallTime;                                  // duration of last jump (when in jump duration from jump begin to now)
 
-    if ((flags & MOVEMENTFLAG_JUMPING) || (flags & MOVEMENTFLAG_FALLING))
+    if ((flags & MOVEMENTFLAG_FALLING) || (flags & MOVEMENTFLAG_FALLINGFAR))
     {
         // recheck
         CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4+4+4+4);

@@ -365,8 +365,7 @@ enum DeathState
     JUST_DIED   = 1,
     CORPSE      = 2,
     DEAD        = 3,
-    JUST_ALIVED = 4,
-    DEAD_FALLING= 5
+    JUST_ALIVED = 4
 };
 
 enum UnitState
@@ -601,9 +600,9 @@ enum MovementFlags
     MOVEMENTFLAG_ONTRANSPORT    = 0x00000200,
     MOVEMENTFLAG_LEVITATING     = 0x00000400,
     MOVEMENTFLAG_ROOT           = 0x00000800,
-    MOVEMENTFLAG_JUMPING        = 0x00001000,               // Called MOVEFLAG_FALLING in OregonCore
+    MOVEMENTFLAG_FALLING        = 0x00001000,
     MOVEMENTFLAG_UNK4           = 0x00002000,
-    MOVEMENTFLAG_FALLING        = 0x00004000,               // Called MOVEFLAG_FALLINGFAR in OregonCore
+    MOVEMENTFLAG_FALLINGFAR     = 0x00004000,
     // 0x8000, 0x10000, 0x20000, 0x40000, 0x80000, 0x100000
     MOVEMENTFLAG_SWIMMING       = 0x00200000,               // appears with fly flag also
     MOVEMENTFLAG_ASCENDING      = 0x00400000,
@@ -618,7 +617,7 @@ enum MovementFlags
     
     MOVEMENTFLAG_MOVING =
             MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_BACKWARD | MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT |
-            MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_JUMPING | MOVEMENTFLAG_FALLING |
+            MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_FALLINGFAR | MOVEMENTFLAG_FALLING |
             MOVEMENTFLAG_SPLINE_ELEVATION | MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING2,
 
     MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT,
@@ -1655,8 +1654,8 @@ class Unit : public WorldObject
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
 
-        bool IsLevitating() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_LEVITATING); }
-        bool IsWalking() const { return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_WALK_MODE); }
+        bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING); }
+        bool IsWalking() const { return HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
 
         virtual bool SetWalk(bool enable);
         bool SetDisableGravity(bool disable);

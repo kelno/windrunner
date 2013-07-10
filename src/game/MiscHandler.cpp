@@ -366,7 +366,7 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
         GetPlayer()->duel         ||                        //...is in Duel
         GetPlayer()->HasAura(9454,0)         ||             //...is frozen by GM via freeze command
                                                             //...is jumping ...is falling
-        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_JUMPING | MOVEMENTFLAG_FALLING))
+        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_FALLINGFAR | MOVEMENTFLAG_FALLING))
     {
         WorldPacket data( SMSG_LOGOUT_RESPONSE, (2+4) ) ;
         data << (uint8)0xC;

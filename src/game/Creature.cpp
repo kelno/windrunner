@@ -635,11 +635,6 @@ void Creature::Update(uint32 diff)
             
             break;
         }
-        case DEAD_FALLING:
-        {
-            if (!FallGround())
-                setDeathState(JUST_DIED);
-        }
         default:
             break;
     }
@@ -1818,41 +1813,40 @@ float Creature::GetAttackDistance(Unit const* pl) const
 
 void Creature::setDeathState(DeathState s)
 {
-    if((s == JUST_DIED && !m_isDeadByDefault)||(s == JUST_ALIVED && m_isDeadByDefault))
-    {
-        m_corpseRemoveTime = time(NULL) + m_corpseDelay;
-        m_respawnTime = time(NULL) + m_respawnDelay + m_corpseDelay;
+	if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
+	{
+		m_corpseRemoveTime = m_corpseDelay * IN_MILLISECONDS; // the max/default time for corpse decay (before creature is looted/AllLootRemovedFromCorpse() is called)
+	    m_respawnTime = time(NULL) + m_respawnDelay;        // respawn delay (spawntimesecs)
 
-        // always save boss respawn time at death to prevent crash cheating
-        if(sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
-            SaveRespawnTime();
-            
-        Map *map = FindMap();
-        if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-            ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
+	    // always save boss respawn time at death to prevent crash cheating
+	    if (sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
+	        SaveRespawnTime();
 
-        if (canFly() && FallGround())
-            return;
-    }
-    Unit::setDeathState(s);
+	    Map *map = FindMap();
+	    if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
+	        ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
+	}
 
-    if(s == JUST_DIED)
-    {
-        SetUInt64Value (UNIT_FIELD_TARGET,0);               // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
-        SetUInt32Value(UNIT_NPC_FLAGS, 0);
-        //if(!isPet())
-            setActive(false);
+	Unit::setDeathState(s);
 
-        if(!isPet() && GetCreatureInfo()->SkinLootId)
-            if ( LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId) )
-                SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+	if(s == JUST_DIED)
+	{
+        SetTarget(0);                // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
+        SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
-        if ((canFly() || IsFlying()))
+        setActive(false);
+
+        if (!isPet() && GetCreatureInfo()->SkinLootId)
+            if (LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId))
+                if (hasLootRecipient())
+                    SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+
+        if ((canFly()))
             i_motionMaster.MoveFall();
 
         Unit::setDeathState(CORPSE);
     }
-    if(s == JUST_ALIVED)
+	else if(s == JUST_ALIVED)
     {
         //if(isPet())
         //    setActive(true);
@@ -1866,28 +1860,10 @@ void Creature::setDeathState(DeathState s)
         SetWalk(true);
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
         clearUnitState(UNIT_STAT_ALL_STATE);
+        Motion_Initialize();
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
         LoadCreaturesAddon(true);
-        Motion_Initialize();
     }
-}
-
-bool Creature::FallGround()
-{
-    // Let's abort after we called this function one time
-    if (getDeathState() == DEAD_FALLING)
-        return false;
-
-    float x, y, z;
-    GetPosition(x, y, z);
-    float ground_Z = GetMap()->GetHeight(x, y, z);
-    if (fabs(ground_Z - z) < 0.1f)
-        return false;
-
-    Unit::setDeathState(DEAD_FALLING);
-    GetMotionMaster()->MovePoint(0, x, y, ground_Z);
-    Relocate(x, y, ground_Z);
-    return true;
 }
 
 void Creature::Respawn()

@@ -376,6 +376,8 @@ void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
     recv_data >> hairStyle >> hairColor >> facialHair >> outfitId;
 
     Player * pNewChar = new Player(this);
+    pNewChar->GetMotionMaster()->Initialize();
+
     if(!pNewChar->Create( objmgr.GenerateLowGuid(HIGHGUID_PLAYER), name, race_, class_, gender, skin, face, hairStyle, hairColor, facialHair, outfitId ))
     {
         // Player not create (race/class problem?)
@@ -387,7 +389,7 @@ void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
         return;
     }
 
-    if(have_same_race && skipCinematics == 1 || skipCinematics == 2)
+    if((have_same_race && skipCinematics == 1) || skipCinematics == 2)
         pNewChar->setCinematic(1);                          // not show intro
 
     // Player created, save it now

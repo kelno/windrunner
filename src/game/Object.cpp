@@ -278,8 +278,13 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
     // 0x20
     if (flags & UPDATEFLAG_LIVING)
     {
-    	if (unit->GetTransport())
-    		unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	if (GetTypeId() == TYPEID_PLAYER)
+    	{
+    	    if (unit->GetTransport())
+    	    	unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	    else
+    	    	unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	}
     	else
     		unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
 

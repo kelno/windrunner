@@ -9487,8 +9487,12 @@ void Unit::setDeathState(DeathState s)
         // remove aurastates allowing special moves
         ClearAllReactives();
         ClearDiminishings();
-        GetMotionMaster()->Clear(false);
-        GetMotionMaster()->MoveIdle();
+
+        if (IsInWorld())
+        {
+            GetMotionMaster()->Clear(false);
+            GetMotionMaster()->MoveIdle();
+        }
 
         StopMoving();
         DisableSpline();
@@ -12762,19 +12766,9 @@ bool Unit::SetDisableGravity(bool disable)
         return false;
 
     if (disable)
-    {
         AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
-        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
-    }
     else
-    {
         RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
-        if (!HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
-        {
-        	m_movementInfo.SetFallTime(0);
-        	AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
-        }
-    }
 
     return true;
 }
@@ -12798,19 +12792,9 @@ bool Unit::SetCanFly(bool enable)
         return false;
 
     if (enable)
-    {
         AddUnitMovementFlag(MOVEMENTFLAG_CAN_FLY);
-        RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
-    }
     else
-    {
         RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_MASK_MOVING_FLY);
-        if (!HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
-        {
-        	m_movementInfo.SetFallTime(0);
-        	AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
-        }
-    }
 
     return true;
 }

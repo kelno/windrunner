@@ -630,7 +630,7 @@ void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi)
 
     data >> mi->fallTime;
 
-    if (mi->HasMovementFlag(MOVEMENTFLAG_JUMPING))
+    if (mi->HasMovementFlag(MOVEMENTFLAG_FALLING))
     {
         data >> mi->jump.zspeed;
         data >> mi->jump.sinAngle;
