@@ -708,7 +708,7 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
 
     if(i_AI) delete i_AI;
 
-    Motion_Initialize();
+    i_motionMaster.Initialize();
 
     i_AI = ai ? ai : FactorySelector::selectAI(this);
     IsAIEnabled = true;     // Keep this when getting rid of old system
@@ -722,21 +722,6 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
         m_AI->initialize();
     
     return true;
-}
-
-void Creature::Motion_Initialize()
-{
-    if (!m_formation)
-        i_motionMaster.Initialize();
-    else if (m_formation->getLeader() == this)
-    {
-        m_formation->FormationReset(false);
-        i_motionMaster.Initialize();
-    }
-    else if (m_formation->isFormed())
-        i_motionMaster.MoveIdle(); //wait the order of leader
-    else
-        i_motionMaster.Initialize();
 }
 
 bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data)
@@ -1815,7 +1800,7 @@ void Creature::setDeathState(DeathState s)
 {
 	if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
 	{
-		m_corpseRemoveTime = m_corpseDelay * IN_MILLISECONDS; // the max/default time for corpse decay (before creature is looted/AllLootRemovedFromCorpse() is called)
+		m_corpseRemoveTime = time(NULL) + m_corpseDelay;
 	    m_respawnTime = time(NULL) + m_respawnDelay;        // respawn delay (spawntimesecs)
 
 	    // always save boss respawn time at death to prevent crash cheating
@@ -1826,7 +1811,6 @@ void Creature::setDeathState(DeathState s)
 	    if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
 	        ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
 	}
-
 	Unit::setDeathState(s);
 
 	if(s == JUST_DIED)
@@ -1838,15 +1822,14 @@ void Creature::setDeathState(DeathState s)
 
         if (!isPet() && GetCreatureInfo()->SkinLootId)
             if (LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId))
-                if (hasLootRecipient())
-                    SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+            	SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
 
-        if ((canFly()))
+        if ((canFly() || IsFlying()))
             i_motionMaster.MoveFall();
 
         Unit::setDeathState(CORPSE);
     }
-	else if(s == JUST_ALIVED)
+	if(s == JUST_ALIVED)
     {
         //if(isPet())
         //    setActive(true);
@@ -1860,9 +1843,9 @@ void Creature::setDeathState(DeathState s)
         SetWalk(true);
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
         clearUnitState(UNIT_STAT_ALL_STATE);
-        Motion_Initialize();
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
         LoadCreaturesAddon(true);
+        i_motionMaster.Initialize();
     }
 }
 
