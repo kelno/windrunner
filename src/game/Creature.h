@@ -736,6 +736,8 @@ class Creature : public Unit
         bool IsBeingEscorted() { return m_isBeingEscorted; }
         void SetEscorted(bool status) { m_isBeingEscorted = status; }
 
+        void UpdateMovementFlags();
+
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
