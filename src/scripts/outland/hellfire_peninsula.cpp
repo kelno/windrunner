@@ -1113,7 +1113,7 @@ struct npc_sedai_quest_credit_markerAI : public ScriptedAI
     {
         if (pSummoned->GetEntry() == NPC_ESCORT1)
         {
-            pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            pSummoned->SetWalk(true);
             pSummoned->GetMotionMaster()->MovePoint(0, 208.029f, 4134.618f, 77.763f);
         }
     }
@@ -1179,7 +1179,7 @@ struct npc_vindicator_sedaiAI : public ScriptedAI
     {
         if (pSummoned->GetEntry() == NPC_ESCORT)
         {
-            pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            pSummoned->SetWalk(true);
             pSummoned->GetMotionMaster()->MovePoint(0, 205.660f, 4130.663f, 77.175f);
         }
 
@@ -1192,7 +1192,7 @@ struct npc_vindicator_sedaiAI : public ScriptedAI
         {
             if (pSummoned->GetEntry() == NPC_KRUN)
             {
-                pSummoned->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            	pSummoned->SetWalk(true);
                 pSummoned->GetMotionMaster()->MovePoint(0, 194.739868f, 4143.145996f, 73.798088f);
                 DoScriptText(SAY_KRUN, pSummoned,0);
                 pSummoned->AI()->AttackStart(me);
@@ -1230,7 +1230,7 @@ struct npc_vindicator_sedaiAI : public ScriptedAI
             case 1:
                 DoSpawnEscort();
             case 2:
-                me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+                me->SetWalk(true);
             case 3:
                 me->GetMotionMaster()->MovePoint(0, 204.877f, 4133.172f, 76.897f);
                 return 2900;
@@ -1288,7 +1288,7 @@ struct npc_vindicator_sedaiAI : public ScriptedAI
                     pEsc->GetMotionMaster()->MovePoint(0, 235.063f, 4117.826f, 84.471f);
                 return 1000;
             case 19:
-                me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            	me->SetWalk(true);
                 me->GetMotionMaster()->MovePoint(0, 199.706f, 4134.302f, 75.404f);
                 return 6000;       
             case 20:
@@ -1434,7 +1434,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
             case 2:DoScriptText(SAY_BARADA1, me,0);return 5000;
             case 3:DoScriptText(SAY_BARADA2, me,0);return 3000;
             case 4:DoScriptText(SAY_COLONEL1, pColonel, 0);return 3000;
-            case 5:me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);return 3000;
+            case 5:me->SetWalk(true);return 3000;
             case 6:me->GetMotionMaster()->MovePoint(0, -707.702f, 2749.038f, 101.590f);return 2000;
             case 7:me->GetMotionMaster()->MovePoint(0, -710.810f, 2748.376f, 101.590f);return 2100;
             case 8:me->SetOrientation(colonel);
@@ -1445,7 +1445,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
             case 12:me->RemoveAllAuras();
             case 13:me->CastSpell(me, SPELL_EXORCIM2 , false);
             case 14:pColonel->CastSpell(pColonel, SPELL_COLONEL1, false);
-            case 15:pColonel->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+            case 15:pColonel->SetDisableGravity(true);
                     pColonel->SetSpeed(MOVE_RUN, 0.17f);
                     pColonel->GetMotionMaster()->MovePoint(0, -710.611f, 2753.435f, 103.774f);
                     pColonel->CastSpell(pColonel, SPELL_COLONEL3, false);return 14000;
@@ -1504,7 +1504,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
             case 49:pColonel->GetMotionMaster()->MovePoint(0, -710.111f, 2754.346f, 102.367f);return 3000;
             case 50:pColonel->RemoveAllAuras();
             case 51:me->RemoveAllAuras();return 2000;
-            case 52:me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);return 2000;
+            case 52:me->SetWalk(true);return 2000;
             case 53:me->GetMotionMaster()->MovePoint(0, -706.726f, 2751.632f, 101.591f);return 2200;
             case 54:me->GetMotionMaster()->MovePoint(0, -707.382f, 2753.994f, 101.591f);return 7000;
             case 55:me->SetStandState(UNIT_STAND_STATE_KNEEL);
@@ -1590,7 +1590,7 @@ struct npc_darkness_releasedAI : public ScriptedAI
 
         DoCast(me, SPELL_AURA_ME);
 
-        me->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+        me->SetDisableGravity(true);
         me->SetSpeed(MOVE_RUN, 0.10f);
 
         switch(urand(0,3))
