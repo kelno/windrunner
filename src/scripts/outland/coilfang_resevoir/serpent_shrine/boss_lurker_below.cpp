@@ -119,7 +119,6 @@ class Boss_Lurker_Below : public CreatureScript
 
             void onReset(bool onSpawn)
             {
-                me->SetDisableGravity(true);
                 me->SetSwim(true);
                 summons.DespawnAll();
 

@@ -1660,7 +1660,7 @@ class Unit : public WorldObject
         virtual bool SetWalk(bool enable);
         bool SetDisableGravity(bool disable);
         virtual bool SetSwim(bool enable);
-        virtual bool SetCanFly(bool enable);
+        virtual bool SetCanFly(bool enable, bool packetOnly = false);
         virtual bool SetWaterWalking(bool enable, bool packetOnly = false);
         virtual bool SetFeatherFall(bool enable, bool packetOnly = false);
         virtual bool SetHover(bool enable, bool packetOnly = false);

@@ -12796,7 +12796,7 @@ bool Unit::SetSwim(bool enable)
     return true;
 }
 
-bool Unit::SetCanFly(bool enable)
+bool Unit::SetCanFly(bool enable, bool /*packetOnly = false */)
 {
     if (enable == HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
         return false;

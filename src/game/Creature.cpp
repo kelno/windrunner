@@ -653,7 +653,7 @@ void Creature::UpdateMovementFlags()
 	if (fabs(GetPositionZ() - tz) > 0.1f)
 		inAir = true;
 
-	if (!inAir || IsFalling())
+	if (IsFalling())
 	{
 		SetCanFly(false);
 		SetDisableGravity(false);

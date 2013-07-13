@@ -241,6 +241,15 @@ bool CreatureAINew::isActive(uint8 id)
     return false;
 }
 
+uint32 CreatureAINew::getTimer(uint8 id)
+{
+	EventMap::iterator itr = m_events.find(id);
+	if (itr != m_events.end())
+		return itr->second->timer;
+
+    return 0;
+}
+
 void CreatureAINew::setFlag(uint8 id, uint32 flags)
 {
     EventMap::iterator itr = m_events.find(id);
