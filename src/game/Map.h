@@ -309,7 +309,9 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
         // can return INVALID_HEIGHT if under z+2 z coord not found height
         float _GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
         float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
-        
+
+        float GetWaterOrGroundLevel(float x, float y, float z, float* ground = NULL, bool swim = false) const;
+
         bool isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, uint32 phasemask = 0) const;
         void Balance() { _dynamicTree.balance(); }
         void Remove(const GameObjectModel& mdl) { _dynamicTree.remove(mdl); }

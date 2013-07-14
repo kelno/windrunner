@@ -241,6 +241,15 @@ bool CreatureAINew::isActive(uint8 id)
     return false;
 }
 
+uint32 CreatureAINew::getTimer(uint8 id)
+{
+	EventMap::iterator itr = m_events.find(id);
+	if (itr != m_events.end())
+		return itr->second->timer;
+
+    return 0;
+}
+
 void CreatureAINew::setFlag(uint8 id, uint32 flags)
 {
     EventMap::iterator itr = m_events.find(id);
@@ -568,7 +577,8 @@ void CreatureAINew::deleteFromThreatList(Unit* target)
 void CreatureAINew::doTeleportTo(float x, float y, float z, uint32 time)
 {
     me->Relocate(x,y,z);
-    me->SendMonsterMove(x, y, z, time);
+    float speed = me->GetDistance(x, y, z) / ((float)time * 0.001f);
+    me->MonsterMoveWithSpeed(x, y, z, speed);
 }
 
 void CreatureAINew::doResetThreat()

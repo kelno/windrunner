@@ -83,33 +83,12 @@ enum Spells
 
 enum PhaseFelmyst
 {
-    PHASE_NULL  = 0,
-    PHASE_GROUND = 1,
-    PHASE_FLIGHT = 2,
-};
-
-enum EventFelmyst
-{
-    EVENT_NULL          =   0,
-    EVENT_BERSERK       =   1,
-
-    EVENT_CLEAVE        =   2,
-    EVENT_CORROSION     =   3,
-    EVENT_GAS_NOVA      =   4,
-    EVENT_ENCAPS_WARN   =   5,
-    EVENT_ENCAPSULATE   =   6,
-    EVENT_FLIGHT        =   7,
-
-    EVENT_FLIGHT_SEQUENCE   =   2,
-    EVENT_SUMMON_DEAD       =   3,
-    EVENT_SUMMON_FOG        =   4
-};
-
-static EventFelmyst MaxTimer[]=
-{
-    EVENT_NULL,
-    EVENT_FLIGHT,
-    EVENT_SUMMON_FOG,
+	PHASE_NULL   = 0,
+    PHASE_INTRO  = 1,
+    PHASE_RESET  = 2,
+    PHASE_PULL   = 3,
+    PHASE_GROUND = 4,
+    PHASE_FLIGHT = 5
 };
 
 #define ORIENTATION_LEFT    4.7984
@@ -126,656 +105,573 @@ static float rights[3][3] = { {1492.819946, 515.668030, 60.083302},
                               {1467.219971, 516.318970, 60.083302},
                               {1441.640015, 520.520020, 60.083302} };
 
-struct boss_felmystAI : public ScriptedAI
+class boss_felmyst : public CreatureScript
 {
-    boss_felmystAI(Creature *c) : ScriptedAI(c)
+public:
+	boss_felmyst() : CreatureScript("boss_felmyst") {}
+
+    class boss_felmystAI : public CreatureAINew
     {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        justBorn = true;
-        IntroTimer = 5000;
-        IntroPhase = 1;
-    }
-
-    ScriptedInstance *pInstance;
-    PhaseFelmyst Phase;
-    EventFelmyst Event;
-    uint32 Timer[EVENT_FLIGHT + 1];
-    
-    uint32 jumpFlagTimer;
-    
-    uint32 IntroTimer;
-    uint8 IntroPhase;
-
-    uint32 FlightCount;
-    uint32 BreathCount;
-    
-    uint8 randomPoint;
-
-    float BreathX, BreathY;
-    
-    bool justPulled;
-    bool goingLeft;
-    bool justBorn;
-    
-    Unit* encapsTarget;
-
-    void Reset()
-    {
-        Phase = PHASE_NULL;
-        Event = EVENT_NULL;
-        Timer[EVENT_BERSERK] = 600000;
-        FlightCount = 0;
-        randomPoint = 0;
-        
-        jumpFlagTimer = 1000;
-        
-        justPulled = false;
-
-        if (justBorn) {
-            me->SetStandState(PLAYER_STATE_SLEEP);
-            me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            me->SetReactState(REACT_PASSIVE);
-        }
-        else {
-            m_creature->SetFlying(true);
-            me->GetMotionMaster()->MovePath(25038, true);
-            m_creature->SendMovementFlagUpdate();
+        public:
+    	boss_felmystAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        {
+            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
 
-        m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
-        m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
-        
-        m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+        ScriptedInstance* pInstance;
+        SummonList Summons;
 
-        DespawnSummons(MOB_VAPOR_TRAIL);
-        m_creature->setActive(false);
-        
-        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-        m_creature->SetFullTauntImmunity(true);
+        enum Armageddontarget
+        {
+            EVENT_CLEAVE               = 0,
+            EVENT_CORROSION            = 1,
+            EVENT_GAS_NOVA             = 2,
+            EVENT_ENCAPSULATE          = 3,
+            EVENT_ENCAPS_WARN          = 4,
+            EVENT_FOG_CORRUPTION       = 5,
+            EVENT_BERSERK              = 6
+        };
 
-        if(pInstance)
-            pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
-            
-        WorldPacket data;                       //send update position to client
-        m_creature->BuildHeartBeatMsg(&data);
-        m_creature->SendMessageToSet(&data,true);
-        
-        goingLeft = false;
-        
-        encapsTarget = NULL;
-        
-        if (pInstance) {
-            Map::PlayerList const& players = pInstance->instance->GetPlayers();
-            if (!players.isEmpty()) {
-                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
-                    if (Player* plr = itr->getSource()) {
-                        if (plr->HasAura(SPELL_FOG_CHARM))
-                            plr->CastSpell(plr, SPELL_SOUL_SEVER, true);
-                    }
+        uint32 flightPhaseTimer;
+        uint32 flightPhase;
+        uint32 introPhaseTimer;
+        uint32 introPhase;
+        uint32 BreathCount;
+        bool goingLeft;
+        bool inChaseOnFlight;
+        uint8 randomPoint;
+
+        Unit* encapsTarget;
+
+        void onReset(bool onSpawn)
+        {
+        	inChaseOnFlight = false;
+        	encapsTarget = NULL;
+        	flightPhaseTimer = 60000;
+        	flightPhase = 0;
+        	introPhaseTimer = 0;
+        	introPhase = 0;
+        	BreathCount = 0;
+
+        	setPhase(PHASE_NULL);
+        	if (onSpawn)
+        	    setPhase(PHASE_INTRO);
+        	else
+        		setPhase(PHASE_RESET);
+
+        	if (onSpawn)
+        	{
+        	    addEvent(EVENT_CLEAVE, 5000, 10000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_CORROSION, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_GAS_NOVA, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_ENCAPSULATE, 25000, 30000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_ENCAPS_WARN, getTimer(EVENT_ENCAPSULATE) - 1000, getTimer(EVENT_ENCAPSULATE) - 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_FOG_CORRUPTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(5));
+        	    addEvent(EVENT_BERSERK, 600000, 600000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
+        	}
+        	else
+        	{
+        		resetEvent(EVENT_CLEAVE, 5000, 10000);
+        		resetEvent(EVENT_CORROSION, 10000, 20000);
+        		resetEvent(EVENT_GAS_NOVA, 20000, 25000);
+        		resetEvent(EVENT_ENCAPSULATE, 25000, 30000);
+        		resetEvent(EVENT_ENCAPS_WARN, getTimer(EVENT_ENCAPSULATE) - 1000);
+        		resetEvent(EVENT_FOG_CORRUPTION, 500);
+        		resetEvent(EVENT_BERSERK, 600000);
+        	}
+
+        	me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
+        	me->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
+
+        	me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+
+        	Summons.DespawnAll();
+
+        	me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+        	me->SetFullTauntImmunity(true);
+
+            if(pInstance)
+        	    pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
+
+            me->CastSpell(me, AURA_SUNWELL_RADIANCE, true);
+        }
+
+        void onEnterPhase(uint32 newPhase)
+        {
+            switch (newPhase)
+            {
+                case PHASE_INTRO:
+                	me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+                	me->SetReactState(REACT_PASSIVE);
+                	break;
+                case PHASE_RESET:
+                	me->SetDisableGravity(true);
+                	me->SendMovementFlagUpdate();
+                	me->GetMotionMaster()->MovePath(25038, true);
+                	setPhase(PHASE_PULL);
+                	break;
+                case PHASE_GROUND:
+                	flightPhaseTimer = 60000;
+                	scheduleEvent(EVENT_CLEAVE, 5000, 10000);
+                	scheduleEvent(EVENT_CORROSION, 10000, 20000);
+                	scheduleEvent(EVENT_GAS_NOVA, 20000, 25000);
+                	scheduleEvent(EVENT_ENCAPSULATE, 25000, 30000);
+                	break;
+                case PHASE_FLIGHT:
+                	scheduleEvent(EVENT_FOG_CORRUPTION, 0);
+                	enableEvent(EVENT_FOG_CORRUPTION);
+                	flightPhaseTimer = 1000;
+                	flightPhase = 0;
+                	break;
+            }
+        }
+
+        void onCombatStart(Unit* /*who*/)
+        {
+            if (pInstance)
+                pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
+
+            me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
+
+            if (pInstance)
+            {
+                if (Creature* brutallus = Creature::GetCreature(*me, pInstance->GetData64(DATA_BRUTALLUS))) {
+                    if (!brutallus->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
+                        brutallus->SetVisibility(VISIBILITY_OFF);
                 }
             }
+            inChaseOnFlight = true;
         }
-        
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
-    }
 
-    void Aggro(Unit *who)
-    {
-        if (justBorn)
-            return;
-            
-        m_creature->GetMotionMaster()->Initialize();
-        //m_creature->GetMotionMaster()->MoveChase(who);
-
-        m_creature->setActive(true);
-        DoZoneInCombat();
-        m_creature->CastSpell(m_creature, AURA_SUNWELL_RADIANCE, true);
-        m_creature->CastSpell(m_creature, AURA_NOXIOUS_FUMES, true);
-        EnterPhase(PHASE_GROUND, true);
-        justPulled = true;
-
-        if (pInstance) {
-            pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
-            if (Creature* brutallus = Creature::GetCreature(*me, pInstance->GetData64(DATA_BRUTALLUS))) {
-                if (!brutallus->HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE))
-                    brutallus->SetVisibility(VISIBILITY_OFF);
-            }
-        }
-    }
-
-    void AttackStart(Unit *who)
-    {
-        if(Phase != PHASE_FLIGHT)
-            ScriptedAI::AttackStart(who);
-    }
-
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (!me->isInCombat())
-            return;
-
-        if(Phase != PHASE_FLIGHT && !justBorn)
-            ScriptedAI::MoveInLineOfSight(who);
-    }
-
-    void KilledUnit(Unit* victim)
-    {
-        DoScriptText(RAND(YELL_KILL1, YELL_KILL2), m_creature);
-    }
-
-    void JustDied(Unit* Killer)
-    {
-        DoScriptText(YELL_DEATH, m_creature);
-
-        if(pInstance)
-            pInstance->SetData(DATA_FELMYST_EVENT, DONE);
-            
-        if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0)) {
-            kalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-            kalecgos->setActive(true);
-        }
-    }
-
-    void SpellHit(Unit *caster, const SpellEntry *spell)
-    {
-        if (spell->Id == SPELL_FOG_INFORM)
+        void attackStart(Unit *pTarget)
         {
-            float x, y, z;
-            caster->GetPosition(x, y, z);
-            Unit* summon = m_creature->SummonCreature(MOB_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
-            if(summon)
-            {
-                summon->SetMaxHealth(caster->GetMaxHealth());
-                summon->SetHealth(caster->GetMaxHealth());
-                summon->CastSpell(summon, SPELL_FOG_CHARM, true);
-                summon->CastSpell(summon, SPELL_FOG_CHARM2, true);
-            }
-            m_creature->DealDamage(caster, caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }
-    }
-
-    void JustSummoned(Creature *summon)
-    {
-        if(summon->GetEntry() == MOB_DEAD)
-        {
-            summon->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
-            DoZoneInCombat(summon);
-            summon->CastSpell(summon, SPELL_DEAD_PASSIVE, true);
-        }
-    }
-
-    void MovementInform(uint32, uint32)
-    {
-        if (FlightCount == 6 || FlightCount == 7) {
-            if (!goingLeft)
-                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
-            else
-                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-//            me->SendMovementFlagUpdate(300.f);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
-        }
-        else
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
-    }
-
-    void DamageTaken(Unit*, uint32 &damage)
-    {
-        if(Phase != PHASE_GROUND && damage >= m_creature->GetHealth())
-            damage = 0;
-    }
-
-    void EnterPhase(PhaseFelmyst NextPhase, bool pull = false)
-    {
-        switch(NextPhase)
-        {
-        case PHASE_GROUND:
-            Timer[EVENT_CLEAVE] = 5000 + rand()%5 * 1000;
-            Timer[EVENT_CORROSION] = 10000 + rand()%10 * 1000;
-            Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
-            if (pull)
-                Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
-            else
-                Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
-            Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
-            Timer[EVENT_FLIGHT] = 60000;
-            break;
-        case PHASE_FLIGHT:
-            m_creature->SetSpeed(MOVE_FLIGHT, 1.3f, true);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
-            Timer[EVENT_SUMMON_DEAD] = 0;
-            Timer[EVENT_SUMMON_FOG] = 0;
-            FlightCount = 0;
-            BreathCount = 0;
-            break;
-        default:
-            break;
-        }
-        Phase = NextPhase;
-    }
-
-    void HandleFlightSequence()
-    {
-        switch(FlightCount)
-        {
-        case 0:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            m_creature->GetMotionMaster()->Clear(false);
-            m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetFlying(true);
-            m_creature->StopMoving();
-            m_creature->SendMovementFlagUpdate();
-            DoScriptText(YELL_TAKEOFF, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
-            break;
-        case 1:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX()+1, m_creature->GetPositionY(), m_creature->GetPositionZ()+10);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
-            break;
-        case 2:{
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            Unit* target;
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
-            if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
-            if(target)
-            {
-                Creature* Vapor = m_creature->SummonCreature(MOB_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
-                if(Vapor)
-                {
-                    Vapor->AI()->AttackStart(target);
-                    m_creature->InterruptNonMeleeSpells(false);
-                    m_creature->CastSpell(Vapor, SPELL_VAPOR_CHANNEL, false); // core bug
-                    Vapor->CastSpell(Vapor, SPELL_VAPOR_TRIGGER, true);
-                }
-            }
-            else
-            {
-                EnterEvadeMode();
+            if (getPhase() != PHASE_GROUND && getPhase() != PHASE_PULL)
                 return;
-            }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
-            break;}
-        case 3: {
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            DespawnSummons(MOB_VAPOR_TRAIL);
-            Unit* target;
-            target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
-            if(!target) target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_PLAYER_GUID));
-            if(target)
-            {
-                Creature* Vapor = m_creature->SummonCreature(MOB_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
-                if(Vapor)
-                {
-                    Vapor->AI()->AttackStart(target);
-                    m_creature->InterruptNonMeleeSpells(false);
-                    m_creature->CastSpell(Vapor, SPELL_VAPOR_CHANNEL, false); // core bug
-                    Vapor->CastSpell(Vapor, SPELL_VAPOR_TRIGGER, true);
-                }
-            }
-            else
-            {
-                EnterEvadeMode();
-                return;
-            }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 10000;
-            break;}
-        case 4:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            DespawnSummons(MOB_VAPOR_TRAIL);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
-            break;
-        case 5:
-        {
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            if (BreathCount == 0) {
-                switch (rand()%2) {
-                    case 0:
-                        goingLeft = true;
-                        break;
-                    case 1:
-                        goingLeft = false;
-                        break;
-                }
-            }
-            m_creature->RemoveAurasDueToSpell(AURA_NOXIOUS_FUMES);
-            if (!goingLeft)     // Right
-                m_creature->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
-            else                      // Left
-                m_creature->GetMotionMaster()->MovePoint(0, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
-            break;
+
+            CreatureAINew::attackStart(pTarget);
         }
-        case 6:
+
+        void onDeath(Unit* /*killer*/)
         {
-            randomPoint = rand()%3;
-            if (!goingLeft)     // Right
-                m_creature->GetMotionMaster()->MovePoint(1, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
-            else
-                m_creature->GetMotionMaster()->MovePoint(1, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
-//            me->SendMovementFlagUpdate(300.f);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 28000;
-            break;
+        	DoScriptText(YELL_DEATH, me);
+
+        	if(pInstance)
+        	    pInstance->SetData(DATA_FELMYST_EVENT, DONE);
+
+        	if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0))
+        	    kalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
-        case 7:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            if (!goingLeft) {      // Right
-                m_creature->SetOrientation(m_creature->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
-                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() - 0.5, m_creature->GetPositionY() + 1, m_creature->GetPositionZ());
-            } else {
-                m_creature->SetOrientation(m_creature->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
-                m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX() + 0.5, m_creature->GetPositionY() - 1, m_creature->GetPositionZ());
-            }
-            //m_creature->StopMoving();
-            //me->SendMovementFlagUpdate(300.f);
-            DoScriptText(EMOTE_DEEP_BREATH, m_creature);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2500;
-            break;
-        case 8:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            m_creature->CastSpell(m_creature, SPELL_FOG_BREATH, true);
+
+        void onKill(Unit* /*victim*/)
+        {
+        	DoScriptText(RAND(YELL_KILL1, YELL_KILL2), me);
+        }
+
+        void onSummon(Creature* summoned)
+        {
+            Summons.Summon(summoned);
+            if(summoned->GetEntry() == MOB_DEAD)
             {
-                if (!goingLeft)   // Right
-                    m_creature->GetMotionMaster()->MovePoint(2, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
+            	summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+            	summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
+            }
+        }
+
+        void onSummonDespawn(Creature* unit)
+        {
+            Summons.Despawn(unit);
+        }
+
+        void onHitBySpell(Unit* caster, SpellEntry const* spell)
+        {
+        	if (spell->Id == SPELL_FOG_INFORM)
+        	{
+        	    float x, y, z;
+        	    caster->GetPosition(x, y, z);
+        	    Unit* summon = me->SummonCreature(MOB_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
+        	    if(summon)
+        	    {
+        	        summon->SetMaxHealth(caster->GetMaxHealth());
+        	        summon->SetHealth(caster->GetMaxHealth());
+        	        summon->CastSpell(summon, SPELL_FOG_CHARM, true);
+        	        summon->CastSpell(summon, SPELL_FOG_CHARM2, true);
+        	    }
+        	    me->DealDamage(caster, caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        	}
+        }
+
+        void onMovementInform(uint32, uint32)
+        {
+            if (flightPhase == 6 || flightPhase == 7)
+            {
+                if (!goingLeft)
+                    me->SetOrientation(me->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
                 else
-                    m_creature->GetMotionMaster()->MovePoint(2, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
+                	me->SetOrientation(me->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
             }
-            Timer[EVENT_SUMMON_FOG] = 1;
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
-            break;
-        case 9:
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
-            m_creature->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
-            BreathCount++;
-            Timer[EVENT_SUMMON_FOG] = 0;
-            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
-            goingLeft = !goingLeft;
-            if(BreathCount < 3) FlightCount = 4;
-            break;
-        case 10:
-            m_creature->CastSpell(m_creature, AURA_NOXIOUS_FUMES, true);
-            if(Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
-            {
-                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, target->GetGUID());
-                float x, y, z;
-                target->GetContactPoint(m_creature, x, y, z);
-                if (goingLeft)
-                    m_creature->GetMotionMaster()->MovePoint(4, 1482.709961, 649.406006, 21.081100);    // Left landing point
-                else
-                    m_creature->GetMotionMaster()->MovePoint(4, 1491.119995, 553.672974, 24.921900);    // Right landing point
-            }
-            else
-            {
-                EnterEvadeMode();
-                return;
-            }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
-            break;
-        case 11:
+
+            if (getPhase() == PHASE_FLIGHT)
+            	flightPhaseTimer = 1;
+        }
+
+        void onDamageTaken(Unit* attacker, uint32& damage)
         {
-            m_creature->SetFlying(false);
-            m_creature->StopMoving();
-            m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->SendMovementFlagUpdate();
-            EnterPhase(PHASE_GROUND);
-            Unit *target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
-            m_creature->AI()->AttackStart(target);
-            m_creature->GetMotionMaster()->MoveChase(target);
-            break;
+            if(getPhase() != PHASE_GROUND && damage >= me->GetHealth())
+                damage = 0;
         }
-        default:
-            break;
-        }
-        FlightCount++;
-    }
-    
-    void DeleteFromThreatList(uint64 TargetGUID)
-    {
-        for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
+
+        void handleIntro(uint32 const diff)
         {
-            if((*itr)->getUnitGuid() == TargetGUID)
+            if (introPhaseTimer <= diff)
             {
-                (*itr)->removeReference();
-                break;
-            }
-        }
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        if (justBorn) {
-            if (IntroTimer <= diff) {
-                switch (IntroPhase) {
-                case 1:
-                    me->SetStandState(UNIT_STAND_STATE_STAND);
-                    DoScriptText(YELL_BIRTH, me);
-                    IntroTimer = 4000;
-                    IntroPhase++;
-                    break;
-                case 2:
-                    me->GetMotionMaster()->Clear(false);
-                    me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-                    me->SetFlying(true);
-                    me->SendMovementFlagUpdate();
-                    IntroTimer = 500;
-                    IntroPhase++;
-                    break;
-                case 3:
-                    me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344, false);
-                    me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
-                    m_creature->SetSpeed(MOVE_FLIGHT, 1.3f, true);
-                    IntroTimer = 10000;
-                    IntroPhase++;
-                    break;
-                case 4:
-                    me->GetMotionMaster()->MovePath(25038, true);
-                    IntroTimer = 0;
-                    IntroPhase++;
-                    me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                    me->SetReactState(REACT_AGGRESSIVE);
-                    justBorn = false;
-                }
-            }
-            else
-                IntroTimer -= diff;
-
-            return;
+        	    switch (introPhase)
+        	    {
+        	        case 0:
+        	            me->SetStandState(UNIT_STAND_STATE_STAND);
+        	            DoScriptText(YELL_BIRTH, me);
+        	            introPhaseTimer = 4000;
+        	            introPhase++;
+        	            break;
+        	        case 1:
+        	            me->GetMotionMaster()->Clear(false);
+        	            me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
+        	            me->SetDisableGravity(true);
+        	            me->UpdateMovementFlags();
+        	            introPhaseTimer = 500;
+        	            introPhase++;
+        	            break;
+        	        case 2:
+        	        	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+        	        	me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
+        	            me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344, false);
+        	            introPhaseTimer = 6000;
+        	            introPhase++;
+        	            break;
+        	        case 3:
+        	            me->GetMotionMaster()->MovePath(25038, true);
+        	            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        	            me->SetReactState(REACT_AGGRESSIVE);
+        	            setPhase(PHASE_PULL);
+        	            break;
+        	    }
+        	}
+        	else
+        		introPhaseTimer -= diff;
         }
 
-        if (!UpdateVictim() && Phase != PHASE_FLIGHT)
-            return;
-            
-        m_creature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-        
-        if (jumpFlagTimer <= diff) {
-            Map::PlayerList const& players = pInstance->instance->GetPlayers();
-            if (!players.isEmpty()) {
-                for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
-                    if (Player* plr = itr->getSource())
-                        plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
-                }
-            }
-
-            jumpFlagTimer = 1000;
-        }
-        else
-            jumpFlagTimer -= diff;
-
-        Event = EVENT_NULL;
-        for(uint32 i = 1; i <= MaxTimer[Phase]; i++) {
-            if(Timer[i]) {
-                if(Timer[i] <= diff) {
-                    if(!Event)
-                        Event = (EventFelmyst)i;
-                }
-                else Timer[i] -= diff;
-            }
-        }
-        
-        if (m_creature->getVictim() && m_creature->getVictim()->HasAura(SPELL_FOG_CHARM))
-            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
-
-        if(m_creature->IsNonMeleeSpellCasted(false))
-            return;
-            
-        if (justPulled && m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
-            justPulled = false;
-            m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-            m_creature->SetFlying(false);
-            m_creature->SendMovementFlagUpdate();
-            float x, y, z;
-            m_creature->GetPosition(x, y, z);
-            m_creature->UpdateGroundPositionZ(x, y, z);
-            m_creature->Relocate(x, y, z);
-            
-            WorldPacket data;                       //send update position to client
-            m_creature->BuildHeartBeatMsg(&data);
-            m_creature->SendMessageToSet(&data,true);
-        }
-
-        if (Phase == PHASE_GROUND) {
-            switch(Event)
-            {
-            case EVENT_BERSERK:
-                DoScriptText(YELL_BERSERK, m_creature);
-                m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
-                Timer[EVENT_BERSERK] = 10000;
-                break;
-            case EVENT_CLEAVE:
-                m_creature->CastSpell(m_creature->getVictim(), SPELL_CLEAVE, false);
-                Timer[EVENT_CLEAVE] = 5000 + rand()%5 * 1000;
-                break;
-            case EVENT_CORROSION:
-                m_creature->CastSpell(m_creature->getVictim(), SPELL_CORROSION, false);
-                Timer[EVENT_CORROSION] = 20000 + rand()%10 * 1000;
-                break;
-            case EVENT_GAS_NOVA:
-                m_creature->CastSpell(m_creature, SPELL_GAS_NOVA, false);
-                Timer[EVENT_GAS_NOVA] = 20000 + rand()%5 * 1000;
-                break;
-            case EVENT_ENCAPSULATE:
-                if(encapsTarget) {
-                    m_creature->CastSpell(encapsTarget, SPELL_ENCAPSULATE_CHANNEL, false);
-                    Timer[EVENT_ENCAPSULATE] = 25000 + rand()%5 * 1000;
-                    Timer[EVENT_ENCAPS_WARN] = Timer[EVENT_ENCAPSULATE] - 1000;
-                    /*if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
-                        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, topTarget->GetGUID());*/
-                }
-                break;
-            case EVENT_ENCAPS_WARN:
-                if (Timer[EVENT_FLIGHT] < 8000) {
-                    Timer[EVENT_ENCAPS_WARN] = 30000;
-                    Timer[EVENT_ENCAPSULATE] = 30000;
-                    break;
-                }
-                if (encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
-                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
-                if (!encapsTarget)
-                    break;
-                while (encapsTarget->isDead()) {
-                    encapsTarget = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
-                    if (!encapsTarget)
-                        break;
-                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, encapsTarget->GetGUID());
-                }
-                Timer[EVENT_ENCAPS_WARN] = 20000;
-                break;
-            case EVENT_FLIGHT:
-                EnterPhase(PHASE_FLIGHT);
-                break;
-            default:
-                DoMeleeAttackIfReady();
-                break;
-            }
-        }
-
-        if (Phase == PHASE_FLIGHT) {
-            switch(Event) {
-            case EVENT_BERSERK:
-                DoScriptText(YELL_BERSERK, m_creature);
-                m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
-                Timer[EVENT_BERSERK] = 0;
-                break;
-            case EVENT_FLIGHT_SEQUENCE:
-                HandleFlightSequence();
-                break;
-            case EVENT_SUMMON_FOG:
-                {
-                    if (pInstance) {
-                        switch (randomPoint) {
-                        case 0: pInstance->SetData((goingLeft ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY()); break;
-                        case 1: pInstance->SetData((goingLeft ? DATA_ACTIVATE_CENTER_TO_LEFT : DATA_ACTIVATE_CENTER_TO_RIGHT), (uint32) me->GetPositionY()); break;
-                        case 2: pInstance->SetData((goingLeft ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY()); break;
-                        }
-                    }
-                    float x, y, z;
-                    m_creature->GetPosition(x, y, z);
-                    m_creature->UpdateGroundPositionZ(x, y, z);
-                    if(Creature *Fog = m_creature->SummonCreature(MOB_VAPOR_TRAIL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
-                    {
-                        Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
-                        Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
-                        /*if (Creature* trigger = Fog->FindNearestCreature(23472, 10.0f))
-                            trigger->CastSpell(trigger, SPELL_FOG_TRIGGER, true);*/
-                    }
-                }
-                Timer[EVENT_SUMMON_FOG] = 500;
-                break;
-            default:
-                break;
-            }
-        }
-    }
-    
-    void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
-    {
-        if (spellId == SPELL_ENCAPSULATE_CHANNEL) {
-            if (Unit* topTarget = SelectUnit(SELECT_TARGET_TOPAGGRO, 0))
-                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, topTarget->GetGUID());
-        }
-        
-        Map::PlayerList const& players = pInstance->instance->GetPlayers();
-        if (!players.isEmpty()) {
-            for (Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
-                if (Player* plr = itr->getSource())
-                    plr->RemoveUnitMovementFlag(MOVEMENTFLAG_JUMPING);
-            }
-        }
-    }
-
-    void DespawnSummons(uint32 entry)
-    {
-        std::list<Creature*> templist;
-        float x, y, z;
-        m_creature->GetPosition(x, y, z);
-
+        void handleFlight(uint32 const diff)
         {
-            CellPair pair(Trinity::ComputeCellPair(x, y));
-            Cell cell(pair);
-            cell.data.Part.reserved = ALL_DISTRICT;
-            cell.SetNoCreate();
+        	if (flightPhaseTimer <= diff)
+        	{
+        	    switch(flightPhase)
+        	    {
+        	        case 0:
+        	            me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
+        	            me->StopMoving();
+        	            me->SetDisableGravity(true);
+        	            me->UpdateMovementFlags();
+        	            DoScriptText(YELL_TAKEOFF, me);
+        	            flightPhaseTimer = 2000;
+        	            flightPhase++;
+        	            break;
+        	        case 1:
+        	        	me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ()+10);
+        	        	flightPhaseTimer = 0;
+        	        	flightPhase++;
+        	            break;
+        	        case 2:
+        	        {
+        	            Unit* target;
+        	            target = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
+        	            if(!target)
+        	            	target = Unit::GetUnit((*me), pInstance->GetData64(DATA_PLAYER_GUID));
 
-            Trinity::AllCreaturesOfEntryInRange check(m_creature, entry, 100);
-            Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(templist, check);
+        	            if(target)
+        	            {
+        	                Creature* Vapor = me->SummonCreature(MOB_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
+        	                if(Vapor)
+        	                {
+        	                    Vapor->AI()->AttackStart(target);
+        	                    me->InterruptNonMeleeSpells(false);
+        	                    me->CastSpell(Vapor, SPELL_VAPOR_CHANNEL, false); // core bug
+        	                    Vapor->CastSpell(Vapor, SPELL_VAPOR_TRIGGER, true);
+        	                }
+        	            }
+        	            flightPhaseTimer = 10000;
+        	            flightPhase++;
+        	            break;
+        	        }
+        	        case 3:
+        	        {
+        	        	Summons.DespawnEntry(MOB_VAPOR_TRAIL);
+        	            Unit* target;
+        	            target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true);
+        	            if(!target)
+        	            	target = Unit::GetUnit((*me), pInstance->GetData64(DATA_PLAYER_GUID));
 
-            TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> cSearcher(searcher);
+        	            if(target)
+        	            {
+        	                Creature* Vapor = me->SummonCreature(MOB_VAPOR, target->GetPositionX()-5+rand()%10, target->GetPositionY()-5+rand()%10, target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 9000);
+        	                if(Vapor)
+        	                {
+        	                    Vapor->AI()->AttackStart(target);
+        	                    me->InterruptNonMeleeSpells(false);
+        	                    me->CastSpell(Vapor, SPELL_VAPOR_CHANNEL, false); // core bug
+        	                    Vapor->CastSpell(Vapor, SPELL_VAPOR_TRIGGER, true);
+        	                }
+        	            }
 
-            cell.Visit(pair, cSearcher, *(m_creature->GetMap()));
-        }
+        	            flightPhaseTimer = 10000;
+        	            flightPhase++;
+        	            break;
+        	        }
+        	        case 4:
+        	        	Summons.DespawnEntry(MOB_VAPOR_TRAIL);
+        	        	flightPhaseTimer = 1;
+        	        	flightPhase++;
+        	            break;
+        	        case 5:
+        	        {
+        	            if (BreathCount == 0)
+        	            {
+        	                switch (rand()%2)
+        	                {
+        	                    case 0:
+        	                        goingLeft = true;
+        	                        break;
+        	                    case 1:
+        	                        goingLeft = false;
+        	                        break;
+        	                }
+        	            }
+        	            me->RemoveAurasDueToSpell(AURA_NOXIOUS_FUMES);
+        	            if (!goingLeft)     // Right
+        	            	me->GetMotionMaster()->MovePoint(0, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
+        	            else                // Left
+        	            	me->GetMotionMaster()->MovePoint(0, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
+        	            flightPhaseTimer = 28000;
+        	            flightPhase++;
+        	            break;
+        	        }
+        	        case 6:
+        	        {
+        	            randomPoint = rand()%3;
+        	            if (!goingLeft)     // Right
+        	            	me->GetMotionMaster()->MovePoint(1, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
+        	            else
+        	            	me->GetMotionMaster()->MovePoint(1, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
 
-        for(std::list<Creature*>::iterator i = templist.begin(); i != templist.end(); ++i)
-        {
-            if(entry == MOB_VAPOR_TRAIL && Phase == PHASE_FLIGHT)
-            {
-                float x, y, z;
-                (*i)->GetPosition(x, y, z);
-                m_creature->SummonCreature(MOB_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
+        	            flightPhaseTimer = 28000;
+        	            flightPhase++;
+        	            break;
+        	        }
+        	        case 7:
+        	            if (!goingLeft)
+        	            {
+        	            	me->SetOrientation(me->GetAngle(lefts[randomPoint][0], lefts[randomPoint][1]));
+        	            	me->GetMotionMaster()->MovePoint(0, me->GetPositionX() - 0.5, me->GetPositionY() + 1, me->GetPositionZ());
+        	            }
+        	            else
+        	            {
+        	            	me->SetOrientation(me->GetAngle(rights[randomPoint][0], rights[randomPoint][1]));
+        	            	me->GetMotionMaster()->MovePoint(0, me->GetPositionX() + 0.5, me->GetPositionY() - 1, me->GetPositionZ());
+        	            }
+
+        	            DoScriptText(EMOTE_DEEP_BREATH, me);
+        	            flightPhaseTimer = 2500;
+        	            flightPhase++;
+        	            break;
+        	        case 8:
+        	        	scheduleEvent(EVENT_FOG_CORRUPTION, 1);
+        	        	me->CastSpell(me, SPELL_FOG_BREATH, true);
+        	            if (!goingLeft)
+        	            	me->GetMotionMaster()->MovePoint(2, lefts[randomPoint][0], lefts[randomPoint][1], lefts[randomPoint][2]-10);
+        	            else
+        	            	me->GetMotionMaster()->MovePoint(2, rights[randomPoint][0], rights[randomPoint][1], rights[randomPoint][2]-10);
+
+        	            flightPhaseTimer = 0;
+        	            flightPhase++;
+        	            break;
+        	        case 9:
+        	        	scheduleEvent(EVENT_FOG_CORRUPTION, 0);
+        	        	me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
+        	            BreathCount++;
+        	            flightPhaseTimer = 1;
+        	            flightPhase++;
+
+        	            goingLeft = !goingLeft;
+        	            if(BreathCount < 3)
+        	            	flightPhase = 4;
+        	            break;
+        	        case 10:
+        	        	me->CastSpell(me, AURA_NOXIOUS_FUMES, true);
+        	            if(Unit* target = selectUnit(SELECT_TARGET_TOPAGGRO, 0))
+        	            {
+        	                float x, y, z;
+        	                target->GetContactPoint(me, x, y, z);
+        	                if (goingLeft)
+        	                	me->GetMotionMaster()->MovePoint(4, 1482.709961, 649.406006, 21.081100);    // Left landing point
+        	                else
+        	                	me->GetMotionMaster()->MovePoint(4, 1491.119995, 553.672974, 24.921900);    // Right landing point
+        	            }
+
+        	            flightPhaseTimer = 0;
+        	            flightPhase++;
+        	            break;
+        	        case 11:
+        	        {
+        	        	disableEvent(EVENT_FOG_CORRUPTION);
+        	            Unit *target = selectUnit(SELECT_TARGET_TOPAGGRO, 0);
+        	            attackStart(target);
+        	            inChaseOnFlight = true;
+        	            setPhase(PHASE_PULL);
+        	            flightPhase++;
+        	            break;
+        	        }
+        	        default:
+        	            break;
+        	    }
             }
-            (*i)->SetVisibility(VISIBILITY_OFF);
-            (*i)->setDeathState(JUST_DIED);
-            if((*i)->getDeathState() == CORPSE)
-                (*i)->RemoveCorpse();
+        	else
+        		flightPhaseTimer -= diff;
         }
+
+        void update(const uint32 diff)
+        {
+        	if (getPhase() == PHASE_INTRO)
+        	{
+        		handleIntro(diff);
+        		return;
+        	}
+
+        	if (!updateVictim())
+        	    return;
+
+        	if(me->IsNonMeleeSpellCasted(false))
+        	    return;
+
+        	if (inChaseOnFlight && me->IsWithinMeleeRange(me->getVictim()))
+        	{
+        		inChaseOnFlight = false;
+        	    me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+        	    me->SetDisableGravity(false);
+
+        	    float x, y, z;
+        	    me->GetPosition(x, y, z);
+        	    me->UpdateGroundPositionZ(x, y, z);
+        	    me->Relocate(x, y, z);
+
+        	    me->SendMovementFlagUpdate();
+
+        	    setPhase(PHASE_GROUND);
+        	}
+
+        	if (getPhase() == PHASE_FLIGHT)
+        	{
+        		me->SetTarget(0);
+        		handleFlight(diff);
+        	}
+        	else if (getPhase() == PHASE_GROUND)
+        	{
+        		if (flightPhaseTimer <= diff)
+        		{
+        			setPhase(PHASE_FLIGHT);
+        		}
+        		else
+        			flightPhaseTimer -= diff;
+
+        		doMeleeAttackIfReady();
+        	}
+
+        	updateEvents(diff);
+
+        	while (executeEvent(diff, m_currEvent))
+        	{
+        	    switch (m_currEvent)
+        	    {
+        	        case EVENT_CLEAVE:
+        	        	me->CastSpell(me->getVictim(), SPELL_CLEAVE, false);
+        	        	scheduleEvent(EVENT_CLEAVE, 5000, 10000);
+        	        	break;
+        	        case EVENT_CORROSION:
+        	        	me->CastSpell(me->getVictim(), SPELL_CORROSION, false);
+        	        	scheduleEvent(EVENT_CORROSION, 20000, 30000);
+        	        	break;
+        	        case EVENT_GAS_NOVA:
+        	            me->CastSpell(me, SPELL_GAS_NOVA, false);
+        	            scheduleEvent(EVENT_GAS_NOVA, 20000, 25000);
+        	            break;
+        	        case EVENT_ENCAPSULATE:
+        	        	if(encapsTarget)
+        	        		me->CastSpell(encapsTarget, SPELL_ENCAPSULATE_CHANNEL, false);
+
+        	            scheduleEvent(EVENT_ENCAPSULATE, 25000, 30000);
+        	            scheduleEvent(EVENT_ENCAPS_WARN, getTimer(EVENT_ENCAPSULATE) - 1000);
+        	        	break;
+        	        case EVENT_ENCAPS_WARN:
+        	        	if (flightPhaseTimer < 8000)
+        	        	{
+        	        		scheduleEvent(EVENT_ENCAPSULATE, 30000);
+        	        		scheduleEvent(EVENT_ENCAPS_WARN, 30000);
+        	        	}
+        	        	if (encapsTarget = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
+        	        	    me->SetTarget(encapsTarget->GetGUID());
+
+        	        	if (!encapsTarget)
+        	        	    break;
+
+        	        	while (encapsTarget->isDead())
+        	        	{
+        	        	    encapsTarget = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true);
+
+        	        	    if (!encapsTarget)
+        	        	        break;
+
+        	        	    me->SetTarget(encapsTarget->GetGUID());
+        	        	}
+        	        	scheduleEvent(EVENT_ENCAPS_WARN, 20000);
+        	        	break;
+        	        case EVENT_BERSERK:
+        	        	DoScriptText(YELL_BERSERK, me);
+        	        	me->CastSpell(me, SPELL_BERSERK, true);
+        	        	scheduleEvent(EVENT_BERSERK, getPhase() == PHASE_GROUND ? 10000 : 0);
+        	        case EVENT_FOG_CORRUPTION:
+        	        {
+        	            if (pInstance)
+        	            {
+        	                switch (randomPoint)
+        	                {
+        	                    case 0:
+        	                    	pInstance->SetData((goingLeft ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY());
+        	                    	break;
+        	                    case 1:
+        	                    	pInstance->SetData((goingLeft ? DATA_ACTIVATE_CENTER_TO_LEFT : DATA_ACTIVATE_CENTER_TO_RIGHT), (uint32) me->GetPositionY());
+        	                    	break;
+        	                    case 2:
+        	                    	pInstance->SetData((goingLeft ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY());
+        	                    	break;
+        	                }
+        	            }
+
+        	            float x, y, z;
+        	            me->GetPosition(x, y, z);
+        	            me->UpdateGroundPositionZ(x, y, z);
+        	            if(Creature *Fog = me->SummonCreature(MOB_VAPOR_TRAIL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
+        	            {
+        	                Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
+        	                Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
+        	            }
+        	            scheduleEvent(EVENT_FOG_CORRUPTION, 500);
+        	            break;
+        	        }
+        	    }
+        	}
+        }
+    };
+
+    CreatureAINew* getAI(Creature* creature)
+    {
+        return new boss_felmystAI(creature);
     }
 };
 
@@ -810,7 +706,7 @@ struct mob_felmyst_trailAI : public ScriptedAI
     {
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->CastSpell(m_creature, SPELL_TRAIL_TRIGGER, true);
-        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID());
+        m_creature->SetTarget(m_creature->GetGUID());
         m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
     }
     void Reset() {}
@@ -819,11 +715,6 @@ struct mob_felmyst_trailAI : public ScriptedAI
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff) {}
 };
-
-CreatureAI* GetAI_boss_felmyst(Creature *_Creature)
-{
-    return new boss_felmystAI(_Creature);
-}
 
 CreatureAI* GetAI_mob_felmyst_vapor(Creature *_Creature)
 {
@@ -875,10 +766,8 @@ CreatureAI* GetAI_trigger_felmyst_fog(Creature *pCreature)
 void AddSC_boss_felmyst()
 {
     Script *newscript;
-    newscript = new Script;
-    newscript->Name="boss_felmyst";
-    newscript->GetAI = &GetAI_boss_felmyst;
-    newscript->RegisterSelf();
+
+    sScriptMgr.addScript(new boss_felmyst());
 
     newscript = new Script;
     newscript->Name="mob_felmyst_vapor";
