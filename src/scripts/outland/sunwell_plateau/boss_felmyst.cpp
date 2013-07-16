@@ -162,9 +162,9 @@ public:
 
         	if (onSpawn)
         	{
-        	    addEvent(EVENT_CLEAVE, 5000, 10000, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(4));
-        	    addEvent(EVENT_CORROSION, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(4));
-        	    addEvent(EVENT_GAS_NOVA, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(4));
+        	    addEvent(EVENT_CLEAVE, 5000, 10000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_CORROSION, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_GAS_NOVA, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
         	    addEvent(EVENT_ENCAPSULATE, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
         	    addEvent(EVENT_ENCAPS_WARN, 29000, 29000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
         	    addEvent(EVENT_FOG_CORRUPTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(6));
@@ -597,12 +597,12 @@ public:
         	}
         	else if (getPhase() == PHASE_GROUND)
         	{
-        		/*if (flightPhaseTimer <= diff)
+        		if (flightPhaseTimer <= diff)
         		{
         			setPhase(PHASE_FLIGHT);
         		}
         		else
-        			flightPhaseTimer -= diff;*/
+        			flightPhaseTimer -= diff;
 
         		doMeleeAttackIfReady();
         	}
@@ -630,10 +630,7 @@ public:
         	            break;
         	        case EVENT_ENCAPSULATE:
         	        	if(encapsTarget)
-        	        	{
-        	        		sLog.outString("log2");
         	        		doCast(encapsTarget, SPELL_ENCAPSULATE_CHANNEL, false);
-        	        	}
 
         	        	m_phase = PHASE_GROUND;
 
@@ -644,7 +641,6 @@ public:
         	            scheduleEvent(EVENT_ENCAPS_WARN, 29000);
         	        	break;
         	        case EVENT_ENCAPS_WARN:
-        	        	sLog.outString("log1");
         	        	if (encapsTarget = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
         	        	    me->SetTarget(encapsTarget->GetGUID());
 
