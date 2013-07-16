@@ -43,9 +43,7 @@ struct Mob_EventAI : public ScriptedAI
     {
         EventList = pEventList;
         Phase = 0;
-        CombatMovementEnabled = true;
         MeleeEnabled = true;
-        AttackDistance = 0;
         AttackAngle = 0.0f;
 
         //Handle Spawned Events
@@ -72,9 +70,7 @@ struct Mob_EventAI : public ScriptedAI
 
     //Variables used by Events themselves
     uint8 Phase;                                            //Current phase, max 32 phases
-    bool CombatMovementEnabled;                             //If we allow targeted movment gen (movement twoards top threat)
     bool MeleeEnabled;                                      //If we allow melee auto attack
-    uint32 AttackDistance;                                  //Distance to attack from
     float AttackAngle;                                      //Angle of attack
     uint32 TimetoFleeLeft;                                  //For fleeing
 
@@ -679,10 +675,10 @@ struct Mob_EventAI : public ScriptedAI
                             //Melee current victim if flag not set
                             if (!(param3 & CAST_NO_MELEE_IF_OOM))
                             {
-                                AttackDistance = 0;
+                                SetCombatDistance(0.0f);
                                 AttackAngle = 0;
 
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), AttackDistance, AttackAngle);
+                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
                             }
 
                         }else
@@ -791,12 +787,12 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case ACTION_T_COMBAT_MOVEMENT:
             {
-                CombatMovementEnabled = param1;
+                SetCombatMovementAllowed(param1);
 
                 //Allow movement (create new targeted movement gen if none exist already)
-                if (CombatMovementEnabled)
+                if (IsCombatMovementAllowed())
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), AttackDistance, AttackAngle);
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
                 }
                 else
                 {
@@ -866,12 +862,11 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case ACTION_T_RANGED_MOVEMENT:
             {
-                AttackDistance = param1;
+                SetCombatDistance((float)param1);
                 AttackAngle = ((float)param2/180)*M_PI;
-
-                if (CombatMovementEnabled)
+                if (IsCombatMovementAllowed())
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), AttackDistance, AttackAngle);
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
                 }
             }
             break;
@@ -1200,7 +1195,7 @@ struct Mob_EventAI : public ScriptedAI
         EventUpdateTime = EVENT_UPDATE_TIME;
         EventDiff = 0;
     }
-
+    /*
     void AttackStart(Unit *who)
     {
         if (!who)
@@ -1216,16 +1211,16 @@ struct Mob_EventAI : public ScriptedAI
                 Aggro(who);
             }
 
-            if (CombatMovementEnabled)
+            if (IsCombatMovementAllowed())
             {
-                m_creature->GetMotionMaster()->MoveChase(who, AttackDistance, AttackAngle);
+                m_creature->GetMotionMaster()->MoveChase(who, GetCombatDistance(), AttackAngle);
             }
             else
             {
                 m_creature->GetMotionMaster()->MoveIdle();
             }
         }
-    }
+    }*/
 
     void MoveInLineOfSight(Unit *who)
     {
