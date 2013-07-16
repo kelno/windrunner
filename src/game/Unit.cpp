@@ -2412,9 +2412,6 @@ void Unit::SendAttackStop(Unit* victim)
     data << uint32(0);                                      // can be 0x1
     SendMessageToSet(&data, true);
     sLog.outDetail("%s %u stopped attacking %s %u", (GetTypeId()==TYPEID_PLAYER ? "player" : "creature"), GetGUIDLow(), (victim->GetTypeId()==TYPEID_PLAYER ? "player" : "creature"),victim->GetGUIDLow());
-
-    /*if(victim->GetTypeId() == TYPEID_UNIT)
-    (victim->ToCreature())->AI().EnterEvadeMode(this);*/
 }
 
 bool Unit::isSpellBlocked(Unit *pVictim, SpellEntry const *spellProto, WeaponAttackType attackType)
@@ -7076,6 +7073,7 @@ bool Unit::IsNeutralToAll() const
     return my_faction->IsNeutralToAll();
 }
 
+/* return true if we started attacking a new target */
 bool Unit::Attack(Unit *victim, bool meleeAttack)
 {
     if (!victim || victim == this)
@@ -7119,6 +7117,7 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
     if (GetTypeId() == TYPEID_UNIT && getStandState() == UNIT_STAND_STATE_DEAD)
         SetStandState(UNIT_STAND_STATE_STAND);
 
+    //already attacking
     if (m_attacking)
     {
         if (m_attacking == victim)
@@ -7135,9 +7134,9 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
             }
             else if (hasUnitState(UNIT_STAT_MELEE_ATTACKING))
             {
-            	clearUnitState(UNIT_STAT_MELEE_ATTACKING);
-            	SendAttackStop(victim);
-            	return true;
+                clearUnitState(UNIT_STAT_MELEE_ATTACKING);
+                SendAttackStop(victim); //melee attack stop
+                return true;
             }
             return false;
         }
@@ -7156,6 +7155,7 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
 
     //Set our target
     SetTarget(victim->GetGUID());
+
     if (meleeAttack)
         addUnitState(UNIT_STAT_MELEE_ATTACKING);
 
@@ -7183,7 +7183,7 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
     if (haveOffhandWeapon())
         resetAttackTimer(OFF_ATTACK);
 
-    if (meleeAttack)
+    if (meleeAttack) 
         SendAttackStart(victim);
 
     return true;
@@ -9051,9 +9051,6 @@ bool Unit::isAttackableByAOE() const
 
     if(HasFlag(UNIT_FIELD_FLAGS,
         UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE | UNIT_FLAG_OOC_NOT_ATTACKABLE))
-        return false;
-
-    if (HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
         return false;
 
     if(GetTypeId()==TYPEID_PLAYER && (this->ToPlayer())->isGameMaster())

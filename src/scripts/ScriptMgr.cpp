@@ -126,6 +126,7 @@ extern void AddSC_boss_balinda();
 extern void AddSC_boss_drekthar();
 extern void AddSC_boss_galvangar();
 extern void AddSC_boss_vanndar();
+extern void AddSC_alterac_bowman();
 
 //Arathi Highlands
 extern void AddSC_arathi_highlands();
@@ -1514,6 +1515,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_drekthar();
     AddSC_boss_galvangar();
     AddSC_boss_vanndar();
+    AddSC_alterac_bowman();
 
     //Arathi Highlands
     AddSC_arathi_highlands();
