@@ -3867,7 +3867,7 @@ void Aura::HandleAuraModIncreaseFlightSpeed(bool apply, bool Real)
     	if (m_target->GetTypeId() == TYPEID_UNIT)
     	    m_target->SetCanFly(apply);
     	else if (m_target->GetTypeId() == TYPEID_PLAYER)
-    	    m_target->SetCanFly(apply, true);
+    	    m_target->ToPlayer()->SetCanFly(apply, true);
 
     	if (!m_target && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
     		m_target->GetMotionMaster()->MoveFall();
@@ -5634,7 +5634,7 @@ void Aura::HandleAuraAllowFlight(bool apply, bool Real)
     if (m_target->GetTypeId() == TYPEID_UNIT)
         m_target->SetCanFly(apply);
     else if (m_target->GetTypeId() == TYPEID_PLAYER)
-    	m_target->SetCanFly(apply, true);
+    	m_target->ToPlayer()->SetCanFly(apply, true);
 
     if (!apply && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
     	m_target->GetMotionMaster()->MoveFall();
