@@ -638,7 +638,7 @@ public:
         	        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
         	        		doCast(me, SPELL_VAPOR_SELECT, false);
 
-        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 20000);
+        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 25000);
         	        	break;
         	        case EVENT_FOG_CORRUPTION:
         	        {
