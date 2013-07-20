@@ -262,6 +262,7 @@ public:
                 	enableEvent(EVENT_DEMONIC_VAPOR);
                 	flightPhaseTimer = 300;
                 	flightPhase = 0;
+                	BreathCount = 0;
                 	break;
             }
         }
@@ -693,9 +694,11 @@ public:
         }
 
         ScriptedInstance* pInstance;
+        bool startFollow;
 
         void onReset(bool onSpawn)
         {
+        	startFollow = false;
         	me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         	me->SetWalk(false);
         	me->SetSpeed(MOVE_RUN, 1.0f);
@@ -703,9 +706,19 @@ public:
 
         void onCombatStart(Unit* /*who*/)
         {
+        	startFollow = true;
         	setZoneInCombat(true);
         	doCast((Unit*)NULL, SPELL_VAPOR_FORCE, false);
         	doCast(me, SPELL_VAPOR_TRIGGER, false);
+        }
+
+        void update(uint32 const /*diff*/)
+        {
+        	if (startFollow)
+        	{
+        	    if(!me->getVictim())
+        	        attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+        	}
         }
     };
 
@@ -742,6 +755,10 @@ public:
         	doCast((Unit*)NULL, SPELL_DEAD_SUMMON, false);
         	me->DisappearAndDie();
         }
+
+        void attackStart(Unit* /*victim*/) {}
+
+        void update(uint32 const /*diff*/) {}
     };
 
     CreatureAINew* getAI(Creature* creature)
