@@ -159,7 +159,7 @@ struct boss_brutallusAI : public ScriptedAI
             Madrigosa->SetVisibility(VISIBILITY_ON);
         }
 
-        DoCast((Unit*)NULL, 45884, true);
+        DoCastAOE(45884, true);
 
         DoScriptText(YELL_DEATH, m_creature);
 
@@ -497,7 +497,7 @@ struct trigger_death_cloudAI : public ScriptedAI
             if (Creature *Madrigosa = Unit::GetCreature(*me, pInstance ? pInstance->GetData64(DATA_MADRIGOSA) : 0)) {
                 Madrigosa->RemoveAurasDueToSpell(44885);
                 Madrigosa->SetVisibility(VISIBILITY_OFF);
-                DoCast((Unit*)NULL, 45069, true);
+                DoCastAOE(45069, true);
                 bornTimer = 0;
                 me->DisappearAndDie();
             }

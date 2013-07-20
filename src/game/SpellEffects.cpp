@@ -2418,8 +2418,14 @@ void Spell::EffectForceCast(uint32 i)
             if (!m_caster->getVictim())
                 return;
 
-            m_caster->getVictim()->CastSpell(m_caster->getVictim(), triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+            m_caster->getVictim()->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
             break;
+        case 45391:
+        	unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+        	break;
+        case 45388:
+        	unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+        	break;
         default:
             unitTarget->CastSpell(unitTarget,spellInfo,true,NULL,NULL,m_originalCasterGUID);
             break;
@@ -4401,7 +4407,22 @@ void Spell::EffectSummonWild(uint32 i)
         {
             Creature* Charmed = m_originalCaster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
             if (Charmed)
-                Charmed->SetSummoner(m_caster);
+            {
+                switch (m_spellInfo->Id)
+                {
+                    case 45392:
+                    	Charmed->SetSummoner(m_originalCaster);
+                    	if (Charmed->getAI())
+                    		Charmed->getAI()->attackStart(m_caster);
+                    	break;
+                    case 45410:
+                    	Charmed->SetSummoner(m_originalCaster);
+                    	break;
+                    default:
+                    	Charmed->SetSummoner(m_caster);
+                    	break;
+                }
+            }
             if (creature_entry == 12922 || creature_entry == 8996) //Summoned Imp/Voidwalker by many NPCs, they're all level 46, even if summoner has a different level
             {
                 Charmed->SetLevel(m_originalCaster->getLevel());
