@@ -70,7 +70,7 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
             }
             else
             {
-                dist = i_offset + 1.0f;
+                dist = i_offset;
                 size = owner->GetObjectSize();
             }
 
@@ -137,7 +137,7 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time
     }
 
 	// prevent movement while casting spells with cast time or channel time
-    if (owner->hasUnitState(UNIT_STAT_CASTING))
+	if (owner->IsNonMeleeSpellCasted(false, false, true))
     {
 	    if (!owner->IsStopped())
 	        owner->StopMoving();
