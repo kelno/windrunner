@@ -86,6 +86,7 @@ extern void AddSC_onevents();
 extern void AddSC_npc_lottery();
 extern void AddSC_theinform();
 extern void AddSC_mylittlebombling();
+extern void AddSC_npc_interpreter();
 
 extern void AddSC_npc_teleporter();
 
@@ -1475,6 +1476,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_npc_lottery();
 	AddSC_theinform();
     AddSC_mylittlebombling();
+    AddSC_npc_interpreter();
 
     AddSC_npc_teleporter();
 

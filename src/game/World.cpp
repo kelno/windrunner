@@ -1149,6 +1149,8 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_SPAM_REPORT_COOLDOWN] = sConfig.GetIntDefault("Spam.Report.Cooldown", 120); // In seconds
 
     m_configs[CONFIG_CREATURE_FAMILY_FLEE_DELAY] = sConfig.GetIntDefault("CreatureFamilyFleeDelay", 7000);
+    
+    m_configs[CONFIG_FACTION_CHANGE_ENABLED] = sConfig.GetBoolDefault("Faction.Change.Enabled", false);
 }
 
 extern void LoadGameObjectModelList();
