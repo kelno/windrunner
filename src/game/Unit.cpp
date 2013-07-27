@@ -2403,15 +2403,16 @@ void Unit::SendAttackStart(Unit* pVictim)
 
 void Unit::SendAttackStop(Unit* victim)
 {
-    if(!victim)
-        return;
-
     WorldPacket data( SMSG_ATTACKSTOP, (4+16) );            // we guess size
     data.append(GetPackGUID());
     data.append(victim ? victim->GetPackGUID() : 0);
     data << uint32(0);                                      // can be 0x1
     SendMessageToSet(&data, true);
-    sLog.outDetail("%s %u stopped attacking %s %u", (GetTypeId()==TYPEID_PLAYER ? "player" : "creature"), GetGUIDLow(), (victim->GetTypeId()==TYPEID_PLAYER ? "player" : "creature"),victim->GetGUIDLow());
+
+    if (victim)
+        sLog.outDetail("%s %u stopped attacking %s %u", (GetTypeId()==TYPEID_PLAYER ? "player" : "creature"), GetGUIDLow(), (victim->GetTypeId()==TYPEID_PLAYER ? "player" : "creature"),victim->GetGUIDLow());
+    else
+    	sLog.outDetail("%s %u stopped attacking", (GetTypeId()==TYPEID_PLAYER ? "player" : "creature"), GetGUIDLow());
 }
 
 bool Unit::isSpellBlocked(Unit *pVictim, SpellEntry const *spellProto, WeaponAttackType attackType)
