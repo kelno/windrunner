@@ -17,6 +17,7 @@ SET(scripts_STAT_SRCS
     include/precompiled.h
     azeroth/arathi_highlands.cpp
     azeroth/alterac_mountains.cpp
+    azeroth/alterac_valley/alterac_bowman.cpp
     azeroth/alterac_valley/AV_Marshals.cpp
     azeroth/alterac_valley/AV_Warmasters.cpp
     azeroth/alterac_valley/boss_balinda.cpp
@@ -309,6 +310,7 @@ SET(scripts_STAT_SRCS
     misc/item_scripts.cpp
     misc/item_test.cpp
     misc/npc_innkeeper.cpp
+    misc/npc_interpreter.cpp
     misc/npc_professions.cpp
     misc/npc_spectate.cpp
     misc/npc_xp_blocker.cpp
