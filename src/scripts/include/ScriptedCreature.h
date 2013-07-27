@@ -209,15 +209,13 @@ struct ScriptedAI : public CreatureAI
         bool m_bCombatMovement;
 };
 
+/* Can now be replaced with a SetCombatMovementAllowed(false), you should avoid using this */
 struct Scripted_NoMovementAI : public ScriptedAI
 {
-    Scripted_NoMovementAI(Creature* creature) : ScriptedAI(creature) {}
+    Scripted_NoMovementAI(Creature* creature) : ScriptedAI(creature) { SetCombatMovementAllowed(false); }
 
     //Called if IsVisible(Unit *who) is true at each *who move
     //void MoveInLineOfSight(Unit *);
-
-    //Called at each attack of m_creature by any victim
-    void AttackStart(Unit *);
 };
 
 struct NullCreatureAI : public ScriptedAI
