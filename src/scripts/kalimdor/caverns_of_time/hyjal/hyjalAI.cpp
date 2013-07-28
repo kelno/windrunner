@@ -499,7 +499,7 @@ void hyjalAI::SummonCreature(uint32 entry, float Base[4][3])
         // Increment Enemy Count to be used in World States and instance script
         ++EnemyCount;
 
-        pCreature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        pCreature->SetWalk(false);
         pCreature->setActive(true);
         switch(entry)
         {
@@ -1042,7 +1042,7 @@ void hyjalAI::WaypointReached(uint32 i)
                 if((*itr) && (*itr)->isAlive() && (*itr) != m_creature && (*itr)->GetEntry() != JAINA)
                 {
                     if((*itr)->GetDistance(m_creature) >= 60)
-                        (*itr)->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    	(*itr)->SetWalk(false);
                     float x, y, z;
                     (*itr)->SetDefaultMovementType(IDLE_MOTION_TYPE);
                     (*itr)->GetMotionMaster()->Initialize();

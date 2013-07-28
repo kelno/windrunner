@@ -119,7 +119,7 @@ class Boss_Lurker_Below : public CreatureScript
 
             void onReset(bool onSpawn)
             {
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
+                me->SetSwim(true);
                 summons.DespawnAll();
 
                 if (_instance)

@@ -132,7 +132,7 @@ class WorldSession
 
         void SizeError(WorldPacket const& packet, uint32 size) const;
         
-        void ReadMovementInfo(WorldPacket &data, MovementInfo *mi, uint32* flags);
+        void ReadMovementInfo(WorldPacket &data, MovementInfo *mi);
 
         void SendPacket(WorldPacket const* packet);
         void SendNotification(const char *format,...) ATTR_PRINTF(2,3);
@@ -383,7 +383,7 @@ class WorldSession
         void HandleMoveWorldportAckOpcode();                // for server-side calls
 
         void HandleMovementOpcodes(WorldPacket& recvPacket);
-        void HandlePossessedMovement(WorldPacket& recv_data, MovementInfo& movementInfo, uint32& MovementFlags);
+        void HandlePossessedMovement(WorldPacket& recv_data, MovementInfo& movementInfo);
         void HandleSetActiveMoverOpcode(WorldPacket &recv_data);
         void HandleNotActiveMoverOpcode(WorldPacket &recv_data);
         void HandleMoveTimeSkippedOpcode(WorldPacket &recv_data);

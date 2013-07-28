@@ -203,7 +203,7 @@ void initBlyCrewMember(Player* pPlayer, uint32 entry,float x,float y, float z)
     if (Creature* crew = pPlayer->FindCreatureInGrid(entry, 10.0f, true)) {
         crew->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
         crew->SetReactState(REACT_AGGRESSIVE);
-        crew->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        crew->SetWalk(true);
         crew->SetHomePosition(x,y,z,0);
         crew->GetMotionMaster()->MovePoint(1,x,y,z);
         crew->setFaction(FACTION_FREED);
