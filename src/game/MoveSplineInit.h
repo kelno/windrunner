@@ -95,9 +95,6 @@ namespace Movement
 
         PointsArray& Path() { return args.path; }
 
-        /* Disables transport coordinate transformations for cases where raw offsets are available
-        */
-        void DisableTransportPathTransformations();
     protected:
 
         MoveSplineInitArgs args;

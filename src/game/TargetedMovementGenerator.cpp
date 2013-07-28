@@ -49,8 +49,8 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
     {
         if (!i_offset)
         {
-            // to nearest contact position
-            i_target->GetContactPoint(owner, x, y, z);
+        	// to nearest contact position
+        	i_target->GetContactPoint(owner, x, y, z);
         }
         else
         {
@@ -70,15 +70,15 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
             }
             else
             {
-                dist = i_offset;
+                dist = i_offset + 1.0f;
                 size = owner->GetObjectSize();
             }
 
-            /*if (i_target->IsWithinDistInMap(owner, dist))
-                return;*/
+            if (i_target->IsWithinDistInMap(owner, dist))
+                return;
 
             // to at i_offset distance from target and i_angle from target facing
-            i_target->GetClosePoint(x, y, z, size, i_offset, i_angle);
+            i_target->GetClosePoint(x, y, z, size, dist, i_angle);
         }
     }
     else
@@ -157,7 +157,7 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time
     {
 	    i_recheckDistance.Reset(100);
 	    //More distance let have better performance, less distance let have more sensitive reaction at target move.
-	    float allowed_dist = (owner->GetCombatReach() + i_target.getTarget()->GetCombatReach())/2.0f + sWorld.getRate(RATE_TARGET_POS_RECALCULATION_RANGE);
+	    float allowed_dist = owner->GetCombatReach() + sWorld.getRate(RATE_TARGET_POS_RECALCULATION_RANGE);
 	    G3D::Vector3 dest = owner->movespline->FinalDestination();
 
 	    if (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->canFly())
