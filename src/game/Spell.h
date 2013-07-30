@@ -649,7 +649,9 @@ namespace Trinity
 
             for(typename GridRefManager<T>::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
-                if( !itr->getSource()->isAlive() || (itr->getSource()->GetTypeId() == TYPEID_PLAYER && (itr->getSource()->ToPlayer())->isInFlight()))
+                if( !itr->getSource()->isAlive() || 
+                    ( itr->getSource()->GetTypeId() == TYPEID_PLAYER && ((itr->getSource()->ToPlayer())->isInFlight() || (itr->getSource()->ToPlayer())->isSpectator()) ) 
+                  )
                     continue;
 
                 switch (i_TargetType)
