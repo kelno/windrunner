@@ -153,7 +153,7 @@ bool OutdoorPvPObjective::AddCreature(uint32 type, uint32 entry, uint32 teamval,
     if(!pMap)
         return true;
     Creature* pCreature = new Creature;
-    if (!pCreature->Create(guid, pMap, entry, teamval))
+    if (!pCreature->Create(guid, pMap, entry, teamval, x, y, z, o))
     {
         sLog.outError("Can't create creature entry: %u",entry);
         delete pCreature;
@@ -161,15 +161,6 @@ bool OutdoorPvPObjective::AddCreature(uint32 type, uint32 entry, uint32 teamval,
     }
 
     pCreature->AIM_Initialize();
-
-    pCreature->Relocate(x, y, z, o);
-
-    if(!pCreature->IsPositionValid())
-    {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not added to opvp. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
-        delete pCreature;
-        return false;
-    }
 
     if(spawntimedelay)
         pCreature->SetRespawnDelay(spawntimedelay);
@@ -269,7 +260,7 @@ bool OutdoorPvPObjective::AddCapturePoint(uint32 entry, uint32 map, float x, flo
     }
     // add creature...
     Creature* pCreature = new Creature;
-    if (!pCreature->Create(creature_guid, pMap, OPVP_TRIGGER_CREATURE_ENTRY, 0))
+    if (!pCreature->Create(creature_guid, pMap, OPVP_TRIGGER_CREATURE_ENTRY, 0, x, y, z, o))
     {
         sLog.outError("Can't create creature entry: %u",entry);
         delete pCreature;
@@ -277,15 +268,6 @@ bool OutdoorPvPObjective::AddCapturePoint(uint32 entry, uint32 map, float x, flo
     else
     {
         pCreature->AIM_Initialize();
-
-        pCreature->Relocate(x, y, z, o);
-
-        if(!pCreature->IsPositionValid())
-        {
-            sLog.outError("ERROR: Creature (guidlow %d, entry %d) not added to opvp. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
-            delete pCreature;
-            return false;
-        }
 
         pMap->Add(pCreature);
     }

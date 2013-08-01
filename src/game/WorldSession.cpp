@@ -605,39 +605,39 @@ void WorldSession::SendAuthWaitQue(uint32 position)
     }
 }
 
-void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi, uint32* flags)
+void WorldSession::ReadMovementInfo(WorldPacket &data, MovementInfo *mi)
 {
-    data >> *flags;
-    data >> mi->unk1;
+    data >> mi->flags;
+    data >> mi->flags2;
     data >> mi->time;
-    data >> mi->x;
-    data >> mi->y;
-    data >> mi->z;
-    data >> mi->o;
+    data >> mi->pos.m_positionX;
+    data >> mi->pos.m_positionY;
+    data >> mi->pos.m_positionZ;
+    data >> mi->pos.m_orientation;
 
-    if ((*flags) & MOVEMENTFLAG_ONTRANSPORT)
+    if (mi->HasMovementFlag(MOVEMENTFLAG_ONTRANSPORT))
     {
-        data >> mi->t_guid;
-        data >> mi->t_x;
-        data >> mi->t_y;
-        data >> mi->t_z;
-        data >> mi->t_o;
-        data >> mi->t_time;
+        data >> mi->transport.guid;
+        data >> mi->transport.pos.m_positionX;
+        data >> mi->transport.pos.m_positionY;
+        data >> mi->transport.pos.m_positionZ;
+        data >> mi->transport.pos.m_orientation;
+        data >> mi->transport.time;
     }
 
-    if ((*flags) & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-        data >> mi->s_pitch;
+    if (mi->HasMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
+        data >> mi->pitch;
 
     data >> mi->fallTime;
 
-    if ((*flags) & MOVEMENTFLAG_JUMPING)
+    if (mi->HasMovementFlag(MOVEMENTFLAG_FALLING))
     {
-        data >> mi->j_unk;
-        data >> mi->j_sinAngle;
-        data >> mi->j_cosAngle;
-        data >> mi->j_xyspeed;
+        data >> mi->jump.zspeed;
+        data >> mi->jump.sinAngle;
+        data >> mi->jump.cosAngle;
+        data >> mi->jump.xyspeed;
     }
 
-    if ((*flags) & MOVEMENTFLAG_SPLINE_ELEVATION)
-        data >> mi->u_unk1;
+    if (mi->HasMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION))
+        data >> mi->splineElevation;
 }

@@ -366,7 +366,7 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
         GetPlayer()->duel         ||                        //...is in Duel
         GetPlayer()->HasAura(9454,0)         ||             //...is frozen by GM via freeze command
                                                             //...is jumping ...is falling
-        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_JUMPING | MOVEMENTFLAG_FALLING))
+        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_FALLINGFAR | MOVEMENTFLAG_FALLING))
     {
         WorldPacket data( SMSG_LOGOUT_RESPONSE, (2+4) ) ;
         data << (uint8)0xC;
@@ -1468,14 +1468,21 @@ void WorldSession::HandleChooseTitleOpcode( WorldPacket & recv_data )
 void WorldSession::HandleAllowMoveAckOpcode( WorldPacket & recv_data )
 {
     PROFILE;
-    
-    CHECK_PACKET_SIZE(recv_data, 4+4);
 
-    uint32 counter, time_;
-    recv_data >> counter >> time_;
+    uint32 counter, clientTicks;
+    recv_data >> counter >> clientTicks;
 
-    // time_ seems always more than getMSTime()
-    uint32 diff = getMSTimeDiff(getMSTime(),time_);
+    if (counter != _player->m_timeSyncCounter - 1)
+    	sLog.outDebug("Wrong time sync counter from player %s (cheater?)", _player->GetName());
+
+    sLog.outDebug("Time sync received: counter %u, client ticks %u, time since last sync %u", counter, clientTicks, clientTicks - _player->m_timeSyncClient);
+
+    uint32 ourTicks = clientTicks + (getMSTime() - _player->m_timeSyncServer);
+
+    // diff should be small
+    sLog.outDebug("Our ticks: %u, diff %u, latency %u", ourTicks, ourTicks - clientTicks, GetLatency());
+
+    _player->m_timeSyncClient = clientTicks;
 }
 
 void WorldSession::HandleResetInstancesOpcode( WorldPacket & /*recv_data*/ )
@@ -1560,28 +1567,19 @@ void WorldSession::HandleDismountOpcode( WorldPacket & /*recv_data*/ )
 void WorldSession::HandleMoveFlyModeChangeAckOpcode( WorldPacket & recv_data )
 {
     PROFILE;
-    
-    CHECK_PACKET_SIZE(recv_data, 8+4+4);
 
-    // fly mode on/off
-
-    uint64 guid;
+    uint64 guid;                                            // guid - unused
     uint32 unk;
-    uint32 flags;
+    float unk2;
+    recv_data >> guid;
+    recv_data >> unk;
 
-    recv_data >> guid >> unk >> flags;
+    MovementInfo movementInfo;
+    ReadMovementInfo(recv_data, &movementInfo);
 
-    _player->SetUnitMovementFlags(flags);
-    /*
-    on:
-    25 00 00 00 00 00 00 00 | 00 00 00 00 00 00 80 00
-    85 4E A9 01 19 BA 7A C3 | 42 0D 70 44 44 B0 A8 42
-    78 15 94 40 39 03 00 00 | 00 00 80 3F
-    off:
-    25 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00
-    10 FD A9 01 19 BA 7A C3 | 42 0D 70 44 44 B0 A8 42
-    78 15 94 40 39 03 00 00 | 00 00 00 00
-    */
+    recv_data >> unk2;                                         // unk2
+
+    _player->m_movementInfo.flags = movementInfo.GetMovementFlags();
 }
 
 void WorldSession::HandleRequestPetInfoOpcode( WorldPacket & /*recv_data */)
