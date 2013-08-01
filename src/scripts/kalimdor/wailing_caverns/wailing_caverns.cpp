@@ -291,12 +291,11 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
                             {
                                 DoScriptText(SAY_FAREWELL, naralex);
                                 naralex->AddAura(SPELL_FLIGHT_FORM, naralex);
-                                naralex->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
                             }
                             SetRun();
                             m_creature->SetStandState(UNIT_STAND_STATE_STAND);
                             m_creature->AddAura(SPELL_FLIGHT_FORM, m_creature);
-                            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                            m_creature->SetDisableGravity(true);
                         }
                         else
                         if (eventProgress == 9)
