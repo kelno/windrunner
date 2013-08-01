@@ -830,7 +830,7 @@ void SmartScript::ProcessAction(SmartScriptHolder &e, Unit* unit, uint32 var0, u
                 if (e.GetTargetType() == SMART_TARGET_POSITION)
                     me->SetOrientation(e.target.o);
                 else if (targets && !targets->empty())
-                    me->SetFacing(0, (*targets->begin()));
+                    me->SetFacingToObject((*targets->begin()));
                 break;
             }
         /*case SMART_ACTION_PLAYMOVIE:      //FIXME
