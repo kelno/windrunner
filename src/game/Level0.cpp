@@ -1551,27 +1551,6 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
         return false;
     }
     
-    if (m_session->GetSecurity() <= SEC_PLAYER) {
-        result = LoginDatabase.PQuery("SELECT amount FROM account_credits WHERE id = %u", account_id);
-
-        if (!result) {
-            PSendSysMessage(LANG_NO_CREDIT_EVER);
-            SetSentErrorMessage(true);
-            return false;
-        }
-
-        fields = result->Fetch();
-        uint32 credits = fields[0].GetUInt32();
-
-        delete result;
-
-        if (credits < 3) {
-            PSendSysMessage(LANG_CREDIT_NOT_ENOUGH);
-            SetSentErrorMessage(true);
-            return false;
-        }
-    }
-    
     if (m_session->GetPlayer()->getLevel() < 10) {
         PSendSysMessage(LANG_FACTIONCHANGE_LEVEL_MIN);
         SetSentErrorMessage(true);
@@ -1585,15 +1564,6 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
         SetSentErrorMessage(true);
         return false;
     }
-    
-    // Dump player by safety
-    std::ostringstream oss;
-    std::string fname = sConfig.GetStringDefault("LogsDir", "");
-    oss << fname;
-    if (fname.length() > 0 && fname.at(fname.length()-1) != '/')
-        oss << "/";
-    oss << "chardump_factionchange/" << account_id << "_" << GUID_LOPART(m_session->GetPlayer()->GetGUID()) << "_" << m_session->GetPlayer()->GetName();
-    PlayerDumpWriter().WriteDump(oss.str().c_str(), GUID_LOPART(m_session->GetPlayer()->GetGUID()));
     
     fields = result->Fetch();
     
@@ -1642,6 +1612,41 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     PlayerInfo const* myInfo = objmgr.GetPlayerInfo(m_race, m_class);
     bool factionChange = (Player::TeamForRace(m_race) != Player::TeamForRace(t_race));
     
+    // Check if this transfer is currently allowed
+    if (factionChange) {
+        if (dest_team == BG_TEAM_ALLIANCE && !sWorld.getConfig(CONFIG_FACTION_CHANGE_H2A)) {
+            PSendSysMessage("Le changement de faction n'est actuellement pas autorisé dans le sens Horde -> Alliance.");
+            SetSentErrorMessage(true);
+            return false;
+        } else if (dest_team == BG_TEAM_HORDE && !sWorld.getConfig(CONFIG_FACTION_CHANGE_A2H)) {
+            PSendSysMessage("Le changement de faction n'est actuellement pas autorisé dans le sens Alliance -> Horde.");
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+    
+    uint32 cost = 4;
+    if (m_session->GetSecurity() <= SEC_PLAYER) {
+        result = LoginDatabase.PQuery("SELECT amount FROM account_credits WHERE id = %u", account_id);
+
+        if (!result) {
+            PSendSysMessage(LANG_NO_CREDIT_EVER);
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        fields = result->Fetch();
+        uint32 credits = fields[0].GetUInt32();
+
+        delete result;
+
+        if (credits < cost) {
+            PSendSysMessage(LANG_CREDIT_NOT_ENOUGH);
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+    
     // Check guild and arena team, friends are removed after the SaveToDB() call
     // Guild
     if (factionChange) {
@@ -1665,6 +1670,15 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     
         delete result;
     }
+    
+    // Dump player by safety
+    std::ostringstream oss;
+    std::string fname = sConfig.GetStringDefault("LogsDir", "");
+    oss << fname;
+    if (fname.length() > 0 && fname.at(fname.length()-1) != '/')
+        oss << "/";
+    oss << "chardump_factionchange/" << account_id << "_" << GUID_LOPART(m_session->GetPlayer()->GetGUID()) << "_" << m_session->GetPlayer()->GetName();
+    PlayerDumpWriter().WriteDump(oss.str().c_str(), GUID_LOPART(m_session->GetPlayer()->GetGUID()));
     
     WorldLocation loc;
     uint32 area_id = 0;
@@ -1796,20 +1810,16 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
 
             if (dest_team == BG_TEAM_ALLIANCE) {
                 if (spell_alliance == 0) {
-                    //CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = %u AND spell = %u", spell_alliance, plr->GetGUIDLow(), spell_horde);
                     plr->removeSpell(spell_horde);
                 } else {
-                    //CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", spell_alliance, plr->GetGUIDLow(), spell_horde);
                     plr->removeSpell(spell_horde);
                     plr->learnSpell(spell_alliance);
                 }
             }
             else {
                 if (spell_horde == 0) {
-                    //CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = %u AND spell = %u", spell_horde, plr->GetGUIDLow(), spell_alliance);
                     plr->removeSpell(spell_alliance);
                 } else {
-                    //CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", spell_horde, plr->GetGUIDLow(), spell_alliance);
                     plr->removeSpell(spell_alliance);
                     plr->learnSpell(spell_horde);
                 }
@@ -1826,10 +1836,8 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             uint32 to = fields[1].GetUInt32();
 
             if (to == 0) {
-                //CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = %u AND spell = %u", plr->GetGUIDLow(), from);
                 plr->removeSpell(from);
             } else {
-                //CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", to, plr->GetGUIDLow(), from);
                 plr->removeSpell(from);
                 plr->learnSpell(to);
             }
@@ -1844,10 +1852,8 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             uint32 to = fields[1].GetUInt32();
 
             if (to == 0) {
-                //CharacterDatabase.PExecute("DELETE FROM character_spell WHERE guid = %u AND spell = %u", plr->GetGUIDLow(), from);
                 plr->removeSpell(from);
             } else {
-                //CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", to, plr->GetGUIDLow(), from);
                 plr->removeSpell(from);
                 plr->learnSpell(to);
             }
@@ -1862,36 +1868,58 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
 
             if (dest_team == BG_TEAM_ALLIANCE) {
                 if (item_alliance == 0) {
-//                    CharacterDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", plr->GetGUIDLow(), item_horde);
-//                    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item_template = %u AND guid = %u", item_horde, plr->GetGUIDLow());
-                    plr->DestroyItemCount(item_horde, 1, true);
+                    uint32 count = plr->GetItemCount(item_horde, true);
+                    if (count != 0)
+                        plr->DestroyItemCount(item_horde, count, true, false, true);
                 } else {
-//                    CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", item_alliance, plr->GetGUIDLow(), item_horde);
-//                    CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", item_alliance, plr->GetGUIDLow(), item_horde);
-                    plr->DestroyItemCount(item_horde, 1, true);
-                    ItemPosCountVec dest;
-                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_alliance, 1, false);
-                    if (msg == EQUIP_ERR_OK)
-                        plr->StoreNewItem( dest, item_alliance, 1, true);
-                    else
-                        sLog.outError("Faction change: Player %s (GUID %u) couldn't store item %u! (TODO)", plr->GetName(), plr->GetGUIDLow(), item_alliance); // Shouldn't happen since we delete the corresponding item just before adding the new
+                    uint32 count = plr->GetItemCount(item_horde, true);
+                    if (count != 0) {
+                        plr->DestroyItemCount(item_horde, count, true, false, true);
+                        ItemPosCountVec dest;
+                        uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_alliance, count, false);
+                        if (msg == EQUIP_ERR_OK)
+                            plr->StoreNewItem(dest, item_alliance, count, true);
+                        else {
+                            if (Item* newItem = Item::CreateItem(item_alliance, count, plr)) {
+                                SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                                newItem->SaveToDB(trans);
+                                CharacterDatabase.CommitTransaction(trans);
+
+                                MailItemsInfo mi;
+                                mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                                std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                                WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                            }
+                        }
+                    }
                 }
             }
             else {
                 if (item_horde == 0) {
-//                    CharacterDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", plr->GetGUIDLow(), item_alliance);
-//                    CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item_template = %u AND guid = %u", item_alliance, plr->GetGUIDLow());
-                    plr->DestroyItemCount(item_alliance, 1, true);
+                    uint32 count = plr->GetItemCount(item_alliance, true);
+                    if (count != 0)
+                        plr->DestroyItemCount(item_alliance, count, true, false, true);
                 } else {
-//                    CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", item_horde, plr->GetGUIDLow(), item_alliance);
-//                    CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", item_horde, plr->GetGUIDLow(), item_alliance);
-                    plr->DestroyItemCount(item_alliance, 1, true);
-                    ItemPosCountVec dest;
-                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_horde, 1, false);
-                    if (msg == EQUIP_ERR_OK)
-                        plr->StoreNewItem( dest, item_horde, 1, true);
-                    else
-                        sLog.outError("Faction change: Player %s (GUID %u) couldn't store item %u! (TODO)", plr->GetName(), plr->GetGUIDLow(), item_horde); // Shouldn't happen since we delete the corresponding item just before adding the new
+                    uint32 count = plr->GetItemCount(item_alliance, true);
+                    if (count != 0) {
+                        plr->DestroyItemCount(item_alliance, count, true, false, true);
+                        ItemPosCountVec dest;
+                        uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_horde, count, false);
+                        if (msg == EQUIP_ERR_OK)
+                            plr->StoreNewItem(dest, item_horde, count, true);
+                        else {
+                            if (Item* newItem = Item::CreateItem(item_horde, count, plr)) {
+                                SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                                newItem->SaveToDB(trans);
+                                CharacterDatabase.CommitTransaction(trans);
+
+                                MailItemsInfo mi;
+                                mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                                std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                                WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1907,19 +1935,30 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             uint32 to = fields[1].GetUInt32();
 
             if (to == 0) {
-//                CharacterDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", plr->GetGUIDLow(), from);
-//                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item_template = %u AND guid = %u", from, plr->GetGUIDLow());
-                plr->DestroyItemCount(from, 1, true);
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0)
+                    plr->DestroyItemCount(from, count, true, false, true);
             } else {
-//                CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", to, plr->GetGUIDLow(), from);
-//                CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", to, plr->GetGUIDLow(), from);
-                plr->DestroyItemCount(from, 1, true);
-                ItemPosCountVec dest;
-                uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, 1, false);
-                if (msg == EQUIP_ERR_OK)
-                    plr->StoreNewItem( dest, to, 1, true);
-                else
-                    sLog.outError("Faction change: Player %s (GUID %u) couldn't store item %u! (TODO)", plr->GetName(), plr->GetGUIDLow(), to); // Shouldn't happen since we delete the corresponding item just before adding the new
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0) {
+                    plr->DestroyItemCount(from, count, true, false, true);
+                    ItemPosCountVec dest;
+                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, count, false);
+                    if (msg == EQUIP_ERR_OK)
+                        plr->StoreNewItem( dest, to, count, true);
+                    else {
+                        if (Item* newItem = Item::CreateItem(to, count, plr)) {
+                            SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                            newItem->SaveToDB(trans);
+                            CharacterDatabase.CommitTransaction(trans);
+
+                            MailItemsInfo mi;
+                            mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                            std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                            WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                        }
+                    }
+                }
             }
         } while (result->NextRow());
     }
@@ -1932,19 +1971,30 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             uint32 to = fields[1].GetUInt32();
 
             if (to == 0) {
-//                CharacterDatabase.PExecute("DELETE FROM item_instance WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", plr->GetGUIDLow(), from);
-//                CharacterDatabase.PExecute("DELETE FROM character_inventory WHERE item_template = %u AND guid = %u", from, plr->GetGUIDLow());
-                plr->DestroyItemCount(from, 1, true);
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0)
+                    plr->DestroyItemCount(from, count, true, false, true);
             } else {
-//                CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", to, plr->GetGUIDLow(), from);
-//                CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", to, plr->GetGUIDLow(), from);
-                plr->DestroyItemCount(from, 1, true);
-                ItemPosCountVec dest;
-                uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, 1, false);
-                if (msg == EQUIP_ERR_OK)
-                    plr->StoreNewItem( dest, to, 1, true);
-                else
-                    sLog.outError("Faction change: Player %s (GUID %u) couldn't store item %u! (TODO)", plr->GetName(), plr->GetGUIDLow(), to); // Shouldn't happen since we delete the corresponding item just before adding the new
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0) {
+                    plr->DestroyItemCount(from, count, true, false, true);
+                    ItemPosCountVec dest;
+                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, count, false);
+                    if (msg == EQUIP_ERR_OK)
+                        plr->StoreNewItem(dest, to, count, true);
+                    else {
+                        if (Item* newItem = Item::CreateItem(to, count, plr)) {
+                            SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                            newItem->SaveToDB(trans);
+                            CharacterDatabase.CommitTransaction(trans);
+
+                            MailItemsInfo mi;
+                            mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                            std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                            WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                        }
+                    }
+                }
             }
         } while (result->NextRow());
     }
@@ -1952,6 +2002,11 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     // Act like auctions are expired
     sAHMgr.RemoveAllAuctionsOf(plr->GetGUIDLow());
 
+    if (m_session->GetSecurity() <= SEC_PLAYER) {
+        LoginDatabase.PExecute("UPDATE account_credits SET amount = amount - %u, last_update = %u, `from` = 'Boutique' WHERE id = %u", cost, time(NULL), account_id);
+        CharacterDatabase.PExecute("INSERT INTO character_purchases (guid, actions, time) VALUES (%u, '%s', %u)", plr->GetGUID(), "Changement de faction", time(NULL));
+    }
+    
     plr->SaveToDB();
     plr->m_kickatnextupdate = true;
     

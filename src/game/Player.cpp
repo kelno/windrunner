@@ -3361,9 +3361,12 @@ void Player::removeSpell(uint32 spell_id, bool disabled)
                 // lockpicking special case, not have ABILITY_LEARNED_ON_GET_RACE_OR_CLASS_SKILL
                 pSkill->id==SKILL_LOCKPICKING && _spell_idx->second->max_value==0 )
             {
-                // not reset skills for professions and racial abilities
+                // not reset skills for professions, class and racial abilities
                 if( (pSkill->categoryId==SKILL_CATEGORY_SECONDARY || pSkill->categoryId==SKILL_CATEGORY_PROFESSION) &&
                     (IsProfessionSkill(pSkill->id) || _spell_idx->second->racemask!=0) )
+                    continue;
+                
+                if (pSkill->categoryId == SKILL_CATEGORY_CLASS || pSkill->categoryId == SKILL_CATEGORY_WEAPON) // When do we need to reset this? I added this because it made faction-changed characters forget almost all their spells
                     continue;
 
                 SetSkill(pSkill->id, 0, 0 );
@@ -6279,16 +6282,29 @@ void Player::SwapFactionReputation(uint32 factionId1, uint32 factionId2)
     FactionEntry const* factionEntry1 = sFactionStore.LookupEntry(factionId1);
     FactionEntry const* factionEntry2 = sFactionStore.LookupEntry(factionId2);
     
-    const FactionState* state1 = GetFactionState(factionEntry1);
-    const FactionState* state2 = GetFactionState(factionEntry2);
+    FactionState* state1 = (FactionState*) GetFactionState(factionEntry1);
+    FactionState* state2 = (FactionState*) GetFactionState(factionEntry2);
     
+   
     if (!state1 || !state2) {
         sLog.outError("Player::SwapFactionReputation: Attempt to swap a faction with a non-existing FactionEntry");
         return;
     }
     
-    m_factions[factionEntry1->reputationListID] = *state2;
-    m_factions[factionEntry2->reputationListID] = *state1;
+    FactionState derefState1 = *state1;
+    FactionState derefState1Cpy = *state1;
+    FactionState derefState2 = *state2;
+    
+    derefState1.Standing = derefState2.Standing;
+    derefState1.Flags = derefState2.Flags;
+    derefState1.Changed = true;
+    
+    derefState2.Standing = derefState1Cpy.Standing;
+    derefState2.Flags = derefState1Cpy.Flags;
+    derefState2.Changed = true;
+    
+    m_factions[factionEntry1->reputationListID] = derefState2;
+    m_factions[factionEntry2->reputationListID] = derefState1;
 }
 
 void Player::DropFactionReputation(uint32 factionId)
@@ -11315,7 +11331,7 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
     }
 }
 
-void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool unequip_check)
+void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool unequip_check, bool inBankAlso)
 {
     Item *pItem;
     ItemPrototype const *pProto;
@@ -11435,6 +11451,68 @@ void Player::DestroyItemCount( uint32 item, uint32 count, bool update, bool uneq
                     pItem->SendUpdateToPlayer( this );
                 pItem->SetState(ITEM_CHANGED, this);
                 return;
+            }
+        }
+    }
+    
+    if(inBankAlso)
+    {
+        for(int i = BANK_SLOT_ITEM_START; i < BANK_SLOT_ITEM_END; i++)
+        {
+            Item *pItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
+            if( pItem && pItem->GetEntry() == item )
+            {
+                if( pItem->GetCount() + remcount <= count )
+                {
+                    // all items in inventory can unequipped
+                    remcount += pItem->GetCount();
+                    DestroyItem( INVENTORY_SLOT_BAG_0, i, update);
+
+                    if(remcount >=count)
+                        return;
+                }
+                else
+                {
+                    pProto = pItem->GetProto();
+                    ItemRemovedQuestCheck( pItem->GetEntry(), count - remcount );
+                    pItem->SetCount( pItem->GetCount() - count + remcount );
+                    if( IsInWorld() & update )
+                        pItem->SendUpdateToPlayer( this );
+                    pItem->SetState(ITEM_CHANGED, this);
+                    return;
+                }
+            }
+        }
+        for(int i = BANK_SLOT_BAG_START; i < BANK_SLOT_BAG_END; i++)
+        {
+            if(Bag* pBag = (Bag*)GetItemByPos( INVENTORY_SLOT_BAG_0, i ))
+            {
+                for(uint32 j = 0; j < pBag->GetBagSize(); j++)
+                {
+                    pItem = pBag->GetItemByPos(j);
+                    if( pItem && pItem->GetEntry() == item )
+                    {
+                        // all items in bags can be unequipped
+                        if( pItem->GetCount() + remcount <= count )
+                        {
+                            remcount += pItem->GetCount();
+                            DestroyItem( i, j, update );
+
+                            if(remcount >=count)
+                                return;
+                        }
+                        else
+                        {
+                            pProto = pItem->GetProto();
+                            ItemRemovedQuestCheck( pItem->GetEntry(), count - remcount );
+                            pItem->SetCount( pItem->GetCount() - count + remcount );
+                            if( IsInWorld() && update )
+                                pItem->SendUpdateToPlayer( this );
+                            pItem->SetState(ITEM_CHANGED, this);
+                            return;
+                        }
+                    }
+                }
             }
         }
     }
