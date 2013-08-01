@@ -41,10 +41,11 @@ class TargetedMovementGeneratorMedium
 : public MovementGeneratorMedium< T, D >, public TargetedMovementGeneratorBase
 {
     protected:
-	    TargetedMovementGeneratorMedium(Unit* target, float offset, float angle) :
+	    TargetedMovementGeneratorMedium(Unit* target, float offset, float angle, bool strictDist) :
 	    	TargetedMovementGeneratorBase(target), i_path(NULL),
 	    	i_recheckDistance(0), i_offset(offset), i_angle(angle),
-	    	i_recalculateTravel(false), i_targetReached(false)
+	    	i_strictDist(strictDist), i_recalculateTravel(false),
+	    	i_targetReached(false)
         {
         }
         ~TargetedMovementGeneratorMedium() { delete i_path; }
@@ -63,6 +64,7 @@ class TargetedMovementGeneratorMedium
         TimeTrackerSmall i_recheckDistance;
         float i_offset;
         float i_angle;
+        bool i_strictDist;
         bool i_recalculateTravel : 1;
         bool i_targetReached : 1;
 };
@@ -73,8 +75,8 @@ class ChaseMovementGenerator : public TargetedMovementGeneratorMedium<T, ChaseMo
     public:
         ChaseMovementGenerator(Unit* target)
             : TargetedMovementGeneratorMedium<T, ChaseMovementGenerator<T> >(target) {}
-        ChaseMovementGenerator(Unit* target, float offset, float angle)
-            : TargetedMovementGeneratorMedium<T, ChaseMovementGenerator<T> >(target, offset, angle) {}
+        ChaseMovementGenerator(Unit* target, float offset, float angle, bool strictDist)
+            : TargetedMovementGeneratorMedium<T, ChaseMovementGenerator<T> >(target, offset, angle, strictDist) {}
         ~ChaseMovementGenerator() {}
 
         MovementGeneratorType GetMovementGeneratorType() { return CHASE_MOTION_TYPE; }
@@ -98,7 +100,7 @@ class FollowMovementGenerator : public TargetedMovementGeneratorMedium<T, Follow
         FollowMovementGenerator(Unit* target)
             : TargetedMovementGeneratorMedium<T, FollowMovementGenerator<T> >(target){}
         FollowMovementGenerator(Unit* target, float offset, float angle)
-            : TargetedMovementGeneratorMedium<T, FollowMovementGenerator<T> >(target, offset, angle) {}
+            : TargetedMovementGeneratorMedium<T, FollowMovementGenerator<T> >(target, offset, angle, false) {}
         ~FollowMovementGenerator() {}
 
         MovementGeneratorType GetMovementGeneratorType() { return FOLLOW_MOTION_TYPE; }

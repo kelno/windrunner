@@ -252,7 +252,7 @@ void MotionMaster::MoveConfused()
     }
 }
 
-void MotionMaster::MoveChase(Unit* target, float dist, float angle)
+void MotionMaster::MoveChase(Unit* target, float dist, float angle, bool strictDist)
 {
     // ignore movement request if target not exist
     if(!target || target == _owner || _owner->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_MOVE))
@@ -265,7 +265,7 @@ void MotionMaster::MoveChase(Unit* target, float dist, float angle)
         		_owner->GetGUIDLow(),
             target->GetTypeId()==TYPEID_PLAYER ? "player" : "creature",
             target->GetTypeId()==TYPEID_PLAYER ? target->GetGUIDLow() : (target->ToCreature())->GetDBTableGUIDLow() );
-        Mutate(new ChaseMovementGenerator<Player>(target, dist, angle), MOTION_SLOT_ACTIVE);
+        Mutate(new ChaseMovementGenerator<Player>(target, dist, angle, strictDist), MOTION_SLOT_ACTIVE);
     }
     else
     {
@@ -273,7 +273,7 @@ void MotionMaster::MoveChase(Unit* target, float dist, float angle)
         		_owner->GetEntry(), _owner->GetGUIDLow(),
             target->GetTypeId()==TYPEID_PLAYER ? "player" : "creature",
             target->GetTypeId()==TYPEID_PLAYER ? target->GetGUIDLow() : (target->ToCreature())->GetDBTableGUIDLow() );
-        Mutate(new ChaseMovementGenerator<Creature>(target, dist, angle), MOTION_SLOT_ACTIVE);
+        Mutate(new ChaseMovementGenerator<Creature>(target, dist, angle, strictDist), MOTION_SLOT_ACTIVE);
     }
 }
 

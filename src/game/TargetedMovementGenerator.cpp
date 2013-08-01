@@ -74,8 +74,11 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
                 size = owner->GetObjectSize();
             }
 
-            if (i_target->IsWithinDistInMap(owner, dist))
-                return;
+            if (!i_strictDist)
+            {
+                if (i_target->IsWithinDistInMap(owner, dist))
+                    return;
+            }
 
             // to at i_offset distance from target and i_angle from target facing
             i_target->GetClosePoint(x, y, z, size, dist, i_angle);

@@ -166,12 +166,12 @@ void ScriptedAI::JustRespawned()
     Reset();
 }
 
-void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle)
+void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle, bool strictDist)
 {
     if (!victim)
         return;
 
-    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle);
+    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle, strictDist);
 }
 
 void ScriptedAI::DoStartNoMovement(Unit* victim)
