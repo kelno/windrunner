@@ -48,8 +48,6 @@ SET(game_STAT_SRCS
    ChannelHandler.cpp
    ChannelMgr.h
    CharacterHandler.cpp
-   ChargeMovementGenerator.cpp
-   ChargeMovementGenerator.h
    Chat.cpp
    Chat.h
    ChatHandler.cpp
@@ -77,9 +75,6 @@ SET(game_STAT_SRCS
    CreatureTextMgr.h
    CreatureScript.h
    Debugcmds.cpp
-   DestinationHolder.cpp
-   DestinationHolder.h
-   DestinationHolderImp.h
    DuelHandler.cpp
    DynamicObject.cpp
    DynamicObject.h
@@ -157,6 +152,16 @@ SET(game_STAT_SRCS
    MovementGenerator.h
    MovementGeneratorImpl.h
    MovementHandler.cpp
+   MovementPacketBuilder.cpp
+   MovementPacketBuilder.h
+   MovementTypedefs.h
+   MovementUtil.cpp
+   MoveSpline.cpp
+   MoveSpline.h
+   MoveSplineFlag.h
+   MoveSplineInit.cpp
+   MoveSplineInit.h
+   MoveSplineInitArgs.h
    NPCHandler.cpp
    NPCHandler.h
    NullCreatureAI.cpp
@@ -190,7 +195,6 @@ SET(game_STAT_SRCS
    OutdoorPvPTF.h
    OutdoorPvPZM.cpp
    OutdoorPvPZM.h
-   Path.h
    PathFinder.cpp
    PathFinder.h
    PetAI.cpp
@@ -244,6 +248,9 @@ SET(game_STAT_SRCS
    SpellMgr.cpp
    SpellMgr.h
    SpellScript.h
+   Spline.cpp
+   Spline.h
+   SplineImpl.h
    StatSystem.cpp
    TargetedMovementGenerator.cpp
    TargetedMovementGenerator.h
@@ -262,7 +269,6 @@ SET(game_STAT_SRCS
    Transports.h
    ThreatManager.cpp
    ThreatManager.h
-   Traveller.h
    Unit.cpp
    Unit.h
    UnitEvents.h
@@ -321,3 +327,4 @@ scripts
 detour
 recast
 )
+

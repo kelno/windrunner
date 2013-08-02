@@ -669,7 +669,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
                 Aggro(who);
             }
 
-            DoStartMovement(who, 13, 0);
+            DoStartMovement(who, 13, 0, true);
         }
     }
 
