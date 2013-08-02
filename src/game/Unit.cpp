@@ -446,18 +446,7 @@ bool Unit::IsWithinMeleeRange(Unit *obj, float dist) const
 
 void Unit::GetRandomContactPoint( const Unit* obj, float &x, float &y, float &z, float distance2dMin, float distance2dMax ) const
 {
-    float combat_reach = GetCombatReach();
-    if(combat_reach < 0.1) // sometimes bugged for players
-    {
-        //sLog.outError("Unit %u (Type: %u) has invalid combat_reach %f",GetGUIDLow(),GetTypeId(),combat_reach);
-       // if(GetTypeId() ==  TYPEID_UNIT)
-          //  sLog.outError("Creature entry %u has invalid combat_reach", (this->ToCreature())->GetEntry());
-        combat_reach = DEFAULT_COMBAT_REACH;
-    }
-    uint32 attacker_number = getAttackers().size();
-    if(attacker_number > 0) --attacker_number;
-    GetNearPoint(obj,x,y,z,obj->GetCombatReach(), distance2dMin+(distance2dMax-distance2dMin)*GetMap()->rand_norm()
-                 , GetAngle(obj) + (attacker_number ? (M_PI/2 - M_PI * GetMap()->rand_norm()) * (float)attacker_number / combat_reach / 3 : 0));
+    GetNearPoint(obj, x, y, z, 0.0f, distance2dMin+(distance2dMax-distance2dMin)*GetMap()->rand_norm(), GetAngle(obj));
 }
 
 void Unit::StartAutoRotate(uint8 type, uint32 fulltime, double Angle, bool attackVictimOnEnd)

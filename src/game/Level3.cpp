@@ -7893,8 +7893,8 @@ bool ChatHandler::HandleNpcSetCombatDistance(const char* args)
 
     if(pCreature->AI())
     {
-        pCreature->AI()->SetCombatDistance(distance);
-        PSendSysMessage("m_combatDistance set to %f", distance);
+        //pCreature->AI()->SetCombatDistance(distance);
+        PSendSysMessage("command disabled");
     }
 
     return true;

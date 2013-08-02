@@ -50,7 +50,7 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
         if (!i_offset)
         {
         	// to nearest contact position
-        	i_target->GetContactPoint(owner, x, y, z);
+        	i_target->GetRandomContactPoint(owner, x, y, z, 0, CONTACT_DISTANCE);
         }
         else
         {
@@ -169,8 +169,8 @@ bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time
 	    	targetMoved = (i_target->GetDistance2d(dest.x, dest.y) >= allowed_dist);
 	}
 
-	if (i_recalculateTravel || targetMoved)
-	    _setTargetLocation(owner, targetMoved);
+    if (i_recalculateTravel || targetMoved)
+        _setTargetLocation(owner, targetMoved);
 
 	if (owner->movespline->Finalized())
 	{
@@ -208,6 +208,7 @@ void ChaseMovementGenerator<Creature>::Initialize(Creature* owner)
 {
     owner->SetWalk(false);
     owner->addUnitState(UNIT_STAT_CHASE | UNIT_STAT_CHASE_MOVE);
+
     _setTargetLocation(owner, true);
 }
 

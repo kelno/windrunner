@@ -98,9 +98,8 @@ void ScriptedAI::AttackStart(Unit* who)
 {
     if (!who)
         return;
-    
-    bool melee = (GetCombatDistance() > ATTACK_DISTANCE) ? me->GetDistance(who) <= ATTACK_DISTANCE : true;
-    if (m_creature->Attack(who, melee))
+
+    if (m_creature->Attack(who, true))
     {
         m_creature->AddThreat(who, 0.0f);
         if (!InCombat)
