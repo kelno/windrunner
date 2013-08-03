@@ -1,4 +1,4 @@
-﻿#include "precompiled.h"
+#include "precompiled.h"
 
 #define GOSSIP_MENU 907 //change me later?
 #define PVPZONE_ARRIVAL_ALLIANCE 1, 4809.387207, -2012.331177, 1068.865967, 1.220856 
