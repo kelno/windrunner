@@ -44,6 +44,16 @@ int32 irand (int32 min, int32 max)
   return result;
 }
 
+float frand(float min, float max)
+{
+    float result;
+    #pragma omp critical (mtrand)
+    {
+        result =  float(mtRand.get().rand() * (max - min) + min);
+    }
+    return result;
+}
+
 uint32 urand (uint32 min, uint32 max)
 {
 	uint32 result;
