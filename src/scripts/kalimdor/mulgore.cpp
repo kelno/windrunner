@@ -91,7 +91,7 @@ struct npc_kyle_frenziedAI : public ScriptedAI
             z = (z2 <= INVALID_HEIGHT) ? z : z2;
             m_creature->SetDefaultMovementType(IDLE_MOTION_TYPE);       //there is other way to stop waypoint movement?
             m_creature->GetMotionMaster()->Initialize();
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            m_creature->SetWalk(false);
             m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
         }
     }
