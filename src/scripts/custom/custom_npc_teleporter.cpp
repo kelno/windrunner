@@ -24,6 +24,12 @@ EndScriptData */
 #include "precompiled.h"
 #include <cstring>
 
+#define NPC_TELEPORTER_ENTRY 41
+#define NPC_ARRIVAL_HORDE_1 42
+#define NPC_ARRIVAL_ALLY_1 44
+#define NPC_ARRIVAL_HORDE_2 91457
+#define NPC_ARRIVAL_ALLY_2 91458
+
 /*######
 ## npc_teleporter
 ######*/
@@ -45,7 +51,11 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
     if (action == GOSSIP_ACTION_INFO_DEF)
     {
         if (pPlayer->HasLevelInRangeForTeleport() || pPlayer->isGameMaster()) {
-            uint32 destEntry = pPlayer->GetTeam() == HORDE ? 42 : 44; //depends on player's team
+            uint32 destEntry;
+            if(pCreature->GetCreatureInfo()->Entry == NPC_TELEPORTER_ENTRY)
+				destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_1 : NPC_ARRIVAL_ALLY_1; //depends on player's team
+			else
+				destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_2 : NPC_ARRIVAL_ALLY_2;
             
             //get coordinates of target in DB
             QueryResult* result = WorldDatabase.PQuery("SELECT map, position_x, position_y, position_z, orientation FROM creature WHERE id = %u LIMIT 1", destEntry);
@@ -104,6 +114,7 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
             pPlayer->PlayerTalkClass->CloseGossip();
         }
     }
+    return true;
 }
 
 /*######
