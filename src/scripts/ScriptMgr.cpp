@@ -89,6 +89,7 @@ extern void AddSC_mylittlebombling();
 extern void AddSC_npc_interpreter();
 
 extern void AddSC_npc_teleporter();
+extern void AddSC_npc_teleporter_pvpzone();
 
 // -- GO --
 extern void AddSC_go_scripts();
@@ -1479,6 +1480,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_npc_interpreter();
 
     AddSC_npc_teleporter();
+    AddSC_npc_teleporter_pvpzone();
 
     // -- GO --
     AddSC_go_scripts();

@@ -313,6 +313,7 @@ SET(scripts_STAT_SRCS
     misc/npc_interpreter.cpp
     misc/npc_professions.cpp
     misc/npc_spectate.cpp
+    misc/npc_teleporter_pvpzone.cpp
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
     misc/npc_mylittlebombling.cpp
