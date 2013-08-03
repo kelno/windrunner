@@ -329,7 +329,7 @@ struct npc_ashari_crystalAI : public ScriptedAI
     
     void Reset()
     {
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+    	m_creature->SetDisableGravity(true);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
     
@@ -351,7 +351,7 @@ struct npc_ashari_crystalAI : public ScriptedAI
     
     void UpdateAI (uint32 const diff) 
     {
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+    	m_creature->SetDisableGravity(true);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 };
