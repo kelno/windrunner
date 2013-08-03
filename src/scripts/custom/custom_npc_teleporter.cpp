@@ -27,8 +27,8 @@ EndScriptData */
 #define NPC_TELEPORTER_ENTRY 41
 #define NPC_ARRIVAL_HORDE_1 42
 #define NPC_ARRIVAL_ALLY_1 44
-#define NPC_ARRIVAL_HORDE_2 91457
-#define NPC_ARRIVAL_ALLY_2 91458
+#define NPC_ARRIVAL_HORDE_2 91504
+#define NPC_ARRIVAL_ALLY_2 91505
 
 /*######
 ## npc_teleporter
