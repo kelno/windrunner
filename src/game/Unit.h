@@ -1679,10 +1679,6 @@ class Unit : public WorldObject
 
         void KnockbackFrom(float x, float y, float speedXY, float speedZ);
 
-        void UpdateAllowedPositionZ(float x, float y, float &z) const;
-        void MovePositionToFirstCollision(uint32 mapId, Position &pos, float dist, float angle);
-        void GetFirstCollisionPosition(uint32 mapId, Position &pos, float dist, float angle);
-
         // Movement info
         Movement::MoveSpline * movespline;
 
