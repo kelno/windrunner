@@ -10,7 +10,6 @@ struct alterac_bowmanAI : public ScriptedAI
 	{   
         shoot_timer = SHOOT_COOLDOWN;
         target = NULL;
-        SetCombatDistance(80.0f); //Disable melee visual
         SetCombatMovementAllowed(false);
         me->SetSheath(SHEATH_STATE_RANGED);
     }

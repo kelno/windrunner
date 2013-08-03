@@ -43,6 +43,9 @@ inline uint32 secsToTimeBitFields(time_t secs)
     return (lt->tm_year - 100) << 24 | lt->tm_mon  << 20 | (lt->tm_mday - 1) << 14 | lt->tm_wday << 11 | lt->tm_hour << 6 | lt->tm_min;
 }
 
+/* Return a random number in the range min..max */
+float frand(float min, float max);
+
 /* Return a random number in the range min..max; (max-min) must be smaller than 32768. */
 int32 irand(int32 min, int32 max);
 

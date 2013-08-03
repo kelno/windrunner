@@ -117,7 +117,7 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
         eventTimer = 5000;
         step = 1;
         ashbringerGUID = caster->GetGUID();
-        me->SetFacing(3.1142, NULL);
+        me->SetFacingTo(3.1142);
         me->SendMovementFlagUpdate();
         DoScriptText(SAY_ASH_1, me);
         me->SetReactState(REACT_PASSIVE);

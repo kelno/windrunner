@@ -2701,14 +2701,7 @@ void Aura::HandleAuraWaterWalk(bool apply, bool Real)
     if(!Real)
         return;
 
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_WATER_WALK, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_LAND_WALK, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);
-    m_target->SendMessageToSet(&data,true);
+    m_target->SetWaterWalking(apply);
 }
 
 void Aura::HandleAuraFeatherFall(bool apply, bool Real)
@@ -2716,18 +2709,11 @@ void Aura::HandleAuraFeatherFall(bool apply, bool Real)
     // only at real add/remove aura
     if(!Real)
         return;
-        
+
+    m_target->SetFeatherFall(apply);
+
     if (!apply && m_target->GetTypeId() == TYPEID_PLAYER)
         m_target->ToPlayer()->SetFallInformation(0, m_target->GetPositionZ());
-
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_FEATHER_FALL, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_NORMAL_FALL, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << (uint32)0;
-    m_target->SendMessageToSet(&data,true);
 }
 
 void Aura::HandleAuraHover(bool apply, bool Real)
@@ -2735,18 +2721,8 @@ void Aura::HandleAuraHover(bool apply, bool Real)
     // only at real add/remove aura
     if(!Real)
         return;
-        
-    if (!apply && m_target->GetTypeId() == TYPEID_PLAYER)
-        m_target->ToPlayer()->SetFallInformation(0, m_target->GetPositionZ());
 
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_SET_HOVER, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_UNSET_HOVER, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);
-    m_target->SendMessageToSet(&data,true);
+    m_target->SetHover(apply);    //! Sets movementflags
 }
 
 void Aura::HandleWaterBreathing(bool apply, bool Real)
@@ -3888,21 +3864,13 @@ void Aura::HandleAuraModIncreaseFlightSpeed(bool apply, bool Real)
     // Enable Fly mode for flying mounts
     if (m_modifier.m_auraname == SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED)
     {
-        WorldPacket data;
-        if(apply)
-        {
-            ((Player*)m_target)->SetCanFly(true);
-            data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
-        }
-        else
-        {
-            data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
-            ((Player*)m_target)->SetCanFly(false);
-        }
+    	if (m_target->GetTypeId() == TYPEID_UNIT)
+    	    m_target->SetCanFly(apply);
+    	else if (m_target->GetTypeId() == TYPEID_PLAYER)
+    	    m_target->ToPlayer()->SetCanFly(apply, true);
 
-        data.append(m_target->GetPackGUID());
-        data << uint32(0);                                      // unknown
-        m_target->SendMessageToSet(&data, true);
+    	if (!m_target && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
+    		m_target->GetMotionMaster()->MoveFall();
 
         //Players on flying mounts must be immune to polymorph
         if (m_target->GetTypeId()==TYPEID_PLAYER)
@@ -5663,22 +5631,13 @@ void Aura::HandleAuraAllowFlight(bool apply, bool Real)
     if(!Real)
         return;
 
-    // allow fly
-    WorldPacket data;
-    if(apply)
-    {
-        ((Player*)m_target)->SetCanFly(true);
-        data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
-    }
-    else
-    {
-        data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
-        ((Player*)m_target)->SetCanFly(false);
-    }
+    if (m_target->GetTypeId() == TYPEID_UNIT)
+        m_target->SetCanFly(apply);
+    else if (m_target->GetTypeId() == TYPEID_PLAYER)
+    	m_target->ToPlayer()->SetCanFly(apply, true);
 
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);                                      // unk
-    m_target->SendMessageToSet(&data, true);
+    if (!apply && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
+    	m_target->GetMotionMaster()->MoveFall();
 }
 
 void Aura::HandleModRating(bool apply, bool Real)
@@ -5899,7 +5858,7 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
             
             uint32 health = m_target->GetHealth();
 
-            ghost->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            ghost->SetDisableGravity(true);
 
             // immunity for body
             m_target->CastSpell(m_target, 40282, true);
@@ -5916,13 +5875,13 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                 }
             }*/
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
         }
         
         return;
