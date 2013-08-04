@@ -97,6 +97,7 @@ class CreatureAINew
         void delayAllEvents(uint32 delay);
         bool executeEvent(uint32 const /*diff*/, uint8& /*id*/);
         void updateEvents(uint32 const /*diff*/, uint32 mask = 0);
+        uint32 getTimer(uint8 id);
         // + ensureTimerOnEvents(uint32 minTimer); -> delay events which have timer < minTimer to minTimer
         
         /* Phases handling */

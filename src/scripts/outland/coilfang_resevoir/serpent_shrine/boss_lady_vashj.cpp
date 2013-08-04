@@ -643,7 +643,7 @@ struct mob_enchanted_elementalAI : public ScriptedAI
 
         if(move < diff)
         {
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+        	m_creature->SetWalk(true);
             if (phase == 1)
             {
                 m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
@@ -768,7 +768,7 @@ struct mob_toxic_sporebatAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->AddUnitMovementFlag(/*MOVEMENTFLAG_ONTRANSPORT + */MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
         m_creature->setFaction(14);
         movement_timer = 0;
         ToxicSpore_Timer = 5000;
