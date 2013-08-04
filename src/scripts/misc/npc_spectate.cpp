@@ -231,12 +231,6 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	}
 	    }
 
-	    if (player->getSpectateCooldown() > 0)
-	    {
-	    	mobArena->Whisper("Un cooldown de 10 secondes est appliqué entre chaque mode spectateur.", player->GetGUID());
-	    	return;
-	    }
-
 	    // all's well, set bg id
 	    // when porting out from the bg, it will be reset to 0
 	    player->SetBattleGroundId(target->GetBattleGroundId());
