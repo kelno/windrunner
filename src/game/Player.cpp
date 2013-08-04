@@ -267,8 +267,6 @@ UpdateMask Player::updateVisualBits;
 
 Player::Player (WorldSession *session): Unit()
 {
-    m_transport = 0;
-
     m_speakTime = 0;
     m_speakCount = 0;
 
@@ -405,7 +403,6 @@ Player::Player (WorldSession *session): Unit()
     m_anti_lastalarmtime = 0;    //last time when alarm generated
     m_anti_alarmcount = 0;       //alarm counter
     m_anti_TeleTime = 0;
-    m_CanFly=false;
     /////////////////////////////////
 
     m_mailsLoaded = false;
@@ -444,9 +441,6 @@ Player::Player (WorldSession *session): Unit()
     m_summon_y = 0.0f;
     m_summon_z = 0.0f;
     m_invite_summon = false;
-
-    //Default movement to run mode
-    m_unit_movement_flags = 0;
 
     m_miniPet = 0;
     m_bgAfkReportedTimer = 0;
@@ -1353,6 +1347,14 @@ void Player::Update( uint32 p_time )
             m_zoneUpdateTimer -= p_time;
     }
 
+    if (m_timeSyncTimer > 0)
+    {
+        if (p_time >= m_timeSyncTimer)
+            SendTimeSync();
+        else
+            m_timeSyncTimer -= p_time;
+    }
+
     if (isAlive())
     {
         RegenerateAll();
@@ -1715,6 +1717,15 @@ uint8 Player::chatTag() const
         return 0;
 }
 
+void Player::SendTeleportAckPacket()
+{
+    WorldPacket data(MSG_MOVE_TELEPORT_ACK, 41);
+    data.append(GetPackGUID());
+    data << uint32(0);                                     // this value increments every time
+    BuildMovementPacket(&data);
+    GetSession()->SendPacket(&data);
+}
+
 bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientation, uint32 options)
 {
     if(!MapManager::IsValidMapCoord(mapid, x, y, z, orientation))
@@ -1756,26 +1767,35 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     if(GetSession()->Expansion() < mEntry->Expansion())
     {
         if(GetTransport())
+        {
+        	m_transport->RemovePassenger(this);
+        	m_transport = NULL;
+        	m_movementInfo.transport.Reset();
             RepopAtGraveyard();                             // teleport to near graveyard if on transport, looks blizz like :)
+        }
 
         SendTransferAborted(mapid, TRANSFER_ABORT_INSUF_EXPAN_LVL1);
 
         return false;                                       // normal client can't teleport to this map...
     }
 
-    // if we were on a transport, leave
-    if (!(options & TELE_TO_NOT_LEAVE_TRANSPORT) && m_transport)
-    {
-        m_transport->RemovePassenger(this);
-        m_transport = NULL;
-        m_movementInfo.t_x = 0.0f;
-        m_movementInfo.t_y = 0.0f;
-        m_movementInfo.t_z = 0.0f;
-        m_movementInfo.t_o = 0.0f;
-        m_movementInfo.t_time = 0;
-    }
-
     SetSemaphoreTeleport(true);
+
+    // reset movement flags at teleport, because player will continue move with these flags after teleport
+    SetUnitMovementFlags(GetUnitMovementFlags() & MOVEMENTFLAG_MASK_HAS_PLAYER_STATUS_OPCODE);
+    DisableSpline();
+
+    if (m_transport)
+    {
+        if (options & TELE_TO_NOT_LEAVE_TRANSPORT)
+            AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+        else
+        {
+            m_transport->RemovePassenger(this);
+            m_transport = NULL;
+            m_movementInfo.transport.Reset();
+        }
+    }
 
     // The player was ported to another map and looses the duel immediatly.
     // We have to perform this check before the teleport, otherwise the
@@ -1787,9 +1807,6 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             DuelComplete(DUEL_FLED);
     }
 
-    // reset movement flags at teleport, because player will continue move with these flags after teleport
-    SetUnitMovementFlags(0);
-
     if ((GetMapId() == mapid) && (!m_transport))
     {
         // prepare zone change detect
@@ -1798,10 +1815,12 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // near teleport
         if(!GetSession()->PlayerLogout())
         {
-            WorldPacket data;
-            BuildTeleportAckMsg(&data, x, y, z, orientation);
-            GetSession()->SendPacket(&data);
-            SetPosition( x, y, z, orientation, true);
+        	Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
+
+        	Relocate(x, y, z, orientation);
+
+        	SendTeleportAckPacket();
+            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
         }
         else
             // this will be used instead of the current location in SaveToDB
@@ -1926,7 +1945,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
                 data.Initialize(SMSG_NEW_WORLD, (20));
                 if (m_transport)
                 {
-                    data << (uint32)mapid << m_movementInfo.t_x << m_movementInfo.t_y << m_movementInfo.t_z << m_movementInfo.t_o;
+                    data << (uint32)mapid << m_movementInfo.transport.pos.GetPositionX() << m_movementInfo.transport.pos.GetPositionY() << m_movementInfo.transport.pos.GetPositionZ() << m_movementInfo.transport.pos.GetOrientation();
                 }
                 else
                 {
@@ -1947,10 +1966,10 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
 
             if(m_transport)
             {
-                final_x += m_movementInfo.t_x;
-                final_y += m_movementInfo.t_y;
-                final_z += m_movementInfo.t_z;
-                final_o += m_movementInfo.t_o;
+            	final_x += m_movementInfo.transport.pos.GetPositionX();
+            	final_y += m_movementInfo.transport.pos.GetPositionY();
+            	final_z += m_movementInfo.transport.pos.GetPositionZ();
+            	final_o += m_movementInfo.transport.pos.GetOrientation();
             }
 
             m_teleport_dest = WorldLocation(mapid, final_x, final_y, final_z, final_o);
@@ -4024,24 +4043,6 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
     if(updateRealmChars) sWorld.UpdateRealmCharCount(accountId);
 }
 
-void Player::SetMovement(PlayerMovementType pType)
-{
-    WorldPacket data;
-    switch(pType)
-    {
-        case MOVE_ROOT:       data.Initialize(SMSG_FORCE_MOVE_ROOT,   GetPackGUID().size()+4); break;
-        case MOVE_UNROOT:     data.Initialize(SMSG_FORCE_MOVE_UNROOT, GetPackGUID().size()+4); break;
-        case MOVE_WATER_WALK: data.Initialize(SMSG_MOVE_WATER_WALK,   GetPackGUID().size()+4); break;
-        case MOVE_LAND_WALK:  data.Initialize(SMSG_MOVE_LAND_WALK,    GetPackGUID().size()+4); break;
-        default:
-            sLog.outError("Player::SetMovement: Unsupported move type (%d), data not sent to client.",pType);
-            return;
-    }
-    data.append(GetPackGUID());
-    data << uint32(0);
-    GetSession()->SendPacket( &data );
-}
-
 /* Preconditions:
   - a resurrectable corpse must not be loaded for the player (only bones)
   - the player must be in world
@@ -4076,9 +4077,9 @@ void Player::BuildPlayerRepop()
     // convert player body to ghost
     SetHealth( 1 );
 
-    SetMovement(MOVE_WATER_WALK);
+    SetWaterWalking(true);
     if(!GetSession()->isLogingOut())
-        SetMovement(MOVE_UNROOT);
+    	SetRooted(false);
 
     // BG - remove insignia related
     RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
@@ -4132,8 +4133,8 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 
     setDeathState(ALIVE);
 
-    SetMovement(MOVE_LAND_WALK);
-    SetMovement(MOVE_UNROOT);
+    SetWaterWalking(false);
+    SetRooted(false);
 
     m_deathTimer = 0;
 
@@ -4188,7 +4189,10 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 
 void Player::KillPlayer()
 {
-    SetMovement(MOVE_ROOT);
+	if (IsFlying() && !GetTransport())
+	    i_motionMaster.MoveFall();
+
+	SetRooted(true);
 
     StopMirrorTimers();                                     //disable timers(bars)
 
@@ -10831,7 +10835,7 @@ Item* Player::StoreNewItem( ItemPosCountVec const& dest, uint32 item, bool updat
     }
     
     if (item == 31088)  // Tainted Core
-        SetMovement(MOVE_ROOT);
+    	SetRooted(true);
         
     // If purple equipable item, save inventory immediately
     if (pItem && pItem->GetProto()->Quality >= ITEM_QUALITY_EPIC &&
@@ -11279,7 +11283,7 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
         
         
         if (pItem->GetEntry() == 31088)      // Vashj Tainted Core
-            SetMovement(MOVE_UNROOT);
+        	SetRooted(false);
 
         if(pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
             CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
@@ -14786,10 +14790,10 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
         transGUID = 0;
 
-        m_movementInfo.t_x = 0.0f;
-        m_movementInfo.t_y = 0.0f;
-        m_movementInfo.t_z = 0.0f;
-        m_movementInfo.t_o = 0.0f;
+        m_movementInfo.transport.pos.m_positionX = 0.0f;
+        m_movementInfo.transport.pos.m_positionY = 0.0f;
+        m_movementInfo.transport.pos.m_positionZ = 0.0f;
+        m_movementInfo.transport.pos.m_orientation = 0.0f;
     }
 
     ////                                                     0     1       2      3    4    5    6
@@ -14830,27 +14834,27 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     if (transGUID != 0)
     {
-        m_movementInfo.t_x = fields[LOAD_DATA_TRANSX].GetFloat();
-        m_movementInfo.t_y = fields[LOAD_DATA_TRANSY].GetFloat();
-        m_movementInfo.t_z = fields[LOAD_DATA_TRANSZ].GetFloat();
-        m_movementInfo.t_o = fields[LOAD_DATA_TRANSO].GetFloat();
+        m_movementInfo.transport.pos.m_positionX = fields[LOAD_DATA_TRANSX].GetFloat();
+        m_movementInfo.transport.pos.m_positionY = fields[LOAD_DATA_TRANSY].GetFloat();
+        m_movementInfo.transport.pos.m_positionZ = fields[LOAD_DATA_TRANSZ].GetFloat();
+        m_movementInfo.transport.pos.m_orientation = fields[LOAD_DATA_TRANSO].GetFloat();
 
         if( !Trinity::IsValidMapCoord(
-            GetPositionX()+m_movementInfo.t_x,GetPositionY()+m_movementInfo.t_y,
-            GetPositionZ()+m_movementInfo.t_z,GetOrientation()+m_movementInfo.t_o) ||
+            GetPositionX()+m_movementInfo.transport.pos.m_positionX,GetPositionY()+m_movementInfo.transport.pos.m_positionY,
+            GetPositionZ()+m_movementInfo.transport.pos.m_positionZ,GetOrientation()+m_movementInfo.transport.pos.m_orientation) ||
             // transport size limited
-            m_movementInfo.t_x > 50 || m_movementInfo.t_y > 50 || m_movementInfo.t_z > 50 )
+            m_movementInfo.transport.pos.m_positionX > 50 || m_movementInfo.transport.pos.m_positionY > 50 || m_movementInfo.transport.pos.m_positionZ > 50 )
         {
             sLog.outError("Player (guidlow %d) have invalid transport coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",
-                guid,GetPositionX()+m_movementInfo.t_x,GetPositionY()+m_movementInfo.t_y,
-                GetPositionZ()+m_movementInfo.t_z,GetOrientation()+m_movementInfo.t_o);
+                guid,GetPositionX()+m_movementInfo.transport.pos.m_positionX,GetPositionY()+m_movementInfo.transport.pos.m_positionY,
+                GetPositionZ()+m_movementInfo.transport.pos.m_positionZ,GetOrientation()+m_movementInfo.transport.pos.m_orientation);
 
             RelocateToHomebind();
 
-            m_movementInfo.t_x = 0.0f;
-            m_movementInfo.t_y = 0.0f;
-            m_movementInfo.t_z = 0.0f;
-            m_movementInfo.t_o = 0.0f;
+            m_movementInfo.transport.pos.m_positionX = 0.0f;
+            m_movementInfo.transport.pos.m_positionY = 0.0f;
+            m_movementInfo.transport.pos.m_positionZ = 0.0f;
+            m_movementInfo.transport.pos.m_orientation = 0.0f;
 
             transGUID = 0;
         }
@@ -14876,10 +14880,10 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
             RelocateToHomebind();
 
-            m_movementInfo.t_x = 0.0f;
-            m_movementInfo.t_y = 0.0f;
-            m_movementInfo.t_z = 0.0f;
-            m_movementInfo.t_o = 0.0f;
+            m_movementInfo.transport.pos.m_positionX = 0.0f;
+            m_movementInfo.transport.pos.m_positionY = 0.0f;
+            m_movementInfo.transport.pos.m_positionZ = 0.0f;
+            m_movementInfo.transport.pos.m_orientation = 0.0f;
 
             transGUID = 0;
         }
@@ -16404,13 +16408,13 @@ void Player::SaveToDB()
     ss << (uint64)m_resetTalentsTime;
 
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_x);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionX);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_y);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionY);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_z);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionZ);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_o);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_orientation);
     ss << ", ";
     if (m_transport)
         ss << m_transport->GetGUIDLow();
@@ -19003,8 +19007,6 @@ void Player::SendInitialVisiblePackets(Unit* target)
 
     if(target->isAlive())
     {
-        if(target->GetMotionMaster()->GetCurrentMovementGeneratorType() != IDLE_MOTION_TYPE)
-            target->SendMonsterMoveWithSpeedToCurrentDestination(this);
         if(target->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && target->getVictim())
             target->SendAttackStart(target->getVictim());
     }
@@ -19272,17 +19274,17 @@ void Player::SendInitialPacketsAfterAddToMap()
             auraList.front()->ApplyModifier(true,true);
     }
 
-    if(HasAuraType(SPELL_AURA_MOD_STUN))
-        SetMovement(MOVE_ROOT);
+    if (HasAuraType(SPELL_AURA_FEATHER_FALL))
+        SetFeatherFall(true, true);
 
-    // manual send package (have code in ApplyModifier(true,true); that don't must be re-applied.
-    if(HasAuraType(SPELL_AURA_MOD_ROOT))
-    {
-        WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
-        data.append(GetPackGUID());
-        data << (uint32)2;
-        SendMessageToSet(&data,true);
-    }
+    if (HasAuraType(SPELL_AURA_WATER_WALK))
+        SetWaterWalking(true, true);
+
+    if(HasAuraType(SPELL_AURA_MOD_STUN))
+    	SetRooted(true);
+
+    if (HasAuraType(SPELL_AURA_HOVER))
+    	SetHover(true, true);
 
     // setup BG group membership if need
     if(BattleGround* currentBg = GetBattleGround())
@@ -19322,6 +19324,9 @@ void Player::SendInitialPacketsAfterAddToMap()
 
     SendEnchantmentDurations();                             // must be after add to map
     SendItemDurations();                                    // must be after add to map
+
+    ResetTimeSync();
+    SendTimeSync();
 }
 
 void Player::SendUpdateToOutOfRangeGroupMembers()
@@ -20427,7 +20432,7 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
         return;
 
     // calculate total z distance of the fall
-    float z_diff = m_lastFallZ - movementInfo.z;
+    float z_diff = m_lastFallZ - movementInfo.pos.m_positionZ;
 
     //Players with low fall distance, Feather Fall or physical immunity (charges used) are ignored
     // 14.57 can be calculated by resolving damageperc formular below to 0
@@ -20445,8 +20450,8 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
         {
             uint32 damage = (uint32)(damageperc * GetMaxHealth()*sWorld.getRate(RATE_DAMAGE_FALL));
 
-            float height = movementInfo.z;
-            UpdateGroundPositionZ(movementInfo.x,movementInfo.y,height);
+            float height = movementInfo.pos.m_positionZ;
+            UpdateGroundPositionZ(movementInfo.pos.m_positionX,movementInfo.pos.m_positionY,height);
 
             if (damage > 0)
             {
@@ -20462,7 +20467,7 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
             }
 
             //Z given by moveinfo, LastZ, FallTime, WaterZ, MapZ, Damage, Safefall reduction
-            DEBUG_LOG("FALLDAMAGE z=%f sz=%f pZ=%f FallTime=%d mZ=%f damage=%d SF=%d" , movementInfo.z, height, GetPositionZ(), movementInfo.fallTime, height, damage, safe_fall);
+            DEBUG_LOG("FALLDAMAGE z=%f sz=%f pZ=%f FallTime=%d mZ=%f damage=%d SF=%d" , movementInfo.pos.m_positionZ, height, GetPositionZ(), movementInfo.fallTime, height, damage, safe_fall);
         }
     }
     m_session->GetPlayer()->SetKnockedBack(false);
@@ -21139,6 +21144,93 @@ void Player::RemoveAllCurrentPetAuras()
 {
     if(Pet* pet = GetPet())
         pet->RemoveAllAuras();
-     else 
+     else
         CharacterDatabase.PQuery("DELETE FROM pet_aura WHERE guid = ( SELECT id FROM character_pet WHERE owner = %u AND slot = %u )", GetGUIDLow(), PET_SAVE_NOT_IN_SLOT);
+}
+
+bool Player::SetCanFly(bool apply, bool packetOnly)
+{
+    if (!packetOnly && !Unit::SetCanFly(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_CAN_FLY : SMSG_MOVE_UNSET_CAN_FLY, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_UPDATE_CAN_FLY, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetWaterWalking(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_WATER_WALK : SMSG_MOVE_LAND_WALK, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_WATER_WALK, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetFeatherFall(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_FEATHER_FALL : SMSG_MOVE_NORMAL_FALL, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_FEATHER_FALL, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetHover(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_HOVER : SMSG_MOVE_UNSET_HOVER, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_HOVER, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+void Player::ResetTimeSync()
+{
+    m_timeSyncCounter = 0;
+    m_timeSyncTimer = 0;
+    m_timeSyncClient = 0;
+    m_timeSyncServer = getMSTime();
+}
+
+void Player::SendTimeSync()
+{
+    WorldPacket data(SMSG_TIME_SYNC_REQ, 4);
+    data << uint32(m_timeSyncCounter++);
+    GetSession()->SendPacket(&data);
+
+    // Schedule next sync in 10 sec
+    m_timeSyncTimer = 10000;
+    m_timeSyncServer = getMSTime();
 }
