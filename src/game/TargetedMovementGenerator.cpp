@@ -81,7 +81,7 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
             }
 
             // to at i_offset distance from target and i_angle from target facing
-            i_target->GetClosePoint(x, y, z, size, dist, i_angle);
+            i_target->GetClosePoint(x, y, z, dist + size, i_angle);
         }
     }
     else

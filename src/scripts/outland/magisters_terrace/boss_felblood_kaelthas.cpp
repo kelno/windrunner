@@ -221,7 +221,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                 if(i_pl->isAlive())
                 {
                     i_pl->CastSpell(i_pl, SPELL_TELEPORT_CENTER, true);
-                    m_creature->GetNearPoint(m_creature,x,y,z,5,5,0);
+                    m_creature->GetNearPoint(m_creature, x, y, z, 5.0f, 0.0f);
                     i_pl->TeleportTo(m_creature->GetMapId(),x,y,LOCATION_Z,i_pl->GetOrientation());
                 }
         }

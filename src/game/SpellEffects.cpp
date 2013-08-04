@@ -1504,7 +1504,7 @@ void Spell::EffectDummy(uint32 i)
                         return;
 
                     float fDestX, fDestY, fDestZ;
-                    m_caster->GetNearPoint(m_caster, fDestX, fDestY, fDestZ, m_caster->GetObjectSize(), 30.0f, 0.0f);
+                    m_caster->GetNearPoint(m_caster, fDestX, fDestY, fDestZ, 30.0f, 0.0f);
                     if (Creature* pWolf = m_caster->SummonCreature(25324, fDestX, fDestY, fDestZ, 0.0f, TEMPSUMMON_TIMED_DESPAWN, 60000))
                         pWolf->GetMotionMaster()->MoveFollow(m_caster, PET_FOLLOW_DIST, pWolf->GetAngle(m_caster)); 
                     return;
@@ -6579,9 +6579,9 @@ void Spell::EffectSummonTotem(uint32 i)
     else
     {
         if (m_caster->ToPlayer() && m_caster->ToPlayer()->InArena())
-            m_caster->GetClosePoint(dx,dy,dz,pTotem->GetObjectSize()/10,0.1f,angle);
+            m_caster->GetClosePoint(dx, dy, dz, pTotem->GetObjectSize()/10, angle);
         else
-            m_caster->GetClosePoint(dx,dy,dz,pTotem->GetObjectSize(),2.0f,angle);
+            m_caster->GetClosePoint(dx, dy, dz, pTotem->GetObjectSize() + 2.0f, angle);
     }
 
     if( fabs( dz - m_caster->GetPositionZ() ) > 5 )

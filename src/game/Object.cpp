@@ -2097,9 +2097,9 @@ void WorldObject::GetNearPoint2D(float &x, float &y, float distance2d, float abs
     Trinity::NormalizeMapCoord(y);
 }
 
-void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, float &z, float searcher_size, float distance2d, float absAngle ) const
+void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, float &z, float distance2d, float absAngle ) const
 {
-    GetNearPoint2D(x, y, distance2d+searcher_size, absAngle);
+    GetNearPoint2D(x, y, distance2d, absAngle);
     z = GetPositionZ();
     UpdateAllowedPositionZ(x, y, z);
 }

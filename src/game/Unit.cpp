@@ -446,7 +446,7 @@ bool Unit::IsWithinMeleeRange(Unit *obj, float dist) const
 
 void Unit::GetRandomContactPoint( const Unit* obj, float &x, float &y, float &z, float distance2dMin, float distance2dMax ) const
 {
-    GetNearPoint(obj, x, y, z, obj->GetObjectSize(), distance2dMin+(distance2dMax-distance2dMin)*GetMap()->rand_norm(), GetAngle(obj));
+    GetNearPoint(obj, x, y, z, distance2dMin+(distance2dMax-distance2dMin)*GetMap()->rand_norm(), GetAngle(obj));
 }
 
 void Unit::StartAutoRotate(uint8 type, uint32 fulltime, double Angle, bool attackVictimOnEnd)
