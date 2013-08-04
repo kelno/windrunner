@@ -94,7 +94,17 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
     
     if (action == GOSSIP_ACTION_INFO_DEF+1 && pPlayer->isGameMaster()) //double check
     {
-        QueryResult *result = WorldDatabase.PQuery("SELECT guid FROM creature WHERE id = 42 OR id = 44");
+        uint32 destEntry1, destEntry2;
+        if(pCreature->GetCreatureInfo()->Entry == NPC_TELEPORTER_ENTRY)
+        {
+            destEntry1 = NPC_ARRIVAL_HORDE_1;
+            destEntry2 = NPC_ARRIVAL_ALLY_1;
+        } else {
+            destEntry1 = NPC_ARRIVAL_HORDE_2;
+            destEntry2 = NPC_ARRIVAL_ALLY_2;
+        }
+
+        QueryResult *result = WorldDatabase.PQuery("SELECT guid FROM creature WHERE id = %u OR id = %u",destEntry1,destEntry2);
         
         if (!result)
         {
