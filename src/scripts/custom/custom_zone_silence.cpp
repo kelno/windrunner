@@ -14,6 +14,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+// TODO : This won't work for multiple npc's (they'll conflift with each other)
+
 /* ScriptData
 SDName: npc_zone_silence
 SD%Complete: 100
@@ -36,7 +38,7 @@ struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
  
     void MoveInLineOfSight(Unit *who)
     {
-        if (who->GetTypeId() == TYPEID_PLAYER || (who->GetTypeId() == TYPEID_UNIT && who->GetCreature(*me, who->GetGUID())->isPet())) {
+        if (who->GetTypeId() == TYPEID_PLAYER) {
             if (who->GetDistance(me) < 30 ) {
                 if(!who->HasAura(SPELL_SILENCE, 0) && who->isAlive())
                     who->AddAura(SPELL_SILENCE, who); //pas un cast sinon rendement décroissant qui s'applique
