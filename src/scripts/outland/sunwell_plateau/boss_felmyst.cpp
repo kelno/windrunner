@@ -122,7 +122,7 @@ public:
         ScriptedInstance* pInstance;
         SummonList Summons;
 
-        enum Armageddontarget
+        enum events
         {
             EVENT_CLEAVE               = 0,
             EVENT_CORROSION            = 1,
@@ -343,39 +343,7 @@ public:
 
         void onSummonDespawn(Creature* unit)
         {
-        	switch (unit->GetEntry())
-        	{
-        	    case MOB_VAPOR:
-        	    {
-        	    	std::list<Creature*> vaporTrail;
-        	    	unit->GetCreatureListWithEntryInGrid(vaporTrail, MOB_VAPOR_TRAIL, 100.0f);
-        	    	for(std::list<Creature*>::iterator i = vaporTrail.begin(); i != vaporTrail.end(); ++i)
-        	    	{
-        	    	    if ((*i)->getAI())
-        	    	    	(*i)->getAI()->message(0, 0);
-        	    	}
-        	    	break;
-        	    }
-        	}
             Summons.Despawn(unit);
-        }
-
-        void onHitBySpell(Unit* caster, SpellEntry const* spell)
-        {
-        	if (spell->Id == SPELL_FOG_INFORM)
-        	{
-        	    float x, y, z;
-        	    caster->GetPosition(x, y, z);
-        	    Unit* summon = me->SummonCreature(MOB_DEAD, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
-        	    if(summon)
-        	    {
-        	        summon->SetMaxHealth(caster->GetMaxHealth());
-        	        summon->SetHealth(caster->GetMaxHealth());
-        	        summon->CastSpell(summon, SPELL_FOG_CHARM, true);
-        	        summon->CastSpell(summon, SPELL_FOG_CHARM2, true);
-        	    }
-        	    me->DealDamage(caster, caster->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        	}
         }
 
         void onMovementInform(uint32 type, uint32 id)
@@ -523,7 +491,7 @@ public:
         	            	flightPhase = 2;
         	            break;
         	        case 5:
-        	            if (origin)
+        	            if (!origin)
         	                me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
         	            else
         	                me->GetMotionMaster()->MovePoint(3, 1491.119995, 553.672974, 24.921900);
@@ -598,15 +566,15 @@ public:
         	    switch (m_currEvent)
         	    {
         	        case EVENT_CLEAVE:
-        	        	me->CastSpell(me->getVictim(), SPELL_CLEAVE, false);
+        	        	doCast(me->getVictim(), SPELL_CLEAVE, false);
         	        	scheduleEvent(EVENT_CLEAVE, 5000, 10000);
         	        	break;
         	        case EVENT_CORROSION:
-        	        	me->CastSpell(me->getVictim(), SPELL_CORROSION, false);
+        	        	doCast(me->getVictim(), SPELL_CORROSION, false);
         	        	scheduleEvent(EVENT_CORROSION, 20000, 30000);
         	        	break;
         	        case EVENT_GAS_NOVA:
-        	            me->CastSpell(me, SPELL_GAS_NOVA, false);
+        	        	doCast(me, SPELL_GAS_NOVA, false);
         	            scheduleEvent(EVENT_GAS_NOVA, 20000, 25000);
         	            break;
         	        case EVENT_ENCAPSULATE:
@@ -631,7 +599,7 @@ public:
         	        	break;
         	        case EVENT_BERSERK:
         	        	DoScriptText(YELL_BERSERK, me);
-        	        	me->CastSpell(me, SPELL_BERSERK, true);
+        	        	doCast(me, SPELL_BERSERK, true);
         	        	scheduleEvent(EVENT_BERSERK, getPhase() == PHASE_GROUND ? 10000 : 0);
         	        	break;
         	        case EVENT_DEMONIC_VAPOR:
@@ -743,22 +711,41 @@ public:
 
         ScriptedInstance* pInstance;
 
+        enum events
+        {
+            EVENT_DEAD            = 0
+        };
+
         void onReset(bool onSpawn)
         {
+        	if (onSpawn)
+                addEvent(EVENT_DEAD, 12000, 16000);
+            else
+        	    resetEvent(EVENT_DEAD, 12000, 16000);
+
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             doCast((Unit*)NULL, SPELL_TRAIL_TRIGGER, false);
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
         }
 
-        void message(uint32 /*id*/, uint32 /*data*/)
-        {
-        	doCast((Unit*)NULL, SPELL_DEAD_SUMMON, false);
-        	me->DisappearAndDie();
-        }
-
         void attackStart(Unit* /*victim*/) {}
 
-        void update(uint32 const /*diff*/) {}
+        void update(uint32 const diff)
+        {
+        	updateEvents(diff);
+
+        	while (executeEvent(diff, m_currEvent))
+        	{
+        	    switch (m_currEvent)
+        	    {
+        	        case EVENT_DEAD:
+        	        	disableEvent(EVENT_DEAD);
+        	        	doCast((Unit*)NULL, SPELL_DEAD_SUMMON, false);
+        	        	me->DisappearAndDie();
+        	            break;
+        	    }
+        	}
+        }
     };
 
     CreatureAINew* getAI(Creature* creature)
