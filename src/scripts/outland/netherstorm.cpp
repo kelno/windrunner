@@ -1203,7 +1203,7 @@ struct npc_boom_botAI : public ScriptedAI
     {
         Boom = false;
         BoomTimer = 800;
-        me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+        me->SetWalk(true);
     }
     
     void Aggro(Unit* who) {}

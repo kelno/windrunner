@@ -3045,7 +3045,12 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46087:
         case 46161:
         case 46289:
-        case 45657: //Darkness of a Thousand Souls
+        case 45657: // Darkness of a Thousand Souls
+        case 45391: // Vapor Select
+        case 45782: // Fog corruption
+        case 45714: // Fog corruption
+        case 45717: // Fog corruption
+        case 45726: // Fog corruption
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 26102: // Sandblast (Ouro)

@@ -191,16 +191,15 @@ void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& recvPacket)
     PROFILE;
     
     MovementInfo movementInfo;
-    uint32 MovementFlags;
 
-    recvPacket >> MovementFlags;
-    recvPacket >> movementInfo.unk1;
+    recvPacket >> movementInfo.flags;
+    recvPacket >> movementInfo.flags2;
     recvPacket >> movementInfo.time;
-    recvPacket >> movementInfo.x;
-    recvPacket >> movementInfo.y;
-    recvPacket >> movementInfo.z;
-    recvPacket >> movementInfo.o;
-    GetPlayer()->SetPosition(movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o);
+    recvPacket >> movementInfo.pos.m_positionX;
+    recvPacket >> movementInfo.pos.m_positionY;
+    recvPacket >> movementInfo.pos.m_positionZ;
+    recvPacket >> movementInfo.pos.m_orientation;
+    GetPlayer()->SetPosition(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ, movementInfo.pos.m_orientation);
     GetPlayer()->m_movementInfo = movementInfo;
     GetPlayer()->m_anti_lastmovetime = movementInfo.time;
 
@@ -223,7 +222,7 @@ void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& recvPacket)
             FlightPathMovementGenerator* flight = (FlightPathMovementGenerator*)(GetPlayer()->GetMotionMaster()->top());
 
             flight->SetCurrentNodeAfterTeleport();
-            PathNode const& node = flight->GetPath()[flight->GetCurrentNode()];
+            TaxiPathNode const& node = flight->GetPath()[flight->GetCurrentNode()];
             flight->SkipCurrentNode();
 
             GetPlayer()->TeleportTo(curDestNode->map_id,node.x,node.y,node.z,GetPlayer()->GetOrientation());
