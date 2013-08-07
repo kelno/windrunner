@@ -1520,7 +1520,21 @@ void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const
 {
     float new_z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(x,y,z,true);
     if(new_z > INVALID_HEIGHT)
-        z = new_z+ 0.05f;                                   // just to be sure that we are not a few pixel under the surface
+        z = new_z + 0.05f;                                   // just to be sure that we are not a few pixel under the surface
+    else
+    {
+    	while (new_z <= INVALID_HEIGHT)
+    	{
+    	    z+= 1.0f;
+    	    new_z = GetBaseMap()->GetHeight(x, y, z, true);
+
+    	    if (z > MAX_HEIGHT)
+    	        break;
+    	}
+
+    	if (new_z > INVALID_HEIGHT)
+    		z = new_z;
+    }
 }
 
 bool WorldObject::IsPositionValid() const

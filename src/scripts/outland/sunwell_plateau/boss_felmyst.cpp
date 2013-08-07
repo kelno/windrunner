@@ -147,9 +147,9 @@ public:
 
         void onReset(bool onSpawn)
         {
-        	inChaseOnFlight = false;
         	origin = false;
         	direction = false;
+        	inChaseOnFlight = false;
         	encapsTarget = NULL;
         	flightPhaseTimer = 60000;
         	flightPhase = 0;
@@ -226,10 +226,12 @@ public:
             switch (newPhase)
             {
                 case PHASE_INTRO:
+                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
                 	me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 	me->SetReactState(REACT_PASSIVE);
                 	break;
                 case PHASE_RESET:
+                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
                 	me->StopMoving();
                 	me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                 	me->SetDisableGravity(true);
@@ -246,6 +248,7 @@ public:
                 	scheduleEvent(EVENT_ENCAPS_WARN, 29000);
                 	break;
                 case PHASE_FLIGHT:
+                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
                 	switch (rand()%2)
                 	{
                 	    case 0:
@@ -286,11 +289,11 @@ public:
 
         void attackStart(Unit *pTarget)
         {
-            if (getPhase() != PHASE_GROUND && getPhase() != PHASE_PULL)
-                return;
-
             if (!pTarget)
                 return;
+
+            if (getPhase() != PHASE_PULL && getPhase() != PHASE_GROUND)
+            	return;
 
             if (me->Attack(pTarget, true))
             {
@@ -369,6 +372,18 @@ public:
         	    	    me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10, true, 500);
         	    	break;
         	    case 3:
+        	    	me->StopMoving();
+
+        	        me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+        	    	me->SetDisableGravity(false);
+
+        	    	float x, y, z;
+        	    	me->GetPosition(x, y, z);
+        	    	me->UpdateGroundPositionZ(x, y, z);
+        	    	me->Relocate(x, y, z);
+
+        	    	me->SendMovementFlagUpdate();
+
         	    	setPhase(PHASE_PULL);
         	    	if (Unit *target = selectUnit(SELECT_TARGET_TOPAGGRO, 0))
         	    	{
@@ -377,8 +392,6 @@ public:
         	    	}
         	    	else
         	    	    evade();
-
-        	    	inChaseOnFlight = true;
         	    	break;
         	}
         }
@@ -419,7 +432,6 @@ public:
         	            introPhase++;
         	            break;
         	        case 2:
-        	        	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
         	        	me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
         	            me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344);
         	            introPhaseTimer = 6000;
@@ -476,7 +488,7 @@ public:
         	            else
         	            	me->GetMotionMaster()->MovePoint(2, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10);
 
-        	            scheduleEvent(EVENT_FOG_CORRUPTION, 1);
+        	            scheduleEvent(EVENT_FOG_CORRUPTION, 500);
         	            enableEvent(EVENT_FOG_CORRUPTION);
         	            direction = !direction;
         	            BreathCount++;
@@ -491,6 +503,7 @@ public:
         	            	flightPhase = 2;
         	            break;
         	        case 5:
+        	        	me->SetSpeed(MOVE_FLIGHT, 2.3f, true);
         	            if (!origin)
         	                me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
         	            else
@@ -521,20 +534,22 @@ public:
         	if(me->IsNonMeleeSpellCasted(false))
         	    return;
 
-        	if (inChaseOnFlight && me->IsWithinMeleeRange(me->getVictim()))
+        	if (getPhase() == PHASE_PULL && me->IsWithinMeleeRange(me->getVictim()))
         	{
-        		me->StopMoving();
-        		inChaseOnFlight = false;
-        	    me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-        	    me->SetDisableGravity(false);
+        	    if (inChaseOnFlight)
+        	    {
+        	        me->StopMoving();
+        	        inChaseOnFlight = false;
+        	        me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+        	        me->SetDisableGravity(false);
 
-        	    float x, y, z;
-        	    me->GetPosition(x, y, z);
-        	    me->UpdateGroundPositionZ(x, y, z);
-        	    me->Relocate(x, y, z);
+        	        float x, y, z;
+        	        me->GetPosition(x, y, z);
+        	        me->UpdateGroundPositionZ(x, y, z);
+        	        me->Relocate(x, y, z);
 
-        	    me->SendMovementFlagUpdate();
-
+        	        me->SendMovementFlagUpdate();
+        	    }
         	    setPhase(PHASE_GROUND);
         	}
 
@@ -604,7 +619,7 @@ public:
         	        	break;
         	        case EVENT_DEMONIC_VAPOR:
         	        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
-        	        		doCast(me, SPELL_VAPOR_SELECT, false);
+        	        		doCast(me, SPELL_VAPOR_SELECT, true);
 
         	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 25000);
         	        	break;
@@ -676,8 +691,8 @@ public:
         {
         	startFollow = true;
         	setZoneInCombat(true);
-        	doCast((Unit*)NULL, SPELL_VAPOR_FORCE, false);
-        	doCast(me, SPELL_VAPOR_TRIGGER, false);
+        	doCast((Unit*)NULL, SPELL_VAPOR_FORCE, true);
+        	doCast(me, SPELL_VAPOR_TRIGGER, true);
         }
 
         void update(uint32 const /*diff*/)
@@ -724,7 +739,7 @@ public:
         	    resetEvent(EVENT_DEAD, 12000, 16000);
 
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-            doCast((Unit*)NULL, SPELL_TRAIL_TRIGGER, false);
+            doCast((Unit*)NULL, SPELL_TRAIL_TRIGGER, true);
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
         }
 
@@ -740,7 +755,7 @@ public:
         	    {
         	        case EVENT_DEAD:
         	        	disableEvent(EVENT_DEAD);
-        	        	doCast((Unit*)NULL, SPELL_DEAD_SUMMON, false);
+        	        	doCast((Unit*)NULL, SPELL_DEAD_SUMMON, true);
         	        	me->DisappearAndDie();
         	            break;
         	    }
@@ -773,7 +788,7 @@ public:
         {
         	setZoneInCombat(true);
         	attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-        	doCast((Unit*)NULL, SPELL_DEAD_PASSIVE, false);
+        	doCast((Unit*)NULL, SPELL_DEAD_PASSIVE, true);
         }
 
         void updateEM(uint32 const diff)

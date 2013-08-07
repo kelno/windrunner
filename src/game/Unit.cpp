@@ -9363,10 +9363,6 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
 
     propagateSpeedChange();
 
-    // Send speed change packet only for player
-    if (GetTypeId()!=TYPEID_PLAYER)
-        return;
-
     WorldPacket data;
     if(!forced)
     {
@@ -9408,9 +9404,26 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
     }
     else
     {
-        // register forced speed changes for WorldSession::HandleForceSpeedChangeAck
-        // and do it only for real sent packets and use run for run/mounted as client expected
-        ++(this->ToPlayer())->m_forced_speed_changes[mtype];
+    	if (GetTypeId() == TYPEID_PLAYER)
+    	{
+            // register forced speed changes for WorldSession::HandleForceSpeedChangeAck
+            // and do it only for real sent packets and use run for run/mounted as client expected
+            ++(this->ToPlayer())->m_forced_speed_changes[mtype];
+            if (withPet)
+            {
+                if(GetPetGUID() && !isInCombat() && m_speed_rate[mtype] >= 1.0f)
+                {
+                    if (Pet* pet = GetPet())
+                        pet->SetSpeed(mtype, m_speed_rate[mtype], forced);
+                }
+                if (GetTypeId() == TYPEID_PLAYER)
+                {
+                    if (Pet* minipet = ToPlayer()->GetMiniPet())
+                        minipet->SetSpeed(mtype, m_speed_rate[mtype], forced);
+                }
+            }
+    	}
+
         switch(mtype)
         {
             case MOVE_WALK:
@@ -9447,16 +9460,6 @@ void Unit::SetSpeed(UnitMoveType mtype, float rate, bool forced, bool withPet /*
             data << uint8(0);                               // new 2.1.0
         data << float(GetSpeed(mtype));
         SendMessageToSet( &data, true );
-    }
-    if (withPet) {
-        if(GetPetGUID() && !isInCombat() && m_speed_rate[mtype] >= 1.0f) {
-            if (Pet* pet = GetPet())
-                pet->SetSpeed(mtype, m_speed_rate[mtype], forced);
-        }
-        if (GetTypeId() == TYPEID_PLAYER) {
-            if (Pet* minipet = ToPlayer()->GetMiniPet())
-                minipet->SetSpeed(mtype, m_speed_rate[mtype], forced);
-        }
     }
 }
 
