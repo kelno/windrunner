@@ -3046,7 +3046,6 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46161:
         case 46289:
         case 45657: // Darkness of a Thousand Souls
-        case 45391: // Vapor Select
         case 45782: // Fog corruption
         case 45714: // Fog corruption
         case 45717: // Fog corruption
@@ -3082,6 +3081,10 @@ void SpellMgr::LoadSpellCustomAttr()
         case 29943: // TEMP: For a event from Gashrok! NOT BLIZZLIKE
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
+            break;
+        case 45391: // Vapor Select
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->MaxAffectedTargets = 1;
             break;
         case 45892:
             spellInfo->MaxAffectedTargets = 1;
