@@ -14,12 +14,6 @@
 * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-/* ScriptData
-SDName: Boss_Felmyst
-SD%Complete: 95%
-SDComment: Flying movements may not be 100% correct. Kalecgos event on death. Flying path on spawn. Autoshoot & mind flay decast.
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_sunwell_plateau.h"
 
@@ -165,22 +159,22 @@ public:
 
         	if (onSpawn)
         	{
-        	    addEvent(EVENT_CLEAVE, 5000, 10000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
-        	    addEvent(EVENT_CORROSION, 10000, 20000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
-        	    addEvent(EVENT_GAS_NOVA, 20000, 25000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
-        	    addEvent(EVENT_ENCAPSULATE, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
-        	    addEvent(EVENT_ENCAPS_WARN, 29000, 29000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4));
-        	    addEvent(EVENT_FOG_CORRUPTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(6));
-        	    addEvent(EVENT_DEMONIC_VAPOR, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, false, phaseMaskForPhase(6));
-        	    addEvent(EVENT_BERSERK, 600000, 600000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(4) | phaseMaskForPhase(6));
+        	    addEvent(EVENT_CLEAVE, 5000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_CORROSION, 10000, 20000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_GAS_NOVA, 21000, 26000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_ENCAPSULATE, 33000, 33000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4) | phaseMaskForPhase(5));
+        	    addEvent(EVENT_ENCAPS_WARN, 32000, 32000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4));
+        	    addEvent(EVENT_FOG_CORRUPTION, 500, 500, EVENT_FLAG_NONE, false, phaseMaskForPhase(6));
+        	    addEvent(EVENT_DEMONIC_VAPOR, 500, 500, EVENT_FLAG_NONE, false, phaseMaskForPhase(6));
+        	    addEvent(EVENT_BERSERK, 600000, 600000, EVENT_FLAG_NONE, true, phaseMaskForPhase(4) | phaseMaskForPhase(6));
         	}
         	else
         	{
         		resetEvent(EVENT_CLEAVE, 5000, 10000);
         		resetEvent(EVENT_CORROSION, 10000, 20000);
-        		resetEvent(EVENT_GAS_NOVA, 20000, 25000);
-        		resetEvent(EVENT_ENCAPSULATE, 30000);
-        		resetEvent(EVENT_ENCAPS_WARN, 29000);
+        		resetEvent(EVENT_GAS_NOVA, 21000);
+        		resetEvent(EVENT_ENCAPSULATE, 33000);
+        		resetEvent(EVENT_ENCAPS_WARN, 32000);
         		resetEvent(EVENT_FOG_CORRUPTION, 500);
         		resetEvent(EVENT_DEMONIC_VAPOR, 500);
         		resetEvent(EVENT_BERSERK, 600000);
@@ -226,12 +220,12 @@ public:
             switch (newPhase)
             {
                 case PHASE_INTRO:
-                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                	me->SetSpeed(MOVE_RUN, 1.3f, true);
                 	me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 	me->SetReactState(REACT_PASSIVE);
                 	break;
                 case PHASE_RESET:
-                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                	me->SetSpeed(MOVE_RUN, 1.3f, true);
                 	me->StopMoving();
                 	me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                 	me->SetDisableGravity(true);
@@ -240,6 +234,7 @@ public:
                 	setPhase(PHASE_PULL);
                 	break;
                 case PHASE_GROUND:
+                	me->SetSpeed(MOVE_RUN, 1.0f, true);
                 	flightPhaseTimer = 60000;
                 	scheduleEvent(EVENT_CLEAVE, 5000, 10000);
                 	scheduleEvent(EVENT_CORROSION, 10000, 20000);
@@ -248,7 +243,7 @@ public:
                 	scheduleEvent(EVENT_ENCAPS_WARN, 29000);
                 	break;
                 case PHASE_FLIGHT:
-                	me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                	me->SetSpeed(MOVE_RUN, 1.3f, true);
                 	switch (rand()%2)
                 	{
                 	    case 0:
@@ -272,6 +267,8 @@ public:
 
         void onCombatStart(Unit* /*who*/)
         {
+        	me->SetWalk(false);
+
             if (pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, IN_PROGRESS);
 
@@ -342,10 +339,15 @@ public:
             	summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
             	summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
             }
+            else if (summoned->GetEntry() == MOB_VAPOR)
+            	me->SetTarget(summoned->GetGUID());
         }
 
         void onSummonDespawn(Creature* unit)
         {
+        	if (unit->GetEntry() == MOB_VAPOR)
+        		me->SetTarget(0);
+
             Summons.Despawn(unit);
         }
 
@@ -356,20 +358,17 @@ public:
 
         	switch (id)
         	{
-        	    case 1:
-        	    	if (!direction)
-        	    	    me->GetMotionMaster()->MovePoint(2, flightMobRight[0], flightMobRight[1], flightMobRight[2], true, 500);
-        	    	else
-        	    	    me->GetMotionMaster()->MovePoint(2, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2], true, 500);
-        	    	break;
         	    case 2:
         	    	me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
         	    	disableEvent(EVENT_FOG_CORRUPTION);
 
-        	    	if (!direction)
-        	    	    me->GetMotionMaster()->MovePoint(0, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10, true, 500);
-        	    	else
-        	    	    me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10, true, 500);
+        	    	if (BreathCount < 3)
+        	    	{
+        	    	    if (!direction)
+        	    	        me->GetMotionMaster()->MovePoint(0, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10, true, 500);
+        	    	    else
+        	    	        me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10, true, 500);
+        	    	}
         	    	break;
         	    case 3:
         	    	me->StopMoving();
@@ -465,13 +464,17 @@ public:
         	            flightPhase++;
         	            break;
         	        case 1:
-        	        	me->GetMotionMaster()->MovePoint(1, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ()+10);
-        	        	flightPhaseTimer = 44000;
+        	        	me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
+        	        	flightPhaseTimer = 37000;
         	        	flightPhase++;
         	            break;
         	        case 2:
         	        	disableEvent(EVENT_DEMONIC_VAPOR);
 
+        	        	flightPhaseTimer = 1;
+        	        	flightPhase++;
+        	        	break;
+        	        case 3:
         	        	if (!direction)
         	        	    me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
         	        	else
@@ -481,7 +484,7 @@ public:
         	            flightPhaseTimer = 2500;
         	            flightPhase++;
         	            break;
-        	        case 3:
+        	        case 4:
         	        	doCast(me, SPELL_FOG_BREATH, false);
         	            if (!direction)
         	            	me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
@@ -493,17 +496,20 @@ public:
         	            direction = !direction;
         	            BreathCount++;
 
-        	            flightPhaseTimer = 17000;
+        	            flightPhaseTimer = 16000;
+        	            if (BreathCount >= 3)
+        	            	flightPhaseTimer = 9000;
+
         	            flightPhase++;
         	            break;
-        	        case 4:
+        	        case 5:
         	        	flightPhaseTimer = 1;
         	        	flightPhase++;
         	            if(BreathCount < 3)
-        	            	flightPhase = 2;
+        	            	flightPhase = 3;
         	            break;
-        	        case 5:
-        	        	me->SetSpeed(MOVE_FLIGHT, 2.3f, true);
+        	        case 6:
+        	        	me->SetSpeed(MOVE_RUN, 1.3f, true);
         	            if (!origin)
         	                me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
         	            else
@@ -531,48 +537,50 @@ public:
         	if (!updateVictim())
         	    return;
 
-        	if(me->IsNonMeleeSpellCasted(false))
-        	    return;
-
-        	if (getPhase() == PHASE_PULL && me->IsWithinMeleeRange(me->getVictim()))
+        	switch (getPhase())
         	{
-        	    if (inChaseOnFlight)
-        	    {
-        	        me->StopMoving();
-        	        inChaseOnFlight = false;
-        	        me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
-        	        me->SetDisableGravity(false);
+                case PHASE_PULL:
+                	if (me->IsWithinMeleeRange(me->getVictim()))
+                	{
+                		if (inChaseOnFlight)
+                		{
+                		    me->StopMoving();
+                		    inChaseOnFlight = false;
+                		    me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
+                		    me->SetDisableGravity(false);
 
-        	        float x, y, z;
-        	        me->GetPosition(x, y, z);
-        	        me->UpdateGroundPositionZ(x, y, z);
-        	        me->Relocate(x, y, z);
+                		    float x, y, z;
+                		    me->GetPosition(x, y, z);
+                		    me->UpdateGroundPositionZ(x, y, z);
+                		    me->Relocate(x, y, z);
 
-        	        me->SendMovementFlagUpdate();
-        	    }
-        	    setPhase(PHASE_GROUND);
+                		    me->SendMovementFlagUpdate();
+                		}
+                		setPhase(PHASE_GROUND);
+                	}
+                	break;
+                case PHASE_FLIGHT:
+                	if (flightPhase >= 2)
+                	    me->SetTarget(0);
+
+                	handleFlight(diff);
+                	break;
+                case PHASE_GROUND:
+                	if (flightPhaseTimer)
+                	{
+                	    if (flightPhaseTimer <= diff)
+                	        setPhase(PHASE_FLIGHT);
+                	    else
+                	        flightPhaseTimer -= diff;
+                	}
+
+                	doMeleeAttackIfReady();
+                	break;
+                case PHASE_ENC:
+                	if (encapsTarget)
+                	    me->SetTarget(encapsTarget->GetGUID());
+                	break;
         	}
-
-        	if (getPhase() == PHASE_FLIGHT)
-        	{
-        		me->SetTarget(0);
-        		handleFlight(diff);
-        	}
-        	else if (getPhase() == PHASE_GROUND)
-        	{
-        		if (flightPhaseTimer)
-        		{
-        		    if (flightPhaseTimer <= diff)
-        			    setPhase(PHASE_FLIGHT);
-        		    else
-        			    flightPhaseTimer -= diff;
-        		}
-
-        		doMeleeAttackIfReady();
-        	}
-        	else if (getPhase() == PHASE_ENC)
-        		if (encapsTarget)
-        			me->SetTarget(encapsTarget->GetGUID());
 
         	updateEvents(diff);
 
@@ -590,7 +598,7 @@ public:
         	        	break;
         	        case EVENT_GAS_NOVA:
         	        	doCast(me, SPELL_GAS_NOVA, false);
-        	            scheduleEvent(EVENT_GAS_NOVA, 20000, 25000);
+        	            scheduleEvent(EVENT_GAS_NOVA, 21000, 26000);
         	            break;
         	        case EVENT_ENCAPSULATE:
         	        	if(encapsTarget)
@@ -601,8 +609,8 @@ public:
         	        	if (Unit* tank = selectUnit(SELECT_TARGET_TOPAGGRO, 0, 150.0f, true))
         	        	    me->SetTarget(tank->GetGUID());
 
-        	            scheduleEvent(EVENT_ENCAPSULATE, 30000);
-        	            scheduleEvent(EVENT_ENCAPS_WARN, 29000);
+        	            scheduleEvent(EVENT_ENCAPSULATE, 33000);
+        	            scheduleEvent(EVENT_ENCAPS_WARN, 32000);
         	        	break;
         	        case EVENT_ENCAPS_WARN:
         	        	if (encapsTarget = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
@@ -610,7 +618,7 @@ public:
 
         	        	setPhase(PHASE_ENC);
 
-        	        	scheduleEvent(EVENT_ENCAPS_WARN, 29000);
+        	        	scheduleEvent(EVENT_ENCAPS_WARN, 32000);
         	        	break;
         	        case EVENT_BERSERK:
         	        	DoScriptText(YELL_BERSERK, me);
@@ -618,10 +626,18 @@ public:
         	        	scheduleEvent(EVENT_BERSERK, getPhase() == PHASE_GROUND ? 10000 : 0);
         	        	break;
         	        case EVENT_DEMONIC_VAPOR:
+        	        	me->StopMoving();
         	        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
         	        		doCast(me, SPELL_VAPOR_SELECT, true);
 
-        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 25000);
+        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 18000);
+
+        	        	me->GetMotionMaster()->Clear();
+        	        	if (!direction)
+        	        	    me->GetMotionMaster()->MovePoint(2, flightMobRight[0], flightMobRight[1], flightMobRight[2], true, 10000);
+        	        	else
+        	        	    me->GetMotionMaster()->MovePoint(2, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2], true, 10000);
+
         	        	break;
         	        case EVENT_FOG_CORRUPTION:
         	        {

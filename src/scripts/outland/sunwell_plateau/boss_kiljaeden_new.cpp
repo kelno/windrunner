@@ -464,6 +464,7 @@ public:
                 FindOrbs();
                 OrbsEmpowered = 0;
                 EmpowerCount = 0;
+                me->SetDisableGravity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->setActive(true);
                 Searched = false;
@@ -1825,12 +1826,9 @@ public:
                 {
                     resetEvent(EVENT_SHADOWBOLT_S, 500, 1000);
                 }
-                me->SetFullTauntImmunity(true);
-            }
 
-            void onCombatStart(Unit* /*victim*/)
-            {
-            	setZoneInCombat(true);
+                me->SetDisableGravity(true);
+                me->SetFullTauntImmunity(true);
             }
 
             void attackStart(Unit* victim)
