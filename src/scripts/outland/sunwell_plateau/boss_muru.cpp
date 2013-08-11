@@ -779,6 +779,7 @@ public:
             SummonSentinel = false;
             switchState = false;
 
+            me->SetDisableGravity(true);
             me->addUnitState(UNIT_STAT_STUNNED);
         }
 

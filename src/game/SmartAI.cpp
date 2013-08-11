@@ -721,15 +721,12 @@ void SmartAI::SetRun(bool run)
 
 void SmartAI::SetFly(bool bFly)
 {
-    me->SetFlying(bFly);
+	me->SetDisableGravity(bFly);
 }
 
 void SmartAI::SetSwimm(bool bSwimm)
 {
-    if (bSwimm)
-        me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
-    else
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+	me->SetSwim(bSwimm);
 }
 
 void SmartAI::sGossipHello(Player* player)

@@ -320,7 +320,7 @@ struct TRINITY_DLL_DECL npc_escaping_peasantAI : public Scripted_NoMovementAI
     npc_escaping_peasantAI(Creature * c) : Scripted_NoMovementAI(c)
     {
         me->SetReactState(REACT_PASSIVE);
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetWalk(true);
         Eris = NULL;
         uint8 pos = rand() % 6;
         me->GetMotionMaster()->MovePoint(0, PeasantsArrivalPositions[pos].x, PeasantsArrivalPositions[pos].y, PeasantsArrivalPositions[pos].z);
