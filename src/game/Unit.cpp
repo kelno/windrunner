@@ -9487,13 +9487,13 @@ void Unit::setDeathState(DeathState s)
         ClearAllReactives();
         ClearDiminishings();
 
+        StopMoving();
         if (IsInWorld())
         {
             GetMotionMaster()->Clear(false);
             GetMotionMaster()->MoveIdle();
         }
 
-        StopMoving();
         DisableSpline();
         //without this when removing IncreaseMaxHealth aura player may stuck with 1 hp
         //do not why since in IncreaseMaxHealth currenthealth is checked
@@ -11182,17 +11182,20 @@ void Unit::SendPetAIReaction(uint64 guid)
 
 ///----------End of Pet responses methods----------
 
-void Unit::StopMoving()
+void Unit::StopMoving(bool forceSendStop /*=false*/)
 {
+	if (IsStopped() && !forceSendStop)
+	    return;
+
 	clearUnitState(UNIT_STAT_MOVING);
+
+	// prevent loose possess
+	if (isPossessed())
+	    return;
 
 	// not need send any packets if not in world
 	if (!IsInWorld())
 	    return;
-
-	// prevent loose possess
-	if (isPossessed())
-		return;
 
 	Movement::MoveSplineInit init(this);
 	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
@@ -12371,7 +12374,6 @@ void Unit::SetCharmedOrPossessedBy(Unit* charmer, bool possess)
     if(GetTypeId() == TYPEID_PLAYER && (this->ToPlayer())->GetTransport())
         return;
 
-    SetWalk(false);
     CastStop();
     CombatStop(); //TODO: CombatStop(true) may cause crash (interrupt spells)
     DeleteThreatList();

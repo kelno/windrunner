@@ -1276,6 +1276,32 @@ public:
                     }
                 }
 
+                if (me->hasUnitState(UNIT_STAT_CASTING) || me->hasUnitState(UNIT_STAT_STUNNED))
+                    return;
+
+                //Phase 3
+                if (getPhase() <= PHASE_NORMAL)
+                {
+                    if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
+                    {
+                        talk(SAY_KJ_PHASE3);
+                        setPhase(PHASE_DARKNESS);
+                    }
+                }
+
+                //Phase 4
+                if (getPhase() <= PHASE_DARKNESS)
+                {
+                    if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
+                    {
+                        doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                        talk(SAY_KJ_PHASE4);
+                        setPhase(PHASE_ARMAGEDDON);
+                        enableEvent(EVENT_ORBS_EMPOWER);
+                        enableEvent(EVENT_SHADOW_SPIKE);
+                    }
+                }
+
                 while (executeEvent(diff, m_currEvent))
                 {
                     switch (m_currEvent)
@@ -1361,33 +1387,6 @@ public:
                             break;
                         }
                     }
-                }
-
-                //Phase 3
-                if (getPhase() <= PHASE_NORMAL)
-                {
-                    if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
-                    {
-                        talk(SAY_KJ_PHASE3);
-                        setPhase(PHASE_DARKNESS);
-                    }
-                    else
-                        return;
-                }
-
-                //Phase 4
-                if (getPhase() <= PHASE_DARKNESS)
-                {
-                    if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
-                    {
-                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        talk(SAY_KJ_PHASE4);
-                        setPhase(PHASE_ARMAGEDDON);
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                        enableEvent(EVENT_SHADOW_SPIKE);
-                    }
-                    else
-                        return;
                 }
             }
     };

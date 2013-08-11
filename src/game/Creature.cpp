@@ -175,6 +175,8 @@ m_isBeingEscorted(false)
     m_GlobalCooldown = 0;
     DisableReputationGain = false;
     TriggerJustRespawned = false;
+
+    SetWalk(true);
 }
 
 Creature::~Creature()
@@ -1860,13 +1862,14 @@ void Creature::setDeathState(DeathState s)
         //    setActive(true);
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
+        SetWalk(true);
         ResetPlayerDamageReq();
 
         UpdateMovementFlags();
 
         CreatureInfo const *cinfo = GetCreatureInfo();
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
-        SetWalk(true);
+
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
         clearUnitState(UNIT_STAT_ALL_STATE);
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
