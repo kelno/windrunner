@@ -133,6 +133,7 @@ public:
         uint32 introPhaseTimer;
         uint32 introPhase;
         uint32 BreathCount;
+        uint32 demonicCount;
         bool origin;
         bool direction;
         bool inChaseOnFlight;
@@ -150,6 +151,7 @@ public:
         	introPhaseTimer = 0;
         	introPhase = 0;
         	BreathCount = 0;
+        	demonicCount = 0;
 
         	setPhase(PHASE_NULL);
         	if (onSpawn)
@@ -256,6 +258,7 @@ public:
                 	        break;
                 	}
 
+                	demonicCount = 0;
                 	scheduleEvent(EVENT_DEMONIC_VAPOR, 5000);
                 	enableEvent(EVENT_DEMONIC_VAPOR);
                 	flightPhaseTimer = 300;
@@ -465,16 +468,10 @@ public:
         	            break;
         	        case 1:
         	        	me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
-        	        	flightPhaseTimer = 37000;
+        	        	flightPhaseTimer = 38000;
         	        	flightPhase++;
         	            break;
         	        case 2:
-        	        	disableEvent(EVENT_DEMONIC_VAPOR);
-
-        	        	flightPhaseTimer = 1;
-        	        	flightPhase++;
-        	        	break;
-        	        case 3:
         	        	if (!direction)
         	        	    me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
         	        	else
@@ -484,7 +481,7 @@ public:
         	            flightPhaseTimer = 2500;
         	            flightPhase++;
         	            break;
-        	        case 4:
+        	        case 3:
         	        	doCast(me, SPELL_FOG_BREATH, false);
         	            if (!direction)
         	            	me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
@@ -502,13 +499,13 @@ public:
 
         	            flightPhase++;
         	            break;
-        	        case 5:
+        	        case 4:
         	        	flightPhaseTimer = 1;
         	        	flightPhase++;
         	            if(BreathCount < 3)
-        	            	flightPhase = 3;
+        	            	flightPhase = 2;
         	            break;
-        	        case 6:
+        	        case 5:
         	        	me->SetSpeed(MOVE_RUN, 1.3f, true);
         	            if (!origin)
         	                me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
@@ -630,7 +627,11 @@ public:
         	        	if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
         	        		doCast(me, SPELL_VAPOR_SELECT, true);
 
-        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 18000);
+        	        	demonicCount++;
+        	        	if (demonicCount >= 2)
+        	        		disableEvent(EVENT_DEMONIC_VAPOR);
+
+        	        	scheduleEvent(EVENT_DEMONIC_VAPOR, 15000);
 
         	        	me->GetMotionMaster()->Clear();
         	        	if (!direction)

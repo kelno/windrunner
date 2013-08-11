@@ -649,21 +649,38 @@ namespace Trinity
 
             for(typename GridRefManager<T>::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
-                if( !itr->getSource()->isAlive() || 
-                    ( itr->getSource()->GetTypeId() == TYPEID_PLAYER && ((itr->getSource()->ToPlayer())->isInFlight() || (itr->getSource()->ToPlayer())->isSpectator()) ) 
-                  )
-                    continue;
+                if(!itr->getSource()->isAlive())
+                	continue;
+
+                if (itr->getSource()->GetTypeId() == TYPEID_PLAYER)
+                {
+                	if ((itr->getSource()->ToPlayer())->isInFlight())
+		                continue;
+
+                	if ((itr->getSource()->ToPlayer())->isSpectator())
+                		continue;
+                }
 
                 switch (i_TargetType)
                 {
                     case SPELL_TARGETS_ALLY:
-                        if (!itr->getSource()->isAttackableByAOE() || !i_caster->IsFriendlyTo( itr->getSource() ))
+                        if (!itr->getSource()->isAttackableByAOE())
                             continue;
+
+                        if (itr->getSource()->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
+                            continue;
+
+                        if (!i_caster->IsFriendlyTo(itr->getSource()))
+                        	continue;
                         break;
                     case SPELL_TARGETS_ENEMY:
                     {
                         if(itr->getSource()->GetTypeId()==TYPEID_UNIT && (itr->getSource()->ToCreature())->isTotem())
                             continue;
+
+                        if (itr->getSource()->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
+                            continue;
+
                         if(!itr->getSource()->isAttackableByAOE())
                             continue;
 
@@ -679,13 +696,16 @@ namespace Trinity
                             if (!check->IsHostileTo( itr->getSource() ))
                                 continue;
                         }
-                    }break;
+                        break;
+                    }
                     case SPELL_TARGETS_ENTRY:
                     {
                         if(itr->getSource()->GetEntry()!= i_entry)
                             continue;
-                    }break;
-                    default: continue;
+                        break;
+                    }
+                    default:
+                    	continue;
                 }
 
                 switch(i_push_type)

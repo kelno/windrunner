@@ -4399,12 +4399,6 @@ void Spell::EffectSummonWild(uint32 i)
         int32 duration = GetSpellDuration(m_spellInfo);
 
         TempSummonType summonType = (duration == 0) ? TEMPSUMMON_DEAD_DESPAWN : TEMPSUMMON_TIMED_DESPAWN;
-        switch (m_spellInfo->Id)
-        {
-            case 45836:
-            	summonType = TEMPSUMMON_CORPSE_DESPAWN;
-            	break;
-        }
 
         if(m_originalCaster)
         {

@@ -11190,6 +11190,10 @@ void Unit::StopMoving()
 	if (!IsInWorld())
 	    return;
 
+	// prevent loose possess
+	if (isPossessed())
+		return;
+
 	Movement::MoveSplineInit init(this);
 	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
 	init.SetFacing(GetOrientation());
@@ -12226,8 +12230,6 @@ void Unit::SetStunned(bool apply)
         data.append(GetPackGUID());
         data << uint32(0);
         SendMessageToSet(&data,true);
-
-        CastStop();
     }
     else
     {

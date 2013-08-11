@@ -1276,9 +1276,6 @@ public:
                     }
                 }
 
-                if (me->hasUnitState(UNIT_STAT_CASTING) || me->hasUnitState(UNIT_STAT_STUNNED))
-                    return;
-
                 while (executeEvent(diff, m_currEvent))
                 {
                     switch (m_currEvent)
@@ -1347,9 +1344,8 @@ public:
                                     ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
 
                             }
-                            scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
-                            scheduleEvent(EVENT_DARKNESS, 30000);
                             disableEvent(EVENT_ORBS_EMPOWER);
+                            scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
                             break;
                         case EVENT_SINISTER_REFLECTION:
                         	talk(SAY_KJ_REFLECTION);
