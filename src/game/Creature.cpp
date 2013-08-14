@@ -175,8 +175,6 @@ m_isBeingEscorted(false)
     m_GlobalCooldown = 0;
     DisableReputationGain = false;
     TriggerJustRespawned = false;
-
-    SetWalk(true);
 }
 
 Creature::~Creature()
