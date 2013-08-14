@@ -607,7 +607,12 @@ class WorldObject : public Object, public WorldLocation
 
         float GetObjectSize() const
         {
-            return ( m_valuesCount > UNIT_FIELD_COMBATREACH ) ? m_floatValues[UNIT_FIELD_COMBATREACH] : DEFAULT_WORLD_OBJECT_SIZE;
+        	if (GetTypeId() == TYPEID_PLAYER)
+        		return DEFAULT_WORLD_OBJECT_SIZE;
+        	else if (m_valuesCount > UNIT_FIELD_COMBATREACH)
+        		return m_floatValues[UNIT_FIELD_COMBATREACH];
+        	else
+        		return DEFAULT_WORLD_OBJECT_SIZE;
         }
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
