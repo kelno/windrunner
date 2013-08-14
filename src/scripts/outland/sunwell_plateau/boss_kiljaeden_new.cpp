@@ -17,6 +17,7 @@
 #include "precompiled.h"
 #include "def_sunwell_plateau.h"
 #include <math.h>
+#include "MoveSplineInit.h"
 
 /*** Spells used during the encounter ***/
 enum SpellIds
@@ -189,19 +190,12 @@ float DeceiverLocations[3][3]=
 };
 
 // Locations, where Shield Orbs will spawn
-float ShieldOrbLocations[4][2]=
+Position const ShieldOrbLocations[4] =
 {
-    {1698.900f, 627.870f},    //middle pont of Sunwell
-    {12.0f, 3.14f},             // First one spawns northeast of KJ
-    {12.0f, 3.14f/0.7f},         // Second one spawns southeast
-    {12.0f, 3.14f*3.8f}          // Third one spawns (?)
-};
-
-float OrbLocations[4][5] = {
-    (1694.48f, 674.29f,  28.0502f, 4.86985f),
-    (1745.68f, 621.823f, 28.0505f, 2.93777f),
-    (1704.14f, 583.591f, 28.1696f, 1.59003f),
-    (1653.12f, 635.41f,  28.0932f, 0.0977725f),
+    {1698.900f, 627.870f, SHIELD_ORB_Z, 0.0f},    //middle pont of Sunwell
+    {12.0f, 3.14f, SHIELD_ORB_Z, 0.0f},           // First one spawns northeast of KJ
+    {12.0f, 3.14f/0.7f, SHIELD_ORB_Z, 0.0f},      // Second one spawns southeast
+    {12.0f, 3.14f*3.8f, SHIELD_ORB_Z, 0.0f}       // Third one spawns (?)
 };
 
 struct Speech
@@ -1332,8 +1326,8 @@ public:
                             for (uint8 i = 1; i < getPhase(); ++i)
                             {
                                 float sx, sy;
-                                sx = ShieldOrbLocations[0][0] + sin(ShieldOrbLocations[i][0]);
-                                sy = ShieldOrbLocations[0][1] + sin(ShieldOrbLocations[i][1]);
+                                sx = ShieldOrbLocations[0].GetPositionX() + sin(ShieldOrbLocations[i].GetPositionX());
+                                sy = ShieldOrbLocations[0].GetPositionY() + sin(ShieldOrbLocations[i].GetPositionY());
                                 if (Creature* orb = me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000))
                                 {
                                 	orb->SetSummoner(me);
@@ -1784,30 +1778,32 @@ public:
     class mob_shield_orbAI : public CreatureAINew
     {
         private:
-            bool PointReached;
             bool Clockwise;
-            bool checkTimer;
     
             ScriptedInstance *pInstance;
-    
-            float x, y, r, c, mx, my;
         public:
             mob_shield_orbAI(Creature* creature) : CreatureAINew(creature)
             {
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
+            void FillCirclePath(Position const& centerPos, float radius, float z, Movement::PointsArray& path, bool clockwise)
+            {
+                float step = clockwise ? -M_PI / 9.0f : M_PI / 9.0f;
+                float angle = centerPos.GetAngle(me->GetPositionX(), me->GetPositionY());
+
+                for (uint8 i = 0; i < 18; angle += step, ++i)
+                {
+                    G3D::Vector3 point;
+                    point.x = centerPos.GetPositionX() + radius * cosf(angle);
+                    point.y = centerPos.GetPositionY() + radius * sinf(angle);
+                    point.z = z; // Don't use any height getters unless all bugs are fixed.
+                    path.push_back(point);
+                }
+            }
+
             void onReset(bool onSpawn)
             {
-                PointReached = true;
-
-                r = 17;
-                c = 0;
-                checkTimer = 2000;
-        
-                mx = ShieldOrbLocations[0][0];
-                my = ShieldOrbLocations[0][1];
-        
                 if (rand()%2)
                     Clockwise = true;
                 else
@@ -1838,13 +1834,13 @@ public:
             	}
             }
 
-            void onMovementInform(uint32 type, uint32 /*id*/)
+            void onCombatStart(Unit* /*who*/)
             {
-                if(type != POINT_MOTION_TYPE)
-                    return;
-
-
-                PointReached = true;
+            	Movement::MoveSplineInit init(me);
+            	FillCirclePath(ShieldOrbLocations[0], 17.0f, SHIELD_ORB_Z, init.Path(), Clockwise);
+            	init.SetFly();
+            	init.SetCyclic();
+            	init.Launch();
             }
 
             void updateEM(uint32 const diff)
@@ -1859,36 +1855,6 @@ public:
                 {
                     me->DisappearAndDie();
                     return;
-                }
-
-                if (PointReached)
-                {
-                    if (Clockwise)
-                    {
-                        y = my - r * sin(c);
-                        x = mx - r * cos(c);
-                    }
-                    else
-                    {
-                        y = my + r * sin(c);
-                        x = mx + r * cos(c);
-                    }
-            
-                    PointReached = false;
-                    checkTimer = 2000;
-            
-                    me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z, true, 100);
-            
-                    c += 3.1415926535/32;
-                    if (c > 2*3.1415926535)
-                        c = 0;
-                }
-                else
-                {
-                    if (checkTimer <= diff)
-                	    PointReached = true;
-                	else
-                		checkTimer -= diff;
                 }
 
                 if (!updateVictim())
