@@ -47,7 +47,7 @@ namespace Movement
             time_perc(0.f), splineId(0), initialOrientation(0.f),
             HasVelocity(false)
         {
-            path.resize(path_capacity);
+            path.reserve(path_capacity);
         }
 
         PointsArray path;
