@@ -1903,7 +1903,9 @@ uint16 Map::GetAreaFlag(float x, float y, float z, bool *isOutdoors) const
 
     if (isOutdoors)
     {
-        if (haveAreaInfo)
+        if (sWorld.getConfig(CONFIG_PVP_ZONE_ENABLE) && GetZoneId(x,y,z) == sWorld.getConfig(CONFIG_PVP_ZONE_ID))
+            *isOutdoors = true;
+        else if (haveAreaInfo)
             *isOutdoors = IsOutdoorWMO(mogpFlags, adtId, rootId, groupId, wmoEntry, atEntry, i_mapEntry->MapID);
         else
             *isOutdoors = true;
