@@ -327,6 +327,7 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
 
     void Reset()
     {
+        SetCombatMovementAllowed(true);
         PlayerGUID = 0;
         Tapped = false;
         PoisonTimer = 0;
@@ -363,33 +364,42 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
         {
             m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_EAT);
             PoisonTimer = 5000;
+            SetCombatMovementAllowed(false);
         }
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(PoisonTimer && PoisonTimer <= diff)
+        if(PoisonTimer)
         {
-            if(PlayerGUID)
+            if(PoisonTimer <= diff)
             {
-                Player* plr = Unit::GetPlayer(PlayerGUID);
-                if(plr && plr->GetQuestStatus(11020) == QUEST_STATUS_INCOMPLETE)
-                    plr->KilledMonster(23209, m_creature->GetGUID());
-            }
-            PoisonTimer = 0;
-            m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-        }else PoisonTimer -= diff;
+                if(PlayerGUID)
+                {
+                    Player* plr = Unit::GetPlayer(PlayerGUID);
+                    if(plr && plr->GetQuestStatus(11020) == QUEST_STATUS_INCOMPLETE)
+                        plr->KilledMonster(23209, m_creature->GetGUID());
+                }
+                PoisonTimer = 0;
+                m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            } else PoisonTimer -= diff;
+            
+            return;
+        }
+        
+        if(!UpdateVictim())
+            return;
         
         if (KickTimer <= diff) {
             if (m_creature->getVictim()) {
-                DoCast(m_creature->getVictim(), SPELL_KICK, true);
+                DoCast(m_creature->getVictim(), SPELL_KICK, false);
                 KickTimer = 15000;
             }
         }else KickTimer -= diff;
         
         if (SunderArmorTimer <= diff) {
             if (m_creature->getVictim()) {
-                DoCast(m_creature->getVictim(), SPELL_SUNDER_ARMOR, true);
+                DoCast(m_creature->getVictim(), SPELL_SUNDER_ARMOR, false);
                 SunderArmorTimer = 8000;
             }
         }else SunderArmorTimer -= diff;
