@@ -197,20 +197,27 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	return;
 	    }
 
-	    if (player->GetMap()->IsBattleGroundOrArena() && !player->isSpectator())
+	    Map* const pMap = player->GetBaseMap();
+	    if (!pMap)
+	    	return;
+
+	    if (pMap->IsBattleGroundOrArena() && !player->isSpectator())
 	    {
 	    	mobArena->Whisper("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille ou une arène.", player->GetGUID());
 	    	return;
 	    }
 
-	    Map* cMap = target->GetMap();
-	    if (!cMap || !cMap->IsBattleArena())
+	    Map* const tMap = target->GetBaseMap();
+	    if (!tMap)
+	        return;
+
+	    if (!tMap->IsBattleArena())
 	    {
 	    	mobArena->Whisper("Ce joueur n'est pas dans une arène.", player->GetGUID());
 	    	return;
 	    }
 
-	    if (player->GetMap()->IsBattleGround())
+	    if (pMap->IsBattleGround())
 	    {
 	    	mobArena->Whisper("Vous ne pouvez pas faire cela car vous êtes déjà dans un champ de bataille.", player->GetGUID());
 	    	return;
@@ -231,13 +238,6 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	}
 	    }
 
-	    // all's well, set bg id
-	    // when porting out from the bg, it will be reset to 0
-	    player->SetBattleGroundId(target->GetBattleGroundId());
-	    // remember current position as entry point for return at bg end teleportation
-	    if (!player->GetMap()->IsBattleGroundOrArena())
-	        player->SetBattleGroundEntryPoint(player->GetMapId(), player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation());
-
 	    if (target->isSpectator())
 	    {
 	    	mobArena->Whisper("Vous ne pouvez pas faire cela car le joueur ciblé est aussi spectateur.", player->GetGUID());
@@ -254,11 +254,17 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    else
 	    	player->SaveRecallPosition();
 
+	    // all's well, set bg id
+	    // when porting out from the bg, it will be reset to 0
+	    player->SetBattleGroundId(target->GetBattleGroundId());
 	    // search for two teams
 	    BattleGround *bGround = target->GetBattleGround();
         if (!bGround)
             return;
-        
+
+        // remember current position as entry point for return at bg end teleportation
+        player->SetBattleGroundEntryPoint(player->GetMapId(), player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetOrientation());
+
 	    if (bGround->isRated())
 	    {
 	        uint32 slot = bGround->GetArenaType() - 2;
