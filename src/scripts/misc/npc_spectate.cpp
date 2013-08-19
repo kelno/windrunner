@@ -197,7 +197,7 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	return;
 	    }
 
-	    Map* const pMap = player->GetBaseMap();
+	    const Map* pMap = player->GetBaseMap();
 	    if (!pMap)
 	    	return;
 
@@ -207,7 +207,7 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    	return;
 	    }
 
-	    Map* const tMap = target->GetBaseMap();
+	    const Map* tMap = target->GetBaseMap();
 	    if (!tMap)
 	        return;
 
