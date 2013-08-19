@@ -56,10 +56,10 @@ class TransportPath
         std::vector<PathNode> i_nodes;
 };
 
-class Transport : private GameObject
+class Transport : public GameObject
 {
     public:
-        explicit Transport();
+        Transport();
 
         // prevent using Transports as normal GO, but allow call some inherited functions
         using GameObject::IsTransport;

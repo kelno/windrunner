@@ -122,9 +122,9 @@ void npc_escortAI::UpdateAI(const uint32 diff)
             {
                 //Correct movement speed
                 if (Run)
-                    m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    m_creature->SetWalk(false);
                 else
-                    m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                	m_creature->SetWalk(true);
 
                 //Continue with waypoints
                 if( !IsOnHold )
@@ -264,14 +264,14 @@ void npc_escortAI::SetRun(bool bRun)
     if (bRun)
     {
         if (!Run)
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        	m_creature->SetWalk(false);
         else
             sLog.outError("EscortAI attempt to set run mode for creature %u, but is already running.", me->GetEntry());
     }
     else
     {
         if (Run)
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        	m_creature->SetWalk(true);
         else
             sLog.outError("EscortAI attempt to set walk mode for creature %u, but is already walking.", me->GetEntry());
     }
@@ -328,8 +328,8 @@ void npc_escortAI::Start(bool bAttack, bool bDefend, bool bRun, uint64 pGUID, ui
 
     //Set initial speed
     if (Run)
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-    else m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetWalk(false);
+    else m_creature->SetWalk(true);
 
     //Start WP
     m_creature->GetMotionMaster()->MovePoint(CurrentWP->id, CurrentWP->x, CurrentWP->y, CurrentWP->z );
