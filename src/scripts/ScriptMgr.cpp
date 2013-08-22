@@ -114,6 +114,7 @@ extern void AddSC_SmartSCripts();
 // -- Misc --
 extern void AddSC_arena_spectator_script();
 extern void AddSC_hallows_end();
+extern void AddSC_arenabeastmaster();
 
 //--------------------
 //------ ZONE --------
@@ -1505,6 +1506,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Misc --
     AddSC_arena_spectator_script();
     AddSC_hallows_end();
+    AddSC_arenabeastmaster();
 
     //--------------------
     //------ ZONE --------
