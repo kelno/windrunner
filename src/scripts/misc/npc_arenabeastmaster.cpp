@@ -75,7 +75,7 @@ bool GossipHello_arenabeastmaster(Player *player, Creature *me)
         return true;
     }
 
-	player->ADD_GOSSIP_ITEM( 0, getPetTypeName(WINDSERPENT), GOSSIP_SENDER_MAIN, WINDSERPENT);
+    player->ADD_GOSSIP_ITEM( 0, getPetTypeName(WINDSERPENT), GOSSIP_SENDER_MAIN, WINDSERPENT);
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(SCORPID), GOSSIP_SENDER_MAIN, SCORPID);
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(SPIDER), GOSSIP_SENDER_MAIN, SPIDER);
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(RAVAGER), GOSSIP_SENDER_MAIN, RAVAGER);
@@ -100,7 +100,7 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
     }
     Pet* pet = new Pet(HUNTER_PET);
     if(!pet)
-      return true;
+        return true;
 
     sLog.outString("0");
     if(!pet->CreateBaseAtCreatureEntry(getPetTypeEntry(type), me))
@@ -121,24 +121,24 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
 
     pet->SetUInt32Value(UNIT_FIELD_LEVEL,player->getLevel()-1);
     pet->GetCharmInfo()->SetPetNumber(objmgr.GeneratePetNumber(), true);
-     pet->AIM_Initialize();
-     pet->InitPetCreateSpells();
-     pet->SetHealth(pet->GetMaxHealth());
+    pet->AIM_Initialize();
+    pet->InitPetCreateSpells();
+    pet->SetHealth(pet->GetMaxHealth());
 
-     MapManager::Instance().GetMap(pet->GetMapId(), pet)->Add(pet->ToCreature());
+    MapManager::Instance().GetMap(pet->GetMapId(), pet)->Add(pet->ToCreature());
 
-     // visual effect for levelup
-     pet->SetUInt32Value(UNIT_FIELD_LEVEL,player->getLevel());
+    // visual effect for levelup
+    pet->SetUInt32Value(UNIT_FIELD_LEVEL,player->getLevel());
 
-     player->SetPet(pet);
-     pet->SavePetToDB(PET_SAVE_AS_CURRENT);
-     player->PetSpellInitialize();
+    player->SetPet(pet);
+    pet->SavePetToDB(PET_SAVE_AS_CURRENT);
+    player->PetSpellInitialize();
      
-     pet->SetLoyaltyLevel(BEST_FRIEND);
-     pet->SetPower(POWER_HAPPINESS,1050000); //maxed
-     pet->SetTP(pet->getLevel()*pet->GetLoyaltyLevel()-1); //350 when best friend at lvl 70
+    pet->SetLoyaltyLevel(BEST_FRIEND);
+    pet->SetPower(POWER_HAPPINESS,1050000); //maxed
+    pet->SetTP(pet->getLevel()*pet->GetLoyaltyLevel()-1); //350 when best friend at lvl 70
 
-	player->PlayerTalkClass->CloseGossip();
+    player->PlayerTalkClass->CloseGossip();
 		
     return true;
 }
