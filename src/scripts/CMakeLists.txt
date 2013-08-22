@@ -309,6 +309,7 @@ SET(scripts_STAT_SRCS
     misc/hallowsend.cpp
     misc/item_scripts.cpp
     misc/item_test.cpp
+	misc/npc_arenabeastmaster.cpp
     misc/npc_innkeeper.cpp
     misc/npc_interpreter.cpp
     misc/npc_professions.cpp
