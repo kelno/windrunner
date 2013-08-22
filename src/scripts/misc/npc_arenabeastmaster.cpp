@@ -83,7 +83,7 @@ bool GossipHello_arenabeastmaster(Player *player, Creature *me)
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(RAPTOR), GOSSIP_SENDER_MAIN, RAPTOR);
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(DRAGONHAWK), GOSSIP_SENDER_MAIN, DRAGONHAWK);
         
-	player->PlayerTalkClass->SendGossipMenu(3,me->GetGUID());
+	player->PlayerTalkClass->SendGossipMenu(1,me->GetGUID());
 
     return true;
 }
@@ -102,13 +102,12 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
     if(!pet)
         return true;
 
-    sLog.outString("0");
     if(!pet->CreateBaseAtCreatureEntry(getPetTypeEntry(type), me))
     {
         delete pet;
         return false;
     }
-    sLog.outString("1");
+
     pet->SetUInt32Value(UNIT_FIELD_FACTIONTEMPLATE, player->getFaction());
     pet->SetUInt64Value(UNIT_FIELD_SUMMONEDBY, player->GetGUID());
     pet->SetUInt64Value(UNIT_FIELD_CREATEDBY, player->GetGUID());
@@ -136,7 +135,7 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
      
     pet->SetLoyaltyLevel(BEST_FRIEND);
     pet->SetPower(POWER_HAPPINESS,1050000); //maxed
-    pet->SetTP(pet->getLevel()*pet->GetLoyaltyLevel()-1); //350 when best friend at lvl 70
+    pet->SetTP(pet->getLevel()*(pet->GetLoyaltyLevel()-1)); //350 when best friend at lvl 70
 
     player->PlayerTalkClass->CloseGossip();
 		
@@ -150,6 +149,6 @@ void AddSC_arenabeastmaster()
     newscript = new Script;
     newscript->Name="npc_arenabeastmaster";
     newscript->pGossipHello = &GossipHello_arenabeastmaster;
-	newscript->pGossipSelect = &GossipSelect_arenabeastmaster;
+    newscript->pGossipSelect = &GossipSelect_arenabeastmaster;
     newscript->RegisterSelf();
 }
