@@ -121,7 +121,7 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
     pet->SetUInt32Value(UNIT_FIELD_LEVEL,player->getLevel()-1);
     pet->GetCharmInfo()->SetPetNumber(objmgr.GeneratePetNumber(), true);
     pet->AIM_Initialize();
-    pet->InitPetCreateSpells();
+    //pet->InitPetCreateSpells();
     pet->SetHealth(pet->GetMaxHealth());
 
     MapManager::Instance().GetMap(pet->GetMapId(), pet)->Add(pet->ToCreature());
