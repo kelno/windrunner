@@ -138,7 +138,7 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
 		
     pet->SetLoyaltyLevel(BEST_FRIEND);
     pet->SetPower(POWER_HAPPINESS,1050000); //maxed
-    pet->SetTP(player->getLevel()*(pet->GetLoyaltyLevel()-1) - GetDispTP()); //350 when best friend at lvl 70
+    pet->SetTP(player->getLevel()*(pet->GetLoyaltyLevel()-1) - pet->GetDispTP()); //350 when best friend at lvl 70
 
     return true;
 }
