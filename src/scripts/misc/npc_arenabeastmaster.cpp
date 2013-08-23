@@ -122,10 +122,6 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
     pet->GetCharmInfo()->SetPetNumber(objmgr.GeneratePetNumber(), true);
     pet->AIM_Initialize();
 
-    pet->SetLoyaltyLevel(BEST_FRIEND);
-    pet->SetPower(POWER_HAPPINESS,1050000); //maxed
-    pet->SetTP(pet->getLevel()*(pet->GetLoyaltyLevel()-1)); //350 when best friend at lvl 70
-
     pet->InitPetCreateSpells();
     pet->SetHealth(pet->GetMaxHealth());
 
@@ -140,6 +136,10 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
      
     player->PlayerTalkClass->CloseGossip();
 		
+    pet->SetLoyaltyLevel(BEST_FRIEND);
+    pet->SetPower(POWER_HAPPINESS,1050000); //maxed
+    pet->SetTP(player->getLevel()*(pet->GetLoyaltyLevel()-1) - GetDispTP()); //350 when best friend at lvl 70
+
     return true;
 }
 
