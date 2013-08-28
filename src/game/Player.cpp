@@ -15072,55 +15072,58 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
     
-    // TO BE REMOVED AROUND AUGUST 15TH 2013
+    // TO BE REMOVED AROUND SEPTEMBER 15TH 2013
     // Tabards
     if (GetTeam() == HORDE) {
-        if (HasItemCount(20132, 1, true))
-            SwapItems(20132, 20131);
-        if (HasItemCount(19506, 1, true))
-            SwapItems(19506, 19505);
-        if (HasItemCount(19032, 1, true))
-            SwapItems(19032, 19031);
-    } else {
-        if (HasItemCount(20131, 1, true))
-            SwapItems(20131, 20132);
-        if (HasItemCount(19505, 1, true))
-            SwapItems(19505, 19506);
-        if (HasItemCount(19031, 1, true))
-            SwapItems(19031, 19032);
-    }
-    
-    // PvP mounts
-    if (GetTeam() == HORDE) {
-        if (HasItemCount(19030, 1, true))
-            SwapItems(19030, 19029);
-        if (HasItemCount(29465, 1, true))
-            SwapItems(29465, 29466);
-        if (HasItemCount(29467, 1, true))
-            SwapItems(29467, 29469);
-        if (HasItemCount(29468, 1, true))
-            SwapItems(29468, 29470);
-        if (HasItemCount(29471, 1, true))
-            SwapItems(29471, 29472);
-        if (HasItemCount(35906, 1, true))
-            SwapItems(35906, 34129);
         if (HasItemCount(19045, 1, true))
             SwapItems(19045, 19046);
     } else {
-        if (HasItemCount(19029, 1, true))
-            SwapItems(19029, 19030);
-        if (HasItemCount(29466, 1, true))
-            SwapItems(29466, 29465);
-        if (HasItemCount(29469, 1, true))
-            SwapItems(29469, 29467);
-        if (HasItemCount(29470, 1, true))
-            SwapItems(29470, 29468);
-        if (HasItemCount(29472, 1, true))
-            SwapItems(29472, 29471);
-        if (HasItemCount(34129, 1, true))
-            SwapItems(34129, 35906);
         if (HasItemCount(19046, 1, true))
             SwapItems(19046, 19045);
+    }
+    if(m_class == CLASS_PALADIN)
+    {
+        if(!HasSpell(34091)) //fly 280% 
+        {
+            if(    HasItemCount(25473,1)
+                || HasItemCount(25527,1)
+                || HasItemCount(25528,1)
+                || HasItemCount(25529,1)
+                || HasItemCount(25477,1)
+                || HasItemCount(25531,1)
+                || HasItemCount(25532,1)
+                || HasItemCount(25533,1)
+                || HasItemCount(32314,1)
+                || HasItemCount(32316,1)
+                || HasItemCount(32317,1)
+                || HasItemCount(32318,1)
+                || HasItemCount(32319,1)
+                || HasItemCount(33999,1)
+                || HasItemCount(32858,1)
+                || HasItemCount(32859,1)
+                || HasItemCount(32860,1)
+                || HasItemCount(32861,1)
+                || HasItemCount(32862,1)
+                || HasItemCount(37676,1)
+                || HasItemCount(80050,1)
+                || HasItemCount(80051,1)
+                || HasItemCount(34092,1)
+                || HasItemCount(32458,1)
+                || HasItemCount(34061,1)
+                || HasItemCount(32857,1))
+                addSpell(34091,true);
+        }
+        if(!HasSpell(34090)) //fly 60%
+        {
+            if(  HasItemCount(25470,1)
+              || HasItemCount(25471,1)
+              || HasItemCount(25472,1)
+              || HasItemCount(25474,1)
+              || HasItemCount(25475,1)
+              || HasItemCount(25476,1)
+              || HasItemCount(34060,1))
+             addSpell(34090,true);
+        }
     }
     // END OF TO-BE-REMOVED BLOCK
     
@@ -19722,6 +19725,7 @@ float Player::GetReputationPriceDiscount( Creature const* pCreature ) const
     return 1.0f - 0.05f* (rank - REP_NEUTRAL);
 }
 
+/* Warning : This is wrong for some spells such as draenei racials or paladin mount skills/spells */
 bool Player::IsSpellFitByClassAndRace( uint32 spell_id ) const
 {
     uint32 racemask  = getRaceMask();
