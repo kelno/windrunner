@@ -435,7 +435,6 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
         ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    UpdateMovementFlags();
     return true;
 }
 
@@ -469,7 +468,6 @@ void Creature::Update(uint32 diff)
             ((InstanceMap*)map)->GetInstanceData()->OnCreatureRespawn(this, GetEntry());
     }
 
-    UpdateMovementFlags();
     UpdateProhibitedSchools(diff);
 
     switch( m_deathState )
@@ -640,29 +638,6 @@ void Creature::Update(uint32 diff)
         default:
             break;
     }
-}
-
-void Creature::UpdateMovementFlags()
-{
-	if (isPossessed())
-		return;
-
-	bool inAir = false;
-
-	float tz = GetMap()->GetHeight(GetPositionX(), GetPositionY(), GetPositionZ());
-	if (fabs(GetPositionZ() - tz) > 0.1f)
-		inAir = true;
-
-	if (IsFalling())
-	{
-		SetCanFly(false);
-		SetDisableGravity(false);
-	}
-
-	if (!inAir)
-		RemoveUnitMovementFlag(MOVEMENTFLAG_FALLING);
-
-	SetSwim((GetCreatureInfo()->InhabitType & INHABIT_WATER) && IsInWater());
 }
 
 void Creature::RegenerateMana()
@@ -1862,8 +1837,6 @@ void Creature::setDeathState(DeathState s)
         SetLootRecipient(NULL);
         SetWalk(true);
         ResetPlayerDamageReq();
-
-        UpdateMovementFlags();
 
         CreatureInfo const *cinfo = GetCreatureInfo();
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);

@@ -361,25 +361,32 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
     if (uint64 lguid = GetPlayer()->GetLootGUID())
         DoLootRelease(lguid);
 
-    //Can not logout if...
-    if( GetPlayer()->isInCombat() ||                        //...is in combat
-        GetPlayer()->duel         ||                        //...is in Duel
-        GetPlayer()->HasAura(9454,0)         ||             //...is frozen by GM via freeze command
-                                                            //...is jumping ...is falling
-        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_FALLINGFAR | MOVEMENTFLAG_FALLING))
+    bool instantLogout = (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) && !GetPlayer()->isInCombat()) ||
+                             GetPlayer()->isInFlight() || GetSecurity() >= sWorld.getConfig(CONFIG_INSTANT_LOGOUT);
+
+    bool canLogoutInCombat = GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING);
+
+    uint32 reason = 0;
+    if (GetPlayer()->isInCombat() && !canLogoutInCombat)
+        reason = 1;
+    else if (GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_FALLING | MOVEMENTFLAG_FALLINGFAR))
+        reason = 3;                                         // is jumping or falling
+    else if (GetPlayer()->duel || GetPlayer()->HasAura(9454)) // is dueling or frozen by GM via freeze command
+        reason = 2;                                         // FIXME - Need the correct value
+
+    WorldPacket data( SMSG_LOGOUT_RESPONSE, (1+4));
+    data << uint32(reason);
+    data << uint8(instantLogout);
+    SendPacket( &data );
+
+    if (reason)
     {
-        WorldPacket data( SMSG_LOGOUT_RESPONSE, (2+4) ) ;
-        data << (uint8)0xC;
-        data << uint32(0);
-        data << uint8(0);
-        SendPacket( &data );
         LogoutRequest(0);
         return;
     }
 
-    //instant logout in taverns/cities or on taxi or for admins, gm's, mod's if its enabled in mangosd.conf
-    if (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) || GetPlayer()->isInFlight() ||
-        GetSecurity() >= sWorld.getConfig(CONFIG_INSTANT_LOGOUT))
+    //instant logout in taverns/cities or on taxi or for admins, gm's, mod's if its enabled in worldserver.conf
+    if (instantLogout)
     {
         LogoutPlayer(true);
         return;
@@ -397,10 +404,6 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
         GetPlayer()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
     }
 
-    WorldPacket data( SMSG_LOGOUT_RESPONSE, 5 );
-    data << uint32(0);
-    data << uint8(0);
-    SendPacket( &data );
     LogoutRequest(time(NULL));
 }
 

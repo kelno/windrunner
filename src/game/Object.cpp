@@ -80,7 +80,6 @@ Object::Object( )
     m_inWorld           = false;
     m_objectUpdated     = false;
 
-    m_PackGUID.clear();
     m_PackGUID.appendPackGUID(0);
 }
 
@@ -127,7 +126,7 @@ void Object::_Create( uint32 guidlow, uint32 entry, HighGuid guidhigh )
     uint64 guid = MAKE_NEW_GUID(guidlow, entry, guidhigh);  // required more changes to make it working
     SetUInt64Value( OBJECT_FIELD_GUID, guid );
     SetUInt32Value( OBJECT_FIELD_TYPE, m_objectType );
-    m_PackGUID.clear();
+    m_PackGUID.wpos(0);
     m_PackGUID.appendPackGUID(GetGUID());
 }
 
@@ -195,8 +194,7 @@ void Object::BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) c
 
     ByteBuffer buf(500);
     buf << (uint8)updatetype;
-    //buf.append(GetPackGUID());    //client crashes when using this
-    buf << (uint8)0xFF << GetGUID();
+    buf.append(GetPackGUID());
     buf << (uint8)m_objectTypeId;
 
     _BuildMovementUpdate(&buf, flags);
@@ -235,9 +233,7 @@ void Object::BuildValuesUpdateBlockForPlayer(UpdateData *data, Player *target) c
     ByteBuffer buf(500);
 
     buf << (uint8) UPDATETYPE_VALUES;
-    //buf.append(GetPackGUID());    //client crashes when using this. but not have crash in debug mode
-    buf << (uint8)0xFF;
-    buf << GetGUID();
+    buf.append(GetPackGUID());
 
     UpdateMask updateMask;
     updateMask.SetCount( m_valuesCount );
@@ -264,40 +260,43 @@ void Object::DestroyForPlayer(Player *target) const
 
 void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
 {
-	Unit* unit = NULL;
-	WorldObject* object = ((WorldObject*)this);
-
-	if (isType(TYPEMASK_UNIT))
-	    unit = object->ToUnit();
-
     *data << (uint8)flags;                                  // update flags
-
-    uint32 mouvementFlag = MOVEMENTFLAG_NONE;
-    uint8 mouvementExtraFlag = 0;
 
     // 0x20
     if (flags & UPDATEFLAG_LIVING)
     {
+    	Unit* unit = ((Unit*)this);
+
     	if (GetTypeId() == TYPEID_PLAYER)
     	{
-    	    if (unit->GetTransport())
-    	    	unit->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    		Player* player = ((Player*)unit);
+    	    if (player->GetTransport())
+    	    	player->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
     	    else
-    	    	unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	    	player->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
     	}
     	else
     		unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
 
-    	mouvementFlag = unit->GetUnitMovementFlags();
-    	mouvementExtraFlag = unit->GetExtraUnitMovementFlags();
+    	// Write movement info
+    	unit->BuildMovementPacket(data);
 
-    	*data << uint32(mouvementFlag);
-    	*data << uint8(mouvementExtraFlag);
-    	*data << uint32(getMSTime());
+    	// Unit speeds
+    	*data << float(unit->GetSpeed(MOVE_WALK));
+    	*data << float(unit->GetSpeed(MOVE_RUN));
+    	*data << float(unit->GetSpeed(MOVE_RUN_BACK));
+    	*data << float(unit->GetSpeed(MOVE_SWIM));
+    	*data << float(unit->GetSpeed(MOVE_SWIM_BACK));
+    	*data << float(unit->GetSpeed(MOVE_FLIGHT));
+    	*data << float(unit->GetSpeed(MOVE_FLIGHT_BACK));
+    	*data << float(unit->GetSpeed(MOVE_TURN_RATE));
+
+    	// 0x08000000
+    	if(unit->GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ENABLED)
+    	    Movement::PacketBuilder::WriteCreate(*unit->movespline, *data);
     }
-
     // 0x40
-    if (flags & UPDATEFLAG_HASPOSITION)
+    else if (flags & UPDATEFLAG_HASPOSITION)
     {
         // 0x02
         if ((flags & UPDATEFLAG_TRANSPORT) && ((GameObject*)this)->GetGoType() == GAMEOBJECT_TYPE_MO_TRANSPORT)
@@ -305,70 +304,20 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
             *data << float(0);
             *data << float(0);
             *data << float(0);
-            *data << object->GetOrientation();
+            *data << float(((WorldObject*)this)->GetOrientation());
         }
         else
         {
-            *data << object->GetPositionX();
-            *data << object->GetPositionY();
+            *data << float(((WorldObject*)this)->GetPositionX());
+            *data << float(((WorldObject*)this)->GetPositionY());
             if (isType(TYPEMASK_UNIT))
-                *data << unit->GetPositionZMinusOffset();
+                *data << float(((Unit*)this)->GetPositionZMinusOffset());
             else
-            	*data << object->GetPositionZ();
+            	*data << float(((WorldObject*)this)->GetPositionZ());
 
-            *data << object->GetOrientation();
+            *data << float(((WorldObject*)this)->GetOrientation());
         }
     }
-
-    // 0x20
-    if(flags & UPDATEFLAG_LIVING)
-    {
-        // 0x00000200
-        if(mouvementFlag & MOVEMENTFLAG_ONTRANSPORT)
-        {
-        	if (GetTypeId() == TYPEID_PLAYER)
-                *data << object->GetTransport()->GetGUID();
-        	else
-        		*data << (uint8)0;
-        	*data << object->GetTransOffsetX();
-        	*data << object->GetTransOffsetY();
-        	*data << object->GetTransOffsetZ();
-        	*data << object->GetTransOffsetO();
-        	*data << object->GetTransTime();
-        }
-
-        if (mouvementFlag & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-        	*data << object->m_movementInfo.pitch;
-
-        *data << object->m_movementInfo.fallTime;
-
-        // 0x00001000
-        if (mouvementFlag & MOVEMENTFLAG_FALLING)
-        {
-            *data << object->m_movementInfo.jump.zspeed;
-            *data << object->m_movementInfo.jump.sinAngle;
-            *data << object->m_movementInfo.jump.cosAngle;
-            *data << object->m_movementInfo.jump.xyspeed;
-        }
-
-        // 0x04000000
-        if (mouvementFlag & MOVEMENTFLAG_SPLINE_ELEVATION)
-        	*data << object->m_movementInfo.splineElevation;
-
-        *data << unit->GetSpeed( MOVE_WALK );
-        *data << unit->GetSpeed( MOVE_RUN );
-        *data << unit->GetSpeed( MOVE_RUN_BACK );
-        *data << unit->GetSpeed( MOVE_SWIM );
-        *data << unit->GetSpeed( MOVE_SWIM_BACK );
-        *data << unit->GetSpeed( MOVE_FLIGHT );
-        *data << unit->GetSpeed( MOVE_FLIGHT_BACK );
-        *data << unit->GetSpeed( MOVE_TURN_RATE );
-
-        // 0x08000000
-        if(mouvementFlag & MOVEMENTFLAG_SPLINE_ENABLED)
-            Movement::PacketBuilder::WriteCreate(*ToUnit()->movespline, *data);
-    }
-
 
     // 0x8
     if(flags & UPDATEFLAG_LOWGUID)
@@ -420,8 +369,8 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
     // 0x4
     if(flags & UPDATEFLAG_FULLGUID)
     {
-    	if (unit->getVictim())
-    		data->append(unit->getVictim()->GetPackGUID());
+    	if (((Unit*)this)->getVictim())
+    		data->append(((Unit*)this)->getVictim()->GetPackGUID());
     	else
     		*data << uint8(0);
     }

@@ -618,16 +618,12 @@ enum MovementFlags
     MOVEMENTFLAG_MOVING =
             MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_BACKWARD | MOVEMENTFLAG_STRAFE_LEFT | MOVEMENTFLAG_STRAFE_RIGHT |
             MOVEMENTFLAG_PITCH_UP | MOVEMENTFLAG_PITCH_DOWN | MOVEMENTFLAG_FALLINGFAR | MOVEMENTFLAG_FALLING |
-            MOVEMENTFLAG_SPLINE_ELEVATION | MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING2,
+            MOVEMENTFLAG_SPLINE_ELEVATION | MOVEMENTFLAG_ASCENDING | MOVEMENTFLAG_FLYING | MOVEMENTFLAG_ROOT,
 
     MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT,
 
     MOVEMENTFLAG_MASK_MOVING_FLY =
-            MOVEMENTFLAG_FLYING | MOVEMENTFLAG_FLYING2 | MOVEMENTFLAG_ASCENDING,
-
-    /// Movement flags that have change status opcodes associated for players
-    MOVEMENTFLAG_MASK_HAS_PLAYER_STATUS_OPCODE = MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ROOT |
-        MOVEMENTFLAG_WATERWALKING | MOVEMENTFLAG_SAFE_FALL | MOVEMENTFLAG_HOVER
+            MOVEMENTFLAG_FLYING | MOVEMENTFLAG_ASCENDING,
 };
 
 enum UnitTypeMask
@@ -1164,7 +1160,7 @@ class Unit : public WorldObject
         virtual bool IsInWater() const;
         virtual bool IsUnderWater() const;
         bool isInAccessiblePlaceFor(Creature const* c) const;
-        
+
         void SetFullTauntImmunity(bool apply);
 
         void SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, bool critical = false);
@@ -1482,6 +1478,7 @@ class Unit : public WorldObject
         float GetAPMultiplier(WeaponAttackType attType, bool normalized);
         void ModifyAuraState(AuraState flag, bool apply);
         bool HasAuraState(AuraState flag) const { return HasFlag(UNIT_FIELD_AURASTATE, 1<<(flag-1)); }
+        bool HasAuraStateForCaster(AuraState flag, uint64 casterGuid) const;
         void UnsummonAllTotems();
         int32 SpellBaseDamageBonus(SpellSchoolMask schoolMask, Unit* pVictim = NULL);
         int32 SpellBaseHealingBonus(SpellSchoolMask schoolMask);
@@ -1660,6 +1657,8 @@ class Unit : public WorldObject
 
         bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING); }
         bool IsWalking() const { return HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
+        bool isMoving() const { return HasUnitMovementFlag(MOVEMENTFLAG_MOVING); }
+        bool isMovingOrTurning() const { return HasUnitMovementFlag(MOVEMENTFLAG_MOVING | MOVEMENTFLAG_TURNING); }
 
         virtual bool SetWalk(bool enable);
         bool SetDisableGravity(bool disable);
@@ -1675,6 +1674,7 @@ class Unit : public WorldObject
         void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false);
         void SendTeleportPacket(Position& pos);
         bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
+        bool UpdatePosition(const Position &pos, bool teleport = false);
         void UpdateHeight(float newZ);
 
         void KnockbackFrom(float x, float y, float speedXY, float speedZ);

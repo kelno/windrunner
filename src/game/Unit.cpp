@@ -7282,6 +7282,32 @@ void Unit::RemoveAllAttackers()
     }
 }
 
+bool Unit::HasAuraStateForCaster(AuraState flag, uint64 casterGuid) const
+{
+    if (!HasAuraState(flag))
+        return false;
+
+    // single per-caster aura state
+    if (flag == AURA_STATE_IMMOLATE)
+    {
+        Unit::AuraList const& dotList = GetAurasByType(SPELL_AURA_PERIODIC_DAMAGE);
+        for (Unit::AuraList::const_iterator i = dotList.begin(); i != dotList.end(); ++i)
+        {
+            if ((*i)->GetCasterGUID() == casterGuid &&
+                    //  Immolate
+            		(*i)->GetSpellProto()->SpellFamilyName == SPELLFAMILY_WARLOCK &&
+            		((*i)->GetSpellProto()->SpellFamilyFlags & 4))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    return true;
+}
+
 void Unit::ModifyAuraState(AuraState flag, bool apply)
 {
     if (apply)
@@ -12888,29 +12914,28 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
     *data << GetPositionY();
     *data << GetPositionZMinusOffset();
     *data << GetOrientation();
-    *data << (uint8)0;
 
-    if (GetUnitMovementFlags() & MOVEMENTFLAG_ONTRANSPORT)
+    if (HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT))
     {
     	if (GetTypeId() == TYPEID_PLAYER && GetTransport())
-    	    data->append(GetTransport()->GetPackGUID());
-    	else
-    	    *data << (uint8)0;
-
-    	*data << float (GetTransOffsetX());
-    	*data << float (GetTransOffsetY());
-    	*data << float (GetTransOffsetZ());
-    	*data << float (GetTransOffsetO());
-    	*data << uint32 (GetTransTime());
+    	{
+    	    *data << uint64 (ToPlayer()->GetTransport()->GetGUID());
+    	    *data << float (GetTransOffsetX());
+    	    *data << float (GetTransOffsetY());
+    	    *data << float (GetTransOffsetZ());
+    	    *data << float (GetTransOffsetO());
+    	    *data << uint32 (GetTransTime());
+    	}
+    	//TrinIty currently not have support for other than player on transport
     }
 
-    if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
+    if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING) || HasUnitMovementFlag(MOVEMENTFLAG_FLYING2))
     	*data << (float)m_movementInfo.pitch;
 
     *data << (uint32)m_movementInfo.fallTime;
 
     // 0x00001000
-    if (GetUnitMovementFlags() & MOVEMENTFLAG_FALLING)
+    if (HasUnitMovementFlag(MOVEMENTFLAG_FALLING))
     {
     	*data << (float)m_movementInfo.jump.zspeed;
     	*data << (float)m_movementInfo.jump.sinAngle;
@@ -12919,7 +12944,7 @@ void Unit::BuildMovementPacket(ByteBuffer *data) const
     }
 
     // 0x04000000
-    if (GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ELEVATION)
+    if (HasUnitMovementFlag(MOVEMENTFLAG_SPLINE_ELEVATION))
     	*data << (float)m_movementInfo.splineElevation;
 }
 
@@ -12951,7 +12976,18 @@ bool Unit::UpdatePosition(float x, float y, float z, float orientation, bool tel
     else if (turn)
         SetOrientation(orientation);
 
+    if (GetTypeId() == TYPEID_PLAYER)
+    {
+        // code block for underwater state update
+    	ToPlayer()->UpdateUnderwaterState(GetMap(), x, y, z);
+    }
+
     return (relocated || turn);
+}
+
+bool Unit::UpdatePosition(const Position &pos, bool teleport)
+{
+    return UpdatePosition(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation(), teleport);
 }
 
 void Unit::SendTeleportPacket(Position& pos)
@@ -13018,7 +13054,7 @@ void Unit::DisableSpline()
 
 bool Unit::IsFalling() const
 {
-    return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FALLING) || movespline->isFalling();
+    return m_movementInfo.HasMovementFlag(MOVEMENTFLAG_FALLING | MOVEMENTFLAG_FALLINGFAR) || movespline->isFalling();
 }
 
 void Unit::KnockbackFrom(float x, float y, float speedXY, float speedZ)

@@ -189,18 +189,15 @@ void WorldSession::HandleActivateTaxiFarOpcode ( WorldPacket & recv_data )
 void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& recvPacket)
 {
     PROFILE;
-    
-    MovementInfo movementInfo;
 
-    recvPacket >> movementInfo.flags;
-    recvPacket >> movementInfo.flags2;
-    recvPacket >> movementInfo.time;
-    recvPacket >> movementInfo.pos.m_positionX;
-    recvPacket >> movementInfo.pos.m_positionY;
-    recvPacket >> movementInfo.pos.m_positionZ;
-    recvPacket >> movementInfo.pos.m_orientation;
-    GetPlayer()->SetPosition(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ, movementInfo.pos.m_orientation);
+    MovementInfo movementInfo;
+    ReadMovementInfo(recvPacket, &movementInfo);
+
+    uint32 unk;
+    recvPacket >> unk;
+
     GetPlayer()->m_movementInfo = movementInfo;
+
     GetPlayer()->m_anti_lastmovetime = movementInfo.time;
 
     // in taxi flight packet received in 2 case:

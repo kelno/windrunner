@@ -355,64 +355,13 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     CHECK_PACKET_SIZE(recv_data, 4+1+4+4+4+4+4);
 
     //get opcode and preview flags
-    uint32 m_flags = GetPlayer()->GetUnitMovementFlags();
     uint16 opcode = recv_data.GetOpcode();
 
     /* extract packet */
     MovementInfo movementInfo;
 
-    recv_data >> movementInfo.flags;
-    recv_data >> movementInfo.flags2;
-    recv_data >> movementInfo.time;
-    recv_data >> movementInfo.pos.m_positionX;
-    recv_data >> movementInfo.pos.m_positionY;
-    recv_data >> movementInfo.pos.m_positionZ;
-    recv_data >> movementInfo.pos.m_orientation;
+    ReadMovementInfo(recv_data, &movementInfo);
 
-    if(movementInfo.flags & MOVEMENTFLAG_ONTRANSPORT)
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+8+4+4+4+4+4);
-
-        recv_data >> movementInfo.transport.guid;
-        recv_data >> movementInfo.transport.pos.m_positionX;
-        recv_data >> movementInfo.transport.pos.m_positionY;
-        recv_data >> movementInfo.transport.pos.m_positionZ;
-        recv_data >> movementInfo.transport.pos.m_orientation;
-        recv_data >> movementInfo.transport.time;
-    }
-
-    if(movementInfo.flags & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-        recv_data >> movementInfo.pitch;                  // pitch, -1.55=looking down, 0=looking straight forward, +1.55=looking up
-    }
-
-    // recheck
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-    recv_data >> movementInfo.fallTime;                     // duration of last jump (when in jump duration from jump begin to now)
-
-    if(movementInfo.flags & MOVEMENTFLAG_FALLING)
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4+4+4+4);
-
-        recv_data >> movementInfo.jump.zspeed;                    // constant, but different when jumping in water and on land?
-        recv_data >> movementInfo.jump.sinAngle;               // sin of angle between orientation0 and players orientation
-        recv_data >> movementInfo.jump.cosAngle;               // cos of angle between orientation0 and players orientation
-        recv_data >> movementInfo.jump.xyspeed;                // speed of xy movement
-    }
-
-    if(movementInfo.flags & MOVEMENTFLAG_SPLINE_ELEVATION)
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-        recv_data >> movementInfo.splineElevation;                   // unknown
-    }
     /*----------------*/
 
     if(recv_data.size() != recv_data.rpos())
@@ -611,8 +560,10 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     data.append(recv_data.contents(), recv_data.size());
     GetPlayer()->SendMessageToSet(&data, false);
 
-    GetPlayer()->SetPosition(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ, movementInfo.pos.m_orientation);
     GetPlayer()->m_movementInfo = movementInfo;
+
+    GetPlayer()->UpdatePosition(movementInfo.pos);
+
     if (GetPlayer()->m_lastFallTime >= movementInfo.fallTime || GetPlayer()->m_lastFallZ <=movementInfo.pos.m_positionZ || recv_data.GetOpcode() == MSG_MOVE_FALL_LAND)
         GetPlayer()->SetFallInformation(movementInfo.fallTime, movementInfo.pos.m_positionZ);
 
@@ -670,8 +621,9 @@ void WorldSession::HandlePossessedMovement(WorldPacket& recv_data, MovementInfo&
             plr->SetInWater( !plr->IsInWater() || plr->GetBaseMap()->IsUnderWater(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ) );
         }
 
-        plr->SetPosition(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ, movementInfo.pos.m_orientation, false);
         plr->m_movementInfo = movementInfo;
+
+        plr->UpdatePosition(movementInfo.pos);
 
         if(plr->isMovingOrTurning())
             plr->RemoveSpellsCausingAura(SPELL_AURA_FEIGN_DEATH);
@@ -683,10 +635,7 @@ void WorldSession::HandlePossessedMovement(WorldPacket& recv_data, MovementInfo&
         }
     }
     else // Possessed unit is a creature
-    {
-        Map* map = MapManager::Instance().GetMap(pos_unit->GetMapId(), pos_unit);
-        map->CreatureRelocation(pos_unit->ToCreature(), movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, movementInfo.pos.m_positionZ, movementInfo.pos.m_orientation);
-    }
+    	pos_unit->UpdatePosition(movementInfo.pos);
 }
 
 void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
@@ -697,16 +646,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
 
     /* extract packet */
     uint64 guid;
-    uint8  unkB;
-    uint32 unk1, flags, time, fallTime;
-    float x, y, z, orientation;
-
-    uint64 t_GUID;
-    float  t_x, t_y, t_z, t_o;
-    uint32 t_time;
-    float  s_pitch;
-    float  j_unk1, j_sinAngle, j_cosAngle, j_xyspeed;
-    float  u_unk1;
+    uint32 unk1;
     float  newspeed;
 
     recv_data >> guid;
@@ -716,53 +656,13 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket &recv_data)
         return;
 
     // continue parse packet
-
     recv_data >> unk1;
-    recv_data >> flags >> unkB >> time;
-    recv_data >> x >> y >> z >> orientation;
-    if (flags & MOVEMENTFLAG_ONTRANSPORT)
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+8+4+4+4+4+4);
 
-        recv_data >> t_GUID;
-        recv_data >> t_x >> t_y >> t_z >> t_o >> t_time;
-    }
-    if (flags & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-        recv_data >> s_pitch;                               // pitch, -1.55=looking down, 0=looking straight forward, +1.55=looking up
-    }
-
-    // recheck
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-    recv_data >> fallTime;                                  // duration of last jump (when in jump duration from jump begin to now)
-
-    if ((flags & MOVEMENTFLAG_FALLING) || (flags & MOVEMENTFLAG_FALLINGFAR))
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4+4+4+4);
-
-        recv_data >> j_unk1;                                // ?constant, but different when jumping in water and on land?
-        recv_data >> j_sinAngle >> j_cosAngle;              // sin + cos of angle between orientation0 and players orientation
-        recv_data >> j_xyspeed;                             // speed of xy movement
-    }
-
-    if(flags & MOVEMENTFLAG_SPLINE_ELEVATION)
-    {
-        // recheck
-        CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
-
-        recv_data >> u_unk1;                                // unknown
-    }
-
-    // recheck
-    CHECK_PACKET_SIZE(recv_data, recv_data.rpos()+4);
+    MovementInfo movementInfo;
+    ReadMovementInfo(recv_data, &movementInfo);
 
     recv_data >> newspeed;
+
     /*----------------*/
 
     // client ACK send one packet for mounted/run case and need skip all except last from its
@@ -873,7 +773,8 @@ void WorldSession::HandleMoveKnockBackAck( WorldPacket & recv_data )
     _player->m_movementInfo = movementInfo;
 
     WorldPacket data(MSG_MOVE_KNOCK_BACK, 66);
-    data.appendPackGUID(guid);
+
+    data << guid;
     _player->BuildMovementPacket(&data);
 
     // knockback specific info
