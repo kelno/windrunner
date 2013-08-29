@@ -620,6 +620,21 @@ void Creature::Update(uint32 diff)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
             if(!isAlive())
                 break;
+
+	
+	    if(!isInCombat() && GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_PERIODIC_RELOC)
+            {
+                if(m_relocateTimer < diff)
+                {
+                     m_relocateTimer = 60000;
+                     // forced recreate creature object at clients
+                     UnitVisibility currentVis = GetVisibility();
+                     SetVisibility(VISIBILITY_RESPAWN);
+                     ObjectAccessor::UpdateObjectVisibility(this);
+                     SetVisibility(currentVis); // restore visibility state
+                     ObjectAccessor::UpdateObjectVisibility(this);
+                } else m_relocateTimer -= diff;
+            }
             if(m_regenTimer > 0)
             {
                 if(diff >= m_regenTimer)

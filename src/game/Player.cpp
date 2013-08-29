@@ -656,47 +656,8 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
 
     //Reputations if "StartAllReputation" is enabled, -- TODO: Fix this in a better way
     if(sWorld.getConfig(CONFIG_START_ALL_REP))
-    {
-        SetFactionReputation(sFactionStore.LookupEntry(942),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(935),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(936),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(1011),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(970),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(967),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(989),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(932),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(934),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(1038),42999);
-        SetFactionReputation(sFactionStore.LookupEntry(1077),42999);
-
-        // Factions depending on team, like cities and some more stuff
-        switch(GetTeam())
-        {
-        case ALLIANCE:
-            SetFactionReputation(sFactionStore.LookupEntry(72),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(47),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(69),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(930),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(730),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(978),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(54),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(946),42999);
-            break;
-        case HORDE:
-            SetFactionReputation(sFactionStore.LookupEntry(76),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(68),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(81),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(911),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(729),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(941),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(530),42999);
-            SetFactionReputation(sFactionStore.LookupEntry(947),42999);
-            break;
-        default:
-            break;
-        }
-    }
-
+        SetAtLoginFlag(AT_LOGIN_ALL_REP);
+        
     // Played time
     m_Last_tick = time(NULL);
     m_Played_time[0] = 0;
@@ -731,7 +692,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         for(int i=0; i<4 ;i++)
             taction[i] = (*action_itr[i]);
 
-        addActionButton((uint8)taction[0], taction[1], (uint8)taction[2], (uint8)taction[3]);
+	addActionButton((uint8)taction[0], taction[1], (uint8)taction[2], (uint8)taction[3]);
 
         for(int i=0; i<4 ;i++)
             ++action_itr[i];
@@ -824,8 +785,130 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         }
     }
     // all item positions resolved
-    
+
     m_lastGenderChange = 0;
+
+    // From this point WM Tournoi Specific
+
+    if(class_ == CLASS_HUNTER)
+    { // Pet spells
+        uint32 spellsId [119] = {5149,883,1515,6991,2641,982,17254,737,17262,24424,26184,3530,26185,35303,311,26184,17263,7370,35299,35302,17264,1749,231,2441,23111,2976,23111,17266,2981,17262,24609,2976,26094,2982,298,1747,17264,24608,26189,24454,23150,24581,2977,1267,1748,26065,24455,1751,17265,23146,17267,23112,17265,2310,23100,24451,175,24607,2315,2981,24641,25013,25014,17263,3667,24584,3667,2975,23146,25015,1749,26185,1750,35388,17266,24607,25016,23149,24588,23149,295,27361,26202,35306,2619,2977,16698,3666,3666,24582,23112,26202,1751,16698,24582,17268,24599,24589,25017,35391,3489,28343,35307,27347,27349,353,24599,35324,27347,35348,27348,17268,27348,27346,24845,27361,2751,24632,35308 };
+        for (int i = 0; i < 119; i++)
+            addSpell(spellsId[i],true);
+    }
+
+    //class specific spells/skills from recuperation data
+    int faction = (GetTeam() == ALLIANCE) ? 1 : 2;
+    QueryResult* query = WorldDatabase.PQuery("SELECT command FROM recups_data WHERE classe = %u AND (faction = %u OR faction = 0)", class_, faction);
+    if (query) {
+        do {
+            Field* fields = query->Fetch();
+            std::string tempstr = fields[0].GetString();
+
+            {
+                std::vector<std::string> v, vline;
+                std::vector<std::string>::iterator i;
+
+                int cutAt;
+                while ((cutAt = tempstr.find_first_of(";")) != tempstr.npos) {
+                    if (cutAt > 0) {
+                        vline.push_back(tempstr.substr(0, cutAt));
+                    }
+                    tempstr = tempstr.substr(cutAt + 1);
+                }
+
+                if (tempstr.length() > 0) {
+                    vline.push_back(tempstr);
+                }
+
+                for (i = vline.begin(); i != vline.end(); i++) {
+                    v.clear();
+                    tempstr = *i;
+                    while ((cutAt = tempstr.find_first_of(" ")) != tempstr.npos) {
+                        if (cutAt > 0) {
+                            v.push_back(tempstr.substr(0, cutAt));
+                        }
+                        tempstr = tempstr.substr(cutAt + 1);
+                    }
+
+                    if (tempstr.length() > 0) {
+                        v.push_back(tempstr);
+                    }
+
+                    if (v[0] == "learn") {
+                        uint32 spell = atol(v[1].c_str());
+                        SpellEntry const* spellInfo = spellmgr.LookupSpell(spell);
+                        if (!spellInfo || !SpellMgr::IsSpellValid(spellInfo, m_session->GetPlayer())) {
+                            continue;
+                        }
+
+                        if (!HasSpell(spell))
+                            addSpell(spell,true);
+                    } else if (v[0] == "setskill") {
+                        /* skill, v[1] == skill ID */
+                        int32 skill = atoi(v[1].c_str());
+                        if (skill <= 0) {
+                            continue;
+                        }
+
+                        int32 maxskill = 375;
+
+                        SkillLineEntry const* sl = sSkillLineStore.LookupEntry(skill);
+                        if (!sl) {
+                            continue;
+                        }
+
+                        if (!GetSkillValue(skill)) {
+                            continue;
+                        }
+
+                        SetSkill(skill, 375, maxskill);
+                    }
+                }
+            }
+        } while (query->NextRow());
+    } else {
+        sLog.outError("Player creation : failed to get data from recups_data to add initial spells/skills");
+    }
+
+    SetSkill(129,375,375); //first aid
+    addSpell(27028,true); //first aid spell
+    addSpell(27033,true); //bandage
+    addSpell(28029,true); //master ench
+    SetSkill(333,375,375); //max it
+    addSpell(23803,true);//  [Ench. d'arme (Esprit renforcÃ©) frFR] 
+    addSpell(34002,true); // [Ench. de brassards (Assaut) frFR]
+    addSpell(25080,true); // [Ench. de gants (Agilité excellente) frFR]
+    addSpell(34091,true); //mount 280 
+    
+    //Pala mounts
+    if(class_ == CLASS_PALADIN)
+    {
+        if(GetTeam() == ALLIANCE) {
+            addSpell(23214,true); //60
+            addSpell(13819,true); //40
+        } else {
+            addSpell(34767,true); //60
+            addSpell(34769,true); //40
+        }
+    }
+
+        /*
+    if(class_ == CLASS_SHAMAN)
+    {
+        uint32 totemsID[4] = { 5175, 5176, 5177, 5178 };
+        for(int i = 0; i < 4; i++)
+        {
+            uint32 noSpaceForCount = 0;
+            ItemPosCountVec dest;
+            uint8 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, totemsID[i], 1, &noSpaceForCount );
+            if( msg != EQUIP_ERR_OK ) 
+                continue;
+            Item* item = StoreNewItem( dest, totemsID[i], true, 0);
+            if(item)
+                SendNewItem(item,1,false,false);
+        }
+    }*/
 
     return true;
 }
@@ -6773,6 +6856,17 @@ void Player::UpdateArea(uint32 newArea)
 
 void Player::UpdateZone(uint32 newZone)
 {
+    //bring back the escapers !
+    if(   newZone != 616  //Hyjal arena zone
+       && GetAreaId() != 19 //Zul Gurub arena zone
+       && !InBattleGround()
+       && !IsBeingTeleported()
+       && !isGameMaster())
+    {
+       TeleportToArenaZone(ShouldGoToSecondaryArenaZone());
+       return;
+    }
+
     uint32 oldZoneId  = m_zoneUpdateId;
     m_zoneUpdateId    = newZone;
     m_zoneUpdateTimer = ZONE_UPDATE_INTERVAL;
@@ -14754,11 +14848,19 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     // init saved position, and fix it later if problematic
     uint32 transGUID = fields[LOAD_DATA_TRANSGUID].GetUInt32();
-    Relocate(fields[LOAD_DATA_POSX].GetFloat(),fields[LOAD_DATA_POSY].GetFloat(),fields[LOAD_DATA_POSZ].GetFloat(),fields[LOAD_DATA_ORIENTATION].GetFloat());
+    float x,y,z,o;
+    uint32 tMapId;
+    GetArenaZoneCoord(ShouldGoToSecondaryArenaZone(),tMapId,x,y,z,o);
+   /* Relocate(fields[LOAD_DATA_POSX].GetFloat(),fields[LOAD_DATA_POSY].GetFloat(),fields[LOAD_DATA_POSZ].GetFloat(),fields[LOAD_DATA_ORIENTATION].GetFloat());
     SetFallInformation(0, fields[LOAD_DATA_POSZ].GetFloat());
-    SetMapId(fields[LOAD_DATA_MAP].GetUInt32());
+    SetMapId(fields[LOAD_DATA_MAP].GetUInt32()); */
+    Relocate(x,y,z,o);
+    SetFallInformation(0, z);
+    SetMapId(tMapId);
+
     SetDifficulty(fields[LOAD_DATA_DUNGEON_DIFF].GetUInt32());                  // may be changed in _LoadGroup
     
+
     // Experience Blocking
     m_isXpBlocked = fields[LOAD_DATA_XP_BLOCKED].GetUInt8();
     
@@ -15088,61 +15190,6 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     _LoadReputation(holder->GetResult(PLAYER_LOGIN_QUERY_LOADREPUTATION));
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
-    
-    // TO BE REMOVED AROUND SEPTEMBER 15TH 2013
-    // Tabards
-    if (GetTeam() == HORDE) {
-        if (HasItemCount(19045, 1, true))
-            SwapItems(19045, 19046);
-    } else {
-        if (HasItemCount(19046, 1, true))
-            SwapItems(19046, 19045);
-    }
-    if(m_class == CLASS_PALADIN)
-    {
-        if(!HasSpell(34091)) //fly 280% 
-        {
-            if(    HasItemCount(25473,1)
-                || HasItemCount(25527,1)
-                || HasItemCount(25528,1)
-                || HasItemCount(25529,1)
-                || HasItemCount(25477,1)
-                || HasItemCount(25531,1)
-                || HasItemCount(25532,1)
-                || HasItemCount(25533,1)
-                || HasItemCount(32314,1)
-                || HasItemCount(32316,1)
-                || HasItemCount(32317,1)
-                || HasItemCount(32318,1)
-                || HasItemCount(32319,1)
-                || HasItemCount(33999,1)
-                || HasItemCount(32858,1)
-                || HasItemCount(32859,1)
-                || HasItemCount(32860,1)
-                || HasItemCount(32861,1)
-                || HasItemCount(32862,1)
-                || HasItemCount(37676,1)
-                || HasItemCount(80050,1)
-                || HasItemCount(80051,1)
-                || HasItemCount(34092,1)
-                || HasItemCount(32458,1)
-                || HasItemCount(34061,1)
-                || HasItemCount(32857,1))
-                addSpell(34091,true);
-        }
-        if(!HasSpell(34090)) //fly 60%
-        {
-            if(  HasItemCount(25470,1)
-              || HasItemCount(25471,1)
-              || HasItemCount(25472,1)
-              || HasItemCount(25474,1)
-              || HasItemCount(25475,1)
-              || HasItemCount(25476,1)
-              || HasItemCount(34060,1))
-             addSpell(34090,true);
-        }
-    }
-    // END OF TO-BE-REMOVED BLOCK
     
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
@@ -21221,4 +21268,62 @@ void Player::RemoveAllCurrentPetAuras()
         pet->RemoveAllAuras();
      else 
         CharacterDatabase.PQuery("DELETE FROM pet_aura WHERE guid IN ( SELECT id FROM character_pet WHERE owner = %u AND slot = %u )", GetGUIDLow(), PET_SAVE_NOT_IN_SLOT);
+}
+
+void Player::GetArenaZoneCoord(bool secondary, uint32& map, float& x, float& y, float& z, float& o)
+{
+    bool set = false;
+    QueryResult* query = WorldDatabase.PQuery("SELECT position_x, position_y, position_z, orientation, map FROM game_tele WHERE name = \"%s\"", secondary ? "pvpzone2" : "pvpzone");
+    if (query) {
+        Field* fields = query->Fetch();
+        if(fields)
+        {
+            x = fields[0].GetFloat();
+            y = fields[1].GetFloat();
+            z = fields[2].GetFloat();
+            o = fields[3].GetFloat();
+            map = fields[4].GetUInt32();
+            set = true;
+        }
+    }
+
+    if(!set) //default values
+    {
+        sLog.outError("GetArenaZoneCoord(...) : DB values not found, using default values");
+        if(!secondary) { //hyjal area
+           map = 1;x = 4717.020020;y = -1973.829956;z = 1087.079956;o = 0.068669;
+        } else { //ZG Area
+           map = 0;x = -12248.573242;y = -1679.274902;z = 130.267273;o = 3.024384;
+        }
+    }
+}
+
+void Player::TeleportToArenaZone(bool secondary)
+{    
+    float x, y, z, o;
+    uint32 map;
+    GetArenaZoneCoord(secondary, map, x, y, z, o);
+    TeleportTo(map, x, y, z, o, TELE_TO_GM_MODE); 
+}
+
+/* true if the player threshold is reached and there is more player in the main zone than the secondary */
+bool Player::ShouldGoToSecondaryArenaZone()
+{
+    bool teleportToSecondaryZone = false;
+    uint32 onlinePlayers = sWorld.GetActiveSessionCount();
+    uint32 repartitionTheshold = sWorld.getConfig(CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD);
+
+    if(repartitionTheshold && onlinePlayers > repartitionTheshold)
+    {
+        float x,y,z,o; 
+        uint32 mainMapId, secMapId;
+        GetArenaZoneCoord(false, mainMapId, x, y, z, o);
+        GetArenaZoneCoord(true, secMapId, x, y, z, o);
+        Map* mainMap = MapManager::Instance().FindMap(mainMapId);
+        Map* secMap = MapManager::Instance().FindMap(secMapId);
+        if(mainMap && secMap && mainMap->GetPlayers().getSize() > secMap->GetPlayers().getSize())
+                return true;
+    }
+
+    return false;
 }
