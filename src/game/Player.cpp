@@ -1813,23 +1813,6 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         // prepare zone change detect
         uint32 old_zone = GetZoneId();
 
-        // near teleport
-        if(!GetSession()->PlayerLogout())
-        {
-        	Position oldPos = { GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation() };
-
-        	Relocate(x, y, z, orientation);
-
-        	SendTeleportAckPacket();
-            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
-        }
-        else
-            // this will be used instead of the current location in SaveToDB
-            m_teleport_dest = WorldLocation(mapid, x, y, z, orientation);
-        SetFallInformation(0, z);
-
-        //BuildHeartBeatMsg(&data);
-        //SendMessageToSet(&data, true);
         if (!(options & TELE_TO_NOT_UNSUMMON_PET))
         {
             //same map, only remove pet if out of range
@@ -1860,8 +1843,19 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             }
         }
 
+        // this will be used instead of the current location in SaveToDB
+        m_teleport_dest = WorldLocation(mapid, x, y, z, orientation);
+        SetFallInformation(0, z);
+
+        // near teleport
         if(!GetSession()->PlayerLogout())
         {
+        	Position oldPos;
+        	GetPosition(&oldPos);
+        	Relocate(x, y, z, orientation);
+        	SendTeleportAckPacket();
+            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
+
             // don't reset teleport semaphore while logging out, otherwise m_teleport_dest won't be used in Player::SaveToDB
             SetSemaphoreTeleport(false);
 

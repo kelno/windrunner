@@ -1223,7 +1223,7 @@ bool WorldObject::HasInArc(const float arcangle, const WorldObject* obj) const
     return (( angle >= lborder ) && ( angle <= rborder ));
 }
 
-void WorldObject::MovePositionToFirstCollision(uint32 mapId, Position &pos, float dist, float angle)
+void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float angle)
 {
     angle += GetOrientation();
     float destx, desty, destz, ground, floor;
@@ -1254,7 +1254,7 @@ void WorldObject::MovePositionToFirstCollision(uint32 mapId, Position &pos, floa
     }
 
     // check dynamic collision
-    col = GetMap()->getObjectHitPos(mapId, pos.m_positionX, pos.m_positionY, pos.m_positionZ+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
+    col = GetMap()->getObjectHitPos(GetMapId(), pos.m_positionX, pos.m_positionY, pos.m_positionZ+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
 
     // Collided with a gameobject
     if (col)
@@ -1291,10 +1291,10 @@ void WorldObject::MovePositionToFirstCollision(uint32 mapId, Position &pos, floa
     pos.SetOrientation(GetOrientation());
 }
 
-void WorldObject::GetFirstCollisionPosition(uint32 mapId, Position &pos, float dist, float angle)
+void WorldObject::GetFirstCollisionPosition(Position &pos, float dist, float angle)
 {
-    GetPosition(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
-    MovePositionToFirstCollision(mapId, pos, dist, angle);
+    GetPosition(&pos);
+    MovePositionToFirstCollision(pos, dist, angle);
 }
 
 void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
@@ -2067,14 +2067,61 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, 
     UpdateAllowedPositionZ(x, y, z);
 }
 
-void WorldObject::GetGroundPoint(float &x, float &y, float &z, float dist, float angle)
+void WorldObject::MovePosition(Position &pos, float dist, float angle)
 {
     angle += GetOrientation();
-    x += dist * cos(angle);
-    y += dist * sin(angle);
-    Trinity::NormalizeMapCoord(x);
-    Trinity::NormalizeMapCoord(y);
-    UpdateGroundPositionZ(x, y, z);
+    float destx, desty, destz, ground, floor;
+    destx = pos.m_positionX + dist * std::cos(angle);
+    desty = pos.m_positionY + dist * std::sin(angle);
+
+    // Prevent invalid coordinates here, position is unchanged
+    if (!Trinity::IsValidMapCoord(destx, desty, pos.m_positionZ))
+    {
+    	sLog.outError("WorldObject::MovePosition invalid coordinates X: %f and Y: %f were passed!", destx, desty);
+        return;
+    }
+
+    ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+    floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+    destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+
+    float step = dist/10.0f;
+
+    for (uint8 j = 0; j < 10; ++j)
+    {
+        // do not allow too big z changes
+        if (fabs(pos.m_positionZ - destz) > 6)
+        {
+            destx -= step * std::cos(angle);
+            desty -= step * std::sin(angle);
+            ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+            floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+            destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+        }
+        // we have correct destz now
+        else
+        {
+            pos.Relocate(destx, desty, destz);
+            break;
+        }
+    }
+
+    Trinity::NormalizeMapCoord(pos.m_positionX);
+    Trinity::NormalizeMapCoord(pos.m_positionY);
+    UpdateGroundPositionZ(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+    pos.SetOrientation(GetOrientation());
+}
+
+void WorldObject::GetNearPosition(Position &pos, float dist, float angle)
+{
+    GetPosition(&pos);
+    MovePosition(pos, dist, angle);
+}
+
+void WorldObject::GetRandomNearPosition(Position &pos, float radius)
+{
+    GetPosition(&pos);
+    MovePosition(pos, radius * (float)rand_norm(), (float)rand_norm() * static_cast<float>(2 * M_PI));
 }
 
 bool Position::HasInArc(float arc, const Position *obj) const

@@ -101,7 +101,7 @@ FleeingMovementGenerator<T>::_getPoint(T* owner, float &x, float &y, float &z)
     }
 
     Position pos;
-    owner->GetFirstCollisionPosition(owner->GetMapId(), pos, dist, angle);
+    owner->GetFirstCollisionPosition(pos, dist, angle);
     x = pos.m_positionX;
     y = pos.m_positionY;
     z = pos.m_positionZ;

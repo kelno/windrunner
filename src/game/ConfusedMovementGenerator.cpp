@@ -90,7 +90,7 @@ ConfusedMovementGenerator<T>::Update(T* unit, const uint32 &diff)
 
         	Position pos;
             pos.Relocate(i_x, i_y, i_z);
-            unit->MovePositionToFirstCollision(unit->GetMapId(), pos, dest, 0.0f);
+            unit->MovePositionToFirstCollision(pos, dest, 0.0f);
 
             PathInfo path(unit);
             path.SetPathLengthLimit(30.0f);

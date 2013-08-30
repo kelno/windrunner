@@ -1824,8 +1824,13 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                 default:                            angle = rand_norm()*2*M_PI; break;
             }
 
-            m_caster->GetGroundPointAroundUnit(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            if (cur == TARGET_DEST_CASTER_FRONT_LEAP)
+            	m_caster->GetFirstCollisionPosition(pos, dist, angle);
+            else
+            	m_caster->GetNearPosition(pos, dist, angle);
+
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -1866,8 +1871,9 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             default:                            angle = m_caster->GetMap()->rand_norm()*2*M_PI; break;
             }
 
-            target->GetGroundPointAroundUnit(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            target->GetNearPosition(pos, dist, angle);
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -1904,11 +1910,10 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             if (cur == TARGET_DEST_DEST_RANDOM)
               dist *= m_caster->GetMap()->rand_norm();
 
-            x = m_targets.m_destX;
-            y = m_targets.m_destY;
-            z = m_targets.m_destZ;
-            m_caster->GetGroundPoint(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            pos.Relocate(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ);
+            m_caster->MovePosition(pos, dist, angle);
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -4077,7 +4082,7 @@ uint8 Spell::CanCast(bool strict)
 
                 Position pos;
                 target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
-                target->GetFirstCollisionPosition(target->GetMapId(), pos, CONTACT_DISTANCE, target->GetRelativeAngle(m_caster));
+                target->GetFirstCollisionPosition(pos, CONTACT_DISTANCE, target->GetRelativeAngle(m_caster));
 
                 SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex);
                 float max_range = GetSpellMaxRange(srange); // + range_mod;

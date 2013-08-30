@@ -6900,22 +6900,9 @@ void Spell::EffectMomentMove(uint32 i)
     if(!m_targets.HasDst())
         return;
 
-    uint32 mapid = m_caster->GetMapId();
-    float dist = GetSpellRadius(sSpellRadiusStore.LookupEntry(m_spellInfo->EffectRadiusIndex[i]));
-    float x,y,z;
-    float destx,desty,destz,ground,floor;
-    float orientation = unitTarget->GetOrientation(), step;
-
-    unitTarget->GetPosition(x,y,z);
-    destx = x + dist * cos(orientation);
-    desty = y + dist * sin(orientation);
-    ground = unitTarget->GetMap()->GetHeight(destx,desty,MAX_HEIGHT,true);
-    floor = unitTarget->GetMap()->GetHeight(destx,desty,z, true);
-    destz = fabs(ground - z) <= fabs(floor - z) ? ground:floor;
-
     Position pos;
-    pos.Relocate(destx, desty, destz, orientation);
-    unitTarget->GetFirstCollisionPosition(unitTarget->GetMapId(), pos, unitTarget->GetDistance(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ() + 2.0f), 0.0f);
+    pos.Relocate(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ);
+    unitTarget->GetFirstCollisionPosition(pos, unitTarget->GetDistance(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ() + 2.0f), 0.0f);
     unitTarget->NearTeleportTo(pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation, unitTarget == m_caster);
 }
 
@@ -7054,7 +7041,7 @@ void Spell::EffectCharge(uint32 i)
     {
         Position pos;
         target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
-        target->GetFirstCollisionPosition(target->GetMapId(), pos, unitTarget->GetObjectSize(), unitTarget->GetRelativeAngle(m_caster));
+        target->GetFirstCollisionPosition(pos, unitTarget->GetObjectSize(), unitTarget->GetRelativeAngle(m_caster));
         m_caster->GetMotionMaster()->MoveCharge(pos.m_positionX, pos.m_positionY, pos.m_positionZ, 0);
     }
     else
@@ -7760,7 +7747,7 @@ void Spell::EffectBind(uint32 i)
 
     uint32 area_id;
     WorldLocation loc;
-    player->GetPosition(loc);
+    player->GetPosition(&loc);
     area_id = player->GetAreaId();
 
     player->SetHomebindToLocation(loc, area_id);

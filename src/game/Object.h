@@ -555,49 +555,12 @@ class WorldObject : public Object, public WorldLocation
 
         void _Create( uint32 guidlow, HighGuid guidhigh, uint32 mapid );
 
-        void Relocate(float x, float y, float z, float orientation)
-        {
-            m_positionX = x;
-            m_positionY = y;
-            m_positionZ = z;
-            m_orientation = orientation;
-        }
-
-        void Relocate(float x, float y, float z)
-        {
-            m_positionX = x;
-            m_positionY = y;
-            m_positionZ = z;
-        }
-
-        void Relocate(WorldLocation const & loc)
-        {
-            SetMapId(loc.m_mapId);
-            Relocate(loc.m_positionX, loc.m_positionY, loc.m_positionZ, loc.m_orientation);
-        }
-
-        void SetOrientation(float orientation) { m_orientation = orientation; }
-
-        float GetPositionX( ) const { return m_positionX; }
-        float GetPositionY( ) const { return m_positionY; }
-        float GetPositionZ( ) const { return m_positionZ; }
-        void GetPosition( float &x, float &y, float &z ) const
-            { x = m_positionX; y = m_positionY; z = m_positionZ; }
-        void GetPosition( WorldLocation &loc ) const
-            { loc.m_mapId = GetMapId(); GetPosition(loc.m_positionX, loc.m_positionY, loc.m_positionZ); loc.m_orientation = GetOrientation(); }
-        float GetOrientation( ) const { return m_orientation; }
         void GetNearPoint2D( float &x, float &y, float distance, float absAngle) const;
         void GetNearPoint( WorldObject const* searcher, float &x, float &y, float &z, float distance2d,float absAngle) const;
         void GetClosePoint(float &x, float &y, float &z, float distance2d = 0, float angle = 0) const
         {
             // angle calculated from current orientation
             GetNearPoint(NULL, x, y, z, distance2d, GetOrientation() + angle);
-        }
-        void GetGroundPoint(float &x, float &y, float &z, float dist, float angle);
-        void GetGroundPointAroundUnit(float &x, float &y, float &z, float dist, float angle)
-        {
-            GetPosition(x, y, z);
-            GetGroundPoint(x, y, z, dist, angle);
         }
         void GetContactPoint( const WorldObject* obj, float &x, float &y, float &z, float distance2d = CONTACT_DISTANCE) const
         {
@@ -617,9 +580,13 @@ class WorldObject : public Object, public WorldLocation
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
 
+        void MovePosition(Position &pos, float dist, float angle);
+        void GetNearPosition(Position &pos, float dist, float angle);
+        void GetRandomNearPosition(Position &pos, float radius);
+
         void UpdateAllowedPositionZ(float x, float y, float &z) const;
-        void MovePositionToFirstCollision(uint32 mapId, Position &pos, float dist, float angle);
-        void GetFirstCollisionPosition(uint32 mapId, Position &pos, float dist, float angle);
+        void MovePositionToFirstCollision(Position &pos, float dist, float angle);
+        void GetFirstCollisionPosition(Position &pos, float dist, float angle);
 
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 
