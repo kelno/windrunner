@@ -1484,7 +1484,7 @@ bool GOHello_windsor_jailbreak_door(Player* player, GameObject* go)
             if (Creature* dughal = player->FindCreatureInGrid(9022, 50.0f, true)) {
                 DoScriptText(WINDSOR_SAY_DUGHAL, dughal, player);
                 DoScriptText(WINDSOR_SAY_FREEPRISONER, windsor, NULL);
-                dughal->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                dughal->SetWalk(false);
                 dughal->GetMotionMaster()->MovePoint(0, 324.853241, -197.296951, -77.042488);
             }
             
@@ -1537,7 +1537,7 @@ bool GOHello_windsor_jailbreak_door(Player* player, GameObject* go)
         {
             if (Creature* tobias = player->FindCreatureInGrid(9679, 50.0f, true)) {
                 DoScriptText(WINDSOR_SAY_TOBIAS_FREE, tobias, NULL);
-                tobias->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                tobias->SetWalk(false);
                 tobias->GetMotionMaster()->MovePoint(0, 625.452820, -241.325729, -82.321175);
                 DoScriptText(WINDSOR_SAY_CONGRATS, windsor, player);
             }
