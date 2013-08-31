@@ -1073,6 +1073,8 @@ public:
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
+            bool isEmpowered;
+
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
 	    {
@@ -1119,6 +1121,7 @@ public:
                     resetEvent(EVENT_ARMAGEDDON, 21000);
                 }
 
+                isEmpowered = false;
                 firstDialogueStep = false;
                 secondDialogueStep = false;
                 thirdDialogueStep = false;
@@ -1203,6 +1206,9 @@ public:
                     	break;
                     case POINT_END_STUN:
                     	me->SetControlled(false, UNIT_STAT_STUNNED);
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	isEmpowered = false;
+                    	enableEvent(EVENT_SHADOW_SPIKE);
                     	break;
                 }
             }
@@ -1264,9 +1270,6 @@ public:
                     	SetNewArray(thirdDialogue);
                         thirdDialogueStep = true;
                         StartNextDialogueText(SAY_KALEC_3);
-                        doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                        enableEvent(EVENT_SHADOW_SPIKE);
                     }
                 }
 
@@ -1291,7 +1294,7 @@ public:
                         doCast(NULL, SPELL_DESTROY_DRAKES, true);
                         talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
-                        enableEvent(EVENT_ORBS_EMPOWER);
+                        isEmpowered = false;
                         enableEvent(EVENT_SHADOW_SPIKE);
                     }
                 }
@@ -1353,18 +1356,22 @@ public:
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             break;
                         case EVENT_ORBS_EMPOWER:
-                            if (getPhase() == PHASE_SACRIFICE)
-                            {
-                                if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(true);
-                            }
-                            else
-                            {
-                                if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
+                        	if (!isEmpowered)
+                        	{
+                                if (getPhase() == PHASE_SACRIFICE)
+                                {
+                                    if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                                        ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(true);
+                                }
+                                else
+                                {
+                                    if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                                        ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
 
-                            }
-                            disableEvent(EVENT_ORBS_EMPOWER);
+                                }
+                                isEmpowered = true;
+                        	}
+
                             scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
                             break;
                         case EVENT_SINISTER_REFLECTION:
