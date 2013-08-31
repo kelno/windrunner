@@ -258,7 +258,7 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
        if (Creature* npc = instance->GetCreatureInMap(GetData64(entry))) {
            if (npc->isAlive()) {
                 npc->clearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-                npc->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                npc->SetWalk(true);
                 npc->GetMotionMaster()->MovePoint(1,x,y,z);
                 npc->SetHomePosition(x,y,z,o);
            }

@@ -117,7 +117,7 @@ struct boss_alarAI : public ScriptedAI
         //m_creature->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 10);
         //m_creature->SetFloatValue(UNIT_FIELD_COMBATREACH, 10);
         m_creature->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FIRE, true);
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->setActive(false);
     }
@@ -127,7 +127,7 @@ struct boss_alarAI : public ScriptedAI
         if(pInstance)
             pInstance->SetData(DATA_ALAREVENT, IN_PROGRESS);
 
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING); // after enterevademode will be set walk movement
+        m_creature->SetDisableGravity(true);
         DoZoneInCombat();
         m_creature->setActive(true);
     }
@@ -435,7 +435,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
     mob_ember_of_alarAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = (ScriptedInstance*)c->GetInstanceData();
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
         m_creature->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FIRE, true);
     }
 
