@@ -22,8 +22,6 @@
 #define TRINITY_POINTMOVEMENTGENERATOR_H
 
 #include "MovementGenerator.h"
-#include "DestinationHolder.h"
-#include "Traveller.h"
 #include "FollowerReference.h"
 #include "PathFinder.h"
 
@@ -33,26 +31,51 @@ class PointMovementGenerator
 {
     public:
         PointMovementGenerator(uint32 _id, float _x, float _y, float _z, bool _usePathfinding, float _speed = 0.0f) : id(_id),
-            i_x(_x), i_y(_y), i_z(_z), i_nextMoveTime(0), arrived(false), m_usePathfinding(_usePathfinding), m_speed(_speed) {}
+            i_x(_x), i_y(_y), i_z(_z), i_recalculateSpeed(false), m_usePathfinding(_usePathfinding), m_speed(_speed) {}
 
-        void Initialize(T &);
-        void Finalize(T &unit);
-        void Reset(T &unit){unit.StopMoving();}
-        bool Update(T &, const uint32 &diff);
+        void Initialize(T*);
+        void Finalize(T*);
+        void Reset(T*);
+        bool Update(T*, const uint32 &diff);
 
-        void MovementInform(T &);
+        void MovementInform(T*);
+
+        void unitSpeedChanged() { i_recalculateSpeed = true; }
 
         MovementGeneratorType GetMovementGeneratorType() { return POINT_MOTION_TYPE; }
 
-        bool GetDestination(float& x, float& y, float& z) const { x=i_x; y=i_y; z=i_z; return true; }
+        void GetDestination(float& x, float& y, float& z) const { x = i_x; y = i_y; z = i_z; }
     private:
-        TimeTracker i_nextMoveTime;
-        float i_x,i_y,i_z;
+        float i_x, i_y, i_z;
         uint32 id;
-        DestinationHolder< Traveller<T> > i_destinationHolder;
-        bool arrived;
         bool m_usePathfinding;
         float m_speed;
+        bool i_recalculateSpeed;
 };
+
+class AssistanceMovementGenerator : public PointMovementGenerator<Creature>
+{
+    public:
+        AssistanceMovementGenerator(float _x, float _y, float _z) :
+            PointMovementGenerator<Creature>(0, _x, _y, _z, true) {}
+
+        MovementGeneratorType GetMovementGeneratorType() { return ASSISTANCE_MOTION_TYPE; }
+        void Finalize(Unit*);
+};
+
+// Does almost nothing - just doesn't allows previous movegen interrupt current effect.
+class EffectMovementGenerator : public MovementGenerator
+{
+    public:
+        explicit EffectMovementGenerator(uint32 Id) : m_Id(Id) {}
+        void Initialize(Unit*) {}
+        void Finalize(Unit*);
+        void Reset(Unit*) {}
+        bool Update(Unit*, const uint32 &diff);
+        MovementGeneratorType GetMovementGeneratorType() { return EFFECT_MOTION_TYPE; }
+    private:
+        uint32 m_Id;
+};
+
 #endif
 
