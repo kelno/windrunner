@@ -221,7 +221,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                 if(i_pl->isAlive())
                 {
                     i_pl->CastSpell(i_pl, SPELL_TELEPORT_CENTER, true);
-                    m_creature->GetNearPoint(m_creature,x,y,z,5,5,0);
+                    m_creature->GetNearPoint(m_creature, x, y, z, 5.0f, 0.0f);
                     i_pl->TeleportTo(m_creature->GetMapId(),x,y,LOCATION_Z,i_pl->GetOrientation());
                 }
         }
@@ -255,14 +255,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                 {
                     // Also needs an exception in spell system.
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_FLY, true, 0, 0, m_creature->GetGUID());
-                    // Use packet hack
-                    WorldPacket data(12);
-                    data.SetOpcode(SMSG_MOVE_SET_CAN_FLY);
-                    data.append(i_pl->GetPackGUID());
-                    data << uint32(0);
-                    i_pl->SendMessageToSet(&data, true);
-                    i_pl->SetSpeed(MOVE_FLIGHT, 2.0f);
-					i_pl->SetCanFly(true);
+					i_pl->SetCanFly(true, true);
                 }
             }
         }
@@ -279,12 +272,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
             {
                 i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_FLY);
                 i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_DOT);
-                WorldPacket data(12);
-                data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
-                data.append(i_pl->GetPackGUID());
-                data << uint32(0);
-                i_pl->SendMessageToSet(&data, true);
-				i_pl->SetCanFly(false);
+				i_pl->SetCanFly(false, true);
             }
         }
     }
@@ -616,7 +604,7 @@ struct mob_arcane_sphereAI : public ScriptedAI
     void Reset()
     {
         me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-        m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
         DespawnTimer = 30000;
         ChangeTargetTimer = 5000;
         CheckTimer = 1000;
