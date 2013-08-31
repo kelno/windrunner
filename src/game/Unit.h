@@ -1388,14 +1388,11 @@ class Unit : public WorldObject
         float GetWeaponDamageRange(WeaponAttackType attType ,WeaponDamageRange type) const;
         void SetBaseWeaponDamage(WeaponAttackType attType ,WeaponDamageRange damageRange, float value) { m_weaponDamage[attType][damageRange] = value; }
 
-        bool isInFront(Unit const* target,float distance, float arc = M_PI) const;
         void SetInFront(Unit const* target)
         {
             if(!hasUnitState(UNIT_STAT_CANNOT_TURN) && !IsUnitRotating()) 
                 SetOrientation(GetAngle(target)); 
         }
-        bool isInBack(Unit const* target, float distance, float arc = M_PI) const;
-        bool isInLine(Unit const* target, float distance) const;
 
         // Visibility system
         UnitVisibility GetVisibility() const { return m_Visibility; }
@@ -1797,6 +1794,8 @@ class Unit : public WorldObject
         uint32 m_rootTimes;
 
         TimeTrackerSmall m_movesplineTimer;
+
+        bool _isWalkingBeforeCharm; // Are we walking before we were charmed?
 };
 
 namespace Trinity

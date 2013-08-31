@@ -261,6 +261,8 @@ Unit::Unit()
     _targetLocked = false;
 
     m_rootTimes = 0;
+
+    _isWalkingBeforeCharm = false;
 }
 
 Unit::~Unit()
@@ -3165,24 +3167,6 @@ Spell* Unit::FindCurrentSpellBySpellId(uint32 spell_id) const
         if(m_currentSpells[i] && m_currentSpells[i]->m_spellInfo->Id==spell_id)
             return m_currentSpells[i];
     return NULL;
-}
-
-bool Unit::isInFront(Unit const* target, float distance,  float arc) const
-{
-    return IsWithinDistInMap(target, distance) && HasInArc( arc, target );
-}
-
-bool Unit::isInBack(Unit const* target, float distance, float arc) const
-{
-    return IsWithinDistInMap(target, distance) && !HasInArc( 2 * M_PI - arc, target );
-}
-
-bool Unit::isInLine(Unit const* target, float distance) const
-{
-    if(!HasInArc(M_PI, target) || !IsWithinDistInMap(target, distance)) return false;
-    float width = GetObjectSize() + target->GetObjectSize() * 0.5f;
-    float angle = GetAngle(target) - GetOrientation();
-    return abs(sin(angle)) * GetExactDistance2d(target->GetPositionX(), target->GetPositionY()) < width;
 }
 
 bool Unit::isInAccessiblePlaceFor(Creature const* c) const
@@ -12422,6 +12406,13 @@ void Unit::SetCharmedOrPossessedBy(Unit* charmer, bool possess)
     setFaction(charmer->getFaction());
     SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PVP_ATTACKABLE);
 
+    _isWalkingBeforeCharm = IsWalking();
+    if (_isWalkingBeforeCharm)
+    {
+        SetWalk(false);
+        SendMovementFlagUpdate();
+    }
+
     if(GetTypeId() == TYPEID_UNIT)
     {
         (this->ToCreature())->AI()->OnCharmed(charmer, true);
@@ -12496,6 +12487,7 @@ void Unit::RemoveCharmedOrPossessedBy(Unit *charmer)
     DeleteThreatList();
     SetCharmerGUID(0);
     RestoreFaction();
+    GetMotionMaster()->InitDefault();
 
     if(possess)
     {
@@ -12533,6 +12525,12 @@ void Unit::RemoveCharmedOrPossessedBy(Unit *charmer)
         return;
 
     assert(!possess || charmer->GetTypeId() == TYPEID_PLAYER);
+
+    if (IsWalking() != _isWalkingBeforeCharm)
+    {
+        SetWalk(_isWalkingBeforeCharm);
+        SendMovementFlagUpdate(true); // send packet to self, to update movement state on player.
+    }
 
     charmer->SetCharm(0);
     if(possess)

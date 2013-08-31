@@ -199,9 +199,24 @@ struct Position
         { return GetExactDistSq(x, y, z) < dist * dist; }
     bool IsInDist(const Position *pos, float dist) const
         { return GetExactDistSq(pos) < dist * dist; }
-    bool HasInArc(float arcangle, const Position *pos) const;
-    bool HasInLine(const Unit* target, float distance, float width) const;
+    bool HasInArc(float arcangle, const Position *pos, float border = 2.0f) const;
+    bool HasInLine(const Unit* target, float width) const;
     std::string ToString() const;
+
+    // modulos a radian orientation to the range of 0..2PI
+    static float NormalizeOrientation(float o)
+    {
+        // fmod only supports positive numbers. Thus we have
+        // to emulate negative numbers
+        if (o < 0)
+        {
+            float mod = o *-1;
+            mod = fmod(mod, 2.0f * static_cast<float>(M_PI));
+            mod = -mod + 2.0f * static_cast<float>(M_PI);
+            return mod;
+        }
+        return fmod(o, 2.0f * static_cast<float>(M_PI));
+    }
 };
 ByteBuffer &operator>>(ByteBuffer& buf, Position::PositionXYZOStreamer const & streamer);
 ByteBuffer & operator<<(ByteBuffer& buf, Position::PositionXYZStreamer const & streamer);
@@ -568,15 +583,7 @@ class WorldObject : public Object, public WorldLocation
             GetNearPoint(obj, x, y, z, distance2d, GetAngle( obj ));
         }
 
-        float GetObjectSize() const
-        {
-        	if (GetTypeId() == TYPEID_PLAYER)
-        		return DEFAULT_WORLD_OBJECT_SIZE;
-        	else if (m_valuesCount > UNIT_FIELD_COMBATREACH)
-        		return m_floatValues[UNIT_FIELD_COMBATREACH];
-        	else
-        		return DEFAULT_WORLD_OBJECT_SIZE;
-        }
+        float GetObjectSize() const;
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
 
@@ -625,13 +632,10 @@ class WorldObject : public Object, public WorldLocation
         bool IsWithinDistInMap(const WorldObject* obj, const float dist2compare, const bool is3D = true) const;
         bool IsWithinLOS(const float x, const float y, const float z ) const;
         bool IsWithinLOSInMap(const WorldObject* obj) const;
-        
-        bool GetDistanceOrder(WorldObject const* obj1, WorldObject const* obj2, bool is3D = true) const;
+        bool isInFront(WorldObject const* target, float arc = M_PI) const;
+        bool isInBack(WorldObject const* target, float arc = M_PI) const;
 
-        float GetAngle( const WorldObject* obj ) const;
-        float GetAngle( const float x, const float y ) const;
-        bool HasInArc( const float arcangle, const float x, const float y) const;
-        bool HasInArc( const float arcangle, const WorldObject* obj ) const;
+        bool GetDistanceOrder(WorldObject const* obj1, WorldObject const* obj2, bool is3D = true) const;
 
         virtual void SendMessageToSet(WorldPacket *data, bool self, bool to_possessor = true);
         virtual void SendMessageToSetInRange(WorldPacket *data, float dist, bool self, bool to_possessor = true);

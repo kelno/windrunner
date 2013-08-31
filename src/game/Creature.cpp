@@ -807,6 +807,8 @@ bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, floa
     if (Entry == VISUAL_WAYPOINT)
     	SetVisibility(VISIBILITY_OFF);
 
+    SetWalk(true);
+
     return true;
 }
 
@@ -1845,22 +1847,24 @@ void Creature::setDeathState(DeathState s)
     }
 	if(s == JUST_ALIVED)
     {
-        //if(isPet())
-        //    setActive(true);
+		clearUnitState(UNIT_STAT_ALL_STATE);
+
+		Unit::setDeathState(ALIVE);
+
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
-        SetWalk(true);
+
         ResetPlayerDamageReq();
 
         CreatureInfo const *cinfo = GetCreatureInfo();
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
 
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
-        clearUnitState(UNIT_STAT_ALL_STATE);
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
         LoadCreaturesAddon(true);
+
+        SetWalk(true);
         i_motionMaster.Initialize();
-        Unit::setDeathState(ALIVE);
     }
 }
 
