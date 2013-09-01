@@ -35,6 +35,29 @@ bool GossipHello_catapultmaster(Player *player, Creature *_Creature)
     return true;
 }
 
+bool GossipSelect_catapultmaster(Player *player, Creature *_Creature, uint32 sender, uint32 action )
+{
+	switch(action)
+	{
+	case ACTION_SPEED:
+	case ACTION_ANGLE:
+		break;
+	case ACTION_GO:
+        WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
+		data.append(player->GetPackGUID());
+		data << uint32(0);                                      // Sequence
+		data << X_DIRECTION;                                    // x direction
+		data << Y_DIRECTION;                                    // y direction
+		data << ((catapultmasterAI*)_Creature->AI())->horizontal_speed;      // Horizontal speed
+		data << ((catapultmasterAI*)_Creature->AI())->vertical_speed;                              // Z Movement speed (vertical)
+
+		player->GetSession()->SendPacket(&data);
+		break;
+	}
+
+    return true;
+}
+
 bool GossipSelectWithCode_catapultmaster( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* Code )
 {
 	switch(action)
@@ -46,15 +69,7 @@ bool GossipSelectWithCode_catapultmaster( Player *player, Creature *_Creature, u
 		((catapultmasterAI*)_Creature->AI())->vertical_speed = -atof(Code);
 		break;
 	case ACTION_GO:
-		WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
-		data.append(player->GetPackGUID());
-		data << uint32(0);                                      // Sequence
-		data << X_DIRECTION;                                    // x direction
-		data << Y_DIRECTION;                                    // y direction
-		data << ((catapultmasterAI*)_Creature->AI())->horizontal_speed;      // Horizontal speed
-		data << ((catapultmasterAI*)_Creature->AI())->vertical_speed;                              // Z Movement speed (vertical)
-
-		player->GetSession()->SendPacket(&data);
+        //not handled here
 		break;
 	}
 
@@ -75,6 +90,7 @@ void AddSC_catapultmaster()
     newscript->Name="npc_catapultmaster";
 	newscript->GetAI = &GetAI_catapultmaster;
     newscript->pGossipHello = &GossipHello_catapultmaster;
+    newscript->pGossipSelect = &GossipSelect_catapultmaster;
 	newscript->pGossipSelectWithCode = &GossipSelectWithCode_catapultmaster;
     newscript->RegisterSelf();
 }
