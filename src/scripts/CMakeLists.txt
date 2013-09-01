@@ -310,6 +310,7 @@ SET(scripts_STAT_SRCS
     misc/item_scripts.cpp
     misc/item_test.cpp
     misc/npc_arenabeastmaster.cpp
+    misc/npc_catapultmaster.cpp
     misc/npc_innkeeper.cpp
     misc/npc_interpreter.cpp
     misc/npc_professions.cpp
