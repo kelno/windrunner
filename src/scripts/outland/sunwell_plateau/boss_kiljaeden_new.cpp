@@ -1072,7 +1072,6 @@ public:
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
-            bool isEmpowered;
 
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
@@ -1096,7 +1095,7 @@ public:
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_DARKNESS, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_DARKNESS, 75000, 75000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_SINISTER_REFLECTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 4
@@ -1113,14 +1112,13 @@ public:
                     // Phase 3
                     resetEvent(EVENT_SHADOW_SPIKE, 4000);
                     resetEvent(EVENT_FLAME_DART, 3000);
-                    resetEvent(EVENT_DARKNESS, 45000);
+                    resetEvent(EVENT_DARKNESS, 75000);
                     resetEvent(EVENT_ORBS_EMPOWER, 35000);
                     resetEvent(EVENT_SINISTER_REFLECTION, 500);
                     // Phase 4
                     resetEvent(EVENT_ARMAGEDDON, 21000);
                 }
 
-                isEmpowered = false;
                 firstDialogueStep = false;
                 secondDialogueStep = false;
                 thirdDialogueStep = false;
@@ -1129,6 +1127,60 @@ public:
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 me->addUnitState(UNIT_STAT_STUNNED);
+            }
+
+            void onEnterPhase(uint32 newPhase)
+            {
+                switch (newPhase)
+                {
+                    case PHASE_DARKNESS:
+                    	// Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 10000, 15000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+
+                    	talk(SAY_KJ_PHASE3);
+                    	break;
+                    case PHASE_ARMAGEDDON:
+                        // Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 10000, 15000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+                    	// Phase 3
+                    	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
+                    	scheduleEvent(EVENT_FLAME_DART, 3000);
+                    	scheduleEvent(EVENT_DARKNESS, 45000);
+                    	scheduleEvent(EVENT_ORBS_EMPOWER, 35000);
+                    	scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
+
+                    	talk(SAY_KJ_PHASE4);
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SHADOW_SPIKE);
+                    	enableEvent(EVENT_ORBS_EMPOWER);
+                    	break;
+                    case PHASE_SACRIFICE:
+                    	// Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 40000, 40000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+                        // Phase 3
+                    	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
+                    	scheduleEvent(EVENT_FLAME_DART, 3000);
+                    	scheduleEvent(EVENT_DARKNESS, 25000);
+                    	scheduleEvent(EVENT_ORBS_EMPOWER, 500);
+                    	scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
+                    	// Phase 4
+                    	scheduleEvent(EVENT_ARMAGEDDON, 21000);
+
+                    	talk(SAY_KJ_PHASE5);
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SHADOW_SPIKE);
+                    	enableEvent(EVENT_ORBS_EMPOWER);
+                    	break;
+                }
             }
 
             void onSummon(Creature* summoned)
@@ -1199,15 +1251,11 @@ public:
                     	}
                         break;
                     case SAY_KJ_PHASE5:
-                    	talk(SAY_KJ_PHASE5);
-                    	setPhase(PHASE_SACRIFICE);
                     	me->SetControlled(true, UNIT_STAT_STUNNED);
                     	break;
                     case POINT_END_STUN:
                     	me->SetControlled(false, UNIT_STAT_STUNNED);
-                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                    	isEmpowered = false;
-                    	enableEvent(EVENT_SHADOW_SPIKE);
+                    	setPhase(PHASE_SACRIFICE);
                     	break;
                 }
             }
@@ -1216,7 +1264,7 @@ public:
             {
                 if (annimSpawnTimer)
                 {
-                    me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+                    me->SetTarget(0);
                     if (annimSpawnTimer <= diff)
                     {
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -1279,23 +1327,14 @@ public:
                 if (getPhase() <= PHASE_NORMAL)
                 {
                     if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
-                    {
-                        talk(SAY_KJ_PHASE3);
                         setPhase(PHASE_DARKNESS);
-                    }
                 }
 
                 //Phase 4
                 if (getPhase() <= PHASE_DARKNESS)
                 {
                     if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
-                    {
-                        doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        talk(SAY_KJ_PHASE4);
                         setPhase(PHASE_ARMAGEDDON);
-                        isEmpowered = false;
-                        enableEvent(EVENT_SHADOW_SPIKE);
-                    }
                 }
 
                 while (executeEvent(diff, m_currEvent))
@@ -1341,7 +1380,6 @@ public:
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast((Unit*)NULL, SPELL_SHADOW_SPIKE);
-                            scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
                             disableEvent(EVENT_SHADOW_SPIKE);
                             break;
                         case EVENT_FLAME_DART:
@@ -1355,23 +1393,19 @@ public:
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             break;
                         case EVENT_ORBS_EMPOWER:
-                        	if (!isEmpowered)
-                        	{
-                                if (getPhase() == PHASE_SACRIFICE)
-                                {
-                                    if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                                        ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(true);
-                                }
-                                else
-                                {
-                                    if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-                                        ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
+                            if (getPhase() == PHASE_SACRIFICE)
+                            {
+                                if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(true);
+                            }
+                            else
+                            {
+                                if (Creature* kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
+                                    ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
 
-                                }
-                                isEmpowered = true;
-                        	}
+                            }
 
-                            scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
+                            disableEvent(EVENT_ORBS_EMPOWER);
                             break;
                         case EVENT_SINISTER_REFLECTION:
                         	talk(SAY_KJ_REFLECTION);
