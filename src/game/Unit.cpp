@@ -2668,6 +2668,9 @@ SpellMissInfo Unit::MagicSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 //   Resist
 SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool CanReflect)
 {
+	if (pVictim->GetEntry() == 25653 && spell->Id == 45848)
+		return SPELL_MISS_NONE;
+
     // Return evade for units in evade mode
     if (pVictim->GetTypeId()==TYPEID_UNIT && (pVictim->ToCreature())->IsInEvadeMode())
         return SPELL_MISS_EVADE;
@@ -8423,18 +8426,16 @@ bool Unit::IsImmunedToDamage(SpellSchoolMask shoolMask, bool useCharges)
 
 bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo, bool useCharges)
 {
-	// Hack for blue dragon
-	switch (spellInfo->Id)
-	{
-	    case 45833:
-	    case 45836:
-	    case 45838:
-	    case 45839:
-	    	return false;
-	}
-
     if (!spellInfo)
         return false;
+
+    // Hack for blue dragon
+    switch (spellInfo->Id)
+    {
+        case 45848:
+        case 45838:
+            return false;
+    }
 
     SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_DISPEL];
     for(SpellImmuneList::const_iterator itr = dispelList.begin(); itr != dispelList.end(); ++itr)

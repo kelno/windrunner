@@ -4418,6 +4418,12 @@ void Spell::EffectSummonWild(uint32 i)
                     case 45410:
                     	Charmed->SetSummoner(m_originalCaster);
                     	break;
+                    case 45836:
+                    	Charmed->SetSummoner(m_caster);
+                    	if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                    	    m_caster->CastSpell((Unit*)NULL, 45839, true);
+                    	m_caster->CastSpell((Unit*)NULL, 45838, true);
+                    	Charmed->CastSpell((Unit*)NULL, 45838, true);
                     default:
                     	Charmed->SetSummoner(m_caster);
                     	break;
@@ -4487,11 +4493,6 @@ void Spell::EffectSummonWild(uint32 i)
         case 26326:
             if (m_caster->GetTypeId() == TYPEID_PLAYER)
                 m_caster->ToPlayer()->KilledMonster(15894, 0);
-            break;
-        // KilJaeden encounter (summon blue dragon)
-        case 45836:
-        	if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                m_caster->CastSpell((Unit*)NULL, 45839, true);
             break;
         default:
             break;

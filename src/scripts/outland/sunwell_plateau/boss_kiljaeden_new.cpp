@@ -409,7 +409,6 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
 
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
-        	plr->CastSpell((Unit*)NULL, SPELL_POSSESS_DRAKE_IMMUNE, true);
         	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
@@ -2123,30 +2122,6 @@ public:
     }
 };
 
-//AI for Power of the Blue Flight
-class npc_power_blue_flight : public CreatureScript
-{
-public:
-	npc_power_blue_flight() : CreatureScript("npc_power_blue_flight") {}
-
-    class npc_power_blue_flightAI : public CreatureAINew
-    {
-        private:
-            ScriptedInstance *pInstance;
-
-        public:
-            npc_power_blue_flightAI(Creature* creature) : CreatureAINew(creature)
-            {
-                pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-            }
-    };
-
-    CreatureAINew* getAI(Creature* creature)
-    {
-        return new npc_power_blue_flightAI(creature);
-    }
-};
-
 void AddSC_boss_kiljaeden_new()
 {
     Script* newscript;
@@ -2165,5 +2140,4 @@ void AddSC_boss_kiljaeden_new()
     sScriptMgr.addScript(new mob_armageddon());
     sScriptMgr.addScript(new mob_shield_orb());
     sScriptMgr.addScript(new mob_sinster_reflection());
-    sScriptMgr.addScript(new npc_power_blue_flight());
 }

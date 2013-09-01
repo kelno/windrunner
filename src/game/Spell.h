@@ -667,18 +667,12 @@ namespace Trinity
                         if (!itr->getSource()->isAttackableByAOE())
                             continue;
 
-                        if (itr->getSource()->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
-                            continue;
-
                         if (!i_caster->IsFriendlyTo(itr->getSource()))
                         	continue;
                         break;
                     case SPELL_TARGETS_ENEMY:
                     {
                         if(itr->getSource()->GetTypeId()==TYPEID_UNIT && (itr->getSource()->ToCreature())->isTotem())
-                            continue;
-
-                        if (itr->getSource()->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED))
                             continue;
 
                         if(!itr->getSource()->isAttackableByAOE())

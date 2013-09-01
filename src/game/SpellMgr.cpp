@@ -586,6 +586,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
         case 37472:
         case 45989:
         case 20553:
+        case 45856:                                         // Breath: Haste
+        case 45860:                                         // Breath: Revitalize
             return true;
         case  1852:                                         // Silenced (GM)
         case 46392:                                         // Focused Assault
