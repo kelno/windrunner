@@ -28,7 +28,7 @@ bool GossipHello_catapultmaster(Player *player, Creature *_Creature)
 {    
 	player->ADD_GOSSIP_ITEM_EXTENDED( 0, "Vitesse", GOSSIP_SENDER_MAIN, ACTION_SPEED, "", 0, true);
 	player->ADD_GOSSIP_ITEM_EXTENDED( 0, "Angle", GOSSIP_SENDER_MAIN, ACTION_ANGLE, "", 0, true);
-	player->ADD_GOSSIP_ITEM_EXTENDED( 0, "GO !", GOSSIP_SENDER_MAIN, ACTION_GO, "", 0, true);
+    player->ADD_GOSSIP_ITEM( 0, "GO !", GOSSIP_SENDER_MAIN, ACTION_GO);
         
 	player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
 
@@ -43,6 +43,8 @@ bool GossipSelect_catapultmaster(Player *player, Creature *_Creature, uint32 sen
 	case ACTION_ANGLE:
 		break;
 	case ACTION_GO:
+        _Creature->Say("YOLO !",LANG_UNIVERSAL,NULL);
+
         WorldPacket data(SMSG_MOVE_KNOCK_BACK, (8+4+4+4+4+4));
 		data.append(player->GetPackGUID());
 		data << uint32(0);                                      // Sequence
