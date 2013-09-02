@@ -1157,6 +1157,7 @@ public:
 
                     	talk(SAY_KJ_PHASE4);
                     	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SINISTER_REFLECTION);
                     	enableEvent(EVENT_SHADOW_SPIKE);
                     	enableEvent(EVENT_ORBS_EMPOWER);
                     	break;
@@ -1177,6 +1178,7 @@ public:
 
                     	talk(SAY_KJ_PHASE5);
                     	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SINISTER_REFLECTION);
                     	enableEvent(EVENT_SHADOW_SPIKE);
                     	enableEvent(EVENT_ORBS_EMPOWER);
                     	break;
@@ -1411,7 +1413,7 @@ public:
                         	talk(SAY_KJ_REFLECTION);
                             doCast((Unit*)NULL, SPELL_SINISTER_REFLECTION, true);
 
-                        	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
+                            disableEvent(EVENT_SINISTER_REFLECTION);
                         	break;
                         case EVENT_ARMAGEDDON:
                         {
