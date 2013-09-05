@@ -665,36 +665,39 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
         return;
     }
     
-    // Close rated arena during the night to block wintraders
-    bool closeAtNight = sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK) & 1;
-    bool alsoCloseSkirmish = sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK) & 2;
-	time_t curTime = time(NULL);
-	tm localTm = *localtime(&curTime);
-	if (closeAtNight && (isRated || alsoCloseSkirmish) && !_player->isGameMaster())
-	{
-		if (localTm.tm_wday == 0 || localTm.tm_wday == 6) { // Saturday (6) or Sunday (0)
-			if (localTm.tm_hour > 3 && localTm.tm_hour < 7) {
-				ChatHandler(GetPlayer()).PSendSysMessage(LANG_RATED_ARENA_CLOSED_DURING_NIGHT);
-				return;
-			}
-		}
-		else {
-			if (localTm.tm_hour > 2 && localTm.tm_hour < 8) {
-				ChatHandler(GetPlayer()).PSendSysMessage(LANG_RATED_ARENA_CLOSED_DURING_NIGHT);
-				return;
-			}
-		}
-	}
-    //ArenaServer (WM Tournoi) is open wedsnesday, saturday & sunday from 14 to 22 pm
-    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && sWorld.getConfig(CONFIG_ARENASERVER_USE_CLOSESCHEDULE)) 
-    { 
-        if (localTm.tm_wday != 3 && localTm.tm_wday != 6 && localTm.tm_wday != 0
-		    && localTm.tm_hour < 14 && localTm.tm_hour > 22) 
+    if(!_player->isGameMaster())
+    {
+        // Close rated arena during the night to block wintraders
+        bool closeAtNight = sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK) & 1;
+        bool alsoCloseSkirmish = sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK) & 2;
+        time_t curTime = time(NULL);
+        tm localTm = *localtime(&curTime);
+        if (closeAtNight && (isRated || alsoCloseSkirmish))
         {
-			ChatHandler(GetPlayer()).PSendSysMessage(LANG_ARENASERVER_CLOSED);
-			return;
+            if (localTm.tm_wday == 0 || localTm.tm_wday == 6) { // Saturday (6) or Sunday (0)
+                if (localTm.tm_hour > 3 && localTm.tm_hour < 7) {
+                    ChatHandler(GetPlayer()).PSendSysMessage(LANG_RATED_ARENA_CLOSED_DURING_NIGHT);
+                    return;
+                }
+            }
+            else {
+                if (localTm.tm_hour > 2 && localTm.tm_hour < 8) {
+                    ChatHandler(GetPlayer()).PSendSysMessage(LANG_RATED_ARENA_CLOSED_DURING_NIGHT);
+                    return;
+                }
+            }
         }
-	}
+        //Arena server (WM Tournoi) is open wedsnesday, saturday & sunday from 14 to 22 pm
+        if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && sWorld.getConfig(CONFIG_ARENASERVER_USE_CLOSESCHEDULE)) 
+        { 
+            if (localTm.tm_wday != 3 && localTm.tm_wday != 6 && localTm.tm_wday != 0
+                && localTm.tm_hour < 14 && localTm.tm_hour > 22) 
+            {
+                ChatHandler(GetPlayer()).PSendSysMessage(LANG_ARENASERVER_CLOSED);
+                return;
+            }
+        }
+    }
 
     uint8 arenatype = 0;
     uint32 arenaRating = 0;
@@ -715,7 +718,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
             return;
     }
 
-    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && arenatype != ARENA_TYPE_3v3)
+    if(!_player->isGameMaster() && sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && arenatype != ARENA_TYPE_3v3)
     {
         ChatHandler(GetPlayer()).PSendSysMessage(LANG_ARENASERVER_ONLY_3V3);
         return;
@@ -800,10 +803,10 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
             char *pvpchannel = "pvp";
             char *ttype;
             switch (arenatype) {
-	            case 2: ttype = "2v2"; channel = "2v2"; break;
-	            case 3: ttype = "3v3"; channel = "3v3"; break;
-	            case 5: ttype = "5v5"; channel = "5v5"; break;
-	            default: sLog.outError("Invalid arena type.");
+                case 2: ttype = "2v2"; channel = "2v2"; break;
+                case 3: ttype = "3v3"; channel = "3v3"; break;
+                case 5: ttype = "5v5"; channel = "5v5"; break;
+                default: sLog.outError("Invalid arena type.");
             }
 
             //msg << "TAG: [" << ttype << "] (" << arenaRating/50*50 << " - " << ((arenaRating/50)+1)*50 << ")";

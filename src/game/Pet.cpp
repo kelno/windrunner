@@ -604,13 +604,16 @@ void Pet::Update(uint32 diff)
             else
                 m_regenTimer -= diff;
 
-            if(m_happinessTimer <= diff)
+            if(!sWorld.getConfig(CONFIG_ARENASERVER_ENABLED))
             {
-                LooseHappiness();
-                m_happinessTimer = 7500;
+                if(m_happinessTimer <= diff)
+                {
+                    LooseHappiness();
+                    m_happinessTimer = 7500;
+                }
+                else
+                    m_happinessTimer -= diff;
             }
-            else
-                m_happinessTimer -= diff;
 
             if(m_loyaltyTimer <= diff)
             {
@@ -648,8 +651,6 @@ void Pet::RegenerateFocus()
 
 void Pet::LooseHappiness()
 {
-    SetPower(POWER_HAPPINESS, 166500);
-    return;
     uint32 curValue = GetPower(POWER_HAPPINESS);
     if (curValue <= 0)
         return;
@@ -987,10 +988,13 @@ bool Pet::CreateBaseAtCreature(Creature* creature)
     SetUInt32Value(UNIT_NPC_FLAGS, 0);
 
     CreatureFamilyEntry const* cFamily = sCreatureFamilyStore.LookupEntry(creature->GetCreatureInfo()->family);
-    if( char* familyname = cFamily->Name[sWorld.GetDefaultDbcLocale()] )
-        SetName(familyname);
-    else
-        SetName(creature->GetName());
+	if(cFamily)
+	{
+		if( char* familyname = cFamily->Name[sWorld.GetDefaultDbcLocale()] )
+			SetName(familyname);
+		else
+			SetName(creature->GetName());
+	}
 
     m_loyaltyPoints = 1000;
     if(cinfo->type == CREATURE_TYPE_BEAST)
@@ -1307,7 +1311,7 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
                     break;
             }
             break;
-		case POSSESSED_PET:
+        case POSSESSED_PET:
             switch(GetEntry())
             {
                 case 19405: // Steam Tonk
@@ -1316,14 +1320,14 @@ bool Pet::InitStatsForLevel(uint32 petlevel)
                     SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, 1.0f);
                     SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, 2.0f);
                     break;
-				default:
+                default:
                     SetCreateMana(28 + 10*petlevel);
                     SetCreateHealth(28 + 30*petlevel);
                     SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, float(petlevel - (petlevel / 4)));
                     SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, float(petlevel + (petlevel / 4)));
                     break;
-			}
-			break;
+            }
+            break;
         default:
             sLog.outError("Pet have incorrect type (%u) for levelup.", getPetType());
             break;
@@ -1714,11 +1718,11 @@ bool Pet::addSpell(uint16 spell_id, uint16 active, PetSpellState state, uint16 s
         CastSpell(this, spell_id, true);
     else if(state == PETSPELL_NEW)
     {
-    	for (uint8 i = 0; i < CREATURE_MAX_SPELLS; i++)
-    	{
+        for (uint8 i = 0; i < CREATURE_MAX_SPELLS; i++)
+        {
             if (m_charmInfo->AddSpellToAB(oldspell_id, spell_id, i, (ActiveStates)active))
-            	break;
-    	}
+                break;
+        }
     }
 
     if(newspell->active == ACT_ENABLED)

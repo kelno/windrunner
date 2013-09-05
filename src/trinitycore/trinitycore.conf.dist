@@ -186,16 +186,16 @@ EAIErrorLevel = 2
 #                 0 (do not permit addon channel)
 #
 #    MapUpdate.Threads
-#	      Number of threads to update maps.
+#        Number of threads to update maps.
 #        Default: 1
 #
 #     GuidDistribution.NewMethod
 #          Enable new method for unit guid distribution, using an alternate range of guid for summoned unit. This is to prevent guid overflow.
-#			Default: 0
-#			
-#		GuidDistribution.Proportion
-#		    If using Unitguid.NewMethod, set the proportion (in %) of remaining free guid used for summoned units. May range from 50 to 95.
-#			Default: 90
+#          Default: 0
+#            
+#      GuidDistribution.Proportion
+#          If using Unitguid.NewMethod, set the proportion (in %) of remaining free guid used for summoned units. May range from 50 to 95.
+#          Default: 90
 #
 ###################################################################################################################
 
@@ -321,7 +321,7 @@ GuidDistribution.Proportion = 90
 #        Default: "Ra.log"
 #                 "" - Empty name for disable
 #
-#	ArenaLogFile
+#    ArenaLogFile
 #        Log file of arena fights and arena team creations
 #        Default: "" - do not create arena log file
 #
@@ -581,19 +581,19 @@ Anticheat.Movement.AlarmTime = 5000
 #                 1 (true)
 #
 #   Battleground.PrematureReward
-#	     Reward players in case of prematurely finished BG
-#	     Default: 1 (true)
-#	 	      0 (false)
+#        Reward players in case of prematurely finished BG
+#        Default: 1 (true)
+#               0 (false)
 #
 #    Battleground.Arena.Rated.Enable
 #        Default: 1 (true)
 #            0 (false)
 #
 #    Battleground.Arena.NightClose.Mask
-#         Close arenas at night
-#          Default: 1 (rated only)
-#                2 (skirmish only)
-#                3 (both)
+#        Close arenas at night
+#        Default: 1 (rated only)
+#            2 (skirmish only)
+#            3 (both)
 #
 #    Battleground.Arena.Alternate.Rating
 #        Use alternate rating system (+15/15)
@@ -601,8 +601,8 @@ Anticheat.Movement.AlarmTime = 5000
 #            0 (false)
 #
 #    Battleground.Arena.Announce
-#         Announce arena queue on "pvp" channel
-#         Default: 1 (true)
+#        Announce arena queue on "pvp" channel
+#        Default: 1 (true)
 #             0 (false)
 #
 #    CastUnstuck
@@ -686,7 +686,7 @@ Anticheat.Movement.AlarmTime = 5000
 #        Default: 10
 #
 #    ArenaSpectator.Ghost
-#        Can see ghost or not
+#        Spectators can see stealth & invisible units
 #        Default: 1
 #
 #    Spam.Report.Threshold
@@ -1671,48 +1671,48 @@ Ra.Secure = 1
 ###################################################################################################################
 # CUSTOM SERVER OPTIONS
 #
-#	PlayerStart.AllReputation
-#		Players will start with most of the high level reputations that are needed for items, mounts etc.
-#		If there are any reputation faction you want to be added, just tell me.
+#    PlayerStart.AllReputation
+#        Players will start with most of the high level reputations that are needed for items, mounts etc.
+#        If there are any reputation faction you want to be added, just tell me.
 #
-#	PlayerStart.AllSpells
-#		If enabled, players will start with all their class spells (not talents). Useful for instant 70 servers.
-#		You must import playercreateinfo_spell_custom.sql, it's included in the SQL folder.
-#		Default: 0 - off
-#				 1 - on
+#    PlayerStart.AllSpells
+#        If enabled, players will start with all their class spells (not talents). Useful for instant 70 servers.
+#        You must import playercreateinfo_spell_custom.sql, it's included in the SQL folder.
+#        Default: 0 - off
+#                 1 - on
 #
-#	PlayerStart.MapsExplored
-#		Players will start with all maps explored if enabled
+#    PlayerStart.MapsExplored
+#        Players will start with all maps explored if enabled
 #
-#	MusicInBattleground
-#		If enabled, "L70ETC - Power of the horde" will be played when BG starts ;)
+#    MusicInBattleground
+#        If enabled, "L70ETC - Power of the horde" will be played when BG starts ;)
 #
-#	HonorPointsAfterDuel
-#		The amount of honor points the duel winner will get after a duel.
-#		Default: 0 - disable
+#    HonorPointsAfterDuel
+#        The amount of honor points the duel winner will get after a duel.
+#        Default: 0 - disable
 #
-#	AlwaysMaxWeaponSkill
-#		Players will automatically gain max weapon/defense skill when logging in, leveling up etc.
+#    AlwaysMaxWeaponSkill
+#        Players will automatically gain max weapon/defense skill when logging in, leveling up etc.
 #
-#	PvPToken.Enable
-#		Enable/disable PvP Token System. Players will get a token after slaying another player that gives honor.
+#    PvPToken.Enable
+#        Enable/disable PvP Token System. Players will get a token after slaying another player that gives honor.
 #
-#	PvPToken.MapAllowType
-#		Where players can receive the pvp token
-#		4 - In all maps
-#		3 - In battlegrounds only
-#		2 - In FFA areas only (gurubashi arena etc)
-#		1 - In battlegrounds AND FFA areas only
+#    PvPToken.MapAllowType
+#        Where players can receive the pvp token
+#        4 - In all maps
+#        3 - In battlegrounds only
+#        2 - In FFA areas only (gurubashi arena etc)
+#        1 - In battlegrounds AND FFA areas only
 #
-#	PvPToken.ItemID
-#		The item players will get after killing someone if PvP Token system is enabled.
-#		Default: 29434 - Badge of justice
+#    PvPToken.ItemID
+#        The item players will get after killing someone if PvP Token system is enabled.
+#        Default: 29434 - Badge of justice
 #
-#	PvPToken.ItemCount
-#		Modify the item ID count - Default: 1
+#    PvPToken.ItemCount
+#        Modify the item ID count - Default: 1
 #
-#	NoResetTalentsCost
-#		Enable or disable no cost when reseting talents
+#    NoResetTalentsCost
+#        Enable or disable no cost when reseting talents
 #
 #   ForbiddenMaps
 #       map ids that users below SEC_GAMEMASTER cannot enter, with delimiter ','
