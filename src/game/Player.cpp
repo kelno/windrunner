@@ -357,7 +357,7 @@ Player::Player (WorldSession *session): Unit()
     m_restTime = 0;
     m_deathTimer = 0;
     m_deathExpireTime = 0;
-	m_deathTime = 0;
+    m_deathTime = 0;
 
     m_swingErrorMsg = 0;
 
@@ -692,7 +692,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         for(int i=0; i<4 ;i++)
             taction[i] = (*action_itr[i]);
 
-	addActionButton((uint8)taction[0], taction[1], (uint8)taction[2], (uint8)taction[3]);
+        addActionButton((uint8)taction[0], taction[1], (uint8)taction[2], (uint8)taction[3]);
 
         for(int i=0; i<4 ;i++)
             ++action_itr[i];
@@ -2084,7 +2084,7 @@ void Player::RemoveFromWorld()
     }
 
     if (isSpectator())
-    	SetSpectate(false);
+        SetSpectate(false);
 
     ///- Do not add/remove the player from the object storage
     ///- It will crash when updating the ObjectAccessor
@@ -4127,7 +4127,7 @@ void Player::BuildPlayerRepop()
     if(GetCorpse())
     {
         sLog.outError("BuildPlayerRepop: player %s(%d) already has a corpse", GetName(), GetGUIDLow());
-	return;
+    return;
     }
 
     // create a corpse and place it at the player's location
@@ -4268,14 +4268,14 @@ void Player::KillPlayer()
     // 6 minutes until repop at graveyard
     m_deathTimer = 6*MINUTE*1000;
 
-	m_deathTime = time(NULL);
+    m_deathTime = time(NULL);
 
     UpdateCorpseReclaimDelay();                             // dependent at use SetDeathPvP() call before kill
     SendCorpseReclaimDelay();
     
     /* Sunwell/Kalecgos: death in spectral realm */
     if (GetMapId() == 580 && GetPositionZ() < -65)
-		TeleportTo(GetMapId(), GetPositionX(), GetPositionY(), 53.079, GetOrientation());
+        TeleportTo(GetMapId(), GetPositionX(), GetPositionY(), 53.079, GetOrientation());
 
     // don't create corpse at this moment, player might be falling
 
@@ -6575,7 +6575,7 @@ bool Player::RewardHonor(Unit *uVictim, uint32 groupsize, float honor, bool pvpt
                 else if (victim_title < HKRANKMAX)
                     victim_rank = victim_title + 4;
                 else if (victim_title < (2*HKRANKMAX-1))
-                	victim_rank = victim_title - (HKRANKMAX-1) + 4;
+                    victim_rank = victim_title - (HKRANKMAX-1) + 4;
                 else
                     victim_guid = 0;                        // Don't show HK: <rank> message, only log.
             }
@@ -7636,7 +7636,7 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
                 uint32 FTSpellId=0;
                 switch(pEnchant->spellid[s])
                 {
-					// Flametongue Weapon
+                    // Flametongue Weapon
                     case 10400:  FTSpellId = 8026; break; // Rank 1
                     case 15567: FTSpellId = 8028; break; // Rank 2
                     case 15568: FTSpellId = 8029; break; // Rank 3
@@ -15178,6 +15178,61 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     _LoadReputation(holder->GetResult(PLAYER_LOGIN_QUERY_LOADREPUTATION));
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
+	
+    // TO BE REMOVED AROUND SEPTEMBER 15TH 2013
+    // Tabards
+    if (GetTeam() == HORDE) {
+        if (HasItemCount(19045, 1, true))
+            SwapItems(19045, 19046);
+    } else {
+        if (HasItemCount(19046, 1, true))
+            SwapItems(19046, 19045);
+    }
+    if(m_class == CLASS_PALADIN)
+    {
+        if(!HasSpell(34091)) //fly 280% 
+        {
+            if(    HasItemCount(25473,1)
+                || HasItemCount(25527,1)
+                || HasItemCount(25528,1)
+                || HasItemCount(25529,1)
+                || HasItemCount(25477,1)
+                || HasItemCount(25531,1)
+                || HasItemCount(25532,1)
+                || HasItemCount(25533,1)
+                || HasItemCount(32314,1)
+                || HasItemCount(32316,1)
+                || HasItemCount(32317,1)
+                || HasItemCount(32318,1)
+                || HasItemCount(32319,1)
+                || HasItemCount(33999,1)
+                || HasItemCount(32858,1)
+                || HasItemCount(32859,1)
+                || HasItemCount(32860,1)
+                || HasItemCount(32861,1)
+                || HasItemCount(32862,1)
+                || HasItemCount(37676,1)
+                || HasItemCount(80050,1)
+                || HasItemCount(80051,1)
+                || HasItemCount(34092,1)
+                || HasItemCount(32458,1)
+                || HasItemCount(34061,1)
+                || HasItemCount(32857,1))
+                addSpell(34091,true);
+        }
+        if(!HasSpell(34090)) //fly 60%
+        {
+            if(  HasItemCount(25470,1)
+              || HasItemCount(25471,1)
+              || HasItemCount(25472,1)
+              || HasItemCount(25474,1)
+              || HasItemCount(25475,1)
+              || HasItemCount(25476,1)
+              || HasItemCount(34060,1))
+             addSpell(34090,true);
+        }
+    }
+    // END OF TO-BE-REMOVED BLOCK
     
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
@@ -15441,14 +15496,14 @@ void Player::_LoadAuras(QueryResult *result, uint32 timediff)
                 continue;
             
             // Do not load SPELL_AURA_IGNORED auras
-	    bool abort = false;
+        bool abort = false;
             for (uint8 i = 0; i < 3; i++) {
                 if (spellproto->Effect[i] == SPELL_EFFECT_APPLY_AURA && spellproto->EffectApplyAuraName[i] == 221)
                     abort = true;
             }
 
-	    if (abort)
-		continue;
+        if (abort)
+        continue;
 
             for(uint32 i=0; i<stackcount; i++)
             {
@@ -17219,11 +17274,11 @@ void Player::ResetInstances(uint8 method)
         
         if (method == INSTANCE_RESET_CHANGE_DIFFICULTY)
         {
-			if (entry->map_type == MAP_RAID) {
-				++itr;
-				continue;
-			}
-		}
+            if (entry->map_type == MAP_RAID) {
+                ++itr;
+                continue;
+            }
+        }
 
         // if the map is loaded, reset it
         Map *map = MapManager::Instance().FindMap(p->GetMapId(), p->GetInstanceId());
@@ -18707,28 +18762,28 @@ void Player::ToggleMetaGemsActive(uint8 exceptslot, bool apply)
 
 void Player::LeaveBattleground(bool teleportToEntryPoint)
 {
-	if(BattleGround *bg = GetBattleGround())
+    if(BattleGround *bg = GetBattleGround())
     {
-		if (bg->isSpectator(GetGUID()))
-			return;
+        if (bg->isSpectator(GetGUID()))
+            return;
 
         bool need_debuf = bg->isBattleGround() && !isGameMaster() && ((bg->GetStatus() == STATUS_IN_PROGRESS) || (bg->GetStatus() == STATUS_WAIT_JOIN)) && sWorld.getConfig(CONFIG_BATTLEGROUND_CAST_DESERTER);
 
         if(bg->isArena() && bg->isRated() && bg->GetStatus() == STATUS_WAIT_JOIN) //if game has not end then make sure that personal raiting is decreased
-		{
-			//decrease private raiting here
-			Team Loser = (Team)bg->GetPlayerTeam(GetGUID());
-			Team Winner = Loser == ALLIANCE ? HORDE : ALLIANCE;
-			ArenaTeam* WinnerTeam = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(Winner));
-			ArenaTeam* LoserTeam = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(Loser));
+        {
+            //decrease private raiting here
+            Team Loser = (Team)bg->GetPlayerTeam(GetGUID());
+            Team Winner = Loser == ALLIANCE ? HORDE : ALLIANCE;
+            ArenaTeam* WinnerTeam = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(Winner));
+            ArenaTeam* LoserTeam = objmgr.GetArenaTeamById(bg->GetArenaTeamIdForTeam(Loser));
             if (WinnerTeam && LoserTeam)
-    			LoserTeam->MemberLost(this,WinnerTeam->GetStats().rating);
-		}
+                LoserTeam->MemberLost(this,WinnerTeam->GetStats().rating);
+        }
         if (bg->GetTypeID() == BATTLEGROUND_WS) {
             RemoveAurasDueToSpell(46392);
             RemoveAurasDueToSpell(46393);
         }
-		bg->RemovePlayerAtLeave(GetGUID(), teleportToEntryPoint, true);
+        bg->RemovePlayerAtLeave(GetGUID(), teleportToEntryPoint, true);
 
         // call after remove to be sure that player resurrected for correct cast
         if(need_debuf && !sWorld.IsShuttingDown())
@@ -18784,16 +18839,16 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
     // Check spectator case
     if (GetBattleGround())
     {
-    	if (GetBattleGround()->isSpectator(GetGUID()))
-    	{
-    		if (GetBattleGround()->isSpectator(u->GetGUID()))
-    		    return false;
-    	}
-    	else
-    	{
-    		if (!isGameMaster() && GetBattleGround()->isSpectator(u->GetGUID()))
-    		    return false;
-    	}
+        if (GetBattleGround()->isSpectator(GetGUID()))
+        {
+            if (GetBattleGround()->isSpectator(u->GetGUID()))
+                return false;
+        }
+        else
+        {
+            if (!isGameMaster() && GetBattleGround()->isSpectator(u->GetGUID()))
+                return false;
+        }
     }
 
     // Arena visibility before arena start
@@ -18884,11 +18939,11 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
         }
         else if (sWorld.getConfig(CONFIG_ARENA_SPECTATOR_GHOST) && isSpectator())
         {
-        	if(u->GetTypeId() == TYPEID_PLAYER
-        	  && GetSession()->GetSecurity() < u->ToPlayer()->GetSession()->GetSecurity())
-        		return false;
-        	else
-        		return true;
+            if(u->GetTypeId() == TYPEID_PLAYER
+              && GetSession()->GetSecurity() < u->ToPlayer()->GetSession()->GetSecurity())
+                return false;
+            else
+                return true;
         }
         return false;
     }
@@ -18909,11 +18964,11 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
         }
         else if (sWorld.getConfig(CONFIG_ARENA_SPECTATOR_GHOST) && isSpectator())
         {
-        	if(u->GetTypeId() == TYPEID_PLAYER
-        	  && GetSession()->GetSecurity() < u->ToPlayer()->GetSession()->GetSecurity())
-        	    return false;
-        	else
-        	    return true;
+            if(u->GetTypeId() == TYPEID_PLAYER
+              && GetSession()->GetSecurity() < u->ToPlayer()->GetSession()->GetSecurity())
+                return false;
+            else
+                return true;
         }
 
         // player see other player with stealth/invisibility only if he in same group or raid or same team (raid/team case dependent from conf setting)
@@ -18934,10 +18989,10 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
     // GM invisibility checks early, invisibility if any detectable, so if not stealth then visible
     if(u->GetVisibility() == VISIBILITY_GROUP_STEALTH)
     {
-    	if (!isGameMaster())
-    	{
-    		if (!isSpectator() || !sWorld.getConfig(CONFIG_ARENA_SPECTATOR_GHOST))
-    		{
+        if (!isGameMaster())
+        {
+            if (!isSpectator() || !sWorld.getConfig(CONFIG_ARENA_SPECTATOR_GHOST))
+            {
                 // if player is dead then he can't detect anyone in any cases
                 //do not know what is the use of this detect
                 // stealth and detected and visible for some seconds
@@ -18947,8 +19002,8 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
                     if(!(u->GetTypeId()==TYPEID_PLAYER && !IsHostileTo(u) && IsGroupVisibleFor(p)))
                         if(!detect || !canDetectStealthOf(u, GetDistance(u)))
                             return false;
-    		}
-    	}
+            }
+        }
     }
 
     // If use this server will be too laggy
@@ -18970,8 +19025,8 @@ bool Player::IsVisibleInGridForPlayer( Player const * pl ) const
     }
     else if (sWorld.getConfig(CONFIG_ARENA_SPECTATOR_GHOST) && pl->isSpectator())
     {
-    	if(GetSession()->GetSecurity() <= pl->GetSession()->GetSecurity())
-    		return true;
+        if(GetSession()->GetSecurity() <= pl->GetSession()->GetSecurity())
+            return true;
     }
 
     // It seems in battleground everyone sees everyone, except the enemy-faction ghosts
@@ -19081,38 +19136,38 @@ void Player::SendInitialVisiblePackets(Unit* target)
 
     if (BattleGround *bg = GetBattleGround())
     {
-    	if (bg->isSpectator(GetGUID()))
-    	{
+        if (bg->isSpectator(GetGUID()))
+        {
             for(uint8 i = 0; i < MAX_AURAS; ++i)
             {
                 if(uint32 auraId = target->GetUInt32Value(UNIT_FIELD_AURA + i))
                 {
-        	        if (Player *stream = target->ToPlayer())
-        	        {
-        	        	if (bg->isSpectator(stream->GetGUID()))
-        	        		continue;
+                    if (Player *stream = target->ToPlayer())
+                    {
+                        if (bg->isSpectator(stream->GetGUID()))
+                            continue;
 
-        	    	    AuraMap& Auras = target->GetAuras();
+                        AuraMap& Auras = target->GetAuras();
 
-        	    	    for(AuraMap::iterator iter = Auras.begin(); iter != Auras.end(); ++iter)
-        	    	    {
-        	    	        if (iter->second->GetId() == auraId)
-		                    {
-        	                    Aura* aura = iter->second;
+                        for(AuraMap::iterator iter = Auras.begin(); iter != Auras.end(); ++iter)
+                        {
+                            if (iter->second->GetId() == auraId)
+                            {
+                                Aura* aura = iter->second;
 
-        	                    SpectatorAddonMsg msg;
-        	                    uint64 casterID = 0;
-        	                    if (aura->GetCaster())
-        	                        casterID = (aura->GetCaster()->ToPlayer()) ? aura->GetCaster()->GetGUID() : 0;
-        	                    msg.SetPlayer(stream->GetName());
-        	                    msg.CreateAura(casterID, aura->GetSpellProto()->Id,
-        	                                   aura->IsPositive(), aura->GetSpellProto()->Dispel,
-        	                                   aura->GetAuraDuration(), aura->GetAuraMaxDuration(),
-        	                                   aura->GetStackAmount(), false);
-        	                    msg.SendPacket(GetGUID());
-        	                }
-        	            }
-        	        }
+                                SpectatorAddonMsg msg;
+                                uint64 casterID = 0;
+                                if (aura->GetCaster())
+                                    casterID = (aura->GetCaster()->ToPlayer()) ? aura->GetCaster()->GetGUID() : 0;
+                                msg.SetPlayer(stream->GetName());
+                                msg.CreateAura(casterID, aura->GetSpellProto()->Id,
+                                               aura->IsPositive(), aura->GetSpellProto()->Dispel,
+                                               aura->GetAuraDuration(), aura->GetAuraMaxDuration(),
+                                               aura->GetStackAmount(), false);
+                                msg.SendPacket(GetGUID());
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -20362,7 +20417,7 @@ void Player::SendCorpseReclaimDelay(bool load)
             count=0;
 
         //time_t expected_time = corpse->GetGhostTime()+copseReclaimDelay[count];
-		time_t expected_time = m_deathTime+copseReclaimDelay[count];
+        time_t expected_time = m_deathTime+copseReclaimDelay[count];
 
         time_t now = time(NULL);
         if(now >= expected_time)
@@ -20645,11 +20700,11 @@ void Player::StopCastingBindSight()
 
 void Player::ClearFarsight()
 {
-	if (isSpectator() && !spectateFrom)
-	    return;
+    if (isSpectator() && !spectateFrom)
+        return;
 
-	if (isSpectator())
-	    spectateFrom = NULL;
+    if (isSpectator())
+        spectateFrom = NULL;
 
     if (GetUInt64Value(PLAYER_FARSIGHT))
     {
@@ -20669,7 +20724,7 @@ void Player::SetFarsightTarget(WorldObject* obj)
         return;
 
     if (isSpectator() && spectateFrom)
-    	RemovePlayerFromVision(spectateFrom);
+        RemovePlayerFromVision(spectateFrom);
 
     // Remove the current target if there is one
     StopCastingBindSight();
@@ -21027,24 +21082,24 @@ void Player::UnsummonPetTemporaryIfAny()
 
 void Player::setCommentator(bool on)
 {
-	if (on)
-	{
-		SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_COMMENTATOR | PLAYER_FLAGS_COMMENTATOR_UBER);
+    if (on)
+    {
+        SetFlag(PLAYER_FLAGS, PLAYER_FLAGS_COMMENTATOR | PLAYER_FLAGS_COMMENTATOR_UBER);
 
-		WorldPacket data(SMSG_COMMENTATOR_STATE_CHANGED, 8 + 1);
-		data << uint64(GetGUID());
-		data << uint8(1);
-		SendMessageToSet(&data, true);
-	}
-	else
-	{
-		RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_COMMENTATOR | PLAYER_FLAGS_COMMENTATOR_UBER);
+        WorldPacket data(SMSG_COMMENTATOR_STATE_CHANGED, 8 + 1);
+        data << uint64(GetGUID());
+        data << uint8(1);
+        SendMessageToSet(&data, true);
+    }
+    else
+    {
+        RemoveFlag(PLAYER_FLAGS, PLAYER_FLAGS_COMMENTATOR | PLAYER_FLAGS_COMMENTATOR_UBER);
 
-		WorldPacket data(SMSG_COMMENTATOR_STATE_CHANGED, 8 + 1);
-		data << uint64(GetGUID());
-		data << uint8(0);
-		SendMessageToSet(&data, true);
-	}
+        WorldPacket data(SMSG_COMMENTATOR_STATE_CHANGED, 8 + 1);
+        data << uint64(GetGUID());
+        data << uint8(0);
+        SendMessageToSet(&data, true);
+    }
 }
 
 void Player::SetSpectate(bool on)
@@ -21080,7 +21135,7 @@ void Player::SetSpectate(bool on)
         setFactionForRace(getRace());
 
         if (spectateFrom)
-        	spectateFrom->RemovePlayerFromVision(this);
+            spectateFrom->RemovePlayerFromVision(this);
 
         // restore FFA PvP Server state
         if(sWorld.IsFFAPvPRealm())
@@ -21107,9 +21162,9 @@ bool Player::HaveSpectators()
     if (BattleGround *bg = GetBattleGround())
     {
         if (bg->isSpectator(GetGUID()))
-        	return false;
+            return false;
 
-    	if (bg->isArena())
+        if (bg->isArena())
         {
             if (bg->GetStatus() != STATUS_IN_PROGRESS)
                 return false;
@@ -21123,49 +21178,49 @@ bool Player::HaveSpectators()
 
 void Player::SendDataForSpectator()
 {
-	BattleGround *bGround = GetBattleGround();
-	if (!bGround)
-		return;
+    BattleGround *bGround = GetBattleGround();
+    if (!bGround)
+        return;
 
-	if (!bGround->isSpectator(GetGUID()))
-	    return;
+    if (!bGround->isSpectator(GetGUID()))
+        return;
 
-	if (bGround->GetStatus() != STATUS_IN_PROGRESS)
-	    return;
+    if (bGround->GetStatus() != STATUS_IN_PROGRESS)
+        return;
 
-	for (BattleGround::BattleGroundPlayerMap::const_iterator itr = bGround->GetPlayers().begin(); itr != bGround->GetPlayers().end(); ++itr)
-	    if (Player* tmpPlayer = ObjectAccessor::FindPlayer(itr->first))
-	    {
-	        if (bGround->isSpectator(tmpPlayer->GetGUID()))
-	            continue;
+    for (BattleGround::BattleGroundPlayerMap::const_iterator itr = bGround->GetPlayers().begin(); itr != bGround->GetPlayers().end(); ++itr)
+        if (Player* tmpPlayer = ObjectAccessor::FindPlayer(itr->first))
+        {
+            if (bGround->isSpectator(tmpPlayer->GetGUID()))
+                continue;
 
-	        uint32 tmpID = bGround->GetPlayerTeam(tmpPlayer->GetGUID());
+            uint32 tmpID = bGround->GetPlayerTeam(tmpPlayer->GetGUID());
 
-	        // generate addon massage
-	        std::string pName = tmpPlayer->GetName();
-	        std::string tName = "";
+            // generate addon massage
+            std::string pName = tmpPlayer->GetName();
+            std::string tName = "";
 
-	        if (Player *target = tmpPlayer->GetSelectedPlayer())
-	        {
-	        	if (!bGround->isSpectator(target->GetGUID()))
-	                tName = target->GetName();
-	        }
+            if (Player *target = tmpPlayer->GetSelectedPlayer())
+            {
+                if (!bGround->isSpectator(target->GetGUID()))
+                    tName = target->GetName();
+            }
 
-	        SpectatorAddonMsg msg;
-	        msg.SetPlayer(pName);
-	        if (tName != "")
-	            msg.SetTarget(tName);
-	        msg.SetStatus(tmpPlayer->isAlive());
-	        msg.SetClass(tmpPlayer->getClass());
-	        msg.SetCurrentHP(tmpPlayer->GetHealth());
-	        msg.SetMaxHP(tmpPlayer->GetMaxHealth());
-	        Powers powerType = tmpPlayer->getPowerType();
-	        msg.SetMaxPower(tmpPlayer->GetMaxPower(powerType));
-	        msg.SetCurrentPower(tmpPlayer->GetPower(powerType));
-	        msg.SetPowerType(powerType);
-	        msg.SetTeam(tmpID);
-	        msg.SendPacket(GetGUID());
-	    }
+            SpectatorAddonMsg msg;
+            msg.SetPlayer(pName);
+            if (tName != "")
+                msg.SetTarget(tName);
+            msg.SetStatus(tmpPlayer->isAlive());
+            msg.SetClass(tmpPlayer->getClass());
+            msg.SetCurrentHP(tmpPlayer->GetHealth());
+            msg.SetMaxHP(tmpPlayer->GetMaxHealth());
+            Powers powerType = tmpPlayer->getPowerType();
+            msg.SetMaxPower(tmpPlayer->GetMaxPower(powerType));
+            msg.SetCurrentPower(tmpPlayer->GetPower(powerType));
+            msg.SetPowerType(powerType);
+            msg.SetTeam(tmpID);
+            msg.SendPacket(GetGUID());
+        }
 }
 
 void Player::SendSpectatorAddonMsgToBG(SpectatorAddonMsg msg)
@@ -21174,7 +21229,7 @@ void Player::SendSpectatorAddonMsgToBG(SpectatorAddonMsg msg)
         return;
 
     if (BattleGround *bg = GetBattleGround())
-    	bg->SendSpectateAddonsMsg(msg);
+        bg->SendSpectateAddonsMsg(msg);
 }
 
 void Player::UpdateKnownTitles()
@@ -21188,32 +21243,32 @@ void Player::UpdateKnownTitles()
 
     for (int i = HKRANK01; i != HKRANKMAX; ++i)
     {
-    	uint32 checkTitle = i;
+        uint32 checkTitle = i;
         checkTitle += ((GetTeam() == ALLIANCE) ? (HKRANKMAX-1) : 0);
-    	if(CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(checkTitle))
-    	{
-    		bit_index = tEntry->bit_index;
-    		if (HasTitle(bit_index))
-    			RemoveTitle(tEntry);
-    	}
+        if(CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(checkTitle))
+        {
+            bit_index = tEntry->bit_index;
+            if (HasTitle(bit_index))
+                RemoveTitle(tEntry);
+        }
 
         if (honor_kills >= sWorld.pvp_ranks[i])
         {
-        	uint32 new_title = i;
+            uint32 new_title = i;
             new_title += ((GetTeam() == ALLIANCE) ? 0 : (HKRANKMAX-1));
 
             if(CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(new_title))
             {
-            	bit_index = tEntry->bit_index;
-            	if (!HasTitle(bit_index))
-            	{
-            		SetFlag64(PLAYER_FIELD_KNOWN_TITLES,uint64(1) << bit_index);
+                bit_index = tEntry->bit_index;
+                if (!HasTitle(bit_index))
+                {
+                    SetFlag64(PLAYER_FIELD_KNOWN_TITLES,uint64(1) << bit_index);
 
-            		WorldPacket data(SMSG_TITLE_EARNED, 4 + 4);
-            		data << uint32(bit_index);
-            		data << uint32(1);
-            		GetSession()->SendPacket(&data);
-            	}
+                    WorldPacket data(SMSG_TITLE_EARNED, 4 + 4);
+                    data << uint32(bit_index);
+                    data << uint32(1);
+                    GetSession()->SendPacket(&data);
+                }
             }
         }
     }
