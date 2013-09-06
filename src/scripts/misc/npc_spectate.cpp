@@ -170,6 +170,7 @@ void ShowPage(Player *player, uint32 page, ArenaType type)
     }
 
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Refresh", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3 + type);
 }
 
 void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
@@ -331,6 +332,20 @@ void ShowDefaultPage(Player* player, Creature* creature)
 	}
 }
 
+void RefreshPage(Player* player, Creature* creature, uint8 type)
+{
+	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+    {
+		ShowPage(player, 0, (ArenaType)type);
+		player->SEND_GOSSIP_MENU(DEFAULT_GOSSIP_MESSAGE, creature->GetGUID());
+    }
+	else
+	{
+		player->CLOSE_GOSSIP_MENU();
+		creature->Whisper("Arena spectator désactivé", player->GetGUID());
+	}
+}
+
 bool GossipHello_npc_spectate(Player* pPlayer, Creature* pCreature)
 {
 	if(sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
@@ -354,6 +369,8 @@ bool GossipSelect_npc_spectate(Player* player, Creature* creature, uint32 /*send
 {
 	if (action == GOSSIP_ACTION_INFO_DEF + 1)
 		ShowDefaultPage(player, creature);
+	else if (action >= (GOSSIP_ACTION_INFO_DEF + 3) && action < NPC_SPECTATOR_ACTION_2)
+		RefreshPage(player, creature, action - (GOSSIP_ACTION_INFO_DEF + 3));
 	else if (action >= NPC_SPECTATOR_ACTION_2 && action < NPC_SPECTATOR_ACTION_3)
 	{
 		ShowPage(player, action - NPC_SPECTATOR_ACTION_2, ARENA_TYPE_2v2);
