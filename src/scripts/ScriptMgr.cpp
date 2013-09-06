@@ -88,6 +88,7 @@ extern void AddSC_theinform();
 extern void AddSC_mylittlebombling();
 extern void AddSC_npc_interpreter();
 
+extern void AddSC_catapultmaster();
 extern void AddSC_npc_teleporter();
 extern void AddSC_npc_teleporter_pvpzone();
 
@@ -114,6 +115,7 @@ extern void AddSC_SmartSCripts();
 // -- Misc --
 extern void AddSC_arena_spectator_script();
 extern void AddSC_hallows_end();
+extern void AddSC_arenabeastmaster();
 
 //--------------------
 //------ ZONE --------
@@ -1481,6 +1483,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     AddSC_npc_teleporter();
     AddSC_npc_teleporter_pvpzone();
+    AddSC_catapultmaster();
 
     // -- GO --
     AddSC_go_scripts();
@@ -1505,6 +1508,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Misc --
     AddSC_arena_spectator_script();
     AddSC_hallows_end();
+    AddSC_arenabeastmaster();
 
     //--------------------
     //------ ZONE --------

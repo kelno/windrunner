@@ -558,21 +558,7 @@ void Creature::Update(uint32 diff)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
             if(!isAlive())
                 break;
-
-            if(!isInCombat() && GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_PERIODIC_RELOC)
-            {
-                if(m_relocateTimer < diff)
-                {
-                    m_relocateTimer = 60000;
-                    // forced recreate creature object at clients
-                    UnitVisibility currentVis = GetVisibility();
-                    SetVisibility(VISIBILITY_RESPAWN);
-                    ObjectAccessor::UpdateObjectVisibility(this);
-                    SetVisibility(currentVis); // restore visibility state
-                    ObjectAccessor::UpdateObjectVisibility(this);
-                } else m_relocateTimer -= diff;
-             }
-
+                
             if(isInCombat() && 
                 (isWorldBoss() || GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_INSTANCE_BIND) &&
                 GetMap() && GetMap()->IsDungeon())
@@ -621,6 +607,24 @@ void Creature::Update(uint32 diff)
             // CORPSE/DEAD state will processed at next tick (in other case death timer will be updated unexpectedly)
             if(!isAlive())
                 break;
+
+            if(!isInCombat() && GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_PERIODIC_RELOC)
+            {
+                if(m_relocateTimer < diff)
+                {
+                     m_relocateTimer = 60000;
+                     // forced recreate creature object at clients
+                     UnitVisibility currentVis = GetVisibility();
+                     SetVisibility(VISIBILITY_RESPAWN);
+                     ObjectAccessor::UpdateObjectVisibility(this);
+                     SetVisibility(currentVis); // restore visibility state
+                     ObjectAccessor::UpdateObjectVisibility(this);
+                } else m_relocateTimer -= diff;
+            }
+            
+            if (m_formation)
+                GetFormation()->CheckLeaderDistance(this);
+                
             if(m_regenTimer > 0)
             {
                 if(diff >= m_regenTimer)
@@ -628,24 +632,23 @@ void Creature::Update(uint32 diff)
                 else
                     m_regenTimer -= diff;
             }
-            if (m_regenTimer != 0)
-                break;
-
-            if (!isInCombat())
+            
+            if (m_regenTimer == 0)
             {
-                if(HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_OTHER_TAGGER))
-                    SetUInt32Value(UNIT_DYNAMIC_FLAGS, GetCreatureInfo()->dynamicflags);
-                RegenerateHealth();
-            }
-            else if(IsPolymorphed())
+                if (!isInCombat())
+                {
+                    if(HasFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_OTHER_TAGGER))
+                        SetUInt32Value(UNIT_DYNAMIC_FLAGS, GetCreatureInfo()->dynamicflags);
+                        
+                    RegenerateHealth();
+                }
+                else if(IsPolymorphed())
                     RegenerateHealth();
 
-            RegenerateMana();
+                RegenerateMana();
 
-            m_regenTimer = 2000;
-            
-            if (m_formation)
-                GetFormation()->CheckLeaderDistance(this);
+                m_regenTimer = 2000;
+            }
             
             break;
         }
@@ -1923,13 +1926,13 @@ void Creature::Respawn()
 
 void Creature::ForcedDespawn(uint32 timeMSToDespawn)
 {
-	if (timeMSToDespawn)
-	{
-	    ForcedDespawnDelayEvent* pEvent = new ForcedDespawnDelayEvent(*this);
+    if (timeMSToDespawn)
+    {
+        ForcedDespawnDelayEvent* pEvent = new ForcedDespawnDelayEvent(*this);
 
-	    m_Events.AddEvent(pEvent, m_Events.CalculateTime(timeMSToDespawn));
-	    return;
-	}
+        m_Events.AddEvent(pEvent, m_Events.CalculateTime(timeMSToDespawn));
+        return;
+    }
 
     setDeathState(JUST_DIED);
     RemoveCorpse(false);

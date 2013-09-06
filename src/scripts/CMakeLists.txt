@@ -198,7 +198,7 @@ SET(scripts_STAT_SRCS
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
     custom/custom_npc_teleporter.cpp
-	custom/custom_theinform.cpp
+    custom/custom_theinform.cpp
     custom/custom_training_dummy.cpp
     custom/custom_zone_silence.cpp
     custom/on_events.cpp
@@ -309,6 +309,8 @@ SET(scripts_STAT_SRCS
     misc/hallowsend.cpp
     misc/item_scripts.cpp
     misc/item_test.cpp
+    misc/npc_arenabeastmaster.cpp
+    misc/npc_catapultmaster.cpp
     misc/npc_innkeeper.cpp
     misc/npc_interpreter.cpp
     misc/npc_professions.cpp
