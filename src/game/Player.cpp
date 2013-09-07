@@ -873,6 +873,7 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         addSpell(23803,true);//  [Ench. d'arme (Esprit renforc\E9) frFR] 
         addSpell(34002,true); // [Ench. de brassards (Assaut) frFR]
         addSpell(25080,true); // [Ench. de gants (Agilit\E9 excellente) frFR]
+        addSpell(44383,true); // [Ench. de bouclier (R\E9silience) frFR]
         addSpell(34091,true); //mount 280 
     
         //Pala mounts
@@ -15157,6 +15158,87 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
 	
     // TO BE REMOVED AROUND SEPTEMBER 15TH 2013
+    
+    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED))
+    {
+        if(!HasSpell(44383)) //[Ench. de bouclier (R\E9silience) frFR]
+            addSpell(44383,true);
+
+        if(m_class == CLASS_PRIEST)
+        {
+            if(m_race == RACE_HUMAN)
+            {
+                if(!HasSpell(25441)) //[R\E9action, rang 6 frFR]
+                    addSpell(25441,true);
+                if(!HasSpell(25437)) // [Pri\E8re du d\E9sespoir, rang 8 frFR]
+                    addSpell(25437,true);
+            } else if (m_race == RACE_DWARF) {
+                if(!HasSpell(25437)) // [Pri\E8re du d\E9sespoir, rang 8 frFR]
+                    addSpell(25437,true);
+                if(!HasSpell(44047)) //  [Ch\E2tier, rang 6 frFR]
+                    addSpell(44047,true);
+            } else if (m_race == RACE_NIGHTELF) {
+                if(!HasSpell(25446)) //  [Eclats stellaires, rang 8 frFR]
+                    addSpell(25446,true);
+                if(!HasSpell(2651)) //  - [Gr\E2ce d'Elune frFR]
+                    addSpell(2651,true);
+            } else if (m_race == RACE_DRAENEI) {
+                if(!HasSpell(44047)) //  44047 - [Ch\E2tier, rang 6 frFR]
+                    addSpell(44047,true);
+                if(!HasSpell(32548)) //  32548 - [Symbole d'espoir frFR]
+                    addSpell(32548,true);
+            } else if (m_race == RACE_UNDEAD_PLAYER) {
+                if(!HasSpell(25467)) //  25467 - [Peste d\E9vorante, rang 7 frFR]
+                    addSpell(25467,true);
+                if(!HasSpell(25461)) //  25461 - [Toucher de faiblesse, rang 7 frFR]
+                    addSpell(25461,true);
+            } else if (m_race == RACE_TROLL) {
+                if(!HasSpell(25470)) //  25470 - [Mal\E9fice de faiblesse, rang 7 frFR]
+                    addSpell(25470,true);
+                if(!HasSpell(25477)) //  25477 - [Garde de l'ombre, rang 7 frFR]
+                    addSpell(25477,true);
+            } else if (m_race == RACE_BLOODELF) {
+                if(!HasSpell(25461)) //  25461 - [Toucher de faiblesse, rang 7 frFR]
+                    addSpell(25461,true);
+                if(!HasSpell(32676)) //  32676 - [Consumer la magie frFR]
+                    addSpell(32676,true);
+            }
+        } else if (m_class == CLASS_WARLOCK) {
+            if(!HasSpell(688)) // diablo
+                addSpell(688,true);
+        } else if (m_class == CLASS_WARRIOR) {
+            SetSkill(160, 375, 375); // 160 - masse \E0 deux mains
+        } else if (m_class == CLASS_PALADIN) {
+            
+            if(HasSpell(10321)) //Jugement 100M
+                removeSpell(10321,true);
+            if(!HasSpell(20271)) //jugement le vrai !
+                addSpell(20271,true);
+            if(!HasSpell(21084)) // Seau de pi\E9t\E9 rang 1
+                addSpell(21084,true);
+
+            if(GetTeam() == ALLIANCE)
+            {
+                if(!HasSpell(31801)) // [Sceau de vengeance frFR]
+                    addSpell(31801,true);
+            } else {
+                if(!HasSpell(31892)) // 31892 - [Sceau de sang frFR][connu]
+                    addSpell(31892,true);
+            }
+        } else if (m_class == CLASS_SHAMAN) {
+            if(GetTeam() == ALLIANCE)
+            {
+                if(!HasSpell(32182)) // 32182 - [H\E9ro\EFsme frFR]
+                    addSpell(32182,true);
+            } else {
+                if(!HasSpell(2825)) // 2825 - [Furie sanguinaire frFR]
+                    addSpell(2825,true);
+            }
+        } else if (m_class == CLASS_DRUID) {
+            SetSkill(54, 375, 375); //54 - [Masses \E0 une main frFR][passif]
+        }
+    }
+
     // Tabards
     if (GetTeam() == HORDE) {
         if (HasItemCount(19045, 1, true))
@@ -15165,6 +15247,7 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
         if (HasItemCount(19046, 1, true))
             SwapItems(19046, 19045);
     }
+
     if(m_class == CLASS_PALADIN)
     {
         if(!HasSpell(34091)) //fly 280% 
