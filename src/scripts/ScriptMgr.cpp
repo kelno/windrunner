@@ -66,10 +66,8 @@ void LoadOverridenDBCData();
 // -- Areatrigger --
 extern void AddSC_areatrigger_scripts();
 
-// -- Boss --
-extern void AddSC_boss_emeriss();
-extern void AddSC_boss_taerar();
-extern void AddSC_boss_ysondre();
+// -- Outdoors dragons --
+extern void AddSC_boss_dragonsofnightmare()
 
 // -- Creature --
 extern void AddSC_mob_event();
@@ -1459,10 +1457,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Areatrigger --
     AddSC_areatrigger_scripts();
 
-    // -- Boss --
-    AddSC_boss_emeriss();
-    AddSC_boss_taerar();
-    AddSC_boss_ysondre();
+    // -- Outdoors Dragons --
+    AddSC_boss_dragonsofnightmare();
 
     // -- Creature --
     AddSC_mob_event();
