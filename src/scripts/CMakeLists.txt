@@ -6,6 +6,8 @@ SET(scripts_STAT_SRCS
     include/FollowerAI.cpp
     include/FollowerAI.h
     include/GenericCreature.cpp
+	include/SimpleCooldown.h
+	include/SimpleCooldown.cpp
     include/ScriptedCreature.cpp
     include/ScriptedCreature.h
     include/ScriptedGossip.h
@@ -322,11 +324,8 @@ SET(scripts_STAT_SRCS
     outdoor/boss_azuregos.cpp
     outdoor/boss_doomwalker.cpp
     outdoor/boss_doomlord_kazzak.cpp
-    outdoor/boss_emeriss.cpp
+	outdoor/boss_dragonsofnightmare.cpp
     outdoor/boss_kruul.cpp
-    outdoor/boss_lethon.cpp
-    outdoor/boss_taerar.cpp
-    outdoor/boss_ysondre.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
