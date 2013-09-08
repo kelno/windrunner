@@ -133,6 +133,11 @@ struct mob_underbog_mushroomAI : public ScriptedAI
             Stop = true;
         }else Shrink_Timer -= diff;
     }
+
+    uint32 message(uint32 id, uint32 data)
+    { 
+        Stop = (bool)data;  
+    }
 };
 CreatureAI* GetAI_mob_underbog_mushroom(Creature *_Creature)
 {

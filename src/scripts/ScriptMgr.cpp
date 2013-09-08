@@ -67,7 +67,7 @@ void LoadOverridenDBCData();
 extern void AddSC_areatrigger_scripts();
 
 // -- Outdoors dragons --
-extern void AddSC_boss_dragonsofnightmare()
+extern void AddSC_boss_dragonsofnightmare();
 
 // -- Creature --
 extern void AddSC_mob_event();
