@@ -2650,6 +2650,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45661:
         case 45665:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 45401:
             spellInfo->procChance = 15;

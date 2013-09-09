@@ -618,9 +618,12 @@ public:
         	        	scheduleEvent(EVENT_ENCAPS_WARN, 32000);
         	        	break;
         	        case EVENT_BERSERK:
-        	        	DoScriptText(YELL_BERSERK, me);
-        	        	doCast(me, SPELL_BERSERK, true);
-        	        	scheduleEvent(EVENT_BERSERK, getPhase() == PHASE_GROUND ? 10000 : 0);
+        	        	if (!me->HasAura(SPELL_BERSERK))
+        	        	{
+        	        	    DoScriptText(YELL_BERSERK, me);
+        	        	    doCast(me, SPELL_BERSERK, true);
+        	        	}
+        	        	scheduleEvent(EVENT_BERSERK, 10000);
         	        	break;
         	        case EVENT_DEMONIC_VAPOR:
         	        	me->StopMoving();
