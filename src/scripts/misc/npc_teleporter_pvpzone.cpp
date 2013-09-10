@@ -40,7 +40,7 @@ bool GossipSelect_npc_teleporter_pvpzone(Player *pPlayer, Creature *pCreature, u
 			else
 				pPlayer->TeleportTo(PVPZONE_ARRIVAL_ALLIANCE);
 		} else {
-			pPlayer->TeleportTo(map,x,z,y,o);
+			pPlayer->TeleportTo(map,x,y,z,o);
 		}
 		pPlayer->PlayerTalkClass->CloseGossip();
 		return true;
