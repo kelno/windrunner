@@ -290,7 +290,7 @@ struct instance_shattered_halls : public ScriptedInstance
     }
     
     // Update is only needed in Heroic, for the timer
-    void Update(uint32 const diff)
+    void Update(uint32 diff)
     {   
         if (!HeroicMode)
             return;
