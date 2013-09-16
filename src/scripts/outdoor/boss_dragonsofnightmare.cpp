@@ -52,11 +52,6 @@ struct DragonOfNightmareAI_template : public ScriptedAI
         DreamFog2=NULL;
     }
     
-    void Suicide(Unit* Target)
-    {
-        Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-    }
-    
     void Reset()
     {
         SCDTailSweep->resetAtStart();
@@ -68,16 +63,7 @@ struct DragonOfNightmareAI_template : public ScriptedAI
     
     void JustDied(Unit *victim)
     {
-        if(DreamFog1 && ((Creature*)DreamFog1)->isAlive())
-        {
-            Suicide(DreamFog1);
-        }
         DreamFog1=NULL;
-        
-        if(DreamFog2 && ((Creature*)DreamFog2)->isAlive())
-        {
-            Suicide(DreamFog2);
-        }
         DreamFog2=NULL;
     }
     
@@ -478,9 +464,9 @@ struct LethonAI : public DragonOfNightmareAI_template
             DoYell(YELL_AT_PHASE_CHANGE_LETHON,LANG_UNIVERSAL,NULL);
         }
         
-        if(lowHpYellLeft==1 && m_creature->IsBelowHPPercent(5))
+        if(lowHpYellLeft && m_creature->IsBelowHPPercent(5))
         {
-            lowHpYellLeft--;
+            lowHpYellLeft = 0;
             DoYell(YELL_AT_5_PRECENT_LIFE_LETHON,LANG_UNIVERSAL,NULL);
         }
         DoMeleeAttackIfReady();
@@ -582,9 +568,9 @@ struct EmerissAI : public DragonOfNightmareAI_template
             DoCast(me,SPELL_CORRUPTION_OF_THE_EARTH_EMERISS,true);
         }
         
-        if(lowHpYellLeft==1 && m_creature->IsBelowHPPercent(5))
+        if(lowHpYellLeft && m_creature->IsBelowHPPercent(5))
         {
-            lowHpYellLeft--;
+            lowHpYellLeft = 0;
             DoYell(YELL_AT_5_PRECENT_LIFE_EMERISS,LANG_UNIVERSAL,NULL);
         }
         DoMeleeAttackIfReady();
@@ -720,7 +706,7 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
     {
         // reset phase
         killAllShades();
-        lowHpYellLeft=1;
+        lowHpYellLeft = 1;
         isBanished=false;
         
         SCDArcaneBlast->resetAtStart();
@@ -744,7 +730,7 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
             if(TabShadesOfTaerar[i])
             {
                 if(((Creature*)TabShadesOfTaerar[i])->isAlive())
-                        Suicide((Unit*) TabShadesOfTaerar[i]);
+                        Instakill((Unit*) TabShadesOfTaerar[i]);
                 TabShadesOfTaerar[i]=NULL;
             }
         }
@@ -790,9 +776,9 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
             isBanished=true;
         }
         
-        if(lowHpYellLeft==1 && m_creature->IsBelowHPPercent(5))
+        if(lowHpYellLeft && m_creature->IsBelowHPPercent(5))
         {
-            lowHpYellLeft--;
+            lowHpYellLeft = 0;
             DoYell(YELL_AT_5_PRECENT_LIFE_TAERAR,LANG_UNIVERSAL,NULL);
         }
         DoMeleeAttackIfReady();
@@ -908,7 +894,7 @@ struct npc_dementeddruidsAIAI : public ScriptedAI
     SimpleCooldown *SCDSilence;
     Creature* Ysondre;
     
-    void Suicide(Unit* Target)
+    void Instakill(Unit* Target)
     {
         Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
     }
@@ -952,7 +938,7 @@ struct npc_dementeddruidsAIAI : public ScriptedAI
         
         if(Ysondre->isDead() || !Ysondre->isInCombat())
         {
-            Suicide(me);
+            Instakill(me);
         }
         
         if(SCDMoonFire->CheckAndUpdate(diff))
@@ -1045,9 +1031,9 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
         }
                 
                 
-        if(me->IsBelowHPPercent(5))
+        if(lowHpYellLeft && me->IsBelowHPPercent(5))
         {
-            lowHpYellLeft--;
+            lowHpYellLeft = 0;
             DoYell(YELL_AT_5_PRECENT_LIFE_YSONDRE,LANG_UNIVERSAL,NULL);
         }
                 
