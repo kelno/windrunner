@@ -51,6 +51,11 @@ struct DragonOfNightmareAI_template : public ScriptedAI
         DreamFog1=NULL;
         DreamFog2=NULL;
     }
+
+    void Instakill(Unit* Target)
+    {
+        Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+    }
     
     void Reset()
     {
