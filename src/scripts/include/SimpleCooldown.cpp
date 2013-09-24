@@ -1,3 +1,4 @@
+#include "precompiled.h"
 #include "SimpleCooldown.h"
 #include <stdlib.h>
 
