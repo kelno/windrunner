@@ -454,6 +454,26 @@ SET(scripts_STAT_SRCS
     outland/zulaman/zulaman.cpp
 )
     
+MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+IF(MSVC)
+GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
+SET(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
+SET(Sources ${${SourcesVar}})
+
+SET_SOURCE_FILES_PROPERTIES(${PrecompiledSource}
+							PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+									   OBJECT_OUTPUTS "${PrecompiledBinary}")
+SET_SOURCE_FILES_PROPERTIES(${Sources}
+							PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\""
+									   OBJECT_DEPENDS "${PrecompiledBinary}")  
+# Add precompiled header to SourcesVar
+LIST(APPEND ${SourcesVar} ${PrecompiledSource})
+ENDIF(MSVC)
+ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
+
 #add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/trinitycore.conf"')
+IF (WIN32 AND MSVC)
+	ADD_MSVC_PRECOMPILED_HEADER("precompiled.h" "precompiled.cpp" ${scripts_STAT_SRCS})
+ENDIF()
 add_library(scripts STATIC ${scripts_STAT_SRCS})
 ADD_DEPENDENCIES(game scripts revision.h)
