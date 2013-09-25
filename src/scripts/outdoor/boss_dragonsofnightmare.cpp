@@ -892,7 +892,7 @@ CreatureAI* GetAI_boss_shadeoftaerar(Creature *_Creature)
 
 
 
-struct npc_dementeddruidsAIAI : public ScriptedAI
+struct npc_dementeddruidsAI : public ScriptedAI
 {
     SimpleCooldown *SCDMoonFire;
     SimpleCooldown *SCDCurseOfThorns;
@@ -904,7 +904,7 @@ struct npc_dementeddruidsAIAI : public ScriptedAI
         Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
     }
     
-    npc_dementeddruidsAIAI(Creature *c) : ScriptedAI(c) 
+    npc_dementeddruidsAI(Creature *c) : ScriptedAI(c) 
     {
         SCDMoonFire=new SimpleCooldown(TIMER_MOONFIRE_DRUID);
         SCDCurseOfThorns=new SimpleCooldown(TIMER_CURSE_OF_THORNS_DRUID);
