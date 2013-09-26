@@ -28,7 +28,7 @@ EndScriptData */
 
 uint32 HordePrisoners[3] = { 17296, 17295, 17297 };
 uint32 AlliancePrisoners[3] = { 17290, 17292, 17289 };
-uint32 PrisonersCoord[3][4] = 
+float PrisonersCoord[3][4] = 
 {
     { 147.752808, -79.643730, 1.917701, 5.537074 },
     { 142.168777, -84.358223, 1.908038, 6.264657 },
