@@ -23,11 +23,16 @@
 #define RANDOM_RANGE_TAIL_SWEEP         2000 
 #define RANDOM_RANGE_NOXIOUS_BREATH     4000
 
+#define MAX_DISTANCE_FROM_HOME          120
+
 
 // Template Dragon of Nightmare
 
 struct DragonOfNightmareAI_template : public ScriptedAI
 {
+    bool initialPositionInitialised;
+    float initialX, initialY,initialZ;
+    
     Creature* DreamFog1;
     Creature* DreamFog2;
     
@@ -44,6 +49,8 @@ struct DragonOfNightmareAI_template : public ScriptedAI
     
     DragonOfNightmareAI_template(Creature *c) : ScriptedAI(c)
     {
+        initialPositionInitialised=false;
+        
         SCDTailSweep = new SimpleCooldown(TIMER_TAIL_SWEEP, TIMER_TAIL_SWEEP, true, RANDOM_RANGE_TAIL_SWEEP, false, false);
         SCDNoxiousBreath= new SimpleCooldown(TIMER_NOXIOUS_BREATH, TIMER_NOXIOUS_BREATH, true, RANDOM_RANGE_NOXIOUS_BREATH, false, false);
         SCDSeepingFog= new SimpleCooldown(TIMER_SEEPING_FOG);
@@ -59,6 +66,12 @@ struct DragonOfNightmareAI_template : public ScriptedAI
     
     void Reset()
     {
+        if(!initialPositionInitialised)
+        {
+            initialPositionInitialised=true;
+            me->GetPosition(initialX, initialY,initialZ);
+        }
+        
         SCDTailSweep->resetAtStart();
         SCDNoxiousBreath->resetAtStart();
         SCDSeepingFog->resetAtStart();
@@ -91,6 +104,10 @@ struct DragonOfNightmareAI_template : public ScriptedAI
     {
         if (!UpdateVictim())
             return;
+        
+        if(me->GetDistance(initialX, initialY, initialZ)>MAX_DISTANCE_FROM_HOME)
+            EnterEvadeMode();
+        
         
         checkIfSomeoneAffectedByMarkOfNatureOrIsTooFar();
         
@@ -203,9 +220,9 @@ struct DreamFogAI : public ScriptedAI
         return;
     }
     
-    void Suicide()
+    void Instakill(Unit* Target)
     {
-        me->DealDamage(me, me->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+        Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
     }
     
     void UpdateAI(const uint32 diff)
@@ -217,7 +234,7 @@ struct DreamFogAI : public ScriptedAI
         }
         
         if(Dragon->isDead())
-            Suicide();
+            Instakill(me);
         
         //me->AI()->AttackStart(Cible);
         if(SCDTimerUpdateMovement->CheckAndUpdate(diff))
@@ -638,6 +655,10 @@ struct boss_shadeoftaerarAI : public ScriptedAI
         SCDPoisonBreath = new SimpleCooldown(TIMER_POISONBREATH_SHADES);
     }
 
+    void Instakill(Unit* Target)
+    {
+        Target->DealDamage(Target, Target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+    }
 
     void Reset()
     {
@@ -651,14 +672,15 @@ struct boss_shadeoftaerarAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!UpdateVictim())
-            return;
-        
         if(!Taerar || Taerar->isDead() || !Taerar->isInCombat() )
         {
             // Suicide
-            me->DealDamage(me, me->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+            Instakill(me);
+            me->RemoveCorpse();
         }
+        
+        if (!UpdateVictim())
+            return;
         
         if(SCDPoisonCLoud->CheckAndUpdate(diff))
             DoCast(m_creature->getVictim(),SPELL_POISONCLOUD_SHADES);
@@ -685,20 +707,24 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
     SimpleCooldown* SCDArcaneBlast;
     SimpleCooldown* SCDBellowingGroar;
     SimpleCooldown* SCDBanish;
-    bool IsThereShades;
     bool isBanished;
     
     Creature *TabShadesOfTaerar[size_TabShadesOfTaerar];
+    
+    void resetShadesPointer()
+    {
+        for(int i=0 ; i<size_TabShadesOfTaerar ; i++)
+        {       // Evite un crash lors du pop du boss. 
+            TabShadesOfTaerar[i]=NULL;
+        }
+    }
     
     boss_taerarAI(Creature *c) : DragonOfNightmareAI_template(c)
     {        
         SCDArcaneBlast = new SimpleCooldown(TIMER_ARCANEBLAST_TAERAR);
         SCDBellowingGroar = new SimpleCooldown(TIMER_BELLOWINGROAR_TAERAR);
         SCDBanish = new SimpleCooldown(TIMER_BANISH_TAERAR);
-        for(int i=0 ; i<size_TabShadesOfTaerar ; i++)
-        {       // Evite un crash lors du pop du boss. 
-            TabShadesOfTaerar[i]=NULL;
-        }
+        resetShadesPointer();
     }
     
     void Aggro(Unit* u)
@@ -709,8 +735,8 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
     
     void Reset()
     {
+        resetShadesPointer();
         // reset phase
-        killAllShades();
         lowHpYellLeft = 1;
         isBanished=false;
         
@@ -719,26 +745,7 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
         SCDBanish->resetAtStart();
         
         me->RemoveAurasDueToSpellByCancel(SPELL_BANISH_TAERAR);
-        
-        // Init at NULL
-        for(int i=0 ; i<size_TabShadesOfTaerar ; i++)
-        {
-            TabShadesOfTaerar[i]=NULL;
-        }
         DragonOfNightmareAI_template::Reset();
-    }
-    
-    void killAllShades()
-    {
-        for(int i=0 ; i<size_TabShadesOfTaerar ; i++)
-        {
-            if(TabShadesOfTaerar[i])
-            {
-                if(((Creature*)TabShadesOfTaerar[i])->isAlive())
-                        Instakill((Unit*) TabShadesOfTaerar[i]);
-                TabShadesOfTaerar[i]=NULL;
-            }
-        }
     }
     
     void KilledUnit(Unit *victim)
@@ -750,11 +757,13 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
     {
         DragonOfNightmareAI_template::JustDied(victim);
         DoYell(TELL_AT_DEATH_TAERAR,LANG_UNIVERSAL,NULL);
-        killAllShades();
     }
     
     void UpdateAI(const uint32 diff)
     {
+        if(!UpdateVictim())
+            return;
+        
         if(isBanished)
         {
             if(SCDBanish->CheckAndUpdate(diff) || checkIfAllShadesAreDead())
@@ -812,37 +821,35 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
                 
                 TabShadesOfTaerar[i]->setFaction(me->getFaction());
                 Unit* target=SelectUnit(SELECT_TARGET_RANDOM,0);
-                TabShadesOfTaerar[i]->Attack(target,false); // Si true ils ne se déplacent po :(
-                TabShadesOfTaerar[i]->AddThreat(target,6000.0f);
+                TabShadesOfTaerar[i]->AI()->AttackStart(target); // Si true ils ne se déplacent po :(
+                TabShadesOfTaerar[i]->AddThreat(target,10000.0f);
                 
             }
         }
         me->InterruptNonMeleeSpells(false);
         me->AddAura(SPELL_BANISH_TAERAR,me);
-        IsThereShades=true;
         return;
     }
     
     bool checkIfAllShadesAreDead()
     {
+        bool AllShadesDead = true;
         for(int i=0 ; i<size_TabShadesOfTaerar ; i++) // Les mort sont trop NULL :D
         {
             if(TabShadesOfTaerar[i])
             {
-                if(TabShadesOfTaerar[i]->isDead())
+                if( TabShadesOfTaerar[i]->isDead())
+                {
                     TabShadesOfTaerar[i]=NULL;
+                }
+                else
+                {
+                    AllShadesDead=false; // he is alive
+                }
             }
+            
         }
-        
-        for(int i=0 ; i<size_TabShadesOfTaerar ; i++)
-        {
-            if(TabShadesOfTaerar[i])
-            {
-                if(TabShadesOfTaerar[i]->isAlive())
-                    return false;
-            }
-        }
-        return true;
+        return AllShadesDead;
     }
 };
 
@@ -1005,7 +1012,7 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
     void SummonDruids()
     {
         Unit* Target;
-        npc_dementeddruidsAIAI* Druid;
+        npc_dementeddruidsAI* Druid;
         Creature* DruidCreature;
         for(int i=0 ; i<10 ; i++)
         {
@@ -1014,7 +1021,7 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
             DruidCreature=me->SummonCreature(ID_MOD_DRUID_YSONDRE,Target->GetPositionX()+rand()%10,Target->GetPositionY()+rand()%10,Target->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,TIMER_SPAWN_DRUID);
             if(DruidCreature)
             {
-                Druid=((npc_dementeddruidsAIAI*)DruidCreature->AI());
+                Druid=((npc_dementeddruidsAI*)DruidCreature->AI());
                 Druid->Ysondre=me;
                 Druid->AttackStart(Target);
                 DruidCreature->AddThreat(Target,6000.0f);
@@ -1055,7 +1062,7 @@ CreatureAI* GetAI_boss_ysondre(Creature *_Creature)
 
 CreatureAI* GetAI_npc_dementeddruidsAI(Creature *_Creature)
 {
-    return new npc_dementeddruidsAIAI (_Creature);
+    return new npc_dementeddruidsAI (_Creature);
 }
 
 
