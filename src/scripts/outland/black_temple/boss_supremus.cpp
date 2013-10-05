@@ -24,54 +24,70 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_black_temple.h"
 
-#define EMOTE_NEW_TARGET            -1564010
-#define EMOTE_PUNCH_GROUND          -1564011                //DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
-#define EMOTE_GROUND_CRACK          -1564012
+#define EMOTE_NEW_TARGET             -1564010
+#define EMOTE_PUNCH_GROUND           -1564011                //DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
+#define EMOTE_GROUND_CRACK           -1564012
 
 //Spells
-#define SPELL_MOLTEN_PUNCH          40126
-#define SPELL_HATEFUL_STRIKE        41926
-#define SPELL_MOLTEN_FLAME          40980
-#define SPELL_VOLCANIC_ERUPTION     40117
-#define SPELL_VOLCANIC_SUMMON       40276
-#define SPELL_BERSERK               45078
-#define SPELL_CHARGE                41581
+#define SPELL_MOLTEN_PUNCH           40126
+#define SPELL_HATEFUL_STRIKE         41926
+#define SPELL_MOLTEN_FLAME           40980
+#define SPELL_VOLCANIC_ERUPTION      40117 // permanent aura (visual) + trigger SPELL_VOLCANIC_GEYSER 
+#define SPELL_VOLCANIC_GEYSER        42055 //18 secs aura triggered by SPELL_VOLCANIC_ERUPTION (trigger SPELL_VOLCANIC_GEYSER_DAMAGE every sec)
+#define SPELL_VOLCANIC_GEYSER_DAMAGE 42052
+#define SPELL_VOLCANIC_SUMMON        40276
+#define SPELL_BERSERK                45078
+#define SPELL_CHARGE                 41581
 
-#define CREATURE_VOLCANO            23085
-#define CREATURE_STALKER            23095
+#define CREATURE_VOLCANO             23085
+#define CREATURE_STALKER             23095 //summoned by molten punch, has CREATURE_FLAG_EXTRA_TRIGGER and spell[0]=40980 -> cast it at spawn
 
 struct molten_flameAI : public ScriptedAI
 {
+    /*
     float destX, destY, destZ;
     float currentX, currentY, currentZ, groundZ;
-    
+    */
+    Unit* currentTarget;
+
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
-        me->GetNearPoint(me, destX, destY, destZ, 1, 50, M_PI*2*rand_norm());
-        me->GetMotionMaster()->MovePoint(0, destX, destY, destZ);
+        /* me->GetNearPoint(me, destX, destY, destZ, 1, 50, M_PI*2*rand_norm());
+        me->GetMotionMaster()->MovePoint(0, destX, destY, destZ); */
     }
     
     void Reset() {
+        
         float x,y,z;
         m_creature->GetPosition(x,y,z);
         z = m_creature->GetMap()->GetHeight(x, y, z);
         m_creature->Relocate(x,y,z,0);
+        
+        currentTarget = NULL;
+        RandomizeTarget();
     }
-    
-    void Aggro(Unit *who) {}
 
-    void MoveInLineOfSight(Unit *who)
+    void RandomizeTarget()
     {
-        return; // paralyze the npc
+        if( !(currentTarget = SelectUnit(SELECT_TARGET_RANDOM,0,20.0f,100.0f,true)) )
+            currentTarget = SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
+
+        if(currentTarget)
+            me->GetMotionMaster()->MoveFollow(currentTarget,0,0);
     }
     
     // At each update, check if we are not under the map. If it's the case, just teleport 
     void UpdateAI(uint32 const diff)
     {
+        /*
         float x,y,z;
         m_creature->GetPosition(x,y,z);
         z = m_creature->GetMap()->GetHeight(x, y, z);
         m_creature->Relocate(x,y,z,0);
+        */
+        //change target if we reached it
+        if(currentTarget && me->GetDistance(currentTarget) < 5.0f)
+            RandomizeTarget();
     }
 };
 
@@ -132,10 +148,7 @@ struct boss_supremusAI : public ScriptedAI
     void ToggleDoors(bool close)
     {
         if(GameObject* Doors = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GAMEOBJECT_SUPREMUS_DOORS)))
-        {
-            if(close) Doors->SetGoState(1);                 // Closed
-            else Doors->SetGoState(0);                      // Open
-        }
+            Doors->SetGoState((uint32)close);
     }
 
     void JustDied(Unit *killer)
@@ -174,6 +187,20 @@ struct boss_supremusAI : public ScriptedAI
         return target;
     }
 
+    void SwitchTargetP2()
+    {
+        if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
+        {
+            if(m_creature->GetDistance2d(m_creature->getVictim()) > 40)
+                m_creature->CastSpell(m_creature->getVictim(),SPELL_CHARGE,false);
+                        
+            DoResetThreat();
+            m_creature->AddThreat(target, 5000000.0f);
+            DoScriptText(EMOTE_NEW_TARGET, m_creature);
+            SwitchTargetTimer = 10000;
+        }
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
@@ -208,16 +235,7 @@ struct boss_supremusAI : public ScriptedAI
         {
             if(SwitchTargetTimer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
-                {
-                    if(m_creature->GetDistance2d(m_creature->getVictim()) > 40)
-                        m_creature->CastSpell(m_creature->getVictim(),SPELL_CHARGE,false);
-                        
-                    DoResetThreat();
-                    m_creature->AddThreat(target, 5000000.0f);
-                    DoScriptText(EMOTE_NEW_TARGET, m_creature);
-                    SwitchTargetTimer = 10000;
-                }
+                SwitchTargetP2();
             }else SwitchTargetTimer -= diff;
 
             if(SummonVolcanoTimer < diff)
@@ -243,6 +261,7 @@ struct boss_supremusAI : public ScriptedAI
                 m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
                 m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
                 DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
+                SwitchTargetP2();
             }
             else
             {
@@ -274,6 +293,7 @@ struct npc_volcanoAI : public ScriptedAI
     uint32 CheckTimer;
     uint32 UnderMapCheckTimer;
     bool Eruption;
+    uint32 EruptionTimeLeft;
     
     float currentX, currentY, currentZ, groundZ;
 
@@ -282,20 +302,26 @@ struct npc_volcanoAI : public ScriptedAI
         CheckTimer = 1500;
         UnderMapCheckTimer = 750;
         Eruption = false;
+        EruptionTimeLeft = 20000;
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+
+        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
     }
 
     void Aggro(Unit *who) {}
 
-    void MoveInLineOfSight(Unit *who)
-    {
-        return; // paralyze the npc
-    }
-
     void UpdateAI(const uint32 diff)
     {
+        if(EruptionTimeLeft < diff)
+        {
+           if(m_creature->HasAura(SPELL_VOLCANIC_ERUPTION, 0))
+                m_creature->RemoveAura(SPELL_VOLCANIC_ERUPTION, 0);
+            return;
+        }
+        else EruptionTimeLeft -= diff;
+
         if(CheckTimer < diff)
         {
             uint64 SupremusGUID = pInstance->GetData64(DATA_SUPREMUS);

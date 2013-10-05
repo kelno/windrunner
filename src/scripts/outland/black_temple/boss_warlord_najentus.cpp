@@ -47,10 +47,10 @@ enum NajentusSpells {
     SPELL_BERSERK                  = 45078
 };
 
-#define TIMER_NEEDLE_SPINE           20000+rand()%5000;
+#define TIMER_NEEDLE_SPINE           3000
 #define TIMER_NEEDLE_SPINE_START     10000
 #define TIMER_TIDAL_SHIELD           60000
-#define TIMER_SPECIAL_YELL           25000 + (rand()%76)*1000
+#define TIMER_SPECIAL_YELL           25000 + (rand()%76)*1000 // 25 - 100
 #define TIMER_SPECIAL_YELL_START     TIMER_SPECIAL_YELL + 20000
 #define TIMER_ENRAGE                 480000
 #define TIMER_IMPALING_SPINE         21000
@@ -152,21 +152,25 @@ struct boss_najentusAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(hasShield())
-            return;
-
         if(TidalShieldTimer < diff)
         {
             m_creature->CastSpell(m_creature, SPELL_TIDAL_SHIELD, true);
             TidalShieldTimer = TIMER_TIDAL_SHIELD;
         }else TidalShieldTimer -= diff;
 
-        if(EnrageTimer < diff)
+        DoMeleeAttackIfReady();
+
+        if(hasShield())
+            return;
+
+        if(!m_creature->HasAura(SPELL_BERSERK, 0))
         {
-            DoScriptText(SAY_ENRAGE2, m_creature);
-            m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
-            EnrageTimer = 600000;
-        }else EnrageTimer -= diff;
+            if(EnrageTimer < diff)
+            {
+                DoScriptText(SAY_ENRAGE2, m_creature);
+                m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
+            }else EnrageTimer -= diff;
+        }
 
         if(NeedleSpineTimer < diff)
         {
@@ -207,8 +211,6 @@ struct boss_najentusAI : public ScriptedAI
                 ImpalingSpineTimer = TIMER_IMPALING_SPINE;
             }
         }else ImpalingSpineTimer -= diff;
-
-        DoMeleeAttackIfReady();
     }
 };
 

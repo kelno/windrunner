@@ -5,6 +5,8 @@
 #ifndef DEF_BLACK_TEMPLE_H
 #define DEF_BLACK_TEMPLE_H
 
+#define EMOTE_NAJENTUS_DOOR_OPENING -1563999
+
 enum eTypes
 {
     DATA_AKAMA                      = 1,

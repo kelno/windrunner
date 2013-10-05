@@ -82,6 +82,7 @@ struct ScriptedAI : public CreatureAI
 
     // Called when hit by a spell
     void SpellHit(Unit* caster, const SpellEntry*) {}
+    void SpellHit(Unit* caster, const SpellEntry*, uint32& damage) {}
 
     // Called when spell hits a target
     void SpellHitTarget(Unit* target, const SpellEntry*) {}
@@ -119,7 +120,7 @@ struct ScriptedAI : public CreatureAI
     void Reset() {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    virtual void Aggro(Unit*) = 0;
+    void Aggro(Unit*) {}
 
     //*************
     //AI Helper Functions
