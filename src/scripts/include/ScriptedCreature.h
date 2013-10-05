@@ -82,7 +82,6 @@ struct ScriptedAI : public CreatureAI
 
     // Called when hit by a spell
     void SpellHit(Unit* caster, const SpellEntry*) {}
-    void SpellHit(Unit* caster, const SpellEntry*, uint32& damage) {}
 
     // Called when spell hits a target
     void SpellHitTarget(Unit* target, const SpellEntry*) {}
