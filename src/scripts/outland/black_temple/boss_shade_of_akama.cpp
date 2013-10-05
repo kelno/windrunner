@@ -37,8 +37,8 @@ static Location ChannelerLocations[]=
 
 static Location SpawnLocations[]=
 {
-    {498.652740, 461.728119, 0, 113.537949},
-    {498.505003, 339.619324, 0, 113.537949}
+    {498.652740, 461.728119, 0, 113.537949}, // East alcove (left facing shade)
+    {498.505003, 339.619324, 0, 113.537949} //  West alcove (right facing shade)
 };
 
 static Location AkamaWP[]=
@@ -83,6 +83,8 @@ enum AkamaSpells {
 #define TIMER_SUMMON_DEFENDER 15000
 #define TIMER_SUMMON_PACK 35000
 #define TIMER_SUMMON_PACK_FIRST 5000
+#define TIMER_SUMMON_SORCERER 25000
+#define TIMER_SUMMON_SORCERER_START 5000
 
 enum AkamaCreatures {
     CREATURE_CHANNELER          =    23421,
@@ -187,6 +189,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         AkamaGUID = pInstance ? pInstance->GetData64(DATA_AKAMA_SHADE) : NULL;
         me->setActive(true);//if view distance is too low
+        //me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
     }
     
     enum Messages {
@@ -203,9 +206,10 @@ struct boss_shade_of_akamaAI : public ScriptedAI
     std::list<uint64> Channelers;
     uint64 AkamaGUID;
 
-    uint32 SummonTimer;
+    uint32 SummonPackTimer;
     uint32 ResetTimer; //Reset encounter timer on Akama's death
-    uint32 DefenderTimer;                                   
+    uint32 DefenderTimer;       
+    uint32 SorcererTimer;
 
     bool IsBanished;
     bool HasKilledAkama;
@@ -251,13 +255,13 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             if(Akama->isDead())
             {
                 Akama->Respawn();//respawn akama if dead
-                Akama->AI()->EnterEvadeMode();
             }
         }
 
-        SummonTimer = TIMER_SUMMON_PACK_FIRST;
+        SummonPackTimer = TIMER_SUMMON_PACK_FIRST;
         ResetTimer = 30000;
         DefenderTimer = TIMER_SUMMON_DEFENDER;
+        SorcererTimer = TIMER_SUMMON_SORCERER_START;
 
         IsBanished = true;
         HasKilledAkama = false;
@@ -348,11 +352,11 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             }
         }
     }
-
+    
     void SummonSorcerer()
     {
-        uint32 random = rand()%2;
-        Creature* Sorcerer = me->SummonCreature(CREATURE_SORCERER, SpawnLocations[random].x, SpawnLocations[random].y, SpawnLocations[random].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
+        //always summoned on akama's left
+        Creature* Sorcerer = me->SummonCreature(CREATURE_SORCERER, SpawnLocations[1].x, SpawnLocations[1].y, SpawnLocations[1].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
         if(Sorcerer)
         {
             Sorcerer->AI()->message(mob_ashtongue_sorcererAI::SMESSAGE_SHADE_GUID,me->GetGUID());
@@ -398,17 +402,16 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         {
             Player* p = me->GetPlayer(itr->getUnitGuid());
             if(p)
-                p->RewardReputation(Akama,1);
+                p->RewardReputation(Akama,1.0f);
         }
     }
 
     bool HasReachedAkama()
     {
-        if(Creature* Akama = Unit::GetCreature(*me, AkamaGUID))
-        {
+        if(Creature* Akama = me->GetMap()->GetCreatureInMap(AkamaGUID))
             if(me->GetDistance2d(Akama) < 5.0f)
                 return true;
-        }
+
         return false;
     }
 
@@ -417,21 +420,25 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         if(!InCombat)
             return;
 
-        if(IsBanished)
+        if(IsBanished && !HasKilledAkamaAndReseting)
         {
             if(DefenderTimer < diff)
             {
                 SummonDefender();
-                if(me->GetAuraCount(SPELL_SHADE_SOUL_CHANNEL) < 6)
-                    SummonSorcerer();
                 DefenderTimer = TIMER_SUMMON_DEFENDER;
             }else DefenderTimer -= diff;
 
-            if(SummonTimer < diff)
+            if(SorcererTimer < diff)
+            {
+                SummonSorcerer();
+                SorcererTimer = TIMER_SUMMON_SORCERER;
+            } else SorcererTimer -= diff;
+
+            if(SummonPackTimer < diff)
             {
                 SummonCreaturesPack();
-                SummonTimer = TIMER_SUMMON_PACK;
-            }else SummonTimer -= diff;
+                SummonPackTimer = TIMER_SUMMON_PACK;
+            }else SummonPackTimer -= diff;
 
             if(AkamaGUID)
             {
@@ -523,7 +530,6 @@ struct npc_akamaAI : public ScriptedAI
         DestructivePoisonTimer = TIMER_SPELL_DESTRUCTIVE_POISON;
         LightningBoltTimer = TIMER_SPELL_LIGHTNING_BOLT;
         CheckTimer = 2000;
-        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_HEAL, true);
         summons.DespawnAll();
         me->SetReactState(REACT_PASSIVE);
         me->AI()->SetCombatMovementAllowed(false);
