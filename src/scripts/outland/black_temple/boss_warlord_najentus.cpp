@@ -47,8 +47,8 @@ enum NajentusSpells {
     SPELL_BERSERK                  = 45078
 };
 
-#define TIMER_NEEDLE_SPINE           3000
-#define TIMER_NEEDLE_SPINE_START     10000
+#define TIMER_NEEDLE_SPINE           2000 + rand()%500
+#define TIMER_NEEDLE_SPINE_START     5000
 #define TIMER_TIDAL_SHIELD           60000
 #define TIMER_SPECIAL_YELL           25000 + (rand()%76)*1000 // 25 - 100
 #define TIMER_SPECIAL_YELL_START     TIMER_SPECIAL_YELL + 20000
