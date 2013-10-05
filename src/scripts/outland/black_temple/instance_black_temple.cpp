@@ -60,6 +60,8 @@ struct instance_black_temple : public ScriptedInstance
     uint64 TeronGorefiend;
 
     uint64 NajentusGate;
+    uint32 NajentusGateTimer;
+    bool NajentusGateTimed;
     uint64 MainTempleDoors;
     uint64 ShadeOfAkamaDoor;
     uint64 CommonDoor;//Teron
@@ -93,6 +95,8 @@ struct instance_black_temple : public ScriptedInstance
         TeronGorefiend = 0;
 
         NajentusGate    = 0;
+        NajentusGateTimer = 0;
+        NajentusGateTimed = false;
         MainTempleDoors = 0;
         ShadeOfAkamaDoor= 0;
         CommonDoor              = 0;//teron
@@ -233,7 +237,8 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_HIGHWARLORDNAJENTUSEVENT:
             if(data == DONE)
             {
-                HandleGameObject(NajentusGate, true);
+                NajentusGateTimed = true;
+                NajentusGateTimer = 5000;
             }
             m_auiEncounter[0] = data;break;
         case DATA_SUPREMUSEVENT:
@@ -250,8 +255,8 @@ struct instance_black_temple : public ScriptedInstance
             m_auiEncounter[2] = data;
             
             if (data == DONE) {
-                for (std::list<uint64>::const_iterator itr = ashtongues.begin(); itr != ashtongues.end(); itr++) {
-                    if (Creature* tmp = instance->GetCreatureInMap(*itr))
+                for (auto itr : ashtongues) {
+                    if (Creature* tmp = instance->GetCreatureInMap(itr))
                         tmp->setFaction(1820);
                 }
             }
@@ -320,6 +325,22 @@ struct instance_black_temple : public ScriptedInstance
         }
 
         return 0;
+    }
+
+    void Update(uint32 diff)
+    {
+        if(NajentusGateTimed)
+        {
+            if(NajentusGateTimer < diff)
+            {
+                HandleGameObject(NajentusGate, true);
+                NajentusGateTimed = false;
+
+                Creature* naj = instance->GetCreatureInMap(Najentus);
+                if(naj)
+                    DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, naj); //Fixme : this is supposed to be in the chatbox and not a boss emote. But how do you get a normal emote without the name of the creature in the beginning?
+            } else NajentusGateTimer -= diff;
+        }
     }
 
    std::string GetSaveData()

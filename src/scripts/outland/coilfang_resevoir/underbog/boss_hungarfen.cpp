@@ -134,7 +134,7 @@ struct mob_underbog_mushroomAI : public ScriptedAI
         }else Shrink_Timer -= diff;
     }
 
-    uint32 message(uint32 id, uint32 data)
+    uint64 message(uint32 id, uint64 data)
     { 
         Stop = (bool)data;  
         return 0;
