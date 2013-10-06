@@ -1016,15 +1016,18 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
         Creature* DruidCreature;
         for(int i=0 ; i<10 ; i++)
         {
-            Target=SelectUnit(SELECT_TARGET_RANDOM,0);
-            // Summon with absolute coordinate
-            DruidCreature=me->SummonCreature(ID_MOD_DRUID_YSONDRE,Target->GetPositionX()+rand()%10,Target->GetPositionY()+rand()%10,Target->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,TIMER_SPAWN_DRUID);
-            if(DruidCreature)
+            Target = SelectUnit(SELECT_TARGET_RANDOM,0);
+            if(Target)
             {
-                Druid=((npc_dementeddruidsAI*)DruidCreature->AI());
-                Druid->Ysondre=me;
-                Druid->AttackStart(Target);
-                DruidCreature->AddThreat(Target,6000.0f);
+                // Summon with absolute coordinate
+                DruidCreature = me->SummonCreature(ID_MOD_DRUID_YSONDRE,Target->GetPositionX()+rand()%10,Target->GetPositionY()+rand()%10,Target->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,TIMER_SPAWN_DRUID);
+                if(DruidCreature)
+                {
+                    Druid=((npc_dementeddruidsAI*)DruidCreature->AI());
+                    Druid->Ysondre=me;
+                    Druid->AttackStart(Target);
+                    DruidCreature->AddThreat(Target,6000.0f);
+                }
             }
         }
     }
@@ -1041,7 +1044,6 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
                 DoYell(YELL_AT_PHASE_CHANGE_YSONDRE,LANG_UNIVERSAL,NULL);
                 SummonDruids();
         }
-                
                 
         if(lowHpYellLeft && me->IsBelowHPPercent(5))
         {
