@@ -186,7 +186,8 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         //Sort the list of players
         targets.sort(ObjectDistanceOrderReversed(m_creature));
         //Resize so we only get top 5
-        targets.resize(5);
+        if(targets.size())
+            targets.resize(5);
 
         //Aura each player in the targets list with Bloodboil.
         for(std::list<Unit *>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
