@@ -254,9 +254,11 @@ struct instance_black_temple : public ScriptedInstance
             }else HandleGameObject(ShadeOfAkamaDoor, true);
             m_auiEncounter[2] = data;
             
-            if (data == DONE) {
-                for (auto itr : ashtongues) {
-                    if (Creature* tmp = instance->GetCreatureInMap(itr))
+            if (data == DONE)
+            {
+                for (std::list<uint64>::const_iterator itr = ashtongues.begin(); itr != ashtongues.end(); itr++)
+                {
+                    if (Creature* tmp = instance->GetCreatureInMap(*itr))
                         tmp->setFaction(1820);
                 }
             }

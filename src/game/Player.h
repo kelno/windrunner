@@ -46,7 +46,6 @@ class DynamicObject;
 class Creature;
 class Pet;
 class PlayerMenu;
-class Transport;
 class UpdateMask;
 class PlayerSocial;
 class OutdoorPvP;
@@ -877,52 +876,6 @@ enum InstanceResetWarningType
     RAID_INSTANCE_WELCOME           = 4                     // Welcome to %s. This raid instance is scheduled to reset in %s.
 };
 
-struct MovementInfo
-{
-    // common
-    //uint32  flags;
-    uint8   unk1;
-    uint32  time;
-    float   x, y, z, o;
-    // transport
-    uint64  t_guid;
-    float   t_x, t_y, t_z, t_o;
-    uint32  t_time;
-    // swimming and unk
-    float   s_pitch;
-    // last fall time
-    uint32  fallTime;
-    // jumping
-    float   j_unk, j_sinAngle, j_cosAngle, j_xyspeed;
-    // spline
-    float   u_unk1;
-
-    MovementInfo()
-    {
-        //flags =
-        time = t_time = fallTime = 0;
-        unk1 = 0;
-        x = y = z = o = t_x = t_y = t_z = t_o = s_pitch = j_unk = j_sinAngle = j_cosAngle = j_xyspeed = u_unk1 = 0.0f;
-        t_guid = 0;
-    }
-
-    /*void SetMovementFlags(uint32 _flags)
-    {
-        flags = _flags;
-    }*/
-};
-
-// flags that use in movement check for example at spell casting
-MovementFlags const movementFlagsMask = MovementFlags(
-    MOVEMENTFLAG_FORWARD |MOVEMENTFLAG_BACKWARD  |MOVEMENTFLAG_STRAFE_LEFT|MOVEMENTFLAG_STRAFE_RIGHT|
-    MOVEMENTFLAG_PITCH_UP|MOVEMENTFLAG_PITCH_DOWN|MOVEMENTFLAG_ROOT        |
-    MOVEMENTFLAG_JUMPING |MOVEMENTFLAG_FALLING   |MOVEMENTFLAG_ASCENDING   |
-    MOVEMENTFLAG_FLYING  |MOVEMENTFLAG_SPLINE_ELEVATION
-);
-
-MovementFlags const movementOrTurningFlagsMask = MovementFlags(
-    movementFlagsMask | MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT
-);
 class InstanceSave;
 
 enum RestType
@@ -1849,7 +1802,8 @@ class Player : public Unit
         void SendResetInstanceFailed(uint32 reason, uint32 MapId);
         void SendResetFailedNotify(uint32 mapid);
 
-        bool SetPosition(float x, float y, float z, float orientation, bool teleport = false);
+        virtual bool UpdatePosition(float x, float y, float z, float orientation, bool teleport = false);
+        bool UpdatePosition(const Position &pos, bool teleport = false) { return UpdatePosition(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation(), teleport); }
         void UpdateUnderwaterState( Map * m, float x, float y, float z );
 
         void SendMessageToSet(WorldPacket *data, bool self, bool to_possessor = true);// overwrite Object::SendMessageToSet
@@ -1882,8 +1836,6 @@ class Player : public Unit
             StopMirrorTimer(BREATH_TIMER);
             StopMirrorTimer(FIRE_TIMER);
         }
-
-        void SetMovement(PlayerMovementType pType);
 
         void JoinedChannel(Channel *c);
         void LeftChannel(Channel *c);
@@ -2186,7 +2138,6 @@ class Player : public Unit
         /*********************************************************/
         /***                 VARIOUS SYSTEMS                   ***/
         /*********************************************************/
-        MovementInfo m_movementInfo;
         uint32 m_lastFallTime;
         float  m_lastFallZ;
         void SetFallInformation(uint32 time, float z)
@@ -2194,13 +2145,13 @@ class Player : public Unit
             m_lastFallTime = time;
             m_lastFallZ = z;
         }
-        bool isMoving() const { return HasUnitMovementFlag(movementFlagsMask); }
-        bool isMovingOrTurning() const { return HasUnitMovementFlag(movementOrTurningFlagsMask); }
 
-        //bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
-        bool CanFly() const { return m_CanFly;  }
-        void SetCanFly(bool CanFly) { m_CanFly=CanFly; }
-        bool IsFlying() const { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING); }
+        bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
+
+        bool SetCanFly(bool apply, bool packetOnly = false);
+        bool SetWaterWalking(bool apply, bool packetOnly = false);
+        bool SetFeatherFall(bool apply, bool packetOnly = false);
+        bool SetHover(bool enable, bool packetOnly = false);
 
         void HandleDrowning(uint32 time_diff);
         void HandleFallDamage(MovementInfo& movementInfo);
@@ -2214,16 +2165,6 @@ class Player : public Unit
 
         uint64 GetFarSight() const { return GetUInt64Value(PLAYER_FARSIGHT); }
         void SetFarSight(uint64 guid) { SetUInt64Value(PLAYER_FARSIGHT, guid); }
-
-        // Transports
-        Transport * GetTransport() const { return m_transport; }
-        void SetTransport(Transport * t) { m_transport = t; }
-
-        float GetTransOffsetX() const { return m_movementInfo.t_x; }
-        float GetTransOffsetY() const { return m_movementInfo.t_y; }
-        float GetTransOffsetZ() const { return m_movementInfo.t_z; }
-        float GetTransOffsetO() const { return m_movementInfo.t_o; }
-        uint32 GetTransTime() const { return m_movementInfo.t_time; }
 
         uint32 GetSaveTimer() const { return m_nextSave; }
         void   SetSaveTimer(uint32 timer) { m_nextSave = timer; }
@@ -2389,7 +2330,12 @@ class Player : public Unit
         
         time_t lastLagReport;
 
+        void SendTeleportAckPacket();
+
         SmoothingSystem* smoothingSystem;
+
+        void ResetTimeSync();
+        void SendTimeSync();
 
     protected:
 
@@ -2600,10 +2546,6 @@ class Player : public Unit
         uint32 m_anti_lastalarmtime;    //last time when alarm generated
         uint32 m_anti_alarmcount;       //alarm counter
         uint32 m_anti_TeleTime;
-        bool m_CanFly;
-
-        // Transports
-        Transport * m_transport;
 
         uint32 m_resetTalentsCost;
         time_t m_resetTalentsTime;
@@ -2683,6 +2625,11 @@ class Player : public Unit
         
         SpamReports _spamReports;
         time_t _lastSpamAlert; // When was the last time we reported this ugly spammer to the staff?
+
+        uint32 m_timeSyncCounter;
+        uint32 m_timeSyncTimer;
+        uint32 m_timeSyncClient;
+        uint32 m_timeSyncServer;
 
     public:
         bool m_kickatnextupdate;

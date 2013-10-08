@@ -418,7 +418,7 @@ struct npc_isla_starmaneAI : public npc_escortAI
             m_creature->SetInFront(player); break;
         case 30: m_creature->HandleEmoteCommand(EMOTE_ONESHOT_WAVE); break;
         case 31: DoCast(m_creature, SPELL_CAT);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); break;
+            m_creature->SetWalk(false); break;
         }
     }
 
@@ -776,7 +776,7 @@ struct npc_cenarion_sparrowhawkAI : public ScriptedAI
     void Reset()
     {
         despawnTimer = 0;
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        me->SetWalk(false);
 
         if (GameObject* ravenStone = me->FindGOInGrid(185541, 100.0f)) {
             float x, y, z;
@@ -982,9 +982,9 @@ struct npc_chief_letollAI : public npc_escortAI
             for (uint8 i = 0; i < 4; i++) {
                 if (Creature* researcher = Creature::GetCreature(*me, researchers[i])) {
                     if (run)
-                        researcher->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    	researcher->SetWalk(false);
                     else
-                        researcher->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    	researcher->SetWalk(true);
                 }
             }
         }

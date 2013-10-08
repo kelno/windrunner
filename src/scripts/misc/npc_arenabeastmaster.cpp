@@ -1,4 +1,4 @@
-﻿#include "precompiled.h"
+#include "precompiled.h"
 #include <string>
 #include "MapManager.h"
 #include "ObjectMgr.h"

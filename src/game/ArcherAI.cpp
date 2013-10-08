@@ -29,8 +29,7 @@ ArcherAI::ArcherAI(Creature *c) : CreatureAI(c)
     m_minRange = GetSpellMinRange(sSpellRangeStore.LookupEntry(spellmgr.LookupSpell(me->m_spells[0])->rangeIndex));
     if (!m_minRange)
         m_minRange = MELEE_RANGE;
-    m_CombatDistance = GetSpellMaxRange(sSpellRangeStore.LookupEntry(spellmgr.LookupSpell(me->m_spells[0])->rangeIndex));
-    m_SightDistance = m_CombatDistance;
+    m_combatDistance = GetSpellMaxRange(sSpellRangeStore.LookupEntry(spellmgr.LookupSpell(me->m_spells[0])->rangeIndex));
 }
 
 void ArcherAI::AttackStart(Unit *who)
@@ -40,16 +39,16 @@ void ArcherAI::AttackStart(Unit *who)
 
     if (me->IsWithinCombatRange(who, m_minRange))
     {
-        if (me->Attack(who, true) && !who->HasUnitMovementFlag(MOVEMENTFLAG_FLYING))
+        if (me->Attack(who, true) && !who->HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
             me->GetMotionMaster()->MoveChase(who);
     }
     else
     {
-        if (me->Attack(who, false) && !who->HasUnitMovementFlag(MOVEMENTFLAG_FLYING))
-            me->GetMotionMaster()->MoveChase(who, m_CombatDistance);
+        if (me->Attack(who, false) && !who->HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
+            me->GetMotionMaster()->MoveChase(who, m_combatDistance);
     }
 
-    if (who->HasUnitMovementFlag(MOVEMENTFLAG_FLYING))
+    if (who->HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
         me->GetMotionMaster()->MoveIdle();
 }
 
