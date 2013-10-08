@@ -340,7 +340,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                 Creature* Spawn = me->SummonCreature(spawnEntries[j], SpawnLocations[i].x, SpawnLocations[i].y, SpawnLocations[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
                 if(Spawn)
                 {
-                    Spawn->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                    Spawn->SetWalk(false);
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,100.0f,true);
                     if(target) {
                         Spawn->AI()->AttackStart(target);
@@ -360,7 +360,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         if(Sorcerer)
         {
             Sorcerer->AI()->message(mob_ashtongue_sorcererAI::SMESSAGE_SHADE_GUID,me->GetGUID());
-            Sorcerer->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            Sorcerer->SetWalk(false);
             Sorcerer->GetMotionMaster()->MovePoint(0, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ());
             Sorcerer->SetUInt64Value(UNIT_FIELD_TARGET, me->GetGUID());
             Channelers.push_back(Sorcerer->GetGUID());
@@ -373,7 +373,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         Creature* Defender = me->SummonCreature(CREATURE_DEFENDER, SpawnLocations[ran].x, SpawnLocations[ran].y, SpawnLocations[ran].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
         if(Defender)
         {
-            Defender->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            Defender->SetWalk(false);
             if(Creature* Akama = me->GetMap()->GetCreatureInMap(AkamaGUID))
             {
                 float x, y, z;
@@ -715,7 +715,7 @@ struct npc_akamaAI : public ScriptedAI
         {
         case 0: break;
         case 1:
-            me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            me->SetWalk(true);
             me->GetMotionMaster()->MovePoint(1, AkamaWP[1].x, AkamaWP[1].y, AkamaWP[1].z);
             outroProgress = 0; // re set in MovementInform when point reached
             break;
@@ -908,4 +908,3 @@ void AddSC_boss_shade_of_akama()
     newscript->pGossipSelect = &GossipSelect_npc_akama;
     newscript->RegisterSelf();
 }
-

@@ -48,6 +48,8 @@
 #include "TemporarySummon.h"
 #include "DynamicTree.h"
 
+#include "MovementPacketBuilder.h"
+
 uint32 GuidHigh2TypeId(uint32 guid_hi)
 {
     switch(guid_hi)
@@ -78,7 +80,6 @@ Object::Object( )
     m_inWorld           = false;
     m_objectUpdated     = false;
 
-    m_PackGUID.clear();
     m_PackGUID.appendPackGUID(0);
 }
 
@@ -125,7 +126,7 @@ void Object::_Create( uint32 guidlow, uint32 entry, HighGuid guidhigh )
     uint64 guid = MAKE_NEW_GUID(guidlow, entry, guidhigh);  // required more changes to make it working
     SetUInt64Value( OBJECT_FIELD_GUID, guid );
     SetUInt32Value( OBJECT_FIELD_TYPE, m_objectType );
-    m_PackGUID.clear();
+    m_PackGUID.wpos(0);
     m_PackGUID.appendPackGUID(GetGUID());
 }
 
@@ -136,7 +137,7 @@ void Object::BuildMovementUpdateBlock(UpdateData * data, uint32 flags ) const
     buf << uint8( UPDATETYPE_MOVEMENT );
     buf << GetGUID();
 
-    _BuildMovementUpdate(&buf, flags, 0x00000000);
+    _BuildMovementUpdate(&buf, flags);
 
     data->AddUpdateBlock(buf);
 }
@@ -150,7 +151,6 @@ void Object::BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) c
 
     uint8  updatetype = UPDATETYPE_CREATE_OBJECT;
     uint8  flags      = m_updateFlag;
-    uint32 flags2     = 0;
 
     /** lower flag1 **/
     if(target == this)                                      // building packet for oneself
@@ -182,17 +182,22 @@ void Object::BuildCreateUpdateBlockForPlayer(UpdateData *data, Player *target) c
                     break;
             }
         }
+
+        if (isType(TYPEMASK_UNIT))
+        {
+            if (((Unit*)this)->getVictim())
+            	flags |= UPDATEFLAG_FULLGUID;
+        }
     }
 
     //sLog.outDebug("BuildCreateUpdate: update-type: %u, object-type: %u got flags: %X, flags2: %X", updatetype, m_objectTypeId, flags, flags2);
 
     ByteBuffer buf(500);
     buf << (uint8)updatetype;
-    //buf.append(GetPackGUID());    //client crashes when using this
-    buf << (uint8)0xFF << GetGUID();
+    buf.append(GetPackGUID());
     buf << (uint8)m_objectTypeId;
 
-    _BuildMovementUpdate(&buf, flags, flags2);
+    _BuildMovementUpdate(&buf, flags);
 
     UpdateMask updateMask;
     updateMask.SetCount( m_valuesCount );
@@ -228,9 +233,7 @@ void Object::BuildValuesUpdateBlockForPlayer(UpdateData *data, Player *target) c
     ByteBuffer buf(500);
 
     buf << (uint8) UPDATETYPE_VALUES;
-    //buf.append(GetPackGUID());    //client crashes when using this. but not have crash in debug mode
-    buf << (uint8)0xFF;
-    buf << GetGUID();
+    buf.append(GetPackGUID());
 
     UpdateMask updateMask;
     updateMask.SetCount( m_valuesCount );
@@ -255,220 +258,64 @@ void Object::DestroyForPlayer(Player *target) const
     target->GetSession()->SendPacket( &data );
 }
 
-void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2 ) const
+void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags) const
 {
     *data << (uint8)flags;                                  // update flags
 
     // 0x20
     if (flags & UPDATEFLAG_LIVING)
     {
-        switch(GetTypeId())
-        {
-            case TYPEID_UNIT:
-            {
-                flags2 = ((Unit*)this)->GetUnitMovementFlags();
-                flags2 &= ~MOVEMENTFLAG_ONTRANSPORT;
-                flags2 &= ~MOVEMENTFLAG_SPLINE_ENABLED;
-            }
-            break;
-            case TYPEID_PLAYER:
-            {
-                Player *player = const_cast<Player*>(ToPlayer());
+    	Unit* unit = ((Unit*)this);
 
-                flags2 = player->GetUnitMovementFlags();
+    	if (GetTypeId() == TYPEID_PLAYER)
+    	{
+    		Player* player = ((Player*)unit);
+    	    if (player->GetTransport())
+    	    	player->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	    else
+    	    	player->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+    	}
+    	else
+    		unit->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
 
-                if(player->GetTransport())
-                    flags2 |= MOVEMENTFLAG_ONTRANSPORT;
-                else
-                    flags2 &= ~MOVEMENTFLAG_ONTRANSPORT;
+    	// Write movement info
+    	unit->BuildMovementPacket(data);
 
-                // remove unknown, unused etc flags for now
-                flags2 &= ~MOVEMENTFLAG_SPLINE_ENABLED;            // will be set manually
+    	// Unit speeds
+    	*data << float(unit->GetSpeed(MOVE_WALK));
+    	*data << float(unit->GetSpeed(MOVE_RUN));
+    	*data << float(unit->GetSpeed(MOVE_RUN_BACK));
+    	*data << float(unit->GetSpeed(MOVE_SWIM));
+    	*data << float(unit->GetSpeed(MOVE_SWIM_BACK));
+    	*data << float(unit->GetSpeed(MOVE_FLIGHT));
+    	*data << float(unit->GetSpeed(MOVE_FLIGHT_BACK));
+    	*data << float(unit->GetSpeed(MOVE_TURN_RATE));
 
-                if(player->isInFlight())
-                {
-                    WPAssert(player->GetMotionMaster()->GetCurrentMovementGeneratorType() == FLIGHT_MOTION_TYPE);
-                    flags2 = (MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_SPLINE_ENABLED);
-                }
-            }
-            break;
-        }
-
-        *data << uint32(flags2);                            // movement flags
-        *data << uint8(0);                                  // unk 2.3.0
-        *data << uint32(getMSTime());                       // time (in milliseconds)
+    	// 0x08000000
+    	if(unit->GetUnitMovementFlags() & MOVEMENTFLAG_SPLINE_ENABLED)
+    	    Movement::PacketBuilder::WriteCreate(*unit->movespline, *data);
     }
-
     // 0x40
-    if (flags & UPDATEFLAG_HASPOSITION)
+    else if (flags & UPDATEFLAG_HASPOSITION)
     {
         // 0x02
-        if((flags & UPDATEFLAG_TRANSPORT) && ((GameObject*)this)->GetGoType() == GAMEOBJECT_TYPE_MO_TRANSPORT)
+        if ((flags & UPDATEFLAG_TRANSPORT) && ((GameObject*)this)->GetGoType() == GAMEOBJECT_TYPE_MO_TRANSPORT)
         {
-            *data << (float)0;
-            *data << (float)0;
-            *data << (float)0;
-            *data << ((WorldObject *)this)->GetOrientation();
+            *data << float(0);
+            *data << float(0);
+            *data << float(0);
+            *data << float(((WorldObject*)this)->GetOrientation());
         }
         else
         {
-            *data << ((WorldObject *)this)->GetPositionX();
-            *data << ((WorldObject *)this)->GetPositionY();
-            *data << ((WorldObject *)this)->GetPositionZ();
-            *data << ((WorldObject *)this)->GetOrientation();
-        }
-    }
-
-    // 0x20
-    if(flags & UPDATEFLAG_LIVING)
-    {
-        // 0x00000200
-        if(flags2 & MOVEMENTFLAG_ONTRANSPORT)
-        {
-            if(GetTypeId() == TYPEID_PLAYER)
-            {
-                *data << (uint64)(this->ToPlayer())->GetTransport()->GetGUID();
-                *data << (float)(this->ToPlayer())->GetTransOffsetX();
-                *data << (float)(this->ToPlayer())->GetTransOffsetY();
-                *data << (float)(this->ToPlayer())->GetTransOffsetZ();
-                *data << (float)(this->ToPlayer())->GetTransOffsetO();
-                *data << (uint32)(this->ToPlayer())->GetTransTime();
-            }
-            //TrinIty currently not have support for other than player on transport
-        }
-
-        // 0x02200000
-        if(flags2 & (MOVEMENTFLAG_SWIMMING | MOVEMENTFLAG_FLYING2))
-        {
-            if(GetTypeId() == TYPEID_PLAYER)
-                *data << (float)(this->ToPlayer())->m_movementInfo.s_pitch;
+            *data << float(((WorldObject*)this)->GetPositionX());
+            *data << float(((WorldObject*)this)->GetPositionY());
+            if (isType(TYPEMASK_UNIT))
+                *data << float(((Unit*)this)->GetPositionZMinusOffset());
             else
-                *data << (float)0;                          // is't part of movement packet, we must store and send it...
-        }
+            	*data << float(((WorldObject*)this)->GetPositionZ());
 
-        if(GetTypeId() == TYPEID_PLAYER)
-            *data << (uint32)(this->ToPlayer())->m_movementInfo.fallTime;
-        else
-            *data << (uint32)0;                             // last fall time
-
-        // 0x00001000
-        if(flags2 & MOVEMENTFLAG_JUMPING)
-        {
-            if(GetTypeId() == TYPEID_PLAYER)
-            {
-                *data << (float)(this->ToPlayer())->m_movementInfo.j_unk;
-                *data << (float)(this->ToPlayer())->m_movementInfo.j_sinAngle;
-                *data << (float)(this->ToPlayer())->m_movementInfo.j_cosAngle;
-                *data << (float)(this->ToPlayer())->m_movementInfo.j_xyspeed;
-            }
-            else
-            {
-                *data << (float)0;
-                *data << (float)0;
-                *data << (float)0;
-                *data << (float)0;
-            }
-        }
-
-        // 0x04000000
-        if(flags2 & MOVEMENTFLAG_SPLINE_ELEVATION)
-        {
-            if(GetTypeId() == TYPEID_PLAYER)
-                *data << (float)(this->ToPlayer())->m_movementInfo.u_unk1;
-            else
-                *data << (float)0;
-        }
-
-        *data << ((Unit*)this)->GetSpeed( MOVE_WALK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_RUN );
-        *data << ((Unit*)this)->GetSpeed( MOVE_SWIM_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_SWIM );
-        *data << ((Unit*)this)->GetSpeed( MOVE_RUN_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_FLIGHT );
-        *data << ((Unit*)this)->GetSpeed( MOVE_FLIGHT_BACK );
-        *data << ((Unit*)this)->GetSpeed( MOVE_TURN_RATE );
-
-        // 0x08000000
-        if(flags2 & MOVEMENTFLAG_SPLINE_ENABLED)
-        {
-            if(GetTypeId() != TYPEID_PLAYER)
-            {
-                sLog.outError("_BuildMovementUpdate: MOVEMENTFLAG_SPLINE2 for non-player");
-                return;
-            }
-
-            Player *player = const_cast<Player*>(ToPlayer());
-
-            if(!player->isInFlight())
-            {
-                sLog.outError("_BuildMovementUpdate: MOVEMENTFLAG_SPLINE2 but not in flight");
-                return;
-            }
-
-            WPAssert(player->GetMotionMaster()->GetCurrentMovementGeneratorType() == FLIGHT_MOTION_TYPE);
-
-            FlightPathMovementGenerator *fmg = (FlightPathMovementGenerator*)(player->GetMotionMaster()->top());
-
-            uint32 flags3 = 0x00000300;
-
-            *data << uint32(flags3);                        // splines flag?
-
-            if(flags3 & 0x10000)                            // probably x,y,z coords there
-            {
-                *data << (float)0;
-                *data << (float)0;
-                *data << (float)0;
-            }
-
-            if(flags3 & 0x20000)                            // probably guid there
-            {
-                *data << uint64(0);
-            }
-
-            if(flags3 & 0x40000)                            // may be orientation
-            {
-                *data << (float)0;
-            }
-
-            Path &path = fmg->GetPath();
-
-            float x, y, z;
-            (this->ToPlayer())->GetPosition(x, y, z);
-
-            uint32 inflighttime = uint32(path.GetPassedLength(fmg->GetCurrentNode(), x, y, z) * 32);
-            uint32 traveltime = uint32(path.GetTotalLength() * 32);
-
-            *data << uint32(inflighttime);                  // passed move time?
-            *data << uint32(traveltime);                    // full move time?
-            *data << uint32(0);                             // ticks count?
-
-            uint32 poscount = uint32(path.Size());
-
-            *data << uint32(poscount);                      // points count
-
-            for(uint32 i = 0; i < poscount; ++i)
-            {
-                *data << path.GetNodes()[i].x;
-                *data << path.GetNodes()[i].y;
-                *data << path.GetNodes()[i].z;
-            }
-
-            /*for(uint32 i = 0; i < poscount; i++)
-            {
-                // path points
-                *data << (float)0;
-                *data << (float)0;
-                *data << (float)0;
-            }*/
-
-            *data << path.GetNodes()[poscount-1].x;
-            *data << path.GetNodes()[poscount-1].y;
-            *data << path.GetNodes()[poscount-1].z;
-
-            // target position (path end)
-            /**data << ((Unit*)this)->GetPositionX();
-             *data << ((Unit*)this)->GetPositionY();
-             *data << ((Unit*)this)->GetPositionZ();*/
+            *data << float(((WorldObject*)this)->GetOrientation());
         }
     }
 
@@ -522,7 +369,10 @@ void Object::_BuildMovementUpdate(ByteBuffer * data, uint8 flags, uint32 flags2 
     // 0x4
     if(flags & UPDATEFLAG_FULLGUID)
     {
-        *data << uint8(0);                                  // packed guid (probably target guid)
+    	if (((Unit*)this)->getVictim())
+    		data->append(((Unit*)this)->getVictim()->GetPackGUID());
+    	else
+    		*data << uint8(0);
     }
 
     // 0x2
@@ -1083,6 +933,7 @@ WorldObject::WorldObject()
 
     m_isActive          = false;
     IsTempWorldObject   = false;
+    m_transport         = NULL;
 }
 
 void WorldObject::SetWorldObject(bool on)
@@ -1225,6 +1076,22 @@ bool WorldObject::IsWithinDistInMap(const WorldObject* obj, const float dist2com
 {
     if (!obj || !IsInMap(obj)) return false;
 
+    float sizefactor = GetObjectSize() + obj->GetObjectSize();
+    float maxdist = dist2compare + sizefactor;
+
+    if (m_transport && obj->GetTransport() &&  obj->GetTransport()->GetGUIDLow() == m_transport->GetGUIDLow())
+    {
+        float dtx = m_movementInfo.transport.pos.m_positionX - obj->m_movementInfo.transport.pos.m_positionX;
+        float dty = m_movementInfo.transport.pos.m_positionY - obj->m_movementInfo.transport.pos.m_positionY;
+        float disttsq = dtx * dtx + dty * dty;
+        if (is3D)
+        {
+            float dtz = m_movementInfo.transport.pos.m_positionZ - obj->m_movementInfo.transport.pos.m_positionZ;
+            disttsq += dtz * dtz;
+        }
+        return disttsq < (maxdist * maxdist);
+    }
+
     float dx = GetPositionX() - obj->GetPositionX();
     float dy = GetPositionY() - obj->GetPositionY();
     float distsq = dx*dx + dy*dy;
@@ -1233,8 +1100,6 @@ bool WorldObject::IsWithinDistInMap(const WorldObject* obj, const float dist2com
         float dz = GetPositionZ() - obj->GetPositionZ();
         distsq += dz*dz;
     }
-    float sizefactor = GetObjectSize() + obj->GetObjectSize();
-    float maxdist = dist2compare + sizefactor;
 
     return distsq < maxdist * maxdist;
 }
@@ -1282,80 +1147,223 @@ bool WorldObject::GetDistanceOrder(WorldObject const* obj1, WorldObject const* o
     return distsq1 < distsq2;
 }
 
-float WorldObject::GetAngle(const WorldObject* obj) const
+void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float angle)
 {
-    if(!obj) return 0;
-    return GetAngle( obj->GetPositionX(), obj->GetPositionY() );
+    angle += GetOrientation();
+    float destx, desty, destz, ground, floor;
+    pos.m_positionZ += 2.0f;
+    destx = pos.m_positionX + dist * std::cos(angle);
+    desty = pos.m_positionY + dist * std::sin(angle);
+
+    // Prevent invalid coordinates here, position is unchanged
+    if (!Trinity::IsValidMapCoord(destx, desty))
+    {
+    	sLog.outError("WorldObject::MovePositionToFirstCollision invalid coordinates X: %f and Y: %f were passed!", destx, desty);
+        return;
+    }
+
+    ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+    floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+    destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+
+    bool col = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.m_positionX, pos.m_positionY, pos.m_positionZ+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
+
+    // collision occured
+    if (col)
+    {
+        // move back a bit
+        destx -= CONTACT_DISTANCE * std::cos(angle);
+        desty -= CONTACT_DISTANCE * std::sin(angle);
+        dist = sqrt((pos.m_positionX - destx)*(pos.m_positionX - destx) + (pos.m_positionY - desty)*(pos.m_positionY - desty));
+    }
+
+    // check dynamic collision
+    col = GetMap()->getObjectHitPos(GetMapId(), pos.m_positionX, pos.m_positionY, pos.m_positionZ+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
+
+    // Collided with a gameobject
+    if (col)
+    {
+        destx -= CONTACT_DISTANCE * std::cos(angle);
+        desty -= CONTACT_DISTANCE * std::sin(angle);
+        dist = sqrt((pos.m_positionX - destx)*(pos.m_positionX - destx) + (pos.m_positionY - desty)*(pos.m_positionY - desty));
+    }
+
+    float step = dist/10.0f;
+
+    for (uint8 j = 0; j < 10; ++j)
+    {
+        // do not allow too big z changes
+        if (fabs(pos.m_positionZ - destz) > 6)
+        {
+            destx -= step * std::cos(angle);
+            desty -= step * std::sin(angle);
+            ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+            floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+            destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+        }
+        // we have correct destz now
+        else
+        {
+            pos.Relocate(destx, desty, destz);
+            break;
+        }
+    }
+
+    Trinity::NormalizeMapCoord(pos.m_positionX);
+    Trinity::NormalizeMapCoord(pos.m_positionY);
+    UpdateAllowedPositionZ(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+    pos.SetOrientation(GetOrientation());
 }
 
-// Return angle in range 0..2*pi
-float WorldObject::GetAngle( const float x, const float y ) const
+void WorldObject::GetFirstCollisionPosition(Position &pos, float dist, float angle)
 {
-    float dx = x - GetPositionX();
-    float dy = y - GetPositionY();
-
-    float ang = atan2(dy, dx);
-    ang = (ang >= 0) ? ang : 2 * M_PI + ang;
-    return ang;
+    GetPosition(&pos);
+    MovePositionToFirstCollision(pos, dist, angle);
 }
 
-bool WorldObject::HasInArc(const float arcangle, const float x, const float y) const
+void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
 {
-    // always have self in arc
-    if(x == m_positionX && y == m_positionY)
-        return true;
+    switch (GetTypeId())
+    {
+        case TYPEID_UNIT:
+        {
+            // non fly unit don't must be in air
+            // non swim unit must be at ground (mostly speedup, because it don't must be in water and water level check less fast
+            if (!ToCreature()->canFly())
+            {
+                bool canSwim = ToCreature()->canSwim();
+                float max_z = 0.0f;
+                float ground_z = z;
+                if (canSwim)
+                	max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
+                else
+                {
+                	ground_z = GetBaseMap()->GetHeight(x, y, z, true);
+                	max_z = ground_z;
+                }
 
-    float arc = arcangle;
+                if (max_z > INVALID_HEIGHT)
+                {
+                    if (z > max_z)
+                        z = max_z;
+                    else if (z < ground_z)
+                        z = ground_z;
+                }
+                else
+                {
+                	while (max_z <= INVALID_HEIGHT)
+                	{
+                		z+= 1.0f;
+                		if (canSwim)
+                		    max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
+                		else
+                		{
+                		    ground_z = GetBaseMap()->GetHeight(x, y, z, true);
+                		    max_z = ground_z;
+                		}
 
-    // move arc to range 0.. 2*pi
-    while( arc >= 2.0f * M_PI )
-        arc -=  2.0f * M_PI;
-    while( arc < 0 )
-        arc +=  2.0f * M_PI;
+                		if (z > MAX_HEIGHT)
+                			break;
+                	}
 
-    float angle = GetAngle( x, y );
-    angle -= m_orientation;
+                	if (max_z > INVALID_HEIGHT)
+                	{
+                	    if (z > max_z)
+                	        z = max_z;
+                	    else if (z < ground_z)
+                	       z = ground_z;
+                	}
+                }
+            }
+            else
+            {
+                float ground_z = GetBaseMap()->GetHeight(x, y, z, true);
+                if (z < ground_z)
+                    z = ground_z;
+            }
+            break;
+        }
+        case TYPEID_PLAYER:
+        {
+            // for server controlled moves playr work same as creature (but it can always swim)
+            if (!ToPlayer()->CanFly())
+            {
+                float ground_z = z;
+                float max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
+                if (max_z > INVALID_HEIGHT)
+                {
+                    if (z > max_z)
+                        z = max_z;
+                    else if (z < ground_z)
+                        z = ground_z;
+                }
+                else
+                {
+                	while (max_z <= INVALID_HEIGHT)
+                	{
+                		z+= 1.0f;
+                		max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
+                		if (z > MAX_HEIGHT)
+                		    break;
+                	}
 
-    // move angle to range -pi ... +pi
-    while( angle > M_PI)
-        angle -= 2.0f * M_PI;
-    while(angle < -M_PI)
-        angle += 2.0f * M_PI;
+                	if (max_z > INVALID_HEIGHT)
+                	{
+                	    if (z > max_z)
+                	        z = max_z;
+                	    else if (z < ground_z)
+                	        z = ground_z;
+                	}
+                }
+            }
+            else
+            {
+                float ground_z = GetBaseMap()->GetHeight(x, y, z, true);
+                if (ground_z > INVALID_HEIGHT)
+                {
+                    if (z < ground_z)
+                        z = ground_z;
+                }
+                else
+                {
+                	while (ground_z <= INVALID_HEIGHT)
+                	{
+                	    z+= 1.0f;
+                	    ground_z = GetBaseMap()->GetHeight(x, y, z);
+                	    if (z > MAX_HEIGHT)
+                	        break;
+                	}
 
-    float lborder =  -1 * (arc/2.0f);                       // in range -pi..0
-    float rborder = (arc/2.0f);                             // in range 0..pi
-    return (( angle >= lborder ) && ( angle <= rborder ));
-}
+                	if (ground_z > INVALID_HEIGHT)
+                	{
+                	    if (z < ground_z)
+                	        z = ground_z;
+                	}
+                }
+            }
+            break;
+        }
+        default:
+        {
+            float ground_z = GetBaseMap()->GetHeight(x, y, z, true);
+            if (ground_z > INVALID_HEIGHT)
+                z = ground_z;
+            else
+            {
+            	while (ground_z <= INVALID_HEIGHT)
+            	{
+            	    z+= 1.0f;
+            	    ground_z = GetBaseMap()->GetHeight(x, y, z);
+            	    if (z > MAX_HEIGHT)
+            	        break;
+            	}
 
-bool WorldObject::HasInArc(const float arcangle, const WorldObject* obj) const
-{
-    // always have self in arc
-    if(obj == this)
-        return true;
-
-    float arc = arcangle;
-
-    // move arc to range 0.. 2*pi
-    while( arc >= 2.0f * M_PI )
-        arc -=  2.0f * M_PI;
-    while( arc < 0 )
-        arc +=  2.0f * M_PI;
-
-    float angle = GetAngle( obj );
-    /* m_orientation should be between 0..2pi, but let's take bigger values "in case of" */
-    if (m_orientation < -1000.0f || m_orientation > 1000.0f)
-        const_cast<WorldObject*>(this)->SetOrientation(0.0f);
-    angle -= m_orientation;
-
-    // move angle to range -pi ... +pi
-    while( angle > M_PI)
-        angle -= 2.0f * M_PI;
-    while(angle < -M_PI)
-        angle += 2.0f * M_PI;
-
-    float lborder =  -1 * (arc/2.0f);                       // in range -pi..0
-    float rborder = (arc/2.0f);                             // in range 0..pi
-    return (( angle >= lborder ) && ( angle <= rborder ));
+            	if (ground_z > INVALID_HEIGHT)
+            		z = ground_z;
+            }
+            break;
+        }
+    }
 }
 
 void WorldObject::GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z) const
@@ -1385,7 +1393,21 @@ void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const
 {
     float new_z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(x,y,z,true);
     if(new_z > INVALID_HEIGHT)
-        z = new_z+ 0.05f;                                   // just to be sure that we are not a few pixel under the surface
+        z = new_z + 0.05f;                                   // just to be sure that we are not a few pixel under the surface
+    else
+    {
+    	while (new_z <= INVALID_HEIGHT)
+    	{
+    	    z+= 1.0f;
+    	    new_z = GetBaseMap()->GetHeight(x, y, z, true);
+
+    	    if (z > MAX_HEIGHT)
+    	        break;
+    	}
+
+    	if (new_z > INVALID_HEIGHT)
+    		z = new_z;
+    }
 }
 
 bool WorldObject::IsPositionValid() const
@@ -1611,41 +1633,15 @@ void WorldObject::BuildMonsterChat(WorldPacket *data, uint8 msgtype, char const*
     *data << (uint8)0;                                      // ChatTag
 }
 
-void WorldObject::BuildHeartBeatMsg(WorldPacket *data) const
+void Unit::BuildHeartBeatMsg(WorldPacket *data) const
 {
     //Heartbeat message cannot be used for non-units
     if (!isType(TYPEMASK_UNIT))
         return;
 
-    data->Initialize(MSG_MOVE_HEARTBEAT, 32);
+    data->Initialize(MSG_MOVE_HEARTBEAT, 64);
     data->append(GetPackGUID());
-    *data << uint32(((Unit*)this)->GetUnitMovementFlags()); // movement flags
-    *data << uint8(0);                                      // 2.3.0
-    *data << getMSTime();                                   // time
-    *data << m_positionX;
-    *data << m_positionY;
-    *data << m_positionZ;
-    *data << m_orientation;
-    *data << uint32(0);
-}
-
-void WorldObject::BuildTeleportAckMsg(WorldPacket *data, float x, float y, float z, float ang) const
-{
-    //TeleportAck message cannot be used for non-units
-    if (!isType(TYPEMASK_UNIT))
-        return;
-
-    data->Initialize(MSG_MOVE_TELEPORT_ACK, 41);
-    data->append(GetPackGUID());
-    *data << uint32(0);                                     // this value increments every time
-    *data << uint32(((Unit*)this)->GetUnitMovementFlags()); // movement flags
-    *data << uint8(0);                                      // 2.3.0
-    *data << getMSTime();                                   // time
-    *data << x;
-    *data << y;
-    *data << z;
-    *data << ang;
-    *data << uint32(0);
+    BuildMovementPacket(data);
 }
 
 void WorldObject::SendMessageToSet(WorldPacket *data, bool /*fake*/, bool bToPossessor)
@@ -1706,20 +1702,11 @@ Creature* WorldObject::SummonCreature(uint32 id, float x, float y, float z, floa
     if (GetTypeId()==TYPEID_PLAYER)
         team = (this->ToPlayer())->GetTeam();
 
-    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), GetMap(), id, team))
-    {
-        delete pCreature;
-        return NULL;
-    }
-
     if (x == 0.0f && y == 0.0f && z == 0.0f)
-        GetClosePoint(x, y, z, pCreature->GetObjectSize());
+    	GetPosition(x, y, z);
 
-    pCreature->Relocate(x, y, z, ang);
-
-    if(!pCreature->IsPositionValid())
+    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), GetMap(), id, team, x, y, z, ang))
     {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not summoned. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
         delete pCreature;
         return NULL;
     }
@@ -1997,53 +1984,113 @@ void WorldObject::GetNearPoint2D(float &x, float &y, float distance2d, float abs
     Trinity::NormalizeMapCoord(y);
 }
 
-void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, float &z, float searcher_size, float distance2d, float absAngle ) const
+void WorldObject::GetNearPoint(WorldObject const* searcher, float &x, float &y, float &z, float distance2d, float absAngle ) const
 {
-    GetNearPoint2D(x,y,distance2d+searcher_size,absAngle);
-
+    GetNearPoint2D(x, y, distance2d, absAngle);
     z = GetPositionZ();
-
-    UpdateGroundPositionZ(x,y,z);
+    UpdateAllowedPositionZ(x, y, z);
 }
 
-void WorldObject::GetGroundPoint(float &x, float &y, float &z, float dist, float angle)
+float WorldObject::GetObjectSize() const
+{
+    return (m_valuesCount > UNIT_FIELD_COMBATREACH) ? m_floatValues[UNIT_FIELD_COMBATREACH] : DEFAULT_WORLD_OBJECT_SIZE;
+}
+
+void WorldObject::MovePosition(Position &pos, float dist, float angle)
 {
     angle += GetOrientation();
-    x += dist * cos(angle);
-    y += dist * sin(angle);
-    Trinity::NormalizeMapCoord(x);
-    Trinity::NormalizeMapCoord(y);
-    UpdateGroundPositionZ(x, y, z);
+    float destx, desty, destz, ground, floor;
+    destx = pos.m_positionX + dist * std::cos(angle);
+    desty = pos.m_positionY + dist * std::sin(angle);
+
+    // Prevent invalid coordinates here, position is unchanged
+    if (!Trinity::IsValidMapCoord(destx, desty, pos.m_positionZ))
+    {
+    	sLog.outError("WorldObject::MovePosition invalid coordinates X: %f and Y: %f were passed!", destx, desty);
+        return;
+    }
+
+    ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+    floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+    destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+
+    float step = dist/10.0f;
+
+    for (uint8 j = 0; j < 10; ++j)
+    {
+        // do not allow too big z changes
+        if (fabs(pos.m_positionZ - destz) > 6)
+        {
+            destx -= step * std::cos(angle);
+            desty -= step * std::sin(angle);
+            ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+            floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+            destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+        }
+        // we have correct destz now
+        else
+        {
+            pos.Relocate(destx, desty, destz);
+            break;
+        }
+    }
+
+    Trinity::NormalizeMapCoord(pos.m_positionX);
+    Trinity::NormalizeMapCoord(pos.m_positionY);
+    UpdateGroundPositionZ(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+    pos.SetOrientation(GetOrientation());
 }
 
-bool Position::HasInArc(float arc, const Position *obj) const
+void WorldObject::GetNearPosition(Position &pos, float dist, float angle)
 {
-    // always have self in arc
-    if (obj == this)
-        return true;
+    GetPosition(&pos);
+    MovePosition(pos, dist, angle);
+}
 
-    // move arc to range 0.. 2*pi
-    arc = Trinity::NormalizeOrientation(arc);
+void WorldObject::GetRandomNearPosition(Position &pos, float radius)
+{
+    GetPosition(&pos);
+    MovePosition(pos, radius * (float)rand_norm(), (float)rand_norm() * static_cast<float>(2 * M_PI));
+}
 
-    float angle = GetAngle(obj->GetPositionX(), obj->GetPositionY());
-    angle -= m_orientation;
+bool Position::HasInArc(float arc, const Position *obj, float border) const
+{
+	// always have self in arc
+	if (obj == this)
+	    return true;
+
+	// move arc to range 0.. 2*pi
+	arc = NormalizeOrientation(arc);
+
+	float angle = GetAngle(obj);
+	angle -= m_orientation;
 
     // move angle to range -pi ... +pi
-    angle = Trinity::NormalizeOrientation(angle);
-    if (angle > M_PI)
-        angle -= 2.0f*M_PI;
+	angle = NormalizeOrientation(angle);
+	if (angle > M_PI)
+	    angle -= 2.0f*M_PI;
 
-    float lborder =  -1 * (arc/2.0f);                       // in range -pi..0
-    float rborder = (arc/2.0f);                             // in range 0..pi
-    return ((angle >= lborder) && (angle <= rborder));
+	float lborder = -1 * (arc/border);                        // in range -pi..0
+	float rborder = (arc/border);                             // in range 0..pi
+	return ((angle >= lborder) && (angle <= rborder));
 }
 
-bool Position::HasInLine(const Unit* const target, float distance, float width) const
+bool WorldObject::isInFront(WorldObject const* target,  float arc) const
 {
-    if (!HasInArc(float(M_PI), target) || (target->GetDistance(m_positionX, m_positionY, m_positionZ) >= distance) )
+    return HasInArc(arc, target);
+}
+
+bool WorldObject::isInBack(WorldObject const* target, float arc) const
+{
+    return !HasInArc(2 * M_PI - arc, target);
+}
+
+bool Position::HasInLine(const Unit* const target, float width) const
+{
+    if (!HasInArc(float(M_PI), target))
         return false;
     width += target->GetObjectSize();
-    float angle = GetRelativeAngle(target->GetPositionX(), target->GetPositionY());
+    float angle = GetRelativeAngle(target);
     return fabs(sin(angle)) * GetExactDist2d(target->GetPositionX(), target->GetPositionY()) < width;
 }
 

@@ -1116,9 +1116,9 @@ void Channel::RemoveGMBan(uint64 accountid)
 uint32 Channel::GetNumPlayers()
 { 
     uint32 falseCount = 0;
-    for(auto itr : players)
+    for(PlayerList::iterator itr = players.begin(); itr != players.end(); ++itr)
     {
-        if(!(itr.second.invisible))
+        if(!((*itr).second.invisible))
             falseCount++;
     }
     return falseCount;

@@ -459,7 +459,7 @@ class Creature : public Unit
         
         void DisappearAndDie();
 
-        bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data = NULL);
+        bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data = NULL);
         bool LoadCreaturesAddon(bool reload = false);
         void SelectLevel(const CreatureInfo *cinfo);
         void LoadEquipment(uint32 equip_entry, bool force=false);
@@ -477,11 +477,17 @@ class Creature : public Unit
         bool isRacialLeader() const { return GetCreatureInfo()->RacialLeader; }
         bool isCivilian() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_CIVILIAN; }
         bool isTrigger() const { return GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_TRIGGER; }
-        bool canWalk() const { return GetCreatureInfo()->InhabitType & INHABIT_GROUND; }
-        bool canSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
-        bool canFly()  const { return GetCreatureInfo()->InhabitType & INHABIT_AIR; }
-        void SetFlying(bool apply);
-        void SetWalk(bool enable, bool asDefault = true);
+        bool canWalk() const { return (GetCreatureInfo()->InhabitType & INHABIT_GROUND); }
+        bool canSwim() const { return (GetCreatureInfo()->InhabitType & INHABIT_WATER); }
+        bool canFly()  const { return (GetCreatureInfo()->InhabitType & INHABIT_AIR); }
+
+        bool SetWalk(bool enable);
+        bool SetSwim(bool enable);
+        bool SetCanFly(bool enable);
+        bool SetWaterWalking(bool enable, bool packetOnly = false);
+        bool SetFeatherFall(bool enable, bool packetOnly = false);
+        bool SetHover(bool enable, bool packetOnly = false);
+
         void SetReactState(ReactStates st) { m_reactState = st; }
         ReactStates GetReactState() { return m_reactState; }
         bool HasReactState(ReactStates state) const { return (m_reactState == state); }
@@ -520,7 +526,6 @@ class Creature : public Unit
 
         bool AIM_Initialize(CreatureAI* ai = NULL);
 
-        void AI_SendMoveToPacket(float x, float y, float z, uint32 time, uint32 MovementFlags, uint8 type);
         CreatureAI* AI() { return (CreatureAI*)i_AI; }
         CreatureAINew* getAI() { return m_AI; }
 
@@ -593,7 +598,6 @@ class Creature : public Unit
         const char* GetNameForLocaleIdx(int32 locale_idx) const;
 
         void setDeathState(DeathState s);                   // overwrite virtual Unit::setDeathState
-        bool FallGround();
 
         bool LoadFromDB(uint32 guid, Map *map);
         void SaveToDB();

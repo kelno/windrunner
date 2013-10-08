@@ -61,7 +61,7 @@
 #include "GameEvent.h"
 
 #include "MoveMap.h"                                        // for mmap manager
-#include "PathFinder.h"                                     // for mmap commands                                
+#include "PathFinder.h"                                     // for mmap commands
 
 //reload commands
 bool ChatHandler::HandleReloadCommand(const char* arg)
@@ -3947,9 +3947,9 @@ bool ChatHandler::HandleWaterwalkCommand(const char* args)
     }
 
     if (strncmp(args, "on", 3) == 0)
-        player->SetMovement(MOVE_WATER_WALK);               // ON
+        player->SetWaterWalking(true);               // ON
     else if (strncmp(args, "off", 4) == 0)
-        player->SetMovement(MOVE_LAND_WALK);                // OFF
+    	player->SetWaterWalking(false);              // OFF
     else
     {
         SendSysMessage(LANG_USE_BOL);
@@ -5866,25 +5866,18 @@ bool ChatHandler::HandleFlyModeCommand(const char* args)
     if (!unit || (unit->GetTypeId() != TYPEID_PLAYER))
         unit = m_session->GetPlayer();
 
-    WorldPacket data(12);
+    Player *target = (Player*)unit;
+
     if (strncmp(args, "on", 3) == 0)
-    {
-        data.SetOpcode(SMSG_MOVE_SET_CAN_FLY);
-        ((Player*)(unit))->SetCanFly(true);
-    }
+    	target->SetCanFly(true, true);
     else if (strncmp(args, "off", 4) == 0)
-    {
-        data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
-        ((Player*)(unit))->SetCanFly(false);
-    }
+    	target->SetCanFly(false, true);
     else
     {
         SendSysMessage(LANG_USE_BOL);
         return false;
     }
-    data.append(unit->GetPackGUID());
-    data << uint32(0);                                      // unknown
-    unit->SendMessageToSet(&data, true);
+
     PSendSysMessage(LANG_COMMAND_FLYMODE_STATUS, unit->GetName(), args);
     return true;
 }
@@ -6106,7 +6099,7 @@ bool ChatHandler::HandleMovegensCommand(const char* /*args*/)
             case WAYPOINT_MOTION_TYPE:      SendSysMessage(LANG_MOVEGENS_WAYPOINT);      break;
             case ANIMAL_RANDOM_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_ANIMAL_RANDOM); break;
             case CONFUSED_MOTION_TYPE:      SendSysMessage(LANG_MOVEGENS_CONFUSED);      break;
-            case TARGETED_MOTION_TYPE:
+            /*case TARGETED_MOTION_TYPE:
             {
                 if(unit->GetTypeId()==TYPEID_PLAYER)
                 {
@@ -6147,7 +6140,7 @@ bool ChatHandler::HandleMovegensCommand(const char* /*args*/)
                 break;
             }
             case FLEEING_MOTION_TYPE:  SendSysMessage(LANG_MOVEGENS_FEAR);    break;
-            case DISTRACT_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_DISTRACT);  break;
+            case DISTRACT_MOTION_TYPE: SendSysMessage(LANG_MOVEGENS_DISTRACT);  break;*/
             default:
                 PSendSysMessage(LANG_MOVEGENS_UNKNOWN,mg->GetMovementGeneratorType());
                 break;
@@ -7958,8 +7951,8 @@ bool ChatHandler::HandleNpcSetCombatDistanceCommand(const char* args)
 
     if(pCreature->AI())
     {
-        pCreature->AI()->SetCombatDistance(distance);
-        PSendSysMessage("m_combatDistance set to %f", distance);
+        //pCreature->AI()->SetCombatDistance(distance);
+        PSendSysMessage("command disabled");
     }
 
     return true;

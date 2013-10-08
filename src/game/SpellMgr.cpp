@@ -586,6 +586,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
         case 37472:
         case 45989:
         case 20553:
+        case 45856:                                         // Breath: Haste
+        case 45860:                                         // Breath: Revitalize
             return true;
         case  1852:                                         // Silenced (GM)
         case 46392:                                         // Focused Assault
@@ -2636,6 +2638,8 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45662:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             spellInfo->AttributesEx2 |= SPELL_ATTR_EX2_CANT_CRIT;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 46394:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
@@ -2643,6 +2647,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45661:
         case 45665:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 45401:
             spellInfo->procChance = 15;
@@ -3046,7 +3051,11 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46087:
         case 46161:
         case 46289:
-        case 45657: //Darkness of a Thousand Souls
+        case 45657: // Darkness of a Thousand Souls
+        case 45782: // Fog corruption
+        case 45714: // Fog corruption
+        case 45717: // Fog corruption
+        case 45726: // Fog corruption
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 26102: // Sandblast (Ouro)
@@ -3075,9 +3084,25 @@ void SpellMgr::LoadSpellCustomAttr()
         case 19516:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
+        case 29943: // TEMP: For a event from Gashrok! NOT BLIZZLIKE
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
+            break;
+        case 45391: // Vapor Select
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->MaxAffectedTargets = 1;
+            break;
         case 45892:
             spellInfo->MaxAffectedTargets = 1;
             break;
+        case 45866:
+        case 45855:
+        case 47002:
+        case 46931:
+        case 45402:
+        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+        	break;
         default:
             break;
         }

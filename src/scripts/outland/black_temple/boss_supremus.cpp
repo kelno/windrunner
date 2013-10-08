@@ -52,7 +52,7 @@ struct molten_flameAI : public ScriptedAI
 
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
-        /* me->GetNearPoint(me, destX, destY, destZ, 1, 50, M_PI*2*rand_norm());
+        /* me->GetNearPoint(me, destX, destY, destZ, 50, M_PI*2*rand_norm());
         me->GetMotionMaster()->MovePoint(0, destX, destY, destZ); */
     }
     

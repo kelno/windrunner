@@ -848,6 +848,8 @@ struct TaxiPathNodeEntry
     float     z;
     uint32    actionFlag;
     uint32    delay;
+    uint32    arrivalEventID;
+    uint32    departureEventID;
 };
 
 struct TotemCategoryEntry
@@ -932,15 +934,19 @@ typedef std::map<uint32,TaxiPathSetForSource> TaxiPathSetBySource;
 
 struct TaxiPathNode
 {
-    TaxiPathNode() : mapid(0), x(0),y(0),z(0),actionFlag(0),delay(0) {}
-    TaxiPathNode(uint32 _mapid, float _x, float _y, float _z, uint32 _actionFlag, uint32 _delay) : mapid(_mapid), x(_x),y(_y),z(_z),actionFlag(_actionFlag),delay(_delay) {}
+    TaxiPathNode() : mapid(0), x(0),y(0),z(0),actionFlag(0),delay(0), arrivalEventID(0), departureEventID(0), index(0), path(0) {}
+    TaxiPathNode(uint32 _mapid, float _x, float _y, float _z, uint32 _actionFlag, uint32 _delay, uint32 arrivalID, uint32 departureID, uint32 ind, uint32 pth) : mapid(_mapid), x(_x),y(_y),z(_z),actionFlag(_actionFlag),delay(_delay), arrivalEventID(arrivalID), departureEventID(departureID), index(ind), path(pth) {}
 
+    uint32    index;
+    uint32    path;
     uint32    mapid;
     float     x;
     float     y;
     float     z;
     uint32    actionFlag;
     uint32    delay;
+    uint32    arrivalEventID;
+    uint32    departureEventID;
 };
 typedef std::vector<TaxiPathNode> TaxiPathNodeList;
 typedef std::vector<TaxiPathNodeList> TaxiPathNodesByPath;

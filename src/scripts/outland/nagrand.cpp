@@ -760,7 +760,7 @@ struct npc_maghar_captiveAI : public npc_escortAI
         if (pSummoned->isTotem())
             return;
 
-        pSummoned->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        pSummoned->SetWalk(false);
         pSummoned->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ());
         pSummoned->AI()->AttackStart(m_creature);
     }

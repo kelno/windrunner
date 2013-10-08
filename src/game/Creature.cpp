@@ -33,6 +33,8 @@
 #include "Log.h"
 #include "LootMgr.h"
 #include "MapManager.h"
+#include "MoveSpline.h"
+#include "MoveSplineInit.h"
 #include "CreatureAI.h"
 #include "CreatureAINew.h"
 #include "CreatureAISelector.h"
@@ -171,7 +173,6 @@ m_isBeingEscorted(false)
     m_CreatureSpellCooldowns.clear();
     m_CreatureCategoryCooldowns.clear();
     m_GlobalCooldown = 0;
-    m_unit_movement_flags = MOVEMENTFLAG_WALK_MODE;
     DisableReputationGain = false;
     TriggerJustRespawned = false;
 }
@@ -654,11 +655,6 @@ void Creature::Update(uint32 diff)
             
             break;
         }
-        case DEAD_FALLING:
-        {
-            if (!FallGround())
-                setDeathState(JUST_DIED);
-        }
         default:
             break;
     }
@@ -731,7 +727,9 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
     }
 
     if(i_AI) delete i_AI;
-    i_motionMaster.Initialize();    // Keep this when getting rid of old system
+
+    i_motionMaster.Initialize();
+
     i_AI = ai ? ai : FactorySelector::selectAI(this);
     IsAIEnabled = true;     // Keep this when getting rid of old system
     i_AI->InitializeAI();
@@ -746,38 +744,78 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
     return true;
 }
 
-bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data)
+bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data)
 {
+	ASSERT(map);
     SetMapId(map->GetId());
     SetInstanceId(map->GetInstanceId());
-    //m_DBTableGuid = guidlow;
 
-    //oX = x;     oY = y;    dX = x;    dY = y;    m_moveTime = 0;    m_startMove = 0;
-    const bool bResult = CreateFromProto(guidlow, Entry, team, data);
-
-    if (bResult)
+    CreatureInfo const* cinfo = objmgr.GetCreatureTemplate(Entry);
+    if (!cinfo)
     {
-        switch (GetCreatureInfo()->rank)
-        {
-            case CREATURE_ELITE_RARE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RARE);
-                break;
-            case CREATURE_ELITE_ELITE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_ELITE);
-                break;
-            case CREATURE_ELITE_RAREELITE:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RAREELITE);
-                break;
-            case CREATURE_ELITE_WORLDBOSS:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_WORLDBOSS);
-                break;
-            default:
-                m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_NORMAL);
-                break;
-        }
-        LoadCreaturesAddon();
+    	sLog.outError("Creature::Create(): creature template (guidlow: %u, entry: %u) does not exist.", guidlow, Entry);
+        return false;
     }
-    return bResult;
+
+    //! Relocate before CreateFromProto, to initialize coords and allow
+    //! returning correct zone id for selecting OutdoorPvP/Battlefield script
+    Relocate(x, y, z, ang);
+
+    if (!CreateFromProto(guidlow, Entry, team, data))
+    	return false;
+
+    if (!IsPositionValid())
+    {
+        sLog.outError("Creature::Create(): given coordinates for creature (guidlow %d, entry %d) are not valid (X: %f, Y: %f, Z: %f, O: %f)", guidlow, Entry, data->posX, data->posY, data->posZ, data->orientation);
+        return false;
+    }
+
+    switch (GetCreatureInfo()->rank)
+    {
+        case CREATURE_ELITE_RARE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RARE);
+            break;
+        case CREATURE_ELITE_ELITE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_ELITE);
+            break;
+        case CREATURE_ELITE_RAREELITE:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_RAREELITE);
+            break;
+        case CREATURE_ELITE_WORLDBOSS:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_WORLDBOSS);
+            break;
+        default:
+            m_corpseDelay = sWorld.getConfig(CONFIG_CORPSE_DECAY_NORMAL);
+            break;
+    }
+
+    LoadCreaturesAddon();
+
+    //! Need to be called after LoadCreaturesAddon - MOVEMENTFLAG_HOVER is set there
+    if (HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+    {
+    	float z = data->posZ;
+        z += 1.0f;
+
+        //! Relocate again with updated Z coord
+        Relocate(data->posX, data->posY, z, data->orientation);
+    }
+
+    uint32 displayID = GetNativeDisplayId();
+    CreatureModelInfo const* minfo = objmgr.GetCreatureModelRandomGender(displayID);
+    if (minfo && !isTotem())                               // Cancel load if no model defined or if totem
+    {
+        SetDisplayId(displayID);
+        SetNativeDisplayId(displayID);
+        SetByteValue(UNIT_FIELD_BYTES_0, 2, minfo->gender);
+    }
+
+    if (Entry == VISUAL_WAYPOINT)
+    	SetVisibility(VISIBILITY_OFF);
+
+    SetWalk(true);
+
+    return true;
 }
 
 bool Creature::isTrainerFor(Player* pPlayer, bool msg) const
@@ -1293,29 +1331,6 @@ void Creature::LoadGossipOptions()
     m_gossipOptionLoaded = true;
 }
 
-void Creature::AI_SendMoveToPacket(float x, float y, float z, uint32 time, uint32 MovementFlags, uint8 type)
-{
-    /*    uint32 timeElap = getMSTime();
-        if ((timeElap - m_startMove) < m_moveTime)
-        {
-            oX = (dX - oX) * ( (timeElap - m_startMove) / m_moveTime );
-            oY = (dY - oY) * ( (timeElap - m_startMove) / m_moveTime );
-        }
-        else
-        {
-            oX = dX;
-            oY = dY;
-        }
-
-        dX = x;
-        dY = y;
-        m_orientation = atan2((oY - dY), (oX - dX));
-
-        m_startMove = getMSTime();
-        m_moveTime = time;*/
-    SendMonsterMove(x, y, z, time);
-}
-
 Player *Creature::GetLootRecipient() const
 {
     if (!m_lootRecipient) return NULL;
@@ -1386,7 +1401,7 @@ void Creature::SaveToDB(uint32 mapid, uint8 spawnMask)
     data.equipmentId = GetEquipmentId();
     data.posX = GetPositionX();
     data.posY = GetPositionY();
-    data.posZ = GetPositionZ();
+    data.posZ = GetPositionZMinusOffset();
     data.orientation = GetOrientation();
     data.spawntimesecs = m_respawnDelay;
     // prevent add data integrity problems
@@ -1565,12 +1580,7 @@ bool Creature::CreateFromProto(uint32 guidlow, uint32 Entry, uint32 team, const 
     //Normally non-players do not teleport to other maps.
     Map *map = FindMap();
     if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-    {
-        // Workaround, I need position_x in OnCreatureCreate for Felmyst. I'll rewrite the hook with data as third parameter later
-        if (data)
-            m_positionX = data->posX;
         ((InstanceMap*)map)->GetInstanceData()->OnCreatureCreate(this, Entry);
-    }
 
     return true;
 }
@@ -1593,19 +1603,19 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     }
 
     m_DBTableGuid = guid;
-    if (map->GetInstanceId() != 0) guid = objmgr.GenerateLowGuid(HIGHGUID_UNIT,true);
+
+    if (map->GetInstanceId() != 0)
+    	guid = objmgr.GenerateLowGuid(HIGHGUID_UNIT,true);
+    else
+    {
+    	if (map->GetCreature(MAKE_NEW_GUID(guid, data->id, HIGHGUID_UNIT)))
+    	    return false;
+    }
 
     uint16 team = 0;
-    if(!Create(guid,map,data->id,team,data))
+    if(!Create(guid, map, data->id, team, data->posX, data->posY, data->posZ, data->orientation, data))
         return false;
 
-    Relocate(data->posX,data->posY,data->posZ,data->orientation);
-
-    if(!IsPositionValid())
-    {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not loaded. Suggested coordinates isn't valid (X: %f Y: %f)",GetGUIDLow(),GetEntry(),GetPositionX(),GetPositionY());
-        return false;
-    }
     //We should set first home position, because then AI calls home movement
     SetHomePosition(data->posX,data->posY,data->posZ,data->orientation);
 
@@ -1642,6 +1652,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     m_defaultMovementType = MovementGeneratorType(data->movementType);
 
     AIM_Initialize();
+
     return true;
 }
 
@@ -1814,75 +1825,58 @@ float Creature::GetAttackDistance(Unit const* pl) const
 
 void Creature::setDeathState(DeathState s)
 {
-    if((s == JUST_DIED && !m_isDeadByDefault)||(s == JUST_ALIVED && m_isDeadByDefault))
-    {
-        m_corpseRemoveTime = time(NULL) + m_corpseDelay;
-        m_respawnTime = time(NULL) + m_respawnDelay + m_corpseDelay;
+	if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
+	{
+		m_corpseRemoveTime = time(NULL) + m_corpseDelay;
+	    m_respawnTime = time(NULL) + m_respawnDelay;        // respawn delay (spawntimesecs)
 
-        // always save boss respawn time at death to prevent crash cheating
-        if(sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
-            SaveRespawnTime();
-            
-        Map *map = FindMap();
-        if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-            ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
+	    // always save boss respawn time at death to prevent crash cheating
+	    if (sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
+	        SaveRespawnTime();
 
-        if (canFly() && FallGround())
-            return;
-    }
-    Unit::setDeathState(s);
+	    Map *map = FindMap();
+	    if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
+	        ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
+	}
+	Unit::setDeathState(s);
 
-    if(s == JUST_DIED)
-    {
-        SetUInt64Value (UNIT_FIELD_TARGET,0);               // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
-        SetUInt32Value(UNIT_NPC_FLAGS, 0);
-        //if(!isPet())
-            setActive(false);
+	if(s == JUST_DIED)
+	{
+        SetTarget(0);                // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
+        SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
-        if(!isPet() && GetCreatureInfo()->SkinLootId)
-            if ( LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId) )
-                SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+        setActive(false);
 
-        if (canFly() && FallGround())
-            return;
+        if (!isPet() && GetCreatureInfo()->SkinLootId)
+            if (LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId))
+            	SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+
+        if ((canFly() || IsFlying()))
+            i_motionMaster.MoveFall();
 
         Unit::setDeathState(CORPSE);
     }
-    if(s == JUST_ALIVED)
+	if(s == JUST_ALIVED)
     {
-        //if(isPet())
-        //    setActive(true);
+		clearUnitState(UNIT_STAT_ALL_STATE);
+
+		Unit::setDeathState(ALIVE);
+
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
+
         ResetPlayerDamageReq();
-        Unit::setDeathState(ALIVE);
+
         CreatureInfo const *cinfo = GetCreatureInfo();
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
-        AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
-        clearUnitState(UNIT_STAT_ALL_STATE);
-        i_motionMaster.Initialize();
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
         LoadCreaturesAddon(true);
+
+        SetWalk(true);
+        i_motionMaster.Initialize();
     }
-}
-
-bool Creature::FallGround()
-{
-    // Let's abort after we called this function one time
-    if (getDeathState() == DEAD_FALLING)
-        return false;
-
-    float x, y, z;
-    GetPosition(x, y, z);
-    float ground_Z = GetMap()->GetHeight(x, y, z);
-    if (fabs(ground_Z - z) < 0.1f)
-        return false;
-
-    Unit::setDeathState(DEAD_FALLING);
-    GetMotionMaster()->MovePoint(0, x, y, ground_Z);
-    Relocate(x, y, ground_Z);
-    return true;
 }
 
 void Creature::Respawn()
@@ -2177,7 +2171,7 @@ void Creature::DoFleeToGetAssistance(float radius) // Optional parameter
     if(!pCreature)
         SetControlled(true, UNIT_STAT_FLEEING);
     else
-        GetMotionMaster()->MovePoint(0,pCreature->GetPositionX(),pCreature->GetPositionY(),pCreature->GetPositionZ());
+    	GetMotionMaster()->MoveSeekAssistance(pCreature->GetPositionX(), pCreature->GetPositionY(), pCreature->GetPositionZ());
 }
 
 Unit* Creature::SelectNearestTarget(float dist) const
@@ -2784,36 +2778,92 @@ bool Creature::IsBetweenHPPercent(float minPercent, float maxPercent)
     return GetHealth() > minHealthAtPercent && GetHealth() < maxHealthAtPercent;
 }
 
-void Creature::SetFlying(bool apply)
+bool Creature::SetWalk(bool enable)
 {
-    if (apply)
-    {
-        SetByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
-        AddUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-//        addUnitState(UNIT_STAT_IN_FLIGHT);
-    }
-    else
-    {
-        RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
-        RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT);
-//        clearUnitState(UNIT_STAT_IN_FLIGHT);
-    }
-}
-
-void Creature::SetWalk(bool enable, bool asDefault)
-{
-    // Nothing changed?
-    if (enable == (bool)HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE))
-        return;
-
-    if (enable)
-        AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-    else
-        RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+    if (!Unit::SetWalk(enable))
+        return false;
 
     WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_WALK_MODE : SMSG_SPLINE_MOVE_SET_RUN_MODE, 9);
     data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Creature::SetSwim(bool enable)
+{
+    if (!Unit::SetSwim(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_START_SWIM : SMSG_SPLINE_MOVE_STOP_SWIM);
+    data.append(GetPackGUID());
     SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetCanFly(bool enable)
+{
+    if (!Unit::SetCanFly(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_FLYING : SMSG_SPLINE_MOVE_UNSET_FLYING, 9);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Creature::SetWaterWalking(bool enable, bool packetOnly /* = false */)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_WATER_WALK : SMSG_SPLINE_MOVE_LAND_WALK);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetFeatherFall(bool enable, bool packetOnly /* = false */)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(enable))
+        return false;
+
+    if (!movespline->Initialized())
+        return true;
+
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_FEATHER_FALL : SMSG_SPLINE_MOVE_NORMAL_FALL);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, true);
+    return true;
+}
+
+bool Creature::SetHover(bool enable, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(enable))
+        return false;
+
+    //! Unconfirmed for players:
+    if (enable)
+    	SetByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
+    else
+    	RemoveByteFlag(UNIT_FIELD_BYTES_1, 3, 0x02);
+
+    if (!movespline->Initialized())
+        return true;
+
+    //! Not always a packet is sent
+    WorldPacket data(enable ? SMSG_SPLINE_MOVE_SET_HOVER : SMSG_SPLINE_MOVE_UNSET_HOVER, 9);
+    data.append(GetPackGUID());
+    SendMessageToSet(&data, false);
+    return true;
 }
 
 bool Creature::isMoving()
