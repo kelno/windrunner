@@ -59,6 +59,7 @@ struct instance_black_temple : public ScriptedInstance
     uint64 IllidanStormrage;
     uint64 TeronGorefiend;
 
+    uint64 GateOpeningAnnouncer;
     uint64 NajentusGate;
     uint32 NajentusGateTimer;
     bool NajentusGateTimed;
@@ -94,6 +95,7 @@ struct instance_black_temple : public ScriptedInstance
         IllidanStormrage = 0;
         TeronGorefiend = 0;
 
+        GateOpeningAnnouncer = 0;
         NajentusGate    = 0;
         NajentusGateTimer = 0;
         NajentusGateTimed = false;
@@ -153,6 +155,7 @@ struct instance_black_temple : public ScriptedInstance
             else
                 ashtongues.push_back(creature->GetGUID());
             break;
+        case 30000:    GateOpeningAnnouncer = creature->GetGUID();      break; //summoned by najentus on death
         }
     }
     
@@ -336,9 +339,8 @@ struct instance_black_temple : public ScriptedInstance
                 HandleGameObject(NajentusGate, true);
                 NajentusGateTimed = false;
 
-                Creature* naj = instance->GetCreatureInMap(Najentus);
-                if(naj)
-                    DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, naj); //Fixme : this is supposed to be in the chatbox and not a boss emote. But how do you get a normal emote without the name of the creature in the beginning?
+                Creature* c = instance->GetCreatureInMap(GateOpeningAnnouncer);
+                if(c) DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, c); //May be hacky, any way yo get a normal emote without the name of the creature in the beginning?
             } else NajentusGateTimer -= diff;
         }
     }

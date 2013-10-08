@@ -55,6 +55,8 @@ enum NajentusSpells {
 #define TIMER_ENRAGE                 480000
 #define TIMER_IMPALING_SPINE         21000
 
+#define CREATURE_INVISIBLE_ANNOUNCER 30000 // To announce gate opening
+
 enum NajentusGobjects {
     GOBJECT_SPINE                  = 185584
 };
@@ -108,7 +110,10 @@ struct boss_najentusAI : public ScriptedAI
     void JustDied(Unit *victim)
     {
         if(pInstance)
+        {
+            DoSpawnCreature(CREATURE_INVISIBLE_ANNOUNCER,0,0,0,0, TEMPSUMMON_TIMED_DESPAWN, 30000);
             pInstance->SetData(DATA_HIGHWARLORDNAJENTUSEVENT, DONE);
+        }
 
         DoScriptText(SAY_DEATH, m_creature);
     }
