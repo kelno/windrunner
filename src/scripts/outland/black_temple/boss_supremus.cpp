@@ -55,6 +55,8 @@ struct molten_flameAI : public ScriptedAI
 {
     ScriptedInstance* pInstance;
     Unit* currentTarget;
+    
+    float x, y, z, groundZ;
 
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
@@ -64,17 +66,16 @@ struct molten_flameAI : public ScriptedAI
     
     void UndermapCheck()
     {
-        float currentX, currentY, currentZ, groundZ;
 
-        currentX = m_creature->GetPositionX();
-        currentY = m_creature->GetPositionY();
-        currentZ = m_creature->GetPositionZ();
-        groundZ = currentZ;
+        x = m_creature->GetPositionX();
+        y = m_creature->GetPositionY();
+        z = m_creature->GetPositionZ();
+        groundZ = z;
             
-        m_creature->UpdateGroundPositionZ(currentX, currentY, groundZ);
+        m_creature->UpdateGroundPositionZ(x, z, groundZ);
             
-        if (currentZ < groundZ)
-            DoTeleportTo(currentX, currentY, groundZ);
+        if (z < groundZ)
+            DoTeleportTo(x, y, groundZ);
 
     }
 
@@ -98,13 +99,13 @@ struct molten_flameAI : public ScriptedAI
             currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
 
         if(currentTarget)
-            me->GetMotionMaster()->MoveFollow(currentTarget,0,0);
+            me->GetMotionMaster()->MoveFollowOnPoint(currentTarget);
     }
     
     void UpdateAI(uint32 const diff)
     {
         //change target if we reached it
-        if(!currentTarget || me->GetDistance(currentTarget) < 5.0f)
+        if(!currentTarget || me->GetDistance(currentTarget) < 2.0f)
             RandomizeTarget();
     }
 };
@@ -257,7 +258,10 @@ struct boss_supremusAI : public ScriptedAI
         
         if(PhaseSwitchTimer < diff)
         {
-            SetPhase(currentPhase);
+            if(currentPhase == 1)
+                SetPhase(2);
+            else
+                SetPhase(1);
         }else PhaseSwitchTimer -= diff;
 
         if(BerserkTimer < diff)
