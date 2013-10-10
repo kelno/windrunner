@@ -386,6 +386,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -434,6 +435,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
