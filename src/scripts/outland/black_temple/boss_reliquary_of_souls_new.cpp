@@ -145,7 +145,7 @@ public:
                 
             return true;
         }
-        
+        /*
         // Used to transfer threat between phases
         void mergeThreatList(Creature* essence)
         {
@@ -163,7 +163,7 @@ public:
                 }
             }
         }
-        
+        */
         void onDeath(Unit* killer)
         {
             if (instance) {
@@ -218,7 +218,8 @@ public:
                     if (Creature* summon = me->SummonCreature(23417 + phase, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0)) {
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         if (summon->getAI()) {
-                            summon->getAI()->attackStart(selectUnit(SELECT_TARGET_TOPAGGRO, 0));
+                            //summon->getAI()->attackStart(selectUnit(SELECT_TARGET_TOPAGGRO, 0));
+                            summon->AI()->AttackStart(selectUnit(SELECT_TARGET_NEAREST,0,150.0f,true));
                             essenceGUID = summon->GetGUID();
                             summon->SetSummoner(me);
                             me->GetMotionMaster()->MoveIdle();
@@ -346,17 +347,18 @@ public:
         {
             if (onSpawn) {
                 addEvent(EV_FIXATE, 8000, 8000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_ENRAGE, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_SOUL_DRAIN, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_ENRAGE, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_SOUL_DRAIN, 20000, 20000, EVENT_FLAG_DELAY_IF_CASTING);
             }
             else {
                 scheduleEvent(EV_FIXATE, 8000);
-                scheduleEvent(EV_ENRAGE, 30000);
-                scheduleEvent(EV_SOUL_DRAIN, 45000);
+                scheduleEvent(EV_ENRAGE, 45000);
+                scheduleEvent(EV_SOUL_DRAIN, 20000);
             }
             
             me->SetFullTauntImmunity(true);
             me->SetNoCallAssistance(true);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
         }
         
         void evade()
@@ -423,11 +425,11 @@ public:
                 case EV_ENRAGE:
                     doCast(me, SPELL_ENRAGE);
                     talk(TALK_SUFF_EMOTE_ENRAGE);
-                    scheduleEvent(EV_ENRAGE, 60000);
+                    scheduleEvent(EV_ENRAGE, 30000);
                     break;
                 case EV_SOUL_DRAIN:
                     doCast(selectUnit(SELECT_TARGET_RANDOM, 0), SPELL_SOUL_DRAIN);
-                    scheduleEvent(EV_SOUL_DRAIN, 60000);
+                    scheduleEvent(EV_SOUL_DRAIN, 20000);
                     break;
                 }
             }
@@ -461,14 +463,14 @@ public:
         void onReset(bool onSpawn)
         {
             if (onSpawn) {
-                addEvent(EV_RUNE_SHIELD, 60000, 60000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_DEADEN, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_SOUL_SHOCK, 5000, 5000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_RUNE_SHIELD, 12000, 12000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_DEADEN, 25000, 25000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_SOUL_SHOCK, 6000, 6000, EVENT_FLAG_DELAY_IF_CASTING);
             }
             else {
-                scheduleEvent(EV_RUNE_SHIELD, 60000);
-                scheduleEvent(EV_DEADEN, 30000);
-                scheduleEvent(EV_SOUL_SHOCK, 5000);
+                scheduleEvent(EV_RUNE_SHIELD, 12000);
+                scheduleEvent(EV_DEADEN, 25000);
+                scheduleEvent(EV_SOUL_SHOCK, 6000);
             }
             
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CONFUSE, true);
@@ -545,15 +547,15 @@ public:
                     doCast(me, SPELL_RUNE_SHIELD, true);
                     delayEvent(EV_SOUL_SHOCK, 2000);
                     delayEvent(EV_DEADEN, 2000);
-                    scheduleEvent(EV_RUNE_SHIELD, 60000);
+                    scheduleEvent(EV_RUNE_SHIELD, 15000);
                     break;
                 case EV_SOUL_SHOCK:
                     doCast(me->getVictim(), SPELL_SOUL_SHOCK);
-                    scheduleEvent(EV_SOUL_SHOCK, 5000);
+                    scheduleEvent(EV_SOUL_SHOCK, 6000);
                     break;
                 case EV_DEADEN:
                     doCast(me->getVictim(), SPELL_DEADEN);
-                    scheduleEvent(EV_DEADEN, 25000, 35000);
+                    scheduleEvent(EV_DEADEN, 30000, 30000);
                     if ((rand() % 2) == 0)
                         talk(TALK_DESI_SAY_SPEC);
                     break;
@@ -591,12 +593,12 @@ public:
             if (onSpawn) {
                 addEvent(EV_CHECK_TANK, 3000, 3000);
                 addEvent(EV_SOUL_SCREAM, 10000, 10000, EVENT_FLAG_DELAY_IF_CASTING);
-                addEvent(EV_SPITE, 30000, 30000, EVENT_FLAG_DELAY_IF_CASTING);
+                addEvent(EV_SPITE, 20000, 20000, EVENT_FLAG_DELAY_IF_CASTING);
             }
             else {
                 scheduleEvent(EV_CHECK_TANK, 3000);
                 scheduleEvent(EV_SOUL_SCREAM, 10000);
-                scheduleEvent(EV_SPITE, 30000);
+                scheduleEvent(EV_SPITE, 20000);
             }
             
             tankGUID = 0;
@@ -660,7 +662,7 @@ public:
                 case EV_SPITE:
                     doCast(me, SPELL_SPITE_TARGET);
                     talk(TALK_ANGER_SAY_SPEC);
-                    scheduleEvent(EV_SPITE, 30000);
+                    scheduleEvent(EV_SPITE, 20000);
                     break;
                 }
             }
@@ -711,7 +713,7 @@ public:
     }
 };
 
-void addSC_boss_reliquary_of_souls()
+void AddSC_boss_reliquary_of_souls()
 {
     sScriptMgr.addScript(new Boss_reliquary_of_souls());
     sScriptMgr.addScript(new Boss_essence_of_suffering());
