@@ -222,7 +222,7 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
         }else EnterEvadeMode();
         return true;
     }
-
+    /*
     void MergeThreatList(Creature *pTarget)
     {
         if (!pTarget)
@@ -241,6 +241,7 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
             }
         }
     }
+    */
 
     void JustDied(Unit* killer)
     {
@@ -299,7 +300,7 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
                 if(Creature* Summon = DoSpawnCreature(23417+Phase, 0, 0, 0, 0, TEMPSUMMON_DEAD_DESPAWN, 0))
                 {
                     m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);  // Ribs: open
-                    Summon->AI()->AttackStart(SelectUnit(SELECT_TARGET_TOPAGGRO, 0));
+                    Summon->AI()->AttackStart(SelectUnit(SELECT_TARGET_NEAREST,0,0.0f,150.0f,true));
                     EssenceGUID = Summon->GetGUID();
                     ((boss_soul_essenceAI*)Summon->AI())->ReliquaryGUID = m_creature->GetGUID();
                     DoStartNoMovement(m_creature);
@@ -310,14 +311,14 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
                 if(Phase == 3)
                 {
                     if(!Essence->isAlive())
-                        m_creature->CastSpell(m_creature, 7, true);
+                        m_creature->CastSpell(m_creature, 7, true); //Suicide
                     else return;
                 }
                 else
                 {
                     if(Essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE))
                     {
-                        MergeThreatList(Essence);
+                        //MergeThreatList(Essence);
                         Essence->RemoveAllAuras();
                         Essence->DeleteThreatList();
                         //Essence->AI()->EnterEvadeMode();
@@ -336,7 +337,7 @@ struct boss_reliquary_of_soulsAI : public ScriptedAI
                 }
                 else
                 {
-                    MergeThreatList(Essence);
+                   // MergeThreatList(Essence);
                     Essence->RemoveAllAuras();
                     Essence->DeleteThreatList();
                     //Essence->AI()->EnterEvadeMode();
@@ -415,8 +416,8 @@ struct boss_essence_of_sufferingAI : public boss_soul_essenceAI
 
         AggroYellTimer = 5000;
         FixateTimer = 8000;
-        EnrageTimer = 30000;
-        SoulDrainTimer = 45000;
+        EnrageTimer = 45000;
+        SoulDrainTimer = 20000;
         AuraTimer = 5000;
         
         boss_soul_essenceAI::Reset();
@@ -496,14 +497,14 @@ struct boss_essence_of_sufferingAI : public boss_soul_essenceAI
         if(EnrageTimer < diff)
         {
             DoCast(m_creature, SPELL_ENRAGE);
-            EnrageTimer = 60000;
+            EnrageTimer = 30000;
             DoScriptText(SUFF_EMOTE_ENRAGE, m_creature);
         }else EnrageTimer -= diff;
 
         if(SoulDrainTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_SOUL_DRAIN);
-            SoulDrainTimer = 60000;
+            SoulDrainTimer = 20000;
         }else SoulDrainTimer -= diff;
 
         DoMeleeAttackIfReady();
@@ -520,9 +521,9 @@ struct boss_essence_of_desireAI : public boss_soul_essenceAI
 
     void Reset()
     {
-        RuneShieldTimer = 60000;
-        DeadenTimer = 30000;
-        SoulShockTimer = 5000;
+        RuneShieldTimer = 12000;
+        DeadenTimer = 25000;
+        SoulShockTimer = 6000;
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CONFUSE, true);
         
         boss_soul_essenceAI::Reset();
@@ -580,7 +581,7 @@ struct boss_essence_of_desireAI : public boss_soul_essenceAI
                 m_creature->CastSpell(m_creature, SPELL_RUNE_SHIELD, true);
                 SoulShockTimer += 2000;
                 DeadenTimer += 2000;
-                RuneShieldTimer = 60000;
+                RuneShieldTimer = 15000;
             }
         }else RuneShieldTimer -= diff;
 
@@ -589,7 +590,7 @@ struct boss_essence_of_desireAI : public boss_soul_essenceAI
             if (!m_creature->IsNonMeleeSpellCasted(false))
             {
                 DoCast(m_creature->getVictim(), SPELL_SOUL_SHOCK);
-                SoulShockTimer = 5000;
+                SoulShockTimer = 6000;
             }
         }else SoulShockTimer -= diff;
 
@@ -599,7 +600,7 @@ struct boss_essence_of_desireAI : public boss_soul_essenceAI
             {
                 m_creature->InterruptNonMeleeSpells(false);
                 DoCast(m_creature->getVictim(), SPELL_DEADEN);
-                DeadenTimer = 25000 + rand()%10000;
+                DeadenTimer = 30000;
                 if(!(rand()%2))
                 {
                     DoScriptText(DESI_SAY_SPEC, m_creature);
@@ -631,7 +632,7 @@ struct boss_essence_of_angerAI : public boss_soul_essenceAI
 
         CheckTankTimer = 5000;
         SoulScreamTimer = 10000;
-        SpiteTimer = 30000;
+        SpiteTimer = 20000;
 
         SpiteTargetGUID.clear();
 
@@ -694,7 +695,7 @@ struct boss_essence_of_angerAI : public boss_soul_essenceAI
         if(SpiteTimer < diff)
         {
             DoCast(m_creature, SPELL_SPITE_TARGET);
-            SpiteTimer = 30000;
+            SpiteTimer = 20000;
             DoScriptText(ANGER_SAY_SPEC, m_creature);
         }else SpiteTimer -= diff;
 
