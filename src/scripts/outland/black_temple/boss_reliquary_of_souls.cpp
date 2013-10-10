@@ -423,6 +423,8 @@ struct boss_essence_of_sufferingAI : public boss_soul_essenceAI
         boss_soul_essenceAI::Reset();
         
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        // SPELL_AURA_HASTE_SPELLS too?
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
