@@ -178,7 +178,6 @@ extern void AddSC_boss_supremus();
 extern void AddSC_boss_gurtogg_bloodboil();
 extern void AddSC_boss_mother_shahraz();
 extern void AddSC_boss_reliquary_of_souls();
-extern void addSC_boss_reliquary_of_souls(); // New
 extern void AddSC_boss_teron_gorefiend();
 extern void AddSC_boss_najentus();
 extern void AddSC_boss_illidari_council();
@@ -1569,7 +1568,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_gurtogg_bloodboil();
     AddSC_boss_mother_shahraz();
     AddSC_boss_reliquary_of_souls();
-    addSC_boss_reliquary_of_souls(); // New
     AddSC_boss_teron_gorefiend();
     AddSC_boss_najentus();
     AddSC_boss_illidari_council();
