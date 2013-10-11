@@ -306,11 +306,13 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                     m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
                     
                     // If VMaps are disabled, this spell can call the whole instance
+                    target->ApplySpellImmune(0, IMMUNITY_ID, SPELL_INSIGNIFIGANCE, true);
                     DoCast(m_creature, SPELL_INSIGNIFIGANCE, true);
                     DoCast(target,SPELL_FEL_RAGE_1, true);
                     DoCast(target,SPELL_FEL_RAGE_2, true);
                     DoCast(target,SPELL_FEL_RAGE_3, true);
                     DoCast(target,SPELL_FEL_RAGE_SCALE, true);
+                    target->ApplySpellImmune(0, IMMUNITY_ID, SPELL_INSIGNIFIGANCE, false);
 
                     //Cast this without triggered so that it appears in combat logs and shows visual.
                     DoCast(m_creature, SPELL_FEL_RAGE_SELF);
