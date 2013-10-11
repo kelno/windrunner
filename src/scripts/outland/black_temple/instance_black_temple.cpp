@@ -58,6 +58,7 @@ struct instance_black_temple : public ScriptedInstance
     uint64 BloodElfCouncilVoice;
     uint64 IllidanStormrage;
     uint64 TeronGorefiend;
+    uint64 ReliquaryOfSouls;
 
     uint64 GateOpeningAnnouncer;
     uint64 NajentusGate;
@@ -94,6 +95,7 @@ struct instance_black_temple : public ScriptedInstance
         BloodElfCouncilVoice = 0;
         IllidanStormrage = 0;
         TeronGorefiend = 0;
+        ReliquaryOfSouls = 0;
 
         GateOpeningAnnouncer = 0;
         NajentusGate    = 0;
@@ -143,6 +145,7 @@ struct instance_black_temple : public ScriptedInstance
         case 23426:    IllidariCouncil = creature->GetGUID();           break;
         case 23499:    BloodElfCouncilVoice = creature->GetGUID();      break;
         case 22871:    TeronGorefiend = creature->GetGUID();            break;
+        case 22856:    ReliquaryOfSouls = creature->GetGUID();          break;
         case 22844:
         case 22845:
         case 22846:
@@ -228,6 +231,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_GAMEOBJECT_SUPREMUS_DOORS:   return MainTempleDoors;
         case DATA_BLOOD_ELF_COUNCIL_VOICE:     return BloodElfCouncilVoice;
         case DATA_TERON:                       return TeronGorefiend;
+        case DATA_RELIQUARY_OF_SOULS:          return ReliquaryOfSouls;
         }
 
         return 0;

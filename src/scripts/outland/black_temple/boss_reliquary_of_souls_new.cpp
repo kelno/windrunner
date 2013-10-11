@@ -26,6 +26,9 @@ enum ReliquaryOfSoulsData {
     TALK_ANGER_SAY_DEATH            = 4,
     
     // Spells
+    SPELL_SUMMON_SOUL               = 41537, // trigger 41538
+    SPELL_SUMMON_SOUL2              = 41538, // actual summoning
+
     AURA_OF_SUFFERING               = 41292,
     AURA_OF_SUFFERING_ARMOR         = 42017, // linked aura, need core support
     ESSENCE_OF_SUFFERING_PASSIVE    = 41296, // periodic trigger 41294
@@ -54,8 +57,11 @@ enum ReliquaryOfSoulsData {
     
     // Misc
     CREATURE_ENSLAVED_SOUL          = 23469,
-    NUMBER_ENSLAVED_SOUL            = 8,
+    NUMBER_ENSLAVED_SOUL            = 15,
     DATA_SOUL_DEATH                 = 0,
+    DATA_SOUL_SPAWN                 = 1,
+
+    CREATURE_RIFT_MARKER            = 23472,
     
     // Phases
     PHASE_NONE                      = 0,
@@ -63,14 +69,14 @@ enum ReliquaryOfSoulsData {
     PHASE_DESIRE                    = 2,
     PHASE_ANGER                     = 3
 };
-
+/*
 static float soulsPos[][2] = { {450.4, 212.3},
                                {542.1, 212.3},
                                {542.1, 168.3},
                                {542.1, 137.4},
                                {450.4, 137.4},
                                {450.4, 168.3} };
-
+                               */
 class Boss_reliquary_of_souls : public CreatureScript
 {
 public:
@@ -86,8 +92,44 @@ public:
             phase = PHASE_NONE;
             step = 0;
             timer = 0;
+            //me->getAI()->SetCombatMovementAllowed(false); NYI in CreatureAINew
         }
         
+        Creature* getRandomRift()
+        {
+            if(riftMarkers.size() == 0)
+                return nullptr;
+
+            std::list<uint64>::iterator itr = riftMarkers.begin();
+            std::advance(itr, urand(0, riftMarkers.size() - 1));
+
+            return me->GetMap()->GetCreatureInMap(*itr);
+        }
+
+        void findRifts()
+        {
+            riftMarkers.clear();
+
+            CellPair pair(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+            Cell cell(pair);
+            cell.data.Part.reserved = ALL_DISTRICT;
+            cell.SetNoCreate();
+
+            std::list<Creature*> RiftList;
+
+            Trinity::AllCreaturesOfEntryInRange check(me, CREATURE_RIFT_MARKER, 75);
+            Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(RiftList, check);
+            TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+            cell.Visit(pair, visitor, *(me->GetMap()));
+
+            for(auto itr : RiftList)
+                riftMarkers.push_back(itr->GetGUID());
+
+            if(riftMarkers.size() == 0)
+                sLog.outError("Reliquary of Souls : Cannot find any rifts markers.");
+        }
+
         void onReset(bool onSpawn)
         {
             if (instance && instance->GetData(DATA_RELIQUARYOFSOULSEVENT) != DONE)
@@ -110,11 +152,12 @@ public:
             if (instance)
                 instance->RemoveAuraOnAllPlayers(SPELL_ENEMY_SEETHE);
                 
-            me->SetNoCallAssistance(true);
+            //me->SetNoCallAssistance(true);
         }
         
         void onCombatStart(Unit* victim)
         {
+            if(riftMarkers.size() == 0) findRifts();
             me->AddThreat(victim, 10000.0f);
             setZoneInCombat();
             
@@ -126,24 +169,28 @@ public:
             timer = 0;
         }
         
-        bool summonSoul()
+        void summonSoul()
         {
-            uint32 random = rand()%6;
-            
-            //float x = soulsPos[random][0];
-            Creature* soul = me->SummonCreature(CREATURE_ENSLAVED_SOUL, soulsPos[random][0], soulsPos[random][1], me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_CORPSE_DESPAWN, 0);
+            Creature* rift = getRandomRift();
+
+            if(rift)
+                rift->CastSpell(rift,SPELL_SUMMON_SOUL2,true,0,0,me->GetGUID());
+            /*
+            me->CastSpell(
+            Creature* soul = me->SummonCreature(CREATURE_ENSLAVED_SOUL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
             if (!soul)
                 return false;
                 
             if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0)) {
                 soul->SetSummoner(me);
+                soul->SetNoCallAssistance(true);
                 if (soul->getAI())
                     soul->getAI()->attackStart(target);
             }
             else
                 evade();
                 
-            return true;
+            return true;*/
         }
         /*
         // Used to transfer threat between phases
@@ -176,6 +223,20 @@ public:
         {
             if (id == DATA_SOUL_DEATH && data == 1)
                 soulDeathCount++;
+            else if (id == DATA_SOUL_SPAWN)
+            {
+                soulCount++;
+                Creature* soul = me->GetMap()->GetCreatureInMap(MAKE_NEW_GUID(data, CREATURE_ENSLAVED_SOUL, HIGHGUID_UNIT));
+                if (soul)
+                {
+                    Unit* target = selectUnit(SELECT_TARGET_RANDOM,0,200.0f,true);
+                    if(target)
+                    {
+                        soul->getAI()->attackStart(target);
+                        soul->AddThreat(target, 1500.0f);
+                    }
+                }
+            }
         }
         
         void onMoveInLoS(Unit* who)
@@ -212,14 +273,15 @@ public:
                 case 1:
                     me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_SUBMERGE);
                     doCast(me, SPELL_SUBMERGE);
-                    timer = 2800;
+                    timer = 2500; //2800 avant
                     break;
                 case 2:
                     if (Creature* summon = me->SummonCreature(23417 + phase, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0)) {
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         if (summon->getAI()) {
                             //summon->getAI()->attackStart(selectUnit(SELECT_TARGET_TOPAGGRO, 0));
-                            summon->AI()->AttackStart(selectUnit(SELECT_TARGET_NEAREST,0,150.0f,true));
+                            Unit* target = selectUnit(SELECT_TARGET_NEAREST,0,200.0f,true);
+                            summon->getAI()->attackStart(target);
                             essenceGUID = summon->GetGUID();
                             summon->SetSummoner(me);
                             me->GetMotionMaster()->MoveIdle();
@@ -282,11 +344,11 @@ public:
                     timer = 3000;
                     break;
                 case 6:
-                    if (soulCount < NUMBER_ENSLAVED_SOUL) {
-                        if (summonSoul())
-                            soulCount++;
+                    if (soulCount < NUMBER_ENSLAVED_SOUL-2) {
+                        for(uint8 i = 0; i < 3; i++)
+                            summonSoul();
                             
-                        timer = 500;
+                        timer = 3000;
                         return;
                     }
                     break;
@@ -310,7 +372,8 @@ public:
         
     private:
         ScriptedInstance* instance;
-    
+        std::list<uint64> riftMarkers;
+
         uint64 essenceGUID;
         
         uint32 timer;
@@ -357,7 +420,7 @@ public:
             }
             
             me->SetFullTauntImmunity(true);
-            me->SetNoCallAssistance(true);
+            //me->SetNoCallAssistance(true);
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
         }
         
@@ -474,7 +537,7 @@ public:
             }
             
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CONFUSE, true);
-            me->SetNoCallAssistance(true);
+           // me->SetNoCallAssistance(true);
         }
         
         void evade()
@@ -603,7 +666,7 @@ public:
             
             tankGUID = 0;
             spiteGUIDs.clear();
-            me->SetNoCallAssistance(true);
+            //me->SetNoCallAssistance(true);
         }
         
         void evade()
@@ -617,6 +680,7 @@ public:
         void onCombatStart(Unit* victim)
         {
             tankGUID = victim->GetGUID();
+            victim->ApplySpellImmune(0, IMMUNITY_ID, SPELL_SPITE_TARGET, true); //else we would change target if it's casted on him
             
             talk(TALK_ANGER_SAY_FREED);
             setZoneInCombat();
@@ -625,6 +689,8 @@ public:
         
         void onDeath(Unit* killer)
         {
+            Player* tank = me->GetPlayer(tankGUID);
+            if(tank) tank->ApplySpellImmune(0, IMMUNITY_ID, SPELL_SPITE_TARGET, false);
             talk(TALK_ANGER_SAY_DEATH);
         }
         
@@ -690,27 +756,45 @@ public:
     class Npc_enslaved_soulAI : public CreatureAINew
     {
     public:
-        Npc_enslaved_soulAI(Creature* creature) : CreatureAINew(creature) {}
-        
-        void onCombatStart(Unit* victim)
-        {
-            doCast(me, ENSLAVED_SOUL_PASSIVE, true);
-            setZoneInCombat();
+        Npc_enslaved_soulAI(Creature* creature) : CreatureAINew(creature) 
+        { 
+            instance = ((ScriptedInstance*)creature->GetInstanceData());
+            if(instance)
+                reliquaryGUID = instance->GetData64(DATA_RELIQUARY_OF_SOULS);
         }
         
+        void onReset(bool onSpawn)
+        {
+            if(onSpawn)
+            {
+                //me->SetNoCallAssistance(true);
+                doCast(me, ENSLAVED_SOUL_PASSIVE, true);
+                Creature* reliquary = me->GetMap()->GetCreatureInMap(reliquaryGUID);
+                if (reliquary)
+                    reliquary->getAI()->message(DATA_SOUL_SPAWN, me->GetGUIDLow());
+            } else {
+                me->DisappearAndDie();
+            }
+        }
+
         void onDeath(Unit* killer)
         {
-            if (Creature* reliquary = me->GetSummoner()->ToCreature())
+            
+            Creature* reliquary = me->GetMap()->GetCreatureInMap(reliquaryGUID);
+            if (reliquary)
                 reliquary->getAI()->message(DATA_SOUL_DEATH, 1);
                 
             doCast(me, SPELL_SOUL_RELEASE, true);
-        }
+        }        
+    private:
+        ScriptedInstance* instance;
+        uint64 reliquaryGUID;
     };
-    
+
     CreatureAINew* getAI(Creature* creature)
     {
         return new Npc_enslaved_soulAI(creature);
-    }
+    };
 };
 
 void AddSC_boss_reliquary_of_souls()
