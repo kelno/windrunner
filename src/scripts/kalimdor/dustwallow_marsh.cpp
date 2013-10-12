@@ -32,10 +32,12 @@ npc_private_hendel
 npc_stinky
 npc_cassa_crimsonwing
 npc_ogron
+npc_captured_totem
 EndContentData */
 
 #include "precompiled.h"
 #include "EscortAI.h"
+#include "SimpleCooldown.h"
 
 /*######
 ## mobs_risen_husk_spirit
@@ -738,6 +740,81 @@ CreatureAI* GetAI_npc_ogron(Creature* pCreature)
 }
 
 /*######
+## npc_captured_totem
+######*/
+
+struct npc_captured_totemAI : public Scripted_NoMovementAI
+{
+    npc_captured_totemAI(Creature* creature) : Scripted_NoMovementAI(creature)
+    {
+        me->SetReactState(REACT_PASSIVE);
+        me->setFaction(35);
+    }
+
+    void Aggro(Unit* pWho)
+    {
+    }
+    
+    void MasterKilledUnit(Unit* victim)
+    {
+        if (!me->GetOwner())
+            return;
+        
+        if (victim->GetEntry() == 4344 || victim->GetEntry() == 4345)
+            me->GetOwner()->ToPlayer()->KilledMonster(23811, victim->GetGUID());
+    }
+};
+
+CreatureAI* GetAI_npc_captured_totem(Creature* creature)
+{
+    return new npc_captured_totemAI(creature);
+}
+
+/*######
+## npc_searingwhelp
+######*/
+
+#define TIMER_FIREBALL 6000
+#define SPELL_FIREBALL 11021
+
+struct SearingWhelpAI : public ScriptedAI
+{
+    SimpleCooldown* SCDBdf;
+
+    SearingWhelpAI(Creature *c) : ScriptedAI(c)
+    {
+        SCDBdf = new SimpleCooldown(TIMER_FIREBALL);
+    }
+    
+    void Aggro(Unit* who)
+    {
+        if(who)
+            DoCast(who,SPELL_FIREBALL,false);
+    }
+    
+    void Reset()
+    {
+        SCDBdf->reinitCD();
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if (!UpdateVictim())
+            return;
+        
+        if(SCDBdf->CheckAndUpdate(diff) && me->getVictim())
+            DoCast(me->getVictim(),SPELL_FIREBALL,false);
+        
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_SearingWhelp(Creature *_Creature)
+{
+    return new SearingWhelpAI(_Creature);
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -803,5 +880,15 @@ void AddSC_dustwallow_marsh()
     newscript->Name = "npc_ogron";
     newscript->GetAI = &GetAI_npc_ogron;
     newscript->pQuestAccept = &QuestAccept_npc_ogron;
+    newscript->RegisterSelf();
+    
+    newscript = new Script;
+    newscript->Name = "npc_captured_totem";
+    newscript->GetAI = &GetAI_npc_captured_totem;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_searingwhelp";
+    newscript->GetAI = &GetAI_SearingWhelp;
     newscript->RegisterSelf();
 }

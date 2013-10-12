@@ -39,6 +39,8 @@
 
 void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     // TODO: add targets.read() check
     CHECK_PACKET_SIZE(recvPacket,1+1+1+1+8);
 
@@ -190,6 +192,8 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,1+1);
 
     sLog.outDetail("WORLD: CMSG_OPEN_ITEM packet, data length = %i",recvPacket.size());
@@ -290,13 +294,14 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleGameObjectUseOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data, 8);
 
     uint64 guid;
 
     recv_data >> guid;
 
-    sLog.outDebug( "WORLD: Recvd CMSG_GAMEOBJ_USE Message [guid=%u]", GUID_LOPART(guid));
     GameObject *obj = ObjectAccessor::GetGameObject(*_player, guid);
 
     if(!obj)
@@ -312,15 +317,14 @@ void WorldSession::HandleGameObjectUseOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,4+1+2);
 
     uint32 spellId;
     uint8  cast_count;
     recvPacket >> spellId;
     recvPacket >> cast_count;
-
-    sLog.outDebug("WORLD: got cast spell packet, spellId - %u, cast_count: %u data length = %i",
-        spellId, cast_count, recvPacket.size());
 
     SpellEntry const *spellInfo = spellmgr.LookupSpell(spellId );
 
@@ -369,6 +373,8 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleCancelCastOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,4);
 
     uint32 spellId;
@@ -380,6 +386,8 @@ void WorldSession::HandleCancelCastOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,4);
 
     uint32 spellId;
@@ -414,6 +422,8 @@ void WorldSession::HandleCancelAuraOpcode( WorldPacket& recvPacket)
 
 void WorldSession::HandlePetCancelAuraOpcode( WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket, 8+4);
 
     uint64 guid;
@@ -461,6 +471,8 @@ void WorldSession::HandleCancelGrowthAuraOpcode( WorldPacket& /*recvPacket*/)
 
 void WorldSession::HandleCancelAutoRepeatSpellOpcode( WorldPacket& /*recvPacket*/)
 {
+    PROFILE;
+    
     // may be better send SMSG_CANCEL_AUTO_REPEAT?
     // cancel and prepare for deleting
     _player->InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
@@ -469,6 +481,8 @@ void WorldSession::HandleCancelAutoRepeatSpellOpcode( WorldPacket& /*recvPacket*
 /// \todo Complete HandleCancelChanneling function
 void WorldSession::HandleCancelChanneling( WorldPacket & /*recv_data */)
 {
+    PROFILE;
+    
     /*
         CHECK_PACKET_SIZE(recv_data, 4);
 
@@ -479,6 +493,8 @@ void WorldSession::HandleCancelChanneling( WorldPacket & /*recv_data */)
 
 void WorldSession::HandleTotemDestroy( WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket, 1);
 
     uint8 slotId;
@@ -499,8 +515,8 @@ void WorldSession::HandleTotemDestroy( WorldPacket& recvPacket)
 
 void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
 {
-    sLog.outDebug("WORLD: CMSG_SELF_RES");                  // empty opcode
-
+    PROFILE;
+    
     if(_player->GetUInt32Value(PLAYER_SELF_RES_SPELL))
     {
         SpellEntry const *spellInfo = spellmgr.LookupSpell(_player->GetUInt32Value(PLAYER_SELF_RES_SPELL));
@@ -513,7 +529,8 @@ void WorldSession::HandleSelfResOpcode( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleMirrorImageDataRequest(WorldPacket& recvData)
 {
-    sLog.outDebug("WORLD: CMSG_GET_MIRRORIMAGE_DATA");
+    PROFILE;
+    
     uint64 guid;
     recvData >> guid;
 

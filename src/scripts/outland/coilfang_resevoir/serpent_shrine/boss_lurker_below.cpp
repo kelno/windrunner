@@ -56,19 +56,20 @@ enum
 
 float AddPos[9][3] =
 {
-    {-6.21f , -491.38f, -22.16f},   //MOVE_AMBUSHER_1 X, Y, Z
-    {0.90f  , -495.27f, -22.20f},   //MOVE_AMBUSHER_2 X, Y, Z
-    {60.38f , -494.72f, -22.16f},   //MOVE_AMBUSHER_3 X, Y, Z
-    {71.14f , -493.37f, -22.54f},   //MOVE_AMBUSHER_4 X, Y, Z
-    {82.11f , -349.43f, -22.21f},   //MOVE_AMBUSHER_5 X, Y, Z
-    {93.45f , -355.93f, -21.59f},   //MOVE_AMBUSHER_6 X, Y, Z
-    {47.60f , -364.82f, -21.68f},   //MOVE_GUARDIAN_1 X, Y, Z
-    {-14.71f, -446.60f, -21.85f},   //MOVE_GUARDIAN_2 X, Y, Z
-    {94.24f , -400.72f, -21.65f}    //MOVE_GUARDIAN_3 X, Y, Z
+    {0.17f  , -468.30f, -19.79f},   //MOVE_AMBUSHER_1 X, Y, Z
+    {8.43f  , -471.48f, -19.79f},   //MOVE_AMBUSHER_2 X, Y, Z
+    {56.75f , -466.73f, -19.79f},   //MOVE_AMBUSHER_3 X, Y, Z
+    {63.88f , -464.75f, -19.79f},   //MOVE_AMBUSHER_4 X, Y, Z
+    {65.88f , -374.74f, -19.79f},   //MOVE_AMBUSHER_5 X, Y, Z
+    {78.52f , -381.99f, -19.72f},   //MOVE_AMBUSHER_6 X, Y, Z
+    {42.88f , -391.15f, -18.97f},   //MOVE_GUARDIAN_1 X, Y, Z
+    {13.63f , -430.81f, -19.46f},   //MOVE_GUARDIAN_2 X, Y, Z
+    {62.66f , -413.97f, -19.27f}    //MOVE_GUARDIAN_3 X, Y, Z
 };
 
 enum Phases
 {
+    NONE,
     INTRO,
     SUBMERGED,
     EMERGED,
@@ -96,7 +97,7 @@ class Boss_Lurker_Below : public CreatureScript
             uint32 spoutAnimTimer;
             uint32 rotTimer;
             uint32 submergeState;
-            uint32 nbPops;
+            float lastOrientation;
 
             Boss_Lurker_BelowAI(Creature* creature) : Creature_NoMovementAINew(creature), summons(me)
             {
@@ -127,10 +128,7 @@ class Boss_Lurker_Below : public CreatureScript
                     _instance->SetData(DATA_STRANGE_POOL, NOT_STARTED);
                 }
 
-                setPhase(SUBMERGED);
-                me->SetVisibility(VISIBILITY_OFF);//we start invis under water, submerged
-                me->setFaction(35);
-                me->SetReactState(REACT_PASSIVE);
+                setPhase(INTRO);
 
                 introState = 0;
                 introPhaseTimer = 0;
@@ -145,7 +143,7 @@ class Boss_Lurker_Below : public CreatureScript
                 spoutAnimTimer = 0;
                 rotTimer = 0;
                 submergeState = 0;
-                nbPops = 0;
+                lastOrientation = 0.0f;
             }
 
             void attackStart(Unit *pTarget)
@@ -168,9 +166,21 @@ class Boss_Lurker_Below : public CreatureScript
             {
                 switch(newPhase)
                 {
+                    case INTRO:
+                        me->InterruptNonMeleeSpells(false);
+                        me->RemoveAllAuras();
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
+                        me->SetFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
+                        doCast(me, SPELL_SUBMERGE);
+                        me->SetVisibility(VISIBILITY_OFF);
+                        me->setFaction(35);
+                        me->SetReactState(REACT_PASSIVE);
+                        break;
                     case EMERGED:
                         me->InterruptNonMeleeSpells(false);
                         me->RemoveAllAuras();
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                         me->RemoveFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         doCast(me, SPELL_EMERGE, true);
@@ -178,7 +188,6 @@ class Boss_Lurker_Below : public CreatureScript
                         break;
                     case SUBMERGED:
                         me->InterruptNonMeleeSpells(false);
-                        me->RemoveAllAuras();
                         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
                         me->SetFlag(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
@@ -186,7 +195,9 @@ class Boss_Lurker_Below : public CreatureScript
                         submergeState = 1;
                         break;
                     case IN_ROTATE:
+                        me->InterruptNonMeleeSpells(false);
                         me->MonsterTextEmote(EMOTE_SPOUT, 0, true);
+                        lastOrientation = me->GetOrientation();
                         doCast(me, SPELL_SPOUT_BREATH);
                         rotateState = 1;
                         rotateStateTimer = 3000;
@@ -200,39 +211,6 @@ class Boss_Lurker_Below : public CreatureScript
 
                 if (summoned->getAI())
                     summoned->getAI()->setZoneInCombat(true);
-
-                nbPops++;
-                switch (nbPops)
-                {
-                    case 1:
-                        summoned->GetMotionMaster()->MovePoint(0, 0.17f, -468.30f, -19.79f);
-                        break;
-                    case 2:
-                        summoned->GetMotionMaster()->MovePoint(0, 8.43f, -471.48f, -19.79f);
-                        break;
-                    case 3:
-                        summoned->GetMotionMaster()->MovePoint(0, 56.75f, -466.73f, -19.79f);
-                        break;
-                    case 4:
-                        summoned->GetMotionMaster()->MovePoint(0, 63.88f, -464.75f, -19.79f);
-                        break;
-                    case 5:
-                        summoned->GetMotionMaster()->MovePoint(0, 65.88f, -374.74f, -19.79f);
-                        break;
-                    case 6:
-                        summoned->GetMotionMaster()->MovePoint(0, 78.52f, -381.99f, -19.72f);
-                        break;
-                    case 7:
-                        summoned->GetMotionMaster()->MovePoint(0, 42.88f, -391.15f, -18.97f);
-                        break;
-                    case 8:
-                        summoned->GetMotionMaster()->MovePoint(0, 13.63f, -430.81f, -19.46f);
-                        break;
-                    case 9:
-                        nbPops = 0;
-                        summoned->GetMotionMaster()->MovePoint(0, 62.66f, -413.97f, -19.27f);
-                        break;
-                }
             }
 	
             void onSummonDespawn(Creature* unit)
@@ -289,15 +267,20 @@ class Boss_Lurker_Below : public CreatureScript
                     return;
                 }
 
+                if (!updateCombat())
+                    return;
+
                 switch (getPhase())
                 {
                     case EMERGED:
+                        if (!updateVictim())
+                            return;
+
                         if (spoutTimer < diff)
                         {
                             spoutTimer = 22000;
-                            whirlTimer = 100;//whirl directly after spout
-                            rotTimer = 23000;
-                            rotateState = 1;
+                            whirlTimer = 1000;//whirl directly after spout
+                            rotTimer = 24500;
                             setPhase(IN_ROTATE);
                             return;
                         }
@@ -324,21 +307,18 @@ class Boss_Lurker_Below : public CreatureScript
                         else
                             geyserTimer -= diff;
 
-                        if (!isInMeleeRange())
+                        if (waterboltTimer < diff)
                         {
-                            if (waterboltTimer < diff)
+                            if (!isInMeleeRange())
                             {
                                 if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
                                     doCast(target, SPELL_WATERBOLT);
 
                                 waterboltTimer = 3000;
                             }
-                            else
-                                waterboltTimer -= diff;
                         }
-
-                        if (!updateVictim())
-                            return;
+                        else
+                            waterboltTimer -= diff;
 
                         doMeleeAttackIfReady();
                         break;
@@ -347,7 +327,15 @@ class Boss_Lurker_Below : public CreatureScript
                         {
                             rotTimer = 0;
                             rotateState = 0;
+                            rotateStateTimer = 0;
                             m_phase = EMERGED;
+
+                            if(me->getVictim())
+                            {
+                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
+                                me->SetInFront(me->getVictim());
+                                me->StopMoving();
+                            }
                             return;
                         }
                         else
@@ -359,21 +347,29 @@ class Boss_Lurker_Below : public CreatureScript
                             {
                                 case 1:
                                     if(rand()%2)
-                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000);
+                                        me->StartAutoRotate(CREATURE_ROTATE_LEFT, 20000, lastOrientation, false);
                                     else
-                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000);
+                                        me->StartAutoRotate(CREATURE_ROTATE_RIGHT, 20000, lastOrientation, false);
 
                                     rotateState = 2;
                                     break;
+                                case 2:
+                                case 3:
+                                	break;
                             }
                         }
                         else
                             rotateStateTimer -= diff;
 
-                        if (rotateState == 2)
-                        {
-                            me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+                        me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
+                        if (rotateState == 1)
+                        {
+                            me->SetOrientation(lastOrientation);
+                            me->StopMoving();
+                        }
+                        else if (rotateState == 2)
+                        {
                             Map* pMap = me->GetMap();
                             Map::PlayerList const &PlayerList = pMap->GetPlayers();
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
@@ -393,11 +389,25 @@ class Boss_Lurker_Below : public CreatureScript
 
                             if(spoutAnimTimer < diff)
                             {
-                                doCast(me, SPELL_SPOUT_ANIM, true);
-                                spoutAnimTimer = 1000;
+                            	if (rotTimer >= 2000)
+                                    doCast(me, SPELL_SPOUT_ANIM, true);
+
+                            	spoutAnimTimer = 1000;
                             }
                             else
                                 spoutAnimTimer -= diff;
+
+                            if (!me->IsUnitRotating())
+                            {
+                            	rotateState = 3;
+                            	rotateStateTimer = 1000;
+                            	lastOrientation = me->GetOrientation();
+                            }
+                        }
+                        else if (rotateState == 3)
+                        {
+                        	me->SetOrientation(lastOrientation);
+                        	me->StopMoving();
                         }
                         break;
                     case SUBMERGED:
@@ -426,6 +436,7 @@ class Boss_Lurker_Below : public CreatureScript
                     {
                         phaseTimer = 90000;
                         setPhase(EMERGED);
+                        spoutTimer = 2000;
                         return;
                     }
                 }
@@ -453,9 +464,8 @@ class Mob_Coilfang_Guardian : public CreatureScript
         public:
             enum event
             {
-                EV_TEMP           = 0,
-                EV_ARCINGSMASH    = 1,
-                EV_HAMSTRING      = 2
+                EV_ARCINGSMASH    = 0,
+                EV_HAMSTRING      = 1
             };
 
             Mob_Coilfang_GuardianAI(Creature* creature) : CreatureAINew(creature)
@@ -467,30 +477,13 @@ class Mob_Coilfang_Guardian : public CreatureScript
             {
                 if (onSpawn)
                 {
-                    addEvent(EV_TEMP, 11000, 11000);
                     addEvent(EV_ARCINGSMASH, 5000, 5000);
                     addEvent(EV_HAMSTRING, 2000, 2000);
                 }
                 else
                 {
-                    scheduleEvent(EV_TEMP, 11000, 11000);
                     scheduleEvent(EV_ARCINGSMASH, 5000, 5000);
                     scheduleEvent(EV_HAMSTRING, 2000, 2000);
-                }
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-            }
-
-            void onMovementInform(uint32 type, uint32 id)
-            {
-                if(type == POINT_MOTION_TYPE)
-                {
-                    switch (id)
-                    {
-                        case 0:
-                            setZoneInCombat(true);
-                            attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-                            break;
-                    }
                 }
             }
 
@@ -505,16 +498,6 @@ class Mob_Coilfang_Guardian : public CreatureScript
                 {
                     switch (m_currEvent)
                     {
-                        case EV_TEMP:
-                            setZoneInCombat(true);
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
-                            {
-                                attackStart(target);
-                                disableEvent(EV_TEMP);
-                            }
-                            else
-                                scheduleEvent(EV_TEMP, 500);
-                            break;
                         case EV_ARCINGSMASH:
                             doCast(me->getVictim(), SPELL_ARCINGSMASH);
                             scheduleEvent(EV_ARCINGSMASH, urand(10000, 15000));
@@ -544,33 +527,17 @@ class Mob_Coilfang_Ambusher : public CreatureScript
     public:
         Mob_Coilfang_Ambusher() : CreatureScript("Mob_Coilfang_Ambusher") {}
 
-    class Mob_Coilfang_AmbusherAI : public CreatureAINew
+    class Mob_Coilfang_AmbusherAI : public Creature_NoMovementAINew
     {
         public:
             enum event
             {
-                EV_TEMP           = 0,
-                EV_MULTISHOT      = 1,
-                EV_SHOOTBOW       = 2
+                EV_MULTISHOT      = 0,
+                EV_SHOOTBOW       = 1
             };
 
-            Mob_Coilfang_AmbusherAI(Creature* creature) : CreatureAINew(creature)
+            Mob_Coilfang_AmbusherAI(Creature* creature) : Creature_NoMovementAINew(creature)
             {
-                SpellEntry *TempSpell = GET_SPELL(SPELL_SPREAD_SHOT);
-                if (TempSpell)
-                {
-                    TempSpell->Effect[0] = 0;
-                    TempSpell->Effect[1] = 0;
-                    TempSpell->Effect[2] = 0;
-                }
-                TempSpell = GET_SPELL(SPELL_SHOOT);
-                if (TempSpell)
-                {
-                    TempSpell->Effect[0] = 0;
-                    TempSpell->Effect[1] = 0;
-                    TempSpell->Effect[2] = 0;
-                }
-
                 _instance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
@@ -578,64 +545,13 @@ class Mob_Coilfang_Ambusher : public CreatureScript
             {
                 if (onSpawn)
                 {
-                    addEvent(EV_TEMP, 11000, 11000);
                     addEvent(EV_MULTISHOT, 10000, 10000);
                     addEvent(EV_SHOOTBOW, 4000, 4000);
                 }
                 else
                 {
-                    scheduleEvent(EV_TEMP, 11000, 11000);
                     scheduleEvent(EV_MULTISHOT, 10000, 10000);
                     scheduleEvent(EV_SHOOTBOW, 4000, 4000);
-                }
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
-            }
-
-            void onMovementInform(uint32 type, uint32 id)
-            {
-                if(type == POINT_MOTION_TYPE)
-                {
-                    switch (id)
-                    {
-                        case 0:
-                            setZoneInCombat(true);
-                            attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-                            break;
-                    }
-                }
-            }
-
-            void onSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
-            {
-                if (spellId == 37790)
-                {
-                    if (caster->ToCreature())
-                    {
-                        if (me == caster->ToCreature())
-                        {
-                            uint32 damage = 0;
-                            uint32 absorb, resist;
-                            damage = target->CalcArmorReducedDamage(target, 3500);
-                            target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SPREAD_SHOT);
-                            uint32 damageTaken = me->DealDamage(target, damage - absorb - resist);
-                            me->SendSpellNonMeleeDamageLog(target, SPELL_SPREAD_SHOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
-                        }
-                    }
-                }
-                else if (spellId = 37770)
-                {
-                    if (caster->ToCreature())
-                    {
-                        if (me == caster->ToCreature())
-                        {
-                            uint32 damage = 0;
-                            uint32 absorb, resist;
-                            damage = target->CalcArmorReducedDamage(target, 3500);
-                            target->CalcAbsorbResist(target, SPELL_SCHOOL_MASK_NORMAL, SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, SPELL_SHOOT);
-                            uint32 damageTaken = me->DealDamage(target, damage - absorb - resist);
-                            me->SendSpellNonMeleeDamageLog(target, SPELL_SHOOT, damageTaken, SPELL_SCHOOL_MASK_NORMAL, absorb, resist, true, 0, false);
-                        }
-                    }
                 }
             }
 
@@ -650,28 +566,14 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                 {
                     switch (m_currEvent)
                     {
-                        case EV_TEMP:
-                            setZoneInCombat(true);
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
-                            {
-                                attackStart(target);
-                                disableEvent(EV_TEMP);
-                            }
-                            else
-                                scheduleEvent(EV_TEMP, 500);
-                            break;
                         case EV_MULTISHOT:
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
-                                doCast(target, SPELL_SPREAD_SHOT);
+                            doCast(me->getVictim(), SPELL_SPREAD_SHOT);
 
                             scheduleEvent(EV_MULTISHOT, urand(5000, 15000));
                             break;
                         case EV_SHOOTBOW:
                             if (!me->hasUnitState(UNIT_STAT_CASTING))
-                            {
-                                if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 45.0f, false))
-                                    doCast(target, SPELL_SHOOT);
-                            }
+                                doCast(me->getVictim(), SPELL_SHOOT);
 
                             scheduleEvent(EV_SHOOTBOW, urand(2000, 5000));
                             break;

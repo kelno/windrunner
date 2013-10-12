@@ -183,7 +183,7 @@ inline void Trinity::DynamicObjectUpdater::VisitHelper(Unit* target)
         return;
 
     //Check player targets and remove if in GM mode or GM invisibility (for not self casting case)
-    if( target->GetTypeId()==TYPEID_PLAYER && target != i_check && ((target->ToPlayer())->isGameMaster() || (target->ToPlayer())->GetVisibility()==VISIBILITY_OFF) )
+    if( target->GetTypeId()==TYPEID_PLAYER && target != i_check && (((target->ToPlayer())->isGameMaster() || (target->ToPlayer())->isSpectator()) || (target->ToPlayer())->GetVisibility()==VISIBILITY_OFF) )
         return;
 
     if (i_dynobject.IsAffecting(target))
@@ -197,19 +197,20 @@ inline void Trinity::DynamicObjectUpdater::VisitHelper(Unit* target)
         if(!i_check->IsFriendlyTo(target))
             return;
     }
-    else if( i_check->GetTypeId()==TYPEID_PLAYER )
+    else 
     {
-        if (i_check->IsFriendlyTo( target ))
-            return;
+        if(i_check->GetTypeId()==TYPEID_PLAYER )
+        {
+            if (i_check->IsFriendlyTo( target ))
+                return;
+        } else {
+            if (!i_check->IsHostileTo( target ))
+                return;
+        }
 
-        i_check->CombatStart(target);
-    }
-    else
-    {
-        if (!i_check->IsHostileTo( target ))
-            return;
-
-        i_check->CombatStart(target);
+        if (   !(spellInfo->AttributesEx  & SPELL_ATTR_EX_NO_THREAT)
+            && !(spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO) )
+           i_check->CombatStart(target);
     }
 
     // Check target immune to spell or aura

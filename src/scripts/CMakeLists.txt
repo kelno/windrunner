@@ -6,6 +6,8 @@ SET(scripts_STAT_SRCS
     include/FollowerAI.cpp
     include/FollowerAI.h
     include/GenericCreature.cpp
+	include/SimpleCooldown.h
+	include/SimpleCooldown.cpp
     include/ScriptedCreature.cpp
     include/ScriptedCreature.h
     include/ScriptedGossip.h
@@ -17,6 +19,7 @@ SET(scripts_STAT_SRCS
     include/precompiled.h
     azeroth/arathi_highlands.cpp
     azeroth/alterac_mountains.cpp
+    azeroth/alterac_valley/alterac_bowman.cpp
     azeroth/alterac_valley/AV_Marshals.cpp
     azeroth/alterac_valley/AV_Warmasters.cpp
     azeroth/alterac_valley/boss_balinda.cpp
@@ -197,7 +200,7 @@ SET(scripts_STAT_SRCS
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
     custom/custom_npc_teleporter.cpp
-	custom/custom_theinform.cpp
+    custom/custom_theinform.cpp
     custom/custom_training_dummy.cpp
     custom/custom_zone_silence.cpp
     custom/on_events.cpp
@@ -308,18 +311,21 @@ SET(scripts_STAT_SRCS
     misc/hallowsend.cpp
     misc/item_scripts.cpp
     misc/item_test.cpp
+    misc/npc_arenabeastmaster.cpp
+    misc/npc_catapultmaster.cpp
     misc/npc_innkeeper.cpp
+    misc/npc_interpreter.cpp
     misc/npc_professions.cpp
+    misc/npc_spectate.cpp
+    misc/npc_teleporter_pvpzone.cpp
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
+    misc/npc_mylittlebombling.cpp
     outdoor/boss_azuregos.cpp
     outdoor/boss_doomwalker.cpp
     outdoor/boss_doomlord_kazzak.cpp
-    outdoor/boss_emeriss.cpp
+	outdoor/boss_dragonsofnightmare.cpp
     outdoor/boss_kruul.cpp
-    outdoor/boss_lethon.cpp
-    outdoor/boss_taerar.cpp
-    outdoor/boss_ysondre.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
@@ -341,7 +347,6 @@ SET(scripts_STAT_SRCS
     outland/black_temple/boss_bloodboil.cpp
     outland/black_temple/boss_illidan.cpp
     outland/black_temple/boss_mother_shahraz.cpp
-    outland/black_temple/boss_reliquary_of_souls.cpp
     outland/black_temple/boss_reliquary_of_souls_new.cpp
     outland/black_temple/boss_shade_of_akama.cpp
     outland/black_temple/boss_supremus.cpp
@@ -405,7 +410,6 @@ SET(scripts_STAT_SRCS
     outland/shartuul_event.cpp
     outland/shattrath_city.cpp
     outland/silvermoon_city.cpp
-    outland/sunwell_plateau/boss_kiljaeden.cpp
     outland/sunwell_plateau/boss_kiljaeden_new.cpp
     outland/sunwell_plateau/boss_muru.cpp
     outland/sunwell_plateau/boss_eredar_twins.cpp
@@ -449,6 +453,26 @@ SET(scripts_STAT_SRCS
     outland/zulaman/zulaman.cpp
 )
     
+MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+IF(MSVC)
+GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
+SET(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
+SET(Sources ${${SourcesVar}})
+
+SET_SOURCE_FILES_PROPERTIES(${PrecompiledSource}
+	PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+	OBJECT_OUTPUTS "${PrecompiledBinary}")
+SET_SOURCE_FILES_PROPERTIES(${Sources}
+	PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\""
+   OBJECT_DEPENDS "${PrecompiledBinary}")  
+# Add precompiled header to SourcesVar
+LIST(APPEND ${SourcesVar} ${PrecompiledSource})
+ENDIF(MSVC)
+ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
+
 #add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/trinitycore.conf"')
+IF (WIN32 AND MSVC)
+	ADD_MSVC_PRECOMPILED_HEADER("precompiled.h" "precompiled.cpp" ${scripts_STAT_SRCS})
+ENDIF()
 add_library(scripts STATIC ${scripts_STAT_SRCS})
 ADD_DEPENDENCIES(game scripts revision.h)

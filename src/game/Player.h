@@ -50,6 +50,7 @@ class Transport;
 class UpdateMask;
 class PlayerSocial;
 class OutdoorPvP;
+class SpectatorAddonMsg;
 
 typedef std::deque<Mail*> PlayerMails;
 
@@ -200,6 +201,11 @@ struct PlayerInfo
                                                             // existence checked by displayId != 0             // existence checked by displayId != 0
     PlayerInfo() : displayId_m(0),displayId_f(0),levelInfo(NULL)
     {
+    	positionZ = 0.0f;
+    	positionX = 0.0f;
+    	positionY = 0.0f;
+    	mapId = 0;
+    	areaId = 0;
     }
 
     uint32 mapId;
@@ -243,6 +249,27 @@ struct Areas
     float x2;
     float y1;
     float y2;
+};
+
+/* NON BLIZZ : Smoothed crit/resist chance, try to reduce lucky/bad streaks 
+    Do not use on live server, this is not yet complete
+*/
+class SmoothingSystem
+{
+public:
+    enum SmoothType {
+        SMOOTH_CRIT,
+        SMOOTH_RESIST,
+        SMOOTH_MISS,
+
+        SMOOTH_MAX
+    };
+    SmoothingSystem();
+    void ApplySmoothedChance(SmoothType type, float& chance);
+    void UpdateSmoothedChance(SmoothType type, bool success);
+private:
+    uint32* totals;
+    uint32* successes;
 };
 
 enum FactionFlags
@@ -334,6 +361,7 @@ struct FactionState
     uint32 Flags;
     int32  Standing;
     bool Changed;
+    bool Deleted;
 };
 
 typedef std::map<RepListID,FactionState> FactionStateList;
@@ -467,24 +495,49 @@ enum PlayerStateType
 
 enum PlayerFlags
 {
-    PLAYER_FLAGS_GROUP_LEADER   = 0x00000001,
-    PLAYER_FLAGS_AFK            = 0x00000002,
-    PLAYER_FLAGS_DND            = 0x00000004,
-    PLAYER_FLAGS_GM             = 0x00000008,
-    PLAYER_FLAGS_GHOST          = 0x00000010,
-    PLAYER_FLAGS_RESTING        = 0x00000020,
-    PLAYER_FLAGS_FFA_PVP        = 0x00000080,
-    PLAYER_FLAGS_CONTESTED_PVP  = 0x00000100,               // Player has been involved in a PvP combat and will be attacked by contested guards
-    PLAYER_FLAGS_IN_PVP         = 0x00000200,
-    PLAYER_FLAGS_HIDE_HELM      = 0x00000400,
-    PLAYER_FLAGS_HIDE_CLOAK     = 0x00000800,
-    PLAYER_FLAGS_UNK1           = 0x00001000,               // played long time
-    PLAYER_FLAGS_UNK2           = 0x00002000,               // played too long time
-    PLAYER_FLAGS_UNK3           = 0x00008000,               // strange visual effect (2.0.1), looks like PLAYER_FLAGS_GHOST flag
-    PLAYER_FLAGS_SANCTUARY      = 0x00010000,               // player entered sanctuary
-    PLAYER_FLAGS_UNK4           = 0x00020000,               // taxi benchmark mode (on/off) (2.0.1)
-    PLAYER_FLAGS_PVP_COUNTER    = 0x00040000,               // 2.0.8...
+    PLAYER_FLAGS_GROUP_LEADER       = 0x00000001,
+    PLAYER_FLAGS_AFK                = 0x00000002,
+    PLAYER_FLAGS_DND                = 0x00000004,
+    PLAYER_FLAGS_GM                 = 0x00000008,
+    PLAYER_FLAGS_GHOST              = 0x00000010,
+    PLAYER_FLAGS_RESTING            = 0x00000020,
+    PLAYER_FLAGS_FFA_PVP            = 0x00000080,
+    PLAYER_FLAGS_CONTESTED_PVP      = 0x00000100,               // Player has been involved in a PvP combat and will be attacked by contested guards
+    PLAYER_FLAGS_IN_PVP             = 0x00000200,
+    PLAYER_FLAGS_HIDE_HELM          = 0x00000400,
+    PLAYER_FLAGS_HIDE_CLOAK         = 0x00000800,
+    PLAYER_FLAGS_UNK1               = 0x00001000,               // played long time
+    PLAYER_FLAGS_UNK2               = 0x00002000,               // played too long time
+    PLAYER_FLAGS_UNK3               = 0x00008000,               // strange visual effect (2.0.1), looks like PLAYER_FLAGS_GHOST flag
+    PLAYER_FLAGS_SANCTUARY          = 0x00010000,               // player entered sanctuary
+    PLAYER_FLAGS_UNK4               = 0x00020000,               // taxi benchmark mode (on/off) (2.0.1)
+    PLAYER_FLAGS_PVP_COUNTER        = 0x00040000,               // 2.0.8...
+    PLAYER_FLAGS_COMMENTATOR        = 0x00080000,
+    PLAYER_FLAGS_UNK5               = 0x00100000,
+    PLAYER_FLAGS_UNK6               = 0x00200000,
+    PLAYER_FLAGS_COMMENTATOR_UBER   = 0x00400000
 };
+
+#define PLAYER_TITLE_MASK_ALLIANCE_PVP  \
+    (PLAYER_TITLE_PRIVATE | PLAYER_TITLE_CORPORAL |  \
+      PLAYER_TITLE_SERGEANT_A | PLAYER_TITLE_MASTER_SERGEANT | \
+      PLAYER_TITLE_SERGEANT_MAJOR | PLAYER_TITLE_KNIGHT | \
+      PLAYER_TITLE_KNIGHT_LIEUTENANT | PLAYER_TITLE_KNIGHT_CAPTAIN | \
+      PLAYER_TITLE_KNIGHT_CHAMPION | PLAYER_TITLE_LIEUTENANT_COMMANDER | \
+      PLAYER_TITLE_COMMANDER | PLAYER_TITLE_MARSHAL | \
+      PLAYER_TITLE_FIELD_MARSHAL | PLAYER_TITLE_GRAND_MARSHAL)
+
+#define PLAYER_TITLE_MASK_HORDE_PVP  \
+    (PLAYER_TITLE_SCOUT | PLAYER_TITLE_GRUNT |  \
+      PLAYER_TITLE_SERGEANT_H | PLAYER_TITLE_SENIOR_SERGEANT | \
+      PLAYER_TITLE_FIRST_SERGEANT | PLAYER_TITLE_STONE_GUARD | \
+      PLAYER_TITLE_BLOOD_GUARD | PLAYER_TITLE_LEGIONNAIRE | \
+      PLAYER_TITLE_CENTURION | PLAYER_TITLE_CHAMPION | \
+      PLAYER_TITLE_LIEUTENANT_GENERAL | PLAYER_TITLE_GENERAL | \
+      PLAYER_TITLE_WARLORD | PLAYER_TITLE_HIGH_WARLORD)
+
+#define PLAYER_TITLE_MASK_ALL_PVP  \
+    (PLAYER_TITLE_MASK_ALLIANCE_PVP | PLAYER_TITLE_MASK_HORDE_PVP)
 
 // used for PLAYER__FIELD_KNOWN_TITLES field (uint64), (1<<bit_index) without (-1)
 // can't use enum for uint64 values
@@ -595,16 +648,20 @@ enum PlayerExtraFlags
     PLAYER_EXTRA_GM_CHAT            = 0x0020,               // Show GM badge in chat messages
 
     // other states
-    PLAYER_EXTRA_PVP_DEATH          = 0x0100                // store PvP death status until corpse creating.
+    PLAYER_EXTRA_DUEL_AREA          = 0x0040,              // currently in duel area
+    PLAYER_EXTRA_PVP_DEATH          = 0x0100               // store PvP death status until corpse creating.
 };
 
 // 2^n values
 enum AtLoginFlags
 {
-    AT_LOGIN_NONE          = 0,
-    AT_LOGIN_RENAME        = 1,
-    AT_LOGIN_RESET_SPELLS  = 2,
-    AT_LOGIN_RESET_TALENTS = 4
+    AT_LOGIN_NONE          = 0x00,
+    AT_LOGIN_RENAME        = 0x01,
+    AT_LOGIN_RESET_SPELLS  = 0x02,
+    AT_LOGIN_RESET_TALENTS = 0x04,
+    AT_LOGIN_SET_DESERTER  = 0x08,
+    AT_LOGIN_RESET_FLYS    = 0x10,
+    AT_LOGIN_ALL_REP       = 0x20
 };
 
 typedef std::map<uint32, QuestStatusData> QuestStatusMap;
@@ -976,6 +1033,10 @@ class PlayerTaxi
             uint32 submask = 1<<((nodeidx-1)%32);
             return (m_taximask[field] & submask) == submask;
         }
+        void ResetTaximask() {
+            for (uint8 i = 0; i < TaxiMaskSize; i++)
+                m_taximask[i] = 0;
+        }
         bool SetTaximaskNode(uint32 nodeidx)
         {
             uint8  field   = uint8((nodeidx - 1) / 32);
@@ -1009,6 +1070,15 @@ class PlayerTaxi
         TaxiMask m_taximask;
         std::deque<uint32> m_TaxiDestinations;
 };
+
+struct SpamReport
+{
+    time_t time;
+    uint64 reporterGUID;
+    std::string message;
+};
+
+typedef std::map<uint32, SpamReport> SpamReports;
 
 class Player : public Unit
 {
@@ -1087,6 +1157,7 @@ class Player : public Unit
 
         PlayerTaxi m_taxi;
         void InitTaxiNodesForLevel() { m_taxi.InitTaxiNodesForLevel(getRace(),getLevel()); }
+        void ResetTaximask() { m_taxi.ResetTaximask(); }
         bool ActivateTaxiPathTo(std::vector<uint32> const& nodes, uint32 mount_id = 0 , Creature* npc = NULL);
         void CleanupAfterTaxiFlight();
                                                             // mount_id can be used in scripting calls
@@ -1094,13 +1165,15 @@ class Player : public Unit
         void SetAcceptWhispers(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_ACCEPT_WHISPERS; else m_ExtraFlags &= ~PLAYER_EXTRA_ACCEPT_WHISPERS; }
         bool isGameMaster() const { return m_ExtraFlags & PLAYER_EXTRA_GM_ON; }
         void SetGameMaster(bool on);
-        bool isGMChat() const { return GetSession()->GetSecurity() >= SEC_MODERATOR && (m_ExtraFlags & PLAYER_EXTRA_GM_CHAT); }
+        bool isGMChat() const { return GetSession()->GetSecurity() >= SEC_GAMEMASTER1 && (m_ExtraFlags & PLAYER_EXTRA_GM_CHAT); }
         void SetGMChat(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_GM_CHAT; else m_ExtraFlags &= ~PLAYER_EXTRA_GM_CHAT; }
         bool isTaxiCheater() const { return m_ExtraFlags & PLAYER_EXTRA_TAXICHEAT; }
         void SetTaxiCheater(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_TAXICHEAT; else m_ExtraFlags &= ~PLAYER_EXTRA_TAXICHEAT; }
         bool isGMVisible() const { return !(m_ExtraFlags & PLAYER_EXTRA_GM_INVISIBLE); }
         void SetGMVisible(bool on);
         void SetPvPDeath(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_PVP_DEATH; else m_ExtraFlags &= ~PLAYER_EXTRA_PVP_DEATH; }
+        bool isInDuelArea() const;
+        void SetDuelArea(bool on) { if(on) m_ExtraFlags |= PLAYER_EXTRA_DUEL_AREA; else m_ExtraFlags &= ~PLAYER_EXTRA_DUEL_AREA; }
 
         void GiveXP(uint32 xp, Unit* victim);
         void GiveLevel(uint32 level);
@@ -1241,8 +1314,9 @@ class Player : public Unit
                                                             // in trade, guild bank, mail....
         void RemoveItemDependentAurasAndCasts( Item * pItem );
         void DestroyItem( uint8 bag, uint8 slot, bool update );
-        void DestroyItemCount( uint32 item, uint32 count, bool update, bool unequip_check = false);
+        void DestroyItemCount( uint32 item, uint32 count, bool update, bool unequip_check = false, bool inBankAlso = false);
         void DestroyItemCount( Item* item, uint32& count, bool update );
+        void SwapItems(uint32 item1, uint32 item2);
         void DestroyConjuredItems( bool update );
         void DestroyZoneLimitedItem( bool update, uint32 new_zone );
         void SplitItem( uint16 src, uint16 dst, uint32 count );
@@ -1278,6 +1352,7 @@ class Player : public Unit
         void AddEnchantmentDurations(Item *item);
         void RemoveEnchantmentDurations(Item *item);
         void RemoveAllEnchantments(EnchantmentSlot slot, bool arena);
+        void RemoveAllCurrentPetAuras();
         void AddEnchantmentDuration(Item *item,EnchantmentSlot slot,uint32 duration);
         void ApplyEnchantment(Item *item,EnchantmentSlot slot,bool apply, bool apply_dur = true, bool ignore_condition = false);
         void ApplyEnchantment(Item *item,bool apply);
@@ -1478,7 +1553,7 @@ class Player : public Unit
         const uint64& GetSelection( ) const { return m_curSelection; }
         Unit *GetSelectedUnit() const;
         Player *GetSelectedPlayer() const;
-        void SetSelection(const uint64 &guid) { m_curSelection = guid; SetUInt64Value(UNIT_FIELD_TARGET, guid); }
+        void SetSelection(uint64 guid);
 
         uint8 GetComboPoints() { return m_comboPoints; }
         uint64 GetComboTarget() { return m_comboTarget; }
@@ -1870,6 +1945,8 @@ class Player : public Unit
         bool SetFactionReputation(uint32 FactionTemplateId, int32 standing);
         bool SetFactionReputation(FactionEntry const* factionEntry, int32 standing);
         bool SetOneFactionReputation(FactionEntry const* factionEntry, int32 standing);
+        void SwapFactionReputation(uint32 factionId1, uint32 factionId2);
+        void DropFactionReputation(uint32 factionId);
         int32 CalculateReputationGain(uint32 creatureOrQuestLevel, int32 rep, bool for_quest);
         void RewardReputation(Unit *pVictim, float rate);
         void RewardReputation(Quest const *pQuest);
@@ -1898,6 +1975,7 @@ class Player : public Unit
         void ModifyHonorPoints( int32 value );
         void ModifyArenaPoints( int32 value );
         uint32 GetMaxPersonalArenaRatingRequirement();
+        void UpdateKnownTitles();
 
         //End of PvP System
 
@@ -2128,6 +2206,10 @@ class Player : public Unit
         void HandleFallDamage(MovementInfo& movementInfo);
         void HandleFallUnderMap();
 
+        void TeleportToArenaZone(bool secondary = false);
+        bool ShouldGoToSecondaryArenaZone();
+        void GetArenaZoneCoord(bool secondary, uint32& map, float& x, float& y, float& z, float& o);
+
         void SetClientControl(Unit* target, uint8 allowMove);
 
         uint64 GetFarSight() const { return GetUInt64Value(PLAYER_FARSIGHT); }
@@ -2189,12 +2271,14 @@ class Player : public Unit
 
         bool HasAtLoginFlag(AtLoginFlags f) const { return m_atLoginFlags & f; }
         void SetAtLoginFlag(AtLoginFlags f) { m_atLoginFlags |= f; }
+        void UnsetAtLoginFlag(AtLoginFlags f) { m_atLoginFlags = m_atLoginFlags & ~f; }
 
         LookingForGroup m_lookingForGroup;
 
         // Temporarily removed pet cache
         uint32 GetTemporaryUnsummonedPetNumber() const { return m_temporaryUnsummonedPetNumber; }
         void SetTemporaryUnsummonedPetNumber(uint32 petnumber) { m_temporaryUnsummonedPetNumber = petnumber; }
+        void UnsummonPetTemporaryIfAny();
         uint32 GetOldPetSpell() const { return m_oldpetspell; }
         void SetOldPetSpell(uint32 petspell) { m_oldpetspell = petspell; }
         
@@ -2289,6 +2373,23 @@ class Player : public Unit
         uint32 getLastOpenLockKeyId() { return m_lastOpenLockKey; }
         bool hasCustomXpRate() { return m_customXp != 0.0f; }
         float getCustomXpRate() { return m_customXp; }
+
+        bool HaveSpectators();
+        void SendSpectatorAddonMsgToBG(SpectatorAddonMsg msg);
+        bool isSpectateCanceled() { return spectateCanceled; }
+        void CancelSpectate()     { spectateCanceled = true; }
+        Player* getSpectateFrom()   { return spectateFrom; }
+        bool isSpectator() const  { return spectatorFlag; }
+        void SetSpectate(bool on);
+        void SendDataForSpectator();
+
+        void setCommentator(bool on);
+
+        void addSpamReport(uint64 reporterGUID, std::string message);
+        
+        time_t lastLagReport;
+
+        SmoothingSystem* smoothingSystem;
 
     protected:
 
@@ -2385,7 +2486,6 @@ class Player : public Unit
         /*********************************************************/
         time_t m_lastHonorUpdateTime;
 
-        void outDebugValues() const;
         bool _removeSpell(uint16 spell_id);
         uint64 m_lootGuid;
 
@@ -2555,6 +2655,11 @@ class Player : public Unit
         
         bool m_bPassOnGroupLoot;
         
+        // spectator system
+        bool spectatorFlag;
+        bool spectateCanceled;
+        Player *spectateFrom;
+
     private:
         // internal common parts for CanStore/StoreItem functions
         uint8 _CanStoreItem_InSpecificSlot( uint8 bag, uint8 slot, ItemPosCountVec& dest, ItemPrototype const *pProto, uint32& count, bool swap, Item *pSrcItem ) const;
@@ -2575,6 +2680,9 @@ class Player : public Unit
         uint32 m_lastOpenLockKey;
         
         float m_customXp;
+        
+        SpamReports _spamReports;
+        time_t _lastSpamAlert; // When was the last time we reported this ugly spammer to the staff?
 
     public:
         bool m_kickatnextupdate;
@@ -2624,7 +2732,7 @@ template <class T> T Player::ApplySpellMod(uint32 spellId, SpellModOp op, T &bas
 
         if (mod->charges > 0 )
         {
-          if( !(spellInfo->SpellFamilyName == 8 && spellInfo->SpellFamilyFlags & 0x200000000LL) )
+          if( !(spellInfo->SpellFamilyName == 8 && (spellInfo->SpellFamilyFlags & 0x200000000LL)))
             --mod->charges;
             if (mod->charges == 0)
             {

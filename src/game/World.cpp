@@ -216,6 +216,8 @@ void World::AddSession(WorldSession* s)
 void
 World::AddSession_ (WorldSession* s)
 {
+    PROFILE;
+    
     ASSERT (s);
 
     //NOTE - Still there is race condition in WorldSession* being used in the Sockets
@@ -741,6 +743,18 @@ void World::LoadConfigSettings(bool reload)
         m_configs[CONFIG_START_HONOR_POINTS] = m_configs[CONFIG_MAX_HONOR_POINTS];
     }
 
+    std::string s_pvp_ranks = sConfig.GetStringDefault("PvPRank.HKPerRank", "1000,1500,2500,3500,5000,6500,9000,13000,18000,25000,35000,50000,75000,100000");
+    char *c_pvp_ranks = const_cast<char*>(s_pvp_ranks.c_str());
+    for (int i = 0; i !=HKRANKMAX; i++)
+    {
+        if(i==0)
+            pvp_ranks[0] = 0;
+        else if(i==1)
+            pvp_ranks[1] = atoi(strtok (c_pvp_ranks, ","));
+        else
+            pvp_ranks[i] = atoi(strtok (NULL, ","));
+    }
+
     m_configs[CONFIG_MAX_ARENA_POINTS] = sConfig.GetIntDefault("MaxArenaPoints", 5000);
     if(m_configs[CONFIG_MAX_ARENA_POINTS] < 0)
     {
@@ -771,6 +785,9 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE]     = sConfig.GetBoolDefault("Battleground.QueueAnnouncer.Enable", true);
     m_configs[CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_PLAYERONLY] = sConfig.GetBoolDefault("Battleground.QueueAnnouncer.PlayerOnly", false);
     m_configs[CONFIG_BATTLEGROUND_ARENA_RATED_ENABLE]         = sConfig.GetBoolDefault("Battleground.Arena.Rated.Enable", true);
+    m_configs[CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK]  = sConfig.GetIntDefault("Battleground.Arena.NightClose.Mask", 1);
+    m_configs[CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING]     = sConfig.GetBoolDefault("Battleground.Arena.Alternate.Rating", false);
+    m_configs[CONFIG_BATTLEGROUND_ARENA_ANNOUNCE]             = sConfig.GetBoolDefault("Battleground.Arena.Announce", true);
 
     m_configs[CONFIG_CAST_UNSTUCK] = sConfig.GetBoolDefault("CastUnstuck", true);
     m_configs[CONFIG_INSTANCE_RESET_TIME_HOUR]  = sConfig.GetIntDefault("Instance.ResetTimeHour", 4);
@@ -788,8 +805,8 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_GM_VISIBLE_STATE]     = sConfig.GetIntDefault("GM.Visible", 2);
     m_configs[CONFIG_GM_CHAT]              = sConfig.GetIntDefault("GM.Chat",2);
     m_configs[CONFIG_GM_WISPERING_TO]      = sConfig.GetIntDefault("GM.WhisperingTo",2);
-    m_configs[CONFIG_GM_LEVEL_IN_GM_LIST]  = sConfig.GetIntDefault("GM.InGMList.Level", SEC_ADMINISTRATOR);
-    m_configs[CONFIG_GM_LEVEL_IN_WHO_LIST] = sConfig.GetIntDefault("GM.InWhoList.Level", SEC_ADMINISTRATOR);
+    m_configs[CONFIG_GM_LEVEL_IN_GM_LIST]  = sConfig.GetIntDefault("GM.InGMList.Level", SEC_GAMEMASTER3);
+    m_configs[CONFIG_GM_LEVEL_IN_WHO_LIST] = sConfig.GetIntDefault("GM.InWhoList.Level", SEC_GAMEMASTER3);
     m_configs[CONFIG_GM_LOG_TRADE]         = sConfig.GetBoolDefault("GM.LogTrade", false);
     m_configs[CONFIG_START_GM_LEVEL]       = sConfig.GetIntDefault("GM.StartLevel", 1);
     m_configs[CONFIG_ALLOW_GM_GROUP]       = sConfig.GetBoolDefault("GM.AllowInvite", false);
@@ -870,7 +887,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY] = sConfig.GetBoolDefault("SaveRespawnTimeImmediately",true);
     m_configs[CONFIG_WEATHER] = sConfig.GetBoolDefault("ActivateWeather",true);
 
-    m_configs[CONFIG_DISABLE_BREATHING] = sConfig.GetIntDefault("DisableWaterBreath", SEC_CONSOLE);
+    m_configs[CONFIG_DISABLE_BREATHING] = sConfig.GetIntDefault("DisableWaterBreath", SEC_ADMINISTRATOR);
 
     m_configs[CONFIG_ALWAYS_MAX_SKILL_FOR_LEVEL] = sConfig.GetBoolDefault("AlwaysMaxSkillForLevel", false);
 
@@ -938,7 +955,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS] = sConfig.GetIntDefault("Arena.AutoDistributeInterval", 7);
 
     m_configs[CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER] = sConfig.GetIntDefault("BattleGround.PrematureFinishTimer", 0);
-    m_configs[CONFIG_INSTANT_LOGOUT] = sConfig.GetIntDefault("InstantLogout", SEC_MODERATOR);
+    m_configs[CONFIG_INSTANT_LOGOUT] = sConfig.GetIntDefault("InstantLogout", SEC_GAMEMASTER1);
     
     m_configs[CONFIG_GROUPLEADER_RECONNECT_PERIOD] = sConfig.GetIntDefault("GroupLeaderReconnectPeriod", 180);
 
@@ -1121,6 +1138,34 @@ void World::LoadConfigSettings(bool reload)
 
     m_configs[CONFIG_GUIDDISTRIB_NEWMETHOD] = sConfig.GetBoolDefault("GuidDistribution.NewMethod", false);
     m_configs[CONFIG_GUIDDISTRIB_PROPORTION] = sConfig.GetIntDefault("GuidDistribution.Proportion", 90);
+
+    m_configs[CONFIG_ARENA_SPECTATOR_ENABLE] = sConfig.GetBoolDefault("ArenaSpectator.Enable", true);
+    m_configs[CONFIG_ARENA_SPECTATOR_MAX] = sConfig.GetIntDefault("ArenaSpectator.Max", 10);
+    m_configs[CONFIG_ARENA_SPECTATOR_GHOST] = sConfig.GetBoolDefault("ArenaSpectator.Ghost", true);
+
+    m_configs[CONFIG_ARENA_SEASON] = sConfig.GetIntDefault("Arena.Season", 0);
+
+    m_configs[CONFIG_IRC_ENABLED] = sConfig.GetBoolDefault("IRC.Enabled", false);
+    
+    m_configs[CONFIG_SPAM_REPORT_THRESHOLD] = sConfig.GetIntDefault("Spam.Report.Threshold", 3);
+    m_configs[CONFIG_SPAM_REPORT_PERIOD] = sConfig.GetIntDefault("Spam.Report.Period", 120); // In seconds
+    m_configs[CONFIG_SPAM_REPORT_COOLDOWN] = sConfig.GetIntDefault("Spam.Report.Cooldown", 120); // In seconds
+    
+    m_configs[CONFIG_FACTION_CHANGE_ENABLED] = sConfig.GetBoolDefault("Faction.Change.Enabled", false);
+    m_configs[CONFIG_FACTION_CHANGE_A2H] = sConfig.GetBoolDefault("Faction.Change.AllianceToHorde", false);
+    m_configs[CONFIG_FACTION_CHANGE_H2A] = sConfig.GetBoolDefault("Faction.Change.HordeToAlliance", false);
+    m_configs[CONFIG_FACTION_CHANGE_H2A_COST] = sConfig.GetIntDefault("Faction.Change.AllianceToHorde.Cost", 4);
+    m_configs[CONFIG_FACTION_CHANGE_H2A_COST] = sConfig.GetIntDefault("Faction.Change.HordeToAlliance.Cost", 4);
+    m_configs[CONFIG_RACE_CHANGE_COST] = sConfig.GetIntDefault("Race.Change.Cost", 4);
+    
+    m_configs[CONFIG_DUEL_AREA_ENABLE] = sConfig.GetBoolDefault("DuelArea.Enabled", 0);
+
+    m_configs[CONFIG_ARENASERVER_ENABLED] = sConfig.GetBoolDefault("ArenaServer.Enabled", false);
+    m_configs[CONFIG_ARENASERVER_USE_CLOSESCHEDULE] = sConfig.GetBoolDefault("ArenaServer.UseCloseSchedule", true);
+    m_configs[CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD] = sConfig.GetIntDefault("ArenaServer.PlayerRepartitionThreshold", 0);
+
+    m_configs[CONFIG_SMOOTHED_CHANCE_ENABLED] = sConfig.GetBoolDefault("SmoothedChance.Enabled", 0);
+    m_configs[CONFIG_SMOOTHED_CHANCE_INFLUENCE] = sConfig.GetIntDefault("SmoothedChance.Influence", 5);
 }
 
 extern void LoadGameObjectModelList();
@@ -1192,6 +1237,7 @@ void World::SetInitialWorldSettings()
 
     sLog.outString( "Loading InstanceTemplate" );
     objmgr.LoadInstanceTemplate();
+    objmgr.LoadInstanceTemplateAddon();
 
     sLog.outString( "Loading SkillLineAbilityMultiMap Data..." );
     spellmgr.LoadSkillLineAbilityMap();
@@ -1445,8 +1491,10 @@ void World::SetInitialWorldSettings()
     objmgr.LoadFactionChangeSpells();
     sLog.outString("Loading faction change titles...");
     objmgr.LoadFactionChangeTitles();
-    sLog.outString("Loading faction change reputations... (TODO)");
-    // TODO
+    sLog.outString("Loading faction change quests...");
+    objmgr.LoadFactionChangeQuests();
+    sLog.outString("Loading faction change reputations (generic)...");
+    objmgr.LoadFactionChangeReputGeneric();
     
     sLog.outString("Loading Creature Texts...");
     sCreatureTextMgr.LoadCreatureTexts();
@@ -1471,7 +1519,6 @@ void World::SetInitialWorldSettings()
     sSmartScriptMgr.LoadSmartAIFromDB();
 
     ///- Initialize game time and timers
-    sLog.outDebug( "DEBUG:: Initialize game time and timers" );
     m_gameTime = time(NULL);
     m_startTime=m_gameTime;
 
@@ -1501,7 +1548,6 @@ void World::SetInitialWorldSettings()
     mail_timer = ((((localtime( &m_gameTime )->tm_hour + 20) % 24)* HOUR * 1000) / m_timers[WUPDATE_AUCTIONS].GetInterval() );
                                                             //1440
     mail_timer_expires = ( (DAY * 1000) / (m_timers[WUPDATE_AUCTIONS].GetInterval()));
-    sLog.outDebug("Mail timer set to: %u, mail return is called every %u minutes", mail_timer, mail_timer_expires);
 
     ///- Initilize static helper structures
     AIRegistry::Initialize();
@@ -1765,20 +1811,21 @@ void World::Update(time_t diff)
         sAHMgr.Update();
     }
 
-    RecordTimeDiff(NULL);
     /// <li> Handle session updates when the timer has passed
     if (m_timers[WUPDATE_SESSIONS].Passed())
     {
         m_timers[WUPDATE_SESSIONS].Reset();
 
+        RecordTimeDiff(NULL);
         UpdateSessions(diff);
+        RecordTimeDiff("UpdateSessions");
 
         // Update groups
+        RecordTimeDiff(NULL);
         for (ObjectMgr::GroupSet::iterator itr = objmgr.GetGroupSetBegin(); itr != objmgr.GetGroupSetEnd(); ++itr)
             (*itr)->Update(diff);
-
+        RecordTimeDiff("UpdateGroups");
     }
-    RecordTimeDiff("UpdateSessions");
 
     /// <li> Handle weather updates when the timer has passed
     if (m_timers[WUPDATE_WEATHERS].Passed())
@@ -2530,7 +2577,7 @@ void World::ScriptsProcess()
 
                 if(!cmdTarget)
                 {
-                    sLog.outError("SCRIPT_COMMAND_CAST_SPELL call for NULL %s.",step.script->datalong2 ? "source" : "target");
+                    sLog.outError("SCRIPT_COMMAND_CAST_SPELL (ID: %u) call for NULL %s.",step.script->id, step.script->datalong2 ? "source" : "target");
                     break;
                 }
 
@@ -2963,6 +3010,7 @@ BanReturn World::BanAccount(BanMode mode, std::string nameOrIP, std::string dura
     {
         Field* fieldsAccount = resultAccounts->Fetch();
         uint32 account = fieldsAccount->GetUInt32();
+        LoginDatabase.PExecute("UPDATE account SET email_temp = '', email_ts = 0 WHERE id = %u",account);
 
         if(mode!=BAN_IP)
         {
@@ -3134,6 +3182,8 @@ void World::SendServerMessage(uint32 type, const char *text, Player* player)
 
 void World::UpdateSessions( time_t diff )
 {
+    PROFILE;
+    
     ///- Add new sessions
     while(!addSessQueue.empty())
     {
@@ -3174,7 +3224,6 @@ void World::ProcessCliCommands()
 
     while (!cliCmdQueue.empty())
     {
-        sLog.outDebug("CLI command under processing...");
         CliCommandHolder *command = cliCmdQueue.next();
 
         zprint = command->m_print;
@@ -3263,7 +3312,6 @@ void World::UpdateAllowedSecurity()
      if (result)
      {
         m_allowedSecurityLevel = AccountTypes(result->Fetch()->GetUInt16());
-        sLog.outDebug("Allowed Level: %u Result %u", m_allowedSecurityLevel, result->Fetch()->GetUInt16());
         delete result;
      }
 }

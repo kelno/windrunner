@@ -45,7 +45,7 @@
 #include "Config/ConfigEnv.h"
 #include "ScriptCalls.h"
 #include "../scripts/ScriptMgr.h"
-#include "IRC.h"
+#include "IRCMgr.h"
 
 class LoginQueryHolder : public SQLQueryHolder
 {
@@ -164,6 +164,8 @@ void WorldSession::HandleCharEnum(QueryResult * result)
 
 void WorldSession::HandleCharEnumOpcode( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     /// get all the data necessary for loading all characters (along with their pets) on the account
     CharacterDatabase.AsyncPQuery(&chrHandler, &CharacterHandler::HandleCharEnumCallback, GetAccountId(),
          !sWorld.getConfig(CONFIG_DECLINED_NAMES_USED) ?
@@ -192,6 +194,8 @@ void WorldSession::HandleCharEnumOpcode( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1+1+1+1+1+1+1+1);
 
     std::string name;
@@ -407,6 +411,8 @@ void WorldSession::HandleCharCreateOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
 
     uint64 guid;
@@ -462,6 +468,8 @@ void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
     fname.append(fpath);
     PlayerDumpWriter().WriteDump(fname, GUID_LOPART(guid));
 
+    LogsDatabase.PExecute("INSERT INTO char_delete (account, guid, name, time, ip) VALUES (%u, %u, '%s', %u, '%s')", GetAccountId(), GUID_LOPART(guid), name.c_str(), time(NULL), IP_str.c_str());
+
     if(sLog.IsOutCharDump())                                // optimize GetPlayerDump call
     {
         std::string dump = PlayerDumpWriter().GetDump(GUID_LOPART(guid));
@@ -477,6 +485,8 @@ void WorldSession::HandleCharDeleteOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandlePlayerLoginOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
 
     if(PlayerLoading() || GetPlayer() != NULL)
@@ -587,6 +597,18 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         DEBUG_LOG( "WORLD: Sent server info" );
     }
 
+    //warn player if no mail associated to account
+    QueryResult *resultMail = LoginDatabase.PQuery("SELECT email, email_temp FROM account WHERE id = '%u'", pCurrChar->GetSession()->GetAccountId());
+    if(resultMail)
+    {
+        Field *fields = resultMail->Fetch();
+        const char* mail = fields[0].GetString();
+        const char* mail_temp = fields[1].GetString();
+
+        if(!(mail && strcmp(mail, "") != 0) && !(mail_temp && strcmp(mail_temp, "") != 0))
+            chH.PSendSysMessage("|cffff0000Aucune adresse email n'est actuellement associée a ce compte. Un compte sans mail associé ne peux etre recupéré en cas de perte. Vous pouvez utiliser le manager pour corriger ce problème.|r");
+    }
+    
     //QueryResult *result = CharacterDatabase.PQuery("SELECT guildid,rank FROM guild_member WHERE guid = '%u'",pCurrChar->GetGUIDLow());
     QueryResult *resultGuild = holder->GetResult(PLAYER_LOGIN_QUERY_LOADGUILD);
 
@@ -621,9 +643,9 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
             data<<pCurrChar->GetName();
             data<<pCurrChar->GetGUID();
             guild->BroadcastPacket(&data);
-            int guildid = sConfig.GetIntDefault("IRC.Guild.Id", 0);
-            if (guild->GetId() == guildid)
-                sIRC.HandleGameChannelActivity("de guilde", pCurrChar->GetName(), pCurrChar->GetSession()->GetSecurity(), pCurrChar->GetTeam(), WOW_CHAN_JOIN);
+            
+            if (sWorld.getConfig(CONFIG_IRC_ENABLED))
+                sIRCMgr.onIngameGuildJoin(guild->GetId(), guild->GetName().c_str(), pCurrChar->GetName());
 
             DEBUG_LOG( "WORLD: Sent guild-signed-on (SMSG_GUILD_EVENT)" );
 
@@ -723,9 +745,6 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
 
     if(uint32 sourceNode = pCurrChar->m_taxi.GetTaxiSource())
     {
-
-        sLog.outDebug( "WORLD: Restart character %u taxi flight", pCurrChar->GetGUIDLow() );
-
         uint32 MountId = objmgr.GetTaxiMount(sourceNode, pCurrChar->GetTeam());
         uint32 path = pCurrChar->m_taxi.GetCurrentTaxiPath();
 
@@ -794,6 +813,64 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
         pCurrChar->resetTalents(true);
         SendNotification(LANG_RESET_TALENTS);
     }
+    
+    if (pCurrChar->HasAtLoginFlag(AT_LOGIN_SET_DESERTER)) {
+        pCurrChar->CastSpell(pCurrChar, 26013, true);
+        pCurrChar->UnsetAtLoginFlag(AT_LOGIN_SET_DESERTER);
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login & ~'8' WHERE guid = %u", pCurrChar->GetGUIDLow());
+        if (pCurrChar->isDead())
+            pCurrChar->ResurrectPlayer(1.f);
+    }
+    
+    if (pCurrChar->HasAtLoginFlag(AT_LOGIN_RESET_FLYS)) {
+        pCurrChar->ResetTaximask();
+        pCurrChar->InitTaxiNodesForLevel();
+        pCurrChar->UnsetAtLoginFlag(AT_LOGIN_RESET_FLYS);
+        CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login & ~'16' WHERE guid = %u", pCurrChar->GetGUIDLow());
+    }
+
+    if(pCurrChar->HasAtLoginFlag(AT_LOGIN_ALL_REP)) {
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(942),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(935),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(936),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1011),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(970),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(967),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(989),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(932),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(934),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1038),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(1077),42999);
+        pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(990),42999);
+
+        // Factions depending on team, like cities and some more stuff
+        switch(pCurrChar->GetTeam())
+        {
+        case ALLIANCE:
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(72),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(47),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(69),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(930),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(730),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(978),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(54),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(946),42999);
+            break;
+        case HORDE:
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(76),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(68),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(81),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(911),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(729),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(941),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(530),42999);
+            pCurrChar->SetFactionReputation(sFactionStore.LookupEntry(947),42999);
+            break;
+        default:
+            break;
+        }
+        pCurrChar->UnsetAtLoginFlag(AT_LOGIN_ALL_REP);
+    }
 
     // show time before shutdown if shutdown planned.
     if(sWorld.IsShuttingDown())
@@ -825,6 +902,8 @@ void WorldSession::HandlePlayerLogin(LoginQueryHolder * holder)
 
 void WorldSession::HandleSetFactionAtWar( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4+1);
 
     DEBUG_LOG( "WORLD: Received CMSG_SET_FACTION_ATWAR" );
@@ -849,6 +928,8 @@ void WorldSession::HandleSetFactionAtWar( WorldPacket & recv_data )
 //I think this function is never used :/ I dunno, but i guess this opcode not exists
 void WorldSession::HandleSetFactionCheat( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     //CHECK_PACKET_SIZE(recv_data,4+4);
 
     //sLog.outDebug("WORLD SESSION: HandleSetFactionCheat");
@@ -876,6 +957,8 @@ void WorldSession::HandleSetFactionCheat( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleMeetingStoneInfo( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     DEBUG_LOG( "WORLD: Received CMSG_MEETING_STONE_INFO" );
 
     WorldPacket data(SMSG_MEETINGSTONE_SETQUEUE, 5);
@@ -885,6 +968,8 @@ void WorldSession::HandleMeetingStoneInfo( WorldPacket & /*recv_data*/ )
 
 void WorldSession::HandleTutorialFlag( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4);
 
     uint32 iFlag;
@@ -907,18 +992,24 @@ void WorldSession::HandleTutorialFlag( WorldPacket & recv_data )
 
 void WorldSession::HandleTutorialClear( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     for ( uint32 iI = 0; iI < 8; iI++)
         GetPlayer()->SetTutorialInt( iI, 0xFFFFFFFF );
 }
 
 void WorldSession::HandleTutorialReset( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     for ( uint32 iI = 0; iI < 8; iI++)
         GetPlayer()->SetTutorialInt( iI, 0x00000000 );
 }
 
 void WorldSession::HandleSetWatchedFactionIndexOpcode(WorldPacket & recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4);
 
     DEBUG_LOG("WORLD: Received CMSG_SET_WATCHED_FACTION");
@@ -929,6 +1020,8 @@ void WorldSession::HandleSetWatchedFactionIndexOpcode(WorldPacket & recv_data)
 
 void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4+1);
 
     DEBUG_LOG("WORLD: Received CMSG_SET_FACTION_INACTIVE");
@@ -945,18 +1038,24 @@ void WorldSession::HandleSetWatchedFactionInactiveOpcode(WorldPacket & recv_data
 
 void WorldSession::HandleToggleHelmOpcode( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     DEBUG_LOG("CMSG_TOGGLE_HELM for %s", _player->GetName());
     _player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_HELM);
 }
 
 void WorldSession::HandleToggleCloakOpcode( WorldPacket & /*recv_data*/ )
 {
+    PROFILE;
+    
     DEBUG_LOG("CMSG_TOGGLE_CLOAK for %s", _player->GetName());
     _player->ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_HIDE_CLOAK);
 }
 
 void WorldSession::HandleChangePlayerNameOpcode(WorldPacket& recv_data)
 {
+    PROFILE;
+    
     uint64 guid;
     std::string newname;
 
@@ -1033,6 +1132,9 @@ void WorldSession::HandleChangePlayerNameOpcodeCallBack(QueryResult *result, uin
 
     sLog.outChar("Account: %d (IP: %s) Character:[%s] (guid:%u) Changed name to: %s",session->GetAccountId(), session->GetRemoteAddress().c_str(), oldname.c_str(), guidLow, newname.c_str());
 
+    LogsDatabase.PExecute("INSERT INTO char_rename (account, guid, old_name, new_name, time, ip) VALUES (%u, %u, '%s', '%s', %u, '%s')",
+        session->GetAccountId(), guidLow, oldname.c_str(), newname.c_str(), time(NULL), session->GetRemoteAddress().c_str());
+    
     Player::ForceNameUpdateInArenaTeams(guid, newname);
 
     WorldPacket data(SMSG_CHAR_RENAME,1+8+(newname.size()+1));
@@ -1044,6 +1146,8 @@ void WorldSession::HandleChangePlayerNameOpcodeCallBack(QueryResult *result, uin
 
 void WorldSession::HandleDeclinedPlayerNameOpcode(WorldPacket& recv_data)
 {
+    PROFILE;
+    
     uint64 guid;
 
     CHECK_PACKET_SIZE(recv_data, 8);

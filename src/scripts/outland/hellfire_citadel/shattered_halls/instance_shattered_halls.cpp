@@ -28,7 +28,7 @@ EndScriptData */
 
 uint32 HordePrisoners[3] = { 17296, 17295, 17297 };
 uint32 AlliancePrisoners[3] = { 17290, 17292, 17289 };
-uint32 PrisonersCoord[3][4] = 
+float PrisonersCoord[3][4] = 
 {
     { 147.752808, -79.643730, 1.917701, 5.537074 },
     { 142.168777, -84.358223, 1.908038, 6.264657 },
@@ -114,23 +114,6 @@ struct instance_shattered_halls : public ScriptedInstance
                 pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
             break;
         }
-    }
-    
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Shattered Halls: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
     }
     
     // This is a hack. Actually, LootMgr should be able to dynamically change loot table depending on the amount of prisoners killed.
@@ -307,7 +290,7 @@ struct instance_shattered_halls : public ScriptedInstance
     }
     
     // Update is only needed in Heroic, for the timer
-    void Update(uint32 const diff)
+    void Update(uint32 diff)
     {   
         if (!HeroicMode)
             return;

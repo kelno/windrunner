@@ -38,11 +38,13 @@
 #include "Language.h"
 #include "Util.h"
 #include "../scripts/ScriptMgr.h"
-#include "IRC.h"
+#include "IRCMgr.h"
 #include "Config/ConfigEnv.h"
 
 void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4+4+1);
 
     uint32 type;
@@ -130,15 +132,26 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 lang = ModLangAuras.front()->GetModifier()->m_miscvalue;
         }
 
-        if (!_player->CanSpeak())
+        //Flood control for these channels only
+        if (type == CHAT_MSG_SAY
+        || type == CHAT_MSG_YELL
+        || type == CHAT_MSG_EMOTE
+        || type == CHAT_MSG_TEXT_EMOTE
+        || type == CHAT_MSG_CHANNEL
+        || type == CHAT_MSG_BG_SYSTEM_NEUTRAL
+        || type == CHAT_MSG_BG_SYSTEM_ALLIANCE
+        || type == CHAT_MSG_BG_SYSTEM_HORDE
+        || type == CHAT_MSG_BATTLEGROUND
+        || type == CHAT_MSG_BATTLEGROUND_LEADER)
         {
-            std::string timeStr = secsToTimeString(m_muteTime - time(NULL));
-            SendNotification(GetTrinityString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
-            return;
-        }
-
-        if (type != CHAT_MSG_AFK && type != CHAT_MSG_DND)
             GetPlayer()->UpdateSpeakTime();
+            if ( !_player->CanSpeak() )
+            {
+                std::string timeStr = secsToTimeString(m_muteTime - time(NULL));
+                SendNotification(GetTrinityString(LANG_WAIT_BEFORE_SPEAKING),timeStr.c_str());
+                return;
+            }
+        }
     }
 
    if (GetPlayer()->HasAura(1852,0) && type != CHAT_MSG_WHISPER)
@@ -166,6 +179,12 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
 
             if (ChatHandler(this).ParseCommands(msg.c_str()) > 0)
                 break;
+            
+        	if (GetPlayer()->isSpectator())
+        	{
+        		SendNotification("Vous ne pouvez pas effectuer cette action lorsque vous êtes spectateur");
+        		return;
+        	}
 
             // strip invisible characters for non-addon messages
             if (lang != LANG_ADDON && sWorld.getConfig(CONFIG_CHAT_FAKE_MESSAGE_PREVENTING))
@@ -213,11 +232,6 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
 
             if(msg.empty())
                 break;
-            
-            if (GetPlayer()->GetSession()->GetSecurity() <= SEC_PLAYER && GetPlayer()->getLevel() <= sWorld.getConfig(CONFIG_WHISPER_MINLEVEL)) {
-                ChatHandler(this).PSendSysMessage("Votre niveau est insuffisant pour chuchoter aux autres joueurs (niveau %u requis).", sWorld.getConfig(CONFIG_WHISPER_MINLEVEL));
-                break;
-            }
                 
             if (strncmp(msg.c_str(), "|cff", 4) == 0) {
                 char* cEntry = ChatHandler(GetPlayer()).extractKeyFromLink(((char*)msg.c_str()), "Hitem");
@@ -249,6 +263,17 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 data<<to;
                 SendPacket(&data);
                 return;
+            }
+
+            //can still whisper GM's
+            if (pSecurity <= SEC_PLAYER && 
+                GetPlayer()->GetSession()->GetSecurity() <= SEC_PLAYER && 
+                GetPlayer()->getLevel() < sWorld.getConfig(CONFIG_WHISPER_MINLEVEL) && 
+                lang != LANG_ADDON &&
+                GetPlayer()->GetTotalPlayedTime() < DAY)
+            {
+                ChatHandler(this).PSendSysMessage("Vous devez atteindre le niveau %u ou avoir un temps de jeu total de 24h pour pouvoir chuchoter aux autres joueurs.", sWorld.getConfig(CONFIG_WHISPER_MINLEVEL));
+                break;
             }
 
             if (sWorld.IsPhishing(msg)) {
@@ -335,8 +360,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 Guild *guild = objmgr.GetGuildById(GetPlayer()->GetGuildId());
                 if (guild) {
                     guild->BroadcastToGuild(this, msg, lang == LANG_ADDON ? LANG_ADDON : LANG_UNIVERSAL);
-                    if (guild->GetId() == sConfig.GetIntDefault("IRC.Guild.Id", 0) && lang != LANG_ADDON)
-                        sIRC.HandleGameChatActivity("de guilde", msg, _player->GetName(), GetSecurity(), _player->GetTeam());
+                    if (sWorld.getConfig(CONFIG_IRC_ENABLED) && lang != LANG_ADDON)
+                        sIRCMgr.onIngameGuildMessage(guild->GetId(), _player->GetName(), msg.c_str());
                 }
             }
 
@@ -523,8 +548,6 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
                 sWorld.LogPhishing(GetPlayer()->GetGUIDLow(), 0, msg);
                 break;
             }
-            
-            sIRC.HandleGameChatActivity(channel, msg, _player->GetName(), GetSecurity(), _player->GetTeam());
 
             if(ChannelMgr* cMgr = channelMgr(_player->GetTeam()))
             {
@@ -579,6 +602,8 @@ void WorldSession::HandleMessagechatOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleEmoteOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     if(!GetPlayer()->isAlive())
         return;
     CHECK_PACKET_SIZE(recv_data,4);
@@ -590,6 +615,8 @@ void WorldSession::HandleEmoteOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleTextEmoteOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     if(!GetPlayer()->isAlive())
         return;
 
@@ -665,6 +692,8 @@ void WorldSession::HandleTextEmoteOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data, 8+1);
 
     uint64 iguid;
@@ -685,6 +714,6 @@ void WorldSession::HandleChatIgnoredOpcode(WorldPacket& recv_data )
 
 void WorldSession::HandleChannelDeclineInvite(WorldPacket &recvPacket)
 {
-    sLog.outDebug("Opcode %u", recvPacket.GetOpcode());
+    // TODO
 }
 

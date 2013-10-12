@@ -211,6 +211,8 @@ struct boss_malchezaarAI : public ScriptedAI
             {
                 Door->SetGoState(0);
             }
+
+            pInstance->SetData(DATA_MALCHEZZAR_EVENT, NOT_STARTED);
         }
     }
 
@@ -243,6 +245,8 @@ struct boss_malchezaarAI : public ScriptedAI
             {
                 Door->SetGoState(0);
             }
+
+            pInstance->SetData(DATA_MALCHEZZAR_EVENT, DONE);
         }
     }
 
@@ -257,6 +261,8 @@ struct boss_malchezaarAI : public ScriptedAI
             {
                 Door->SetGoState(1);
             }
+
+            pInstance->SetData(DATA_MALCHEZZAR_EVENT, IN_PROGRESS);
         }
     }
 

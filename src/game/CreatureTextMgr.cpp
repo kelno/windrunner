@@ -115,7 +115,7 @@ uint32 CreatureTextMgr::SendChat(Creature* source, uint8 textGroup, uint64 whisp
     CreatureTextMap::const_iterator sList = mTextMap.find(source->GetEntry());
     if (sList == mTextMap.end())
     {
-        sLog.outDebug("CreatureTextMgr: Could not find Text for Creature(%s) Entry %u in 'creature_text' table. Ignoring.",source->GetName(), source->GetEntry());
+        sLog.outError("CreatureTextMgr: Could not find Text for Creature(%s) Entry %u in 'creature_text' table. Ignoring.",source->GetName(), source->GetEntry());
         return 0;
     }
 
@@ -123,7 +123,7 @@ uint32 CreatureTextMgr::SendChat(Creature* source, uint8 textGroup, uint64 whisp
     CreatureTextHolder::const_iterator itr = TextHolder.find(textGroup);
     if (itr == TextHolder.end())
     {
-        sLog.outDebug("CreatureTextMgr: Could not find TextGroup %u for Creature(%s) GuidLow %u Entry %u. Ignoring.",uint32(textGroup), source->GetName(), source->GetGUIDLow(), source->GetEntry());
+        sLog.outError("CreatureTextMgr: Could not find TextGroup %u for Creature(%s) GuidLow %u Entry %u. Ignoring.",uint32(textGroup), source->GetName(), source->GetGUIDLow(), source->GetEntry());
         return 0;
     }
 
@@ -413,7 +413,7 @@ void CreatureTextMgr::SendChatPacket(WorldPacket* data_en, WorldPacket* data_fr,
                         data_en->put<uint64>(1+4+8+4+4+(int32)(strlen(source->GetName())+1), uint64(itr->getSource()->GetGUID()));
                         data_fr->put<uint64>(1+4+8+4+4+(int32)(strlen(source->GetName())+1), uint64(itr->getSource()->GetGUID()));
                     }
-                    if (!team || (team && itr->getSource()->GetTeam() == team) && (!gmOnly || itr->getSource()->isGameMaster())) {
+                    if (!team || ((team && itr->getSource()->GetTeam() == team) && (!gmOnly || itr->getSource()->isGameMaster()))) {
                         if ((itr->getSource())->GetSession()->GetSessionDbcLocale() == LOCALE_frFR)
                             (itr->getSource())->GetSession()->SendPacket(data_fr);
                         else

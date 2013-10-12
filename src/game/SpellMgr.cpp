@@ -877,24 +877,24 @@ bool IsAuraAddedBySpell(uint32 auraType, uint32 spellId)
     return false;
 }
 
-uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
+SpellFailedReason GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
 {
     // talents that learn spells can have stance requirements that need ignore
     // (this requirement only for client-side stance show in talent description)
     if( GetTalentSpellCost(spellInfo->Id) > 0 &&
         (spellInfo->Effect[0]==SPELL_EFFECT_LEARN_SPELL || spellInfo->Effect[1]==SPELL_EFFECT_LEARN_SPELL || spellInfo->Effect[2]==SPELL_EFFECT_LEARN_SPELL) )
-        return 0;
+        return SPELL_CAST_OK;
 
     uint32 stanceMask = (form ? 1 << (form - 1) : 0);
     if (stanceMask & spellInfo->StancesNot)                 // can explicitly not be casted in this stance
         return SPELL_FAILED_NOT_SHAPESHIFT;
 
     if (stanceMask & spellInfo->Stances)                    // can explicitly be casted in this stance
-        return 0;
+        return SPELL_CAST_OK;
         
     // Spirit of Redemption
     if (form == 0x20 && IsPositiveSpell(spellInfo->Id) && spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST)
-        return 0;
+        return SPELL_CAST_OK;
 
     bool actAsShifted = false;
     if (form > 0)
@@ -903,7 +903,7 @@ uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
         if (!shapeInfo)
         {
             sLog.outError("GetErrorAtShapeshiftedCast: unknown shapeshift %u", form);
-            return 0;
+            return SPELL_CAST_OK;
         }
         actAsShifted = !(shapeInfo->flags1 & 1);            // shapeshift acts as normal form for spells
     }
@@ -922,7 +922,7 @@ uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
             return SPELL_FAILED_ONLY_SHAPESHIFT;
     }
 
-    return 0;
+    return SPELL_CAST_OK;
 }
 
 void SpellMgr::LoadSpellTargetPositions()
@@ -1845,8 +1845,8 @@ void SpellMgr::LoadSpellChains()
             if (rank_count>1)
             for (itr2 = RankErrorMap.lower_bound(err_entry);itr2!=RankErrorMap.upper_bound(err_entry);itr2++)
             {
-                sLog.outDebug("There is a duplicate rank entry (%s) for spell: %u",itr2->first,itr2->second->second.Id);
-                sLog.outDebug("Spell %u removed from chain data.",itr2->second->second.Id);
+                sLog.outError("There is a duplicate rank entry (%s) for spell: %u",itr2->first,itr2->second->second.Id);
+                sLog.outError("Spell %u removed from chain data.",itr2->second->second.Id);
                 RankMap.erase(itr2->second);
                 itr=RankMap.lower_bound(entry);
             }
@@ -2593,9 +2593,6 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->EffectRadiusIndex[1] = 13;
             spellInfo->EffectRadiusIndex[2] = 13;
             break;
-        case 34580:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
-            break;
         case 603:       // Curse of Doom
         case 30910:
             spellInfo->SpellFamilyName = SPELLFAMILY_WARLOCK;
@@ -2633,9 +2630,6 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->InterruptFlags = 8;
             spellInfo->PreventionType = SPELL_PREVENTION_TYPE_SILENCE;
             break;
-        case 1543:
-            spellInfo->speed = 0.0f;
-            break;
         case 26888:
             spellInfo->EffectBasePoints[1] = 740;
             break;
@@ -2656,6 +2650,9 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46562:
             spellInfo->MaxAffectedTargets = 5;
             break;
+        case 40902: //SPELL_AKAMA_SOUL_RETRIEVE
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_CAN_CHANNEL_DEAD_TARGET;
+            break;
         // Eredar Twins spells (Sunwell)
         //case 45248:
         //case 46771:
@@ -2664,9 +2661,6 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            break;
-        case 45389:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
         case 45230:
         case 45235:
@@ -2682,18 +2676,18 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
-        case 45342:
+        case 45342: // Alythess Conflagration
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             // no break
-        case 45329:
+        case 45329: // Sacrolash Show nova
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             break;
-        case 45348:
+        case 45348: // Alythess SPELL_FLAME_TOUCHED
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             // no break
-        case 45347:
+        case 45347: // Sacrolash SPELL_DARK_TOUCHED
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
@@ -2701,7 +2695,7 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->AttributesEx |= SPELL_ATTR_EX_STACK_FOR_DIFF_CASTERS;
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_STACK_FOR_DIFF_CASTERS;
             break;
-        case 46771:
+        case 46771: // SPELL_FLAME_SEAR
             spellInfo->MaxAffectedTargets = 5;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
@@ -2757,6 +2751,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 11596:
         case 11597:
         case 25225:
+        case 40520: //akama's channelers channel
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
         case 1120:
@@ -2774,6 +2769,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 32182:
         case 19574:
         case 41126:
+        case 45389: //Demonic Vapor Beam Visual
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
         case 44335:
@@ -2925,6 +2921,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 41173:
         case 41093:
         case 41084:
+        case 34580: //Impale
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             break;
         case 30009:
@@ -3049,10 +3046,8 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46087:
         case 46161:
         case 46289:
+        case 45657: //Darkness of a Thousand Souls
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            break;
-        case 37284:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 26102: // Sandblast (Ouro)
         case 19272:
@@ -3062,6 +3057,9 @@ void SpellMgr::LoadSpellCustomAttr()
         case 38814:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_CONE_180;
             break;
+        case 46579: //Deathfrost
+        case 31024: //Living Ruby Pendant
+        case 37284: //Scalding Water
         case 20911:
         case 20912:
         case 20913:
@@ -3069,17 +3067,16 @@ void SpellMgr::LoadSpellCustomAttr()
         case 27168:
         case 25899:
         case 27169:
-        case 40470:
-        case 13897:
+        case 40470: //Paladin Tier 6 Trinket
+        case 13897: //Fiery Weapon
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 45770:
         case 19516:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
-        case 29943: // TEMP: For a event from Gashrok! NOT BLIZZLIKE
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
+        case 45892:
+            spellInfo->MaxAffectedTargets = 1;
             break;
         default:
             break;
@@ -3630,17 +3627,22 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
     {
         case SPELLFAMILY_GENERIC:
         {
-            if (spellproto->Id == 30529)
+            switch (spellproto->Id) {
+            case 30529: // Recently In Game - Karazhan Chess Event
+            case 44799: // Frost Breath (Kalecgos)
+            case 46562: // Mind Flay
+            case 6945: // Chest Pains
                 return DIMINISHING_NONE;
-            if (spellproto->Id == 29943) // TEMP - NOT BLIZZLIKE (Gashrok event)
-                return DIMINISHING_NONE;
+            case 12494: // Frostbite
+                return DIMINISHING_TRIGGER_ROOT;
+            }
         }
         case SPELLFAMILY_MAGE:
         {
             // Polymorph
             if ((spellproto->SpellFamilyFlags & 0x00001000000LL) && spellproto->EffectApplyAuraName[0]==SPELL_AURA_MOD_CONFUSE)
                 return DIMINISHING_POLYMORPH;
-            if (spellproto->Id == 33395)
+            if (spellproto->Id == 33395) // Elemental's freeze
                 return DIMINISHING_CONTROL_ROOT;
             break;
         }
@@ -3708,14 +3710,6 @@ DiminishingGroup GetDiminishingReturnsGroupForSpell(SpellEntry const* spellproto
         }
         default:
         {
-            if(spellproto->Id == 12494) // frostbite
-                return DIMINISHING_TRIGGER_ROOT;
-            if (spellproto->Id == 44799)    // Frost Breath (Kalecgos)
-                return DIMINISHING_NONE;
-            if (spellproto->Id == 46562)
-                return DIMINISHING_NONE;
-            if (spellproto->Id == 6945)
-                return DIMINISHING_NONE;
             break;
         }
     }

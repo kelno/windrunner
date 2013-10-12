@@ -135,7 +135,7 @@ class ScriptMgr
         bool EffectDummyCreature(Unit *caster, uint32 spellId, uint32 effIndex, Creature *crTarget);
         
         CreatureAINew* getAINew(Creature* creature);
-        SpellScript* getSpellScript(uint32 spellId);
+        SpellScript* getSpellScript(Spell* spell);
         
         void addScript(CreatureScript* cscript) { m_creatureScripts[cscript->getName()] = cscript; }
         void addScript(SpellScriptWrapper* sscript) { m_spellScripts[sscript->getName()] = sscript; }

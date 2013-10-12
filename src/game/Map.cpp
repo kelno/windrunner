@@ -43,6 +43,7 @@
 #include "VMapFactory.h"
 #include "MoveMap.h"
 #include "DynamicTree.h"
+#include "BattleGround.h"
 
 #define DEFAULT_GRID_EXPIRY     300
 #define MAX_GRID_LOAD_TIME      50
@@ -397,8 +398,6 @@ Map::EnsureGridCreated(const GridPair &p)
         Guard guard(*this);
         if(!getNGrid(p.x_coord, p.y_coord))
         {
-            sLog.outDebug("Loading grid[%u,%u] for map %u", p.x_coord, p.y_coord, i_id);
-
             setNGrid(new NGridType(p.x_coord*MAX_NUMBER_OF_GRIDS + p.y_coord, p.x_coord, p.y_coord, i_gridExpiry, sWorld.getConfig(CONFIG_GRID_UNLOAD)),
                 p.x_coord, p.y_coord);
 
@@ -1151,8 +1150,6 @@ bool Map::UnloadGrid(const uint32 &x, const uint32 &y, bool unloadAll)
         if(!unloadAll && ActiveObjectsNearGrid(x, y))
              return false;
 
-        sLog.outDebug("Unloading grid[%u,%u] for map %u", x,y, i_id);
-
         ObjectGridUnloader unloader(*grid);
 
         if(!unloadAll)
@@ -1240,6 +1237,7 @@ GridMap::GridMap()
     m_liquidLevel = INVALID_HEIGHT;
     m_liquid_type = NULL;
     m_liquid_map  = NULL;
+    m_gridIntHeightMultiplier = 0.0f;
 }
 
 GridMap::~GridMap()
@@ -1826,7 +1824,7 @@ inline bool IsOutdoorWMO(uint32 mogpFlags, int32 adtId, int32 rootId, int32 grou
         return true;
     
     // If flag 0x800 is set and we are in non-flyable areas we cannot mount up even if we are physically outdoors
-    if (mapId != 530 && mogpFlags & 0x800)
+    if (mapId != 530 && (mogpFlags & 0x800))
         return false;
     
     // If this flag is set we are physically outdoors, mounting up is allowed if previous check failed
@@ -1928,9 +1926,9 @@ ZLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidTyp
     if (!Trinity::IsValidMapCoord(x, y, z, 0))
         return LIQUID_MAP_NO_WATER;
 
-    /*if (vmgr->GetLiquidLevel(GetId(), x, y, z, ReqLiquidType, liquid_level, ground_level, liquid_type))
+    if (vmgr->GetLiquidLevel(GetId(), x, y, z, ReqLiquidType, liquid_level, ground_level, liquid_type))
     {
-        sLog.outDebug("getLiquidStatus(): vmap liquid level: %f ground: %f type: %u", liquid_level, ground_level, liquid_type);
+       // sLog.outDebug("getLiquidStatus(): vmap liquid level: %f ground: %f type: %u", liquid_level, ground_level, liquid_type);
         // Check water level and ground level
         if (liquid_level > ground_level && z > ground_level - 2)
         {
@@ -1954,7 +1952,7 @@ ZLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidTyp
                 return LIQUID_MAP_WATER_WALK;
             result = LIQUID_MAP_ABOVE_WATER;
         }
-    }*/
+    }
 
     if(GridMap* gmap = const_cast<Map*>(this)->GetGrid(x, y))
     {
@@ -2400,6 +2398,20 @@ void Map::RemoveCreatureFromPool(Creature *cre, uint32 poolId)
     }
 }
 
+bool Map::SupportsHeroicMode(const MapEntry* mapEntry)
+{
+    if(!mapEntry)
+        return false;
+    if (mapEntry->resetTimeHeroic)
+        return true;
+
+    const InstanceTemplateAddon* instTempAddon = objmgr.GetInstanceTemplateAddon(mapEntry->MapID);
+    if(instTempAddon && instTempAddon->forceHeroicEnabled)
+        return true;
+
+    return false;    
+}
+
 std::vector<Creature*> Map::GetAllCreaturesFromPool(uint32 poolId)
 {
     CreaturePoolMember::iterator itr = m_cpmembers.find(poolId);
@@ -2654,10 +2666,8 @@ void InstanceMap::CreateInstanceData(bool load)
             Field* fields = result->Fetch();
             const char* data = fields[0].GetString();
             if(data)
-            {
-                sLog.outDebug("Loading instance data for `%s` with id %u", objmgr.GetScriptName(i_script_id), i_InstanceId);
                 i_data->Load(data);
-            }
+
             delete result;
         }
     }
@@ -2828,6 +2838,15 @@ bool BattleGroundMap::Add(Player * player)
 
 void BattleGroundMap::Remove(Player *player, bool remove)
 {
+	if (player && player->isSpectator() && !player->isSpectateCanceled())
+	{
+	    if (GetBG())
+	        GetBG()->RemoveSpectator(player->GetGUID());
+
+	    if (player->isSpectator())
+	        player->SetSpectate(false);
+	}
+
     sLog.outDetail("MAP: Removing player '%s' from bg '%u' of map '%s' before relocating to other map", player->GetName(), GetInstanceId(), GetMapName());
     Map::Remove(player, remove);
 }

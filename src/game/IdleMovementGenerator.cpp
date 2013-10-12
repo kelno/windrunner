@@ -70,7 +70,7 @@ bool RotateMovementGenerator::Update(Unit& owner, const uint32& diff)
     }
     
     //Clear our target
-    owner.SetUInt64Value(UNIT_FIELD_TARGET, 0);
+    owner.SetTarget(0);
     
     owner.SetOrientation(angle);
     owner.SendMovementFlagUpdate(); // this is a hack, we do not have anything correct to send in the beginning
@@ -88,6 +88,13 @@ void RotateMovementGenerator::Finalize(Unit& unit)
     unit.clearUnitState(UNIT_STAT_ROTATING);
     if (unit.GetTypeId() == TYPEID_UNIT)
     {
+    	if (unit.GetSummoner())
+        {
+    		if (unit.GetSummoner()->ToCreature())
+    		    if (unit.GetSummoner()->ToCreature()->getAI())
+    		        unit.GetSummoner()->ToCreature()->getAI()->summonedMovementInform(unit.ToCreature(), ROTATE_MOTION_TYPE, 0);
+    	}
+
         if (((Unit*)&unit)->ToCreature()->getAI())
             ((Unit*)&unit)->ToCreature()->getAI()->onMovementInform(ROTATE_MOTION_TYPE, 0);
         else

@@ -42,7 +42,7 @@ EndScriptData */
 //missing hole visual
  
 #define SWEEP_TIMER             15000 + rand()%5000
-#define SANDBLAST_TIMER         20000 + rand()%5000
+#define SANDBLAST_TIMER         25000 + rand()%10000
 #define EMERGED_TIMER           90000
 #define SUBMERGED_TIMER         35000 + rand()%10000
 #define SCARABS_SPAWN_TIMER     15000
@@ -75,13 +75,15 @@ struct boss_ouroAI : public Scripted_NoMovementAI
     uint8 Phase;
     uint16 Morphed_Timer;
     bool Morphed;
-    uint16 OuroHomeArea;
     const CreatureInfo* cinfo;
+    float homeX, homeY, homeZ;
  
-    boss_ouroAI(Creature *c) : Scripted_NoMovementAI(c), Summons(m_creature)
+    boss_ouroAI(Creature *c) : 
+        Scripted_NoMovementAI(c), 
+        Summons(m_creature),
+        cinfo(me->GetCreatureInfo())
     {
-        OuroHomeArea = me->GetAreaId();
-        cinfo = me->GetCreatureInfo();
+        me->GetHomePosition(homeX,homeY,homeZ,*new float());
     }
  
     void Reset()
@@ -189,7 +191,7 @@ struct boss_ouroAI : public Scripted_NoMovementAI
                 } else Morphed_Timer -= diff;
             }
  
-            if (me->GetAreaId() != OuroHomeArea) //maybe to change later if the area bug is fixed?
+            if (me->GetDistance(homeX,homeY,homeZ) > 150)
             {
                 //DoTeleportTo(x,y,z);  //Don't EVER use this again
                 EnterEvadeMode();
@@ -284,6 +286,7 @@ struct boss_ouroAI : public Scripted_NoMovementAI
             break;
         case PHASE_SUBMERGED:
             Morphed = false;
+            me->RemoveAllAuras();
             DoCast(me,SPELL_SUBMERGE,false);
             Submerged_Timer = SUBMERGED_TIMER;
             SummonMounds(4);
@@ -304,6 +307,8 @@ struct boss_ouroAI : public Scripted_NoMovementAI
             ResetAllTimers();
             break;
         case PHASE_BERSERK:
+            me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+            me->setFaction(14);
             IWantATank_Timer = IWANTATANK_TIMER2;
             DoCast(me, SPELL_BERSERK);
             //hack +100% melee damage.
@@ -416,9 +421,8 @@ struct boss_ouro_moundAI : public Scripted_NoMovementAI
  
     void UpdateAI(const uint32 diff)    
     {
-        float x, y ,z;
         Unit* target = NULL;
-        if (NewTarget_Timer < diff || !me->GetMotionMaster()->GetDestination(x,y,z))
+        if (NewTarget_Timer < diff || !me->isMoving())
         {
             target = SelectUnit(SELECT_TARGET_RANDOM, 0, 200,true);
             NewTarget_Timer = NEWTARGET_TIMER;
@@ -428,6 +432,7 @@ struct boss_ouro_moundAI : public Scripted_NoMovementAI
         {
             if (target)
             {
+                float x, y ,z;
                 //me->GetMotionMaster()->MoveChase(target); //buggy
                 target->GetPosition(x,y,z);
                 me->GetMotionMaster()->MovePoint(0,x,y,z);

@@ -22,6 +22,7 @@ SDCategory: Karazhan
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_karazhan.h"
 
 #define SAY_MIDNIGHT_KILL           -1532000
 #define SAY_APPEAR1                 -1532001
@@ -46,11 +47,16 @@ EndScriptData */
 
 struct boss_midnightAI : public ScriptedAI
 {
-    boss_midnightAI(Creature *c) : ScriptedAI(c) {}
+    boss_midnightAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
 
     uint64 Attumen;
     uint8 Phase;
     uint32 Mount_Timer;
+
+    ScriptedInstance *pInstance;
 
     void Reset()
     {
@@ -60,9 +66,16 @@ struct boss_midnightAI : public ScriptedAI
 
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetVisibility(VISIBILITY_ON);
+
+        if(pInstance)
+            pInstance->SetData(DATA_ATTUMEN_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit* who) {}
+    void Aggro(Unit* who) 
+    {
+        if(pInstance)
+            pInstance->SetData(DATA_ATTUMEN_EVENT, IN_PROGRESS);
+    }
 
     void KilledUnit(Unit *victim)
     {
@@ -172,7 +185,11 @@ struct boss_attumenAI : public ScriptedAI
         RandomYellTimer = 30000 + (rand()%31)*1000;         //Occasionally yell
         ChargeTimer = 20000;
         ResetTimer = 0;
+
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
+
+    ScriptedInstance *pInstance;
 
     uint64 Midnight;
     uint8 Phase;
@@ -203,6 +220,9 @@ struct boss_attumenAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
         if (Unit *pMidnight = Unit::GetUnit(*m_creature, Midnight))
             pMidnight->DealDamage(pMidnight, pMidnight->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+
+        if(pInstance)
+            pInstance->SetData(DATA_ATTUMEN_EVENT, DONE);
     }
 
     void UpdateAI(const uint32 diff)

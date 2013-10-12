@@ -473,7 +473,6 @@ struct MapEntry
     bool IsBattleGround() const { return map_type == MAP_BATTLEGROUND; }
     bool IsBattleArena() const { return map_type == MAP_ARENA; }
     bool IsBattleGroundOrArena() const { return map_type == MAP_BATTLEGROUND || map_type == MAP_ARENA; }
-    bool SupportsHeroicMode() const { return resetTimeHeroic && !resetTimeRaid; }
     bool HasResetTime() const { return resetTimeHeroic || resetTimeRaid; }
 
     bool IsMountAllowed() const
@@ -673,6 +672,14 @@ struct SpellEntry
             for (int i = 0; i < 16; i++) {
                 SpellName[i] = new char[128];
                 Rank[i] = new char[128];
+            }
+        }
+        
+        ~SpellEntry()
+        {
+            for (int i = 0; i < 16; i++) {
+                delete[] SpellName[i];
+                delete[] Rank[i];
             }
         }
 

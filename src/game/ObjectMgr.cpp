@@ -1486,10 +1486,6 @@ void ObjectMgr::LoadItemPrototypes()
                 const_cast<ItemPrototype*>(proto)->Sheath = dbcitem->Sheath;
             }
         }
-        else
-        {
-            sLog.outDebug("Item (Entry: %u) not correct (not listed in list of existed items).",i);     // Custom items trigger this error
-        }
 
         if(proto->Class >= MAX_ITEM_CLASS)
         {
@@ -3944,13 +3940,14 @@ void ObjectMgr::LoadInstanceTemplate()
             sLog.outErrorDb("ObjectMgr::LoadInstanceTemplate: bad mapid %d for template!", temp->map);
             continue;
         }
-        else if(!entry->HasResetTime())
+        
+        if(!entry->HasResetTime())
             continue;
 
         if(temp->reset_delay == 0)
         {
             // use defaults from the DBC
-            if(entry->SupportsHeroicMode())
+            if(entry->resetTimeHeroic)
             {
                 temp->reset_delay = entry->resetTimeHeroic / DAY;
             }
@@ -3965,6 +3962,33 @@ void ObjectMgr::LoadInstanceTemplate()
     }
 
     sLog.outString( ">> Loaded %u Instance Template definitions", sInstanceTemplate.RecordCount );
+}
+
+void ObjectMgr::LoadInstanceTemplateAddon()
+{
+    //reload case
+    sInstanceTemplateAddon.Free();
+
+    SQLInstanceLoader loader;
+    loader.Load(sInstanceTemplateAddon);
+
+    for(uint32 i = 0; i < sInstanceTemplateAddon.MaxEntry; i++)
+    {
+        const InstanceTemplateAddon* tempAddon = GetInstanceTemplateAddon(i);
+        if(!tempAddon) continue;
+        if(!tempAddon->forceHeroicEnabled) continue; //entry disabled
+
+        InstanceTemplate* temp = (InstanceTemplate*)GetInstanceTemplate(i);
+        if(!temp)
+        {
+            sLog.outErrorDb("ObjectMgr::LoadInstanceTemplateAddon: bad mapid %d for template!", tempAddon->map);
+            continue;
+        }
+        
+        if(temp->reset_delay == 0) // instance has no reset delay, defaulting to 1 day
+            temp->reset_delay = 1;
+    }
+    sLog.outString( ">> Loaded %u Instance Template Addons definitions", sInstanceTemplateAddon.RecordCount );
     sLog.outString();
 }
 
@@ -4115,7 +4139,6 @@ void ObjectMgr::LoadNpcTextLocales()
 void ObjectMgr::ReturnOrDeleteOldMails(bool serverUp)
 {
     time_t basetime = time(NULL);
-    sLog.outDebug("Returning mails current time: hour: %d, minute: %d, second: %d ", localtime(&basetime)->tm_hour, localtime(&basetime)->tm_min, localtime(&basetime)->tm_sec);
     //delete all old mails without item and without body immediately, if starting server
     if (!serverUp)
         CharacterDatabase.PExecute("DELETE FROM mail WHERE expire_time < '" I64FMTD "' AND has_items = '0' AND itemTextId = 0", (uint64)basetime);
@@ -5198,7 +5221,7 @@ uint32 ObjectMgr::AltGenerateLowGuid(uint32 type, bool& temporary)
     } else {
         if ((*baseguid) +1 >= *tempstartguid) 
         {
-                sLog.outDebug("AltGenerateLowGuid(%i) : Base guid range is full. Reverting to old guid distribution mode, new objects will now use the same range of guid.",type);
+                sLog.outError("AltGenerateLowGuid(%i) : Base guid range is full. Reverting to old guid distribution mode, new objects will now use the same range of guid.",type);
                 *regularmode = true;
                 *baseguid = *tempguid;
         } 
@@ -7741,6 +7764,76 @@ void ObjectMgr::LoadFactionChangeTitles()
     }
     while (result->NextRow());
 
-    sLog.outString(">> Loaded %u faction change spells", count);
+    sLog.outString(">> Loaded %u faction change titles", count);
+    sLog.outString();
+}
+
+void ObjectMgr::LoadFactionChangeQuests()
+{
+    factionchange_quests.clear();
+    
+    QueryResult* result = WorldDatabase.Query("SELECT alliance_id, horde_id FROM player_factionchange_quests");
+
+    if (!result)
+    {
+        sLog.outErrorDb(">> Loaded 0 faction change quest. DB table `player_factionchange_quests` is empty.");
+        sLog.outString();
+        return;
+    }
+
+    uint32 count = 0;
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 alliance = fields[0].GetUInt32();
+        uint32 horde = fields[1].GetUInt32();
+
+        factionchange_quests[alliance] = horde;
+
+        ++count;
+    }
+    while (result->NextRow());
+
+    sLog.outString(">> Loaded %u faction change quests", count);
+    sLog.outString();
+}
+
+void ObjectMgr::LoadFactionChangeReputGeneric()
+{
+    factionchange_reput_generic.clear();
+    
+    QueryResult* result = WorldDatabase.Query("SELECT alliance_id, horde_id FROM player_factionchange_reputations_generic");
+
+    if (!result)
+    {
+        sLog.outString(">> Loaded 0 faction change reputations (generic). DB table `player_factionchange_reputations_generic` is empty.");
+        sLog.outString();
+        return;
+    }
+
+    uint32 count = 0;
+
+    do
+    {
+        Field* fields = result->Fetch();
+
+        uint32 alliance = fields[0].GetUInt32();
+        uint32 horde = fields[1].GetUInt32();
+
+        // TODO: add item template validation
+        /*if (!GetItemTemplate(alliance))
+            sLog.outErrorDb("Item %u referenced in `player_factionchange_items` does not exist, pair skipped!", alliance);
+        else if (!GetItemTemplate(horde))
+            sLog.outErrorDb("Item %u referenced in `player_factionchange_items` does not exist, pair skipped!", horde);
+        else*/
+            factionchange_reput_generic[alliance] = horde;
+
+        ++count;
+    }
+    while (result->NextRow());
+
+    sLog.outString(">> Loaded %u faction change reputations (generic)", count);
     sLog.outString();
 }

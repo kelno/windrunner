@@ -741,7 +741,6 @@ struct npc_skullocAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetReactState(REACT_PASSIVE);
-        m_creature->SetHasChangedReactState();
         
         step5Timer = 0;
     }
@@ -1161,6 +1160,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
             plr->PlaySound(GetSoundForButton(BEAM_YELLOW), false);
             return SPELL_BEAM_YELLOW;
         }
+        return 0;
     }
     
     uint32 GetSpellForBeam(uint8 beam)
@@ -1174,6 +1174,8 @@ struct npc_simon_bunnyAI : public ScriptedAI
             return SPELL_BEAM_RED;
         case BEAM_YELLOW:
             return SPELL_BEAM_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1188,6 +1190,8 @@ struct npc_simon_bunnyAI : public ScriptedAI
             return SOUND_RED;
         case BEAM_YELLOW:
             return SOUND_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1529,6 +1533,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             plr->PlaySound(GetSoundForButton(BEAM_YELLOW), false);
             return SPELL_BEAM_YELLOW;
         }
+        return 0;
     }
     
     uint32 GetSpellForBeam(uint8 beam)
@@ -1542,6 +1547,8 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             return SPELL_BEAM_RED;
         case BEAM_YELLOW:
             return SPELL_BEAM_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1556,6 +1563,8 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             return SOUND_RED;
         case BEAM_YELLOW:
             return SOUND_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -2701,14 +2710,14 @@ struct npc_grullocAI : public ScriptedAI
             burningRageTimer -= diff;
             
         if (crushArmorTimer <= diff) {
-            DoCast(me, SPELL_CRUSH_ARMOR, true);
+            DoCast(me->getVictim(),SPELL_CRUSH_ARMOR);
             crushArmorTimer = 12000 + rand() % 4000;
         }
         else
             crushArmorTimer -= diff;
             
         if (grievousWoundTimer <= diff) {
-            DoCast(me, SPELL_GRIEVOUS_WOUND, true);
+            DoCast(me->getVictim(),SPELL_GRIEVOUS_WOUND);
             grievousWoundTimer = 45000;
         }
         else
@@ -2716,7 +2725,11 @@ struct npc_grullocAI : public ScriptedAI
             
         DoMeleeAttackIfReady();
     }
-    
+
+    void JustDied(Unit* killer)
+    {
+        killer->SummonGameObject(185567, 2694.32, 5525.05, 1.18, 0, 0, 0, 0, 0, 60000);
+    }
 };
 
 CreatureAI* GetAI_npc_grulloc(Creature* creature)

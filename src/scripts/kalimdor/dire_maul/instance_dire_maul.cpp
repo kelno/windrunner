@@ -66,23 +66,6 @@ struct instance_dire_maul : public ScriptedInstance
         return false;
     }
     
-    Player* GetPlayerInMap()
-    {
-        Map::PlayerList const& players = instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                if (Player* plr = itr->getSource())
-                    return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Dire Maul: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
-    
     void OnCreatureCreate(Creature* creature, uint32 entry)
     {
         switch (entry) {
@@ -107,15 +90,22 @@ struct instance_dire_maul : public ScriptedInstance
     uint64 GetData64(uint32 id)
     {
         switch (id) {
-        case DATA_GUID_PUSILLIN: return pusillinGUID;
-        case DATA_GUID_IRONBARKDOOR: return ironbarkDoorGUID;
+        case DATA_GUID_PUSILLIN: 
+            return pusillinGUID;
+        case DATA_GUID_IRONBARKDOOR: 
+            return ironbarkDoorGUID;
+        default:
+            return 0;
         }
     }
     
     uint32 GetData(uint32 type)
     {
         switch (type) {
-        case DATA_ZEVRIM_THORNHOOF: return Encounters[0];
+        case DATA_ZEVRIM_THORNHOOF: 
+            return Encounters[0];
+        default: 
+            return 0;
         }
     }
     

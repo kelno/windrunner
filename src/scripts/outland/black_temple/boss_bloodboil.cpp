@@ -41,7 +41,7 @@ enum Says
 enum Spells
 {
     //Phase 1
-    SPELL_ARCING_SMASH_1        = 40599,
+    SPELL_ARCING_SMASH_1        = 40457,
     SPELL_ACIDIC_WOUND          = 40484, //Trigger Aura
     SPELL_BEWILDERING_STRIKE    = 40491,
     SPELL_EJECT_1               = 40486,
@@ -49,7 +49,7 @@ enum Spells
     SPELL_BLOODBOIL             = 42005,
 
     //Phase 2
-    SPELL_ARCING_SMASH_2        = 40457,
+    SPELL_ARCING_SMASH_2        = 40599,
     SPELL_EJECT_2               = 40597,
     SPELL_FELBREATH_2           = 40595,
     SPELL_FEL_GEYSER            = 40593,
@@ -132,16 +132,17 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         FelBreathTimer = 25000;
         EjectTimer = 10000;
 
-        PhaseChangeTimer = 65000;
+        PhaseChangeTimer = 60000;
         EnrageTimer = 600000;
 
         Phase1 = true;
 
         Charge_Timer = 30000;
 
-        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false); // FIXME: false? Typo?
-        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
+      /*  m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false); // FIXME: false? Typo?
+        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false); */
         m_creature->SetFullTauntImmunity(true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
     }
 
     void Aggro(Unit *who)
@@ -186,14 +187,14 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         //Sort the list of players
         targets.sort(ObjectDistanceOrderReversed(m_creature));
         //Resize so we only get top 5
-        targets.resize(5);
+        if(targets.size() > 5)
+            targets.resize(5);
 
         //Aura each player in the targets list with Bloodboil.
-        for(std::list<Unit *>::iterator itr = targets.begin(); itr != targets.end(); ++itr)
+        for(auto player : targets)
         {
-            Unit* target = *itr;
-            if(target && target->isAlive())
-                m_creature->AddAura(SPELL_BLOODBOIL, target);
+            if(player && player->isAlive())
+                m_creature->AddAura(SPELL_BLOODBOIL, player);
         }
         targets.clear();
     }
@@ -305,11 +306,13 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                     m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
                     
                     // If VMaps are disabled, this spell can call the whole instance
+                    target->ApplySpellImmune(0, IMMUNITY_ID, SPELL_INSIGNIFIGANCE, true);
                     DoCast(m_creature, SPELL_INSIGNIFIGANCE, true);
                     DoCast(target,SPELL_FEL_RAGE_1, true);
                     DoCast(target,SPELL_FEL_RAGE_2, true);
                     DoCast(target,SPELL_FEL_RAGE_3, true);
                     DoCast(target,SPELL_FEL_RAGE_SCALE, true);
+                    target->ApplySpellImmune(0, IMMUNITY_ID, SPELL_INSIGNIFIGANCE, false);
 
                     //Cast this without triggered so that it appears in combat logs and shows visual.
                     DoCast(m_creature, SPELL_FEL_RAGE_SELF);
@@ -332,7 +335,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                 ArcingSmashTimer += 2000;
                 FelBreathTimer += 2000;
                 EjectTimer += 2000;
-                PhaseChangeTimer = 65000;
+                PhaseChangeTimer = 60000;
                 m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
                 m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
             }

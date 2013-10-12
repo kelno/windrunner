@@ -33,14 +33,17 @@
 #include "SystemConfig.h"
 #include "revision.h"
 #include "Util.h"
-#include "IRC.h"
 #include "BattleGround.h"
 #include "Guild.h"
 #include "ArenaTeam.h"
+#include "PlayerDump.h"
+#include "AuctionHouseMgr.h"
 
 #include "ObjectMgr.h"
 #include "SpellMgr.h"
 #include "Config/ConfigEnv.h"
+
+#include <sstream>
 
 bool ChatHandler::HandleHelpCommand(const char* args)
 {
@@ -128,21 +131,12 @@ bool ChatHandler::HandleServerInfoCommand(const char* /*args*/)
     uint32 maxActiveClientsNum = sWorld.GetMaxActiveSessionCount();
     uint32 maxQueuedClientsNum = sWorld.GetMaxQueuedSessionCount();
     std::string str = secsToTimeString(sWorld.GetUptime());
-    uint32 updateTime = sWorld.GetFastTimeDiff();
 
     PSendSysMessage(_FULLVERSION);
-    //if(m_session)
-    //    full = _FULLVERSION(REVISION_DATE,REVISION_TIME,"|cffffffff|Hurl:" REVISION_ID "|h" REVISION_ID "|h|r");
-    //else
-    //    full = _FULLVERSION(REVISION_DATE,REVISION_TIME,REVISION_ID);
-
-    //SendSysMessage(full);
-    //PSendSysMessage(LANG_USING_SCRIPT_LIB,sWorld.GetScriptsVersion());
-    //PSendSysMessage(LANG_USING_WORLD_DB,sWorld.GetDBVersion());
-    //PSendSysMessage(LANG_CONNECTED_USERS, activeClientsNum, maxActiveClientsNum, queuedClientsNum, maxQueuedClientsNum);
     PSendSysMessage("Joueurs en ligne: %u (Max: %u)", activeClientsNum, maxActiveClientsNum);
     PSendSysMessage(LANG_UPTIME, str.c_str());
-    PSendSysMessage("Update time diff: %u.", updateTime);
+    PSendSysMessage("Update time diff lissé: %u.", sWorld.GetFastTimeDiff());
+    PSendSysMessage("Update time diff instantané: %u.", sWorld.GetUpdateTime());
     if (sWorld.IsShuttingDown())
         PSendSysMessage("Arret du serveur dans %s", secsToTimeString(sWorld.GetShutDownTimeLeft()).c_str());
 
@@ -295,33 +289,6 @@ bool ChatHandler::HandleLockAccountCommand(const char* args)
     }
 
     SendSysMessage(LANG_USE_BOL);
-    return true;
-}
-
-bool ChatHandler::HandleGMListIrcCommand(const char* args)
-{
-    bool first = true;
-    std::string msg;
-    for (LoggedUsersList::const_iterator itr = sIRC.LoggedUsers.begin(); itr != sIRC.LoggedUsers.end(); ++itr)
-    {
-        if ((*itr)->GMLevel > SEC_PLAYER && (time(NULL) - (*itr)->lastmsg) <= sIRC.Configs.PingTimeOutTime)
-        {
-            if (first)
-            {
-                SendSysMessage("The following staff members are online on IRC:");
-                first = false;
-            }
-            msg.append((*itr)->nickname);
-            msg.append("\n");
-        }
-    
-    }
-    
-    if (first)
-        SendSysMessage("No staff members are currently logged on IRC.");
-    else
-        SendSysMessage(msg.c_str());
-    
     return true;
 }
 
@@ -827,7 +794,7 @@ bool ChatHandler::HandleRecupParseCommand(Player *player, std::string command, u
                 return false;
             }
 
-            player->SetSkill(skill, metier_level ? 1 : NULL, maxskill);
+            player->SetSkill(skill, metier_level ? metier_level : 1, maxskill);
             PSendSysMessage(LANG_SET_SKILL, skill, sl->name[0], player->GetName(), metier_level, maxskill);
         }
     }
@@ -1559,50 +1526,63 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     if (!args || !*args)
         return false;
         
-    char* targetName = strtok((char*)args, "");
+    char* targetName = strtok((char*)args, " ");
+    char* cForce  = strtok (NULL, " "); //skip same account check (for players that already have max characters count on their account)
     std::string safeTargetName = targetName;
     CharacterDatabase.escape_string(safeTargetName);
     uint64 account_id = m_session->GetAccountId();
-    QueryResult *result = LoginDatabase.PQuery("SELECT amount FROM account_credits WHERE id = %u", account_id);
-
-    if (!result) {
-        PSendSysMessage(LANG_NO_CREDIT_EVER);
+    QueryResult* result = NULL;
+    Field* fields = NULL;
+    
+    if (!sWorld.getConfig(CONFIG_FACTION_CHANGE_ENABLED)) {
+        PSendSysMessage("Le changement de race/faction est actuellement désactivé.");
         SetSentErrorMessage(true);
         return false;
     }
     
-    //sLog.outString("Pom1");
-
-    Field *fields = result->Fetch();
-    uint32 credits = fields[0].GetUInt32();
-
-    delete result;
-
-    if (credits < 3) {
-        PSendSysMessage(LANG_CREDIT_NOT_ENOUGH);
+    if (!m_session->GetPlayer()->isAlive()) {
+        PSendSysMessage("Vous devez être en vie pour effectuer un changement de race ou faction.");
         SetSentErrorMessage(true);
         return false;
     }
     
-    //sLog.outString("Pom2");
+    if (m_session->GetPlayer()->isInCombat()) {
+        PSendSysMessage("Impossible en combat.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
+    if (m_session->GetPlayer()->GetBattleGround()) {
+        PSendSysMessage("Impossible en champ de bataille ou en arène.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
+    if (m_session->GetPlayer()->GetGroup()) {
+        PSendSysMessage("Veuillez quitter votre groupe pour effectuer le changement.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
+    if (m_session->GetPlayer()->GetInstanceId() != 0) {
+        PSendSysMessage("Impossible en instance.");
+        SetSentErrorMessage(true);
+        return false;
+    }
     
     if (m_session->GetPlayer()->getLevel() < 10) {
         PSendSysMessage(LANG_FACTIONCHANGE_LEVEL_MIN);
         SetSentErrorMessage(true);
         return false;
     }
-    
-    //sLog.outString("Pom3");
 
     result = CharacterDatabase.PQuery("SELECT guid, account, race, gender, playerBytes, playerBytes2 FROM characters WHERE name = '%s'", safeTargetName.c_str());
     
     if (!result) {
-        PSendSysMessage("Personnage cible non trouv�.");
+        PSendSysMessage("Personnage cible non trouvé.");
         SetSentErrorMessage(true);
         return false;
     }
-    
-    //sLog.outString("Pom4");
     
     fields = result->Fetch();
     
@@ -1626,6 +1606,18 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     
     delete result;
     
+    if (m_guid == t_guid) {
+        PSendSysMessage("Vous avez essayé de lancer un changement sur vous-même. Merci d'aller lire le post explicatif sur le forum au lieu de faire n'importe quoi !");
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
+    if ((!cForce || strcmp(cForce,"forcer")) && m_account != t_account) {
+        PSendSysMessage("Le personnage modèle doit être présent sur votre compte.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+    
     uint32 dest_team = BG_TEAM_ALLIANCE;
     // Search each faction is targeted
     switch (t_race)
@@ -1642,30 +1634,109 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     }
 
     PlayerInfo const* targetInfo = objmgr.GetPlayerInfo(t_race, m_class);
-    
     if (!targetInfo) {
         PSendSysMessage("La race du personnage cible est incompatible avec votre classe.");
         SetSentErrorMessage(true);
         return false;
     }
     
-    //sLog.outString("Pom5");
-    
+    // Check if this transfer is currently allowed and get cost
     PlayerInfo const* myInfo = objmgr.GetPlayerInfo(m_race, m_class);
     bool factionChange = (Player::TeamForRace(m_race) != Player::TeamForRace(t_race));
+    uint32 cost = sWorld.getConfig(CONFIG_RACE_CHANGE_COST);
+    if (factionChange) {
+        if(dest_team == BG_TEAM_HORDE)
+        {
+            if(!sWorld.getConfig(CONFIG_FACTION_CHANGE_A2H)) 
+            {
+                PSendSysMessage("Le changement de faction n'est actuellement pas autorisé dans le sens Alliance -> Horde.");
+                SetSentErrorMessage(true);
+                return false;
+            }
+            cost = sWorld.getConfig(CONFIG_FACTION_CHANGE_A2H_COST);
+        } else if (dest_team == BG_TEAM_ALLIANCE) 
+        {
+            if (!sWorld.getConfig(CONFIG_FACTION_CHANGE_H2A)) 
+            {
+                PSendSysMessage("Le changement de faction n'est actuellement pas autorisé dans le sens Horde -> Alliance.");
+                SetSentErrorMessage(true);
+                return false;
+            }
+            cost = sWorld.getConfig(CONFIG_FACTION_CHANGE_H2A_COST);
+        }
+    }
+    
+    // Check if enough credits
+    if (cost && m_session->GetSecurity() <= SEC_PLAYER) {
+        result = LoginDatabase.PQuery("SELECT amount FROM account_credits WHERE id = %u", account_id);
+
+        if (!result) {
+            PSendSysMessage(LANG_NO_CREDIT_EVER);
+            SetSentErrorMessage(true);
+            return false;
+        }
+
+        fields = result->Fetch();
+        uint32 credits = fields[0].GetUInt32();
+
+        delete result;
+
+        if (credits < cost) {
+            PSendSysMessage(LANG_CREDIT_NOT_ENOUGH);
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+    
+    // Check guild and arena team, friends are removed after the SaveToDB() call
+    // Guild
+    if (factionChange) {
+        Guild* guild = objmgr.GetGuildById(plr->GetGuildId());
+        if (guild) {
+            PSendSysMessage("Vous êtes actuellement dans une guilde. Veuillez la quitter pour effectuer le changement de faction.");
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+    
+    // Arena teams
+    if (factionChange) {
+        result = CharacterDatabase.PQuery("SELECT arena_team_member.arenaTeamId FROM arena_team_member JOIN arena_team ON arena_team_member.arenaTeamId = arena_team.arenaTeamId WHERE guid = %u", plr->GetGUIDLow());
+
+        if (result) {
+            PSendSysMessage("Vous êtes actuellement dans une ou plusieurs équipes d'arène. Veuillez les quitter pour effectuer le changement de faction.");
+            SetSentErrorMessage(true);
+            return false;
+        }
+    
+        delete result;
+    }
+    
+    // Dump player by safety
+    std::ostringstream oss;
+    std::string fname = sConfig.GetStringDefault("LogsDir", "");
+    oss << fname;
+    if (fname.length() > 0 && fname.at(fname.length()-1) != '/')
+        oss << "/";
+    oss << "chardump_factionchange/" << account_id << "_" << GUID_LOPART(m_session->GetPlayer()->GetGUID()) << "_" << m_session->GetPlayer()->GetName();
+    PlayerDumpWriter().WriteDump(oss.str().c_str(), GUID_LOPART(m_session->GetPlayer()->GetGUID()));
     
     WorldLocation loc;
     uint32 area_id = 0;
     if (factionChange) {
         if (Player::TeamForRace(t_race) == ALLIANCE) {
             loc = WorldLocation(0, -8866.468750, 671.831238, 97.903374, 2.154216);
-            area_id = plr->GetAreaId(); // FIXME
+            area_id = 1519; // Stormwind
         }
         else {
             loc = WorldLocation(1, 1632.54, -4440.77, 15.4584, 1.0637);
-            area_id = plr->GetAreaId();
+            area_id = 1637; // Orgrimmar
         }
     }
+    
+    // Homebind
+    if (factionChange)
+        plr->SetHomebindToLocation(loc, area_id);
     
     uint32 bankBags = plr->GetByteValue(PLAYER_BYTES_2, 2);
     plr->SetByteValue(UNIT_FIELD_BYTES_0, 0, t_race);
@@ -1675,7 +1746,9 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     plr->SetByteValue(PLAYER_BYTES_2, 2, bankBags);
     plr->SetGender(t_gender);
     
-    plr->InitTaxiNodesForLevel();
+    // Reset flys at next login
+    if (factionChange)
+        plr->SetAtLoginFlag(AT_LOGIN_RESET_FLYS);
     
     // Remove previous race starting spells
     std::list<CreateSpellPair>::const_iterator spell_itr;
@@ -1688,16 +1761,12 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     for (spell_itr = targetInfo->spell.begin(); spell_itr != targetInfo->spell.end(); ++spell_itr) {
         uint16 tspell = spell_itr->first;
         if (tspell) {
-            if (!spell_itr->second)               // not care about passive spells or loading case
+            if (!spell_itr->second)               // don't care about passive spells or loading case
                 plr->addSpell(tspell,spell_itr->second);
             else                                            // but send in normal spell in game learn case
                 plr->learnSpell(tspell);
         }
     }
-    
-    // Homebind
-    if (factionChange)
-        plr->SetHomebindToLocation(loc, area_id);
     
     // Reset current quests
     for (uint8 slot = 0; slot < MAX_QUEST_LOG_SIZE; slot++) {
@@ -1733,25 +1802,96 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             }
         }
     }
-
-    plr->SaveToDB();
-    plr->m_kickatnextupdate = true;
     
-    //***********************************************************************//
-    //* BEYOND THIS LINE, ONLY STUFF THAT WILL NOT BE SAVED WITH SaveToDB() *//
-    //***********************************************************************//
+    // Reputations
+    result = WorldDatabase.PQuery("SELECT faction_from, faction_to FROM player_factionchange_reputations WHERE race_from = %u AND race_to = %u", m_race, t_race);
+    if (result) {
+        do {
+            Field* fields = result->Fetch();
+            
+            uint32 from = fields[0].GetUInt32();
+            uint32 to = fields[1].GetUInt32();
+            
+            if (!from)
+                continue;
+            
+            if (!to)
+                plr->DropFactionReputation(from);
+            else
+                plr->SwapFactionReputation(from, to);
+        } while (result->NextRow());
+    }
+    if (factionChange) {
+        for (std::map<uint32, uint32>::const_iterator it = objmgr.factionchange_reput_generic.begin(); it != objmgr.factionchange_reput_generic.end(); ++it) {
+            uint32 faction_alliance = it->first;
+            uint32 faction_horde = it->second;
 
+            if (dest_team == BG_TEAM_ALLIANCE) {
+                if (faction_alliance == 0)
+                    plr->DropFactionReputation(faction_horde);
+                else if (faction_horde == 0)
+                    plr->DropFactionReputation(faction_alliance);
+                else
+                    plr->SwapFactionReputation(faction_alliance, faction_horde);
+            }
+            else {
+                if (faction_horde == 0)
+                    plr->DropFactionReputation(faction_alliance);
+                else if (faction_alliance == 0)
+                    plr->DropFactionReputation(faction_horde);
+                else
+                    plr->SwapFactionReputation(faction_horde, faction_alliance);
+            }
+        }
+    }
+    
     // Spells
     if (factionChange) {
         for (std::map<uint32, uint32>::const_iterator it = objmgr.factionchange_spells.begin(); it != objmgr.factionchange_spells.end(); ++it) {
             uint32 spell_alliance = it->first;
             uint32 spell_horde = it->second;
 
-            if (dest_team == BG_TEAM_ALLIANCE)
-                CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", spell_alliance, plr->GetGUIDLow(), spell_horde);
-            else
-                CharacterDatabase.PExecute("UPDATE character_spell SET spell = %u WHERE guid = %u AND spell = %u", spell_horde, plr->GetGUIDLow(), spell_alliance);
+            if (dest_team == BG_TEAM_ALLIANCE) {
+                if (spell_alliance == 0) {
+                    if (plr->HasSpell(spell_horde))
+                        plr->removeSpell(spell_horde);
+                } else {
+                    if (plr->HasSpell(spell_horde)) {
+                        plr->removeSpell(spell_horde);
+                        plr->learnSpell(spell_alliance);
+                    }
+                }
+            }
+            else {
+                if (spell_horde == 0) {
+                    if (plr->HasSpell(spell_alliance))
+                        plr->removeSpell(spell_alliance);
+                } else {
+                    if (plr->HasSpell(spell_alliance)) {
+                        plr->removeSpell(spell_alliance);
+                        plr->learnSpell(spell_horde);
+                    }
+                }
+            }
         }
+    }
+
+    // Spells, priest specific
+    result = WorldDatabase.PQuery("SELECT spell1, spell2 FROM player_factionchange_spells_priest_specific WHERE race1 IN (0,%u) AND race2 IN (0,%u)", m_race, t_race);
+    if (result) {
+        do {
+            Field* fields = result->Fetch();
+            
+            uint32 from = fields[0].GetUInt32();
+            uint32 to = fields[1].GetUInt32();
+
+            if (plr->HasSpell(from))
+                plr->removeSpell(from);
+
+            if (to != 0)
+                plr->learnSpell(to);
+
+        } while (result->NextRow());
     }
 
     // Items
@@ -1761,102 +1901,374 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
             uint32 item_horde = it->second;
 
             if (dest_team == BG_TEAM_ALLIANCE) {
-                CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", item_alliance, plr->GetGUIDLow(), item_horde);
-                CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", item_alliance, plr->GetGUIDLow(), item_horde);
+                if (item_alliance == 0) {
+                    uint32 count = plr->GetItemCount(item_horde, true);
+                    if (count != 0)
+                        plr->DestroyItemCount(item_horde, count, true, false, true);
+                } else {
+                    uint32 count = plr->GetItemCount(item_horde, true);
+                    if (count != 0) {
+                        plr->DestroyItemCount(item_horde, count, true, false, true);
+                        ItemPosCountVec dest;
+                        uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_alliance, count, false);
+                        if (msg == EQUIP_ERR_OK)
+                            plr->StoreNewItem(dest, item_alliance, count, true);
+                        else {
+                            if (Item* newItem = Item::CreateItem(item_alliance, count, plr)) {
+                                SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                                newItem->SaveToDB(trans);
+                                CharacterDatabase.CommitTransaction(trans);
+
+                                MailItemsInfo mi;
+                                mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                                std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                                WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                            }
+                        }
+                    }
+                }
             }
             else {
-                CharacterDatabase.PExecute("UPDATE item_instance SET data = CONCAT(SUBSTRING(data, 1, length(SUBSTRING_INDEX(data, ' ', 3))), ' ', %u, SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 4)) + 1, length(SUBSTRING_INDEX(data, ' ', 54)))) WHERE owner_guid = %u AND %u = (SELECT SUBSTRING(data, length(SUBSTRING_INDEX(data, ' ', 3)) + 1, length(SUBSTRING_INDEX(data, ' ', 4)) - length(SUBSTRING_INDEX(data, ' ', 3))))", item_horde, plr->GetGUIDLow(), item_alliance);
-                CharacterDatabase.PExecute("UPDATE character_inventory SET item_template = %u WHERE guid = %u AND item_template = %u", item_horde, plr->GetGUIDLow(), item_alliance);
+                if (item_horde == 0) {
+                    uint32 count = plr->GetItemCount(item_alliance, true);
+                    if (count != 0)
+                        plr->DestroyItemCount(item_alliance, count, true, false, true);
+                } else {
+                    uint32 count = plr->GetItemCount(item_alliance, true);
+                    if (count != 0) {
+                        plr->DestroyItemCount(item_alliance, count, true, false, true);
+                        ItemPosCountVec dest;
+                        uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, item_horde, count, false);
+                        if (msg == EQUIP_ERR_OK)
+                            plr->StoreNewItem(dest, item_horde, count, true);
+                        else {
+                            if (Item* newItem = Item::CreateItem(item_horde, count, plr)) {
+                                SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                                newItem->SaveToDB(trans);
+                                CharacterDatabase.CommitTransaction(trans);
+
+                                MailItemsInfo mi;
+                                mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                                std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                                WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
     
-    // Reputations
-    result = WorldDatabase.PQuery("SELECT faction_from, faction_to FROM player_factionchange_reputation WHERE race_from = %u AND race_to = %u", m_race, t_race);
+    // Items, race specific
+    result = WorldDatabase.PQuery("SELECT item1, item2 FROM player_factionchange_items_race_specific WHERE race1 = %u AND race2 = %u", m_race, t_race);
     if (result) {
         do {
             Field* fields = result->Fetch();
             
             uint32 from = fields[0].GetUInt32();
             uint32 to = fields[1].GetUInt32();
+
+            if (to == 0) {
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0)
+                    plr->DestroyItemCount(from, count, true, false, true);
+            } else {
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0) {
+                    plr->DestroyItemCount(from, count, true, false, true);
+                    ItemPosCountVec dest;
+                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, count, false);
+                    if (msg == EQUIP_ERR_OK)
+                        plr->StoreNewItem( dest, to, count, true);
+                    else {
+                        if (Item* newItem = Item::CreateItem(to, count, plr)) {
+                            SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                            newItem->SaveToDB(trans);
+                            CharacterDatabase.CommitTransaction(trans);
+
+                            MailItemsInfo mi;
+                            mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                            std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                            WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                        }
+                    }
+                }
+            }
+        } while (result->NextRow());
+    }
+    result = WorldDatabase.PQuery("SELECT item2, item1 FROM player_factionchange_items_race_specific WHERE race2 = %u AND race1 = %u", m_race, t_race);
+    if (result) {
+        do {
+            Field* fields = result->Fetch();
             
-            CharacterDatabase.PExecute("UPDATE character_reputation SET faction = %u WHERE guid = %u AND faction = %u", to, plr->GetGUIDLow(), from);
+            uint32 from = fields[0].GetUInt32();
+            uint32 to = fields[1].GetUInt32();
+
+            if (to == 0) {
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0)
+                    plr->DestroyItemCount(from, count, true, false, true);
+            } else {
+                uint32 count = plr->GetItemCount(from, true);
+                if (count != 0) {
+                    plr->DestroyItemCount(from, count, true, false, true);
+                    ItemPosCountVec dest;
+                    uint8 msg = plr->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, to, count, false);
+                    if (msg == EQUIP_ERR_OK)
+                        plr->StoreNewItem(dest, to, count, true);
+                    else {
+                        if (Item* newItem = Item::CreateItem(to, count, plr)) {
+                            SQLTransaction trans = CharacterDatabase.BeginTransaction();
+                            newItem->SaveToDB(trans);
+                            CharacterDatabase.CommitTransaction(trans);
+
+                            MailItemsInfo mi;
+                            mi.AddItem(newItem->GetGUIDLow(), newItem->GetEntry(), newItem);
+                            std::string subject = GetSession()->GetTrinityString(LANG_NOT_EQUIPPED_ITEM);
+                            WorldSession::SendMailTo(plr, MAIL_NORMAL, MAIL_STATIONERY_GM, plr->GetGUIDLow(), plr->GetGUIDLow(), subject, 0, &mi, 0, 0, MAIL_CHECK_MASK_NONE);
+                        }
+                    }
+                }
+            }
         } while (result->NextRow());
     }
     
-    // Reset guild, friend list and arena teams
-    // Guild
+    // Act like auctions are expired
+    sAHMgr.RemoveAllAuctionsOf(plr->GetGUIDLow());
+    plr->RemoveAllAuras();
+
+    // Remove instance tag
+    for (uint8 i = 0; i < TOTAL_DIFFICULTIES; i++) {
+        Player::BoundInstancesMap &binds = plr->GetBoundInstances(i);
+        for (Player::BoundInstancesMap::iterator itr = binds.begin(); itr != binds.end(); ) {
+            if (itr->first != plr->GetMapId())
+                plr->UnbindInstance(itr, i);
+            else
+                ++itr;
+        }
+    }
+
+    if (m_session->GetSecurity() <= SEC_PLAYER) {
+        LoginDatabase.PExecute("UPDATE account_credits SET amount = amount - %u, last_update = %u, `from` = 'Boutique' WHERE id = %u", cost, time(NULL), account_id);
+        CharacterDatabase.PExecute("INSERT INTO character_purchases (guid, actions, time) VALUES (%u, '%s', %u)", plr->GetGUID(), "Changement de faction", time(NULL));
+    }
+    
+    plr->SaveToDB();
+    plr->m_kickatnextupdate = true;
+    
+    //***********************************************************************//
+    //* BEYOND THIS LINE, ONLY STUFF THAT WILL NOT BE SAVED WITH SaveToDB() *//
+    //***********************************************************************//
+    
+    // Quests
     if (factionChange) {
-        Guild* guild = objmgr.GetGuildById(plr->GetGuildId());
-        if (guild) {
-            /*if (plr->GetGUID() == guild->GetLeader() && guild->GetMemberSize() > 1)
-                m_session->SendGuildCommandResult(GUILD_QUIT_S, "", GUILD_LEADER_LEAVE);
-            else if (plr->GetGUID() == guild->GetLeader())
-                guild->Disband();
-            else {*/
-                guild->DelMember(plr->GetGUID());
-                /*// Put record into guildlog
-                guild->LogGuildEvent(GUILD_EVENT_LOG_LEAVE_GUILD, _player->GetGUIDLow(), 0, 0);
+        for (std::map<uint32, uint32>::const_iterator it = objmgr.factionchange_quests.begin(); it != objmgr.factionchange_quests.end(); ++it) {
+            uint32 quest_alliance = it->first;
+            uint32 quest_horde = it->second;
 
-                WorldPacket data(SMSG_GUILD_EVENT, (2+10));
-                data << (uint8)GE_LEFT;
-                data << (uint8)1;
-                data << plName;
-                guild->BroadcastPacket(&data);
-
-                m_session->SendGuildCommandResult(GUILD_QUIT_S, guild->GetName(), GUILD_PLAYER_NO_MORE_IN_GUILD);
-            }*/
+            if (dest_team == BG_TEAM_ALLIANCE) {
+                if (quest_alliance == 0)
+                    CharacterDatabase.PExecute("DELETE FROM character_queststatus WHERE guid = %u AND quest = %u", plr->GetGUIDLow(), quest_horde);
+                else
+                    CharacterDatabase.PExecute("UPDATE character_queststatus SET quest = %u WHERE guid = %u AND quest = %u", quest_alliance, plr->GetGUIDLow(), quest_horde);
+            }
+            else {
+                if (quest_horde == 0)
+                    CharacterDatabase.PExecute("DELETE FROM character_queststatus WHERE guid = %u AND quest = %u", plr->GetGUIDLow(), quest_alliance);
+                else
+                    CharacterDatabase.PExecute("UPDATE character_queststatus SET quest = %u WHERE guid = %u AND quest = %u", quest_horde, plr->GetGUIDLow(), quest_alliance);
+            }
         }
     }
 
     // Friend list
     if (factionChange)
         CharacterDatabase.PExecute("DELETE FROM character_social WHERE guid = %u OR friend = %u", plr->GetGUIDLow(), plr->GetGUIDLow());
-    
-    // Arena teams
-    if (factionChange) {
-        result = CharacterDatabase.PQuery("SELECT arena_team_member.arenaTeamId FROM arena_team_member JOIN arena_team ON arena_team_member.arenaTeamId = arena_team.arenaTeamId WHERE guid = %u", plr->GetGUIDLow());
-
-        if (result) {
-            do
-            {
-                Field* fields = result->Fetch();
-                uint32 arenaTeamId = fields[0].GetUInt32();
-                if (arenaTeamId != 0)
-                {
-                    ArenaTeam* arenaTeam = objmgr.GetArenaTeamById(arenaTeamId);
-                    if (arenaTeam)
-                        arenaTeam->DelMember(plr->GetGUID());
-                }
-            }
-            while (result->NextRow());
-        }
-    
-        delete result;
-    }
 
     // Relocation
-    switch (t_race) {
-    case RACE_HUMAN:
-    case RACE_DWARF:
-    case RACE_NIGHTELF:
-    case RACE_GNOME:
-    case RACE_DRAENEI:
-        // Stormwind
-        Player::SavePositionInDB(0, -8866.468750f, 671.831238f, 97.903374f, 2.154216f, 1519, m_fullGUID);
-        break;
-    case RACE_ORC:
-    case RACE_UNDEAD_PLAYER:
-    case RACE_TAUREN:
-    case RACE_TROLL:
-    case RACE_BLOODELF:
-        // Orgrimmar
-        Player::SavePositionInDB(1, 1632.54f, -4440.77f, 15.4584f, 1.0637f, 1637, m_fullGUID);
-        break;
-        
+    if (factionChange) {
+        switch (t_race) {
+        case RACE_HUMAN:
+        case RACE_DWARF:
+        case RACE_NIGHTELF:
+        case RACE_GNOME:
+        case RACE_DRAENEI:
+            // Stormwind
+            Player::SavePositionInDB(0, -8866.468750f, 671.831238f, 97.903374f, 2.154216f, 1519, m_fullGUID);
+            break;
+        case RACE_ORC:
+        case RACE_UNDEAD_PLAYER:
+        case RACE_TAUREN:
+        case RACE_TROLL:
+        case RACE_BLOODELF:
+            // Orgrimmar
+            Player::SavePositionInDB(1, 1632.54f, -4440.77f, 15.4584f, 1.0637f, 1637, m_fullGUID);
+            break;
+        }
     }
     
-    //sLog.outString("Pom6");
-    
+    return true;
+}
+
+bool ChatHandler::HandleSpectateVersion(const char *args)
+{
+    if(!sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+    {
+        PSendSysMessage("Arena spectator désactivé.");
+        return true;
+    }
+
+    if (!args || !*args)
+        return false;
+
+    std::string version = args;
+
+    PSendSysMessage("Addon Spectator Version : %s", version.c_str());
+
+    return true;
+}
+
+bool ChatHandler::HandleSpectateCancelCommand(const char* /*args*/)
+{
+    if(!sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+    {
+        PSendSysMessage("Arena spectator désactivé.");
+        return true;
+    }
+
+    Player* player =  GetSession()->GetPlayer();
+
+    BattleGround *bg = player->GetBattleGround();
+    if (!bg)
+    {
+    	 PSendSysMessage("Vous n'êtes pas dans une arène.");
+    	 SetSentErrorMessage(true);
+    	 return false;
+    }
+
+    if (!bg->isSpectator(player->GetGUID()))
+    {
+        PSendSysMessage("Vous n'êtes pas spectateur.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    player->CancelSpectate();
+
+    uint32 map = player->GetBattleGroundEntryPointMap();
+    float positionX = player->GetBattleGroundEntryPointX();
+    float positionY = player->GetBattleGroundEntryPointY();
+    float positionZ = player->GetBattleGroundEntryPointZ();
+    float positionO = player->GetBattleGroundEntryPointO();
+    if (player->TeleportTo(map, positionX, positionY, positionZ, positionO))
+    {
+        player->SetSpectate(false);
+        bg->RemoveSpectator(player->GetGUID());
+    }
+
+    return true;
+}
+
+bool ChatHandler::HandleSpectateFromCommand(const char *args)
+{
+    if(!sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+    {
+        PSendSysMessage("Arena spectator désactivé.");
+        return true;
+    }
+
+    Player* target;
+    uint64 target_guid;
+    std::string target_name;
+    if (!extractPlayerTarget((char*)args, &target, &target_guid, &target_name))
+        return false;
+
+    Player* player = GetSession()->GetPlayer();
+
+    if (!target)
+    {
+        PSendSysMessage("Le joueur ciblé est introuvable.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (!player->isSpectator())
+    {
+        PSendSysMessage("Vous n'êtes pas spectateur.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (target->isSpectator())
+    {
+        PSendSysMessage("Vous ne pouvez pas faire cela car le joueur ciblé est aussi spectateur.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (player->GetMap() != target->GetMap())
+    {
+        PSendSysMessage("Vous ne pouvez pas faire cela car vous n'êtes pas dans la même arène que le joueur ciblé.");
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    if (BattleGround* bg = target->GetBattleGround())
+    {
+        if (bg->GetStatus() != STATUS_IN_PROGRESS)
+        {
+            PSendSysMessage("Vous ne pouvez pas faire cela car l'arène n'a pas encore commencé.");
+            SetSentErrorMessage(true);
+            return false;
+        }
+    }
+
+    if (player->getSpectateFrom())
+    {
+        if (target == player->getSpectateFrom())
+    	    player->getSpectateFrom()->RemovePlayerFromVision(player);
+        else
+        {
+        	player->getSpectateFrom()->RemovePlayerFromVision(player);
+        	target->AddPlayerToVision(player);
+        }
+        return true;
+    }
+    else
+        target->AddPlayerToVision(player);
+
+    return true;
+}
+
+bool ChatHandler::HandleSpectateInitCommand(const char *args)
+{
+    if(!sWorld.getConfig(CONFIG_ARENA_SPECTATOR_ENABLE))
+        return true;
+
+    if (Player* player = GetSession()->GetPlayer())
+    	player->SendDataForSpectator();
+
+    return true;
+}
+
+bool ChatHandler::HandleUpdateTitleCommand(const char *args)
+{
+    if (Player * player = GetSession()->GetPlayer()) {
+        player->UpdateKnownTitles();
+        return true;
+    }
+    return false;
+}
+
+bool ChatHandler::HandleReportLagCommand(const char* args)
+{
+    time_t now = time(NULL);
+    Player* player = GetSession()->GetPlayer();
+    if (now - player->lastLagReport > 10) { // Spam prevention
+        sLog.outString("[LAG] Player %s (GUID: %u - IP: %s) reported lag - Current timediff: %u",
+                player->GetName(), player->GetGUIDLow(), GetSession()->GetRemoteAddress().c_str(), sWorld.GetUpdateTime());
+        player->lastLagReport = now;
+    }
+
     return true;
 }
