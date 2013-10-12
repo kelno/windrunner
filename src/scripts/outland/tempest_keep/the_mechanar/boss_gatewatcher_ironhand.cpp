@@ -55,6 +55,8 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
 
     uint32 Shadow_Power_Timer;
     uint32 Jackhammer_Timer;
+    uint32 Jackhammer_CastTime;
+    uint8 Jackhammer_Progression;
     uint32 Stream_of_Machine_Fluid_Timer;
 
     void Reset()
@@ -62,7 +64,8 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         Shadow_Power_Timer = 25000;
         Jackhammer_Timer = 45000;
         Stream_of_Machine_Fluid_Timer = 55000;
-
+        Jackhammer_CastTime = 0;
+        Jackhammer_Progression = 0;
     }
     void Aggro(Unit *who)
     {
@@ -104,20 +107,41 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         //Jack Hammer
         if(Jackhammer_Timer < diff)
         {
-            //TODO: expect cast this about 5 times in a row (?), announce it by emote only once
-            DoScriptText(EMOTE_HAMMER, m_creature);
-            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
-
-            //chance to yell, but not same time as emote (after spell in fact casted)
-            if (rand()%2)
-                return;
-
-            switch(rand()%2)
+            switch(Jackhammer_Progression)
             {
-            case 0: DoScriptText(SAY_HAMMER_1, m_creature); break;
-            case 1: DoScriptText(SAY_HAMMER_2, m_creature); break;
+            case 0: 
+                if(Jackhammer_CastTime == 0)
+                {
+                    DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
+                    DoScriptText(EMOTE_HAMMER, m_creature);
+                    Jackhammer_Progression++;
+                }
+                break;
+            case 1: 
+                if(Jackhammer_CastTime > 2500)
+                {
+                    DoScriptText(SAY_HAMMER_1, m_creature); 
+                    Jackhammer_Progression++;
+                }
+                break;
+            case 2: 
+                if(Jackhammer_CastTime > 5500)
+                {
+                    DoScriptText(SAY_HAMMER_2, m_creature); 
+                    Jackhammer_Progression++;
+                }
+                break;
+            case 3:
+                if(Jackhammer_CastTime > 8000)
+                {
+                    Jackhammer_Timer = 30000;
+                    Jackhammer_CastTime = 0;
+                    Jackhammer_Progression = 0;
+                }
+                break;
             }
-            Jackhammer_Timer = 30000;
+            
+            Jackhammer_CastTime += diff;
         }else Jackhammer_Timer -= diff;
 
         //Stream of Machine Fluid

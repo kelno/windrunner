@@ -150,7 +150,8 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
         return false;
     }
-
+    
+    // Override ScriptedInstance::GetPlayerInMap because of aura 45839 check
     Player* GetPlayerInMap()
     {
         Map::PlayerList const& players = instance->GetPlayers();
@@ -160,12 +161,12 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr && !plr->HasAura(45839))
+                if (plr)
                     return plr;
             }
         }
 
-        debug_log("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
+        sLog.outError("Instance Sunwell Plateau: GetPlayerInMap called, and not player found!");
         return NULL;
     }
     
@@ -220,6 +221,21 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 //sLog.outString("Lists sizes: %u - %u - %u", northList.size(), centerList.size(), southList.size());
                 break;
         }
+        m_mNpcEntryGuidStore[pCreature->GetEntry()] = pCreature->GetGUID();
+    }
+
+    void OnCreatureDeath(Creature* creature)
+    {
+    	switch(creature->GetEntry())
+    	{
+    	    case 25653:
+    	    	if (Unit* summoner = creature->GetSummoner())
+    	    	{
+    	    	    summoner->RemoveAurasDueToSpell(45838);
+    	    	    summoner->RemoveAurasDueToSpell(45839);
+    	    	}
+    		    break;
+    	}
     }
 
     void OnObjectCreate(GameObject* pGo)
@@ -372,30 +388,54 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 }
                 Encounters[4] = data; break;
             case DATA_KILJAEDEN_EVENT:     Encounters[5] = data; break;
-            case DATA_ACTIVATE_NORTH:
-                felmystNorthTimer = 1000 + rand()%500;
-                break;
-            /*    for (std::vector<uint64>::iterator itr = northList.begin(); itr != northList.end(); itr++) {
-                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
-                        trigger->CastSpell(trigger, 45582, true);
+            case DATA_ACTIVATE_NORTH_TO_LEFT:
+                for (std::vector<uint64>::iterator itr = northList.begin(); itr != northList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() > data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
                 }
-                break;*/
-            case DATA_ACTIVATE_CENTER:
-                felmystCenterTimer = 1000 + rand()%500;
                 break;
-            /*    for (std::vector<uint64>::iterator itr = centerList.begin(); itr != centerList.end(); itr++) {
-                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
-                        trigger->CastSpell(trigger, 45582, true);
+            case DATA_ACTIVATE_CENTER_TO_LEFT:
+                for (std::vector<uint64>::iterator itr = centerList.begin(); itr != centerList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() > data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
                 }
-                break;*/
-            case DATA_ACTIVATE_SOUTH:
-                felmystSouthTimer = 1000 + rand()%500;
                 break;
-            /*    for (std::vector<uint64>::iterator itr = southList.begin(); itr != southList.end(); itr++) {
-                    if (Creature *trigger = instance->GetCreatureInMap(*itr))
-                        trigger->CastSpell(trigger, 45582, true);
+            case DATA_ACTIVATE_SOUTH_TO_LEFT:
+                for (std::vector<uint64>::iterator itr = southList.begin(); itr != southList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() > data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
                 }
-                break;*/
+                break;
+            case DATA_ACTIVATE_NORTH_TO_RIGHT:
+                for (std::vector<uint64>::iterator itr = northList.begin(); itr != northList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() < data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
+                }
+                break;
+            case DATA_ACTIVATE_CENTER_TO_RIGHT:
+                for (std::vector<uint64>::iterator itr = centerList.begin(); itr != centerList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() < data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
+                }
+                break;
+            case DATA_ACTIVATE_SOUTH_TO_RIGHT:
+                for (std::vector<uint64>::iterator itr = southList.begin(); itr != southList.end(); itr++) {
+                    if (Creature *trigger = instance->GetCreatureInMap(*itr)) {
+                        if (trigger->GetPositionY() < data)
+                            trigger->CastSpell(trigger, 45582, true);
+                    }
+                }
+                break;
             case DATA_ICEBARRIER_EVENT:
                 IceBarrierDone = true;
                 IceBarrierTimer = 3600000;
@@ -416,7 +456,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             SaveToDB();
     }
 
-    void Update(uint32 const diff)
+    void Update(uint32 diff)
     {
         if (!IceBarrierDone) {
             if (IceBarrierTimer <= diff) {
@@ -427,7 +467,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
                 IceBarrierTimer -= diff;
         }
         
-        if (felmystNorthTimer) {
+        /*if (felmystNorthTimer) {
             if (felmystNorthTimer <= diff) {
                 for (std::vector<uint64>::iterator itr = northList.begin(); itr != northList.end(); itr++) {
                     if (Creature *trigger = instance->GetCreatureInMap(*itr))
@@ -461,7 +501,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             }
             else
                 felmystSouthTimer -= diff;
-        }
+        }*/
 
         Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
         if (!Commander || Commander->isInCombat() || Commander->isDead() || !GetAlivePlayerInMap())

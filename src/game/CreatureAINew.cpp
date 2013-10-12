@@ -116,9 +116,32 @@ bool CreatureAINew::updateVictim(bool evade)
     return me->getVictim();
 }
 
+bool CreatureAINew::updateCombat(bool evade)
+{
+    if(!me->getThreatManager().isThreatListEmpty())
+        return true;
+
+    if(me->HasReactState(REACT_AGGRESSIVE))
+    {
+        if (Unit* target = me->SelectNearestTarget())
+        {
+            if(!me->IsOutOfThreatArea(target))
+                return true;
+        }
+    }
+
+    if (evade && me->getAI())
+        me->getAI()->evade();
+
+    return false;
+}
+
 void CreatureAINew::onMoveInLoS(Unit* who)
 {
     if (me->getVictim())
+        return;
+
+    if (me->HasJustRespawned() && !me->GetSummonerGUID())
         return;
 
     if (me->canStartAttack(who))
@@ -401,6 +424,9 @@ bool CreatureAINew::checkTarget(Unit* target, bool playersOnly, float radius)
 
     if (radius < 0.0f && me->IsWithinCombatRange(target, -radius))
         return false;
+
+    if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED) || target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
+    	return false;
 
     return true;
 }

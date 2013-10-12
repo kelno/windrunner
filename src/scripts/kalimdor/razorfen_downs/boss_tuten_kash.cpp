@@ -131,6 +131,7 @@ bool GOHello_go_gong(Player *player, GameObject* go)
             pInstance->SetData(DATA_CREATURE_CREDIT, 0);
             break;
     }
+    return true;
 }
 
 void AddSC_boss_tuten_kash()

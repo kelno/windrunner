@@ -9,6 +9,7 @@
 #include "ObjectMgr.h"
 #include "EventAI.h"
 #include "Policies/SingletonImp.h"
+#include "Spell.h"
 
 class CreatureScript;
 
@@ -65,10 +66,8 @@ void LoadOverridenDBCData();
 // -- Areatrigger --
 extern void AddSC_areatrigger_scripts();
 
-// -- Boss --
-extern void AddSC_boss_emeriss();
-extern void AddSC_boss_taerar();
-extern void AddSC_boss_ysondre();
+// -- Outdoors dragons --
+extern void AddSC_boss_dragonsofnightmare();
 
 // -- Creature --
 extern void AddSC_mob_event();
@@ -84,8 +83,12 @@ extern void AddSC_test();
 extern void AddSC_onevents();
 extern void AddSC_npc_lottery();
 extern void AddSC_theinform();
+extern void AddSC_mylittlebombling();
+extern void AddSC_npc_interpreter();
 
+extern void AddSC_catapultmaster();
 extern void AddSC_npc_teleporter();
+extern void AddSC_npc_teleporter_pvpzone();
 
 // -- GO --
 extern void AddSC_go_scripts();
@@ -108,7 +111,9 @@ extern void AddSC_npc_xp_blocker();
 extern void AddSC_SmartSCripts();
 
 // -- Misc --
+extern void AddSC_arena_spectator_script();
 extern void AddSC_hallows_end();
+extern void AddSC_arenabeastmaster();
 
 //--------------------
 //------ ZONE --------
@@ -123,6 +128,7 @@ extern void AddSC_boss_balinda();
 extern void AddSC_boss_drekthar();
 extern void AddSC_boss_galvangar();
 extern void AddSC_boss_vanndar();
+extern void AddSC_alterac_bowman();
 
 //Arathi Highlands
 extern void AddSC_arathi_highlands();
@@ -172,7 +178,6 @@ extern void AddSC_boss_supremus();
 extern void AddSC_boss_gurtogg_bloodboil();
 extern void AddSC_boss_mother_shahraz();
 extern void AddSC_boss_reliquary_of_souls();
-extern void addSC_boss_reliquary_of_souls(); // New
 extern void AddSC_boss_teron_gorefiend();
 extern void AddSC_boss_najentus();
 extern void AddSC_boss_illidari_council();
@@ -616,6 +621,7 @@ extern void AddSC_boss_skeram();
 extern void AddSC_boss_twinemperors();
 extern void AddSC_mob_anubisath_sentinel();
 extern void AddSC_instance_temple_of_ahnqiraj();
+extern void AddSC_boss_ouro();
 
 //Terokkar Forest
 extern void AddSC_terokkar_forest();
@@ -715,7 +721,7 @@ void ScriptMgr::LoadDatabase()
     }
     
     if (TScriptDB.Open(dbstring, num_threads))
-        outstring_log("TSCR: TrinityScript database: %s",dbstring);
+        sLog.outString("TSCR: TrinityScript database: %s",dbstring);
     else
     {
         error_log("TSCR: Unable to connect to Database. Load database aborted.");
@@ -731,28 +737,26 @@ void ScriptMgr::LoadDatabase()
     if (result)
     {
         Field *fields = result->Fetch();
-        outstring_log("TSCR: Database version is: %s", fields[0].GetString());
-        outstring_log("");
+        sLog.outString("TSCR: Database version is: %s\n", fields[0].GetString());
         delete result;
 
     }else
     {
-        error_log("TSCR: Missing `version.script_version` information.");
-        outstring_log("");
+        error_log("TSCR: Missing `version.script_version` information.\n");
     }
 
     // Drop Existing Text Map, only done once and we are ready to add data from multiple sources.
     TextMap.clear();
 
     // Load EventAI Text
-    outstring_log("TSCR: Loading EventAI Texts...");
+    sLog.outString("TSCR: Loading EventAI Texts...");
     LoadTrinityStrings(TScriptDB,"eventai_texts",-1,1+(TEXT_SOURCE_RANGE));
 
     // Gather Additional data from EventAI Texts
     //result = TScriptDB.PQuery("SELECT entry, sound, type, language, emote FROM eventai_texts");
     result = TScriptDB.PQuery("SELECT entry, sound, type, language FROM eventai_texts");
 
-    outstring_log("TSCR: Loading EventAI Texts additional data...");
+    sLog.outString("TSCR: Loading EventAI Texts additional data...");
     if (result)
     {
         uint32 count = 0;
@@ -798,22 +802,20 @@ void ScriptMgr::LoadDatabase()
 
         delete result;
 
-        outstring_log("");
-        outstring_log(">> TSCR: Loaded %u additional EventAI Texts data.", count);
+        sLog.outString("\n>> TSCR: Loaded %u additional EventAI Texts data.", count);
     }else
     {
-        outstring_log("");
-        outstring_log(">> Loaded 0 additional EventAI Texts data. DB table `eventai_texts` is empty.");
+        sLog.outString("\n>> Loaded 0 additional EventAI Texts data. DB table `eventai_texts` is empty.");
     }
 
     // Load Script Text
-    outstring_log("TSCR: Loading Script Texts...");
+    sLog.outString("TSCR: Loading Script Texts...");
     LoadTrinityStrings(TScriptDB,"script_texts",TEXT_SOURCE_RANGE,1+(TEXT_SOURCE_RANGE*2));
 
     // Gather Additional data from Script Texts
     result = TScriptDB.PQuery("SELECT entry, sound, type, language, emote FROM script_texts");
 
-    outstring_log("TSCR: Loading Script Texts additional data...");
+    sLog.outString("TSCR: Loading Script Texts additional data...");
     if (result)
     {
         uint32 count = 0;
@@ -850,7 +852,7 @@ void ScriptMgr::LoadDatabase()
             if (!GetLanguageDescByID(temp.Language))
                 error_db_log("TSCR: Entry %i in table `script_texts` using Language %u but Language does not exist.",i,temp.Language);
 
-            if (temp.Type > CHAT_TYPE_BOSS_WHISPER)
+            if (temp.Type >= CHAT_TYPE_END)
                 error_db_log("TSCR: Entry %i in table `script_texts` has Type %u but this Chat Type does not exist.",i,temp.Type);
 
             TextMap[i] = temp;
@@ -859,22 +861,20 @@ void ScriptMgr::LoadDatabase()
 
         delete result;
 
-        outstring_log("");
-        outstring_log(">> TSCR: Loaded %u additional Script Texts data.", count);
+        sLog.outString("\n>> TSCR: Loaded %u additional Script Texts data.", count);
     }else
     {
-        outstring_log("");
-        outstring_log(">> Loaded 0 additional Script Texts data. DB table `script_texts` is empty.");
+        sLog.outString("\n>> Loaded 0 additional Script Texts data. DB table `script_texts` is empty.");
     }
 
     // Load Custom Text
-    outstring_log("TSCR: Loading Custom Texts...");
+    sLog.outString("TSCR: Loading Custom Texts...");
     LoadTrinityStrings(TScriptDB,"custom_texts",TEXT_SOURCE_RANGE*2,1+(TEXT_SOURCE_RANGE*3));
 
     // Gather Additional data from Custom Texts
     result = TScriptDB.PQuery("SELECT entry, sound, type, language, emote FROM custom_texts");
 
-    outstring_log("TSCR: Loading Custom Texts additional data...");
+    sLog.outString("TSCR: Loading Custom Texts additional data...");
     if (result)
     {
         uint32 count = 0;
@@ -920,12 +920,10 @@ void ScriptMgr::LoadDatabase()
 
         delete result;
 
-        outstring_log("");
-        outstring_log(">> Loaded %u additional Custom Texts data.", count);
+        sLog.outString("\n>> Loaded %u additional Custom Texts data.", count);
     }else
     {
-        outstring_log("");
-        outstring_log(">> Loaded 0 additional Custom Texts data. DB table `custom_texts` is empty.");
+        sLog.outString("\n>> Loaded 0 additional Custom Texts data. DB table `custom_texts` is empty.");
     }
 
     //Gather additional data for EventAI
@@ -934,7 +932,7 @@ void ScriptMgr::LoadDatabase()
     //Drop Existing EventSummon Map
     EventAI_Summon_Map.clear();
 
-    outstring_log("TSCR: Loading EventAI Summons...");
+    sLog.outString("TSCR: Loading EventAI Summons...");
     if (result)
     {
         uint32 Count = 0;
@@ -959,12 +957,10 @@ void ScriptMgr::LoadDatabase()
 
         delete result;
 
-        outstring_log("");
-        outstring_log(">> Loaded %u EventAI summon definitions", Count);
+        sLog.outString("\n>> Loaded %u EventAI summon definitions", Count);
     }else
     {
-        outstring_log("");
-        outstring_log(">> Loaded 0 EventAI Summon definitions. DB table `eventai_summons` is empty.");
+        sLog.outString("\n>> Loaded 0 EventAI Summon definitions. DB table `eventai_summons` is empty.");
     }
 
     //Gather event data
@@ -978,7 +974,7 @@ void ScriptMgr::LoadDatabase()
     //Drop Existing EventAI List
     EventAI_Event_Map.clear();
 
-    outstring_log("TSCR: Loading EventAI scripts...");
+    sLog.outString("TSCR: Loading EventAI scripts...");
     if (result)
     {
         uint32 Count = 0;
@@ -1197,7 +1193,7 @@ void ScriptMgr::LoadDatabase()
                                 {
                                     //output as debug for now, also because there's no general rule all spells have RecoveryTime
                                     if (temp.event_param3 < spell->RecoveryTime)
-                                        debug_log("TSCR: Event %u Action %u uses SpellID %u but cooldown is longer(%u) than minumum defined in event param3(%u).", i, j+1,temp.action[j].param1, spell->RecoveryTime, temp.event_param3);
+                                        sLog.outError("Event %u Action %u uses SpellID %u but cooldown is longer (%u) than minumum defined in event param3 (%u).", i, j+1,temp.action[j].param1, spell->RecoveryTime, temp.event_param3);
                                 }
                             }
 
@@ -1363,12 +1359,10 @@ void ScriptMgr::LoadDatabase()
 
         delete result;
 
-        outstring_log("");
-        outstring_log(">> Loaded %u EventAI scripts", Count);
+        sLog.outString("\n>> Loaded %u EventAI scripts", Count);
     }else
     {
-        outstring_log("");
-        outstring_log(">> Loaded 0 EventAI scripts. DB table `eventai_scripts` is empty.");
+        sLog.outString("\n>> Loaded 0 EventAI scripts. DB table `eventai_scripts` is empty.");
     }
 
     //Free database thread and resources
@@ -1409,14 +1403,13 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     bool CanLoadDB = true;
 
     //Trinity Script startup
-    outstring_log(" _____     _       _ _         ____            _       _");
-    outstring_log("|_   _| __(_)_ __ (_) |_ _   _/ ___|  ___ _ __(_)_ __ | |_ ");
-    outstring_log("  | || '__| | '_ \\| | __| | | \\___ \\ / __| \'__| | \'_ \\| __|");
-    outstring_log("  | || |  | | | | | | |_| |_| |___) | (__| |  | | |_) | |_ ");
-    outstring_log("  |_||_|  |_|_| |_|_|\\__|\\__, |____/ \\___|_|  |_| .__/ \\__|");
-    outstring_log("                         |___/                  |_|        ");
-    outstring_log("Trinity Script initializing %s", _FULLVERSION);
-    outstring_log("");
+    sLog.outString(" _____     _       _ _         ____            _       _");
+    sLog.outString("|_   _| __(_)_ __ (_) |_ _   _/ ___|  ___ _ __(_)_ __ | |_ ");
+    sLog.outString("  | || '__| | '_ \\| | __| | | \\___ \\ / __| \'__| | \'_ \\| __|");
+    sLog.outString("  | || |  | | | | | | |_| |_| |___) | (__| |  | | |_) | |_ ");
+    sLog.outString("  |_||_|  |_|_| |_|_|\\__|\\__, |____/ \\___|_|  |_| .__/ \\__|");
+    sLog.outString("                         |___/                  |_|        ");
+    sLog.outString("Trinity Script initializing %s\n", _FULLVERSION);
 
     //Get configuration file
     if (!TScriptConfig.SetSource(cfg_file))
@@ -1424,35 +1417,34 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
         CanLoadDB = false;
         error_log("TSCR: Unable to open configuration file. Database will be unaccessible. Configuration values will use default.");
     }
-    else outstring_log("TSCR: Using configuration file %s",cfg_file);
+    else sLog.outString("TSCR: Using configuration file %s",cfg_file);
 
     EAI_ErrorLevel = TScriptConfig.GetIntDefault("EAIErrorLevel", 1);
 
     switch (EAI_ErrorLevel)
     {
         case 0:
-            outstring_log("TSCR: EventAI Error Reporting level set to 0 (Startup Errors only)");
+            sLog.outString("TSCR: EventAI Error Reporting level set to 0 (Startup Errors only)");
             break;
         case 1:
-            outstring_log("TSCR: EventAI Error Reporting level set to 1 (Startup errors and Runtime event errors)");
+            sLog.outString("TSCR: EventAI Error Reporting level set to 1 (Startup errors and Runtime event errors)");
             break;
         case 2:
-            outstring_log("TSCR: EventAI Error Reporting level set to 2 (Startup errors, Runtime event errors, and Creation errors)");
+            sLog.outString("TSCR: EventAI Error Reporting level set to 2 (Startup errors, Runtime event errors, and Creation errors)");
             break;
         default:
-            outstring_log("TSCR: Unknown EventAI Error Reporting level. Defaulting to 1 (Startup errors and Runtime event errors)");
+            sLog.outString("TSCR: Unknown EventAI Error Reporting level. Defaulting to 1 (Startup errors and Runtime event errors)");
             EAI_ErrorLevel = 1;
             break;
     }
 
-    outstring_log("");
+    sLog.outString("");
 
     //Load database (must be called after TScriptConfig.SetSource). In case it failed, no need to even try load.
     if (CanLoadDB)
         LoadDatabase();
 
-    outstring_log("TSCR: Loading C++ scripts");
-    outstring_log("");
+    sLog.outString("TSCR: Loading C++ scripts\n");
 
     for(int i=0;i<MAX_SCRIPTS;i++)
         m_scripts[i]=NULL;
@@ -1464,10 +1456,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Areatrigger --
     AddSC_areatrigger_scripts();
 
-    // -- Boss --
-    AddSC_boss_emeriss();
-    AddSC_boss_taerar();
-    AddSC_boss_ysondre();
+    // -- Outdoors Dragons --
+    AddSC_boss_dragonsofnightmare();
 
     // -- Creature --
     AddSC_mob_event();
@@ -1483,8 +1473,12 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_onevents();
     AddSC_npc_lottery();
 	AddSC_theinform();
+    AddSC_mylittlebombling();
+    AddSC_npc_interpreter();
 
     AddSC_npc_teleporter();
+    AddSC_npc_teleporter_pvpzone();
+    AddSC_catapultmaster();
 
     // -- GO --
     AddSC_go_scripts();
@@ -1507,7 +1501,9 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_SmartSCripts();
     
     // -- Misc --
+    AddSC_arena_spectator_script();
     AddSC_hallows_end();
+    AddSC_arenabeastmaster();
 
     //--------------------
     //------ ZONE --------
@@ -1522,6 +1518,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_drekthar();
     AddSC_boss_galvangar();
     AddSC_boss_vanndar();
+    AddSC_alterac_bowman();
 
     //Arathi Highlands
     AddSC_arathi_highlands();
@@ -1571,7 +1568,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_gurtogg_bloodboil();
     AddSC_boss_mother_shahraz();
     AddSC_boss_reliquary_of_souls();
-    addSC_boss_reliquary_of_souls(); // New
     AddSC_boss_teron_gorefiend();
     AddSC_boss_najentus();
     AddSC_boss_illidari_council();
@@ -2015,6 +2011,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_twinemperors();
     AddSC_mob_anubisath_sentinel();
     AddSC_instance_temple_of_ahnqiraj();
+    AddSC_boss_ouro();
 
     //Terokkar Forest
     AddSC_terokkar_forest();
@@ -2095,11 +2092,11 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
 
     // -------------------
 
-    outstring_log(">> Loaded %i C++ Scripts.", num_sc_scripts);
+    sLog.outString(">> Loaded %i C++ Scripts.", num_sc_scripts);
 
-    outstring_log(">> Load Overriden SQL Data.");
+    sLog.outString(">> Load Overriden SQL Data.");
     LoadOverridenSQLData();
-    outstring_log(">> Load Overriden DBC Data.");
+    sLog.outString(">> Load Overriden DBC Data.");
     LoadOverridenDBCData();
 }
 
@@ -2127,8 +2124,6 @@ void DoScriptText(int32 textEntry, WorldObject* pSource, Unit* target)
         error_log("TSCR: DoScriptText with source entry %u (TypeId=%u, guid=%u) could not find text entry %i.",pSource->GetEntry(),pSource->GetTypeId(),pSource->GetGUIDLow(),textEntry);
         return;
     }
-
-    debug_log("TSCR: DoScriptText: text entry=%i, Sound=%u, Type=%u, Language=%u, Emote=%u",textEntry,(*i).second.SoundId,(*i).second.Type,(*i).second.Language,(*i).second.Emote);
 
     if((*i).second.SoundId)
     {
@@ -2210,7 +2205,7 @@ void Script::RegisterSelf()
         ++num_sc_scripts;
     }
     else
-        sLog.outDebug("CRASH ALERT! TrinityScript: RegisterSelf, but script named %s does not have ScriptName assigned in database.",(this)->Name.c_str());
+        sLog.outError("CRASH ALERT! TrinityScript: RegisterSelf, but script named %s does not have ScriptName assigned in database.",(this)->Name.c_str());
 }
 
 //********************************
@@ -2258,8 +2253,6 @@ bool ScriptMgr::GossipHello ( Player * player, Creature *_Creature )
 
 bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
-
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelect) return false;
 
@@ -2270,8 +2263,6 @@ bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender
 
 bool ScriptMgr::GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
 {
-    debug_log("TSCR: Gossip selection with code, sender: %d, action: %d",sender, action);
-
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
     if (!tmpscript || !tmpscript->pGossipSelectWithCode) return false;
 
@@ -2284,7 +2275,6 @@ bool ScriptMgr::GOSelect( Player *player, GameObject *_GO, uint32 sender, uint32
 {
     if(!_GO)
     return false;
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
 
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if(!tmpscript || !tmpscript->pGOSelect) return false;
@@ -2298,7 +2288,6 @@ bool ScriptMgr::GOSelectWithCode( Player *player, GameObject *_GO, uint32 sender
 {
     if(!_GO)
     return false;
-    debug_log("TSCR: Gossip selection, sender: %d, action: %d",sender, action);
 
     Script *tmpscript = m_scripts[_GO->GetGOInfo()->ScriptId];
     if(!tmpscript || !tmpscript->pGOSelectWithCode) return false;
@@ -2443,13 +2432,16 @@ CreatureAINew* ScriptMgr::getAINew(Creature* creature)
     return iter->second->getAI(creature);
 }
 
-SpellScript* ScriptMgr::getSpellScript(uint32 spellId)
+SpellScript* ScriptMgr::getSpellScript(Spell* spell)
 {
-    SpellScriptMap::const_iterator iter = m_spellScripts.find(objmgr.getSpellScriptName(spellId));
+    if (!spell)
+        return NULL;
+    
+    SpellScriptMap::const_iterator iter = m_spellScripts.find(objmgr.getSpellScriptName(spell->m_spellInfo->Id));
     if (iter == m_spellScripts.end())
         return NULL;
         
-    return iter->second->getSpellScript();
+    return iter->second->getScript(spell);
 }
 
 bool ScriptMgr::ItemUse( Player *player, Item* _Item, SpellCastTargets const& targets)

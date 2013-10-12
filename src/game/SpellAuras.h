@@ -216,6 +216,9 @@ class Aura
         void HandleModStateImmunityMask(bool apply, bool Real);
         void HandleAuraCloneCaster(bool apply, bool Real);
 
+        //custom on WM
+        void HandleAuraApplyExtraFlag(bool apply, bool Real);
+
         virtual ~Aura();
 
         void SetModifier(AuraType t, int32 a, uint32 pt, int32 miscValue);
@@ -278,6 +281,7 @@ class Aura
         bool IsPositive() { return m_positive; }
         void SetNegative() { m_positive = false; }
         void SetPositive() { m_positive = true; }
+        void SetDeathPersistent(bool set) { m_isDeathPersist = set; }
 
         bool IsPermanent() const { return m_permanent; }
         bool IsAreaAura() const { return m_isAreaAura; }
@@ -289,7 +293,6 @@ class Aura
         bool IsRemovedOnShapeLost() const { return m_isRemovedOnShapeLost; }
         bool IsRemoved() const { return m_isRemoved; }
         bool IsInUse() const { return m_in_use;}
-        bool IsStackableDebuff();
         void CleanupTriggeredSpells();
 
         virtual void Update(uint32 diff);

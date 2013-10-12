@@ -155,7 +155,10 @@ enum CreatureFlagsExtra
     CREATURE_FLAG_EXTRA_NO_TAUNT        = 0x00010000,       // cannot be taunted
     CREATURE_FLAG_EXTRA_NO_CRIT         = 0x00020000,       // creature can't do critical strikes
     CREATURE_FLAG_EXTRA_HOMELESS        = 0x00040000,       // consider current position instead of home position for threat area
-    CREATURE_FLAGS_EXTRA_ALIVE_INVISIBLE = 0x00080000,      // not visible for alive players
+    CREATURE_FLAG_EXTRA_ALIVE_INVISIBLE= 0x00080000,      // not visible for alive players
+    CREATURE_FLAG_EXTRA_PERIODIC_RELOC  = 0x00100000,       //periodic relocation when ooc
+    CREATURE_FLAG_EXTRA_DUEL_WIELD      = 0x00200000,       // can dual wield
+    CREATURE_FLAG_EXTRA_NO_HASTE_REDUC  = 0x00400000       // Cast speed can't be recuded
 };
 
 // GCC have alternative #pragma pack(N) syntax and old gcc version not support pack(push,N), also any gcc version not support it at some platform
@@ -479,6 +482,7 @@ class Creature : public Unit
         bool canSwim() const { return GetCreatureInfo()->InhabitType & INHABIT_WATER; }
         bool canFly()  const { return GetCreatureInfo()->InhabitType & INHABIT_AIR; }
         void SetFlying(bool apply);
+        void SetWalk(bool enable, bool asDefault = true);
         void SetReactState(ReactStates st) { m_reactState = st; }
         ReactStates GetReactState() { return m_reactState; }
         bool HasReactState(ReactStates state) const { return (m_reactState == state); }
@@ -512,6 +516,7 @@ class Creature : public Unit
 
         uint32 getLevelForTarget(Unit const* target) const; // overwrite Unit::getLevelForTarget for boss level support
 
+        bool isMoving();
         bool IsInEvadeMode() const;
 
         bool AIM_Initialize(CreatureAI* ai = NULL);
@@ -637,7 +642,7 @@ class Creature : public Unit
 
         void RemoveCorpse(bool setSpawnTime = true);
         
-        void ForcedDespawn();
+        void ForcedDespawn(uint32 timeMSToDespawn = 0);
 
         time_t const& GetRespawnTime() const { return m_respawnTime; }
         time_t GetRespawnTimeEx() const;
@@ -719,13 +724,13 @@ class Creature : public Unit
         bool IsAllowedToLoot(uint64 guid);
         void ResetAllowedToLootList() { m_allowedToLoot.clear(); }
         
-        void SetHasChangedReactState() { m_changedReactStateAfterFiveSecs = true; }
+        // Respawned since less than 5 secs
+        bool HasJustRespawned() const { return (m_timeSinceSpawn < 5000); }
         
         // Scripting tools
         bool IsBelowHPPercent(float percent);
         bool IsAboveHPPercent(float percent);
         bool IsBetweenHPPercent(float minPercent, float maxPercent);
-        
         
         bool IsBeingEscorted() { return m_isBeingEscorted; }
         void SetEscorted(bool status) { m_isBeingEscorted = status; }
@@ -763,6 +768,7 @@ class Creature : public Unit
         void RegenerateHealth();
         uint32 m_regenTimer;
         uint32 m_areaCombatTimer;
+        uint32 m_relocateTimer;
         void AreaCombat();
         MovementGeneratorType m_defaultMovementType;
         Cell m_currentCell;                                 // store current cell where creature listed
@@ -791,7 +797,6 @@ class Creature : public Unit
         std::vector<uint64> m_allowedToLoot;
         
         uint64 m_timeSinceSpawn;                            // (msecs) elapsed time since (re)spawn
-        bool m_changedReactStateAfterFiveSecs;
         
         CreatureAINew* m_AI;
 
@@ -825,6 +830,16 @@ class AssistDelayEvent : public BasicEvent
         uint64            m_victim;
         std::list<uint64> m_assistants;
         Unit&             m_owner;
+};
+
+class ForcedDespawnDelayEvent : public BasicEvent
+{
+    public:
+        ForcedDespawnDelayEvent(Creature& owner) : BasicEvent(), m_owner(owner) { }
+        bool Execute(uint64 e_time, uint32 p_time);
+
+    private:
+        Creature& m_owner;
 };
 
 #endif

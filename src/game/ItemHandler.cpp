@@ -33,6 +33,8 @@
 
 void WorldSession::HandleSplitItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1+1+1);
 
     //sLog.outDebug("WORLD: CMSG_SPLIT_ITEM");
@@ -67,6 +69,8 @@ void WorldSession::HandleSplitItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleSwapInvItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1);
 
     //sLog.outDebug("WORLD: CMSG_SWAP_INV_ITEM");
@@ -106,6 +110,8 @@ void WorldSession::HandleSwapInvItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleAutoEquipItemSlotOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+1);
     uint64 itemguid;
     uint8 dstslot;
@@ -126,6 +132,8 @@ void WorldSession::HandleAutoEquipItemSlotOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleSwapItem( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1+1);
 
     //sLog.outDebug("WORLD: CMSG_SWAP_ITEM");
@@ -158,6 +166,8 @@ void WorldSession::HandleSwapItem( WorldPacket & recv_data )
 
 void WorldSession::HandleAutoEquipItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1);
 
     //sLog.outDebug("WORLD: CMSG_AUTOEQUIP_ITEM");
@@ -261,6 +271,8 @@ void WorldSession::HandleAutoEquipItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleDestroyItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1+1+1+1);
 
     //sLog.outDebug("WORLD: CMSG_DESTROYITEM");
@@ -301,6 +313,8 @@ void WorldSession::HandleDestroyItemOpcode( WorldPacket & recv_data )
 // Only _static_ data send in this packet !!!
 void WorldSession::HandleItemQuerySingleOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data, 4);
 
     //sLog.outDebug("WORLD: CMSG_ITEM_QUERY_SINGLE");
@@ -450,7 +464,6 @@ void WorldSession::HandleItemQuerySingleOpcode( WorldPacket & recv_data )
     }
     else
     {
-        sLog.outDebug(  "WORLD: CMSG_ITEM_QUERY_SINGLE - NO item INFO! (ENTRY: %u)", item );
         WorldPacket data( SMSG_ITEM_QUERY_SINGLE_RESPONSE, 4);
         data << uint32(item | 0x80000000);
         SendPacket( &data );
@@ -459,6 +472,8 @@ void WorldSession::HandleItemQuerySingleOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleReadItem( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1);
 
     //sLog.outDebug( "WORLD: CMSG_READ_ITEM");
@@ -496,22 +511,18 @@ void WorldSession::HandlePageQuerySkippedOpcode( WorldPacket & recv_data )
 {
     CHECK_PACKET_SIZE(recv_data,4+8);
 
-    sLog.outDebug(  "WORLD: Received CMSG_PAGE_TEXT_QUERY" );
-
     uint32 itemid;
     uint64 guid;
 
     recv_data >> itemid >> guid;
-
-    sLog.outDetail( "Packet Info: itemid: %u guidlow: %u guidentry: %u guidhigh: %u",
-        itemid, GUID_LOPART(guid), GUID_ENPART(guid), GUID_HIPART(guid));
 }
 
 void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+8+1);
 
-    sLog.outDebug(  "WORLD: Received CMSG_SELL_ITEM" );
     uint64 vendorguid, itemguid;
     uint8 _count;
 
@@ -526,7 +537,7 @@ void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, vendorguid,UNIT_NPC_FLAG_VENDOR);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleSellItemOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
+        sLog.outError( "WORLD: HandleSellItemOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
         _player->SendSellError( SELL_ERR_CANT_FIND_VENDOR, NULL, itemguid, 0);
         return;
     }
@@ -620,9 +631,10 @@ void WorldSession::HandleSellItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleBuybackItem(WorldPacket & recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4);
 
-    sLog.outDebug(  "WORLD: Received CMSG_BUYBACK_ITEM" );
     uint64 vendorguid;
     uint32 slot;
 
@@ -631,7 +643,7 @@ void WorldSession::HandleBuybackItem(WorldPacket & recv_data)
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, vendorguid,UNIT_NPC_FLAG_VENDOR);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleBuybackItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
+        sLog.outError( "WORLD: HandleBuybackItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
         _player->SendSellError( SELL_ERR_CANT_FIND_VENDOR, NULL, 0, 0);
         return;
     }
@@ -669,9 +681,10 @@ void WorldSession::HandleBuybackItem(WorldPacket & recv_data)
 
 void WorldSession::HandleBuyItemInSlotOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4+8+1+1);
 
-    sLog.outDebug(  "WORLD: Received CMSG_BUY_ITEM_IN_SLOT" );
     uint64 vendorguid, bagguid;
     uint32 item;
     uint8 slot, count;
@@ -683,9 +696,10 @@ void WorldSession::HandleBuyItemInSlotOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleBuyItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4+1+1);
 
-    sLog.outDebug(  "WORLD: Received CMSG_BUY_ITEM" );
     uint64 vendorguid;
     uint32 item;
     uint8 count, unk1;
@@ -697,6 +711,8 @@ void WorldSession::HandleBuyItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleListInventoryOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
 
     uint64 guid;
@@ -706,19 +722,15 @@ void WorldSession::HandleListInventoryOpcode( WorldPacket & recv_data )
     if(!GetPlayer()->isAlive())
         return;
 
-    sLog.outDebug(  "WORLD: Recvd CMSG_LIST_INVENTORY" );
-
     SendListInventory( guid );
 }
 
 void WorldSession::SendListInventory( uint64 vendorguid )
 {
-    sLog.outDebug(  "WORLD: Sent SMSG_LIST_INVENTORY" );
-
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, vendorguid,UNIT_NPC_FLAG_VENDOR);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: SendListInventory - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
+        sLog.outError( "WORLD: SendListInventory - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(vendorguid)) );
         _player->SendSellError( SELL_ERR_CANT_FIND_VENDOR, NULL, 0, 0);
         return;
     }
@@ -781,6 +793,8 @@ void WorldSession::SendListInventory( uint64 vendorguid )
 
 void WorldSession::HandleAutoStoreBagItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1);
 
     //sLog.outDebug("WORLD: CMSG_AUTOSTORE_BAG_ITEM");
@@ -840,8 +854,8 @@ void WorldSession::HandleAutoStoreBagItemOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleBuyBankSlotOpcode(WorldPacket& /*recvPacket*/)
 {
-    sLog.outDebug("WORLD: CMSG_BUY_BANK_SLOT");
-
+    PROFILE;
+    
     uint32 slot = _player->GetByteValue(PLAYER_BYTES_2, 2);
 
     // next slot
@@ -876,13 +890,12 @@ void WorldSession::HandleBuyBankSlotOpcode(WorldPacket& /*recvPacket*/)
 
 void WorldSession::HandleAutoBankItemOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,1+1);
 
-    sLog.outDebug("WORLD: CMSG_AUTOBANK_ITEM");
     uint8 srcbag, srcslot;
-
     recvPacket >> srcbag >> srcslot;
-    sLog.outDebug("STORAGE: receive srcbag = %u, srcslot = %u", srcbag, srcslot);
 
     Item *pItem = _player->GetItemByPos( srcbag, srcslot );
     if( !pItem )
@@ -913,13 +926,12 @@ void WorldSession::HandleAutoBankItemOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleAutoStoreBankItemOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,1+1);
 
-    sLog.outDebug("WORLD: CMSG_AUTOSTORE_BANK_ITEM");
     uint8 srcbag, srcslot;
-
     recvPacket >> srcbag >> srcslot;
-    sLog.outDebug("STORAGE: receive srcbag = %u, srcslot = %u", srcbag, srcslot);
 
     Item *pItem = _player->GetItemByPos( srcbag, srcslot );
     if( !pItem )
@@ -966,6 +978,8 @@ void WorldSession::HandleAutoStoreBankItemOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleSetAmmoOpcode(WorldPacket & recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4);
 
     if(!GetPlayer()->isAlive())
@@ -974,9 +988,7 @@ void WorldSession::HandleSetAmmoOpcode(WorldPacket & recv_data)
         return;
     }
 
-    sLog.outDebug("WORLD: CMSG_SET_AMMO");
     uint32 item;
-
     recv_data >> item;
 
     if(!item)
@@ -1009,11 +1021,12 @@ void WorldSession::SendItemEnchantTimeUpdate(uint64 Playerguid, uint64 Itemguid,
 
 void WorldSession::HandleItemNameQueryOpcode(WorldPacket & recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4);
 
     uint32 itemid;
     recv_data >> itemid;
-    sLog.outDebug("WORLD: CMSG_ITEM_NAME_QUERY %u", itemid);
     ItemPrototype const *pProto = objmgr.GetItemPrototype( itemid );
     if( pProto )
     {
@@ -1039,22 +1052,20 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket & recv_data)
         return;
     }
     else
-        sLog.outDebug("WORLD: CMSG_ITEM_NAME_QUERY for item %u failed (unknown item)", itemid);
+        sLog.outError("WORLD: CMSG_ITEM_NAME_QUERY for item %u failed (unknown item)", itemid);
 }
 
 void WorldSession::HandleWrapItemOpcode(WorldPacket& recv_data)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1+1+1+1);
-
-    sLog.outDebug("Received opcode CMSG_WRAP_ITEM");
 
     uint8 gift_bag, gift_slot, item_bag, item_slot;
     //recv_data.hexlike();
 
     recv_data >> gift_bag >> gift_slot;                     // paper
     recv_data >> item_bag >> item_slot;                     // item
-
-    sLog.outDebug("WRAP: receive gift_bag = %u, gift_slot = %u, item_bag = %u, item_slot = %u", gift_bag, gift_slot, item_bag, item_slot);
 
     Item *gift = _player->GetItemByPos( gift_bag, gift_slot );
     if(!gift)
@@ -1151,8 +1162,8 @@ void WorldSession::HandleWrapItemOpcode(WorldPacket& recv_data)
 
 void WorldSession::HandleSocketOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("WORLD: CMSG_SOCKET_GEMS");
-
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8*4);
 
     uint64 guids[4];
@@ -1280,8 +1291,8 @@ void WorldSession::HandleSocketOpcode(WorldPacket& recv_data)
 
 void WorldSession::HandleCancelTempItemEnchantmentOpcode(WorldPacket& recv_data)
 {
-    sLog.outDebug("WORLD: CMSG_CANCEL_TEMP_ENCHANTMENT");
-
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,4);
 
     uint32 eslot;

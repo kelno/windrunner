@@ -43,9 +43,13 @@ trigger_omen
 lunar_large_spotlight
 npc_rocket_chicken
 npc_midsummer_bonfire
+npc_egbert
+npc_babypanda
+npc_willy
 EndContentData */
 
 #include "precompiled.h"
+#include "PetAI.h"
 
 /*########
 # npc_chicken_cluck
@@ -1211,9 +1215,13 @@ CreatureAI* GetAI_npc_goblin_land_mine(Creature* pCreature)
 #define SPELL_FEELING_FROGGY    43906
 #define SPELL_HEARTS            20372
 
-struct npc_mojoAI : public ScriptedAI
+#define INDECENT_WHISPER1 -1999926
+//...
+#define INDECENT_WHISPER7 -1999932
+
+struct npc_mojoAI : public PetAI
 {
-    npc_mojoAI(Creature *c) : ScriptedAI(c) {}
+    npc_mojoAI(Creature *c) : PetAI(c) {}
     
     uint32 MorphTimer;      /* new hooks OwnerGainedAura and OwnerLostAura? Useless in this case, as morphed player may not be owner, but keep the idea. */
     uint64 PlayerGUID;
@@ -1221,19 +1229,20 @@ struct npc_mojoAI : public ScriptedAI
     void Aggro(Unit *pWho) {}
     void Reset()
     {
-        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
         MorphTimer = 0;
         PlayerGUID = 0;
     }
     
     void UpdateAI(uint32 const diff)
     {
+        PetAI::Minipet_DistanceCheck(diff);
         if (MorphTimer) {
             if (Player *plr = Unit::GetPlayer(PlayerGUID))
-                m_creature->SetInFront(plr);
+                me->SetInFront(plr);
             if (MorphTimer <= diff) {
-                m_creature->RemoveAurasDueToSpell(SPELL_HEARTS);
-                m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                me->RemoveAurasDueToSpell(SPELL_HEARTS);
+                me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
                 MorphTimer = 0;
                 PlayerGUID = 0;
             }
@@ -1257,6 +1266,7 @@ bool ReceiveEmote_npc_mojo(Player *pPlayer, Creature *pCreature, uint32 emote)
         pCreature->AddAura(SPELL_HEARTS, pCreature);
         if (!pPlayer->isInCombat())
             pPlayer->CastSpell(pPlayer, SPELL_FEELING_FROGGY, true);
+        pCreature->Whisper(urand(INDECENT_WHISPER7,INDECENT_WHISPER1), pPlayer->GetGUID(), false);
         pCreature->SetInFront(pPlayer);
         pCreature->GetMotionMaster()->MoveFollow(pPlayer, PET_FOLLOW_DIST/3.0f, M_PI/4);
     }
@@ -1315,26 +1325,27 @@ CreatureAI *GetAI_npc_explosive_sheep(Creature *pCreature)
 
 #define SPELL_MALFUNCTION_EXPLOSION       13261
 
-struct npc_pet_bombAI : public ScriptedAI
+struct npc_pet_bombAI : public PetAI
 {
-    npc_pet_bombAI(Creature *c) : ScriptedAI(c) {}
+    npc_pet_bombAI(Creature *c) : PetAI(c) {}
     
     void Reset()
     {
-        m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
     
     void Aggro(Unit *pWho)
     {
-        m_creature->GetMotionMaster()->MoveChase(pWho);
+        me->GetMotionMaster()->MoveChase(pWho);
     }
     
     void UpdateAI(uint32 const diff)
-    {            
-        if (m_creature->getVictim()) {
-            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
-                DoCast(m_creature->getVictim(), SPELL_MALFUNCTION_EXPLOSION);
-                m_creature->DisappearAndDie();
+    {        
+        PetAI::Minipet_DistanceCheck(diff);
+        if (me->getVictim()) {
+            if (me->IsWithinDistInMap(me->getVictim(), 3.0f)) {
+                me->CastSpell(me->getVictim(), SPELL_MALFUNCTION_EXPLOSION, false);
+                me->DisappearAndDie();
             }
         }
     }
@@ -1401,9 +1412,9 @@ bool GossipSelect_npc_metzen(Player* player, Creature* creature, uint32 sender, 
 ## npc_clockwork_rocket_bot
 ######*/
 
-struct npc_clockwork_rocket_botAI : public ScriptedAI
+struct npc_clockwork_rocket_botAI : public PetAI
 {
-    npc_clockwork_rocket_botAI(Creature* c) : ScriptedAI(c) {}
+    npc_clockwork_rocket_botAI(Creature* c) : PetAI(c) {}
     
     void Reset()
     {
@@ -1419,7 +1430,7 @@ struct npc_clockwork_rocket_botAI : public ScriptedAI
             return;
             
         if (who->ToCreature() && who->GetEntry() == me->GetEntry() && who->IsWithinDistInMap(me, 15.0f))
-            DoCast(who, 45269, false);
+            me->CastSpell(who, 45269, false);
     }
 };
 
@@ -1625,9 +1636,9 @@ CreatureAI* GetAI_lunar_large_spotlight(Creature* creature)
 ## npc_rocket_chicken
 ######*/
 
-struct npc_rocket_chickenAI : public ScriptedAI
+struct npc_rocket_chickenAI : public PetAI
 {
-    npc_rocket_chickenAI(Creature* c) : ScriptedAI(c) {}
+    npc_rocket_chickenAI(Creature* c) : PetAI(c) {}
     
     uint32 animTimer;
     
@@ -1649,9 +1660,10 @@ struct npc_rocket_chickenAI : public ScriptedAI
     
     void UpdateAI(uint32 const diff)
     {
+        PetAI::Minipet_DistanceCheck(diff);
         if (animTimer <= diff) {
             me->GetMotionMaster()->MoveIdle();
-            DoCast(me, 45255);
+            me->CastSpell(me, 45255, false);
             animTimer = 20000 + rand()%10000;
         }
         else
@@ -1718,6 +1730,279 @@ struct npc_midsummer_bonfireAI : public ScriptedAI
 CreatureAI* GetAI_npc_midsummer_bonfire(Creature* creature)
 {
     return new npc_midsummer_bonfireAI(creature);
+}
+
+/*######
+## npc_egbert
+######*/
+
+struct npc_egbertAI : public PetAI
+{
+    npc_egbertAI(Creature* c) : 
+        PetAI(c), 
+        following(false),
+        owner(me->GetOwner())
+    {}
+    
+    bool following;
+    Unit* owner;
+    float homeX, homeY, homeZ;
+    
+    void Reset()
+    {
+        if(owner)
+        {
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+            following = true;
+        } else {
+            me->GetPosition(homeX,homeY,homeZ,*new float);
+            me->SetWalk(false);
+        }
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        PetAI::Minipet_DistanceCheck(diff);
+        if (owner && following && me->GetDistance(owner) < 10)
+            following = false;
+
+        if(!following)
+        {
+            float x, y, z, o;
+            if (!me->GetMotionMaster()->GetDestination(x,y,z)) //has no destination
+            {
+                if(!owner)
+                {
+                    if (me->GetDistance(homeX,homeY,homeZ) > 25)
+                    {
+                        me->GetMotionMaster()->MovePoint(0,homeX,homeY,homeZ,true);
+                        return;
+                    }
+                } else {
+                    if (me->GetDistance(owner) > 20)
+                    {
+                        me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+                        following = true;
+                        return;
+                    }
+                }
+                me->GetPosition(x,y,z,o);
+                float newX, newY, newZ;
+                me->GetRandomPoint(x,y,z,10.0f,newX,newY,newZ);
+                me->GetMotionMaster()->MovePoint(0,newX,newY,newZ);
+            }
+        }
+    }
+};
+
+CreatureAI* GetAI_npc_egbert(Creature* creature)
+{
+    return new npc_egbertAI(creature);
+}
+
+/*######
+## npc_babypanda
+######*/
+
+#define SPELL_SLEEP 32951
+#define SLEEP_TIMER urand(5000, 30000)
+
+struct npc_babypandaAI : public PetAI
+{
+    npc_babypandaAI(Creature* c) : 
+        PetAI(c), 
+        owner(me->GetOwner())
+    {}
+    
+    Unit* owner;
+    uint32 restingTimer;
+    bool sleeping;
+    
+    void Reset()
+    {
+        restingTimer = SLEEP_TIMER;
+        sleeping = false;
+        if(owner)
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {   
+        PetAI::Minipet_DistanceCheck(diff);
+
+        //stop sleeping if too far
+        if(owner && sleeping && me->GetDistance(owner) > 20)
+        {
+            sleeping = false;
+            me->RemoveAurasDueToSpell(SPELL_SLEEP);
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        }
+
+        if(!sleeping)
+        {
+            //reset timer if moving
+            if(me->isMoving())     
+            {
+                if(restingTimer < 5000)
+                    restingTimer = SLEEP_TIMER;
+
+                return;
+            }   
+        
+            //sleep if waited enough
+            if(restingTimer <= diff)
+            {           
+                sleeping = true;
+                me->GetMotionMaster()->MoveIdle();
+                me->CastSpell(me,SPELL_SLEEP,true);
+                restingTimer = SLEEP_TIMER;
+            } else restingTimer -= diff;
+        }     
+    }
+};
+
+CreatureAI* GetAI_npc_babypanda(Creature* creature)
+{
+    return new npc_babypandaAI(creature);
+}
+
+/*######
+## npc_willy
+######*/
+
+#define SPELL_SLEEP 32951
+#define SLEEP_TIMER urand(15000, 40000)
+#define DEATHRAY_TIMER 180000
+#define DEATHRAY_CHECK_TIMER 10000
+#define DEATHRAY_DURATION 800
+#define SPELL_DEATHRAY 40639 //not the right spell. Only visual
+#define SPELL_DEATHTOUCH 5
+
+struct npc_willyAI : public PetAI
+{
+    npc_willyAI(Creature* c) : 
+        PetAI(c), 
+        owner(me->GetOwner())
+    {}
+    
+    Unit* owner;
+
+    bool sleeping;
+    uint32 restingTimer;
+
+    Unit* target;
+    uint32 deathRayDurationTimer;
+    uint32 deathRayTimer;
+    uint32 deathRayCheckTimer;
+    
+    void Reset()
+    {
+        sleeping = false;
+        me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+        restingTimer = SLEEP_TIMER;
+        deathRayDurationTimer = DEATHRAY_DURATION;
+        deathRayTimer = 0;
+        deathRayCheckTimer = DEATHRAY_CHECK_TIMER;
+        target = NULL;
+        if(owner)
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {   
+        PetAI::Minipet_DistanceCheck(diff);
+
+        //stop sleeping if too far
+        if(owner && sleeping && me->GetDistance(owner) > 20)
+        {
+            sleeping = false;
+            me->RemoveAurasDueToSpell(SPELL_SLEEP);
+            me->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH);
+            me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        }
+
+        if(!sleeping)
+        {
+            if(me->isMoving())     
+            {
+                //reset timer if moving
+                if(restingTimer < 5000)
+                    restingTimer = SLEEP_TIMER;
+            } else {
+                //sleep if waited enough
+                if(!target)
+                {
+                    if(restingTimer <= diff)
+                    {           
+                        sleeping = true;
+                        me->GetMotionMaster()->MoveIdle();
+                        me->CastSpell(me,SPELL_SLEEP,true);
+                        //death anim is used for willy's sleep
+                        me->SetFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_FEIGN_DEATH); 
+                        restingTimer = SLEEP_TIMER;
+                    } else restingTimer -= diff;
+                }
+            }
+        
+            if(deathRayTimer <= diff) //ray ready
+            {
+                if(deathRayCheckTimer <= diff)
+                {
+                    if (Unit* critter = FindACritterToNuke())
+                    {
+                        me->CastSpell(critter,SPELL_DEATHRAY,false);
+                        target = critter;
+                        deathRayTimer = DEATHRAY_TIMER;
+                        restingTimer = SLEEP_TIMER;
+                    }
+                    deathRayCheckTimer = DEATHRAY_CHECK_TIMER;
+                } else deathRayCheckTimer -= diff;
+            } else deathRayTimer -= diff;
+
+            
+            //kill target if any (having target = started casting ray). This has to be delayed for the ray to be visible.
+            if(target)
+            {
+                if(deathRayDurationTimer <= diff)
+                {
+                    me->CastSpell(target,SPELL_DEATHTOUCH,true);
+                    target = NULL;
+                    deathRayDurationTimer = DEATHRAY_DURATION;
+                } else deathRayDurationTimer -= diff;
+            }
+        }     
+    }
+
+    Unit* FindACritterToNuke()
+    {
+        std::list<Unit*> list;
+
+        CellPair pair(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
+        Cell cell(pair);
+        cell.data.Part.reserved = ALL_DISTRICT;
+        cell.SetNoCreate();
+
+        Trinity::AnyUnfriendlyUnitInObjectRangeCheck unit_check(me, me, 15.0f);
+        Trinity::UnitListSearcher<Trinity::AnyUnfriendlyUnitInObjectRangeCheck> searcher(list, unit_check);
+
+        TypeContainerVisitor<Trinity::UnitListSearcher<Trinity::AnyUnfriendlyUnitInObjectRangeCheck>, GridTypeMapContainer> unit_searcher(searcher);
+
+        cell.Visit(pair, unit_searcher, *me->GetMap());
+
+        //return first critter if any
+        for (std::list<Unit*>::iterator it = list.begin(); it != list.end(); it++)
+        {
+            if ((*it)->GetCreatureType() == CREATURE_TYPE_CRITTER)
+                return *it;
+        }
+
+        return NULL;
+    }
+};
+
+CreatureAI* GetAI_npc_willy(Creature* creature)
+{
+    return new npc_willyAI(creature);
 }
 
 void AddSC_npcs_special()
@@ -1858,6 +2143,21 @@ void AddSC_npcs_special()
     newscript = new Script;
     newscript->Name = "npc_midsummer_bonfire";
     newscript->GetAI = &GetAI_npc_midsummer_bonfire;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_egbert";
+    newscript->GetAI = &GetAI_npc_egbert;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_babypanda";
+    newscript->GetAI = &GetAI_npc_babypanda;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_willy";
+    newscript->GetAI = &GetAI_npc_willy;
     newscript->RegisterSelf();
 }
 

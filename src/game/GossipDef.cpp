@@ -26,7 +26,7 @@
 #include "WorldSession.h"
 #include "Formulas.h"
 
-GossipMenu::GossipMenu()
+GossipMenu::GossipMenu(WorldSession* session) : m_session(session)
 {
     m_gItems.reserve(16);                                   // can be set for max from most often sizes to speedup push_back and less memory use
 }
@@ -68,6 +68,38 @@ void GossipMenu::AddMenuItem(uint8 Icon, char const* Message, uint32 dtSender, u
     AddMenuItem(Icon, std::string(Message ? Message : ""), dtSender, dtAction, std::string(BoxMessage ? BoxMessage : ""), BoxMoney, Coded);
 }
 
+void GossipMenu::AddMenuItem(uint8 Icon, int32 itemText, uint32 dtSender, uint32 dtAction, int32 boxText, uint32 BoxMoney, bool Coded)
+{
+    uint32 loc_idx = m_session->GetSessionDbLocaleIndex();
+    NpcTextLocale const *ntl;
+
+    GossipText *pGossip;
+
+    std::string sItemText;
+    ntl = objmgr.GetNpcTextLocale(itemText);
+    if(ntl && ntl->Text_0[0].size() > loc_idx && !ntl->Text_0[0][loc_idx].empty())
+        sItemText = ntl->Text_0[0][loc_idx];
+    else {
+        pGossip = objmgr.GetGossipText(itemText);
+        if(pGossip)
+            sItemText = pGossip->Options[0].Text_0;
+    }
+
+    std::string sBoxText;
+    if(Coded)
+    {
+        ntl = objmgr.GetNpcTextLocale(boxText);
+        if(ntl && ntl->Text_0[0].size() > loc_idx && !ntl->Text_0[0][loc_idx].empty())
+            sBoxText = ntl->Text_0[0][loc_idx];
+    } else {
+        pGossip = objmgr.GetGossipText(boxText);
+        if(pGossip)
+            sBoxText = pGossip->Options[0].Text_0;
+    }
+
+    AddMenuItem(Icon, sItemText, dtSender, dtAction, sBoxText, BoxMoney, Coded);
+}
+
 uint32 GossipMenu::MenuItemSender( unsigned int ItemId )
 {
     if ( ItemId >= m_gItems.size() ) return 0;
@@ -94,7 +126,7 @@ void GossipMenu::ClearMenu()
     m_gItems.clear();
 }
 
-PlayerMenu::PlayerMenu( WorldSession *session ) : pSession(session)
+PlayerMenu::PlayerMenu( WorldSession *session ) : pSession(session), mGossipMenu(session)
 {
 }
 
@@ -270,8 +302,6 @@ void PlayerMenu::SendTalking( uint32 textID )
         }
     }
     pSession->SendPacket( &data );
-
-    sLog.outDebug(  "WORLD: Sent SMSG_NPC_TEXT_UPDATE " );
 }
 
 void PlayerMenu::SendTalking( char const * title, char const * text )
@@ -293,8 +323,6 @@ void PlayerMenu::SendTalking( char const * title, char const * text )
     }
 
     pSession->SendPacket( &data );
-
-    sLog.outDebug( "WORLD: Sent SMSG_NPC_TEXT_UPDATE " );
 }
 
 /*********************************************************/
@@ -377,7 +405,6 @@ void PlayerMenu::SendQuestGiverQuestList( QEmote eEmote, const std::string& Titl
         data << title;
     }
     pSession->SendPacket( &data );
-    sLog.outDebug("WORLD: Sent SMSG_QUESTGIVER_QUEST_LIST NPC Guid=%u", GUID_LOPART(npcGUID));
 }
 
 void PlayerMenu::SendQuestGiverStatus( uint8 questStatus, uint64 npcGUID )
@@ -387,7 +414,6 @@ void PlayerMenu::SendQuestGiverStatus( uint8 questStatus, uint64 npcGUID )
     data << uint8(questStatus);
 
     pSession->SendPacket( &data );
-    sLog.outDebug( "WORLD: Sent SMSG_QUESTGIVER_STATUS NPC Guid=%u, status=%u", GUID_LOPART(npcGUID), questStatus);
 }
 
 void PlayerMenu::SendQuestGiverQuestDetails( Quest const *pQuest, uint64 npcGUID, bool ActivateAccept )
@@ -474,8 +500,6 @@ void PlayerMenu::SendQuestGiverQuestDetails( Quest const *pQuest, uint64 npcGUID
         data << uint32(0);                                  // DetailsEmoteDelay
     }
     pSession->SendPacket( &data );
-
-    sLog.outDebug("WORLD: Sent SMSG_QUESTGIVER_QUEST_DETAILS NPCGuid=%u, questid=%u", GUID_LOPART(npcGUID), pQuest->GetQuestId());
 }
 
 void PlayerMenu::SendQuestQueryResponse( Quest const *pQuest )
@@ -596,7 +620,6 @@ void PlayerMenu::SendQuestQueryResponse( Quest const *pQuest )
         data << ObjectiveText[iI];
 
     pSession->SendPacket( &data );
-    sLog.outDebug( "WORLD: Sent SMSG_QUEST_QUERY_RESPONSE questid=%u",pQuest->GetQuestId() );
 }
 
 void PlayerMenu::SendQuestGiverOfferReward( Quest const* pQuest, uint64 npcGUID, bool EnbleNext )
@@ -680,7 +703,6 @@ void PlayerMenu::SendQuestGiverOfferReward( Quest const* pQuest, uint64 npcGUID,
     data << uint32(pQuest->GetRewSpellCast());              // casted spell
     data << uint32(0x00);                                   // unk, NOT honor
     pSession->SendPacket( &data );
-    sLog.outDebug( "WORLD: Sent SMSG_QUESTGIVER_OFFER_REWARD NPCGuid=%u, questid=%u",GUID_LOPART(npcGUID),pQuest->GetQuestId() );
 }
 
 void PlayerMenu::SendQuestGiverRequestItems( Quest const *pQuest, uint64 npcGUID, bool Completable, bool CloseOnCancel )
@@ -761,6 +783,5 @@ void PlayerMenu::SendQuestGiverRequestItems( Quest const *pQuest, uint64 npcGUID
     data << uint32(0x10);
 
     pSession->SendPacket( &data );
-    sLog.outDebug( "WORLD: Sent SMSG_QUESTGIVER_REQUEST_ITEMS NPCGuid=%u, questid=%u", GUID_LOPART(npcGUID), pQuest->GetQuestId() );
 }
 

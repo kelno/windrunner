@@ -208,13 +208,18 @@ IF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
   add_definitions(-D__ASSERTMACROS__)
 ENDIF (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
- #to make build look nice, no gcc nazi warnings.
 IF(UNIX)
-	add_definitions(--no-warnings)
+	add_definitions(--no-warnings)  #to make build look nice, no gcc nazi warnings.
 ELSEIF(WIN32)
-	add_definitions(/W 1 /MP) 
+	add_definitions(/MP) 
 ENDIF ()
 
+if(PROFILING)
+    message(STATUS "Built-in profiling enabled")
+    add_definitions(-DPROFILING)
+else()
+    message(STATUS "Built-in profiling disabled")
+endif()
 
 INCLUDE_DIRECTORIES(
 dep/include 
@@ -222,6 +227,7 @@ dep/include/g3dlite
 dep/recastnavigation/Detour
 dep/recastnavigation/ 
 dep/include/sockets
+dep/libircclient/include
 src/shared 
 src/malloc
 src/framework 
@@ -229,6 +235,7 @@ src/shared/Database
 src/shared/vmap
 src/game
 src/trinityirc
+src/wrchat
 ${CMAKE_BINARY_DIR}
 ${SCRIPT_INCLUDE}
 ${MYSQL_INCLUDE_DIR} 

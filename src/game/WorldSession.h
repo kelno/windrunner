@@ -27,6 +27,9 @@
 
 #include "Common.h"
 #include "WardenBase.h"
+#include "WorldPacket.h"
+#include "ProfilerMgr.h"
+#include "Profiler.h"
 
 class MailItemsInfo;
 struct ItemPrototype;
@@ -104,6 +107,12 @@ public:
     ~WorldSessionFilter() {}
 
     virtual bool Process(WorldPacket* packet);
+};
+
+struct DelayedPacket
+{
+    time_t time;
+    WorldPacket pkt;
 };
 
 /// Player session in the World
@@ -632,7 +641,6 @@ class WorldSession
         void HandleLfmSetNoneOpcode(WorldPacket& recv_data);
         void HandleLfmSetOpcode(WorldPacket& recv_data);
         void HandleLfgSetCommentOpcode(WorldPacket& recv_data);
-        void HandleNewUnknownOpcode(WorldPacket& recv_data);
         void HandleChooseTitleOpcode(WorldPacket& recv_data);
         void HandleRealmStateRequestOpcode(WorldPacket& recv_data);
         void HandleAllowMoveAckOpcode(WorldPacket& recv_data);

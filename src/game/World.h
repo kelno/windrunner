@@ -121,6 +121,9 @@ enum WorldConfigs
     CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_ENABLE,
     CONFIG_BATTLEGROUND_QUEUE_ANNOUNCER_PLAYERONLY,
     CONFIG_BATTLEGROUND_ARENA_RATED_ENABLE,
+    CONFIG_BATTLEGROUND_ARENA_CLOSE_AT_NIGHT_MASK,
+    CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING,
+    CONFIG_BATTLEGROUND_ARENA_ANNOUNCE,
     CONFIG_INSTANCE_RESET_TIME_HOUR,
     CONFIG_INSTANCE_UNLOAD_DELAY,
     CONFIG_CAST_UNSTUCK,
@@ -254,6 +257,34 @@ enum WorldConfigs
     CONFIG_GUIDDISTRIB_NEWMETHOD,
     CONFIG_GUIDDISTRIB_PROPORTION,
 
+    CONFIG_ARENA_SPECTATOR_ENABLE,
+    CONFIG_ARENA_SPECTATOR_MAX,
+    CONFIG_ARENA_SPECTATOR_GHOST,
+
+    CONFIG_ARENA_SEASON,
+
+    CONFIG_IRC_ENABLED,
+    
+    CONFIG_SPAM_REPORT_THRESHOLD,
+    CONFIG_SPAM_REPORT_PERIOD,
+    CONFIG_SPAM_REPORT_COOLDOWN,
+    
+    CONFIG_FACTION_CHANGE_ENABLED,
+    CONFIG_FACTION_CHANGE_A2H,
+    CONFIG_FACTION_CHANGE_H2A,
+    CONFIG_FACTION_CHANGE_A2H_COST,
+    CONFIG_FACTION_CHANGE_H2A_COST,
+    CONFIG_RACE_CHANGE_COST, //Not interfaction
+
+    CONFIG_DUEL_AREA_ENABLE,
+
+    CONFIG_ARENASERVER_ENABLED,
+    CONFIG_ARENASERVER_USE_CLOSESCHEDULE,
+    CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD,
+
+    CONFIG_SMOOTHED_CHANCE_ENABLED,
+    CONFIG_SMOOTHED_CHANCE_INFLUENCE,
+
     CONFIG_VALUE_COUNT
 };
 
@@ -378,6 +409,26 @@ struct AutoAnnounceMessage
 {
     std::string message;
     uint64 nextAnnounce;
+};
+
+enum HonorKillPvPRank
+{
+    HKRANK00,
+    HKRANK01,
+    HKRANK02,
+    HKRANK03,
+    HKRANK04,
+    HKRANK05,
+    HKRANK06,
+    HKRANK07,
+    HKRANK08,
+    HKRANK09,
+    HKRANK10,
+    HKRANK11,
+    HKRANK12,
+    HKRANK13,
+    HKRANK14,
+    HKRANKMAX
 };
 
 // DB scripting commands
@@ -516,8 +567,10 @@ class World
         void SendZoneText(uint32 zone, const char *text, WorldSession *self = 0, uint32 team = 0);
         void SendServerMessage(uint32 type, const char *text = "", Player* player = NULL);
 
+        uint32 pvp_ranks[HKRANKMAX];
+
         /// Are we in the middle of a shutdown?
-        bool IsShuttingDown() const { return m_ShutdownTimer > 0; }
+        bool IsShuttingDown() const { return IsStopped() || m_ShutdownTimer > 0; }
         uint32 const GetShutDownTimeLeft() { return m_ShutdownTimer; }
         void ShutdownServ(uint32 time, uint32 options, /*uint8 exitcode*/ const char* reason);
         void ShutdownCancel();

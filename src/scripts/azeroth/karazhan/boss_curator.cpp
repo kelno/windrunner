@@ -22,6 +22,7 @@ SDCategory: Karazhan
 EndScriptData */
 
 #include "precompiled.h"
+#include "def_karazhan.h"
 
 #define SAY_AGGRO                       -1532057
 #define SAY_SUMMON1                     -1532058
@@ -47,7 +48,12 @@ EndScriptData */
 
 struct boss_curatorAI : public ScriptedAI
 {
-    boss_curatorAI(Creature *c) : ScriptedAI(c) {}
+    boss_curatorAI(Creature *c) : ScriptedAI(c) 
+    {
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+    }
+
+    ScriptedInstance *pInstance;
 
     uint32 AddTimer;
     uint32 HatefulBoltTimer;
@@ -63,6 +69,9 @@ struct boss_curatorAI : public ScriptedAI
         BerserkTimer = 720000;                              //12 minutes
         Enraged = false;
         Evocating = false;
+
+        if(pInstance)
+            pInstance->SetData(DATA_CURATOR_EVENT, NOT_STARTED);
     }
 
     void KilledUnit(Unit *victim)
@@ -77,11 +86,17 @@ struct boss_curatorAI : public ScriptedAI
     void JustDied(Unit *victim)
     {
         DoScriptText(SAY_DEATH, m_creature);
+
+        if(pInstance)
+            pInstance->SetData(DATA_CURATOR_EVENT, DONE);
     }
 
     void Aggro(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
+
+        if(pInstance)
+            pInstance->SetData(DATA_CURATOR_EVENT, IN_PROGRESS);
     }
 
     void UpdateAI(const uint32 diff)

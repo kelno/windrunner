@@ -147,7 +147,10 @@ Map* MapInstanced::GetInstance(const WorldObject* obj)
             if (Map *map = _FindMap(instanceId))
                 return map;
             else
-                return CreateBattleGround(instanceId);
+            {
+            	if (BattleGround* bg = player->GetBattleGround())
+            		return CreateBattleGround(instanceId, bg);
+            }
         } else {
             return NULL;
         }
@@ -198,9 +201,7 @@ InstanceMap* MapInstanced::CreateInstance(uint32 InstanceId, InstanceSave *save,
     }
 
     // some instances only have one difficulty
-    if(!entry->SupportsHeroicMode()) difficulty = DIFFICULTY_NORMAL;
-
-    sLog.outDebug("MapInstanced::CreateInstance: %smap instance %d for %d created with difficulty %s", save?"":"new ", InstanceId, GetId(), difficulty?"heroic":"normal");
+    if(!Map::SupportsHeroicMode(entry)) difficulty = DIFFICULTY_NORMAL;
 
     InstanceMap *map = new InstanceMap(GetId(), GetGridExpiry(), InstanceId, difficulty);
     assert(map->IsDungeon());
@@ -212,15 +213,14 @@ InstanceMap* MapInstanced::CreateInstance(uint32 InstanceId, InstanceSave *save,
     return map;
 }
 
-BattleGroundMap* MapInstanced::CreateBattleGround(uint32 InstanceId)
+BattleGroundMap* MapInstanced::CreateBattleGround(uint32 InstanceId, BattleGround* bg)
 {
     // load/create a map
     Guard guard(*this);
 
-    sLog.outDebug("MapInstanced::CreateBattleGround: map bg %d for %d created.", InstanceId, GetId());
-
     BattleGroundMap *map = new BattleGroundMap(GetId(), GetGridExpiry(), InstanceId);
     assert(map->IsBattleGroundOrArena());
+    map->SetBG(bg);
 
     m_InstancedMaps[InstanceId] = map;
     return map;

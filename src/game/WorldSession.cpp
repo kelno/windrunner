@@ -44,7 +44,7 @@
 #include "ScriptCalls.h"
 #include "../scripts/ScriptMgr.h"
 #include "Config/ConfigEnv.h"
-#include "IRC.h"
+#include "IRCMgr.h"
 #include "WardenWin.h"
 #include "WardenMac.h"
 
@@ -199,7 +199,7 @@ void WorldSession::QueuePacket(WorldPacket* new_packet)
 /// Logging helper for unexpected opcodes
 void WorldSession::logUnexpectedOpcode(WorldPacket* packet, const char *reason)
 {
-    sLog.outError( "SESSION: received unexpected opcode %s (0x%.4X) %s",
+    sLog.outDebug( "SESSION: received unexpected opcode %s (0x%.4X) %s",
         LookupOpcodeName(packet->GetOpcode()),
         packet->GetOpcode(),
         reason);
@@ -208,16 +208,18 @@ void WorldSession::logUnexpectedOpcode(WorldPacket* packet, const char *reason)
 /// Update the WorldSession (triggered by World update)
 bool WorldSession::Update(uint32 diff, PacketFilter& updater)
 {
+    PROFILE;
+    
     ///- Retrieve packets from the receive queue and call the appropriate handlers
     /// not process packets if socket already closed
     WorldPacket *packet;
     while (!_recvQueue.empty() && m_Socket && !m_Socket->IsClosed () && _recvQueue.next(packet, updater))
     {
-        /*#if 1
-        sLog.outError( "MOEP: %s (0x%.4X)",
+        #if 0
+        sLog.outString( "MOEP: %s (0x%.4X)",
                         LookupOpcodeName(packet->GetOpcode()),
                         packet->GetOpcode());
-        #endif*/
+        #endif
 
         if(packet->GetOpcode() >= NUM_MSG_TYPES)
         {
@@ -279,8 +281,11 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
         m_Socket = NULL;
     }
     
-    if (m_Socket && !m_Socket->IsClosed() && m_Warden)
-                m_Warden->Update();
+    if (m_Socket && !m_Socket->IsClosed())
+    {
+    	if (m_Warden)
+            m_Warden->Update();
+    }
 
     ///- If necessary, log the player out
     //check if we are safe to proceed with logout
@@ -382,8 +387,9 @@ void WorldSession::LogoutPlayer(bool Save)
         {
             if (!bg->isArena())
                 bg->EventPlayerLoggedOut(_player);
-
-            _player->LeaveBattleground();
+            
+            if (bg->isArena())
+                _player->LeaveBattleground();
         }
 
         sOutdoorPvPMgr.HandlePlayerLeaveZone(_player,_player->GetZoneId());
@@ -410,8 +416,9 @@ void WorldSession::LogoutPlayer(bool Save)
             data<<_player->GetName();
             data<<_player->GetGUID();
             guild->BroadcastPacket(&data);
-            if (guild->GetId() == sConfig.GetIntDefault("IRC.Guild.Id", 0))
-                sIRC.HandleGameChannelActivity("de guilde", _player->GetName(), _player->GetSession()->GetSecurity(), _player->GetTeam(), WOW_CHAN_LEAVE);
+            
+            if (sWorld.getConfig(CONFIG_IRC_ENABLED))
+                sIRCMgr.onIngameGuildLeft(guild->GetId(), guild->GetName().c_str(), _player->GetName());
         }
 
         ///- Remove pet
@@ -477,7 +484,6 @@ void WorldSession::LogoutPlayer(bool Save)
         //No SQL injection as AccountId is uint32
         CharacterDatabase.PExecute("UPDATE characters SET online = 0 WHERE account = '%u'",
             GetAccountId());
-        sLog.outDebug( "SESSION: Sent SMSG_LOGOUT_COMPLETE Message" );
     }
     
     //Hook for OnLogout Event

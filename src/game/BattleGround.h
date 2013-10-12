@@ -28,6 +28,7 @@
 #include "ObjectMgr.h"
 #include "BattleGroundMgr.h"
 #include "SharedDefines.h"
+#include "SpectatorAddon.h"
 
 enum BattleGroundSounds
 {
@@ -76,7 +77,8 @@ enum BattleGroundSpells
     SPELL_PREPARATION               = 44521,                // Preparation
     SPELL_SPIRIT_HEAL_MANA          = 44535,                // Spirit Heal
     SPELL_RECENTLY_DROPPED_FLAG     = 42792,                // Recently Dropped Flag
-    SPELL_AURA_PLAYER_INACTIVE      = 43681                 // Inactive
+    SPELL_AURA_PLAYER_IDLE          = 43680,                // When reported idle by other players, removed by PvP Combat
+    SPELL_AURA_PLAYER_INACTIVE      = 43681                 // After 1 min Idle
 };
 
 enum BattleGroundTimeIntervals
@@ -85,7 +87,7 @@ enum BattleGroundTimeIntervals
     REMIND_INTERVAL                 = 30000,                // ms
     INVITE_ACCEPT_WAIT_TIME         = 80000,                // ms
     TIME_TO_AUTOREMOVE              = 120000,               // ms
-    MAX_OFFLINE_TIME                = 300000,               // ms
+    MAX_OFFLINE_TIME                = 120000,               // ms
     START_DELAY0                    = 120000,               // ms
     START_DELAY1                    = 60000,                // ms
     START_DELAY2                    = 30000,                // ms
@@ -116,7 +118,7 @@ enum BattleGroundStatus
 
 struct BattleGroundPlayer
 {
-    uint32  LastOnlineTime;                                 // for tracking and removing offline players from queue after 5 minutes
+    uint32  ElapsedTimeDisconnected;                                 // for tracking and removing offline players from queue after 5 minutes
     uint32  Team;                                           // Player's team
 };
 
@@ -428,6 +430,8 @@ class BattleGround
                 ++m_PlayersCount[GetTeamIndexByTeamId(Team)];
         }
 
+        uint32 GetArenaTeamIdForIndex(uint32 index) { return m_ArenaTeamIds[index]; }
+
         // used for rated arena battles
         void SetArenaTeamIdForTeam(uint32 Team, uint32 ArenaTeamId) { m_ArenaTeamIds[GetTeamIndexByTeamId(Team)] = ArenaTeamId; }
         uint32 GetArenaTeamIdForTeam(uint32 Team) const { return m_ArenaTeamIds[GetTeamIndexByTeamId(Team)]; }
@@ -485,6 +489,17 @@ class BattleGround
         void PlayerRelogin(uint64 guid);
 
         void SetDeleteThis() {m_SetDeleteThis = true;}
+
+        typedef std::set<uint64> SpectatorList;
+        void AddSpectator (uint64 playerGuid) {m_Spectators.insert(playerGuid); }
+        void onAddSpectator (Player *spectator);
+        void RemoveSpectator(uint64 playerGuid) { m_Spectators.erase(playerGuid); }
+        bool HaveSpectators() { return (m_Spectators.size() > 0); }
+        void SendSpectateAddonsMsg(SpectatorAddonMsg msg);
+        bool isSpectator(uint64 guid);
+        bool canEnterSpectator(Player *spectator);
+        
+        std::vector<uint64> getFightersGUID() const;
 
     protected:
         //this method is called, when BG cannot spawn its own spirit guide, or something is wrong, It correctly ends BattleGround
@@ -572,6 +587,8 @@ class BattleGround
         float m_TeamStartLocO[2];
         
         std::map<uint64, PlayerLogInfo*> m_team1LogInfo, m_team2LogInfo;
+
+        SpectatorList m_Spectators;
 };
 #endif
 

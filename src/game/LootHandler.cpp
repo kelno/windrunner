@@ -34,9 +34,10 @@
 
 void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,1);
 
-    sLog.outDebug("WORLD: CMSG_AUTOSTORE_LOOT_ITEM");
     Player  *player =   GetPlayer();
     uint64   lguid =    player->GetLootGUID();
     Loot    *loot;
@@ -157,12 +158,16 @@ void WorldSession::HandleAutostoreLootItemOpcode( WorldPacket & recv_data )
     }
     else
         player->SendEquipError( msg, NULL, NULL );
+
+    // If player is removing the last LootItem, delete the empty container.
+    if (loot->isLooted() && IS_ITEM_GUID(lguid))
+        player->GetSession()->DoLootRelease(lguid);
 }
 
 void WorldSession::HandleLootMoneyOpcode( WorldPacket & /*recv_data*/ )
 {
-    sLog.outDebug("WORLD: CMSG_LOOT_MONEY");
-
+    PROFILE;
+    
     Player *player = GetPlayer();
     uint64 guid = player->GetLootGUID();
     if(!guid)
@@ -243,14 +248,18 @@ void WorldSession::HandleLootMoneyOpcode( WorldPacket & /*recv_data*/ )
             player->ModifyMoney( pLoot->gold );
         pLoot->gold = 0;
         pLoot->NotifyMoneyRemoved();
+
+        // Delete container if empty
+        if (pLoot->isLooted() && IS_ITEM_GUID(guid))
+            player->GetSession()->DoLootRelease(guid);
     }
 }
 
 void WorldSession::HandleLootOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
-
-    sLog.outDebug("WORLD: CMSG_LOOT");
 
     uint64 guid;
     recv_data >> guid;
@@ -260,9 +269,9 @@ void WorldSession::HandleLootOpcode( WorldPacket & recv_data )
 
 void WorldSession::HandleLootReleaseOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
-
-    sLog.outDebug("WORLD: CMSG_LOOT_RELEASE");
 
     // cheaters can modify lguid to prevent correct apply loot release code and re-loot
     // use internal stored guid
@@ -445,6 +454,8 @@ void WorldSession::DoLootRelease( uint64 lguid )
 
 void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+1+8);
 
     uint8 slotid;
@@ -465,8 +476,6 @@ void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
     // TODO : add some error message?
     if (_player->GetMapId() != target->GetMapId() || _player->GetDistance(target) > sWorld.getConfig(CONFIG_GROUP_XP_DISTANCE))
         return;
-
-    sLog.outDebug("WorldSession::HandleLootMasterGiveOpcode (CMSG_LOOT_MASTER_GIVE, 0x02A3) Target = [%s].", target->GetName());
 
     if(_player->GetLootGUID() != lootguid)
         return;
@@ -495,7 +504,7 @@ void WorldSession::HandleLootMasterGiveOpcode( WorldPacket & recv_data )
 
     if (slotid > pLoot->items.size())
     {
-        sLog.outDebug("AutoLootItem: Player %s might be using a hack! (slot %d, size %d)",GetPlayer()->GetName(), slotid, pLoot->items.size());
+        sLog.outError("AutoLootItem: Player %s might be using a hack! (slot %d, size %d)",GetPlayer()->GetName(), slotid, pLoot->items.size());
         return;
     }
 

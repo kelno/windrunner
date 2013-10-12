@@ -85,27 +85,6 @@ struct boss_brutallusAI : public ScriptedAI
     bool Intro;
     bool IsIntro;
     bool Enraged;
-    
-    Player* GetPlayerInMap()
-    {
-        if (!pInstance)
-            return NULL;
-            
-        Map::PlayerList const& players = pInstance->instance->GetPlayers();
-
-        if (!players.isEmpty())
-        {
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-            {
-                Player* plr = itr->getSource();
-                if (plr && !plr->HasAura(45839))
-                        return plr;
-            }
-        }
-
-        debug_log("TSCR: Instance Sunwell Plateau: GetPlayerInMap, but PlayerList is empty!");
-        return NULL;
-    }
 
     void Reset()
     {
@@ -128,7 +107,7 @@ struct boss_brutallusAI : public ScriptedAI
             pInstance->SetData(DATA_BRUTALLUS_EVENT, NOT_STARTED);
 
         if (pInstance && pInstance->GetData(DATA_BRUTALLUS_EVENT) == DONE && pInstance->GetData(DATA_FELMYST_EVENT) != DONE) {
-            if (Player *plr = GetPlayerInMap()) {
+            if (Player *plr = pInstance->GetPlayerInMap()) {
                 float x,y,z;
                 m_creature->GetPosition(x,y,z);
                 Creature *felmyst = plr->SummonCreature(FELMYST, x,y, z+30, m_creature->GetOrientation(), TEMPSUMMON_MANUAL_DESPAWN, 0);

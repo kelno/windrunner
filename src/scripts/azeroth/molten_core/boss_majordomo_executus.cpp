@@ -135,7 +135,7 @@ class Boss_Majordomo : public CreatureScript
                 if (onSpawn)
                 {
                     addEvent(EV_REFLECTION, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
-                    addEvent(EV_TELEPORT, 30000, 30000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
+                    addEvent(EV_TELEPORT, 25000, 25000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_BLASTWAVE, 3000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(VISIBLE));
                     addEvent(EV_DOWN, 33000, 33000, EVENT_FLAG_NONE, true, phaseMaskForPhase(DOWN));
                     addEvent(EV_CHECK_PHASE, 10000, 10000, EVENT_FLAG_NONE, true, phaseMaskForPhase(NOT_VISIBLE));
@@ -199,10 +199,10 @@ class Boss_Majordomo : public CreatureScript
                         Map *map = me->GetMap();
                         Map::PlayerList const &PlayerList = map->GetPlayers();
 
-		        for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			    if (Player* i_pl = i->getSource())
-				if (i_pl->isAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
-                                    i_pl->CombatStop(true);
+		                for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+			            if (Player* i_pl = i->getSource())
+				        if (i_pl->isAlive())
+                            i_pl->CombatStop(true);
 
                         break;
                     }
@@ -222,6 +222,9 @@ class Boss_Majordomo : public CreatureScript
             {
                 if (_instance)
                 {
+                    if (_instance->GetData(DATA_MAJORDOMO) == DONE)
+                        return false;
+
                     if (_instance->GetData(DATA_MAJORDOMO) == NOT_STARTED)
                     {
                         for (int i = DATA_LUCIFRON; i <= DATA_SULFURON; i++)
@@ -335,7 +338,7 @@ class Boss_Majordomo : public CreatureScript
 
                 updateEvents(diff, 7);
 
-                if (me->GetDistance(RoomCenter.x, RoomCenter.y , RoomCenter.z) > 100) //room center
+                if (me->GetDistance(RoomCenter.x, RoomCenter.y , RoomCenter.z) > 100)
                     evade();
 
                 if (guardCount < 1 && getPhase() != DOWN)
@@ -568,6 +571,7 @@ class Mob_Hot_Coal : public CreatureScript
             Mob_Hot_CoalAI(Creature* creature) : CreatureAINew(creature)
             {
                 _instance = ((ScriptedInstance*)creature->GetInstanceData());
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             }
 
             void onReset(bool onSpawn)

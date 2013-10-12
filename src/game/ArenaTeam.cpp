@@ -20,6 +20,7 @@
 #include "ObjectMgr.h"
 #include "ArenaTeam.h"
 #include "Chat.h"
+#include "World.h"
 
 ArenaTeam::ArenaTeam()
 {
@@ -52,8 +53,6 @@ bool ArenaTeam::Create(uint64 captainGuid, uint32 type, std::string ArenaTeamNam
     if(objmgr.GetArenaTeamByName(ArenaTeamName))            // arena team with this name already exist
         return false;
 
-    sLog.outDebug("GUILD: creating arena team %s to leader: %u", ArenaTeamName.c_str(), GUID_LOPART(captainGuid));
-
     CaptainGuid = captainGuid;
     Name = ArenaTeamName;
     Type = type;
@@ -75,6 +74,13 @@ bool ArenaTeam::Create(uint64 captainGuid, uint32 type, std::string ArenaTeamNam
 
     CharacterDatabase.CommitTransaction(trans);
     sLog.outArena("New ArenaTeam created [Id: %u] [Type: %u] [Captain GUID: %u]", GetId(), GetType(), GetCaptain());
+    
+    std::string ip = "unknown";
+    if (Player* captain = objmgr.GetPlayer(GetCaptain()))
+        ip = captain->GetSession()->GetRemoteAddress();
+    LogsDatabase.PExecute("INSERT INTO arena_team_event (id, event, type, player, ip, time) VALUES (%u, %u, %u, %u, '%s', %u)",
+            GetId(), uint32(AT_EV_CREATE), GetType(), GUID_LOPART(GetCaptain()), ip.c_str(), time(NULL));
+    
     return true;
 }
 
@@ -145,6 +151,9 @@ bool ArenaTeam::AddMember(const uint64& PlayerGuid, SQLTransaction trans)
         if(CaptainGuid != PlayerGuid)
             pl->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6) + 1, 1);
         sLog.outArena("Player: %s [GUID: %u] joined arena team type: %u [Id: %u].", pl->GetName(), pl->GetGUIDLow(), GetType(), GetId());
+        LogsDatabase.PExecute("INSERT INTO arena_team_event (id, event, type, player, ip, time) VALUES (%u, %u, %u, %u, '%s', %u)",
+            GetId(), uint32(AT_EV_JOIN), GetType(), GUID_LOPART(PlayerGuid), (pl ? pl->GetSession()->GetRemoteAddress().c_str() : ""), time(NULL));
+
     }
     return true;
 }
@@ -272,6 +281,8 @@ void ArenaTeam::SetCaptain(const uint64& guid)
     {
         newcaptain->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + 1 + (GetSlot() * 6), 0);
         sLog.outArena("Player: %s [GUID: %u] promoted player: %s [GUID: %u] to leader of arena team [Id: %u] [Type: %u].", oldcaptain->GetName(), oldcaptain->GetGUIDLow(), newcaptain->GetName(), newcaptain->GetGUID(), GetId(), GetType());
+        LogsDatabase.PExecute("INSERT INTO arena_team_event (id, event, type, player, ip, time) VALUES (%u, %u, %u, %u, '%s', %u)",
+            GetId(), uint32(AT_EV_PROMOTE), GetType(), GUID_LOPART(guid), newcaptain->GetSession()->GetRemoteAddress().c_str(), time(NULL));
     }
 }
 
@@ -300,6 +311,8 @@ void ArenaTeam::DelMember(uint64 guid)
             player->SetUInt32Value(PLAYER_FIELD_ARENA_TEAM_INFO_1_1 + (GetSlot() * 6) + i, 0);
         }
         sLog.outArena("Player: %s [GUID: %u] left arena team type: %u [Id: %u].", player->GetName(), player->GetGUIDLow(), GetType(), GetId());
+        LogsDatabase.PExecute("INSERT INTO arena_team_event (id, event, type, player, ip, time) VALUES (%u, %u, %u, %u, '%s', %u)",
+            GetId(), uint32(AT_EV_LEAVE), GetType(), GUID_LOPART(guid), (player ? player->GetSession()->GetRemoteAddress().c_str() : ""), time(NULL));
     }
     CharacterDatabase.PExecute("DELETE FROM arena_team_member WHERE arenateamid = '%u' AND guid = '%u'", GetId(), GUID_LOPART(guid));
 }
@@ -325,8 +338,12 @@ void ArenaTeam::Disband(WorldSession *session)
         DelMember(members.front().guid);
     }
 
-    if(Player *player = session->GetPlayer())
+    Player *player = session->GetPlayer();
+    if(player)
         sLog.outArena("Player: %s [GUID: %u] disbanded arena team type: %u [Id: %u].", player->GetName(), player->GetGUIDLow(), GetType(), GetId());
+  
+    LogsDatabase.PExecute("INSERT INTO arena_team_event (id, event, type, player, ip, time) VALUES (%u, %u, %u, %u, '%s', %u)",
+            GetId(), uint32(AT_EV_DISBAND), GetType(), (player ? player->GetGUIDLow() : 0), session->GetRemoteAddress().c_str(), time(NULL));
 
     SQLTransaction trans = CharacterDatabase.BeginTransaction();
     trans->PAppend("DELETE FROM arena_team WHERE arenateamid = '%u'", Id);
@@ -352,17 +369,17 @@ void ArenaTeam::Roster(WorldSession *session)
     data << uint32(GetMembersSize());                       // members count
     data << uint32(GetType());                              // arena team type?
     
-    sLog.outError("[CRASHDEBUG] arenateam size (before the loop): %u", members.size());
+    //sLog.outError("[CRASHDEBUG] arenateam size (before the loop): %u", members.size());
 
     for (MemberList::const_iterator itr = members.begin(); itr != members.end(); ++itr)
     {
         pl = objmgr.GetPlayer(itr->guid);
         
-        sLog.outError("[CRASHDEBUG] arenateam size (in the loop): %u", members.size());
+        //sLog.outError("[CRASHDEBUG] arenateam size (in the loop): %u", members.size());
 
         data << uint64(itr->guid);                      // guid
         data << uint8((pl ? 1 : 0));                    // online flag
-        sLog.outError("[CRASHDEBUG] member name address: %p", &itr->name);
+        //sLog.outError("[CRASHDEBUG] member name address: %p", &itr->name);
         data << itr->name;                              // member name
         data << uint32((itr->guid == GetCaptain() ? 0 : 1));// captain flag 0 captain 1 member
         data << uint8((pl ? pl->getLevel() : 0));       // unknown, level?
@@ -374,7 +391,6 @@ void ArenaTeam::Roster(WorldSession *session)
         data << uint32(itr->personal_rating);           // personal rating
     }
     session->SendPacket(&data);
-    sLog.outDebug("WORLD: Sent SMSG_ARENA_TEAM_ROSTER");
 }
 
 void ArenaTeam::Query(WorldSession *session)
@@ -389,7 +405,6 @@ void ArenaTeam::Query(WorldSession *session)
     data << uint32(BorderStyle);                            // border style
     data << uint32(BorderColor);                            // border color
     session->SendPacket(&data);
-    sLog.outDebug("WORLD: Sent SMSG_ARENA_TEAM_QUERY_RESPONSE");
 }
 
 void ArenaTeam::Stats(WorldSession *session)
@@ -475,7 +490,7 @@ void ArenaTeam::SetStats(uint32 stat_type, uint32 value)
             CharacterDatabase.PExecute("UPDATE arena_team_stats SET rank = '%u' WHERE arenateamid = '%u'", value, GetId());
             break;
         default:
-            sLog.outDebug("unknown stat type in ArenaTeam::SetStats() %u", stat_type);
+            sLog.outError("unknown stat type in ArenaTeam::SetStats() %u", stat_type);
             break;
     }
 }
@@ -545,13 +560,14 @@ int32 ArenaTeam::WonAgainst(uint32 againstRating)
 {
     // called when the team has won
     
-    //'chance' calculation - to beat the opponent
-    float chance = GetChanceAgainst(stats.rating,againstRating);
-    // calculate the rating modification (ELO system with k=32)
-    int32 mod = (int32)floor(32.0f * (1.0f - chance));
-    // in case of 2 teams <1900, rating mod is 15
-    if (stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450)
-        mod = int32(15);
+    //update team rating
+    int32 mod;
+    if (sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING) && stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450) {
+        mod = int32(15); // in case of 2 teams <1900, rating mod is 15
+    } else {        
+        float chance = GetChanceAgainst(stats.rating,againstRating); //'chance' calculation - to beat the opponent
+        mod = (int32)floor(32.0f * (1.0f - chance)); //(ELO system with k=32)
+    }
     // modify the team stats accordingly
     stats.rating += mod;
     stats.games_week += 1;
@@ -575,13 +591,16 @@ int32 ArenaTeam::LostAgainst(uint32 againstRating)
 {
     // called when the team has lost
 
-    //'chance' calculation - to loose to the opponent
-    float chance = GetChanceAgainst(stats.rating,againstRating);
-    // calculate the rating modification (ELO system with k=32)
-    int32 mod = (int32)ceil(32.0f * (0.0f - chance));
-    // in case of 2 teams <1900, rating mod is 15
-    if (stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450)
-        mod = int32(-15);
+    //update team rating
+    int32 mod;
+    if (sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING) && stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450) {
+        mod = int32(-15);  // in case of 2 teams <1900, rating mod is 15
+    } else {
+        //'chance' calculation - to loose to the opponent
+        float chance = GetChanceAgainst(stats.rating,againstRating);
+        mod = (int32)ceil(32.0f * (0.0f - chance)); //ELO system with k=32
+    }
+
     // modify the team stats accordingly
     stats.rating += mod;
     stats.games_week += 1;
@@ -608,10 +627,13 @@ void ArenaTeam::MemberLost(Player * plr, uint32 againstRating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = GetChanceAgainst(itr->personal_rating, againstRating);
-            int32 mod = (int32)ceil(32.0f * (0.0f - chance));
-            if (itr->personal_rating < 1900 && againstRating < 1900 && itr->personal_rating > 1450 && againstRating > 1450)
-                mod = int32(-15);
+            int32 mod;
+            if (sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING) && stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450) {
+                mod = int32(-15); // in case of 2 teams <1900, rating mod is 15
+            } else {
+                float chance = GetChanceAgainst(itr->personal_rating, againstRating);
+                mod = (int32)ceil(32.0f * (0.0f - chance)); //(ELO system with k=32)
+            }
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal played stats
             itr->games_week +=1;
@@ -632,10 +654,13 @@ void ArenaTeam::MemberWon(Player * plr, uint32 againstRating)
         if(itr->guid == plr->GetGUID())
         {
             // update personal rating
-            float chance = GetChanceAgainst(itr->personal_rating, againstRating);
-            int32 mod = (int32)floor(32.0f * (1.0f - chance));
-            if (itr->personal_rating < 1900 && againstRating < 1900 && itr->personal_rating > 1450 && againstRating > 1450)
+            int32 mod;
+            if (sWorld.getConfig(CONFIG_BATTLEGROUND_ARENA_ALTERNATE_RATING) && stats.rating < 1900 && againstRating < 1900 && stats.rating > 1450 && againstRating > 1450) {
                 mod = int32(15);
+            } else {
+                float chance = GetChanceAgainst(itr->personal_rating, againstRating);
+                 mod = (int32)floor(32.0f * (1.0f - chance)); //(ELO system with k=32)
+            }
             itr->ModifyPersonalRating(plr, mod, GetSlot());
             // update personal stats
             itr->games_week +=1;

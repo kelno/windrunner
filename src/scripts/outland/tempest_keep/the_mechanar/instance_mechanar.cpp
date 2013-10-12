@@ -95,6 +95,7 @@ struct instance_mechanar : public ScriptedInstance
         switch (identifier) {
         case DATA_MOARGDOOR1_GUID:          return MoargDoor1;
         case DATA_MOARGDOOR2_GUID:          return MoargDoor2;
+        default:                            return 0;
         }
     }
 

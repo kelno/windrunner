@@ -107,7 +107,6 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         felLightningTimer = 5000;
         
         m_creature->SetReactState(REACT_DEFENSIVE);
-        m_creature->SetHasChangedReactState();
 
         if (isActivated)
         {

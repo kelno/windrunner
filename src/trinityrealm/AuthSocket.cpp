@@ -486,7 +486,7 @@ bool AuthSocket::_HandleLogonChallenge()
                     pkt << (uint8)0;                    // Added in 1.12.x client branch
 
                     uint8 secLevel = (*result)[4].GetUInt8();
-                    _accountSecurityLevel = secLevel <= SEC_ADMINISTRATOR ? AccountTypes(secLevel) : SEC_ADMINISTRATOR;
+                    _accountSecurityLevel = secLevel <= SEC_GAMEMASTER3 ? AccountTypes(secLevel) : SEC_GAMEMASTER3;
 
                     _localizationName.resize(4);
                     for(int i = 0; i <4; ++i)
@@ -1058,7 +1058,6 @@ void Patcher::LoadPatchMD5(char * szFileName)
     std::string path = "./patches/";
     path += szFileName;
     FILE * pPatch=fopen(path.c_str(),"rb");
-    sLog.outDebug("Loading patch info from %s\n",path.c_str());
     if(!pPatch)
     {
         sLog.outError("Error loading patch %s\n",path.c_str());

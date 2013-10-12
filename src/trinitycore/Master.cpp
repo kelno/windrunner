@@ -40,7 +40,7 @@
 #include "RASocket.h"
 #include "ScriptCalls.h"
 #include "Util.h"
-#include "IRC.h"
+#include "IRCMgr.h"
 
 #include "sockets/TcpSocket.h"
 #include "sockets/Utility.h"
@@ -318,11 +318,9 @@ int Master::Run()
     }
     
     ///- Start up the IRC client
-    if (sConfig.GetBoolDefault("IRC.Enabled", false)) {
-        ACE_Based::Thread ircp(&sIRC);
-        ircp.setPriority (ACE_Based::High);
-    }
-
+    if (sConfig.GetBoolDefault("IRC.Enabled", false))
+        ACE_Based::Thread thwrchat(&sIRCMgr);
+    
     ///- Launch the world listener socket
   port_t wsport = sWorld.getConfig (CONFIG_PORT_WORLD);
   std::string bind_ip = sConfig.GetStringDefault ("BindIP", "0.0.0.0");

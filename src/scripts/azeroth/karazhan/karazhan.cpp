@@ -150,7 +150,12 @@ struct npc_barnesAI : public npc_escortAI
             Event = pInstance->GetData(DATA_OPERA_PERFORMANCE);
 
              if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-                Door->SetGoState(1);
+             {
+                if (RaidWiped)
+                    Door->SetGoState(0);
+                else
+                    Door->SetGoState(1);
+             }
 
              if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
                 Curtain->SetGoState(1);
@@ -255,17 +260,17 @@ struct npc_barnesAI : public npc_escortAI
             if(CurtainTimer)
             {
                 if(CurtainTimer <= diff)
-            {
-                PrepareEncounter();
+                {
+                    PrepareEncounter();
 
-                if(!pInstance)
-                    return;
+                    if(!pInstance)
+                        return;
 
-                if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                    Curtain->SetGoState(0);
+                    if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
+                        Curtain->SetGoState(0);
 
-                CurtainTimer = 0;
-            }else CurtainTimer -= diff;
+                    CurtainTimer = 0;
+                }else CurtainTimer -= diff;
             }
 
             if(!RaidWiped)
@@ -326,7 +331,6 @@ struct npc_barnesAI : public npc_escortAI
 
     void PrepareEncounter()
     {
-        debug_log("TSCR: Barnes Opera Event - Introduction complete - preparing encounter %d", Event);
         uint8 index = 0;
         uint8 count = 0;
         switch(Event)
@@ -379,15 +383,20 @@ bool GossipHello_npc_barnes(Player* player, Creature* _Creature)
 {
     // Check for death of Moroes.
     ScriptedInstance* pInstance = ((ScriptedInstance*)_Creature->GetInstanceData());
-    if(pInstance && (pInstance->GetData(DATA_MOROES_EVENT) >= DONE))
+    if (pInstance && (pInstance->GetData(DATA_OPERA_EVENT) < DONE))
     {
-        player->ADD_GOSSIP_ITEM(0, OZ_GOSSIP1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        if(pInstance->GetData(DATA_MOROES_EVENT) >= DONE)
+        {
+            player->ADD_GOSSIP_ITEM(0, OZ_GOSSIP1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
-        if(!((npc_barnesAI*)_Creature->AI())->RaidWiped)
-            player->SEND_GOSSIP_MENU(8970, _Creature->GetGUID());
-        else
-            player->SEND_GOSSIP_MENU(8975, _Creature->GetGUID());
-    }else player->SEND_GOSSIP_MENU(8978, _Creature->GetGUID());
+            if(!((npc_barnesAI*)_Creature->AI())->RaidWiped)
+                player->SEND_GOSSIP_MENU(8970, _Creature->GetGUID()); //try again text
+            else
+                player->SEND_GOSSIP_MENU(8975, _Creature->GetGUID());
+        }else {
+            player->SEND_GOSSIP_MENU(8978, _Creature->GetGUID()); //Someone should take care of Moroes
+        }
+    }
 
     return true;
 }

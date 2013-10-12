@@ -1005,6 +1005,7 @@ struct npc_akama_illidanAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         JustCreated = true;
+        baseFaction = me->getFaction();
     }
 
     bool JustCreated;
@@ -1025,8 +1026,11 @@ struct npc_akama_illidanAI : public ScriptedAI
     uint32 TalkCount;
     uint32 Check_Timer;
 
+    uint32 baseFaction;
+
     void Reset()
     {
+        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
         WalkCount = 0;
         if(pInstance)
         {
@@ -1191,6 +1195,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(NextPhase)
         {
         case PHASE_CHANNEL:
+            me->setFaction(baseFaction);
             BeginChannel();
             Timer = 5000;
             ChannelCount = 0;

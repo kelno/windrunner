@@ -98,28 +98,24 @@ void ScriptedAI::AttackStart(Unit* who)
 {
     if (!who)
         return;
-
-    if (m_creature->Attack(who, true))
+    
+    bool melee = (GetCombatDistance() > ATTACK_DISTANCE) ? me->GetDistance(who) <= ATTACK_DISTANCE : true;
+    if (m_creature->Attack(who, melee))
     {
         m_creature->AddThreat(who, 0.0f);
-
         if (!InCombat)
         {
             InCombat = true;
             Aggro(who);
         }
 
-        DoStartMovement(who);
+        if(IsCombatMovementAllowed())
+        {
+            DoStartMovement(who);
+        } else {
+            DoStartNoMovement(who);
+        }
     }
-}
-
-void ScriptedAI::AttackStartNoMove(Unit* pWho)
-{
-    if (!pWho)
-        return;
-
-    if(m_creature->Attack(pWho, false))
-        DoStartNoMovement(pWho);
 }
 
 void ScriptedAI::UpdateAI(const uint32 diff)
@@ -390,6 +386,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -438,6 +435,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -928,25 +926,6 @@ std::list<Creature*> ScriptedAI::DoFindFriendlyMissingBuff(float range, uint32 s
         }
     }
 }*/
-
-void Scripted_NoMovementAI::AttackStart(Unit* who)
-{
-    if (!who)
-        return;
-
-    if (m_creature->Attack(who, true))
-    {
-        m_creature->AddThreat(who, 0.0f);
-
-        if (!InCombat)
-        {
-            InCombat = true;
-            Aggro(who);
-        }
-
-        DoStartNoMovement(who);
-    }
-}
 
 void LoadOverridenSQLData()
 {

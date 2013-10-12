@@ -91,13 +91,7 @@ uint32 AuctionHouseMgr::GetAuctionDeposit(AuctionHouseEntry const* entry, uint32
         faction_pct = 0.0f;
         deposit = 0.0f;
     }
-    sLog.outDebug("SellPrice:\t\t%u", MSV);
-    sLog.outDebug("Deposit Percent:\t%f", faction_pct);
-    sLog.outDebug("Auction Time1:\t\t%u", time);
-    sLog.outDebug("Auction Time2:\t\t%u", MIN_AUCTION_TIME);
-    sLog.outDebug("Auction Time3:\t\t%u", (time / MIN_AUCTION_TIME ));
-    sLog.outDebug("Count:\t\t\t%u", pItem->GetCount());
-    sLog.outDebug("Deposit:\t\t%f", deposit);
+
     if (deposit > 0)
         return (uint32)deposit;
     else
@@ -164,7 +158,6 @@ void AuctionHouseMgr::SendAuctionWonMail( AuctionEntry *auction )
         msgAuctionWonBody.width(16);
         msgAuctionWonBody << std::right << std::hex << auction->owner;
         msgAuctionWonBody << std::dec << ":" << auction->bid << ":" << auction->buyout;
-        sLog.outDebug( "AuctionWon body string : %s", msgAuctionWonBody.str().c_str() );
 
         //prepare mail data... :
         uint32 itemTextId = objmgr.CreateItemText( msgAuctionWonBody.str() );
@@ -215,8 +208,6 @@ void AuctionHouseMgr::SendAuctionSalePendingMail( AuctionEntry * auction )
         msgAuctionSalePendingBody << ":" << auction->deposit << ":" << auctionCut << ":0:";
         msgAuctionSalePendingBody << secsToTimeBitFields(distrTime);
 
-        sLog.outDebug("AuctionSalePending body string : %s", msgAuctionSalePendingBody.str().c_str());
-
         uint32 itemTextId = objmgr.CreateItemText( msgAuctionSalePendingBody.str() );
 
         WorldSession::SendMailTo(owner, MAIL_AUCTION, MAIL_STATIONERY_AUCTION, auction->GetHouseId(), auction->owner, msgAuctionSalePendingSubject.str(), itemTextId, NULL, 0, 0, MAIL_CHECK_MASK_AUCTION);
@@ -246,8 +237,6 @@ void AuctionHouseMgr::SendAuctionSuccessfulMail( AuctionEntry * auction )
         auctionSuccessfulBody << std::right << std::hex << auction->bidder;
         auctionSuccessfulBody << std::dec << ":" << auction->bid << ":" << auction->buyout;
         auctionSuccessfulBody << ":" << auction->deposit << ":" << auctionCut;
-
-        sLog.outDebug("AuctionSuccessful body string : %s", auctionSuccessfulBody.str().c_str());
 
         uint32 itemTextId = objmgr.CreateItemText( auctionSuccessfulBody.str() );
 
@@ -407,6 +396,7 @@ void AuctionHouseMgr::LoadAuctions()
         CreatureData const* auctioneerData = objmgr.GetCreatureData(aItem->auctioneer);
         if(!auctioneerData)
         {
+            AuctionHouseMgr::SendAuctionExpiredMail(aItem);
             aItem->DeleteFromDB();
             sLog.outError("Auction %u has not a existing auctioneer (GUID : %u)", aItem->Id, aItem->auctioneer);
             delete aItem;
@@ -416,6 +406,7 @@ void AuctionHouseMgr::LoadAuctions()
         CreatureInfo const* auctioneerInfo = objmgr.GetCreatureTemplate(auctioneerData->id);
         if(!auctioneerInfo)
         {
+            AuctionHouseMgr::SendAuctionExpiredMail(aItem);
             aItem->DeleteFromDB();
             sLog.outError("Auction %u has not a existing auctioneer (GUID : %u Entry: %u)", aItem->Id, aItem->auctioneer,auctioneerData->id);
             delete aItem;
@@ -425,6 +416,7 @@ void AuctionHouseMgr::LoadAuctions()
         aItem->auctionHouseEntry = AuctionHouseMgr::GetAuctionHouseEntry(auctioneerInfo->faction_A);
         if(!aItem->auctionHouseEntry)
         {
+            AuctionHouseMgr::SendAuctionExpiredMail(aItem);
             aItem->DeleteFromDB();
             sLog.outError("Auction %u has auctioneer (GUID : %u Entry: %u) with wrong faction %u",
                 aItem->Id, aItem->auctioneer,auctioneerData->id,auctioneerInfo->faction_A);
@@ -474,6 +466,13 @@ void AuctionHouseMgr::Update()
     mHordeAuctions.Update();
     mAllianceAuctions.Update();
     mNeutralAuctions.Update();
+}
+
+void AuctionHouseMgr::RemoveAllAuctionsOf(uint32 ownerGUID)
+{
+    mHordeAuctions.RemoveAllAuctionsOf(ownerGUID);
+    mAllianceAuctions.RemoveAllAuctionsOf(ownerGUID);
+    mNeutralAuctions.RemoveAllAuctionsOf(ownerGUID);
 }
 
 AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntry(uint32 factionTemplateId)
@@ -526,6 +525,40 @@ void AuctionHouseObject::Update()
         next = itr;
         ++next;
         if (curTime > (itr->second->expire_time))
+        {
+            ///- Either cancel the auction if there was no bidder
+            if (itr->second->bidder == 0)
+            {
+                sAHMgr.SendAuctionExpiredMail( itr->second );
+            }
+            ///- Or perform the transaction
+            else
+            {
+                //we should send an "item sold" message if the seller is online
+                //we send the item to the winner
+                //we send the money to the seller
+                sAHMgr.SendAuctionSuccessfulMail( itr->second );
+                sAHMgr.SendAuctionWonMail( itr->second );
+            }
+
+            ///- In any case clear the auction
+            itr->second->DeleteFromDB();
+            sAHMgr.RemoveAItem(itr->second->item_guidlow);
+            delete itr->second;
+            RemoveAuction(itr->first);
+        }
+    }
+}
+
+// NOT threadsafe!
+void AuctionHouseObject::RemoveAllAuctionsOf(uint32 ownerGUID)
+{
+    AuctionEntryMap::iterator next;
+    for (AuctionEntryMap::iterator itr = AuctionsMap.begin(); itr != AuctionsMap.end();itr = next)
+    {
+        next = itr;
+        ++next;
+        if (itr->second->owner == ownerGUID)
         {
             ///- Either cancel the auction if there was no bidder
             if (itr->second->bidder == 0)

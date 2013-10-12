@@ -146,6 +146,7 @@ class CreatureAINew
         /* At every creature update in evade mode*/
         virtual void updateEM(uint32 const /*diff*/) {}
         bool updateVictim(bool evade = true);
+        bool updateCombat(bool evade = true);
         virtual void doMeleeAttackIfReady();
         /* In Creature::AIM_Initialize() */
         virtual void initialize() { onReset(true); }
@@ -181,12 +182,14 @@ class CreatureAINew
         virtual void onSummon(Creature* /*summoned*/) {}
         /* When summoned add despawns */
         virtual void onSummonDespawn(Creature* /*summoned*/) {}
-        /* When hit by a spell */
+        /* Hooks for spell */
+        virtual void onSpellPrepare(SpellEntry const* /*spell*/, Unit* /*target*/) {}
         virtual void onHitBySpell(Unit* /*caster*/, SpellEntry const* /*spell*/) {}
         virtual void onSpellFinish(Unit* /*caster*/, uint32 /*spellId*/, Unit* /*target*/, bool /*ok*/) {}
 
         //Called at waypoint reached or PointMovement end
         virtual void onMovementInform(uint32, uint32) {}
+        virtual void summonedMovementInform(Creature* pSummoned, uint32 uiType, uint32 uiPointId) {}
 
     protected:
         Creature* me;

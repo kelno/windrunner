@@ -215,7 +215,6 @@ bool ChatHandler::HandleSendOpcodeCommand(const char* /*args*/)
         }
         else
         {
-            sLog.outDebug("Sending opcode: unknown type '%s'", type.c_str());
             break;
         }
     }
@@ -565,7 +564,7 @@ bool ChatHandler::HandleDebugThreatList(const char * /*args*/)
         if(!unit)
             continue;
         ++cnt;
-        PSendSysMessage("   %u.   %s   (guid %u)  - threat %f",cnt,unit->GetName(), unit->GetGUIDLow(), (*itr)->getThreat());
+        PSendSysMessage("   %u.   %s   (guid %u) - (entry %u) - threat %f",cnt,unit->GetName(), unit->GetGUIDLow(), unit->GetEntry(), (*itr)->getThreat());
     }
     SendSysMessage("End of threat list.");
     return true;
@@ -584,7 +583,7 @@ bool ChatHandler::HandleDebugHostilRefList(const char * /*args*/)
         if(Unit * unit = ref->getSource()->getOwner())
         {
             ++cnt;
-            PSendSysMessage("   %u.   %s   (guid %u)  - threat %f",cnt,unit->GetName(), unit->GetGUIDLow(), ref->getThreat());
+            PSendSysMessage("   %u.   %s   (guid %u) - (entry %u) - threat %f",cnt,unit->GetName(), unit->GetGUIDLow(), unit->GetEntry(), ref->getThreat());
         }
         ref = ref->next();
     }
@@ -738,6 +737,7 @@ bool ChatHandler::HandleDebugSendZoneUnderAttack(const char* args)
     WorldPacket data(SMSG_ZONE_UNDER_ATTACK,4);
     data << zoneId;
     sWorld.SendGlobalMessage(&data,NULL,(team==ALLIANCE ? HORDE : ALLIANCE));
+    return true;
 }
 
 bool ChatHandler::HandleDebugLoSCommand(const char* args)
@@ -758,5 +758,28 @@ bool ChatHandler::HandleDebugLoSCommand(const char* args)
         }
     }*/
     
+    return true;
+}
+
+bool ChatHandler::HandleDebugPlayerFlags(const char* args)
+{
+    if (!args || !*args)
+        return false;
+        
+    int flags = atoi(args);
+    if (!flags)
+        return true;
+        
+    if (flags < 0)
+        m_session->GetPlayer()->RemoveFlag(PLAYER_FLAGS, -flags);
+    else
+        m_session->GetPlayer()->SetFlag(PLAYER_FLAGS, flags);
+        
+    return true;
+}
+
+bool ChatHandler::HandleDebugProfile(const char* args)
+{
+    sLog.outString(sProfilerMgr.dump().c_str());
     return true;
 }

@@ -55,7 +55,6 @@ Group::~Group()
 {
     if(m_bgGroup)
     {
-        sLog.outDebug("Group::~Group: battleground group being deleted.");
         if(m_bgGroup->GetBgRaid(ALLIANCE) == this) m_bgGroup->SetBgRaid(ALLIANCE, NULL);
         else if(m_bgGroup->GetBgRaid(HORDE) == this) m_bgGroup->SetBgRaid(HORDE, NULL);
         else sLog.outError("Group::~Group: battleground group is not linked to the correct battleground.");
@@ -360,6 +359,8 @@ uint32 Group::RemoveMember(const uint64 &guid, const uint8 &method)
 
 void Group::ChangeLeader(const uint64 &guid)
 {
+    PROFILE;
+    
     member_citerator slot = _getMemberCSlot(guid);
 
     if(slot==m_memberSlots.end())
@@ -413,19 +414,18 @@ void Group::CheckLeader(const uint64 &guid, bool isLogout)
 
 bool Group::ChangeLeaderToFirstOnlineMember()
 {
-
-    for(GroupReference *itr = GetFirstMember(); itr != NULL; itr = itr->next())
-    {
+    PROFILE;
+    
+    for (GroupReference *itr = GetFirstMember(); itr != NULL; itr = itr->next()) {
         Player* player = itr->getSource();
 
-        if (player && player->IsInWorld() && player->GetGUID() != m_leaderGuid)
-        {
+        if (player && player->IsInWorld() && player->GetGUID() != m_leaderGuid) {
             ChangeLeader(player->GetGUID());
             return true;
         }
     }
+    
     return false;
-
 }
 
 void Group::Disband(bool hideDestroy)
@@ -736,8 +736,6 @@ void Group::MasterLoot(const uint64& playerGUID, Loot* /*loot*/, WorldObject* ob
     Player *player = objmgr.GetPlayer(playerGUID);
     if(!player)
         return;
-
-    sLog.outDebug("Group::MasterLoot (SMSG_LOOT_MASTER_LIST, 330) player = [%s].", player->GetName());
 
     uint32 real_count = 0;
 
@@ -1051,12 +1049,12 @@ void Group::SendUpdate()
 // Automatic Update by World thread
 void Group::Update(time_t diff)
 {
-    if (m_leaderLogoutTime)
-    {
+    PROFILE;
+
+    if (m_leaderLogoutTime) {
         time_t thisTime = time(NULL);
-    
-        if (thisTime > m_leaderLogoutTime + sWorld.getConfig(CONFIG_GROUPLEADER_RECONNECT_PERIOD))
-        {
+
+        if (thisTime > m_leaderLogoutTime + sWorld.getConfig(CONFIG_GROUPLEADER_RECONNECT_PERIOD)) {
             ChangeLeaderToFirstOnlineMember();
             m_leaderLogoutTime = 0;
         }
@@ -1238,6 +1236,8 @@ bool Group::_removeMember(const uint64 &guid)
 
 void Group::_setLeader(const uint64 &guid)
 {
+    PROFILE;
+    
     member_citerator slot = _getMemberCSlot(guid);
     if(slot==m_memberSlots.end())
         return;
@@ -1649,7 +1649,7 @@ InstanceGroupBind* Group::GetBoundInstance(uint32 mapid, uint8 difficulty)
 {
     // some instances only have one difficulty
     const MapEntry* entry = sMapStore.LookupEntry(mapid);
-    if(!entry || !entry->SupportsHeroicMode()) difficulty = DIFFICULTY_NORMAL;
+    if(!entry || !Map::SupportsHeroicMode(entry)) difficulty = DIFFICULTY_NORMAL;
 
     BoundInstancesMap::iterator itr = m_boundInstances[difficulty].find(mapid);
     if(itr != m_boundInstances[difficulty].end())
@@ -1680,7 +1680,6 @@ InstanceGroupBind* Group::BindToInstance(InstanceSave *save, bool permanent, boo
 
         bind.save = save;
         bind.perm = permanent;
-        if(!load) sLog.outDebug("Group::BindToInstance: %d is now bound to map %d, instance %d, difficulty %d", GUID_LOPART(GetLeaderGUID()), save->GetMapId(), save->GetInstanceId(), save->GetDifficulty());
         return &bind;
     }
     else

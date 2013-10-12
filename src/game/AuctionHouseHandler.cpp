@@ -35,6 +35,8 @@
 //void called when player click on auctioneer npc
 void WorldSession::HandleAuctionHelloOpcode( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8);
 
     uint64 guid;                                            //NPC guid
@@ -43,7 +45,7 @@ void WorldSession::HandleAuctionHelloOpcode( WorldPacket & recv_data )
     Creature *unit = ObjectAccessor::GetNPCIfCanInteractWith(*_player, guid,UNIT_NPC_FLAG_AUCTIONEER);
     if (!unit)
     {
-        sLog.outDebug( "WORLD: HandleAuctionHelloOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
+        sLog.outError( "WORLD: HandleAuctionHelloOpcode - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
         return;
     }
 
@@ -156,6 +158,8 @@ void WorldSession::SendAuctionCancelledToBidderMail( AuctionEntry* auction )
 //this void creates new auction and adds auction to some auctionhouse
 void WorldSession::HandleAuctionSellItem( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+8+4+4+4);
 
     uint64 auctioneer, item;
@@ -170,14 +174,14 @@ void WorldSession::HandleAuctionSellItem( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, auctioneer,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionSellItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
+        sLog.outError( "WORLD: HandleAuctionSellItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
         return;
     }
 
     AuctionHouseEntry const* auctionHouseEntry = AuctionHouseMgr::GetAuctionHouseEntry(pCreature->getFaction());
     if(!auctionHouseEntry)
     {
-        sLog.outDebug( "WORLD: HandleAuctionSellItem - Unit (GUID: %u) has wrong faction.", uint32(GUID_LOPART(auctioneer)) );
+        sLog.outError( "WORLD: HandleAuctionSellItem - Unit (GUID: %u) has wrong faction.", uint32(GUID_LOPART(auctioneer)) );
         return;
     }
 
@@ -285,6 +289,8 @@ void WorldSession::HandleAuctionSellItem( WorldPacket & recv_data )
 //this function is called when client bids or buys out auction
 void WorldSession::HandleAuctionPlaceBid( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4+4);
 
     uint64 auctioneer;
@@ -299,7 +305,7 @@ void WorldSession::HandleAuctionPlaceBid( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, auctioneer,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionPlaceBid - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
+        sLog.outError( "WORLD: HandleAuctionPlaceBid - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
         return;
     }
 
@@ -420,6 +426,8 @@ void WorldSession::HandleAuctionPlaceBid( WorldPacket & recv_data )
 //this void is called when auction_owner cancels his auction
 void WorldSession::HandleAuctionRemoveItem( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4);
 
     uint64 auctioneer;
@@ -431,7 +439,7 @@ void WorldSession::HandleAuctionRemoveItem( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, auctioneer,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionRemoveItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
+        sLog.outError( "WORLD: HandleAuctionRemoveItem - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(auctioneer)) );
         return;
     }
 
@@ -499,6 +507,8 @@ void WorldSession::HandleAuctionRemoveItem( WorldPacket & recv_data )
 //called when player lists his bids
 void WorldSession::HandleAuctionListBidderItems( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4+4);
 
     uint64 guid;                                            //NPC guid
@@ -517,7 +527,7 @@ void WorldSession::HandleAuctionListBidderItems( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, guid,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionListBidderItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
+        sLog.outError( "WORLD: HandleAuctionListBidderItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
         return;
     }
 
@@ -555,6 +565,8 @@ void WorldSession::HandleAuctionListBidderItems( WorldPacket & recv_data )
 //this void sends player info about his auctions
 void WorldSession::HandleAuctionListOwnerItems( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4);
 
     uint32 listfrom;
@@ -566,7 +578,7 @@ void WorldSession::HandleAuctionListOwnerItems( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, guid,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionListOwnerItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
+        sLog.outError( "WORLD: HandleAuctionListOwnerItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
         return;
     }
 
@@ -592,6 +604,8 @@ void WorldSession::HandleAuctionListOwnerItems( WorldPacket & recv_data )
 //this void is called when player clicks on search button
 void WorldSession::HandleAuctionListItems( WorldPacket & recv_data )
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recv_data,8+4+1+1+1+4+4+4+4+1);
 
     std::string searchedname;
@@ -613,7 +627,7 @@ void WorldSession::HandleAuctionListItems( WorldPacket & recv_data )
     Creature *pCreature = ObjectAccessor::GetNPCIfCanInteractWith(*_player, guid,UNIT_NPC_FLAG_AUCTIONEER);
     if (!pCreature)
     {
-        sLog.outDebug( "WORLD: HandleAuctionListItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
+        sLog.outError( "WORLD: HandleAuctionListItems - Unit (GUID: %u) not found or you can't interact with him.", uint32(GUID_LOPART(guid)) );
         return;
     }
 

@@ -30,6 +30,8 @@
 
 void WorldSession::HandleDuelAcceptedOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,8);
 
     uint64 guid;
@@ -51,6 +53,12 @@ void WorldSession::HandleDuelAcceptedOpcode(WorldPacket& recvPacket)
     DEBUG_LOG("Player 1 is: %u (%s)", pl->GetGUIDLow(),pl->GetName());
     DEBUG_LOG("Player 2 is: %u (%s)", plTarget->GetGUIDLow(),plTarget->GetName());
 
+    if(pl->isInDuelArea())
+    {
+        pl->RemoveArenaSpellCooldowns();
+        plTarget->RemoveArenaSpellCooldowns();
+    }
+
     time_t now = time(NULL);
     pl->duel->startTimer = now;
     plTarget->duel->startTimer = now;
@@ -63,6 +71,8 @@ void WorldSession::HandleDuelAcceptedOpcode(WorldPacket& recvPacket)
 
 void WorldSession::HandleDuelCancelledOpcode(WorldPacket& recvPacket)
 {
+    PROFILE;
+    
     CHECK_PACKET_SIZE(recvPacket,8);
 
     //sLog.outDebug( "WORLD: received CMSG_DUEL_CANCELLED" );

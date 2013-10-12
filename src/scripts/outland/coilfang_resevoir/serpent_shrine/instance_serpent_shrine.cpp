@@ -260,7 +260,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 {
                     if(LurkerSubEvent == LURKER_NOT_STARTED)
                     {
-                        FishingTimer = 10000+rand()%30000;//random time before lurker emerges
+                        FishingTimer = 10000+rand()%15000;//random time before lurker emerges
                         LurkerSubEvent = LURKER_FISHING;
                     }
                 }

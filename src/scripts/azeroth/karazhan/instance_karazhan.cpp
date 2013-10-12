@@ -211,7 +211,15 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_OPERA_EVENT:             
                 Encounters[4]  = data; 
                 if(data == DONE)
+                {
+                    GameObject* sideDoor = instance->GetGameObjectInMap(SideEntranceDoor);
+                    if(sideDoor)
+                        sideDoor->RemoveFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+
                     HandleGameObject(SideEntranceDoor,true);
+                    HandleGameObject(StageDoorLeftGUID,true);
+                    HandleGameObject(StageDoorRightGUID,true);
+                }
                 break;
             case DATA_CURATOR_EVENT:           Encounters[5]  = data; break;
             case DATA_SHADEOFARAN_EVENT:       Encounters[6]  = data; break;
@@ -221,8 +229,8 @@ struct instance_karazhan : public ScriptedInstance
                 Encounters[9]  = data;
                 if (data == FAIL || data == DONE || data == NOT_STARTED)
                     RemoveAuraOnAllPlayers(39331);
-                else if (data == IN_PROGRESS || data == SPECIAL)
-                    CastOnAllPlayers(39331);
+                /*else if (data == IN_PROGRESS || data == SPECIAL)
+                    CastOnAllPlayers(39331);*/
                 break;
             case DATA_MALCHEZZAR_EVENT:        Encounters[10] = data; break;
             case DATA_NIGHTBANE_EVENT:
@@ -286,8 +294,12 @@ struct instance_karazhan : public ScriptedInstance
         switch(go->GetEntry())
         {
             case 183932:   CurtainGUID           = go->GetGUID();         break;
-            case 184278:   StageDoorLeftGUID     = go->GetGUID();         break;
-            case 184279:   StageDoorRightGUID    = go->GetGUID();         break;
+            case 184278:   StageDoorLeftGUID     = go->GetGUID();         
+                if(DATA_OPERA_EVENT == DONE)
+                               HandleGameObject(StageDoorLeftGUID,true);  break;
+            case 184279:   StageDoorRightGUID    = go->GetGUID();         
+                if(DATA_OPERA_EVENT == DONE)
+                               HandleGameObject(StageDoorRightGUID,true); break;
             case 184517:   LibraryDoor           = go->GetGUID();         break;
             case 185521:   MassiveDoor           = go->GetGUID();         break;
             case 184276:   GamesmansDoor         = go->GetGUID();         break;
@@ -296,8 +308,12 @@ struct instance_karazhan : public ScriptedInstance
             case 184274:   MastersTerraceDoor[0] = go->GetGUID();         break;
             case 184280:   MastersTerraceDoor[1] = go->GetGUID();         break;
             case 184275:   SideEntranceDoor      = go->GetGUID();         
-                           if(DATA_OPERA_EVENT == DONE)
-                               HandleGameObject(SideEntranceDoor,true);   break;
+                           if(DATA_OPERA_EVENT < DONE)
+                           {
+                               go->SetFlag(GAMEOBJECT_FLAGS, GO_FLAG_INTERACT_COND);
+                               HandleGameObject(SideEntranceDoor,true);
+                           }
+                                                                          break;
         }
 
         switch(OperaEvent)

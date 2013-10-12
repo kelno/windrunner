@@ -31,14 +31,6 @@ EndScriptData */
 #define SPELL_PUMMEL            15615
 #define SPELL_THROWAXE          16075
 
-bool isEventActive()
-{
-    const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
-    bool active = activeEvents.find(57) != activeEvents.end();
-
-    return active;
-}
-
 struct boss_warmastervooneAI : public ScriptedAI
 {
     boss_warmastervooneAI(Creature *c) : ScriptedAI(c) {}
@@ -49,6 +41,14 @@ struct boss_warmastervooneAI : public ScriptedAI
     uint32 MortalStrike_Timer;
     uint32 Pummel_Timer;
     uint32 ThrowAxe_Timer;
+
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(57) != activeEvents.end(); //Winter Veil event
+
+        return active;
+    }
 
     void Reset()
     {
