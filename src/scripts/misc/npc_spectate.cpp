@@ -182,7 +182,7 @@ void ShowPage(Player *player, uint32 page, ArenaType type)
     }
 
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    //player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Refresh", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3 + type);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Refresh", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3 + type);
 }
 
 void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
