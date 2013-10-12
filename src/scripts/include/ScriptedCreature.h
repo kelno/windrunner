@@ -119,7 +119,7 @@ struct ScriptedAI : public CreatureAI
     void Reset() {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    virtual void Aggro(Unit*) = 0;
+    void Aggro(Unit*) {}
 
     //*************
     //AI Helper Functions

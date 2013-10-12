@@ -66,10 +66,8 @@ void LoadOverridenDBCData();
 // -- Areatrigger --
 extern void AddSC_areatrigger_scripts();
 
-// -- Boss --
-extern void AddSC_boss_emeriss();
-extern void AddSC_boss_taerar();
-extern void AddSC_boss_ysondre();
+// -- Outdoors dragons --
+extern void AddSC_boss_dragonsofnightmare();
 
 // -- Creature --
 extern void AddSC_mob_event();
@@ -180,7 +178,6 @@ extern void AddSC_boss_supremus();
 extern void AddSC_boss_gurtogg_bloodboil();
 extern void AddSC_boss_mother_shahraz();
 extern void AddSC_boss_reliquary_of_souls();
-extern void addSC_boss_reliquary_of_souls(); // New
 extern void AddSC_boss_teron_gorefiend();
 extern void AddSC_boss_najentus();
 extern void AddSC_boss_illidari_council();
@@ -855,7 +852,7 @@ void ScriptMgr::LoadDatabase()
             if (!GetLanguageDescByID(temp.Language))
                 error_db_log("TSCR: Entry %i in table `script_texts` using Language %u but Language does not exist.",i,temp.Language);
 
-            if (temp.Type > CHAT_TYPE_BOSS_WHISPER)
+            if (temp.Type >= CHAT_TYPE_END)
                 error_db_log("TSCR: Entry %i in table `script_texts` has Type %u but this Chat Type does not exist.",i,temp.Type);
 
             TextMap[i] = temp;
@@ -1459,10 +1456,8 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     // -- Areatrigger --
     AddSC_areatrigger_scripts();
 
-    // -- Boss --
-    AddSC_boss_emeriss();
-    AddSC_boss_taerar();
-    AddSC_boss_ysondre();
+    // -- Outdoors Dragons --
+    AddSC_boss_dragonsofnightmare();
 
     // -- Creature --
     AddSC_mob_event();
@@ -1573,7 +1568,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_gurtogg_bloodboil();
     AddSC_boss_mother_shahraz();
     AddSC_boss_reliquary_of_souls();
-    addSC_boss_reliquary_of_souls(); // New
     AddSC_boss_teron_gorefiend();
     AddSC_boss_najentus();
     AddSC_boss_illidari_council();

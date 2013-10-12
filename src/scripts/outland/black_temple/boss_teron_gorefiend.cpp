@@ -211,11 +211,6 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 53477, true);
     }
 
-    void Aggro(Unit *who)
-    {
-        //MoveInLineOfSight(who);
-    }
-
     void MoveInLineOfSight(Unit *who)
     {
         if(!who || (!who->isAlive())) return;

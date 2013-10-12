@@ -90,15 +90,22 @@ struct instance_dire_maul : public ScriptedInstance
     uint64 GetData64(uint32 id)
     {
         switch (id) {
-        case DATA_GUID_PUSILLIN: return pusillinGUID;
-        case DATA_GUID_IRONBARKDOOR: return ironbarkDoorGUID;
+        case DATA_GUID_PUSILLIN: 
+            return pusillinGUID;
+        case DATA_GUID_IRONBARKDOOR: 
+            return ironbarkDoorGUID;
+        default:
+            return 0;
         }
     }
     
     uint32 GetData(uint32 type)
     {
         switch (type) {
-        case DATA_ZEVRIM_THORNHOOF: return Encounters[0];
+        case DATA_ZEVRIM_THORNHOOF: 
+            return Encounters[0];
+        default: 
+            return 0;
         }
     }
     
