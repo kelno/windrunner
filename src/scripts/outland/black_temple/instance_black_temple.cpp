@@ -251,7 +251,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_SUPREMUSEVENT:
             if(data == DONE)
             {
-                HandleGameObject(NajentusGate, true);
+                HandleGameObject(MainTempleDoors, true);
             }
             m_auiEncounter[1] = data; break;
         case DATA_SHADEOFAKAMAEVENT:
