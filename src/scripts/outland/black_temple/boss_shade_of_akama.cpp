@@ -255,6 +255,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         me->GetMotionMaster()->MoveTargetedHome();
         summons.DespawnAll();
         me->SetReactState(REACT_PASSIVE);
+        if(pInstance)
+            pInstance->SetData(DATA_SHADEOFAKAMAEVENT, NOT_STARTED);
     }
 
     void Reset()
@@ -358,12 +360,9 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                     if(target) {
                         spawn->AI()->AttackStart(target);
                         spawn->AddThreat(target, 1000.0f);
-                    } else {
-                        if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
-                        {
-                            spawn->AI()->AttackStart(akama);
-                        }
                     }
+                    if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
+                        spawn->AddThreat(akama,1.0f);
                 }
             }
         }
