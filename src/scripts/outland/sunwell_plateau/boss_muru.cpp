@@ -151,6 +151,7 @@ public:
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN, true);
             doCast((Unit*)NULL, SPELL_BLACKHOLE_SPAWN2, true);
             me->addUnitState(UNIT_STAT_STUNNED);
+            me->SetReactState(REACT_AGGRESSIVE);
 
             guidPlayerCD.clear();
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
