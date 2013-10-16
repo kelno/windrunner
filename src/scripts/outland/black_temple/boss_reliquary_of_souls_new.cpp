@@ -69,14 +69,7 @@ enum ReliquaryOfSoulsData {
     PHASE_DESIRE                    = 2,
     PHASE_ANGER                     = 3
 };
-/*
-static float soulsPos[][2] = { {450.4, 212.3},
-                               {542.1, 212.3},
-                               {542.1, 168.3},
-                               {542.1, 137.4},
-                               {450.4, 137.4},
-                               {450.4, 168.3} };
-                               */
+
 class Boss_reliquary_of_souls : public CreatureScript
 {
 public:
@@ -175,22 +168,6 @@ public:
 
             if(rift)
                 rift->CastSpell(rift,SPELL_SUMMON_SOUL2,true,0,0,me->GetGUID());
-            /*
-            me->CastSpell(
-            Creature* soul = me->SummonCreature(CREATURE_ENSLAVED_SOUL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
-            if (!soul)
-                return false;
-                
-            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0)) {
-                soul->SetSummoner(me);
-                soul->SetNoCallAssistance(true);
-                if (soul->getAI())
-                    soul->getAI()->attackStart(target);
-            }
-            else
-                evade();
-                
-            return true;*/
         }
         /*
         // Used to transfer threat between phases
@@ -270,12 +247,12 @@ public:
                     me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_READY2H);
                     timer = 3000;
                     break;
-                case 1:
+                case 1: //open ribs
                     me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_SUBMERGE);
                     doCast(me, SPELL_SUBMERGE);
                     timer = 2500; //2800 avant
                     break;
-                case 2:
+                case 2: //summon essence
                     if (Creature* summon = me->SummonCreature(23417 + phase, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0)) {
                         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_SUBMERGED);
                         if (summon->getAI()) {
@@ -291,14 +268,20 @@ public:
                         evade();
                     timer = 5000;
                     break;
-                case 3: // FIXME: How dumb is this..
-                    if (phase == PHASE_ANGER) {
+                case 3: // wait for essence to be done or die if this was last essence
+                    if (phase == PHASE_ANGER) {  // FIXME: How dumb is this..
                         if (!essence->isAlive())
                             doCast(me, 7, true);
                         else
                             return;
                     }
                     else {
+                        if (essence->isDead()) //debugging purpose for now
+                        {
+                            sLog.outError("RoS : Essence is dead (phase = %u), skipping animation",phase);
+                            step = 4;
+                            return;
+                        }
                         if (essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
                             //mergeThreatList(essence);
                             essence->DeleteThreatList();
@@ -310,7 +293,7 @@ public:
                     }
                     timer = 1000;
                     break;
-                case 4:
+                case 4: // wait for essence to reach me & close ribs
                     timer = 500;
                     if (essence->IsWithinDistInMap(me, 10.0f)) {
                         timer = 2000;
@@ -325,7 +308,7 @@ public:
                         return;
                     }
                     break;
-                case 5:
+                case 5: //despawn essence
                     if (phase == PHASE_SUFFERING) {
                         if (essence->getAI())
                             essence->getAI()->talk(TALK_SUFF_SAY_AFTER);
@@ -343,7 +326,7 @@ public:
                     soulDeathCount = 0;
                     timer = 3000;
                     break;
-                case 6:
+                case 6: //summon souls
                     if (soulCount < NUMBER_ENSLAVED_SOUL-2) {
                         for(uint8 i = 0; i < 3; i++)
                             summonSoul();
@@ -352,7 +335,7 @@ public:
                         return;
                     }
                     break;
-                case 7:
+                case 7: //wait for souls deaths to continue to next phase
                     if (soulDeathCount >= soulCount) {
                         step = 1;
                         phase++;
@@ -517,6 +500,12 @@ public:
     public:
         Boss_essence_of_desireAI(Creature* creature) : CreatureAINew(creature) {}
         
+        //Debugging 
+        void onDeath(Unit* killer) 
+        {
+            sLog.outError("essence of desire died killed by a %s",killer->ToCreature() ? "creature" : "player");
+        }
+
         enum events {
             EV_RUNE_SHIELD  = 0,
             EV_DEADEN       = 1,
@@ -550,12 +539,6 @@ public:
         
         void onDamageTaken(Unit* attacker, uint32& damage)
         {
-            if (attacker == me)
-            {
-                damage = 0;
-                return;
-            }
-                
             if (damage >= me->GetHealth()) {
                 damage = 0;
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
