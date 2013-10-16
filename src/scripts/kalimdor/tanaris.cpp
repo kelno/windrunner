@@ -680,7 +680,7 @@ bool QuestAccept_npc_tooga(Player* pPlayer, Creature* pCreature, const Quest* pQ
     {
         if (npc_toogaAI* pToogaAI = CAST_AI(npc_toogaAI, pCreature->AI())) {
             pToogaAI->StartFollow(pPlayer, FACTION_TOOG_ESCORTEE, pQuest);
-            pCreature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            pCreature->SetWalk(false);
         }
     }
 
