@@ -279,7 +279,8 @@ public:
                         if (essence->isDead()) //debugging purpose for now
                         {
                             sLog.outError("RoS : Essence is dead (phase = %u), skipping animation",phase);
-                            step = 4;
+                            essence->SetVisibility(VISIBILITY_OFF);
+                            step = 5;
                             return;
                         }
                         if (essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
