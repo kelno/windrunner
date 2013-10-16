@@ -58,7 +58,9 @@ struct instance_black_temple : public ScriptedInstance
     uint64 BloodElfCouncilVoice;
     uint64 IllidanStormrage;
     uint64 TeronGorefiend;
+    uint64 ReliquaryOfSouls;
 
+    uint64 GateOpeningAnnouncer;
     uint64 NajentusGate;
     uint32 NajentusGateTimer;
     bool NajentusGateTimed;
@@ -93,7 +95,9 @@ struct instance_black_temple : public ScriptedInstance
         BloodElfCouncilVoice = 0;
         IllidanStormrage = 0;
         TeronGorefiend = 0;
+        ReliquaryOfSouls = 0;
 
+        GateOpeningAnnouncer = 0;
         NajentusGate    = 0;
         NajentusGateTimer = 0;
         NajentusGateTimed = false;
@@ -141,6 +145,7 @@ struct instance_black_temple : public ScriptedInstance
         case 23426:    IllidariCouncil = creature->GetGUID();           break;
         case 23499:    BloodElfCouncilVoice = creature->GetGUID();      break;
         case 22871:    TeronGorefiend = creature->GetGUID();            break;
+        case 22856:    ReliquaryOfSouls = creature->GetGUID();          break;
         case 22844:
         case 22845:
         case 22846:
@@ -153,6 +158,7 @@ struct instance_black_temple : public ScriptedInstance
             else
                 ashtongues.push_back(creature->GetGUID());
             break;
+        case 30000:    GateOpeningAnnouncer = creature->GetGUID();      break; //summoned by najentus on death
         }
     }
     
@@ -225,6 +231,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_GAMEOBJECT_SUPREMUS_DOORS:   return MainTempleDoors;
         case DATA_BLOOD_ELF_COUNCIL_VOICE:     return BloodElfCouncilVoice;
         case DATA_TERON:                       return TeronGorefiend;
+        case DATA_RELIQUARY_OF_SOULS:          return ReliquaryOfSouls;
         }
 
         return 0;
@@ -244,7 +251,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_SUPREMUSEVENT:
             if(data == DONE)
             {
-                HandleGameObject(NajentusGate, true);
+                HandleGameObject(MainTempleDoors, true);
             }
             m_auiEncounter[1] = data; break;
         case DATA_SHADEOFAKAMAEVENT:
@@ -338,9 +345,8 @@ struct instance_black_temple : public ScriptedInstance
                 HandleGameObject(NajentusGate, true);
                 NajentusGateTimed = false;
 
-                Creature* naj = instance->GetCreatureInMap(Najentus);
-                if(naj)
-                    DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, naj); //Fixme : this is supposed to be in the chatbox and not a boss emote. But how do you get a normal emote without the name of the creature in the beginning?
+                Creature* c = instance->GetCreatureInMap(GateOpeningAnnouncer);
+                if(c) DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, c); //May be hacky, any way yo get a normal emote without the name of the creature in the beginning?
             } else NajentusGateTimer -= diff;
         }
     }

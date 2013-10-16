@@ -266,23 +266,28 @@ uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell)
 
     int32 castTime = spellCastTimeEntry->CastTime;
 
+    if (spellInfo->Attributes & SPELL_ATTR_RANGED && (!spell || !(spell->IsAutoRepeat())))
+        castTime += 500;
+
     if (spell && spell->m_spellInfo->Id != 8690)
     {
+       // sLog.outDebug("GetSpellCastTime spell %u - castTime %u",spellInfo->Id,castTime);
         if(Player* modOwner = spell->GetCaster()->GetSpellModOwner())
             modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME, castTime, spell);
 
         if( !(spellInfo->Attributes & (SPELL_ATTR_ABILITY|SPELL_ATTR_TRADESPELL)) )
-            castTime = int32(castTime * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
-        else
         {
-            if (spell->IsRangedSpell() && !spell->IsAutoRepeat())
+          //  sLog.outDebug("Not ability. UNIT_MOD_CAST_SPEED = %f",spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
+            castTime = int32(castTime * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
+        } else
+        {
+            if (spell->IsRangedSpell() && !spell->IsAutoRepeat()) {
+              //  sLog.outDebug("Ranged spell. m_modAttackSpeedPct[RANGED_ATTACK] = %f",spell->GetCaster()->m_modAttackSpeedPct[RANGED_ATTACK]);
                 castTime = int32(castTime * spell->GetCaster()->m_modAttackSpeedPct[RANGED_ATTACK]);
+            }
         }
     }
-
-    if (spellInfo->Attributes & SPELL_ATTR_RANGED && (!spell || !(spell->IsAutoRepeat())))
-        castTime += 500;
-
+   // sLog.outDebug("castTime2 = %i",castTime);
     return (castTime > 0) ? uint32(castTime) : 0;
 }
 
@@ -2681,18 +2686,18 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
-        case 45342:
+        case 45342: // Alythess Conflagration
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             // no break
-        case 45329:
+        case 45329: // Sacrolash Show nova
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             break;
-        case 45348:
+        case 45348: // Alythess SPELL_FLAME_TOUCHED
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             // no break
-        case 45347:
+        case 45347: // Sacrolash SPELL_DARK_TOUCHED
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
@@ -2700,7 +2705,7 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->AttributesEx |= SPELL_ATTR_EX_STACK_FOR_DIFF_CASTERS;
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_STACK_FOR_DIFF_CASTERS;
             break;
-        case 46771:
+        case 46771: // SPELL_FLAME_SEAR
             spellInfo->MaxAffectedTargets = 5;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;

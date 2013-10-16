@@ -742,7 +742,7 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
     DEBUG_LOG("DealDamageStart");
 
     uint32 health = pVictim->GetHealth();
-    sLog.outDetail("deal dmg:%d to health:%d ",damage,health);
+    sLog.outDebug("deal dmg:%d to health:%d ",damage,health);
 
     // duel ends when player has 1 or less hp
     bool duel_hasEnded = false;
@@ -2596,17 +2596,18 @@ float Unit::GetAverageSpellResistance(Unit* caster, SpellSchoolMask damageSchool
         return 0;
 
     uint32 resistance = GetResistance(GetFirstSchoolInMask(damageSchoolMask));
-    sLog.outDebug("GetAverageSpellResistance : resistance = %u",resistance);
-    resistance += caster->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, damageSchoolMask); // spell penetration
-    sLog.outDebug("GetAverageSpellResistance : resistance2 = %u",resistance);
+    int penetration = caster->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, damageSchoolMask); // spell penetration
+
+    if(penetration >= resistance)
+    	resistance = 0;
+    else
+        resistance -= penetration;
 
     float resistChance = (0.75f * resistance / (caster->getLevel() * 5));
     if(resistChance > 0.75f)
         resistChance = 0.75f;
     else if(resistChance < 0.0f)
         resistChance = 0.0f;
-
-    sLog.outDebug("GetAverageSpellResistance : resistChance = %u",resistChance);
 
     return resistChance;
 }
@@ -11435,7 +11436,10 @@ Unit* Unit::SelectNearbyTarget(float dist) const
 
 void Unit::ApplyAttackTimePercentMod( WeaponAttackType att,float val, bool apply )
 {
+    //sLog.outDebug("ApplyAttackTimePercentMod(%u,%f,%s)",att,val,apply?"true":"false");
     float remainingTimePct = (float)m_attackTimer[att] / (GetAttackTime(att) * m_modAttackSpeedPct[att]);
+    //sLog.outDebug("remainingTimePct = %f",remainingTimePct);    
+    //sLog.outDebug("m_modAttackSpeedPct[att] before = %f",m_modAttackSpeedPct[att]);
     if(val > 0)
     {
         ApplyPercentModFloatVar(m_modAttackSpeedPct[att], val, !apply);
@@ -11446,6 +11450,7 @@ void Unit::ApplyAttackTimePercentMod( WeaponAttackType att,float val, bool apply
         ApplyPercentModFloatVar(m_modAttackSpeedPct[att], -val, apply);
         ApplyPercentModFloatValue(UNIT_FIELD_BASEATTACKTIME+att,-val,apply);
     }
+    //sLog.outDebug("m_modAttackSpeedPct[att] after = %f",m_modAttackSpeedPct[att]);
     m_attackTimer[att] = uint32(GetAttackTime(att) * m_modAttackSpeedPct[att] * remainingTimePct);
 }
 

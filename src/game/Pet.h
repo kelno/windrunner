@@ -130,7 +130,7 @@ extern const uint32 LevelStartLoyalty[6];
 
 #define OWNER_MAX_DISTANCE 100
 
-#define PET_FOLLOW_DIST  1
+#define PET_FOLLOW_DIST  0.7
 #define PET_FOLLOW_ANGLE (M_PI/2)
 
 class Pet : public Creature
@@ -146,6 +146,7 @@ class Pet : public Creature
         void setPetType(PetType type) { m_petType = type; }
         bool isControlled() const { return getPetType()==SUMMON_PET || getPetType()==HUNTER_PET; }
         bool isTemporarySummoned() const { return m_duration > 0; }
+        bool canFly() { return false; }
 
         bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 pet_number);
         bool CreateBaseAtCreature(Creature* creature);

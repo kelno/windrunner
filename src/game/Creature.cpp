@@ -2098,8 +2098,8 @@ bool Creature::IsVisibleInGridForPlayer(Player const* pl) const
     if(pl->isGameMaster() || pl->isSpectator())
         return true;
 
-    // CREATURE_FLAGS_EXTRA_ALIVE_INVISIBLE handling
-    if(GetCreatureInfo()->flags_extra & CREATURE_FLAGS_EXTRA_ALIVE_INVISIBLE)
+    // CREATURE_FLAG_EXTRA_ALIVE_INVISIBLE handling
+    if(GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_ALIVE_INVISIBLE)
         return pl->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_GHOST);
 
     // Live player (or with not release body see live creatures or death creatures with corpse disappearing time > 0
@@ -2251,7 +2251,7 @@ void Creature::CallAssistance()
 bool Creature::CanAssistTo(const Unit* u, const Unit* enemy) const
 {
     // is it true?
-    if(!HasReactState(REACT_AGGRESSIVE) || HasJustRespawned())
+    if(!HasReactState(REACT_AGGRESSIVE) || (HasJustRespawned() && !m_summoner)) //ignore justrespawned if summoned
         return false;
 
     // we don't need help from zombies :)

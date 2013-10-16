@@ -1748,6 +1748,7 @@ class Player : public Unit
 
         void UpdateDefenseBonusesMod();
         void ApplyRatingMod(CombatRating cr, int32 value, bool apply);
+        void UpdateHasteRating(CombatRating cr, int32 value, bool apply);
         float GetMeleeCritFromAgility();
         float GetDodgeFromAgility();
         float GetSpellCritFromIntellect();
@@ -2630,6 +2631,8 @@ class Player : public Unit
         uint32 m_timeSyncTimer;
         uint32 m_timeSyncClient;
         uint32 m_timeSyncServer;
+
+        int32 hasteRatings[3]; //CR_HASTE_MELEE && CR_HASTE_RANGED && CR_HASTE_SPELL
 
     public:
         bool m_kickatnextupdate;
