@@ -38,7 +38,9 @@ enum NajentusSay {
 };
 
 enum NajentusSpells {
-    SPELL_NEEDLE_SPINE             = 39992,
+    SPELL_NEEDLE_SPINE             = 39992, //dummy aura
+    SPELL_NEEDLE_SPINE2            = 39835, // physical damage + script effect
+    SPELL_NEEDLE_SPINE_EXPLOSION   = 39968, // AoE damages, linked via spell_linked_spell
     SPELL_TIDAL_BURST              = 39878,
     SPELL_TIDAL_SHIELD             = 39872,
     SPELL_IMPALING_SPINE           = 39837,
@@ -78,19 +80,14 @@ struct boss_najentusAI : public ScriptedAI
 
     uint64 SpineTargetGUID;
 
-    void ResetAttacksTimer()
-    {
-        NeedleSpineTimer = TIMER_NEEDLE_SPINE_START;
-        ImpalingSpineTimer = TIMER_IMPALING_SPINE;
-    }
-
     void Reset()
     {
         EnrageTimer = TIMER_ENRAGE;
         SpecialYellTimer = TIMER_SPECIAL_YELL_START;
         TidalShieldTimer = TIMER_TIDAL_SHIELD;
 
-        ResetAttacksTimer();
+        NeedleSpineTimer = TIMER_NEEDLE_SPINE_START;
+        ImpalingSpineTimer = TIMER_IMPALING_SPINE;
 
         SpineTargetGUID = 0;
 
@@ -129,7 +126,8 @@ struct boss_najentusAI : public ScriptedAI
         {
             m_creature->RemoveAurasDueToSpell(SPELL_TIDAL_SHIELD);
             m_creature->CastSpell(m_creature, SPELL_TIDAL_BURST, true);
-            ResetAttacksTimer();
+            NeedleSpineTimer = 10000;
+            ImpalingSpineTimer = TIMER_IMPALING_SPINE;
         }
     }
 
@@ -181,9 +179,9 @@ struct boss_najentusAI : public ScriptedAI
         {
             //m_creature->CastSpell(m_creature, SPELL_NEEDLE_SPINE, true);
             std::list<Unit*> target;
-            SelectUnitList(target, 3, SELECT_TARGET_RANDOM, 80, true);
+            SelectUnitList(target, 3, SELECT_TARGET_RANDOM, 80.0f, true);
             for(std::list<Unit*>::iterator i = target.begin(); i != target.end(); ++i)
-                m_creature->CastSpell(*i, 39835, true);
+                me->CastSpell(*i, SPELL_NEEDLE_SPINE2, true);
             NeedleSpineTimer = TIMER_NEEDLE_SPINE;
         }else NeedleSpineTimer -= diff;
 
