@@ -1367,7 +1367,7 @@ struct alliance_riflemanAI : public Scripted_NoMovementAI
         if (!who || m_creature->getVictim())
             return;
 
-        if (who->isTargetableForAttack() && m_creature->IsHostileTo(who))
+        if (me->canAttack(who) && m_creature->IsHostileTo(who))
         {
             float attackRadius = m_creature->GetAttackDistance(who);
             if (m_creature->IsWithinDistInMap(who, 30))

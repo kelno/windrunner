@@ -215,7 +215,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
     {
         if(!who || (!who->isAlive())) return;
 
-        if(who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
+        if(me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
         {
             float attackRadius = m_creature->GetAttackDistance(who);
 

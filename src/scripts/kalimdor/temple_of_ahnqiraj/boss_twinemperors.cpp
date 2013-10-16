@@ -299,7 +299,7 @@ struct boss_twinemperorsAI : public ScriptedAI
         if (!who || m_creature->getVictim())
             return;
 
-        if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
+        if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
         {
             float attackRadius = m_creature->GetAttackDistance(who);
             if (attackRadius < PULL_RANGE)
@@ -601,7 +601,7 @@ struct boss_veklorAI : public boss_twinemperorsAI
         if (!who)
             return;
 
-        if (who->isTargetableForAttack())
+        if (me->canAttack(who))
         {
             // VL doesn't melee
             if ( m_creature->Attack(who, false) )
