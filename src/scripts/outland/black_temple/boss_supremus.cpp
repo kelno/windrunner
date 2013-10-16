@@ -183,21 +183,25 @@ struct boss_supremusAI : public ScriptedAI
         }
     }
 
-    Unit* CalculateHatefulStrikeTarget()
+    Player* CalculateHatefulStrikeTarget()
     {
         uint32 maxhealthfound = 0;
-        Unit* target = NULL;
+        Player* target = NULL;
 
         auto& m_threatlist = m_creature->getThreatManager().getThreatList();
         for (auto i : m_threatlist)
         {
-            Unit* pUnit = me->GetMap()->GetCreatureInMap(i->getUnitGuid());
-            if(pUnit && m_creature->IsWithinMeleeRange(pUnit))
+            if(!IS_PLAYER_GUID(i->getUnitGuid()))
+                continue;
+
+            me->AddThreat(0,0);
+            Player* p = me->GetMap()->GetPlayerInMap(i->getUnitGuid());
+            if(p && me->IsWithinMeleeRange(p))
             {
-                if(pUnit->GetHealth() > maxhealthfound)
+                if(p->GetHealth() > maxhealthfound)
                 {
-                    maxhealthfound = pUnit->GetHealth();
-                    target = pUnit;
+                    maxhealthfound = p->GetHealth();
+                    target = p;
                 }
             }
         }
@@ -283,7 +287,7 @@ struct boss_supremusAI : public ScriptedAI
 
             if(HatefulStrikeTimer < diff)
             {
-                if(Unit* target = CalculateHatefulStrikeTarget())
+                if(Player* target = CalculateHatefulStrikeTarget())
                 {
                     DoCast(target, SPELL_HATEFUL_STRIKE);
                     HatefulStrikeTimer = TIMER_HATEFUL_STRIKE;
