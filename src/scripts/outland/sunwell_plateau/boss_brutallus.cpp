@@ -395,7 +395,7 @@ struct boss_brutallusAI : public ScriptedAI
     }
 
     void MoveInLineOfSight(Unit *who) {
-        if (!who->isTargetableForAttack() || !m_creature->IsHostileTo(who))
+        if (!me->canAttack(who) || !m_creature->IsHostileTo(who))
             return;
 
         if (pInstance && Intro)

@@ -192,7 +192,7 @@ struct mob_wisp_invisAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || Creaturetype != 1 || !who->isTargetableForAttack())
+        if (!who || Creaturetype != 1 || !me->canAttack(who))
             return;
 
         if (me->GetDistance2d(who) < 0.1 && !who->HasAura(SPELL_SQUASH_SOUL,0))
@@ -895,7 +895,7 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!who || !who->isTargetableForAttack() || !me->IsHostileTo(who) || me->getVictim())
+        if (!who || !me->canAttack(who) || !me->IsHostileTo(who) || me->getVictim())
             return;
 
         me->AddThreat(who, 0.0f);
