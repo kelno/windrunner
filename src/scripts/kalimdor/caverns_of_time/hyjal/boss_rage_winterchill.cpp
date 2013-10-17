@@ -1,36 +1,28 @@
-/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*/
-
-/* ScriptData
-SDName: boss_rage_winterchill
-SD%Complete: 100
-SDCategory: Hyjal
-EndScriptData */
+//TODO : English translations
 
 #include "precompiled.h"
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_FROST_ARMOR 31256
-#define SPELL_DEATH_AND_DECAY 31258
+enum Spells 
+{
+    SPELL_FROST_ARMOR      = 31256,
+    SPELL_DEATH_AND_DECAY  = 31258,
+    SPELL_FROST_NOVA       = 31250,
+    SPELL_ICEBOLT          = 31249,
+    SPELL_BERSERK          = 26662
+};
 
-#define SPELL_FROST_NOVA 31250
-#define SPELL_ICEBOLT 31249
-
-#define SPELL_BERSERK 26662
+enum Timers
+{
+    TIMER_ENRAGE                = 600000,
+    TIMER_FROST_ARMOR           = 60000,
+    TIMER_ICEBOLT               = 5000,
+    TIMER_ICEBOLT_START         = 12000,
+    TIMER_DEATH_AND_DECAY       = 30000,
+    TIMER_FROST_NOVA            = 30000,
+    TIMER_FROST_NOVA_FIRST      = 20000,
+};
 
 #define SAY_ONDEATH "Vous avez gagné cette bataille, mais... pas... la guerre !"
 #define SOUND_ONDEATH 11026
@@ -74,11 +66,11 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        FrostArmorTimer = 37000;
-        DecayTimer = 45000;
-        NovaTimer = 15000;
-        IceboltTimer = 10000;
-        BerserkTimer = 600000; //10 minutes
+        FrostArmorTimer = TIMER_FROST_ARMOR;
+        DecayTimer = TIMER_DEATH_AND_DECAY;
+        NovaTimer = TIMER_FROST_NOVA_FIRST;
+        IceboltTimer = TIMER_ICEBOLT_START;
+        BerserkTimer = TIMER_ENRAGE; //10 minutes
         
         Enraged = false;
 
@@ -161,12 +153,12 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         if(FrostArmorTimer < diff)
         {
             DoCast(m_creature, SPELL_FROST_ARMOR);
-            FrostArmorTimer = 40000+rand()%20000;
+            FrostArmorTimer = TIMER_FROST_ARMOR;
         }else FrostArmorTimer -= diff;
         if(DecayTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_DEATH_AND_DECAY);
-            DecayTimer = 60000+rand()%20000;
+            DecayTimer = TIMER_DEATH_AND_DECAY;
             switch(rand()%2)
             {
                 case 0:
@@ -182,7 +174,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         if(NovaTimer < diff)
         {
             DoCast(m_creature->getVictim(), SPELL_FROST_NOVA);
-            NovaTimer = 30000+rand()%15000;
+            NovaTimer = TIMER_FROST_NOVA;
             switch(rand()%2)
             {
                 case 0:
@@ -198,7 +190,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         if(IceboltTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,40.0f,true), SPELL_ICEBOLT);
-            IceboltTimer = 11000+rand()%20000;
+            IceboltTimer = TIMER_ICEBOLT;
         }else IceboltTimer -= diff;
         if(BerserkTimer < diff && !Enraged)
         {
