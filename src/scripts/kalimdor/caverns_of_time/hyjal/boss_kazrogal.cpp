@@ -3,9 +3,20 @@
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_CLEAVE 31436
-#define SPELL_WARSTOMP 31480
-#define SPELL_MARK 31447
+enum Spells
+{
+    SPELL_CLEAVE    = 31436,
+    SPELL_WARSTOMP  = 31480,
+    SPELL_MARK      = 31447,
+};
+
+enum Timers
+{
+    TIMER_WARSTOMP_FIRST  = 10000,
+    TIMER_CLEAVE          = 10000,
+    TIMER_MARK_FIRST      = 45000,
+};
+#define TIMER_WARSTOMP 5000 + rand()%25000; //5-30s
 
 #define SOUND_ONDEATH 11018
 
@@ -31,12 +42,6 @@ struct boss_kazrogalAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         go = false;
         pos = 0;
-        SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_MARK);
-        if(TempSpell && TempSpell->EffectImplicitTargetA[0] != 1)
-        {
-            TempSpell->EffectImplicitTargetA[0] = 1;
-            TempSpell->EffectImplicitTargetB[0] = 0;
-        }
     }
 
     uint32 CleaveTimer;
@@ -48,11 +53,13 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
     void Reset()
     {
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+
         damageTaken = 0;
-        CleaveTimer = 5000;
-        WarStompTimer = 15000;
-        MarkTimer = 45000;
-        MarkTimerBase = 45000;
+        CleaveTimer = TIMER_CLEAVE;
+        WarStompTimer = TIMER_WARSTOMP_FIRST;
+        MarkTimer = TIMER_MARK_FIRST;
+        MarkTimerBase = TIMER_MARK_FIRST;
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, NOT_STARTED);
@@ -136,19 +143,21 @@ struct boss_kazrogalAI : public hyjal_trashAI
         if(CleaveTimer < diff)
         {
             DoCast(m_creature, SPELL_CLEAVE);
-            CleaveTimer = 6000+rand()%15000;
+            CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
         if(WarStompTimer < diff)
         {
             DoCast(m_creature, SPELL_WARSTOMP);
-            WarStompTimer = 60000;
+            WarStompTimer = TIMER_WARSTOMP;
         }else WarStompTimer -= diff;
 
         if(m_creature->HasAura(SPELL_MARK,0))
             m_creature->RemoveAurasDueToSpell(SPELL_MARK);
         if(MarkTimer < diff)
         {
+            me->CastSpell(me,SPELL_MARK,true);
+            /*
             //cast dummy, useful for bos addons
             m_creature->CastCustomSpell(m_creature, SPELL_MARK, NULL, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
 
@@ -158,9 +167,9 @@ struct boss_kazrogalAI : public hyjal_trashAI
                 Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
                 if (target && target->GetTypeId() == TYPEID_PLAYER && target->getPowerType() == POWER_MANA)
                 {
-                    target->CastSpell(target, SPELL_MARK,true);//only cast on mana users
+                    target->CastSpell(target,SPELL_MARK,true,0,0,me->GetGUID());//only cast on mana users
                 }
-            }
+            }*/
             MarkTimerBase -= 5000;
             if(MarkTimerBase < 5500)
                 MarkTimerBase = 5500;
