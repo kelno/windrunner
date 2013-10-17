@@ -196,14 +196,15 @@ struct mob_ashtongue_channelerAI : public ScriptedAI
 
             if(me->GetDistance2d(shade) < 20.0f && me->IsWithinLOSInMap(shade))
             {
-                me->GetMotionMaster()->Clear(false);
-                me->GetMotionMaster()->MoveIdle();
+                if(me->isMoving())
+                {
+                    me->GetMotionMaster()->Clear(false);
+                    me->GetMotionMaster()->MoveIdle();
+                }
                 me->CastSpell(shade, SPELL_SHADE_SOUL_CHANNEL, false);
             } else {
                 if(!me->isMoving())
-                {
-                    me->GetMotionMaster()->MoveChase(shade);
-                }
+                    me->GetMotionMaster()->MoveFollow(shade,10.0f,(float)rand()/1000); //random angle to avoid packing
             }
             updateTimer = TIMER_CHANNELER_UPDATE;
         } else updateTimer -= diff;
@@ -288,7 +289,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                 akama->Respawn();
         }
 
-        spawnChannelers();
+        if(!me->isDead())
+            spawnChannelers();
     }
 
     void JustReachedHome() 
@@ -378,9 +380,11 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             Sorcerer->SetUInt64Value(UNIT_FIELD_TARGET, me->GetGUID());
             channelers.push_back(Sorcerer->GetGUID());
             //avoir channelers packing
+            /*
             float x,y,z;
             Sorcerer->GetRandomContactPoint(me,x,y,z,0,20.0f);
             Sorcerer->GetMotionMaster()->MovePoint(0,x,y,z);
+            */
         }
     }
 
