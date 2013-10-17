@@ -3,10 +3,22 @@
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_CARRION_SWARM 31306
-#define SPELL_SLEEP 31298
-#define SPELL_VAMPIRIC_AURA 38196
-#define SPELL_INFERNO 31299
+enum Spells
+{
+    SPELL_CARRION_SWARM  = 31306,
+    SPELL_SLEEP          = 31298,
+    SPELL_VAMPIRIC_AURA  = 38196,
+    SPELL_INFERNO        = 31299
+};
+
+enum Timers
+{
+    TIMER_INFERNO             = 50000,
+    TIMER_INFERNO_START       = 20000,
+    TIMER_SLEEP               = 20000,
+    TIMER_CARRION_SWARM       = 15000,
+    TIMER_CARRION_SWARM_FIRST = 25000
+};
 
 #define SAY_ONDEATH "The clock... is still... ticking."
 #define SOUND_ONDEATH 10982
@@ -53,7 +65,6 @@ struct boss_anetheronAI : public hyjal_trashAI
 
     uint32 SwarmTimer;
     uint32 SleepTimer;
-    uint32 AuraTimer;
     uint32 InfernoTimer;
     bool go;
     uint32 pos;
@@ -61,10 +72,11 @@ struct boss_anetheronAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        SwarmTimer = 45000;
-        SleepTimer = 60000;
-        AuraTimer = 5000;
-        InfernoTimer = 45000;
+        SwarmTimer = TIMER_CARRION_SWARM_FIRST;
+        SleepTimer = TIMER_SLEEP;
+        InfernoTimer = TIMER_INFERNO_START;
+
+        DoCast(m_creature, SPELL_VAMPIRIC_AURA,true);
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, NOT_STARTED);
@@ -152,7 +164,7 @@ struct boss_anetheronAI : public hyjal_trashAI
             if(target)
                 DoCast(target,SPELL_CARRION_SWARM);
 
-            SwarmTimer = 45000+rand()%15000;
+            SwarmTimer = TIMER_CARRION_SWARM;
             switch(rand()%2)
             {
                 case 0:
@@ -174,7 +186,7 @@ struct boss_anetheronAI : public hyjal_trashAI
                 if(target)
                     target->CastSpell(target,SPELL_SLEEP,true);
             }
-            SleepTimer = 60000;
+            SleepTimer = TIMER_SLEEP;
             switch(rand()%2)
             {
                 case 0:
@@ -187,15 +199,11 @@ struct boss_anetheronAI : public hyjal_trashAI
                     break;
             }
         }else SleepTimer -= diff;
-        if(AuraTimer < diff)
-        {
-            DoCast(m_creature, SPELL_VAMPIRIC_AURA,true);
-            AuraTimer = 10000+rand()%10000;
-        }else AuraTimer -= diff;
+
         if(InfernoTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,100,true), SPELL_INFERNO);
-            InfernoTimer = 45000;
+            InfernoTimer = TIMER_INFERNO;
             switch(rand()%2)
             {
                 case 0:
@@ -218,8 +226,16 @@ CreatureAI* GetAI_boss_anetheron(Creature *_Creature)
     return new boss_anetheronAI (_Creature);
 }
 
-#define SPELL_IMMOLATION 31303
-#define SPELL_INFERNO_EFFECT 31302
+enum InfernoSpells
+{
+    SPELL_IMMOLATION     = 31303,
+    SPELL_INFERNO_EFFECT = 31302
+};
+
+enum InfernoTimers
+{
+    TIMER_IMMOLATION     = 2000
+};
 
 struct mob_towering_infernalAI : public ScriptedAI
 {
@@ -238,7 +254,7 @@ struct mob_towering_infernalAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_INFERNO_EFFECT);
-        ImmolationTimer = 5000;
+        ImmolationTimer = TIMER_IMMOLATION;
         CheckTimer = 5000;
     }
 
@@ -290,7 +306,7 @@ struct mob_towering_infernalAI : public ScriptedAI
         if(ImmolationTimer < diff)
         {
             DoCast(m_creature, SPELL_IMMOLATION);
-            ImmolationTimer = 5000;
+            ImmolationTimer = TIMER_IMMOLATION;
         }else ImmolationTimer -= diff;
 
         DoMeleeAttackIfReady();
