@@ -1,35 +1,25 @@
-/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation; either version 2 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*/
-
-/* ScriptData
-SDName: boss_azgalor
-SD%Complete: 95
-SDComment: SPELL_DOOM sometimes casted on tank
-SDCategory: Hyjal
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_RAIN_OF_FIRE          31340
-#define SPELL_DOOM                  31347
-#define SPELL_HOWL_OF_AZGALOR       31344
-#define SPELL_CLEAVE                31345
-#define SPELL_BERSERK               26662
+enum Spells
+{
+    SPELL_RAIN_OF_FIRE      = 31340,
+    SPELL_DOOM              = 31347,
+    SPELL_HOWL_OF_AZGALOR   = 31344,
+    SPELL_CLEAVE            = 31345,
+    SPELL_BERSERK           = 26662,
+};
+
+enum Timers
+{
+    TIMER_BERSERK            = 600000,
+    TIMER_DOOM               = 45000,
+    TIMER_CLEAVE             = 5000,
+    TIMER_HOWL_OF_AZGALOR    = 15000,
+    TIMER_RAIN_OF_FIRE       = 13000,
+    TIMER_RAIN_OF_FIRE_FIRST = 30000,
+};
 
 #define SAY_ONDEATH                 "Your time is almost... up"
 #define SOUND_ONDEATH               11002
@@ -66,7 +56,6 @@ struct boss_azgalorAI : public hyjal_trashAI
     uint32 HowlTimer;
     uint32 CleaveTimer;
     uint32 EnrageTimer;
-    bool enraged;
 
     bool go;
     uint32 pos;
@@ -74,12 +63,11 @@ struct boss_azgalorAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        RainTimer = 20000;
-        DoomTimer = 50000;
-        HowlTimer = 30000;
-        CleaveTimer = 10000;
-        EnrageTimer = 600000;
-        enraged = false;
+        RainTimer = TIMER_RAIN_OF_FIRE_FIRST;
+        DoomTimer = TIMER_DOOM;
+        HowlTimer = TIMER_HOWL_OF_AZGALOR;
+        CleaveTimer = TIMER_CLEAVE;
+        EnrageTimer = TIMER_BERSERK;
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_AZGALOREVENT, NOT_STARTED);
@@ -131,6 +119,21 @@ struct boss_azgalorAI : public hyjal_trashAI
         DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
     }
 
+    Unit* SelectDoomTarget()
+    {
+        std::list<Unit*> target;
+        SelectUnitList(target, 2, SELECT_TARGET_RANDOM, 150.0f, true); //get two target, just in case the first one is our tank
+        if(target.size() < 2)
+            return NULL;
+
+        Unit* firstVictim = *(target.begin());
+        Unit* secondVictim = *(target.begin()++);
+        if( firstVictim != me->getVictim() )
+            return firstVictim;
+        else
+            return secondVictim;
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if (IsEvent)
@@ -163,38 +166,32 @@ struct boss_azgalorAI : public hyjal_trashAI
         if(RainTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,30,true), SPELL_RAIN_OF_FIRE);
-            RainTimer = 20000+rand()%15000;
+            RainTimer = TIMER_RAIN_OF_FIRE;
         }else RainTimer -= diff;
 
         if(DoomTimer < diff)
         {
-            //DoCast(SelectUnit(SELECT_TARGET_RANDOM,1,100,true), SPELL_DOOM);//never on tank
-            //better way to avoid casting on tank (I hope, at least...)
-            Unit* pTarget = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
-            if (pTarget && pTarget == m_creature->getVictim())
-                pTarget = SelectUnit(SELECT_TARGET_BOTTOMAGGRO, 0);
-            DoCast(pTarget, SPELL_DOOM);
-            DoomTimer = 45000+rand()%5000;
+            DoCast(SelectDoomTarget(), SPELL_DOOM);
+            DoomTimer = TIMER_DOOM;
         }else DoomTimer -= diff;
 
         if(HowlTimer < diff)
         {
             DoCast(m_creature, SPELL_HOWL_OF_AZGALOR);
-            HowlTimer = 30000;
+            HowlTimer = TIMER_HOWL_OF_AZGALOR;
         }else HowlTimer -= diff;
 
         if(CleaveTimer < diff)
         {
             DoCast(m_creature->getVictim(), SPELL_CLEAVE);
-            CleaveTimer = 10000+rand()%5000;
+            CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
-        if(EnrageTimer < diff && !enraged)
+        if(EnrageTimer < diff)
         {
             m_creature->InterruptNonMeleeSpells(false);
             DoCast(m_creature, SPELL_BERSERK, true);
-            enraged = true;
-            EnrageTimer = 600000;
+            EnrageTimer = TIMER_BERSERK;
         }else EnrageTimer -= diff;
 
         DoMeleeAttackIfReady();
@@ -206,9 +203,12 @@ CreatureAI* GetAI_boss_azgalor(Creature *_Creature)
     return new boss_azgalorAI (_Creature);
 }
 
-#define SPELL_THRASH 12787
-#define SPELL_CRIPPLE 31406
-#define SPELL_WARSTOMP 31408
+enum DoomguardSpells
+{
+    SPELL_THRASH       = 12787,
+    SPELL_CRIPPLE      = 31406,
+    SPELL_WARSTOMP     = 31408
+};
 
 struct mob_lesser_doomguardAI : public hyjal_trashAI
 {
