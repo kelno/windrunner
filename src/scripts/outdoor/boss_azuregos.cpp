@@ -118,7 +118,7 @@ public:
                 case EV_TELEPORT:
                 {
                     float x, y, z;
-                    me->GetNearPoint(me, x, y, z, me->GetObjectSize(), 5.0f, 0.0f);
+                    me->GetNearPoint(me, x, y, z, 5.0f, 0.0f);
 
                     std::list<Player*> players;
                     getAllPlayersInRange(players, 25.0f);

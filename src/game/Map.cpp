@@ -2409,7 +2409,7 @@ bool Map::SupportsHeroicMode(const MapEntry* mapEntry)
     if(instTempAddon && instTempAddon->forceHeroicEnabled)
         return true;
 
-    return false;    
+    return false;
 }
 
 std::vector<Creature*> Map::GetAllCreaturesFromPool(uint32 poolId)
@@ -2420,6 +2420,24 @@ std::vector<Creature*> Map::GetAllCreaturesFromPool(uint32 poolId)
 
     std::vector<Creature*> emptyVect;
     return emptyVect;
+}
+
+float Map::GetWaterOrGroundLevel(float x, float y, float z, float* ground /*= NULL*/, bool /*swim = false*/) const
+{
+    if (const_cast<Map*>(this)->GetGrid(x, y))
+    {
+        // we need ground level (including grid height version) for proper return water level in point
+        float ground_z = GetHeight(x, y, z, true);
+        if (ground)
+            *ground = ground_z;
+
+        LiquidData liquid_status;
+
+        ZLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
+        return res ? liquid_status.level : ground_z;
+    }
+
+    return VMAP_INVALID_HEIGHT_VALUE;
 }
 
 template void Map::Add(Corpse *);
