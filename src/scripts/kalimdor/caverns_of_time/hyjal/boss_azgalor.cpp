@@ -21,23 +21,16 @@ enum Timers
     TIMER_RAIN_OF_FIRE_FIRST = 30000,
 };
 
-#define SAY_ONDEATH                 "Your time is almost... up"
-#define SOUND_ONDEATH               11002
-
-#define SAY_ONSLAY1                 "Reesh, hokta!"
-#define SAY_ONSLAY2                 "Don't fight it"
-#define SAY_ONSLAY3                 "No one is going to save you"
-#define SOUND_ONSLAY1               11001
-#define SOUND_ONSLAY2               11048
-#define SOUND_ONSLAY3               11047
-
-#define SAY_DOOM1                   "Just a taste... of what awaits you"
-#define SAY_DOOM2                   "Suffer you despicable insect!"
-#define SOUND_DOOM1                 11046
-#define SOUND_DOOM2                 11000
-
-#define SAY_ONAGGRO                 "Abandon all hope! The legion has returned to finish what was begun so many years ago. This time there will be no escape!"
-#define SOUND_ONAGGRO               10999
+enum Texts
+{
+	SAY_ONDEATH = -1801022,
+	SAY_ONSLAY1 = -1801023,
+	SAY_ONSLAY2 = -1801024,
+	SAY_ONSLAY3 = -1801025,
+	SAY_DOOM1 = -1801026,
+	SAY_DOOM2 = -1801027,
+	SAY_ONAGGRO = -1801028
+};
 
 struct boss_azgalorAI : public hyjal_trashAI
 {
@@ -77,27 +70,13 @@ struct boss_azgalorAI : public hyjal_trashAI
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_AZGALOREVENT, IN_PROGRESS);
-        DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
-        DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONAGGRO,me);
     }
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%3)
-        {
-            case 0:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY1);
-                DoYell(SAY_ONSLAY1, LANG_UNIVERSAL, NULL);
-                break;
-            case 1:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY2);
-                DoYell(SAY_ONSLAY2, LANG_UNIVERSAL, NULL);
-                break;
-            case 2:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY3);
-                DoYell(SAY_ONSLAY3, LANG_UNIVERSAL, NULL);
-                break;
-        }
+        DoScriptText(SAY_ONSLAY1 - rand()%3,me);
     }
 
     void WaypointReached(uint32 i)
@@ -116,7 +95,8 @@ struct boss_azgalorAI : public hyjal_trashAI
         hyjal_trashAI::JustDied(victim);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_AZGALOREVENT, DONE);
-        DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
+
+        DoScriptText(SAY_ONDEATH,me);
     }
 
     Unit* SelectDoomTarget()
@@ -132,6 +112,27 @@ struct boss_azgalorAI : public hyjal_trashAI
             return firstVictim;
         else
             return secondVictim;
+    }
+
+    bool HasTwoPlayersInFront()
+    {
+        uint8 playersInArc = 0;
+        std::list<HostilReference*> const& threatlist = me->getThreatManager().getThreatList();
+
+        for (auto itr : threatlist)
+        {
+            Unit* unit = itr->getTarget();
+            if  (   unit->ToPlayer()
+                && me->GetDistance2d(unit) < 8.0f
+                && me->HasInArc(M_PI,unit)
+                )
+                playersInArc++;
+
+            if(playersInArc > 1)
+                return true;
+        }
+
+        return false;
     }
 
     void UpdateAI(const uint32 diff)
@@ -173,6 +174,7 @@ struct boss_azgalorAI : public hyjal_trashAI
         {
             DoCast(SelectDoomTarget(), SPELL_DOOM);
             DoomTimer = TIMER_DOOM;
+            DoScriptText(SAY_DOOM1 - rand()%2,me);
         }else DoomTimer -= diff;
 
         if(HowlTimer < diff)
@@ -183,7 +185,9 @@ struct boss_azgalorAI : public hyjal_trashAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            if(HasTwoPlayersInFront())
+                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+
             CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 

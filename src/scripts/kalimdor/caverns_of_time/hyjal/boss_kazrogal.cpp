@@ -18,22 +18,16 @@ enum Timers
 };
 #define TIMER_WARSTOMP 5000 + rand()%25000; //5-30s
 
-#define SOUND_ONDEATH 11018
-
-#define SAY_ONSLAY1 "Shaza-Kiel!"
-#define SAY_ONSLAY2 "You... are nothing!"
-#define SAY_ONSLAY3 "Miserable nuisance!"
-#define SOUND_ONSLAY1 11017
-#define SOUND_ONSLAY2 11053
-#define SOUND_ONSLAY3 11054
-
-#define SAY_MARK1 "Your death will be a painful one."
-#define SAY_MARK2 "You... are marked."
-#define SOUND_MARK1 11016
-#define SOUND_MARK2 11052
-
-#define SAY_ONAGGRO "Cry for mercy! Your meaningless lives will soon be forfeit."
-#define SOUND_ONAGGRO 11015
+enum Texts
+{
+	SAY_ONSLAY1 = -1801031,
+	SAY_ONSLAY2 = -1801032,
+	SAY_ONSLAY3 = -1801033,
+	SAY_MARK1 = -1801034,
+	SAY_MARK2 = -1801035,
+	SAY_ONAGGRO = -1801036,
+    SOUND_ONDEATH = 11018
+};
 
 struct boss_kazrogalAI : public hyjal_trashAI
 {
@@ -69,27 +63,13 @@ struct boss_kazrogalAI : public hyjal_trashAI
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, IN_PROGRESS);
-        DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
-        DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONAGGRO,me);
     }
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%3)
-        {
-            case 0:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY1);
-                DoYell(SAY_ONSLAY1, LANG_UNIVERSAL, NULL);
-                break;
-            case 1:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY2);
-                DoYell(SAY_ONSLAY2, LANG_UNIVERSAL, NULL);
-                break;
-            case 2:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY3);
-                DoYell(SAY_ONSLAY3, LANG_UNIVERSAL, NULL);
-                break;
-        }
+        DoScriptText(SAY_ONSLAY1 - rand()%3,me);
     }
 
     void WaypointReached(uint32 i)
@@ -108,6 +88,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
         hyjal_trashAI::JustDied(victim);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, DONE);
+
         DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
     }
 
@@ -158,7 +139,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
         {
             me->CastSpell(me,SPELL_MARK,true);
             /*
-            //cast dummy, useful for bos addons
+            //cast dummy, useful for boss addons
             m_creature->CastCustomSpell(m_creature, SPELL_MARK, NULL, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
 
             std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
@@ -174,17 +155,8 @@ struct boss_kazrogalAI : public hyjal_trashAI
             if(MarkTimerBase < 5500)
                 MarkTimerBase = 5500;
             MarkTimer = MarkTimerBase;
-            switch(rand()%3)
-            {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_MARK1);
-                    DoYell(SAY_MARK1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_MARK2);
-                    DoYell(SAY_MARK2, LANG_UNIVERSAL, NULL);
-                    break;
-            }
+            if(rand()%2)
+                DoScriptText(SAY_MARK1 - rand()%2,me);
         }else MarkTimer -= diff;
 
         DoMeleeAttackIfReady();
