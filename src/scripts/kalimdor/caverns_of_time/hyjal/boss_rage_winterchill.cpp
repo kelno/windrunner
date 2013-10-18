@@ -131,34 +131,38 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
 
         if(FrostArmorTimer < diff)
         {
-            DoCast(m_creature, SPELL_FROST_ARMOR);
-            FrostArmorTimer = TIMER_FROST_ARMOR;
+            if(DoCast(m_creature, SPELL_FROST_ARMOR))
+                FrostArmorTimer = TIMER_FROST_ARMOR;
         } else FrostArmorTimer -= diff;
 
         if(DecayTimer < diff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_DEATH_AND_DECAY);
-            DecayTimer = TIMER_DEATH_AND_DECAY;
-            DoScriptText(SAY_DECAY1 - rand()%2,me);
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_DEATH_AND_DECAY))
+            {
+                DecayTimer = TIMER_DEATH_AND_DECAY;
+                DoScriptText(SAY_DECAY1 - rand()%2,me);
+            }
         } else DecayTimer -= diff;
 
         if(NovaTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FROST_NOVA);
-            NovaTimer = TIMER_FROST_NOVA;
-            DoScriptText(SAY_NOVA1 - rand()%2,me);
+            if(DoCast(m_creature->getVictim(), SPELL_FROST_NOVA))
+            {
+                NovaTimer = TIMER_FROST_NOVA;
+                DoScriptText(SAY_NOVA1 - rand()%2,me);
+            }
         } else NovaTimer -= diff;
 
         if(IceboltTimer < diff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,40.0f,true), SPELL_ICEBOLT);
-            IceboltTimer = TIMER_ICEBOLT;
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,40.0f,true), SPELL_ICEBOLT))
+                IceboltTimer = TIMER_ICEBOLT;
         } else IceboltTimer -= diff;
 
         if(BerserkTimer < diff)
         {
-            DoCast(m_creature,SPELL_BERSERK);
-            BerserkTimer = 300000;
+            if(DoCast(m_creature,SPELL_BERSERK,true))
+                BerserkTimer = 300000;
         } else BerserkTimer -= diff;
 
         DoMeleeAttackIfReady();

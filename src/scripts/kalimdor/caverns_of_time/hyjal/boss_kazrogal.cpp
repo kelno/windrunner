@@ -123,40 +123,29 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature, SPELL_CLEAVE);
-            CleaveTimer = TIMER_CLEAVE;
+            if(DoCast(m_creature, SPELL_CLEAVE))
+                CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
         if(WarStompTimer < diff)
         {
-            DoCast(m_creature, SPELL_WARSTOMP);
-            WarStompTimer = TIMER_WARSTOMP;
+            if(DoCast(m_creature, SPELL_WARSTOMP))
+                WarStompTimer = TIMER_WARSTOMP;
         }else WarStompTimer -= diff;
 
         if(m_creature->HasAura(SPELL_MARK,0))
             m_creature->RemoveAurasDueToSpell(SPELL_MARK);
         if(MarkTimer < diff)
         {
-            me->CastSpell(me,SPELL_MARK,true);
-            /*
-            //cast dummy, useful for boss addons
-            m_creature->CastCustomSpell(m_creature, SPELL_MARK, NULL, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
-
-            std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
-            for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
+            if(DoCast(me,SPELL_MARK))
             {
-                Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-                if (target && target->GetTypeId() == TYPEID_PLAYER && target->getPowerType() == POWER_MANA)
-                {
-                    target->CastSpell(target,SPELL_MARK,true,0,0,me->GetGUID());//only cast on mana users
-                }
-            }*/
-            MarkTimerBase -= 5000;
-            if(MarkTimerBase < 5500)
-                MarkTimerBase = 5500;
-            MarkTimer = MarkTimerBase;
-            if(rand()%2)
-                DoScriptText(SAY_MARK1 - rand()%2,me);
+                MarkTimerBase -= 5000;
+                if(MarkTimerBase < 5500)
+                    MarkTimerBase = 5500;
+                MarkTimer = MarkTimerBase;
+                if(rand()%2)
+                    DoScriptText(SAY_MARK1 - rand()%2,me);
+            }
         }else MarkTimer -= diff;
 
         DoMeleeAttackIfReady();

@@ -190,30 +190,30 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-void ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return;
+        return false;
 
     //m_creature->StopMoving();
-    m_creature->CastSpell(victim, spellId, triggered);
+    return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-void ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
         return;
 
-    m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-void ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
         return;
 
     m_creature->StopMoving();
-    m_creature->CastSpell(who, spellInfo, triggered);
+    return m_creature->CastSpell(who, spellInfo, triggered);
 }
 
 void ScriptedAI::DoSay(const char* text, uint32 language, Unit* target, bool SayEmote)
