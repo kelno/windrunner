@@ -166,36 +166,36 @@ struct boss_azgalorAI : public hyjal_trashAI
 
         if(RainTimer < diff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,30,true), SPELL_RAIN_OF_FIRE);
-            RainTimer = TIMER_RAIN_OF_FIRE;
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,30,true), SPELL_RAIN_OF_FIRE))
+                RainTimer = TIMER_RAIN_OF_FIRE;
         }else RainTimer -= diff;
 
         if(DoomTimer < diff)
         {
-            DoCast(SelectDoomTarget(), SPELL_DOOM);
-            DoomTimer = TIMER_DOOM;
-            DoScriptText(SAY_DOOM1 - rand()%2,me);
+            if(DoCast(SelectDoomTarget(), SPELL_DOOM))
+            {
+                DoomTimer = TIMER_DOOM;
+                DoScriptText(SAY_DOOM1 - rand()%2,me);
+            }
         }else DoomTimer -= diff;
 
         if(HowlTimer < diff)
         {
-            DoCast(m_creature, SPELL_HOWL_OF_AZGALOR);
-            HowlTimer = TIMER_HOWL_OF_AZGALOR;
+            if(DoCast(m_creature, SPELL_HOWL_OF_AZGALOR))
+                HowlTimer = TIMER_HOWL_OF_AZGALOR;
         }else HowlTimer -= diff;
 
         if(CleaveTimer < diff)
         {
             if(HasTwoPlayersInFront())
-                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
-
-            CleaveTimer = TIMER_CLEAVE;
+                if(DoCast(m_creature->getVictim(), SPELL_CLEAVE))
+                    CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
         if(EnrageTimer < diff)
         {
-            m_creature->InterruptNonMeleeSpells(false);
-            DoCast(m_creature, SPELL_BERSERK, true);
-            EnrageTimer = TIMER_BERSERK;
+            if(DoCast(m_creature, SPELL_BERSERK, true))
+                EnrageTimer = TIMER_BERSERK;
         }else EnrageTimer -= diff;
 
         DoMeleeAttackIfReady();
