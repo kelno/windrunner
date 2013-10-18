@@ -24,26 +24,18 @@ enum Timers
     TIMER_FROST_NOVA_FIRST      = 20000,
 };
 
-#define SAY_ONDEATH "Vous avez gagné cette bataille, mais... pas... la guerre !"
-#define SOUND_ONDEATH 11026
-
-#define SAY_ONSLAY1 "Toute vie doit périr !"
-#define SAY_ONSLAY2 "Victoire à la Légion !"
-#define SOUND_ONSLAY1 11025
-#define SOUND_ONSLAY2 11057
-
-#define SAY_DECAY1 "Tombez et pourrissez !"
-#define SAY_DECAY2 "Des cendres aux cendres, de poussière à poussière !"
-#define SOUND_DECAY1 11023
-#define SOUND_DECAY2 11055
-
-#define SAY_NOVA1 "Succombez au frisson glacé... de la mort !"
-#define SAY_NOVA2 "Il fera bien plus froid dans vos tombes !"
-#define SOUND_NOVA1 11024
-#define SOUND_NOVA2 11058
-
-#define SAY_ONAGGRO "L'ultime invasion de la Légion a commencé ! Une fois de plus, l'asservissement de ce monde est à notre portée. Ne faites pas de quartier !"
-#define SOUND_ONAGGRO 11022
+enum Texts
+{
+    SAY_ONDEATH = -1801000,
+    SAY_ONSLAY1 = -1801001,
+    SAY_ONSLAY2 = -1801002,
+    SAY_ONSLAY3 = -1801003,
+    SAY_DECAY1  = -1801004,
+    SAY_DECAY2  = -1801005,
+    SAY_NOVA1   = -1801006,
+    SAY_NOVA2   = -1801007,
+    SAY_ONAGGRO = -1801008
+};
 
 struct boss_rage_winterchillAI : public hyjal_trashAI
 {
@@ -59,7 +51,6 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
     uint32 NovaTimer;
     uint32 IceboltTimer;
     uint32 BerserkTimer;
-    bool Enraged;
     bool go;
     uint32 pos;
 
@@ -70,9 +61,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         DecayTimer = TIMER_DEATH_AND_DECAY;
         NovaTimer = TIMER_FROST_NOVA_FIRST;
         IceboltTimer = TIMER_ICEBOLT_START;
-        BerserkTimer = TIMER_ENRAGE; //10 minutes
-        
-        Enraged = false;
+        BerserkTimer = TIMER_ENRAGE;
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, NOT_STARTED);
@@ -82,23 +71,13 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, IN_PROGRESS);
-        DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
-        DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONAGGRO,me);
     }
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%2)
-        {
-            case 0:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY1);
-                DoYell(SAY_ONSLAY1, LANG_UNIVERSAL, NULL);
-                break;
-            case 1:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY2);
-                DoYell(SAY_ONSLAY2, LANG_UNIVERSAL, NULL);
-                break;
-        }
+        DoScriptText(SAY_ONSLAY1 - rand()%3,me);
     }
 
     void WaypointReached(uint32 i)
@@ -117,8 +96,8 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         hyjal_trashAI::JustDied(victim);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, DONE);
-        DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
-        DoYell(SAY_ONDEATH, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONDEATH,me);
     }
 
     void UpdateAI(const uint32 diff)
@@ -154,49 +133,33 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         {
             DoCast(m_creature, SPELL_FROST_ARMOR);
             FrostArmorTimer = TIMER_FROST_ARMOR;
-        }else FrostArmorTimer -= diff;
+        } else FrostArmorTimer -= diff;
+
         if(DecayTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 30.0f, true), SPELL_DEATH_AND_DECAY);
             DecayTimer = TIMER_DEATH_AND_DECAY;
-            switch(rand()%2)
-            {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_DECAY1);
-                    DoYell(SAY_DECAY1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_DECAY2);
-                    DoYell(SAY_DECAY2, LANG_UNIVERSAL, NULL);
-                    break;
-            }
-        }else DecayTimer -= diff;
+            DoScriptText(SAY_DECAY1 - rand()%2,me);
+        } else DecayTimer -= diff;
+
         if(NovaTimer < diff)
         {
             DoCast(m_creature->getVictim(), SPELL_FROST_NOVA);
             NovaTimer = TIMER_FROST_NOVA;
-            switch(rand()%2)
-            {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_NOVA1);
-                    DoYell(SAY_NOVA1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_NOVA2);
-                    DoYell(SAY_NOVA2, LANG_UNIVERSAL, NULL);
-                    break;
-            }
-        }else NovaTimer -= diff;
+            DoScriptText(SAY_NOVA1 - rand()%2,me);
+        } else NovaTimer -= diff;
+
         if(IceboltTimer < diff)
         {
             DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,40.0f,true), SPELL_ICEBOLT);
             IceboltTimer = TIMER_ICEBOLT;
-        }else IceboltTimer -= diff;
-        if(BerserkTimer < diff && !Enraged)
+        } else IceboltTimer -= diff;
+
+        if(BerserkTimer < diff)
         {
             DoCast(m_creature,SPELL_BERSERK);
-            Enraged = true;
-        }
+            BerserkTimer = 300000;
+        } else BerserkTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
