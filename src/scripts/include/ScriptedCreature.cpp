@@ -202,7 +202,7 @@ bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return;
+        return false;
 
     return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
@@ -210,7 +210,7 @@ bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return;
+        return false;
 
     m_creature->StopMoving();
     return m_creature->CastSpell(who, spellInfo, triggered);
