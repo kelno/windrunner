@@ -598,7 +598,6 @@ class WorldObject : public Object, public WorldLocation
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 
         void SetMapId(uint32 newMap) { m_mapId = newMap; m_map = NULL; }
-        uint32 GetMapId() const { return m_mapId; }
         void SetInstanceId(uint32 val) { m_InstanceId = val; m_map = NULL; }
         uint32 GetInstanceId() const { return m_InstanceId; }
 
@@ -690,8 +689,6 @@ class WorldObject : public Object, public WorldLocation
         uint32 m_groupLootTimer;                            // (msecs)timer used for group loot
         uint64 lootingGroupLeaderGUID;                      // used to find group which is looting corpse
 
-        float m_positionX;
-
         MovementInfo m_movementInfo;
 
         // Transports
@@ -713,16 +710,11 @@ class WorldObject : public Object, public WorldLocation
         Transport * m_transport;
 
     private:
-        uint32 m_mapId;
         uint32 m_InstanceId;
         Map    *m_map;
 
         Map* _getMap();
         Map* _findMap();
-
-        float m_positionY;
-        float m_positionZ;
-        float m_orientation;
 
         bool mSemaphoreTeleport;
 };
