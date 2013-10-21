@@ -51,6 +51,9 @@ void PetAI::EnterEvadeMode()
 
 bool PetAI::_needToStop() const
 {
+    if (!i_pet.GetOwner())
+        return true;
+
     // This is needed for charmed creatures, as once their target was reset other effects can trigger threat
     if(i_pet.isCharmed() && i_pet.getVictim() == i_pet.GetCharmer())
         return true;
