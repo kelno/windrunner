@@ -1232,47 +1232,16 @@ void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
             if (!ToCreature()->canFly())
             {
                 bool canSwim = ToCreature()->canSwim();
-                float max_z = 0.0f;
                 float ground_z = z;
-                if (canSwim)
-                	max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
-                else
-                {
-                	ground_z = GetBaseMap()->GetHeight(x, y, z, true);
-                	max_z = ground_z;
-                }
-
+                float max_z = canSwim
+                    ? GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK))
+                    : ((ground_z = GetBaseMap()->GetHeight(x, y, z, true)));
                 if (max_z > INVALID_HEIGHT)
                 {
                     if (z > max_z)
                         z = max_z;
                     else if (z < ground_z)
                         z = ground_z;
-                }
-                else
-                {
-                	while (max_z <= INVALID_HEIGHT)
-                	{
-                		z+= 1.0f;
-                		if (canSwim)
-                		    max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
-                		else
-                		{
-                		    ground_z = GetBaseMap()->GetHeight(x, y, z, true);
-                		    max_z = ground_z;
-                		}
-
-                		if (z > MAX_HEIGHT)
-                			break;
-                	}
-
-                	if (max_z > INVALID_HEIGHT)
-                	{
-                	    if (z > max_z)
-                	        z = max_z;
-                	    else if (z < ground_z)
-                	       z = ground_z;
-                	}
                 }
             }
             else
@@ -1297,49 +1266,12 @@ void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
                     else if (z < ground_z)
                         z = ground_z;
                 }
-                else
-                {
-                	while (max_z <= INVALID_HEIGHT)
-                	{
-                		z+= 1.0f;
-                		max_z = GetBaseMap()->GetWaterOrGroundLevel(x, y, z, &ground_z, !ToUnit()->HasAuraType(SPELL_AURA_WATER_WALK));
-                		if (z > MAX_HEIGHT)
-                		    break;
-                	}
-
-                	if (max_z > INVALID_HEIGHT)
-                	{
-                	    if (z > max_z)
-                	        z = max_z;
-                	    else if (z < ground_z)
-                	        z = ground_z;
-                	}
-                }
             }
             else
             {
                 float ground_z = GetBaseMap()->GetHeight(x, y, z, true);
-                if (ground_z > INVALID_HEIGHT)
-                {
-                    if (z < ground_z)
-                        z = ground_z;
-                }
-                else
-                {
-                	while (ground_z <= INVALID_HEIGHT)
-                	{
-                	    z+= 1.0f;
-                	    ground_z = GetBaseMap()->GetHeight(x, y, z);
-                	    if (z > MAX_HEIGHT)
-                	        break;
-                	}
-
-                	if (ground_z > INVALID_HEIGHT)
-                	{
-                	    if (z < ground_z)
-                	        z = ground_z;
-                	}
-                }
+                if (z < ground_z)
+                    z = ground_z;
             }
             break;
         }
@@ -1348,19 +1280,6 @@ void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
             float ground_z = GetBaseMap()->GetHeight(x, y, z, true);
             if (ground_z > INVALID_HEIGHT)
                 z = ground_z;
-            else
-            {
-            	while (ground_z <= INVALID_HEIGHT)
-            	{
-            	    z+= 1.0f;
-            	    ground_z = GetBaseMap()->GetHeight(x, y, z);
-            	    if (z > MAX_HEIGHT)
-            	        break;
-            	}
-
-            	if (ground_z > INVALID_HEIGHT)
-            		z = ground_z;
-            }
             break;
         }
     }
@@ -1391,23 +1310,9 @@ void WorldObject::GetRandomPoint( float x, float y, float z, float distance, flo
 
 void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const
 {
-    float new_z = MapManager::Instance().GetBaseMap(GetMapId())->GetHeight(x,y,z,true);
-    if(new_z > INVALID_HEIGHT)
-        z = new_z + 0.05f;                                   // just to be sure that we are not a few pixel under the surface
-    else
-    {
-    	while (new_z <= INVALID_HEIGHT)
-    	{
-    	    z+= 1.0f;
-    	    new_z = GetBaseMap()->GetHeight(x, y, z, true);
-
-    	    if (z > MAX_HEIGHT)
-    	        break;
-    	}
-
-    	if (new_z > INVALID_HEIGHT)
-    		z = new_z;
-    }
+    float new_z = GetBaseMap()->GetHeight(x, y, z, true);
+    if (new_z > INVALID_HEIGHT)
+        z = new_z+ 0.05f;                                   // just to be sure that we are not a few pixel under the surface
 }
 
 bool WorldObject::IsPositionValid() const
