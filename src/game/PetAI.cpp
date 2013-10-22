@@ -47,14 +47,11 @@ PetAI::PetAI(Creature *c) : CreatureAI(c), i_tracker(TIME_INTERVAL_LOOK), distan
 
 bool PetAI::_needToStop() const
 {
-    if (!me->GetOwner())
-        return true;
-
     // This is needed for charmed creatures, as once their target was reset other effects can trigger threat
     if(me->isCharmed() && me->getVictim() == me->GetCharmer())
         return true;
 
-    if (me->GetOwner()->ToPlayer() && me->ToPet() && me->ToPet()->isControlled() && me->getVictim()->IsJustCCed() && me->getVictim()->GetEntry() != 10) // Training dummy exception
+    if (me->GetOwner() && me->GetOwner()->ToPlayer() && me->ToPet() && me->ToPet()->isControlled() && me->getVictim()->IsJustCCed() && me->getVictim()->GetEntry() != 10) // Training dummy exception
         return true;
 
     return !me->canAttack(me->getVictim());
@@ -393,8 +390,8 @@ void PetAI::HandleReturnMovement()
 
     // Prevent activating movement when under control of spells
     // such as "Eyes of the Beast"
-    if (me->isCharmed())
-        return;
+    //if (me->isCharmed())
+        //return;
 
     if (me->GetCharmInfo()->HasCommandState(COMMAND_STAY))
     {
