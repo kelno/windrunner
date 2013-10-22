@@ -146,7 +146,7 @@ class SimpleCharmedAI : public PlayerAI
 class CreatureAI : public UnitAI
 {
     protected:
-        Creature *me;
+        Creature* const me;
 
         bool UpdateVictim(bool evade = true);
     public:
@@ -173,6 +173,12 @@ class CreatureAI : public UnitAI
 
         // Called when the creature kills a unit
         virtual void KilledUnit(Unit *) {}
+
+        // Called when owner takes damage
+        virtual void OwnerAttackedBy(Unit* /*attacker*/) {}
+
+        // Called when owner attacks something
+        virtual void OwnerAttacked(Unit* /*target*/) {}
 
         // Called when the creature summon successfully other creature
         virtual void JustSummoned(Creature* ) {}

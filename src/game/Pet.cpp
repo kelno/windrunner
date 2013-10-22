@@ -124,6 +124,17 @@ void Pet::AddToWorld()
         ObjectAccessor::Instance().AddObject(this);
         Unit::AddToWorld();
     }
+
+    // Prevent stuck pets when zoning. Pets default to "follow" when added to world
+    // so we'll reset flags and let the AI handle things
+    if (GetCharmInfo() && GetCharmInfo()->HasCommandState(COMMAND_FOLLOW))
+    {
+        GetCharmInfo()->SetIsCommandAttack(false);
+        GetCharmInfo()->SetIsCommandFollow(false);
+        GetCharmInfo()->SetIsAtStay(false);
+        GetCharmInfo()->SetIsFollowing(false);
+        GetCharmInfo()->SetIsReturning(false);
+    }
 }
 
 void Pet::RemoveFromWorld()

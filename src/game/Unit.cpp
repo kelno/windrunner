@@ -683,6 +683,15 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
             return 0;
     }
 
+    if (pVictim->GetTypeId() == TYPEID_PLAYER && this != pVictim)
+    {
+        // Signal to pets that their owner was attacked
+        Pet* pet = pVictim->ToPlayer()->GetPet();
+
+        if (pet && pet->isAlive() && pet->IsAIEnabled)
+            pet->AI()->OwnerAttackedBy(this);
+    }
+
     //Script Event damage taken
     if( pVictim->GetTypeId()== TYPEID_UNIT && (pVictim->ToCreature())->IsAIEnabled )
     {
@@ -7226,6 +7235,16 @@ bool Unit::Attack(Unit *victim, bool meleeAttack)
     if (meleeAttack) 
         SendAttackStart(victim);
 
+    // Let the pet know we've started attacking someting. Handles melee attacks only
+    // Spells such as auto-shot and others handled in WorldSession::HandleCastSpellOpcode
+    if (this->GetTypeId() == TYPEID_PLAYER)
+    {
+        Pet* playerPet = this->ToPlayer()->GetPet();
+
+        if (playerPet && playerPet->isAlive())
+            playerPet->AI()->OwnerAttacked(victim);
+    }
+
     return true;
 }
 
@@ -10758,6 +10777,72 @@ void CharmInfo::SetPetNumber(uint32 petnumber, bool statwindow)
         m_unit->SetUInt32Value(UNIT_FIELD_PETNUMBER, m_petnumber);
     else
         m_unit->SetUInt32Value(UNIT_FIELD_PETNUMBER, 0);
+}
+
+void CharmInfo::SetIsCommandAttack(bool val)
+{
+    _isCommandAttack = val;
+}
+
+bool CharmInfo::IsCommandAttack()
+{
+    return _isCommandAttack;
+}
+
+void CharmInfo::SetIsCommandFollow(bool val)
+{
+    _isCommandFollow = val;
+}
+
+bool CharmInfo::IsCommandFollow()
+{
+    return _isCommandFollow;
+}
+
+void CharmInfo::SaveStayPosition()
+{
+    //! At this point a new spline destination is enabled because of Unit::StopMoving()
+    G3D::Vector3 const stayPos = m_unit->movespline->FinalDestination();
+    _stayX = stayPos.x;
+    _stayY = stayPos.y;
+    _stayZ = stayPos.z;
+}
+
+void CharmInfo::GetStayPosition(float &x, float &y, float &z)
+{
+    x = _stayX;
+    y = _stayY;
+    z = _stayZ;
+}
+
+void CharmInfo::SetIsAtStay(bool val)
+{
+    _isAtStay = val;
+}
+
+bool CharmInfo::IsAtStay()
+{
+    return _isAtStay;
+}
+
+void CharmInfo::SetIsFollowing(bool val)
+{
+    _isFollowing = val;
+}
+
+bool CharmInfo::IsFollowing()
+{
+    return _isFollowing;
+}
+
+void CharmInfo::SetIsReturning(bool val)
+{
+    _isReturning = val;
+}
+
+bool CharmInfo::IsReturning()
+{
+    return _isReturning;
 }
 
 bool Unit::isFrozen() const

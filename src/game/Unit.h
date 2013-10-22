@@ -151,6 +151,7 @@ enum SpellFacingFlags
 #define BASE_ATTACK_TIME 2000
 
 #define MAX_AGGRO_RESET_TIME 10 // in seconds
+#define MAX_AGGRO_RADIUS 45.0f  // yards
 
 // byte value (UNIT_FIELD_BYTES_1,0)
 enum UnitStandStateType
@@ -854,6 +855,20 @@ struct CharmInfo
         CharmSpellEntry* GetCharmSpell(uint8 index) { return &(m_charmspells[index]); }
         
         GlobalCooldownMgr& GetGlobalCooldownMgr() { return m_GlobalCooldownMgr; }
+
+        void SetIsCommandAttack(bool val);
+        bool IsCommandAttack();
+        void SetIsCommandFollow(bool val);
+        bool IsCommandFollow();
+        void SetIsAtStay(bool val);
+        bool IsAtStay();
+        void SetIsFollowing(bool val);
+        bool IsFollowing();
+        void SetIsReturning(bool val);
+        bool IsReturning();
+        void SaveStayPosition();
+        void GetStayPosition(float &x, float &y, float &z);
+
     private:
         Unit* m_unit;
         UnitActionBarEntry PetActionBar[10];
@@ -865,6 +880,16 @@ struct CharmInfo
 
         //for restoration after charmed
         ReactStates     m_oldReactState;
+
+        bool _isCommandAttack;
+        bool _isCommandFollow;
+        bool _isAtStay;
+        bool _isFollowing;
+        bool _isReturning;
+        float _stayX;
+        float _stayY;
+        float _stayZ;
+
         GlobalCooldownMgr m_GlobalCooldownMgr;
 };
 
@@ -1180,6 +1205,7 @@ class Unit : public WorldObject
         void DeMorph();
         void RestoreDisplayId();
 
+        void SendAttackStop(Unit* victim = NULL);
         void SendAttackStart(Unit* pVictim);
         void SendAttackStateUpdate(CalcDamageInfo *damageInfo);
         void SendAttackStateUpdate(uint32 HitInfo, Unit *target, uint8 SwingType, SpellSchoolMask damageSchoolMask, uint32 Damage, uint32 AbsorbDamage, uint32 Resist, VictimState TargetState, uint32 BlockedAmount);
@@ -1751,9 +1777,6 @@ class Unit : public WorldObject
         void DisableSpline();
 
     private:
-        void SendAttackStop(Unit* victim = NULL);             // only from AttackStop(Unit*)
-        //void SendAttackStart(Unit* pVictim);                // only from Unit::AttackStart(Unit*)
-
         bool IsTriggeredAtSpellProcEvent( Aura* aura, SpellEntry const* procSpell, uint32 procFlag, uint32 procExtra, WeaponAttackType attType, bool isVictim, bool active, SpellProcEventEntry const*& spellProcEvent );
         bool HandleDummyAuraProc(   Unit *pVictim, uint32 damage, Aura* triggredByAura, SpellEntry const *procSpell, uint32 procFlag, uint32 procEx, uint32 cooldown);
         bool HandleHasteAuraProc(   Unit *pVictim, uint32 damage, Aura* triggredByAura, SpellEntry const *procSpell, uint32 procFlag, uint32 procEx, uint32 cooldown);

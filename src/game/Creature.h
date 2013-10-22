@@ -629,6 +629,8 @@ class Creature : public Unit
         float GetAttackDistance(Unit const* pl) const;
 
         Unit* SelectNearestTarget(float dist = 0) const;
+        Unit* SelectNearestHostileUnitInAggroRange(bool useLOS = false) const;
+
         void CallAssistance();
         void SetNoCallAssistance(bool val) { m_AlreadyCallAssistance = val; }
         bool CanCallAssistance() { return !m_AlreadyCallAssistance; }
@@ -682,18 +684,6 @@ class Creature : public Unit
 
         void SetHomePosition(float x, float y, float z, float ori) { mHome_X = x; mHome_Y = y; mHome_Z = z; mHome_O = ori;}
         void GetHomePosition(float &x, float &y, float &z, float &ori) { x = mHome_X; y = mHome_Y; z = mHome_Z; ori = mHome_O; }
-        
-        void GetPosition(float &x, float &y) const
-            { x = GetPositionX(); y = GetPositionY(); }
-        void GetPosition(float &x, float &y, float &z) const
-            { x = GetPositionX(); y = GetPositionY(); z = GetPositionZ(); }
-        void GetPosition(float &x, float &y, float &z, float &o) const
-            { x = GetPositionX(); y = GetPositionY(); z = GetPositionZ(); o = GetOrientation(); }
-        void GetPosition(Position *pos) const
-        {
-            if (pos)
-                pos->Relocate(GetPositionX(), GetPositionY(), GetPositionZ(), GetOrientation());
-        }
 
         uint32 GetGlobalCooldown() const { return m_GlobalCooldown; }
 
