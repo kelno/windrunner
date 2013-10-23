@@ -330,10 +330,10 @@ void MotionMaster::MovePoint(uint32 id, float x, float y, float z, bool usePathf
 void MotionMaster::MoveFall(uint32 id /*=0*/)
 {
     // use larger distance for vmap height search than in most other cases
-    float tz = _owner->GetMap()->GetHeight(_owner->GetPositionX(), _owner->GetPositionY(), _owner->GetPositionZ());
+    float tz = _owner->GetMap()->GetHeight(_owner->GetPositionX(), _owner->GetPositionY(), _owner->GetPositionZ(), true, MAX_FALL_DISTANCE);
     if (tz <= INVALID_HEIGHT)
     {
-    	DEBUG_LOG("MotionMaster::MoveFall: unable retrive a proper height at map %u (x: %f, y: %f, z: %f).",
+    	sLog.outString("MotionMaster::MoveFall: unable retrive a proper height at map %u (x: %f, y: %f, z: %f).",
     			_owner->GetMap()->GetId(), _owner->GetPositionX(), _owner->GetPositionY(), _owner->GetPositionZ());
         return;
     }
