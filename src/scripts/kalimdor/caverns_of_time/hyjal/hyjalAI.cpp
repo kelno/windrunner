@@ -32,6 +32,9 @@ EndScriptData */
 #define SPAWN_GARG_GATE 0
 #define SPAWN_WYRM_GATE 1
 #define SPAWN_NEAR_TOWER 2
+
+#define TEXT_ARCHIMONDE_AT_HORDE_RETREAT -1543998
+
 // Locations for summoning gargoyls and frost wyrms in special cases
 float SpawnPointSpecial[3][3]=
 {
@@ -600,8 +603,6 @@ void hyjalAI::StartEvent(Player* player)
     CheckTimer = 5000;
     PlayerGUID = player->GetGUID();
 
-    m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-
     UpdateWorldState(WORLD_STATE_WAVES, 0);
     UpdateWorldState(WORLD_STATE_ENEMY, 0);
     UpdateWorldState(WORLD_STATE_ENEMYCOUNT, 0);
@@ -684,6 +685,7 @@ void hyjalAI::Retreat()
             AddWaypoint(1,JainaWPs[1][0],JainaWPs[1][1],JainaWPs[1][2]);
             Start(false, false, false);
             SetDespawnAtEnd(false);//move to center of alliance base
+            Talk(SUCCESS);
         }
         if(Faction == 1)
         {
@@ -697,7 +699,9 @@ void hyjalAI::Retreat()
             }
             AddWaypoint(0,JainaDummySpawn[1][0],JainaDummySpawn[1][1],JainaDummySpawn[1][2]);
             Start(false, false, false);
-            SetDespawnAtEnd(false);//move to center of alliance base
+            SetDespawnAtEnd(false);//move to center of horde base
+            if(Creature* archimonde = me->GetMap()->GetCreature(pInstance->GetData64(DATA_ARCHIMONDE)))
+                DoScriptText(TEXT_ARCHIMONDE_AT_HORDE_RETREAT, archimonde); //Not ok, not enough range
         }
     }
     SpawnVeins();
@@ -863,6 +867,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
         if(NextWaveTimer < diff)
         {
+            m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             if(Faction == 0)
                 SummonNextWave(AllianceWaves, WaveCount, AllianceBase);
             else if(Faction == 1)
@@ -887,12 +892,11 @@ void hyjalAI::UpdateAI(const uint32 diff)
                     }
                     else if(BossGUID[i] == BossGUID[1])
                     {
-                        Talk(SUCCESS);
                         SecondBossDead = true;
                     }
                     EventBegun = false;
                     CheckTimer = 0;
-                    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
                     BossGUID[i] = 0;
                     UpdateWorldState(WORLD_STATE_ENEMY, 0); // Reset world state for enemies to disable it
                 }
@@ -1003,7 +1007,6 @@ void hyjalAI::WaypointReached(uint32 i)
 {
     if(i == 1 || (i == 0 && m_creature->GetEntry() == THRALL))
     {
-        m_creature->Yell("Hurry, we don't have much time",0,0);
         WaitForTeleport = true;
         TeleportTimer = 20000;
         if(m_creature->GetEntry() == JAINA)
