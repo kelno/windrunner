@@ -1748,7 +1748,7 @@ float Map::GetHeight(float x, float y, float z, bool pUseVmaps /*= true*/, float
     if (!MapManager::IsValidMapCoord(i_id, x, y, z))
         return 0;
     
-    return std::max<float>(_GetHeight(x, y, z, pUseVmaps, maxSearchDist), _dynamicTree.getHeight(x, y, z));
+    return std::max<float>(_GetHeight(x, y, z, pUseVmaps, maxSearchDist), _dynamicTree.getHeight(x, y, z, maxSearchDist));
 }
 
 float Map::_GetHeight(float x, float y, float z, bool pUseVmaps /*= true*/, float maxSearchDist /*= DEFAULT_HEIGHT_SEARCH*/) const
