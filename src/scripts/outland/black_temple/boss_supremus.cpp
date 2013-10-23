@@ -99,7 +99,7 @@ struct molten_flameAI : public ScriptedAI
             currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
 
         if(currentTarget)
-            me->GetMotionMaster()->MoveFollowOnPoint(currentTarget);
+            me->GetMotionMaster()->MoveFollow(currentTarget, 0.0f, 0.0f);
     }
     
     void UpdateAI(uint32 const diff)

@@ -284,10 +284,9 @@ void SpellCastTargets::write ( WorldPacket * data )
         *data << m_strTarget;
 }
 
-Spell::Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID, Spell** triggeringContainer, bool skipCheck ) :
-    m_spellInfo(info), 
-    m_spellValue(new SpellValue(m_spellInfo)),
-    m_caster(Caster)
+Spell::Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID, Spell** triggeringContainer, bool skipCheck )
+: m_spellInfo(info), m_spellValue(new SpellValue(m_spellInfo)), m_preGeneratedPath(PathInfo(m_caster))
+, m_caster(Caster)
 {
     m_customAttr = spellmgr.GetSpellCustomAttr(m_spellInfo->Id);
     m_skipCheck = skipCheck;
@@ -1847,8 +1846,13 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                 default:                            angle = rand_norm()*2*M_PI; break;
             }
 
-            m_caster->GetGroundPointAroundUnit(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            if (cur == TARGET_DEST_CASTER_FRONT_LEAP)
+            	m_caster->GetFirstCollisionPosition(pos, dist, angle);
+            else
+            	m_caster->GetNearPosition(pos, dist, angle);
+
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -1889,8 +1893,9 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             default:                            angle = m_caster->GetMap()->rand_norm()*2*M_PI; break;
             }
 
-            target->GetGroundPointAroundUnit(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            target->GetNearPosition(pos, dist, angle);
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -1927,11 +1932,10 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             if (cur == TARGET_DEST_DEST_RANDOM)
               dist *= m_caster->GetMap()->rand_norm();
 
-            x = m_targets.m_destX;
-            y = m_targets.m_destY;
-            z = m_targets.m_destZ;
-            m_caster->GetGroundPoint(x, y, z, dist, angle);
-            m_targets.setDestination(x, y, z);
+            Position pos;
+            pos.Relocate(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ);
+            m_caster->MovePosition(pos, dist, angle);
+            m_targets.setDestination(pos.m_positionX, pos.m_positionY, pos.m_positionZ);
             break;
         }
 
@@ -2862,7 +2866,7 @@ void Spell::update(uint32 difftime)
     // check if the player caster has moved before the spell finished
     if ((m_caster->GetTypeId() == TYPEID_PLAYER && m_timer != 0) &&
         (m_castPositionX != m_caster->GetPositionX() || m_castPositionY != m_caster->GetPositionY() || m_castPositionZ != m_caster->GetPositionZ()) &&
-        (m_spellInfo->Effect[0] != SPELL_EFFECT_STUCK || !m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLING)))
+        (m_spellInfo->Effect[0] != SPELL_EFFECT_STUCK || !m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLINGFAR)))
     {
         // always cancel for channeled spells
         //if( m_spellState == SPELL_STATE_CASTING )
@@ -2895,7 +2899,7 @@ void Spell::update(uint32 difftime)
                 if( m_caster->GetTypeId() == TYPEID_PLAYER )
                 {
                     // check if player has jumped before the channeling finished
-                    if(m_caster->HasUnitMovementFlag(MOVEMENTFLAG_JUMPING))
+                    if(m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLING))
                         cancel();
 
                     // check for incapacitating player states
@@ -3833,7 +3837,7 @@ SpellFailedReason Spell::CheckCast(bool strict)
                 return SPELL_FAILED_ONLY_STEALTHED;
         }
     }
-    
+
     // caster state requirements
     if(m_spellInfo->CasterAuraState && !m_caster->HasAuraState(AuraState(m_spellInfo->CasterAuraState)))
         return SPELL_FAILED_CASTER_AURASTATE;
@@ -3844,8 +3848,8 @@ SpellFailedReason Spell::CheckCast(bool strict)
     // (not wand currently autorepeat cast delayed to moving stop anyway in spell update code)
     if( m_caster->GetTypeId()==TYPEID_PLAYER && (m_caster->ToPlayer())->isMoving() )
     {
-        // apply spell limitations at movement
-        if( (!m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLING)) &&
+        // skip stuck spell to allow use it in falling case and apply spell limitations at movement
+        if( (!m_caster->HasUnitMovementFlag(MOVEMENTFLAG_FALLINGFAR) || m_spellInfo->Effect[0] != SPELL_EFFECT_STUCK) &&
             (IsAutoRepeat() || (m_spellInfo->AuraInterruptFlags & AURA_INTERRUPT_FLAG_NOT_SEATED) != 0) )
             return SPELL_FAILED_MOVING;
     }
@@ -4099,8 +4103,24 @@ SpellFailedReason Spell::CheckCast(bool strict)
             }
             case SPELL_EFFECT_CHARGE:
             {
+            	if (!target)
+            		return SPELL_FAILED_BAD_TARGETS;
+
                 if (m_caster->hasUnitState(UNIT_STAT_ROOT))
                     return SPELL_FAILED_ROOTED;
+
+                Position pos;
+                target->GetContactPoint(m_caster, pos.m_positionX, pos.m_positionY, pos.m_positionZ);
+                target->GetFirstCollisionPosition(pos, CONTACT_DISTANCE, target->GetRelativeAngle(m_caster));
+
+                SpellRangeEntry const* srange = sSpellRangeStore.LookupEntry(m_spellInfo->rangeIndex);
+                float max_range = GetSpellMaxRange(srange); // + range_mod;
+                m_preGeneratedPath.SetPathLengthLimit(max_range * 1.5f);
+                bool result = m_preGeneratedPath.Update(pos.m_positionX, pos.m_positionY, pos.m_positionZ + target->GetObjectSize());
+                if (m_preGeneratedPath.getPathType() & PATHFIND_SHORT)
+                    return SPELL_FAILED_OUT_OF_RANGE;
+                else if (!result || m_preGeneratedPath.getPathType() & PATHFIND_NOPATH)
+                    return SPELL_FAILED_NOPATH;
 
                 break;
             }

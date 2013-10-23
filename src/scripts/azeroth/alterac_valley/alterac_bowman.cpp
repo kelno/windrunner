@@ -7,11 +7,11 @@
 struct alterac_bowmanAI : public ScriptedAI
 {
     alterac_bowmanAI(Creature *c) : ScriptedAI(c) 
-	{   
+    {   
         shoot_timer = SHOOT_COOLDOWN;
         target = NULL;
-        SetCombatDistance(80.0f); //Disable melee visual
         SetCombatMovementAllowed(false);
+        SetCombatDistance(80.0f); //Disable melee visual
         me->SetSheath(SHEATH_STATE_RANGED);
     }
 
@@ -22,7 +22,7 @@ struct alterac_bowmanAI : public ScriptedAI
     {   }
 
     void UpdateAI(const uint32 diff)
-    {    
+    {
         if(UpdateVictim())
         {
             //give priority to the aggro system target if any
@@ -43,7 +43,7 @@ struct alterac_bowmanAI : public ScriptedAI
         if(target)
         {
             if(me->GetDistance(target) > 5.0f)
-		    {
+            {
                 if (shoot_timer < diff)
                 {
                     if(!isValidTarget(target))
@@ -51,23 +51,25 @@ struct alterac_bowmanAI : public ScriptedAI
                         target = NULL;
                         return;
                     }
-                    
-				    DoCast(target,SPELL_SHOOT,false);
+
+                    DoCast(target,SPELL_SHOOT,false);
                     shoot_timer = SHOOT_COOLDOWN;
-                } else shoot_timer -= diff;
-            } else {
-                DoMeleeAttackIfReady();
+                }
+                else
+                    shoot_timer -= diff;
             }
+            else
+                DoMeleeAttackIfReady();
         }
-	}
-	
-	void MoveInLineOfSight(Unit *who)
-	{    
+    }
+
+    void MoveInLineOfSight(Unit *who)
+    {    
         if (!target
             && !me->isInCombat() 
             && isValidTarget(who))
                 target = who;
-	}
+    }
 
     void Aggro(Unit* who)
     {    }
@@ -99,4 +101,3 @@ void AddSC_alterac_bowman()
     newscript->GetAI = &GetAI_alterac_bowman;
     newscript->RegisterSelf();
 }
-

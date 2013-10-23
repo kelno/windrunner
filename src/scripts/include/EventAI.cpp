@@ -675,10 +675,8 @@ struct Mob_EventAI : public ScriptedAI
                             //Melee current victim if flag not set
                             if (!(param3 & CAST_NO_MELEE_IF_OOM))
                             {
-                                SetCombatDistance(0.0f);
                                 AttackAngle = 0;
-
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                                SetCombatDistance(CONTACT_DISTANCE, AttackAngle);
                             }
 
                         }else
@@ -862,12 +860,8 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case ACTION_T_RANGED_MOVEMENT:
             {
-                SetCombatDistance((float)param1);
                 AttackAngle = ((float)param2/180)*M_PI;
-                if (IsCombatMovementAllowed())
-                {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
-                }
+                SetCombatDistance((float)param1, AttackAngle);
             }
             break;
         case ACTION_T_RANDOM_PHASE:
