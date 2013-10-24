@@ -34,6 +34,7 @@ EndScriptData */
 #define SPAWN_NEAR_TOWER 2
 
 #define TEXT_ARCHIMONDE_AT_HORDE_RETREAT -1543998
+#define EMOTE_MASS_TELEPORT -1543997
 
 // Locations for summoning gargoyls and frost wyrms in special cases
 float SpawnPointSpecial[3][3]=
@@ -1010,7 +1011,10 @@ void hyjalAI::WaypointReached(uint32 i)
         WaitForTeleport = true;
         TeleportTimer = 20000;
         if(m_creature->GetEntry() == JAINA)
+        {
+            DoScriptText(EMOTE_MASS_TELEPORT,me);
             m_creature->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+        }
         if(m_creature->GetEntry() == THRALL && DummyGuid)
         {
             Unit* Dummy = Unit::GetUnit((*m_creature),DummyGuid);
@@ -1019,6 +1023,7 @@ void hyjalAI::WaypointReached(uint32 i)
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->DoMassTeleport = true;
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->MassTeleportTimer = 20000;
                 Dummy->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+                DoScriptText(EMOTE_MASS_TELEPORT,Dummy);
             }
         }
         //do some talking
