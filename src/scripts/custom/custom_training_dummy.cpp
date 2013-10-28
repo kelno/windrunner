@@ -94,6 +94,18 @@ struct npc_training_dummy : Scripted_NoMovementAI
     }
 };
 
+bool ReceiveEmote_npc_training_dummy(Player *player, Creature *c, uint32 emote)
+{
+    if (emote == TEXTEMOTE_HUG)
+    {
+        char w[50];
+        snprintf(w, 50, "Menace envers vous : %f",c->getThreatManager().getThreat(player));
+        c->MonsterWhisper(w, player->GetGUID());
+    }
+
+    return true;
+}
+
 CreatureAI* GetAI_npc_training_dummy(Creature* pCreature)
 {
     return new npc_training_dummy(pCreature);
@@ -106,5 +118,6 @@ void AddSC_training_dummy()
     newscript = new Script;
     newscript->Name = "npc_training_dummy";
     newscript->GetAI = &GetAI_npc_training_dummy;
+    newscript->pReceiveEmote = &ReceiveEmote_npc_training_dummy;
     newscript->RegisterSelf();
 }
