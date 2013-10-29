@@ -2147,7 +2147,7 @@ class Player : public Unit
             m_lastFallZ = z;
         }
 
-        bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY); }
+        bool CanFly() const { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING); }
 
         bool SetCanFly(bool apply, bool packetOnly = false);
         bool SetWaterWalking(bool apply, bool packetOnly = false);

@@ -624,7 +624,7 @@ enum MovementFlags
     MOVEMENTFLAG_TURNING = MOVEMENTFLAG_LEFT | MOVEMENTFLAG_RIGHT,
 
     MOVEMENTFLAG_MASK_MOVING_FLY =
-            MOVEMENTFLAG_FLYING | MOVEMENTFLAG_ASCENDING,
+            MOVEMENTFLAG_FLYING2 | MOVEMENTFLAG_ASCENDING,
 };
 
 enum UnitTypeMask
@@ -1153,7 +1153,7 @@ class Unit : public WorldObject
         bool isGuard() const  { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GUARD); }
 
         bool isInFlight()  const { return hasUnitState(UNIT_STAT_IN_FLIGHT); }
-        bool IsFlying() const   { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_LEVITATING); }
+        bool IsFlying() const   { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING2 | MOVEMENTFLAG_LEVITATING); }
 
         bool isInCombat()  const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT); }
         void CombatStart(Unit* target, bool updatePvP = true);
@@ -1170,13 +1170,14 @@ class Unit : public WorldObject
         bool HasAura(uint32 spellId) const 
             { return m_Auras.find(spellEffectPair(spellId, 0)) != m_Auras.end(); }
         bool HasAuraWithMechanic(Mechanics mechanic) const;
+        bool HasNegativeAuraWithInterruptFlag(uint32 flag, uint64 guid = 0) const;
 
         bool virtual HasSpell(uint32 /*spellID*/) const { return false; }
 
         bool HasStealthAura()      const { return HasAuraType(SPELL_AURA_MOD_STEALTH); }
         bool HasInvisibilityAura() const { return HasAuraType(SPELL_AURA_MOD_INVISIBILITY); }
         bool isFeared()  const { return HasAuraType(SPELL_AURA_MOD_FEAR); }
-        bool isInRoots() const { return HasAuraType(SPELL_AURA_MOD_ROOT); }
+        bool isInRoots() const;
         bool IsPolymorphed() const;
 
         bool isFrozen() const;
@@ -1705,7 +1706,8 @@ class Unit : public WorldObject
 
         void NearTeleportTo(float x, float y, float z, float orientation, bool casting = false);
         void SendTeleportPacket(Position& pos);
-        bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
+        virtual bool UpdatePosition(float x, float y, float z, float ang, bool teleport = false);
+        // returns true if unit's position really changed
         bool UpdatePosition(const Position &pos, bool teleport = false);
         void UpdateHeight(float newZ);
 

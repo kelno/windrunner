@@ -125,7 +125,7 @@ bool CreatureAINew::updateCombat(bool evade)
     {
         if (Unit* target = me->SelectNearestTarget())
         {
-            if(!me->IsOutOfThreatArea(target))
+            if(me->CanCreatureAttack(target))
                 return true;
         }
     }

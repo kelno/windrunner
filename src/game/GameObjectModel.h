@@ -36,7 +36,6 @@ struct GameObjectDisplayInfoEntry;
 
 class GameObjectModel /*, public Intersectable*/
 {
-    uint32 phasemask;
     bool collisionEnabled;
     G3D::AABox iBound;
     G3D::Matrix3 iInvRot;
@@ -46,7 +45,7 @@ class GameObjectModel /*, public Intersectable*/
     float iScale;
     VMAP::WorldModel* iModel;
 
-    GameObjectModel() : phasemask(0), iModel(NULL), collisionEnabled(false) {}
+    GameObjectModel() : iModel(NULL), collisionEnabled(false) {}
     bool initialize(const GameObject& go, const GameObjectDisplayInfoEntry& info);
 
 public:
@@ -59,10 +58,10 @@ public:
     const G3D::Vector3& getPosition() const { return iPos;}
 
     /**	Enables\disables collision. */
-    void disable() { phasemask = 0; collisionEnabled = false; }
-    void enable(uint32 ph_mask) { phasemask = ph_mask; collisionEnabled = true; }
+    void disable() { collisionEnabled = false; }
+    void enable(uint32 ph_mask) { collisionEnabled = true; }
 
-    bool intersectRay(const G3D::Ray& Ray, float& MaxDist, bool StopAtFirstHit, uint32 ph_mask) const;
+    bool intersectRay(const G3D::Ray& Ray, float& MaxDist, bool StopAtFirstHit) const;
 
     static GameObjectModel* Create(const GameObject& go);
 };

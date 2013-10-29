@@ -385,9 +385,6 @@ void WorldSession::HandleMovementOpcodes( WorldPacket & recv_data )
     if (GetPlayer()->GetDontMove())
         return;
 
-    //Save movement flags
-    GetPlayer()->SetUnitMovementFlags(movementInfo.flags);
-    
     if (GetPlayer()->IsSitState() && (movementInfo.flags & (MOVEMENTFLAG_MOVING | MOVEMENTFLAG_TURNING)))
         GetPlayer()->SetStandState(UNIT_STAND_STATE_STAND);
 

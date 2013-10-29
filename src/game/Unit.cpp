@@ -572,6 +572,19 @@ void Unit::RemoveAurasWithInterruptFlags(uint32 flag, uint32 except, bool withCh
     UpdateInterruptMask();
 }
 
+bool Unit::HasNegativeAuraWithInterruptFlag(uint32 flag, uint64 guid) const
+{
+    if (!(m_interruptMask & flag))
+        return false;
+
+    for (AuraList::const_iterator iter = m_interruptableAuras.begin(); iter != m_interruptableAuras.end(); ++iter)
+    {
+        if (!(*iter)->IsPositive() && (*iter)->GetSpellProto()->AuraInterruptFlags & flag && (!guid || (*iter)->GetCasterGUID() == guid))
+            return true;
+    }
+    return false;
+}
+
 void Unit::UpdateInterruptMask()
 {
     m_interruptMask = 0;
@@ -9771,23 +9784,18 @@ Unit* Creature::SelectVictim(bool evade)
     //otherwise enterevademode every update
 
     Unit* target = NULL;
-    //sLog.outString("%s SelectVictim1", GetName());
     if(!m_ThreatManager.isThreatListEmpty())
     {
-        //sLog.outString("%s SelectVictim2", GetName());
         if(!HasAuraType(SPELL_AURA_MOD_TAUNT)) {
-            //sLog.outString("%s if");
             target = m_ThreatManager.getHostilTarget();
         }
         else {
-            //sLog.outString("%s else");
             target = getVictim();
         }
     }
 
     if(target)
     {
-        //sLog.outString("%s SelectVictim3", GetName());
         SetInFront(target); 
         return target;
     }
@@ -9817,12 +9825,10 @@ Unit* Creature::SelectVictim(bool evade)
     }*/
 
     // search nearby enemy before enter evade mode
-    //sLog.outString("%s SelectVictim5", GetName());
     if(HasReactState(REACT_AGGRESSIVE))
     {
-        //sLog.outString("%s SelectVictim6", GetName());
         target = SelectNearestTarget();
-        if(target && !IsOutOfThreatArea(target))
+        if(target && CanCreatureAttack(target))
             return target;
     }
 
@@ -9846,7 +9852,6 @@ Unit* Creature::SelectVictim(bool evade)
         if (getAI())
             getAI()->evade();
     }
-    //sLog.outString("%s: Returning null", GetName());
     return NULL;
 }
 
@@ -10897,6 +10902,14 @@ bool Unit::isFrozen() const
     for(AuraList::const_iterator i = mRoot.begin(); i != mRoot.end(); ++i)
         if( GetSpellSchoolMask((*i)->GetSpellProto()) & SPELL_SCHOOL_MASK_FROST)
             return true;
+    return false;
+}
+
+bool Unit::isInRoots() const
+{
+    if (HasAuraType(SPELL_AURA_MOD_ROOT))
+        return true;
+
     return false;
 }
 
@@ -13004,7 +13017,13 @@ bool Unit::SetSwim(bool enable)
 
 bool Unit::SetCanFly(bool enable, bool /*packetOnly = false */)
 {
-    if (enable == HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY))
+    uint32 movementFlag = MOVEMENTFLAG_NONE;
+    if (GetTypeId() == TYPEID_PLAYER)
+        movementFlag = MOVEMENTFLAG_FLYING;
+    else
+        movementFlag = MOVEMENTFLAG_CAN_FLY;
+
+    if (enable == HasUnitMovementFlag(movementFlag))
         return false;
 
     if (enable)
@@ -13014,11 +13033,11 @@ bool Unit::SetCanFly(bool enable, bool /*packetOnly = false */)
     }
     else
     {
-        RemoveUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_MASK_MOVING_FLY);
+        RemoveUnitMovementFlag(movementFlag | MOVEMENTFLAG_MASK_MOVING_FLY);
         if (!HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING))
         {
-        	m_movementInfo.SetFallTime(0);
-        	AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
+            m_movementInfo.SetFallTime(0);
+            AddUnitMovementFlag(MOVEMENTFLAG_FALLING);
         }
     }
 

@@ -1770,7 +1770,7 @@ bool Creature::canStartAttack(Unit const* who) const
         || !IsWithinDistInMap(who, GetAttackDistance(who)))
         return false;
 
-    if(!canAttack(who, false))
+    if (!CanCreatureAttack(who))
         return false;
 
     return IsWithinLOSInMap(who);
@@ -2306,36 +2306,30 @@ void Creature::SaveRespawnTime()
     objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
 }
 
-bool Creature::IsOutOfThreatArea(Unit* pVictim) const
+bool Creature::CanCreatureAttack(Unit const* pVictim) const
 {
     if(!pVictim)
-        return true;
-
-    if(!pVictim->IsInMap(this))
-        return true;
-
-    if(!canAttack(pVictim))
-        return true;
-
-    if(!pVictim->isInAccessiblePlaceFor(this))
-        return true;
-
-    if (((Creature*)this)->IsCombatStationary() && !CanReachWithMeleeAttack(pVictim))
-        return true;
-
-    if(sMapStore.LookupEntry(GetMapId())->IsDungeon())
         return false;
 
-    float length;
-    if (GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_HOMELESS || ((Creature*)this)->IsBeingEscorted())
-        length = pVictim->GetDistance(GetPositionX(), GetPositionY(), GetPositionZ());
-    else
-        length = pVictim->GetDistance(mHome_X, mHome_Y, mHome_Z);
-    float AttackDist = GetAttackDistance(pVictim);
-    uint32 ThreatRadius = sWorld.getConfig(CONFIG_THREAT_RADIUS);
+    if(!pVictim->IsInMap(this))
+        return false;
+
+    if(!canAttack(pVictim))
+        return false;
+
+    if(!pVictim->isInAccessiblePlaceFor(this))
+        return false;
+
+    if(sMapStore.LookupEntry(GetMapId())->IsDungeon())
+        return true;
 
     //Use AttackDistance in distance check if threat radius is lower. This prevents creature bounce in and out of combat every update tick.
-    return ( length > (ThreatRadius > AttackDist ? ThreatRadius : AttackDist));
+    float dist = std::max(GetAttackDistance(pVictim), (float)sWorld.getConfig(CONFIG_THREAT_RADIUS));
+
+    if (Unit* unit = GetCharmerOrOwnerOrSelf())
+        return (pVictim->GetDistanceSqr(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ()) < dist * dist);
+    else
+        return pVictim->IsInDist(mHome_X, mHome_Y, mHome_Z, dist);
 }
 
 CreatureDataAddon const* Creature::GetCreatureAddon() const

@@ -929,8 +929,7 @@ Map::Remove(T *obj, bool remove)
     }
 }
 
-void
-Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
+void Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
 {
     assert(player);
 
@@ -1729,13 +1728,13 @@ inline GridMap *Map::GetGrid(float x, float y)
     return GridMaps[gx][gy];
 }
 
-bool Map::getObjectHitPos(uint32 phasemask, float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float& ry, float& rz, float modifyDist)
+bool Map::getObjectHitPos(float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float& ry, float& rz, float modifyDist)
 {
-    Vector3 startPos = Vector3(x1, y1, z1);
-    Vector3 dstPos = Vector3(x2, y2, z2);
+    G3D::Vector3 startPos(x1, y1, z1);
+    G3D::Vector3 dstPos(x2, y2, z2);
     
-    Vector3 resultPos;
-    bool result = _dynamicTree.getObjectHitPos(phasemask, startPos, dstPos, resultPos, modifyDist);
+    G3D::Vector3 resultPos;
+    bool result = _dynamicTree.getObjectHitPos(startPos, dstPos, resultPos, modifyDist);
     
     rx = resultPos.x;
     ry = resultPos.y;
@@ -1747,7 +1746,7 @@ float Map::GetHeight(float x, float y, float z, bool pUseVmaps /*= true*/, float
 {
     if (!MapManager::IsValidMapCoord(i_id, x, y, z))
         return 0;
-    
+
     return std::max<float>(_GetHeight(x, y, z, pUseVmaps, maxSearchDist), _dynamicTree.getHeight(x, y, z, maxSearchDist));
 }
 
@@ -1978,10 +1977,10 @@ uint32 Map::GetZoneId(uint16 areaflag,uint32 map_id)
         return 0;
 }
 
-bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, uint32 phasemask) const
+bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2) const
 {
     return VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(GetId(), x1, y1, z1, x2, y2, z2)
-            && _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2, phasemask);
+            && _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2);
 }
 
 bool Map::IsInWater(float x, float y, float pZ, LiquidData *data) const
@@ -2408,7 +2407,7 @@ float Map::GetWaterOrGroundLevel(float x, float y, float z, float* ground /*= NU
     if (const_cast<Map*>(this)->GetGrid(x, y))
     {
         // we need ground level (including grid height version) for proper return water level in point
-        float ground_z = GetHeight(x, y, z, true);
+        float ground_z = GetHeight(x, y, z, true, 50.0f);
         if (ground)
             *ground = ground_z;
 
