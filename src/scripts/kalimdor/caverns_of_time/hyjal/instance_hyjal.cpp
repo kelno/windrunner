@@ -97,14 +97,14 @@ struct instance_mount_hyjal : public ScriptedInstance
     {
         switch(go->GetEntry())
         {
-            case 182060:
+            case GOBJECT_DOOR_ORC:
                 HordeGate = go->GetGUID();
                 if(allianceRetreat)
                     go->SetGoState(0);
                 else
                     go->SetGoState(1);
                 break;
-            case 182061:
+            case GOBJECT_DOOR_ELF:
                 ElfGate = go->GetGUID();
                 if(hordeRetreat)
                     go->SetGoState(0);
@@ -132,14 +132,14 @@ struct instance_mount_hyjal : public ScriptedInstance
     {
         switch(creature_entry)
         {
-            case 17767: RageWinterchill = creature->GetGUID(); break;
-            case 17808: Anetheron = creature->GetGUID(); break;
-            case 17888: Kazrogal = creature->GetGUID();  break;
-            case 17842: Azgalor = creature->GetGUID(); break;
-            case 17968: Archimonde = creature->GetGUID(); break;
-            case 17772: JainaProudmoore = creature->GetGUID(); break;
-            case 17852: Thrall = creature->GetGUID(); break;
-            case 17948: TyrandeWhisperwind = creature->GetGUID(); break;
+            case CREATURE_RAGE_WINTERCHILL: RageWinterchill = creature->GetGUID(); break;
+            case CREATURE_ANATHERON:        Anetheron = creature->GetGUID(); break;
+            case CREATURE_KAZROGAL:         Kazrogal = creature->GetGUID();  break;
+            case CREATURE_AZGALOR:          Azgalor = creature->GetGUID(); break;
+            case CREATURE_ARCHIMONDE:       Archimonde = creature->GetGUID(); break;
+            case CREATURE_JAINA:            JainaProudmoore = creature->GetGUID(); break;
+            case CREATURE_THRALL:           Thrall = creature->GetGUID(); break;
+            case CREATURE_TYRANDE:          TyrandeWhisperwind = creature->GetGUID(); break;
         }
     }
 
