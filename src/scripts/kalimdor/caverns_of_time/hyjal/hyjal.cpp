@@ -70,7 +70,7 @@ CreatureAI* GetAI_npc_jaina_proudmoore(Creature *_Creature)
     ai->Spell[1].TargetType = TARGETTYPE_RANDOM;
 
     ai->Spell[2].SpellId = SPELL_SUMMON_ELEMENTALS;
-    ai->Spell[2].Cooldown = 90000;
+    ai->Spell[2].Cooldown = 45000;
     ai->Spell[2].TargetType = TARGETTYPE_SELF;
 
     return ai;
