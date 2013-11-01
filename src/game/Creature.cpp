@@ -1770,7 +1770,7 @@ bool Creature::canStartAttack(Unit const* who) const
         || !IsWithinDistInMap(who, GetAttackDistance(who)))
         return false;
 
-    if (!CanCreatureAttack(who))
+    if (!CanCreatureAttack(who, false))
         return false;
 
     return IsWithinLOSInMap(who);
@@ -2306,7 +2306,7 @@ void Creature::SaveRespawnTime()
     objmgr.SaveCreatureRespawnTime(m_DBTableGuid,GetInstanceId(),m_respawnTime);
 }
 
-bool Creature::CanCreatureAttack(Unit const* pVictim) const
+bool Creature::CanCreatureAttack(Unit const* pVictim, bool force /*= true*/) const
 {
     if(!pVictim)
         return false;
@@ -2314,7 +2314,7 @@ bool Creature::CanCreatureAttack(Unit const* pVictim) const
     if(!pVictim->IsInMap(this))
         return false;
 
-    if(!canAttack(pVictim))
+    if(!canAttack(pVictim, force))
         return false;
 
     if(!pVictim->isInAccessiblePlaceFor(this))
@@ -2326,8 +2326,8 @@ bool Creature::CanCreatureAttack(Unit const* pVictim) const
     //Use AttackDistance in distance check if threat radius is lower. This prevents creature bounce in and out of combat every update tick.
     float dist = std::max(GetAttackDistance(pVictim), (float)sWorld.getConfig(CONFIG_THREAT_RADIUS));
 
-    if (Unit* unit = GetCharmerOrOwnerOrSelf())
-        return (pVictim->GetDistanceSqr(unit->GetPositionX(), unit->GetPositionY(), unit->GetPositionZ()) < dist * dist);
+    if (Unit* unit = GetCharmerOrOwner())
+        return pVictim->IsWithinDistInMap(unit, dist);
     else
         return pVictim->IsInDist(mHome_X, mHome_Y, mHome_Z, dist);
 }

@@ -495,7 +495,7 @@ class Creature : public Unit
         bool isTrainerFor(Player* player, bool msg) const;
         bool canBeBattleMasterFor(Player* player, bool msg) const;
         bool canResetTalentsOf(Player* pPlayer) const;
-        bool CanCreatureAttack(Unit const* pVictim) const;
+        bool CanCreatureAttack(Unit const* pVictim, bool force = true) const;
         bool IsImmunedToSpell(SpellEntry const* spellInfo, bool useCharges = false);
                                                             // redefine Unit::IsImmunedToSpell
         bool IsImmunedToSpellEffect(uint32 effect, uint32 mechanic) const;
