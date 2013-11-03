@@ -59,6 +59,18 @@ std::string GetClassNameById(uint8 id)
     return sClass;
 }
 
+std::string GetApproximatedRating(uint32 rating)
+{
+    if (rating >= 2200)
+        return "2200+";
+    else if (rating >= 1900)
+        return "1900+";
+    else if (rating >= 1500)
+        return "1500+";
+    else
+        return "1500-";
+}
+
 std::string GetGamesStringData(BattleGround *arena)
 {
 	std::string data = "";
@@ -87,7 +99,7 @@ std::string GetGamesStringData(BattleGround *arena)
 	    if (arena->isRated())
 	    {
 	    	std::stringstream ss;
-	    	ss << team->GetRating();
+	    	ss << GetApproximatedRating(team->GetRating());
 	    	data += "(" + ss.str() + ")";
 	    }
 	    else

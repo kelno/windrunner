@@ -266,23 +266,28 @@ uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell)
 
     int32 castTime = spellCastTimeEntry->CastTime;
 
+    if (spellInfo->Attributes & SPELL_ATTR_RANGED && (!spell || !(spell->IsAutoRepeat())))
+        castTime += 500;
+
     if (spell && spell->m_spellInfo->Id != 8690)
     {
+       // sLog.outDebug("GetSpellCastTime spell %u - castTime %u",spellInfo->Id,castTime);
         if(Player* modOwner = spell->GetCaster()->GetSpellModOwner())
             modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME, castTime, spell);
 
         if( !(spellInfo->Attributes & (SPELL_ATTR_ABILITY|SPELL_ATTR_TRADESPELL)) )
-            castTime = int32(castTime * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
-        else
         {
-            if (spell->IsRangedSpell() && !spell->IsAutoRepeat())
+          //  sLog.outDebug("Not ability. UNIT_MOD_CAST_SPEED = %f",spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
+            castTime = int32(castTime * spell->GetCaster()->GetFloatValue(UNIT_MOD_CAST_SPEED));
+        } else
+        {
+            if (spell->IsRangedSpell() && !spell->IsAutoRepeat()) {
+              //  sLog.outDebug("Ranged spell. m_modAttackSpeedPct[RANGED_ATTACK] = %f",spell->GetCaster()->m_modAttackSpeedPct[RANGED_ATTACK]);
                 castTime = int32(castTime * spell->GetCaster()->m_modAttackSpeedPct[RANGED_ATTACK]);
+            }
         }
     }
-
-    if (spellInfo->Attributes & SPELL_ATTR_RANGED && (!spell || !(spell->IsAutoRepeat())))
-        castTime += 500;
-
+   // sLog.outDebug("castTime2 = %i",castTime);
     return (castTime > 0) ? uint32(castTime) : 0;
 }
 
@@ -586,6 +591,8 @@ bool IsPositiveEffect(uint32 spellId, uint32 effIndex)
         case 37472:
         case 45989:
         case 20553:
+        case 45856:                                         // Breath: Haste
+        case 45860:                                         // Breath: Revitalize
             return true;
         case  1852:                                         // Silenced (GM)
         case 46392:                                         // Focused Assault
@@ -877,24 +884,24 @@ bool IsAuraAddedBySpell(uint32 auraType, uint32 spellId)
     return false;
 }
 
-uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
+SpellFailedReason GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
 {
     // talents that learn spells can have stance requirements that need ignore
     // (this requirement only for client-side stance show in talent description)
     if( GetTalentSpellCost(spellInfo->Id) > 0 &&
         (spellInfo->Effect[0]==SPELL_EFFECT_LEARN_SPELL || spellInfo->Effect[1]==SPELL_EFFECT_LEARN_SPELL || spellInfo->Effect[2]==SPELL_EFFECT_LEARN_SPELL) )
-        return 0;
+        return SPELL_CAST_OK;
 
     uint32 stanceMask = (form ? 1 << (form - 1) : 0);
     if (stanceMask & spellInfo->StancesNot)                 // can explicitly not be casted in this stance
         return SPELL_FAILED_NOT_SHAPESHIFT;
 
     if (stanceMask & spellInfo->Stances)                    // can explicitly be casted in this stance
-        return 0;
+        return SPELL_CAST_OK;
         
     // Spirit of Redemption
     if (form == 0x20 && IsPositiveSpell(spellInfo->Id) && spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST)
-        return 0;
+        return SPELL_CAST_OK;
 
     bool actAsShifted = false;
     if (form > 0)
@@ -903,7 +910,7 @@ uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
         if (!shapeInfo)
         {
             sLog.outError("GetErrorAtShapeshiftedCast: unknown shapeshift %u", form);
-            return 0;
+            return SPELL_CAST_OK;
         }
         actAsShifted = !(shapeInfo->flags1 & 1);            // shapeshift acts as normal form for spells
     }
@@ -922,7 +929,7 @@ uint8 GetErrorAtShapeshiftedCast (SpellEntry const *spellInfo, uint32 form)
             return SPELL_FAILED_ONLY_SHAPESHIFT;
     }
 
-    return 0;
+    return SPELL_CAST_OK;
 }
 
 void SpellMgr::LoadSpellTargetPositions()
@@ -2630,15 +2637,14 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->InterruptFlags = 8;
             spellInfo->PreventionType = SPELL_PREVENTION_TYPE_SILENCE;
             break;
-        case 1543:
-            spellInfo->speed = 0.0f;
-            break;
         case 26888:
             spellInfo->EffectBasePoints[1] = 740;
             break;
         case 45662:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             spellInfo->AttributesEx2 |= SPELL_ATTR_EX2_CANT_CRIT;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 46394:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
@@ -2646,12 +2652,16 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45661:
         case 45665:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 45401:
             spellInfo->procChance = 15;
             break;
         case 46562:
             spellInfo->MaxAffectedTargets = 5;
+            break;
+        case 40902: //SPELL_AKAMA_SOUL_RETRIEVE
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_CAN_CHANNEL_DEAD_TARGET;
             break;
         // Eredar Twins spells (Sunwell)
         //case 45248:
@@ -2676,18 +2686,18 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
-        case 45342:
+        case 45342: // Alythess Conflagration
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             // no break
-        case 45329:
+        case 45329: // Sacrolash Show nova
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             break;
-        case 45348:
+        case 45348: // Alythess SPELL_FLAME_TOUCHED
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             // no break
-        case 45347:
+        case 45347: // Sacrolash SPELL_DARK_TOUCHED
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
@@ -2695,7 +2705,7 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->AttributesEx |= SPELL_ATTR_EX_STACK_FOR_DIFF_CASTERS;
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_STACK_FOR_DIFF_CASTERS;
             break;
-        case 46771:
+        case 46771: // SPELL_FLAME_SEAR
             spellInfo->MaxAffectedTargets = 5;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
@@ -2751,6 +2761,7 @@ void SpellMgr::LoadSpellCustomAttr()
         case 11596:
         case 11597:
         case 25225:
+        case 40520: //akama's channelers channel
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
         case 1120:
@@ -3045,7 +3056,11 @@ void SpellMgr::LoadSpellCustomAttr()
         case 46087:
         case 46161:
         case 46289:
-        case 45657: //Darkness of a Thousand Souls
+        case 45657: // Darkness of a Thousand Souls
+        case 45782: // Fog corruption
+        case 45714: // Fog corruption
+        case 45717: // Fog corruption
+        case 45726: // Fog corruption
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
             break;
         case 26102: // Sandblast (Ouro)
@@ -3074,9 +3089,25 @@ void SpellMgr::LoadSpellCustomAttr()
         case 19516:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
+        case 29943: // TEMP: For a event from Gashrok! NOT BLIZZLIKE
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
+            break;
+        case 45391: // Vapor Select
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->MaxAffectedTargets = 1;
+            break;
         case 45892:
             spellInfo->MaxAffectedTargets = 1;
             break;
+        case 45866:
+        case 45855:
+        case 47002:
+        case 46931:
+        case 45402:
+        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+        	break;
         default:
             break;
         }

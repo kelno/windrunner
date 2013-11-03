@@ -267,8 +267,6 @@ UpdateMask Player::updateVisualBits;
 
 Player::Player (WorldSession *session): Unit()
 {
-    m_transport = 0;
-
     m_speakTime = 0;
     m_speakCount = 0;
 
@@ -405,7 +403,6 @@ Player::Player (WorldSession *session): Unit()
     m_anti_lastalarmtime = 0;    //last time when alarm generated
     m_anti_alarmcount = 0;       //alarm counter
     m_anti_TeleTime = 0;
-    m_CanFly=false;
     /////////////////////////////////
 
     m_mailsLoaded = false;
@@ -445,9 +442,6 @@ Player::Player (WorldSession *session): Unit()
     m_summon_z = 0.0f;
     m_invite_summon = false;
 
-    //Default movement to run mode
-    m_unit_movement_flags = 0;
-
     m_miniPet = 0;
     m_bgAfkReportedTimer = 0;
     m_contestedPvPTimer = 0;
@@ -484,6 +478,10 @@ Player::Player (WorldSession *session): Unit()
     
     _lastSpamAlert = 0;
     lastLagReport = 0;
+
+    smoothingSystem = new SmoothingSystem();
+    for (uint8 i=0; i<3; i++)
+        hasteRatings[i] = 0;
 }
 
 Player::~Player ()
@@ -876,10 +874,10 @@ bool Player::Create( uint32 guidlow, const std::string& name, uint8 race, uint8 
         addSpell(27033,true); //bandage
         addSpell(28029,true); //master ench
         SetSkill(333,375,375); //max it
-        addSpell(23803,true);//  [Ench. d'arme (Esprit renforcé) frFR] 
+        addSpell(23803,true);//  [Ench. d'arme (Esprit renforc\E9) frFR] 
         addSpell(34002,true); // [Ench. de brassards (Assaut) frFR]
-        addSpell(25080,true); // [Ench. de gants (Agilité excellente) frFR]
-        addSpell(44383,true); // [Ench. de bouclier (Résilience) frFR]
+        addSpell(25080,true); // [Ench. de gants (Agilit\E9 excellente) frFR]
+        addSpell(44383,true); // [Ench. de bouclier (R\E9silience) frFR]
         addSpell(34091,true); //mount 280 
     
         //Pala mounts
@@ -1421,6 +1419,14 @@ void Player::Update( uint32 p_time )
             m_zoneUpdateTimer -= p_time;
     }
 
+    if (m_timeSyncTimer > 0)
+    {
+        if (p_time >= m_timeSyncTimer)
+            SendTimeSync();
+        else
+            m_timeSyncTimer -= p_time;
+    }
+
     if (isAlive())
     {
         RegenerateAll();
@@ -1593,7 +1599,7 @@ void Player::setDeathState(DeathState s)
 void Player::SetSelection(uint64 guid)
 {
     m_curSelection = guid;
-    SetUInt64Value(UNIT_FIELD_TARGET, guid);
+    SetTarget(guid);
 }
 
 bool Player::BuildEnumData( QueryResult * result, WorldPacket * p_data )
@@ -1783,6 +1789,15 @@ uint8 Player::chatTag() const
         return 0;
 }
 
+void Player::SendTeleportAckPacket()
+{
+    WorldPacket data(MSG_MOVE_TELEPORT_ACK, 41);
+    data.append(GetPackGUID());
+    data << uint32(0);                                     // this value increments every time
+    BuildMovementPacket(&data);
+    GetSession()->SendPacket(&data);
+}
+
 bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientation, uint32 options)
 {
     if(!MapManager::IsValidMapCoord(mapid, x, y, z, orientation))
@@ -1824,26 +1839,36 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
     if(GetSession()->Expansion() < mEntry->Expansion())
     {
         if(GetTransport())
+        {
+        	m_transport->RemovePassenger(this);
+        	m_transport = NULL;
+        	m_movementInfo.transport.Reset();
             RepopAtGraveyard();                             // teleport to near graveyard if on transport, looks blizz like :)
+        }
 
         SendTransferAborted(mapid, TRANSFER_ABORT_INSUF_EXPAN_LVL1);
 
         return false;                                       // normal client can't teleport to this map...
     }
 
-    // if we were on a transport, leave
-    if (!(options & TELE_TO_NOT_LEAVE_TRANSPORT) && m_transport)
-    {
-        m_transport->RemovePassenger(this);
-        m_transport = NULL;
-        m_movementInfo.t_x = 0.0f;
-        m_movementInfo.t_y = 0.0f;
-        m_movementInfo.t_z = 0.0f;
-        m_movementInfo.t_o = 0.0f;
-        m_movementInfo.t_time = 0;
-    }
-
     SetSemaphoreTeleport(true);
+
+    // reset movement flags at teleport, because player will continue move with these flags after teleport
+    SetUnitMovementFlags(MOVEMENTFLAG_NONE);
+
+    DisableSpline();
+
+    if (m_transport)
+    {
+        if (options & TELE_TO_NOT_LEAVE_TRANSPORT)
+            AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+        else
+        {
+            m_transport->RemovePassenger(this);
+            m_transport = NULL;
+            m_movementInfo.transport.Reset();
+        }
+    }
 
     // The player was ported to another map and looses the duel immediatly.
     // We have to perform this check before the teleport, otherwise the
@@ -1855,29 +1880,11 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             DuelComplete(DUEL_FLED);
     }
 
-    // reset movement flags at teleport, because player will continue move with these flags after teleport
-    SetUnitMovementFlags(0);
-
     if ((GetMapId() == mapid) && (!m_transport))
     {
         // prepare zone change detect
         uint32 old_zone = GetZoneId();
 
-        // near teleport
-        if(!GetSession()->PlayerLogout())
-        {
-            WorldPacket data;
-            BuildTeleportAckMsg(&data, x, y, z, orientation);
-            GetSession()->SendPacket(&data);
-            SetPosition( x, y, z, orientation, true);
-        }
-        else
-            // this will be used instead of the current location in SaveToDB
-            m_teleport_dest = WorldLocation(mapid, x, y, z, orientation);
-        SetFallInformation(0, z);
-
-        //BuildHeartBeatMsg(&data);
-        //SendMessageToSet(&data, true);
         if (!(options & TELE_TO_NOT_UNSUMMON_PET))
         {
             //same map, only remove pet if out of range
@@ -1908,8 +1915,19 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
             }
         }
 
+        // this will be used instead of the current location in SaveToDB
+        m_teleport_dest = WorldLocation(mapid, x, y, z, orientation);
+        SetFallInformation(0, z);
+
+        // near teleport
         if(!GetSession()->PlayerLogout())
         {
+        	Position oldPos;
+        	GetPosition(&oldPos);
+        	Relocate(x, y, z, orientation);
+        	SendTeleportAckPacket();
+            SendTeleportPacket(oldPos); // this automatically relocates to oldPos in order to broadcast the packet in the right place
+
             // don't reset teleport semaphore while logging out, otherwise m_teleport_dest won't be used in Player::SaveToDB
             SetSemaphoreTeleport(false);
 
@@ -1994,7 +2012,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
                 data.Initialize(SMSG_NEW_WORLD, (20));
                 if (m_transport)
                 {
-                    data << (uint32)mapid << m_movementInfo.t_x << m_movementInfo.t_y << m_movementInfo.t_z << m_movementInfo.t_o;
+                    data << (uint32)mapid << m_movementInfo.transport.pos.GetPositionX() << m_movementInfo.transport.pos.GetPositionY() << m_movementInfo.transport.pos.GetPositionZ() << m_movementInfo.transport.pos.GetOrientation();
                 }
                 else
                 {
@@ -2015,10 +2033,10 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
 
             if(m_transport)
             {
-                final_x += m_movementInfo.t_x;
-                final_y += m_movementInfo.t_y;
-                final_z += m_movementInfo.t_z;
-                final_o += m_movementInfo.t_o;
+            	final_x += m_movementInfo.transport.pos.GetPositionX();
+            	final_y += m_movementInfo.transport.pos.GetPositionY();
+            	final_z += m_movementInfo.transport.pos.GetPositionZ();
+            	final_o += m_movementInfo.transport.pos.GetOrientation();
             }
 
             m_teleport_dest = WorldLocation(mapid, final_x, final_y, final_z, final_o);
@@ -4092,24 +4110,6 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
     if(updateRealmChars) sWorld.UpdateRealmCharCount(accountId);
 }
 
-void Player::SetMovement(PlayerMovementType pType)
-{
-    WorldPacket data;
-    switch(pType)
-    {
-        case MOVE_ROOT:       data.Initialize(SMSG_FORCE_MOVE_ROOT,   GetPackGUID().size()+4); break;
-        case MOVE_UNROOT:     data.Initialize(SMSG_FORCE_MOVE_UNROOT, GetPackGUID().size()+4); break;
-        case MOVE_WATER_WALK: data.Initialize(SMSG_MOVE_WATER_WALK,   GetPackGUID().size()+4); break;
-        case MOVE_LAND_WALK:  data.Initialize(SMSG_MOVE_LAND_WALK,    GetPackGUID().size()+4); break;
-        default:
-            sLog.outError("Player::SetMovement: Unsupported move type (%d), data not sent to client.",pType);
-            return;
-    }
-    data.append(GetPackGUID());
-    data << uint32(0);
-    GetSession()->SendPacket( &data );
-}
-
 /* Preconditions:
   - a resurrectable corpse must not be loaded for the player (only bones)
   - the player must be in world
@@ -4144,9 +4144,9 @@ void Player::BuildPlayerRepop()
     // convert player body to ghost
     SetHealth( 1 );
 
-    SetMovement(MOVE_WATER_WALK);
+    SetWaterWalking(true);
     if(!GetSession()->isLogingOut())
-        SetMovement(MOVE_UNROOT);
+    	SetRooted(false);
 
     // BG - remove insignia related
     RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
@@ -4200,8 +4200,8 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 
     setDeathState(ALIVE);
 
-    SetMovement(MOVE_LAND_WALK);
-    SetMovement(MOVE_UNROOT);
+    SetWaterWalking(false);
+    SetRooted(false);
 
     m_deathTimer = 0;
 
@@ -4256,13 +4256,16 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 
 void Player::KillPlayer()
 {
+    if (IsFlying() && !GetTransport())
+        i_motionMaster.MoveFall();
+
     if(isInDuelArea())
     {
         ResurrectPlayer(1.0f);
         return;
     }
 
-    SetMovement(MOVE_ROOT);
+    SetRooted(true);
 
     StopMirrorTimers();                                     //disable timers(bars)
 
@@ -5047,17 +5050,9 @@ void Player::ApplyRatingMod(CombatRating cr, int32 value, bool apply)
         case CR_CRIT_TAKEN_SPELL:                           // Implemented in Unit::SpellCriticalBonus (only for chance to crit)
             break;
         case CR_HASTE_MELEE:
-            RatingChange = value / RatingCoeffecient;
-            ApplyAttackTimePercentMod(BASE_ATTACK,RatingChange,apply);
-            ApplyAttackTimePercentMod(OFF_ATTACK,RatingChange,apply);
-            break;
         case CR_HASTE_RANGED:
-            RatingChange = value / RatingCoeffecient;
-            ApplyAttackTimePercentMod(RANGED_ATTACK, RatingChange, apply);
-            break;
         case CR_HASTE_SPELL:
-            RatingChange = value / RatingCoeffecient;
-            ApplyCastTimePercentMod(RatingChange,apply);
+            UpdateHasteRating(cr,value,apply);
             break;
         case CR_WEAPON_SKILL_MAINHAND:                      // Implemented in Unit::RollMeleeOutcomeAgainst
         case CR_WEAPON_SKILL_OFFHAND:
@@ -5071,6 +5066,57 @@ void Player::ApplyRatingMod(CombatRating cr, int32 value, bool apply)
             }
             break;
     }
+}
+
+void Player::UpdateHasteRating(CombatRating cr, int32 value, bool apply)
+{
+    if(cr > CR_HASTE_SPELL || cr < CR_HASTE_MELEE)
+    {
+        sLog.outDebug("UpdateHasteRating called with invalid combat rating %u",cr);
+        return;
+    }
+    
+        //    sLog.outDebug("UpdateHasteRating(%u,%i,%s)",cr,value,apply?"true":"false");
+    float RatingCoeffecient = GetRatingCoefficient(cr);
+        //    sLog.outDebug("RatingCoeffecient : %f",RatingCoeffecient);
+    float mod = hasteRatings[cr-CR_HASTE_MELEE]/RatingCoeffecient; // Current mod
+        //    sLog.outDebug("Old mod : %f",mod);
+        //    sLog.outDebug("Previous rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
+    switch(cr)
+    {
+    case CR_HASTE_MELEE:
+       //         sLog.outDebug("current attack time : %u", GetAttackTime(BASE_ATTACK));
+        //unapply previous haste rating
+        ApplyAttackTimePercentMod(BASE_ATTACK,mod,false);
+        ApplyAttackTimePercentMod(OFF_ATTACK,mod,false);
+       //         sLog.outDebug("base atack time : %f",GetAttackTime(BASE_ATTACK));
+        hasteRatings[0] += apply ? value : -value;
+        mod = hasteRatings[0]/RatingCoeffecient;
+        ApplyAttackTimePercentMod(BASE_ATTACK,mod,true);
+        ApplyAttackTimePercentMod(OFF_ATTACK,mod,true);
+       //         sLog.outDebug("New attack time : %u", GetAttackTime(BASE_ATTACK));
+        break;
+    case CR_HASTE_RANGED:
+       //         sLog.outDebug("current attack time : %u", GetAttackTime(RANGED_ATTACK));
+        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, false); //unapply previous haste rating
+      //          sLog.outDebug("base atack time : %f",GetAttackTime(RANGED_ATTACK));
+        hasteRatings[1] += apply ? value : -value;
+        mod = hasteRatings[1]/RatingCoeffecient;
+        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, true);
+       //         sLog.outDebug("New attack time : %u", GetAttackTime(RANGED_ATTACK));
+        break;
+    case CR_HASTE_SPELL:
+        //        sLog.outDebug("current cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        ApplyCastTimePercentMod(mod,false); //unapply previous haste rating
+        //        sLog.outDebug("base cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        hasteRatings[2] += apply ? value : -value;
+        mod = hasteRatings[2]/RatingCoeffecient;
+        ApplyCastTimePercentMod(mod,true);
+        //        sLog.outDebug("New cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        break;
+    }
+   // sLog.outDebug("New rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
+  //  sLog.outDebug("New mod : %f",mod);
 }
 
 void Player::SetRegularAttackTime()
@@ -5711,45 +5757,23 @@ void Player::SetDontMove(bool dontMove)
     m_dontMove = dontMove;
 }
 
-bool Player::SetPosition(float x, float y, float z, float orientation, bool teleport)
+bool Player::UpdatePosition(float x, float y, float z, float orientation, bool teleport)
 {
-    // prevent crash when a bad coord is sent by the client
-    if(!Trinity::IsValidMapCoord(x,y,z,orientation))
-    {
-        sLog.outError("Player::SetPosition(%f, %f, %f, %f, %d) .. bad coordinates for player %u!",x,y,z,orientation,teleport,GetGUIDLow());
+    if (!Unit::UpdatePosition(x, y, z, orientation, teleport))
         return false;
-    }
 
-    Map *m = GetMap();
+    //if (movementInfo.flags & MOVEMENTFLAG_MOVING)
+    //    mover->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE);
+    //if (movementInfo.flags & MOVEMENTFLAG_TURNING)
+    //    mover->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
+    //AURA_INTERRUPT_FLAG_JUMP not sure
 
-    const float old_x = GetPositionX();
-    const float old_y = GetPositionY();
-    const float old_z = GetPositionZ();
-    const float old_r = GetOrientation();
+    // group update
+    if (GetGroup())
+        SetGroupUpdateFlag(GROUP_UPDATE_FLAG_POSITION);
 
-    if( teleport || old_x != x || old_y != y || old_z != z || old_r != orientation )
-    {
-        if (teleport || old_x != x || old_y != y || old_z != z)
-            RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MOVE | AURA_INTERRUPT_FLAG_TURNING);
-        else
-            RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
-
-        // move and update visible state if need
-        m->PlayerRelocation(this, x, y, z, orientation);
-
-        // reread after Map::Relocation
-        m = GetMap();
-        x = GetPositionX();
-        y = GetPositionY();
-        z = GetPositionZ();
-
-        // group update
-        if(GetGroup() && (old_x != x || old_y != y))
-            SetGroupUpdateFlag(GROUP_UPDATE_FLAG_POSITION);
-    }
-
-    // code block for underwater state update
-    UpdateUnderwaterState(m, x, y, z);
+    if (GetTrader() && !IsWithinDistInMap(GetTrader(), INTERACTION_DISTANCE))
+        GetSession()->SendCancelTrade();
 
     CheckAreaExploreAndOutdoor();
 
@@ -5808,7 +5832,7 @@ void Player::CheckAreaExploreAndOutdoor()
             if (!spellInfo || !IsNeedCastSpellAtOutdoor(spellInfo) || HasAura(itr->first))
                 continue;
             
-            if (GetErrorAtShapeshiftedCast(spellInfo, m_form) == 0)
+            if (GetErrorAtShapeshiftedCast(spellInfo, m_form) == SPELL_CAST_OK)
                 CastSpell(this, itr->first, true, NULL);
         }
     }
@@ -6849,6 +6873,7 @@ void Player::UpdateZone(uint32 newZone)
 {
     if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) //bring back the escapers !
         && newZone != 616  //Hyjal arena zone
+        && newZone != 406 // zone pvp
         && GetAreaId() != 19 //Zul Gurub arena zone
         && !InBattleGround()
         && !IsBeingTeleported()
@@ -7461,7 +7486,7 @@ void Player::ApplyEquipSpell(SpellEntry const* spellInfo, Item* item, bool apply
     if(apply)
     {
         // Cannot be used in this stance/form
-        if(GetErrorAtShapeshiftedCast(spellInfo, m_form)!=0)
+        if(GetErrorAtShapeshiftedCast(spellInfo, m_form) != SPELL_CAST_OK)
             return;
 
         if(form_change)                                     // check aura active state from other form
@@ -7495,7 +7520,7 @@ void Player::ApplyEquipSpell(SpellEntry const* spellInfo, Item* item, bool apply
         if(form_change)                                     // check aura compatibility
         {
             // Cannot be used in this stance/form
-            if(GetErrorAtShapeshiftedCast(spellInfo, m_form)==0)
+            if(GetErrorAtShapeshiftedCast(spellInfo, m_form) == SPELL_CAST_OK)
                 return;                                     // and remove only not compatible at form change
         }
 
@@ -7676,9 +7701,12 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
                 continue;
             }
 
-            // do not allow proc windfury totem from yellow attacks
-            if(spell && spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && spellInfo->SpellFamilyFlags & 0x200000000LL)
-                return;
+            // do not allow proc windfury totem from yellow attacks except for attacks on next swing
+            if(spell 
+                && !Spell::IsNextMeleeSwingSpell(spell)
+                && spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN 
+                && spellInfo->SpellFamilyFlags & 0x200000000LL)
+                return; 
 
             // not allow proc extra attack spell at extra attack
             if( m_extraAttacks && IsSpellHaveEffect(spellInfo, SPELL_EFFECT_ADD_EXTRA_ATTACKS) )
@@ -10918,7 +10946,7 @@ Item* Player::StoreNewItem( ItemPosCountVec const& dest, uint32 item, bool updat
     }
     
     if (item == 31088)  // Tainted Core
-        SetMovement(MOVE_ROOT);
+    	SetRooted(true);
         
     // If purple equipable item, save inventory immediately
     if (pItem && pItem->GetProto()->Quality >= ITEM_QUALITY_EPIC &&
@@ -11366,7 +11394,7 @@ void Player::DestroyItem( uint8 bag, uint8 slot, bool update )
         
         
         if (pItem->GetEntry() == 31088)      // Vashj Tainted Core
-            SetMovement(MOVE_UNROOT);
+        	SetRooted(false);
 
         if(pItem->HasFlag(ITEM_FIELD_FLAGS, ITEM_FLAGS_WRAPPED))
             CharacterDatabase.PExecute("DELETE FROM character_gifts WHERE item_guid = '%u'", pItem->GetGUIDLow());
@@ -14837,7 +14865,7 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     // init saved position, and fix it later if problematic
     uint32 transGUID = fields[LOAD_DATA_TRANSGUID].GetUInt32();
-    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED))
+    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && sWorld.getConfig(CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD))
     {
         float x,y,z,o;
         uint32 tMapId;
@@ -14909,10 +14937,10 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
         transGUID = 0;
 
-        m_movementInfo.t_x = 0.0f;
-        m_movementInfo.t_y = 0.0f;
-        m_movementInfo.t_z = 0.0f;
-        m_movementInfo.t_o = 0.0f;
+        m_movementInfo.transport.pos.m_positionX = 0.0f;
+        m_movementInfo.transport.pos.m_positionY = 0.0f;
+        m_movementInfo.transport.pos.m_positionZ = 0.0f;
+        m_movementInfo.transport.pos.m_orientation = 0.0f;
     }
 
     ////                                                     0     1       2      3    4    5    6
@@ -14953,27 +14981,27 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     if (transGUID != 0)
     {
-        m_movementInfo.t_x = fields[LOAD_DATA_TRANSX].GetFloat();
-        m_movementInfo.t_y = fields[LOAD_DATA_TRANSY].GetFloat();
-        m_movementInfo.t_z = fields[LOAD_DATA_TRANSZ].GetFloat();
-        m_movementInfo.t_o = fields[LOAD_DATA_TRANSO].GetFloat();
+        m_movementInfo.transport.pos.m_positionX = fields[LOAD_DATA_TRANSX].GetFloat();
+        m_movementInfo.transport.pos.m_positionY = fields[LOAD_DATA_TRANSY].GetFloat();
+        m_movementInfo.transport.pos.m_positionZ = fields[LOAD_DATA_TRANSZ].GetFloat();
+        m_movementInfo.transport.pos.m_orientation = fields[LOAD_DATA_TRANSO].GetFloat();
 
         if( !Trinity::IsValidMapCoord(
-            GetPositionX()+m_movementInfo.t_x,GetPositionY()+m_movementInfo.t_y,
-            GetPositionZ()+m_movementInfo.t_z,GetOrientation()+m_movementInfo.t_o) ||
+            GetPositionX()+m_movementInfo.transport.pos.m_positionX,GetPositionY()+m_movementInfo.transport.pos.m_positionY,
+            GetPositionZ()+m_movementInfo.transport.pos.m_positionZ,GetOrientation()+m_movementInfo.transport.pos.m_orientation) ||
             // transport size limited
-            m_movementInfo.t_x > 50 || m_movementInfo.t_y > 50 || m_movementInfo.t_z > 50 )
+            m_movementInfo.transport.pos.m_positionX > 50 || m_movementInfo.transport.pos.m_positionY > 50 || m_movementInfo.transport.pos.m_positionZ > 50 )
         {
             sLog.outError("Player (guidlow %d) have invalid transport coordinates (X: %f Y: %f Z: %f O: %f). Teleport to default race/class locations.",
-                guid,GetPositionX()+m_movementInfo.t_x,GetPositionY()+m_movementInfo.t_y,
-                GetPositionZ()+m_movementInfo.t_z,GetOrientation()+m_movementInfo.t_o);
+                guid,GetPositionX()+m_movementInfo.transport.pos.m_positionX,GetPositionY()+m_movementInfo.transport.pos.m_positionY,
+                GetPositionZ()+m_movementInfo.transport.pos.m_positionZ,GetOrientation()+m_movementInfo.transport.pos.m_orientation);
 
             RelocateToHomebind();
 
-            m_movementInfo.t_x = 0.0f;
-            m_movementInfo.t_y = 0.0f;
-            m_movementInfo.t_z = 0.0f;
-            m_movementInfo.t_o = 0.0f;
+            m_movementInfo.transport.pos.m_positionX = 0.0f;
+            m_movementInfo.transport.pos.m_positionY = 0.0f;
+            m_movementInfo.transport.pos.m_positionZ = 0.0f;
+            m_movementInfo.transport.pos.m_orientation = 0.0f;
 
             transGUID = 0;
         }
@@ -14999,10 +15027,10 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
             RelocateToHomebind();
 
-            m_movementInfo.t_x = 0.0f;
-            m_movementInfo.t_y = 0.0f;
-            m_movementInfo.t_z = 0.0f;
-            m_movementInfo.t_o = 0.0f;
+            m_movementInfo.transport.pos.m_positionX = 0.0f;
+            m_movementInfo.transport.pos.m_positionY = 0.0f;
+            m_movementInfo.transport.pos.m_positionZ = 0.0f;
+            m_movementInfo.transport.pos.m_orientation = 0.0f;
 
             transGUID = 0;
         }
@@ -15183,144 +15211,7 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     _LoadReputation(holder->GetResult(PLAYER_LOGIN_QUERY_LOADREPUTATION));
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
-	
-    // TO BE REMOVED AROUND SEPTEMBER 15TH 2013
-    
-    if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED))
-    {
-        if(!HasSpell(44383)) //[Ench. de bouclier (Résilience) frFR]
-            addSpell(44383,true);
 
-        if(m_class == CLASS_PRIEST)
-        {
-            if(m_race == RACE_HUMAN)
-            {
-                if(!HasSpell(25441)) //[Réaction, rang 6 frFR]
-                    addSpell(25441,true);
-                if(!HasSpell(25437)) // [Prière du désespoir, rang 8 frFR]
-                    addSpell(25437,true);
-            } else if (m_race == RACE_DWARF) {
-                if(!HasSpell(25437)) // [Prière du désespoir, rang 8 frFR]
-                    addSpell(25437,true);
-                if(!HasSpell(44047)) //  [Châtier, rang 6 frFR]
-                    addSpell(44047,true);
-            } else if (m_race == RACE_NIGHTELF) {
-                if(!HasSpell(25446)) //  [Eclats stellaires, rang 8 frFR]
-                    addSpell(25446,true);
-                if(!HasSpell(2651)) //  - [Grâce d'Elune frFR]
-                    addSpell(2651,true);
-            } else if (m_race == RACE_DRAENEI) {
-                if(!HasSpell(44047)) //  44047 - [Châtier, rang 6 frFR]
-                    addSpell(44047,true);
-                if(!HasSpell(32548)) //  32548 - [Symbole d'espoir frFR]
-                    addSpell(32548,true);
-            } else if (m_race == RACE_UNDEAD_PLAYER) {
-                if(!HasSpell(25467)) //  25467 - [Peste dévorante, rang 7 frFR]
-                    addSpell(25467,true);
-                if(!HasSpell(25461)) //  25461 - [Toucher de faiblesse, rang 7 frFR]
-                    addSpell(25461,true);
-            } else if (m_race == RACE_TROLL) {
-                if(!HasSpell(25470)) //  25470 - [Maléfice de faiblesse, rang 7 frFR]
-                    addSpell(25470,true);
-                if(!HasSpell(25477)) //  25477 - [Garde de l'ombre, rang 7 frFR]
-                    addSpell(25477,true);
-            } else if (m_race == RACE_BLOODELF) {
-                if(!HasSpell(25461)) //  25461 - [Toucher de faiblesse, rang 7 frFR]
-                    addSpell(25461,true);
-                if(!HasSpell(32676)) //  32676 - [Consumer la magie frFR]
-                    addSpell(32676,true);
-            }
-        } else if (m_class == CLASS_WARLOCK) {
-            if(!HasSpell(688)) // diablo
-                addSpell(688,true);
-        } else if (m_class == CLASS_WARRIOR) {
-            SetSkill(160, 375, 375); // 160 - masse à deux mains
-        } else if (m_class == CLASS_PALADIN) {
-            
-            if(HasSpell(10321)) //Jugement 100M
-                removeSpell(10321,true);
-            if(!HasSpell(20271)) //jugement le vrai !
-                addSpell(20271,true);
-            if(!HasSpell(21084)) // Seau de piété rang 1
-                addSpell(21084,true);
-
-            if(GetTeam() == ALLIANCE)
-            {
-                if(!HasSpell(31801)) // [Sceau de vengeance frFR]
-                    addSpell(31801,true);
-            } else {
-                if(!HasSpell(31892)) // 31892 - [Sceau de sang frFR][connu]
-                    addSpell(31892,true);
-            }
-        } else if (m_class == CLASS_SHAMAN) {
-            if(GetTeam() == ALLIANCE)
-            {
-                if(!HasSpell(32182)) // 32182 - [Héroïsme frFR]
-                    addSpell(32182,true);
-            } else {
-                if(!HasSpell(2825)) // 2825 - [Furie sanguinaire frFR]
-                    addSpell(2825,true);
-            }
-        } else if (m_class == CLASS_DRUID) {
-            SetSkill(54, 375, 375); //54 - [Masses à une main frFR][passif]
-        }
-    }
-
-    // Tabards
-    if (GetTeam() == HORDE) {
-        if (HasItemCount(19045, 1, true))
-            SwapItems(19045, 19046);
-    } else {
-        if (HasItemCount(19046, 1, true))
-            SwapItems(19046, 19045);
-    }
-
-    if(m_class == CLASS_PALADIN)
-    {
-        if(!HasSpell(34091)) //fly 280% 
-        {
-            if(    HasItemCount(25473,1)
-                || HasItemCount(25527,1)
-                || HasItemCount(25528,1)
-                || HasItemCount(25529,1)
-                || HasItemCount(25477,1)
-                || HasItemCount(25531,1)
-                || HasItemCount(25532,1)
-                || HasItemCount(25533,1)
-                || HasItemCount(32314,1)
-                || HasItemCount(32316,1)
-                || HasItemCount(32317,1)
-                || HasItemCount(32318,1)
-                || HasItemCount(32319,1)
-                || HasItemCount(33999,1)
-                || HasItemCount(32858,1)
-                || HasItemCount(32859,1)
-                || HasItemCount(32860,1)
-                || HasItemCount(32861,1)
-                || HasItemCount(32862,1)
-                || HasItemCount(37676,1)
-                || HasItemCount(80050,1)
-                || HasItemCount(80051,1)
-                || HasItemCount(34092,1)
-                || HasItemCount(32458,1)
-                || HasItemCount(34061,1)
-                || HasItemCount(32857,1))
-                addSpell(34091,true);
-        }
-        if(!HasSpell(34090)) //fly 60%
-        {
-            if(  HasItemCount(25470,1)
-              || HasItemCount(25471,1)
-              || HasItemCount(25472,1)
-              || HasItemCount(25474,1)
-              || HasItemCount(25475,1)
-              || HasItemCount(25476,1)
-              || HasItemCount(34060,1))
-             addSpell(34090,true);
-        }
-    }
-    // END OF TO-BE-REMOVED BLOCK
-    
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
 
@@ -16218,7 +16109,7 @@ InstancePlayerBind* Player::GetBoundInstance(uint32 mapid, uint8 difficulty)
 {
     // some instances only have one difficulty
     const MapEntry* entry = sMapStore.LookupEntry(mapid);
-    if(!entry || !entry->SupportsHeroicMode()) difficulty = DIFFICULTY_NORMAL;
+    if(!entry || !Map::SupportsHeroicMode(entry)) difficulty = DIFFICULTY_NORMAL;
 
     BoundInstancesMap::iterator itr = m_boundInstances[difficulty].find(mapid);
     if(itr != m_boundInstances[difficulty].end())
@@ -16633,13 +16524,13 @@ void Player::SaveToDB()
     ss << (uint64)m_resetTalentsTime;
 
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_x);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionX);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_y);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionY);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_z);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_positionZ);
     ss << ", ";
-    ss << finiteAlways(m_movementInfo.t_o);
+    ss << finiteAlways(m_movementInfo.transport.pos.m_orientation);
     ss << ", ";
     if (m_transport)
         ss << m_transport->GetGUIDLow();
@@ -19262,8 +19153,6 @@ void Player::SendInitialVisiblePackets(Unit* target)
 
     if(target->isAlive())
     {
-        if(target->GetMotionMaster()->GetCurrentMovementGeneratorType() != IDLE_MOTION_TYPE)
-            target->SendMonsterMoveWithSpeedToCurrentDestination(this);
         if(target->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && target->getVictim())
             target->SendAttackStart(target->getVictim());
     }
@@ -19508,7 +19397,7 @@ void Player::SendInitialPacketsBeforeAddToMap()
 
     // set fly flag if in fly form or taxi flight to prevent visually drop at ground in showup moment
     if(HasAuraType(SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED) || isInFlight())
-        AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+        AddUnitMovementFlag(MOVEMENTFLAG_FLYING);
 }
 
 void Player::SendInitialPacketsAfterAddToMap()
@@ -19531,17 +19420,17 @@ void Player::SendInitialPacketsAfterAddToMap()
             auraList.front()->ApplyModifier(true,true);
     }
 
-    if(HasAuraType(SPELL_AURA_MOD_STUN))
-        SetMovement(MOVE_ROOT);
+    if (HasAuraType(SPELL_AURA_FEATHER_FALL))
+        SetFeatherFall(true, true);
 
-    // manual send package (have code in ApplyModifier(true,true); that don't must be re-applied.
-    if(HasAuraType(SPELL_AURA_MOD_ROOT))
-    {
-        WorldPacket data(SMSG_FORCE_MOVE_ROOT, 10);
-        data.append(GetPackGUID());
-        data << (uint32)2;
-        SendMessageToSet(&data,true);
-    }
+    if (HasAuraType(SPELL_AURA_WATER_WALK))
+        SetWaterWalking(true, true);
+
+    if(HasAuraType(SPELL_AURA_MOD_STUN))
+    	SetRooted(true);
+
+    if (HasAuraType(SPELL_AURA_HOVER))
+    	SetHover(true, true);
 
     // setup BG group membership if need
     if(BattleGround* currentBg = GetBattleGround())
@@ -19581,6 +19470,9 @@ void Player::SendInitialPacketsAfterAddToMap()
 
     SendEnchantmentDurations();                             // must be after add to map
     SendItemDurations();                                    // must be after add to map
+
+    ResetTimeSync();
+    SendTimeSync();
 }
 
 void Player::SendUpdateToOutOfRangeGroupMembers()
@@ -20601,48 +20493,49 @@ void Player::SetOriginalGroup(Group *group, int8 subgroup)
 
 void Player::UpdateUnderwaterState(Map* m, float x, float y, float z)
 {
-    LiquidData liquid_status;
-    ZLiquidStatus res = m->getLiquidStatus(x, y, z, MAP_ALL_LIQUIDS, &liquid_status);
-    if (!res)
+    LiquidData liquidData;
+    ZLiquidStatus liquidStatus = m->getLiquidStatus(x, y, z, MAP_ALL_LIQUIDS, &liquidData);
+    
+    if (!liquidStatus)
     {
         m_MirrorTimerFlags &= ~(UNDERWATER_INWATER|UNDERWATER_INLAVA|UNDERWATER_INSLIME|UNDERWATER_INDARKWATER);
         // Small hack for enable breath in WMO + enable lava in Molten Core, Blackrock Mountain, BlackRock Dephts and Ironforge
-        if (IsInWater())
+   /*     if (IsInWater())
         {
             m_MirrorTimerFlags|=UNDERWATER_INWATER;
             if(GetMapId() == 409 || GetZoneId() == 25 || GetMapId() == 230 || GetZoneId() == 1537)
                 m_MirrorTimerFlags |= UNDERWATER_INLAVA;
-        }
+        }*/
         return;
     }
 
     // All liquids type - check under water position
-    if (liquid_status.type&(MAP_LIQUID_TYPE_WATER|MAP_LIQUID_TYPE_OCEAN|MAP_LIQUID_TYPE_MAGMA|MAP_LIQUID_TYPE_SLIME))
+    if (liquidData.type&(MAP_LIQUID_TYPE_WATER|MAP_LIQUID_TYPE_OCEAN|MAP_LIQUID_TYPE_MAGMA|MAP_LIQUID_TYPE_SLIME))
     {
-        if (res & LIQUID_MAP_UNDER_WATER)
+        if (liquidStatus & LIQUID_MAP_UNDER_WATER)
             m_MirrorTimerFlags |= UNDERWATER_INWATER;
         else
             m_MirrorTimerFlags &= ~UNDERWATER_INWATER;
     }
 
     // Allow travel in dark water on taxi or transport
-    if ((liquid_status.type & MAP_LIQUID_TYPE_DARK_WATER) && !isInFlight() && !GetTransport())
+    if ((liquidData.type & MAP_LIQUID_TYPE_DARK_WATER) && !isInFlight() && !GetTransport())
         m_MirrorTimerFlags |= UNDERWATER_INDARKWATER;
     else
         m_MirrorTimerFlags &= ~UNDERWATER_INDARKWATER;
 
     // in lava check, anywhere in lava level
-    if (liquid_status.type&MAP_LIQUID_TYPE_MAGMA)
+    if (liquidData.type&MAP_LIQUID_TYPE_MAGMA)
     {
-        if (res & (LIQUID_MAP_UNDER_WATER|LIQUID_MAP_IN_WATER|LIQUID_MAP_WATER_WALK))
+        if (liquidStatus & (LIQUID_MAP_UNDER_WATER|LIQUID_MAP_IN_WATER|LIQUID_MAP_WATER_WALK))
             m_MirrorTimerFlags |= UNDERWATER_INLAVA;
         else
             m_MirrorTimerFlags &= ~UNDERWATER_INLAVA;
     }
     // in slime check, anywhere in slime level
-    if (liquid_status.type&MAP_LIQUID_TYPE_SLIME)
+    if (liquidData.type&MAP_LIQUID_TYPE_SLIME)
     {
-        if (res & (LIQUID_MAP_UNDER_WATER|LIQUID_MAP_IN_WATER|LIQUID_MAP_WATER_WALK))
+        if (liquidStatus & (LIQUID_MAP_UNDER_WATER|LIQUID_MAP_IN_WATER|LIQUID_MAP_WATER_WALK))
             m_MirrorTimerFlags |= UNDERWATER_INSLIME;
         else
             m_MirrorTimerFlags &= ~UNDERWATER_INSLIME;
@@ -20687,7 +20580,7 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
         return;
 
     // calculate total z distance of the fall
-    float z_diff = m_lastFallZ - movementInfo.z;
+    float z_diff = m_lastFallZ - movementInfo.pos.m_positionZ;
 
     //Players with low fall distance, Feather Fall or physical immunity (charges used) are ignored
     // 14.57 can be calculated by resolving damageperc formular below to 0
@@ -20705,8 +20598,8 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
         {
             uint32 damage = (uint32)(damageperc * GetMaxHealth()*sWorld.getRate(RATE_DAMAGE_FALL));
 
-            float height = movementInfo.z;
-            UpdateGroundPositionZ(movementInfo.x,movementInfo.y,height);
+            float height = movementInfo.pos.m_positionZ;
+            UpdateGroundPositionZ(movementInfo.pos.m_positionX,movementInfo.pos.m_positionY,height);
 
             if (damage > 0)
             {
@@ -20722,7 +20615,7 @@ void Player::HandleFallDamage(MovementInfo& movementInfo)
             }
 
             //Z given by moveinfo, LastZ, FallTime, WaterZ, MapZ, Damage, Safefall reduction
-            DEBUG_LOG("FALLDAMAGE z=%f sz=%f pZ=%f FallTime=%d mZ=%f damage=%d SF=%d" , movementInfo.z, height, GetPositionZ(), movementInfo.fallTime, height, damage, safe_fall);
+            DEBUG_LOG("FALLDAMAGE z=%f sz=%f pZ=%f FallTime=%d mZ=%f damage=%d SF=%d" , movementInfo.pos.m_positionZ, height, GetPositionZ(), movementInfo.fallTime, height, damage, safe_fall);
         }
     }
     m_session->GetPlayer()->SetKnockedBack(false);
@@ -20879,25 +20772,11 @@ bool Player::HasLevelInRangeForTeleport()
 /*-----------------------TRINITY--------------------------*/
 bool Player::isTotalImmunity()
 {
-    AuraList const& immune = GetAurasByType(SPELL_AURA_SCHOOL_IMMUNITY);
-
-    for(AuraList::const_iterator itr = immune.begin(); itr != immune.end(); ++itr)
-    {
-        if (((*itr)->GetModifier()->m_miscvalue & SPELL_SCHOOL_MASK_ALL) !=0)   // total immunity
-        {
+    SpellImmuneList const& schoolList = m_spellImmune[IMMUNITY_SCHOOL];
+    for(auto itr : schoolList)
+        if( itr.type & SPELL_SCHOOL_MASK_ALL || itr.type & SPELL_SCHOOL_MASK_MAGIC || itr.type & SPELL_SCHOOL_MASK_NORMAL)
             return true;
-        }
-        if (((*itr)->GetModifier()->m_miscvalue & SPELL_SCHOOL_MASK_NORMAL) !=0)   // physical damage immunity
-        {
-            for(AuraList::const_iterator i = immune.begin(); i != immune.end(); ++i)
-            {
-                if (((*i)->GetModifier()->m_miscvalue & SPELL_SCHOOL_MASK_MAGIC) !=0)   // magic immunity
-                {
-                    return true;
-                }
-            }
-        }
-    }
+
     return false;
 }
 
@@ -21396,8 +21275,95 @@ void Player::RemoveAllCurrentPetAuras()
 {
     if(Pet* pet = GetPet())
         pet->RemoveAllAuras();
-     else 
+     else
         CharacterDatabase.PQuery("DELETE FROM pet_aura WHERE guid IN ( SELECT id FROM character_pet WHERE owner = %u AND slot = %u )", GetGUIDLow(), PET_SAVE_NOT_IN_SLOT);
+}
+
+bool Player::SetCanFly(bool apply, bool packetOnly)
+{
+    if (!packetOnly && !Unit::SetCanFly(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_CAN_FLY : SMSG_MOVE_UNSET_CAN_FLY, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_UPDATE_CAN_FLY, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetWaterWalking(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetWaterWalking(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_WATER_WALK : SMSG_MOVE_LAND_WALK, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_WATER_WALK, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetFeatherFall(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetFeatherFall(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_FEATHER_FALL : SMSG_MOVE_NORMAL_FALL, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_FEATHER_FALL, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+bool Player::SetHover(bool apply, bool packetOnly /*= false*/)
+{
+    if (!packetOnly && !Unit::SetHover(apply))
+        return false;
+
+    WorldPacket data(apply ? SMSG_MOVE_SET_HOVER : SMSG_MOVE_UNSET_HOVER, 12);
+    data.append(GetPackGUID());
+    data << uint32(0);          //! movement counter
+    SendDirectMessage(&data);
+
+    data.Initialize(MSG_MOVE_HOVER, 64);
+    data.append(GetPackGUID());
+    BuildMovementPacket(&data);
+    SendMessageToSet(&data, false);
+    return true;
+}
+
+void Player::ResetTimeSync()
+{
+    m_timeSyncCounter = 0;
+    m_timeSyncTimer = 0;
+    m_timeSyncClient = 0;
+    m_timeSyncServer = getMSTime();
+}
+
+void Player::SendTimeSync()
+{
+    WorldPacket data(SMSG_TIME_SYNC_REQ, 4);
+    data << uint32(m_timeSyncCounter++);
+    GetSession()->SendPacket(&data);
+
+    // Schedule next sync in 10 sec
+    m_timeSyncTimer = 10000;
+    m_timeSyncServer = getMSTime();
 }
 
 void Player::GetArenaZoneCoord(bool secondary, uint32& map, float& x, float& y, float& z, float& o)
@@ -21456,6 +21422,56 @@ bool Player::ShouldGoToSecondaryArenaZone()
     }
 
     return false;
+}
+
+SmoothingSystem::SmoothingSystem()
+{
+    totals = new uint32[SMOOTH_MAX];
+    successes = new uint32[SMOOTH_MAX];
+    for(int i = 0; i < SMOOTH_MAX;i++)
+    {
+        totals[i] = 1;
+        successes[i] = 0;
+    }
+}
+
+/* chance in percentage 0.0f -> 1.0f */
+void SmoothingSystem::ApplySmoothedChance(SmoothType type, float& chance)
+{
+    if(type >= SMOOTH_MAX)
+        return;
+
+    float influence = (float)sWorld.getConfig(CONFIG_SMOOTHED_CHANCE_INFLUENCE) /10.0f; //default value of CONFIG_SMOOTHED_CHANCE_INFLUENCE = 10
+    uint32 currentSuccesses = successes[type];
+    uint32 currentTotal = totals[type];
+    float successRate = ((float)currentSuccesses/currentTotal);
+    float difference = chance - successRate; //if positive, should raise chance
+    
+    sLog.outDebug("type = %u",type);
+    sLog.outDebug("currentSuccesses %u - currentSuccesses %u - chance %f - successRate %f - difference %f - influence %f",currentSuccesses,currentTotal,chance,successRate,difference,influence);
+
+    chance += chance * influence * difference;
+    if(chance < 0.0f)
+        chance = 0.0f;
+    sLog.outDebug("final chance %f",chance);
+}
+void SmoothingSystem::UpdateSmoothedChance(SmoothType type, bool success)
+{
+    if(!sWorld.getConfig(CONFIG_SMOOTHED_CHANCE_ENABLED) || type >= SMOOTH_MAX)
+        return;
+
+    uint32& currentSuccesses = successes[type];
+    uint32& currentTotal = totals[type];
+
+    if(currentTotal == -1) //will never happens in any realistic world but lets do this the clean way
+    {
+        currentTotal = 0;
+        currentSuccesses = 0;
+    }
+
+    currentTotal++;
+    if(success)
+        currentSuccesses++;
 }
 
 bool Player::isInDuelArea() const

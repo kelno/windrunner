@@ -31,17 +31,17 @@ void UnitAI::AttackStart(Unit *victim)
 {
     if(!victim)
         return;
-        
+
     if (me->ToCreature() && me->ToCreature()->getAI())
         return;
-    
+
     bool melee = (m_combatDistance > ATTACK_DISTANCE) ? me->GetDistance(victim) <= ATTACK_DISTANCE : true; //visual part
     if(me->Attack(victim, melee))
     {
         if(m_allowCombatMovement)
         {
             //pet attack from behind in melee
-            if(me->isPet() && melee && victim->getVictim() && victim->getVictim()->GetGUID() != me->GetGUID())
+            if(me->isPet() && victim->getVictim() && victim->getVictim()->GetGUID() != me->GetGUID())
             {
                 me->GetMotionMaster()->MoveChase(victim, CONTACT_DISTANCE, M_PI);
                 return;
@@ -99,20 +99,36 @@ bool UnitAI::DoSpellAttackIfReady(uint32 spell)
     return true;
 }
 
-void UnitAI::SetCombatDistance(float dist)
-{ 
+void UnitAI::SetCombatDistance(float dist, float angle)
+{
     m_combatDistance = dist;
-    //create new targeted movement gen
-    me->AttackStop();
-    AttackStart(me->getVictim()); 
+
+    if (m_allowCombatMovement)
+    {
+        me->GetMotionMaster()->Clear(true);
+        if (me->getVictim())
+            me->GetMotionMaster()->MoveChase(me->getVictim(), dist, angle);
+    }
 };
 
 void UnitAI::SetCombatMovementAllowed(bool allow)
 {
+    if (m_allowCombatMovement == allow)
+        return;
+
     m_allowCombatMovement = allow;
-    //create new targeted movement gen
-    me->AttackStop();
-    AttackStart(me->getVictim()); 
+
+    if (allow)
+    {
+        me->GetMotionMaster()->Clear(true);
+        if (me->getVictim())
+            me->GetMotionMaster()->MoveChase(me->getVictim(), m_combatDistance);
+    }
+    else
+    {
+        me->GetMotionMaster()->Clear(true);
+        me->GetMotionMaster()->MoveIdle();
+    }
 }
 
 //Enable PlayerAI when charmed
@@ -140,6 +156,9 @@ void CreatureAI::MoveInLineOfSight(Unit *who)
         return;
         
     if (me->getAI())
+        return;
+
+    if (me->HasJustRespawned() && !me->GetSummonerGUID())
         return;
 
     if(me->canStartAttack(who))

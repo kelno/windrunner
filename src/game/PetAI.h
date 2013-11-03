@@ -33,11 +33,22 @@ class PetAI : public CreatureAI
 
         PetAI(Creature *c);
 
-        void EnterEvadeMode();
-        void JustDied(Unit* who) { _stopAttack(); }
-
         void UpdateAI(const uint32);
         static int Permissible(const Creature *);
+
+        void KilledUnit(Unit* /*victim*/);
+        void AttackStart(Unit* target);
+        void MovementInform(uint32 moveType, uint32 data);
+        void OwnerAttackedBy(Unit* attacker);
+        void OwnerAttacked(Unit* target);
+        void AttackedBy(Unit* attacker);
+
+        // The following aren't used by the PetAI but need to be defined to override
+        //  default CreatureAI functions which interfere with the PetAI
+        //
+        void MoveInLineOfSight(Unit* /*who*/) {} // CreatureAI interferes with returning pets
+        void EnterEvadeMode() {} // For fleeing, pets don't use this type of Evade mechanic
+
     protected:
         void Minipet_DistanceCheck(uint32 diff);
     private:
@@ -47,10 +58,16 @@ class PetAI : public CreatureAI
 
         void UpdateAllies();
 
-        Creature &i_pet;
+        bool inCombat;
         TimeTracker i_tracker;
         std::set<uint64> m_AllySet;
         uint32 m_updateAlliesTimer;
+
+        Unit* SelectNextTarget(bool allowAutoSelect) const;
+        void HandleReturnMovement();
+        void DoAttack(Unit* target, bool chase);
+        bool CanAttack(Unit* target);
+        void ClearCharmInfoFlags();
 
         typedef std::pair<Unit*, Spell*> TargetSpellPair;
         std::vector<TargetSpellPair> m_targetSpellStore;

@@ -5,6 +5,8 @@
 #ifndef DEF_BLACK_TEMPLE_H
 #define DEF_BLACK_TEMPLE_H
 
+#define EMOTE_NAJENTUS_DOOR_OPENING -1563999
+
 enum eTypes
 {
     DATA_AKAMA                      = 1,
@@ -33,7 +35,8 @@ enum eTypes
     DATA_GAMEOBJECT_ILLIDAN_DOOR_L  = 24,
     DATA_GAMEOBJECT_SUPREMUS_DOORS  = 25,
     DATA_BLOOD_ELF_COUNCIL_VOICE    = 26,
-    DATA_TERON                      = 27
+    DATA_TERON                      = 27,
+    DATA_RELIQUARY_OF_SOULS         = 28
 };
 
 #endif

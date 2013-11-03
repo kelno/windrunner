@@ -119,14 +119,14 @@ struct ScriptedAI : public CreatureAI
     void Reset() {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    virtual void Aggro(Unit*) = 0;
+    void Aggro(Unit*) {}
 
     //*************
     //AI Helper Functions
     //*************
 
     //Start movement toward victim
-    void DoStartMovement(Unit* victim, float distance = 0, float angle = 0);
+    void DoStartMovement(Unit* victim, float distance = 0, float angle = 0, bool strictDist = false);
 
     //Start no movement on victim
     void DoStartNoMovement(Unit* victim);
@@ -134,12 +134,12 @@ struct ScriptedAI : public CreatureAI
     //Stop attack of current victim
     void DoStopAttack();
 
-    //Cast spell by Id
-    void DoCast(Unit* victim, uint32 spellId, bool triggered = false);
-    void DoCastAOE(uint32 spellId, bool triggered = false);
+    //Cast spell by Id, return if spell was successfully casted (=/= spell successfully hit)
+    bool DoCast(Unit* victim, uint32 spellId, bool triggered = false);
+    bool DoCastAOE(uint32 spellId, bool triggered = false);
 
     //Cast spell by spell info
-    void DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered = false);
+    bool DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered = false);
 
     //Creature say
     void DoSay(const char* text, uint32 language, Unit* target, bool SayEmote = false);

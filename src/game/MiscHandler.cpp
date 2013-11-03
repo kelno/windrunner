@@ -277,6 +277,20 @@ void WorldSession::HandleWhoOpcode( WorldPacket & recv_data )
             continue;
 
         uint32 pzoneid = itr->second->GetZoneId();
+        //do not show players in arenas
+        if(pzoneid == 3698 || pzoneid == 3968 || pzoneid == 3702)
+        {
+            uint32 mapId = itr->second->GetBattleGroundEntryPointMap();
+            Map * map = MapManager::Instance().FindMap(mapId);
+            if(map) 
+            {
+                float x = itr->second->GetBattleGroundEntryPointX();
+                float y = itr->second->GetBattleGroundEntryPointY();
+                float z = itr->second->GetBattleGroundEntryPointZ();
+                pzoneid = map->GetZoneId(x,y,z);
+            }
+        }
+        
         uint8 gender = itr->second->getGender();
 
         bool z_show = true;
@@ -361,25 +375,32 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
     if (uint64 lguid = GetPlayer()->GetLootGUID())
         DoLootRelease(lguid);
 
-    //Can not logout if...
-    if( GetPlayer()->isInCombat() ||                        //...is in combat
-        GetPlayer()->duel         ||                        //...is in Duel
-        GetPlayer()->HasAura(9454,0)         ||             //...is frozen by GM via freeze command
-                                                            //...is jumping ...is falling
-        GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_JUMPING | MOVEMENTFLAG_FALLING))
+    bool instantLogout = (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) && !GetPlayer()->isInCombat()) ||
+                             GetPlayer()->isInFlight() || GetSecurity() >= sWorld.getConfig(CONFIG_INSTANT_LOGOUT);
+
+    bool canLogoutInCombat = GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING);
+
+    uint32 reason = 0;
+    if (GetPlayer()->isInCombat() && !canLogoutInCombat)
+        reason = 1;
+    else if (GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_FALLING | MOVEMENTFLAG_FALLINGFAR))
+        reason = 3;                                         // is jumping or falling
+    else if (GetPlayer()->duel || GetPlayer()->HasAura(9454)) // is dueling or frozen by GM via freeze command
+        reason = 2;                                         // FIXME - Need the correct value
+
+    WorldPacket data( SMSG_LOGOUT_RESPONSE, (1+4));
+    data << uint32(reason);
+    data << uint8(instantLogout);
+    SendPacket( &data );
+
+    if (reason)
     {
-        WorldPacket data( SMSG_LOGOUT_RESPONSE, (2+4) ) ;
-        data << (uint8)0xC;
-        data << uint32(0);
-        data << uint8(0);
-        SendPacket( &data );
         LogoutRequest(0);
         return;
     }
 
-    //instant logout in taverns/cities or on taxi or for admins, gm's, mod's if its enabled in mangosd.conf
-    if (GetPlayer()->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_RESTING) || GetPlayer()->isInFlight() ||
-        GetSecurity() >= sWorld.getConfig(CONFIG_INSTANT_LOGOUT))
+    //instant logout in taverns/cities or on taxi or for admins, gm's, mod's if its enabled in worldserver.conf
+    if (instantLogout)
     {
         LogoutPlayer(true);
         return;
@@ -397,10 +418,6 @@ void WorldSession::HandleLogoutRequestOpcode( WorldPacket & /*recv_data*/ )
         GetPlayer()->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
     }
 
-    WorldPacket data( SMSG_LOGOUT_RESPONSE, 5 );
-    data << uint32(0);
-    data << uint8(0);
-    SendPacket( &data );
     LogoutRequest(time(NULL));
 }
 
@@ -1478,14 +1495,21 @@ void WorldSession::HandleChooseTitleOpcode( WorldPacket & recv_data )
 void WorldSession::HandleAllowMoveAckOpcode( WorldPacket & recv_data )
 {
     PROFILE;
-    
-    CHECK_PACKET_SIZE(recv_data, 4+4);
 
-    uint32 counter, time_;
-    recv_data >> counter >> time_;
+    uint32 counter, clientTicks;
+    recv_data >> counter >> clientTicks;
 
-    // time_ seems always more than getMSTime()
-    uint32 diff = getMSTimeDiff(getMSTime(),time_);
+    if (counter != _player->m_timeSyncCounter - 1)
+    	sLog.outDebug("Wrong time sync counter from player %s (cheater?)", _player->GetName());
+
+    sLog.outDebug("Time sync received: counter %u, client ticks %u, time since last sync %u", counter, clientTicks, clientTicks - _player->m_timeSyncClient);
+
+    uint32 ourTicks = clientTicks + (getMSTime() - _player->m_timeSyncServer);
+
+    // diff should be small
+    sLog.outDebug("Our ticks: %u, diff %u, latency %u", ourTicks, ourTicks - clientTicks, GetLatency());
+
+    _player->m_timeSyncClient = clientTicks;
 }
 
 void WorldSession::HandleResetInstancesOpcode( WorldPacket & /*recv_data*/ )
@@ -1570,28 +1594,19 @@ void WorldSession::HandleDismountOpcode( WorldPacket & /*recv_data*/ )
 void WorldSession::HandleMoveFlyModeChangeAckOpcode( WorldPacket & recv_data )
 {
     PROFILE;
-    
-    CHECK_PACKET_SIZE(recv_data, 8+4+4);
 
-    // fly mode on/off
-
-    uint64 guid;
+    uint64 guid;                                            // guid - unused
     uint32 unk;
-    uint32 flags;
+    float unk2;
+    recv_data >> guid;
+    recv_data >> unk;
 
-    recv_data >> guid >> unk >> flags;
+    MovementInfo movementInfo;
+    ReadMovementInfo(recv_data, &movementInfo);
 
-    _player->SetUnitMovementFlags(flags);
-    /*
-    on:
-    25 00 00 00 00 00 00 00 | 00 00 00 00 00 00 80 00
-    85 4E A9 01 19 BA 7A C3 | 42 0D 70 44 44 B0 A8 42
-    78 15 94 40 39 03 00 00 | 00 00 80 3F
-    off:
-    25 00 00 00 00 00 00 00 | 00 00 00 00 00 00 00 00
-    10 FD A9 01 19 BA 7A C3 | 42 0D 70 44 44 B0 A8 42
-    78 15 94 40 39 03 00 00 | 00 00 00 00
-    */
+    recv_data >> unk2;                                         // unk2
+
+    _player->m_movementInfo.flags = movementInfo.GetMovementFlags();
 }
 
 void WorldSession::HandleRequestPetInfoOpcode( WorldPacket & /*recv_data */)

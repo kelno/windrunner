@@ -107,7 +107,6 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         felLightningTimer = 5000;
         
         m_creature->SetReactState(REACT_DEFENSIVE);
-        m_creature->SetHasChangedReactState();
 
         if (isActivated)
         {
@@ -1133,8 +1132,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
 {
     npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
     {
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        
+        me->SetDisableGravity(true);
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     

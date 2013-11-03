@@ -667,7 +667,7 @@ namespace Trinity
             NearestAttackableUnitInObjectRangeCheck(WorldObject const* obj, Unit const* funit, float range) : i_obj(obj), i_funit(funit), i_range(range) {}
             bool operator()(Unit* u)
             {
-                if( u->isTargetableForAttack() && i_obj->IsWithinDistInMap(u, i_range) &&
+                if( i_funit->canAttack(u) && i_obj->IsWithinDistInMap(u, i_range) &&
                     !i_funit->IsFriendlyTo(u) && u->isVisibleForOrDetect(i_funit,false)  )
                 {
                     i_range = i_obj->GetDistance(u);        // use found unit range as new range limit for next check
@@ -685,6 +685,32 @@ namespace Trinity
             NearestAttackableUnitInObjectRangeCheck(NearestAttackableUnitInObjectRangeCheck const&);
     };
 
+    class NearestHostileUnitInAggroRangeCheck
+    {
+        public:
+            explicit NearestHostileUnitInAggroRangeCheck(Creature const* creature, bool useLOS = false) : _me(creature), _useLOS(useLOS)
+            {
+            }
+            bool operator()(Unit* u)
+            {
+                if (!u->IsHostileTo(_me))
+                    return false;
+
+                if (!_me->canStartAttack(u))
+                    return false;
+
+                if (_useLOS && !u->IsWithinLOSInMap(_me))
+                    return false;
+
+                return true;
+            }
+
+    private:
+            Creature const* _me;
+            bool _useLOS;
+            NearestHostileUnitInAggroRangeCheck(NearestHostileUnitInAggroRangeCheck const&);
+    };
+
     class AnyAoETargetUnitInObjectRangeCheck
     {
         public:
@@ -700,7 +726,7 @@ namespace Trinity
             bool operator()(Unit* u)
             {
                 // Check contains checks for: live, non-selectable, non-attackable flags, flight check and GM check, ignore totems
-                if (!u->isTargetableForAttack())
+                if (!i_funit->canAttack(u))
                     return false;
                 if(u->GetTypeId()==TYPEID_UNIT && (u->ToCreature())->isTotem())
                     return false;
@@ -832,7 +858,7 @@ namespace Trinity
                     return false;
 
                 // too far
-                if( !i_funit->IsWithinDistInMap(u, i_range) )
+                if( !i_funit->IsWithinDistInMap(u, i_range, true) )
                     return false;
 
                 // only if see assisted creature

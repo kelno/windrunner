@@ -512,14 +512,73 @@ AreaAura::~AreaAura()
 {
 }
 
-PersistentAreaAura::PersistentAreaAura(SpellEntry const* spellproto, uint32 eff, int32 *currentBasePoints, Unit *target,
-Unit *caster, Item* castItem) : Aura(spellproto, eff, currentBasePoints, target, caster, castItem)
+PersistentAreaAura::PersistentAreaAura(SpellEntry const* spellproto, uint32 eff, int32 *currentBasePoints, Unit *target, Unit *caster, Item* castItem) : 
+    Aura(spellproto, eff, currentBasePoints, target, caster, castItem)
 {
     m_isPersistent = true;
 }
 
 PersistentAreaAura::~PersistentAreaAura()
 {
+   for(auto itr : sourceDynObjects)
+    {
+        DynamicObject* dynObj = ObjectAccessor::GetDynamicObject(*GetCaster(), itr);
+        if(dynObj)
+            dynObj->RemoveAffected(m_target);
+    }
+}
+
+void PersistentAreaAura::AddSource(DynamicObject* dynObj)
+{
+    if(dynObj)
+        sourceDynObjects.push_back(dynObj->GetGUID());
+}
+
+void PersistentAreaAura::Update(uint32 diff)
+{
+    bool remove = false;
+
+    Unit *caster = GetCaster();
+    if(!caster)
+    {
+        m_target->RemoveAura(GetId(), GetEffIndex());
+        return;
+    }
+
+    bool inRange = false;
+    for(std::list<uint64>::iterator itr = sourceDynObjects.begin(); itr != sourceDynObjects.end(); itr++)
+    {
+        DynamicObject* dynObj = ObjectAccessor::GetDynamicObject(*caster, *itr);
+        if(!dynObj)
+        {
+            itr = sourceDynObjects.erase(itr);
+            continue;
+        } else {
+            if(m_target->IsWithinDistInMap(dynObj, dynObj->GetRadius()))
+            {
+                inRange = true;
+                break;
+            }
+        }
+    }
+
+    //using temp pointers since these can be erased after Aura::Update 
+    Unit *tmp_target = m_target;
+    uint32 tmp_id = GetId(), tmp_index = GetEffIndex();
+    Unit* tmp_caster = GetCaster();
+
+    Aura::Update(diff);
+
+    if(!inRange)
+    {
+        tmp_target->RemoveAurasByCasterSpell(tmp_id,tmp_index,tmp_caster->GetGUID());
+        for(auto itr : sourceDynObjects)
+        {
+            DynamicObject* dynObj = ObjectAccessor::GetDynamicObject(*caster, itr);
+            if(dynObj)
+                dynObj->RemoveAffected(tmp_target);
+        }
+    }
 }
 
 Aura* CreateAura(SpellEntry const* spellproto, uint32 eff, int32 *currentBasePoints, Unit *target, Unit *caster, Item* castItem)
@@ -789,38 +848,6 @@ void AreaAura::Update(uint32 diff)
     }
 }
 
-void PersistentAreaAura::Update(uint32 diff)
-{
-    bool remove = false;
-
-    // remove the aura if its caster or the dynamic object causing it was removed
-    // or if the target moves too far from the dynamic object
-    Unit *caster = GetCaster();
-    if (caster)
-    {
-        DynamicObject *dynObj = caster->GetDynObject(GetId(), GetEffIndex());
-        if (dynObj)
-        {
-            if (!m_target->IsWithinDistInMap(dynObj, dynObj->GetRadius()))
-                remove = true;
-        }
-        else
-            remove = true;
-    }
-    else
-        remove = true;
-
-    Unit *tmp_target = m_target;
-    uint32 tmp_id = GetId(), tmp_index = GetEffIndex();
-
-    // WARNING: the aura may get deleted during the update
-    // DO NOT access its members after update!
-    Aura::Update(diff);
-
-    if(remove)
-        tmp_target->RemoveAura(tmp_id, tmp_index);
-}
-
 void Aura::ApplyModifier(bool apply, bool Real)
 {
     if ( IsRemoved() )
@@ -969,7 +996,7 @@ void Aura::_AddAura(bool sameSlot)  // This param is false ONLY in case of doubl
         {
             if (IsPositive())                               // empty positive slot
             {
-                for (uint8 i = 0; (i < (m_target->GetTypeId() == TYPEID_PLAYER) ? MAX_POSITIVE_AURAS_PLAYERS : MAX_POSITIVE_AURAS_CREATURES); i++)
+                for (uint8 i = 0; (i < ((m_target->GetTypeId() == TYPEID_PLAYER) ? MAX_POSITIVE_AURAS_PLAYERS : MAX_POSITIVE_AURAS_CREATURES)); i++)
                 {
                     if (m_target->GetUInt32Value((uint16)(UNIT_FIELD_AURA + i)) == 0)
                     {
@@ -2102,7 +2129,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if( caster && m_target->CanHaveThreatList())
                     m_target->AddThreat(caster, 10.0f);
                 return;
-            case 10909:
+            case 10909: //Mind Vision
                 if (caster->HasAura(14751))
                     caster->RemoveAurasDueToSpell(14751);
                 break;
@@ -2118,7 +2145,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if(caster)
                     caster->CastSpell(caster,13138,true,NULL,this);
                 return;
-            case 34520:
+            case 34520: //Elemental Power Extractor
             {
                 if (!m_target || m_target->GetTypeId() != TYPEID_UNIT || /*!m_target->isDead() || */caster->GetTypeId() != TYPEID_PLAYER)
                     return;
@@ -2130,7 +2157,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
                 return;
             }
-            case 29266:
+            case 29266: //Permanent Feign Death
             {
                 if (m_target) {
                     m_target->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_DEAD);
@@ -2148,7 +2175,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     m_target->RemoveAurasDueToSpell(31970);
                 return;
             }
-            case 32146:
+            case 32146: //Liquid Fire
             {
                 if (!m_target && !caster->getVictim())
                     return;
@@ -2206,7 +2233,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 if(m_target->GetTypeId()==TYPEID_PLAYER)
                     (m_target->ToPlayer())->RemoveAmmo();      // not use ammo and not allow use
                 return;
-            case 41170:
+            case 41170: //Curse of the Bleakheart
             {
                 m_isPeriodic = true;
                 m_modifier.periodictime = 1000;
@@ -2399,6 +2426,22 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
     {
         case SPELLFAMILY_GENERIC:
         {
+            //Akama's canalist channeling, remove 40520 (slow aura) stack
+            if ( GetId()== 40401 ) 
+            {
+                Aura* stack = m_target->GetAura(40520,0);
+                if(stack)
+                {
+                    stack->ApplyModifier(false,true);
+                    uint8 count = m_target->GetAuraCount(40401);
+                    if(apply)
+                        count -= 1; //1 more will be triggered by spell 40401 after this
+                    stack->SetStackAmount(count);
+                    stack->ApplyModifier(true,true);
+                    //how to update visual stack count on client?
+                }
+                return;
+            }
             // Unstable Power
             if( GetId()==24658 )
             {
@@ -2484,6 +2527,7 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
             {
                 if ( apply )
                 {
+                    
                     if ( caster )
                         // prevent double apply bonuses
                         if(m_target->GetTypeId()!=TYPEID_PLAYER || !(m_target->ToPlayer())->GetSession()->PlayerLoading())
@@ -2701,14 +2745,7 @@ void Aura::HandleAuraWaterWalk(bool apply, bool Real)
     if(!Real)
         return;
 
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_WATER_WALK, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_LAND_WALK, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);
-    m_target->SendMessageToSet(&data,true);
+    m_target->SetWaterWalking(apply);
 }
 
 void Aura::HandleAuraFeatherFall(bool apply, bool Real)
@@ -2716,18 +2753,11 @@ void Aura::HandleAuraFeatherFall(bool apply, bool Real)
     // only at real add/remove aura
     if(!Real)
         return;
-        
+
+    m_target->SetFeatherFall(apply);
+
     if (!apply && m_target->GetTypeId() == TYPEID_PLAYER)
         m_target->ToPlayer()->SetFallInformation(0, m_target->GetPositionZ());
-
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_FEATHER_FALL, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_NORMAL_FALL, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << (uint32)0;
-    m_target->SendMessageToSet(&data,true);
 }
 
 void Aura::HandleAuraHover(bool apply, bool Real)
@@ -2735,18 +2765,8 @@ void Aura::HandleAuraHover(bool apply, bool Real)
     // only at real add/remove aura
     if(!Real)
         return;
-        
-    if (!apply && m_target->GetTypeId() == TYPEID_PLAYER)
-        m_target->ToPlayer()->SetFallInformation(0, m_target->GetPositionZ());
 
-    WorldPacket data;
-    if(apply)
-        data.Initialize(SMSG_MOVE_SET_HOVER, 8+4);
-    else
-        data.Initialize(SMSG_MOVE_UNSET_HOVER, 8+4);
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);
-    m_target->SendMessageToSet(&data,true);
+    m_target->SetHover(apply);    //! Sets movementflags
 }
 
 void Aura::HandleWaterBreathing(bool apply, bool Real)
@@ -3095,27 +3115,7 @@ void Aura::HandleAuraTransform(bool apply, bool Real)
     }
     else
     {
-        Unit::AuraList const& otherTransforms = m_target->GetAurasByType(SPELL_AURA_TRANSFORM);
-        if(otherTransforms.empty())
-        {
-            m_target->SetDisplayId(m_target->GetNativeDisplayId());
-            m_target->setTransForm(0);
-        }
-        else
-        {
-            // look for other transform auras
-            Aura* handledAura = *otherTransforms.begin();
-            for(Unit::AuraList::const_iterator i = otherTransforms.begin();i != otherTransforms.end(); ++i)
-            {
-                // negative auras are preferred
-                if(!IsPositiveSpell((*i)->GetSpellProto()->Id))
-                {
-                    handledAura = *i;
-                    break;
-                }
-            }
-            handledAura->ApplyModifier(true);
-        }
+        m_target->RestoreDisplayId();
 
         // Dragonmaw Illusion (restore mount model)
         if(GetId()==42016 && m_target->GetMountID()==16314)
@@ -3898,21 +3898,13 @@ void Aura::HandleAuraModIncreaseFlightSpeed(bool apply, bool Real)
     // Enable Fly mode for flying mounts
     if (m_modifier.m_auraname == SPELL_AURA_MOD_INCREASE_FLIGHT_SPEED)
     {
-        WorldPacket data;
-        if(apply)
-        {
-            ((Player*)m_target)->SetCanFly(true);
-            data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
-        }
-        else
-        {
-            data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
-            ((Player*)m_target)->SetCanFly(false);
-        }
+    	if (m_target->GetTypeId() == TYPEID_UNIT)
+    	    m_target->SetCanFly(apply);
+    	else if (m_target->GetTypeId() == TYPEID_PLAYER)
+    	    m_target->ToPlayer()->SetCanFly(apply, true);
 
-        data.append(m_target->GetPackGUID());
-        data << uint32(0);                                      // unknown
-        m_target->SendMessageToSet(&data, true);
+    	if (!m_target && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
+    		m_target->GetMotionMaster()->MoveFall();
 
         //Players on flying mounts must be immune to polymorph
         if (m_target->GetTypeId()==TYPEID_PLAYER)
@@ -5673,22 +5665,13 @@ void Aura::HandleAuraAllowFlight(bool apply, bool Real)
     if(!Real)
         return;
 
-    // allow fly
-    WorldPacket data;
-    if(apply)
-    {
-        ((Player*)m_target)->SetCanFly(true);
-        data.Initialize(SMSG_MOVE_SET_CAN_FLY, 12);
-    }
-    else
-    {
-        data.Initialize(SMSG_MOVE_UNSET_CAN_FLY, 12);
-        ((Player*)m_target)->SetCanFly(false);
-    }
+    if (m_target->GetTypeId() == TYPEID_UNIT)
+        m_target->SetCanFly(apply);
+    else if (m_target->GetTypeId() == TYPEID_PLAYER)
+    	m_target->ToPlayer()->SetCanFly(apply, true);
 
-    data.append(m_target->GetPackGUID());
-    data << uint32(0);                                      // unk
-    m_target->SendMessageToSet(&data, true);
+    if (!apply && m_target->GetTypeId() == TYPEID_UNIT && !m_target->IsLevitating())
+    	m_target->GetMotionMaster()->MoveFall();
 }
 
 void Aura::HandleModRating(bool apply, bool Real)
@@ -5735,7 +5718,7 @@ void Aura::HandleModTargetResistance(bool apply, bool Real)
     if (m_target->GetTypeId() == TYPEID_PLAYER && (m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_NORMAL))
         m_target->ApplyModInt32Value(PLAYER_FIELD_MOD_TARGET_PHYSICAL_RESISTANCE,GetModifierValue(), apply);
 
-    // show as spell penetration only full spell penetration bonuses (all resistances except armor and holy
+    // show as spell penetration only full spell penetration bonuses (all resistances except armor and holy)
     if (m_target->GetTypeId() == TYPEID_PLAYER && (m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_SPELL)==SPELL_SCHOOL_MASK_SPELL)
         m_target->ApplyModInt32Value(PLAYER_FIELD_MOD_TARGET_RESISTANCE,GetModifierValue(), apply);
 }
@@ -5799,6 +5782,8 @@ void Aura::HandleSpiritOfRedemption( bool apply, bool Real )
             // set stand state (expected in this form)
             if(!m_target->IsStandState())
                 m_target->SetStandState(PLAYER_STATE_NONE);
+
+            m_target->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_UNATTACKABLE);
         }
 
         m_target->SetHealth(1);
@@ -5816,6 +5801,8 @@ void Aura::HandleSpiritOfRedemption( bool apply, bool Real )
             (m_target->ToPlayer())->SetSpiritRedeptionKiller(uint64(0));
         }
     }
+    m_target->ApplySpellImmune(GetId(),IMMUNITY_SCHOOL,SPELL_SCHOOL_MASK_NORMAL,apply);;
+    m_target->CombatStop();
 }
 
 void Aura::CleanupTriggeredSpells()
@@ -5909,7 +5896,7 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
             
             uint32 health = m_target->GetHealth();
 
-            ghost->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            ghost->SetDisableGravity(true);
 
             // immunity for body
             m_target->CastSpell(m_target, 40282, true);
@@ -5926,13 +5913,13 @@ void Aura::HandleSchoolAbsorb(bool apply, bool Real)
                 }
             }*/
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() + 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() + 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
             if (Creature* construct = caster->SummonCreature(23111, m_target->GetPositionX() - 2, m_target->GetPositionY() - 2, m_target->GetPositionZ() + 2, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000))
-                construct->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            	construct->SetDisableGravity(true);
         }
         
         return;
@@ -6001,9 +5988,12 @@ void Aura::PeriodicTick()
                 pCaster->SpellHitResult(m_target,GetSpellProto(),false)!=SPELL_MISS_NONE)
                 return;
 
-            // Check for immune (not use charges)
-            if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
-                return;
+            if (m_target->GetEntry() != 25653 || GetId() != 45848)
+            {
+                // Check for immune (not use charges)
+                if(m_target->IsImmunedToDamage(GetSpellSchoolMask(GetSpellProto())))
+                    return;
+            }
 
             // some auras remove at specific health level or more
             if(m_modifier.m_auraname==SPELL_AURA_PERIODIC_DAMAGE)
@@ -6154,7 +6144,7 @@ void Aura::PeriodicTick()
             data << uint32(GetId());
             data << uint32(1);
             data << uint32(m_modifier.m_auraname);
-            data << (uint32)pdamage;
+            data << (uint32)(pdamage-absorb-resist);             // show effective damage
             data << (uint32)GetSpellSchoolMask(GetSpellProto()); // will be mask in 2.4.x
             data << (uint32)absorb;
             data << (uint32)resist;
@@ -7026,12 +7016,6 @@ void Aura::UnregisterSingleCastAura()
         }
         m_isSingleTargetAura = false;
     }
-}
-
-bool Aura::IsStackableDebuff()
-{
-    if((GetSpellProto()->SpellFamilyFlags & 0x800000LL) && GetSpellProto()->SpellIconID == 548)     // Mind flay
-        return true;
 }
 
 void Aura::HandleAOECharm(bool apply, bool Real)

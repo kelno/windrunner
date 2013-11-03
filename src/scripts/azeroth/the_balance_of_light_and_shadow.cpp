@@ -145,7 +145,6 @@ struct TRINITY_DLL_DECL npc_eris_havenfireAI : public Scripted_NoMovementAI
     {
         if (EventStarted && MyLittlePriest) {
             if (!EventDone) {
-                Wave_Timer -= diff;
                 if (CurrentWave <= WAVE_COUNT) {
                     if (CurrentWave >= 2 && FootSoldiers_Timer < diff) {
                         PlayEvent(EVENT_FOOTSOLDIERS);
@@ -157,10 +156,11 @@ struct TRINITY_DLL_DECL npc_eris_havenfireAI : public Scripted_NoMovementAI
                     }
                     else Peasants_Timer -= diff;
 
-                    if (Wave_Timer > -diff) //WTF.
+                    if (Wave_Timer < diff)
                     {
                         PlayEvent(EVENT_NEWWAVE);
                     }
+                    else Wave_Timer -= diff;
                 }
 
                 if (DiedCount >= 15) {
@@ -320,7 +320,7 @@ struct TRINITY_DLL_DECL npc_escaping_peasantAI : public Scripted_NoMovementAI
     npc_escaping_peasantAI(Creature * c) : Scripted_NoMovementAI(c)
     {
         me->SetReactState(REACT_PASSIVE);
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetWalk(true);
         Eris = NULL;
         uint8 pos = rand() % 6;
         me->GetMotionMaster()->MovePoint(0, PeasantsArrivalPositions[pos].x, PeasantsArrivalPositions[pos].y, PeasantsArrivalPositions[pos].z);

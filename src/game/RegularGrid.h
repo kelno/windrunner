@@ -86,7 +86,7 @@ public:
 
         static Cell ComputeCell(float fx, float fy)
         {
-            Cell c = {fx * (1.f/CELL_SIZE) + (CELL_NUMBER/2), fy * (1.f/CELL_SIZE) + (CELL_NUMBER/2)};
+            Cell c = {(int)(fx * (1.f/CELL_SIZE) + (CELL_NUMBER/2)), (int)(fy * (1.f/CELL_SIZE) + (CELL_NUMBER/2))};
             return c;
         }
 
@@ -202,7 +202,7 @@ public:
 
     // Optimized verson of intersectRay function for rays with vertical directions
     template<typename RayCallback>
-    void intersectZAllignedRay(const Ray& ray, RayCallback& intersectCallback, float& max_dist)
+    void intersectZAllignedRay(const G3D::Ray& ray, RayCallback& intersectCallback, float& max_dist)
     {
         Cell cell = Cell::ComputeCell(ray.origin().x, ray.origin().y);
         if (!cell.isValid())

@@ -222,6 +222,12 @@ struct InstanceTemplate
     uint32 script_id;
 };
 
+struct InstanceTemplateAddon
+{
+    uint32 map;
+    bool forceHeroicEnabled; //true to enable this entry
+};
+
 enum LevelRequirementVsMode
 {
     LEVELREQUIREMENT_HEROIC = 70
@@ -237,7 +243,9 @@ typedef UNORDERED_MAP<Creature*, CreatureMover> CreatureMoveList;
 
 #define MAX_HEIGHT            100000.0f                     // can be use for find ground height at surface
 #define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
+#define MAX_FALL_DISTANCE     250000.0f                     // "unlimited fall" to find VMap ground if it is available, just larger than MAX_HEIGHT - INVALID_HEIGHT
 #define MIN_UNLOAD_DELAY      1                             // immediate unload
+#define DEFAULT_HEIGHT_SEARCH     50.0f                     // default search distance to find height at nearby locations
 
 typedef std::map<uint32/*leaderDBGUID*/, CreatureGroup*>        CreatureGroupHolderType;
 
@@ -307,15 +315,17 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
 
         // some calls like isInWater should not use vmaps due to processor power
         // can return INVALID_HEIGHT if under z+2 z coord not found height
-        float _GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
-        float GetHeight(float x, float y, float z, bool pCheckVMap=true) const;
-        
-        bool isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, uint32 phasemask = 0) const;
+        float _GetHeight(float x, float y, float z, bool pCheckVMap = true, float maxSearchDist = DEFAULT_HEIGHT_SEARCH) const;
+        float GetHeight(float x, float y, float z, bool pCheckVMap = true, float maxSearchDist = DEFAULT_HEIGHT_SEARCH) const;
+
+        float GetWaterOrGroundLevel(float x, float y, float z, float* ground = NULL, bool swim = false) const;
+
+        bool isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2) const;
         void Balance() { _dynamicTree.balance(); }
         void Remove(const GameObjectModel& mdl) { _dynamicTree.remove(mdl); }
         void Insert(const GameObjectModel& mdl) { _dynamicTree.insert(mdl); }
         bool Contains(const GameObjectModel& mdl) const { return _dynamicTree.contains(mdl);}
-        bool getObjectHitPos(uint32 phasemask, float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float &ry, float& rz, float modifyDist);
+        bool getObjectHitPos(float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float &ry, float& rz, float modifyDist);
 
         ZLiquidStatus getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, LiquidData *data = 0) const;
 
@@ -364,7 +374,7 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
         bool IsBattleGround() const { return i_mapEntry && i_mapEntry->IsBattleGround(); }
         bool IsBattleArena() const { return i_mapEntry && i_mapEntry->IsBattleArena(); }
         bool IsBattleGroundOrArena() const { return i_mapEntry && i_mapEntry->IsBattleGroundOrArena(); }
-
+   
         void AddObjectToRemoveList(WorldObject *obj);
         void AddObjectToSwitchList(WorldObject *obj, bool on);
         void DoDelayedMovesAndRemoves();
@@ -376,6 +386,7 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
         void resetMarkedCells() { marked_cells.reset(); }
         bool isCellMarked(uint32 pCellId) { return marked_cells.test(pCellId); }
         void markCell(uint32 pCellId) { marked_cells.set(pCellId); }
+        Player* GetPlayerInMap(uint64 guid);
         Creature* GetCreatureInMap(uint64 guid);
         GameObject* GetGameObjectInMap(uint64 guid);
 
@@ -441,6 +452,8 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
         void AddCreatureToPool(Creature*, uint32);
         void RemoveCreatureFromPool(Creature*, uint32);
         std::vector<Creature*> GetAllCreaturesFromPool(uint32);
+
+        static bool SupportsHeroicMode(const MapEntry* mapEntry);
 
     private:
         void LoadVMap(int pX, int pY);

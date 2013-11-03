@@ -98,9 +98,9 @@ void ScriptedAI::AttackStart(Unit* who)
 {
     if (!who)
         return;
-    
+
     bool melee = (GetCombatDistance() > ATTACK_DISTANCE) ? me->GetDistance(who) <= ATTACK_DISTANCE : true;
-    if (m_creature->Attack(who, melee))
+    if (m_creature->Attack(who, true))
     {
         m_creature->AddThreat(who, 0.0f);
         if (!InCombat)
@@ -166,12 +166,12 @@ void ScriptedAI::JustRespawned()
     Reset();
 }
 
-void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle)
+void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle, bool strictDist)
 {
     if (!victim)
         return;
 
-    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle);
+    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle, strictDist);
 }
 
 void ScriptedAI::DoStartNoMovement(Unit* victim)
@@ -190,30 +190,30 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-void ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return;
+        return false;
 
     //m_creature->StopMoving();
-    m_creature->CastSpell(victim, spellId, triggered);
+    return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-void ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return;
+        return false;
 
-    m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-void ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return;
+        return false;
 
     m_creature->StopMoving();
-    m_creature->CastSpell(who, spellInfo, triggered);
+    return m_creature->CastSpell(who, spellInfo, triggered);
 }
 
 void ScriptedAI::DoSay(const char* text, uint32 language, Unit* target, bool SayEmote)
@@ -386,6 +386,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -434,6 +435,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -817,7 +819,8 @@ void ScriptedAI::DoModifyThreatPercent(Unit *pUnit, int32 pct)
 void ScriptedAI::DoTeleportTo(float x, float y, float z, uint32 time)
 {
     m_creature->Relocate(x,y,z);
-    m_creature->SendMonsterMove(x, y, z, time);
+    float speed = me->GetDistance(x, y, z) / ((float)time * 0.001f);
+    m_creature->MonsterMoveWithSpeed(x, y, z, speed);
 }
 
 void ScriptedAI::DoTeleportPlayer(Unit* pUnit, float x, float y, float z, float o)

@@ -293,7 +293,6 @@ class Aura
         bool IsRemovedOnShapeLost() const { return m_isRemovedOnShapeLost; }
         bool IsRemoved() const { return m_isRemoved; }
         bool IsInUse() const { return m_in_use;}
-        bool IsStackableDebuff();
         void CleanupTriggeredSpells();
 
         virtual void Update(uint32 diff);
@@ -394,12 +393,16 @@ class AreaAura : public Aura
         AreaAuraType m_areaAuraType;
 };
 
+/* PersistentAreaAura is removed if we can't find any sources dynobjects in range*/
 class PersistentAreaAura : public Aura
 {
     public:
         PersistentAreaAura(SpellEntry const* spellproto, uint32 eff, int32 *currentBasePoints, Unit *target, Unit *caster = NULL, Item* castItem = NULL);
         ~PersistentAreaAura();
         void Update(uint32 diff);
+        void AddSource(DynamicObject* dynObj);
+    public:
+        std::list<uint64> sourceDynObjects;
 };
 
 Aura* CreateAura(SpellEntry const* spellproto, uint32 eff, int32 *currentBasePoints, Unit *target, Unit *caster = NULL, Item* castItem = NULL);

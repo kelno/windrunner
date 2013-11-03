@@ -555,7 +555,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         {
         case 1://lift off
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
             m_creature->StopMoving();
             DoYell(SAY_TAKEOFF, LANG_UNIVERSAL, NULL);
             DoPlaySoundToSet(m_creature, SOUND_TAKEOFF);
@@ -625,7 +625,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
         case 9://land
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        	m_creature->SetDisableGravity(false);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             for(uint8 i = 0; i < 2; i++)
@@ -1005,6 +1005,7 @@ struct npc_akama_illidanAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         JustCreated = true;
+        baseFaction = me->getFaction();
     }
 
     bool JustCreated;
@@ -1025,8 +1026,11 @@ struct npc_akama_illidanAI : public ScriptedAI
     uint32 TalkCount;
     uint32 Check_Timer;
 
+    uint32 baseFaction;
+
     void Reset()
     {
+        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
         WalkCount = 0;
         if(pInstance)
         {
@@ -1180,7 +1184,7 @@ struct npc_akama_illidanAI : public ScriptedAI
 
     void BeginWalk()
     {
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetWalk(false);
         m_creature->SetSpeed(MOVE_RUN, 1.0f);
         m_creature->GetMotionMaster()->MovePoint(0, AkamaWP[WalkCount].x, AkamaWP[WalkCount].y, AkamaWP[WalkCount].z);
     }
@@ -1191,6 +1195,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(NextPhase)
         {
         case PHASE_CHANNEL:
+            me->setFaction(baseFaction);
             BeginChannel();
             Timer = 5000;
             ChannelCount = 0;
@@ -1917,7 +1922,7 @@ void boss_illidan_stormrageAI::Reset()
     m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 0);
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 0);
-    m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+    m_creature->SetDisableGravity(false);
     m_creature->setActive(false);
     Summons.DespawnAll();
 }
@@ -1976,7 +1981,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 45479); // Equip our warglaives!
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 45481);
         m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetWalk(false);
         break;
     case 9:
         if(GETCRE(Akama, AkamaGUID))
@@ -2024,7 +2029,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
                 Akama->GetMotionMaster()->Clear(false);
                 //Akama->GetMotionMaster()->MoveIdle();
                 Akama->Relocate(x, y, z);
-                Akama->SendMonsterMove(x, y, z, 0);//Illidan must not die until Akama arrives.
+                Akama->MonsterMoveWithSpeed(x, y, z, 0); //Illidan must not die until Akama arrives.
                 Akama->GetMotionMaster()->MoveChase(m_creature);
             }
         }
@@ -2079,7 +2084,7 @@ void boss_illidan_stormrageAI::CastEyeBlast()
     if(!Trigger) return;
 
     Trigger->SetSpeed(MOVE_WALK, 3);
-    Trigger->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+    Trigger->SetWalk(true);
     Trigger->GetMotionMaster()->MovePoint(0, final.x, final.y, final.z);
 
     //Trigger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);

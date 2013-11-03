@@ -24,27 +24,44 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_black_temple.h"
 
-#define SAY_AGGRO                       -1564000
-#define SAY_NEEDLE1                     -1564001
-#define SAY_NEEDLE2                     -1564002
-#define SAY_SLAY1                       -1564003
-#define SAY_SLAY2                       -1564004
-#define SAY_SPECIAL1                    -1564005
-#define SAY_SPECIAL2                    -1564006
-#define SAY_ENRAGE1                     -1564007            //is this text actually in use?
-#define SAY_ENRAGE2                     -1564008
-#define SAY_DEATH                       -1564009
+enum NajentusSay {
+    SAY_AGGRO                      = -1564000,
+    SAY_NEEDLE1                    = -1564001,
+    SAY_NEEDLE2                    = -1564002,
+    SAY_SLAY1                      = -1564003,
+    SAY_SLAY2                      = -1564004,
+    SAY_SPECIAL1                   = -1564005,
+    SAY_SPECIAL2                   = -1564006,
+    SAY_ENRAGE1                    = -1564007,            //is this text actually in use?
+    SAY_ENRAGE2                    = -1564008,
+    SAY_DEATH                      = -1564009
+};
 
-//Spells
-#define SPELL_NEEDLE_SPINE             39992
-#define SPELL_TIDAL_BURST              39878
-#define SPELL_TIDAL_SHIELD             39872
-#define SPELL_IMPALING_SPINE           39837
-#define SPELL_CREATE_NAJENTUS_SPINE    39956
-#define SPELL_HURL_SPINE               39948
-#define SPELL_BERSERK                  45078
+enum NajentusSpells {
+    SPELL_NEEDLE_SPINE             = 39992, //dummy aura
+    SPELL_NEEDLE_SPINE2            = 39835, // physical damage + script effect
+    SPELL_NEEDLE_SPINE_EXPLOSION   = 39968, // AoE damages, linked via spell_linked_spell
+    SPELL_TIDAL_BURST              = 39878,
+    SPELL_TIDAL_SHIELD             = 39872,
+    SPELL_IMPALING_SPINE           = 39837,
+    SPELL_CREATE_NAJENTUS_SPINE    = 39956,
+    SPELL_HURL_SPINE               = 39948,
+    SPELL_BERSERK                  = 45078
+};
 
-#define GOBJECT_SPINE                  185584
+#define TIMER_NEEDLE_SPINE           2000 + rand()%500
+#define TIMER_NEEDLE_SPINE_START     5000
+#define TIMER_TIDAL_SHIELD           60000
+#define TIMER_SPECIAL_YELL           25000 + (rand()%76)*1000 // 25 - 100
+#define TIMER_SPECIAL_YELL_START     TIMER_SPECIAL_YELL + 20000
+#define TIMER_ENRAGE                 480000
+#define TIMER_IMPALING_SPINE         21000
+
+#define CREATURE_INVISIBLE_ANNOUNCER 30000 // To announce gate opening
+
+enum NajentusGobjects {
+    GOBJECT_SPINE                  = 185584
+};
 
 struct boss_najentusAI : public ScriptedAI
 {
@@ -65,10 +82,12 @@ struct boss_najentusAI : public ScriptedAI
 
     void Reset()
     {
-        EnrageTimer = 480000;
-        SpecialYellTimer = 45000 + (rand()%76)*1000;
+        EnrageTimer = TIMER_ENRAGE;
+        SpecialYellTimer = TIMER_SPECIAL_YELL_START;
+        TidalShieldTimer = TIMER_TIDAL_SHIELD;
 
-        ResetTimer();
+        NeedleSpineTimer = TIMER_NEEDLE_SPINE_START;
+        ImpalingSpineTimer = TIMER_IMPALING_SPINE;
 
         SpineTargetGUID = 0;
 
@@ -88,18 +107,27 @@ struct boss_najentusAI : public ScriptedAI
     void JustDied(Unit *victim)
     {
         if(pInstance)
+        {
+            DoSpawnCreature(CREATURE_INVISIBLE_ANNOUNCER,0,0,0,0, TEMPSUMMON_TIMED_DESPAWN, 30000);
             pInstance->SetData(DATA_HIGHWARLORDNAJENTUSEVENT, DONE);
+        }
 
         DoScriptText(SAY_DEATH, m_creature);
     }
 
+    bool hasShield()
+    {
+        return m_creature->HasAura(SPELL_TIDAL_SHIELD, 0);
+    }
+
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
-        if(spell->Id == SPELL_HURL_SPINE && m_creature->HasAura(SPELL_TIDAL_SHIELD, 0))
+        if(spell->Id == SPELL_HURL_SPINE && hasShield())
         {
             m_creature->RemoveAurasDueToSpell(SPELL_TIDAL_SHIELD);
             m_creature->CastSpell(m_creature, SPELL_TIDAL_BURST, true);
-            ResetTimer();
+            NeedleSpineTimer = 10000;
+            ImpalingSpineTimer = TIMER_IMPALING_SPINE;
         }
     }
 
@@ -122,13 +150,6 @@ struct boss_najentusAI : public ScriptedAI
         return true;
     }
 
-    void ResetTimer(uint32 inc = 0)
-    {
-        NeedleSpineTimer = 10000 + inc;
-        TidalShieldTimer = 60000 + inc;
-        ImpalingSpineTimer = 20000 + inc;
-    }
-
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
@@ -137,24 +158,31 @@ struct boss_najentusAI : public ScriptedAI
         if(TidalShieldTimer < diff)
         {
             m_creature->CastSpell(m_creature, SPELL_TIDAL_SHIELD, true);
-            ResetTimer(45000);
+            TidalShieldTimer = TIMER_TIDAL_SHIELD;
         }else TidalShieldTimer -= diff;
 
-        if(EnrageTimer < diff)
+        DoMeleeAttackIfReady();
+
+        if(hasShield())
+            return;
+
+        if(!m_creature->HasAura(SPELL_BERSERK, 0))
         {
-            DoScriptText(SAY_ENRAGE2, m_creature);
-            m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
-            EnrageTimer = 600000;
-        }else EnrageTimer -= diff;
+            if(EnrageTimer < diff)
+            {
+                DoScriptText(SAY_ENRAGE2, m_creature);
+                m_creature->CastSpell(m_creature, SPELL_BERSERK, true);
+            }else EnrageTimer -= diff;
+        }
 
         if(NeedleSpineTimer < diff)
         {
             //m_creature->CastSpell(m_creature, SPELL_NEEDLE_SPINE, true);
             std::list<Unit*> target;
-            SelectUnitList(target, 3, SELECT_TARGET_RANDOM, 80, true);
+            SelectUnitList(target, 3, SELECT_TARGET_RANDOM, 80.0f, true);
             for(std::list<Unit*>::iterator i = target.begin(); i != target.end(); ++i)
-                m_creature->CastSpell(*i, 39835, true);
-            NeedleSpineTimer = 20000+rand()%5000;
+                me->CastSpell(*i, SPELL_NEEDLE_SPINE2, true);
+            NeedleSpineTimer = TIMER_NEEDLE_SPINE;
         }else NeedleSpineTimer -= diff;
 
         if(SpecialYellTimer < diff)
@@ -164,7 +192,7 @@ struct boss_najentusAI : public ScriptedAI
             case 0: DoScriptText(SAY_SPECIAL1, m_creature); break;
             case 1: DoScriptText(SAY_SPECIAL2, m_creature); break;
             }
-            SpecialYellTimer = 25000 + (rand()%76)*1000;
+            SpecialYellTimer = TIMER_SPECIAL_YELL;
         }else SpecialYellTimer -= diff;
 
         if(ImpalingSpineTimer < diff)
@@ -183,11 +211,9 @@ struct boss_najentusAI : public ScriptedAI
                 case 0: DoScriptText(SAY_NEEDLE1, m_creature); break;
                 case 1: DoScriptText(SAY_NEEDLE2, m_creature); break;
                 }
-                ImpalingSpineTimer = 21000;
+                ImpalingSpineTimer = TIMER_IMPALING_SPINE;
             }
         }else ImpalingSpineTimer -= diff;
-
-        DoMeleeAttackIfReady();
     }
 };
 

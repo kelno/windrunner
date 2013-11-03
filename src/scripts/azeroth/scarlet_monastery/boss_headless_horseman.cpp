@@ -192,7 +192,7 @@ struct mob_wisp_invisAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || Creaturetype != 1 || !who->isTargetableForAttack())
+        if (!who || Creaturetype != 1 || !me->canAttack(who))
             return;
 
         if (me->GetDistance2d(who) < 0.1 && !who->HasAura(SPELL_SQUASH_SOUL,0))
@@ -447,7 +447,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
     {
         me->SetVisibility(VISIBILITY_OFF);
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-        me->AddUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+        me->SetDisableGravity(true);
         me->SetSpeed(MOVE_WALK, 5.0f, true);
         wp_reached = false;
         count = 0;
@@ -485,7 +485,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
 
             break;
         case 19:
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+            me->SetDisableGravity(false);
             break;
         case 20:
         {
@@ -895,7 +895,7 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!who || !who->isTargetableForAttack() || !me->IsHostileTo(who) || me->getVictim())
+        if (!who || !me->canAttack(who) || !me->IsHostileTo(who) || me->getVictim())
             return;
 
         me->AddThreat(who, 0.0f);

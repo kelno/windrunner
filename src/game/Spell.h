@@ -22,6 +22,7 @@
 #define __SPELL_H
 
 #include "GridDefines.h"
+#include "PathFinder.h"
 
 class Unit;
 class Player;
@@ -342,7 +343,7 @@ class Spell
         Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL, bool skipCheck = false );
         ~Spell();
 
-        void prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
+        bool prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
         void cancel();
         void update(uint32 difftime);
         void cast(bool skipCheck = false);
@@ -351,8 +352,8 @@ class Spell
         void TakeReagents();
         void TakeCastItem();
         void TriggerSpell();
-        uint8 CanCast(bool strict);
-        int16 PetCanCast(Unit* target);
+        SpellFailedReason CheckCast(bool strict);
+        SpellFailedReason PetCanCast(Unit* target);
         bool CanAutoCast(Unit* target);
 
         // handlers
@@ -362,10 +363,10 @@ class Spell
         void _handle_immediate_phase();
         void _handle_finish_phase();
 
-        uint8 CheckItems();
-        uint8 CheckRange(bool strict);
-        uint8 CheckPower();
-        uint8 CheckCasterAuras() const;
+        SpellFailedReason CheckItems();
+        SpellFailedReason CheckRange(bool strict);
+        SpellFailedReason CheckPower();
+        SpellFailedReason CheckCasterAuras() const;
 
         int32 CalculateDamage(uint8 i, Unit* target) { return m_caster->CalculateSpellDamage(m_spellInfo,i,m_currentBasePoints[i],target); }
         int32 CalculatePowerCost();
@@ -391,7 +392,7 @@ class Spell
         void CheckSrc() { if(!m_targets.HasSrc()) m_targets.setSrc(m_caster); }
         void CheckDst() { if(!m_targets.HasDst()) m_targets.setDestination(m_caster); }
 
-        void SendCastResult(uint8 result);
+        void SendCastResult(SpellFailedReason result);
         void SendSpellStart();
         void SendSpellGo();
         void SendSpellCooldown();
@@ -420,6 +421,10 @@ class Spell
         bool IsNextMeleeSwingSpell() const
         {
             return m_spellInfo->Attributes & (SPELL_ATTR_ON_NEXT_SWING_1|SPELL_ATTR_ON_NEXT_SWING_2);
+        }
+        static bool IsNextMeleeSwingSpell(SpellEntry const* spellInfo)
+        {
+            return spellInfo && spellInfo->Attributes & (SPELL_ATTR_ON_NEXT_SWING_1|SPELL_ATTR_ON_NEXT_SWING_2);
         }
         bool IsRangedSpell() const
         {
@@ -463,6 +468,8 @@ class Spell
         SpellScript* getScript() { return m_script; }
         
         bool DoesApplyAuraName(uint32 name);
+
+        static bool IsBinaryMagicResistanceSpell(SpellEntry const* spell);
 
     protected:
         bool HasGlobalCooldown();
@@ -614,6 +621,8 @@ class Spell
         bool m_skipCheck;
 
         SpellScript* m_script;
+
+        PathInfo m_preGeneratedPath;
 };
 
 namespace Trinity
@@ -646,21 +655,32 @@ namespace Trinity
 
             for(typename GridRefManager<T>::iterator itr = m.begin(); itr != m.end(); ++itr)
             {
-                if( !itr->getSource()->isAlive() || 
-                    ( itr->getSource()->GetTypeId() == TYPEID_PLAYER && ((itr->getSource()->ToPlayer())->isInFlight() || (itr->getSource()->ToPlayer())->isSpectator()) ) 
-                  )
-                    continue;
+                if(!itr->getSource()->isAlive())
+                	continue;
+
+                if (itr->getSource()->GetTypeId() == TYPEID_PLAYER)
+                {
+                	if ((itr->getSource()->ToPlayer())->isInFlight())
+		                continue;
+
+                	if ((itr->getSource()->ToPlayer())->isSpectator())
+                		continue;
+                }
 
                 switch (i_TargetType)
                 {
                     case SPELL_TARGETS_ALLY:
-                        if (!itr->getSource()->isAttackableByAOE() || !i_caster->IsFriendlyTo( itr->getSource() ))
+                        if(!itr->getSource()->isAttackableByAOE() || !i_caster->IsFriendlyTo( itr->getSource() ))
                             continue;
+                        //cannot target self. Really really really not sure about this flag
+                        if((i_spell.m_spellInfo->AttributesEx4) & 0x2000 && i_caster == itr->getSource() )
+                            continue;
+
+                        if (!i_caster->IsFriendlyTo(itr->getSource()))
+                        	continue;
                         break;
                     case SPELL_TARGETS_ENEMY:
                     {
-                        if(itr->getSource()->GetTypeId()==TYPEID_UNIT && (itr->getSource()->ToCreature())->isTotem())
-                            continue;
                         if(!itr->getSource()->isAttackableByAOE())
                             continue;
 
@@ -676,37 +696,52 @@ namespace Trinity
                             if (!check->IsHostileTo( itr->getSource() ))
                                 continue;
                         }
-                    }break;
+                        break;
+                    }
                     case SPELL_TARGETS_ENTRY:
                     {
                         if(itr->getSource()->GetEntry()!= i_entry)
                             continue;
-                    }break;
-                    default: continue;
+                        break;
+                    }
+                    default:
+                    	continue;
                 }
 
                 switch(i_push_type)
                 {
                     case PUSH_IN_FRONT:
-                        if(i_caster->isInFront((Unit*)(itr->getSource()), i_radius, M_PI/3 ))
-                            i_data->push_back(itr->getSource());
+                    	if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius))
+                    	{
+                            if(i_caster->isInFront((Unit*)(itr->getSource()), M_PI/3 ))
+                        	    i_data->push_back(itr->getSource());
+                    	}
                         break;
                     case PUSH_IN_BACK:
-                        if(i_caster->isInBack((Unit*)(itr->getSource()), i_radius, M_PI/3 ))
-                            i_data->push_back(itr->getSource());
+                    	if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius))
+                    	{
+                            if(i_caster->isInBack((Unit*)(itr->getSource()), M_PI/3 ))
+                        	    i_data->push_back(itr->getSource());
+                    	}
                         break;
                     case PUSH_IN_LINE:
-                        if(i_caster->isInLine((Unit*)(itr->getSource()), i_radius ))
-                            i_data->push_back(itr->getSource());
+                    	if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius))
+                    	{
+                            if(i_caster->HasInLine(itr->getSource(), i_caster->GetObjectSize()))
+                        	    i_data->push_back(itr->getSource());
+                    	}
                         break;
                     case PUSH_IN_FRONT_180:
-                        if(i_caster->isInFront((Unit*)(itr->getSource()), i_radius, M_PI ))
-                             i_data->push_back(itr->getSource());
+                    	if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius))
+                    	{
+                            if(i_caster->isInFront((Unit*)(itr->getSource()), M_PI ))
+                        	    i_data->push_back(itr->getSource());
+                    	}
                         break;
                     default:
                         if(i_TargetType != SPELL_TARGETS_ENTRY && i_push_type == PUSH_SRC_CENTER && i_caster) // if caster then check distance from caster to target (because of model collision)
                         {
-                            if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius) )
+                            if(i_caster->IsWithinDistInMap( itr->getSource(), i_radius, true) )
                                 i_data->push_back(itr->getSource());
                         }
                         else

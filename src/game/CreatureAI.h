@@ -85,15 +85,15 @@ class UnitAI
     protected:
         Unit *me;
         //combat movement part not yet implemented. Creatures with m_combatDistance and target distance > 5.0f wont show melee weapons.
-        float m_combatDistance;         
         bool m_allowCombatMovement;
+        float m_combatDistance;
     public:
-        UnitAI(Unit *u) : me(u), m_combatDistance(0.5f), m_allowCombatMovement(true) {}
+        UnitAI(Unit *u) : me(u), m_allowCombatMovement(true), m_combatDistance(0.5f) {}
         virtual void AttackStart(Unit *);
         virtual void UpdateAI(const uint32 diff) = 0;
 
         float GetCombatDistance() { return m_combatDistance; };
-        void SetCombatDistance(float dist);
+        void SetCombatDistance(float dist, float angle = 0.0f);
 
         bool IsCombatMovementAllowed() { return m_allowCombatMovement; };
         void SetCombatMovementAllowed(bool allow);
@@ -146,7 +146,7 @@ class SimpleCharmedAI : public PlayerAI
 class CreatureAI : public UnitAI
 {
     protected:
-        Creature *me;
+        Creature* const me;
 
         bool UpdateVictim(bool evade = true);
     public:
@@ -173,6 +173,12 @@ class CreatureAI : public UnitAI
 
         // Called when the creature kills a unit
         virtual void KilledUnit(Unit *) {}
+
+        // Called when owner takes damage
+        virtual void OwnerAttackedBy(Unit* /*attacker*/) {}
+
+        // Called when owner attacks something
+        virtual void OwnerAttacked(Unit* /*target*/) {}
 
         // Called when the creature summon successfully other creature
         virtual void JustSummoned(Creature* ) {}
@@ -213,6 +219,9 @@ class CreatureAI : public UnitAI
         virtual void MasterKilledUnit(Unit* unit) {}
         
         virtual bool sOnDummyEffect(Unit* /*caster*/, uint32 /*spellId*/, uint32 /*effIndex*/) { return false; }
+        
+        /* Script interaction */
+        virtual uint64 message(uint32 id, uint64 data) { return 0; }
 };
 
 struct SelectableAI : public FactoryHolder<CreatureAI>, public Permissible<Creature>

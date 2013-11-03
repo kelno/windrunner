@@ -478,7 +478,7 @@ struct boss_kaelthasAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!m_creature->getVictim() && who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
+        if (!m_creature->getVictim() && me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
         {
             if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -1432,7 +1432,7 @@ struct mob_phoenix_tkAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);//birds can fly! :)
+        m_creature->SetDisableGravity(true);
         egg = true;
         Cycle_Timer = 2000;
         m_creature->CastSpell(m_creature,SPELL_BURN,true);

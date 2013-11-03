@@ -929,8 +929,7 @@ Map::Remove(T *obj, bool remove)
     }
 }
 
-void
-Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
+void Map::PlayerRelocation(Player *player, float x, float y, float z, float orientation)
 {
     assert(player);
 
@@ -1729,13 +1728,13 @@ inline GridMap *Map::GetGrid(float x, float y)
     return GridMaps[gx][gy];
 }
 
-bool Map::getObjectHitPos(uint32 phasemask, float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float& ry, float& rz, float modifyDist)
+bool Map::getObjectHitPos(float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float& ry, float& rz, float modifyDist)
 {
-    Vector3 startPos = Vector3(x1, y1, z1);
-    Vector3 dstPos = Vector3(x2, y2, z2);
+    G3D::Vector3 startPos(x1, y1, z1);
+    G3D::Vector3 dstPos(x2, y2, z2);
     
-    Vector3 resultPos;
-    bool result = _dynamicTree.getObjectHitPos(phasemask, startPos, dstPos, resultPos, modifyDist);
+    G3D::Vector3 resultPos;
+    bool result = _dynamicTree.getObjectHitPos(startPos, dstPos, resultPos, modifyDist);
     
     rx = resultPos.x;
     ry = resultPos.y;
@@ -1743,45 +1742,33 @@ bool Map::getObjectHitPos(uint32 phasemask, float x1, float y1, float z1, float 
     return result;
 }
 
-float Map::GetHeight(float x, float y, float z, bool pUseVmaps) const
+float Map::GetHeight(float x, float y, float z, bool pUseVmaps /*= true*/, float maxSearchDist /*= DEFAULT_HEIGHT_SEARCH*/) const
 {
     if (!MapManager::IsValidMapCoord(i_id, x, y, z))
         return 0;
-    
-    return std::max<float>(_GetHeight(x, y, z, pUseVmaps), _dynamicTree.getHeight(x, y, z));
+
+    return std::max<float>(_GetHeight(x, y, z, pUseVmaps, maxSearchDist), _dynamicTree.getHeight(x, y, z, maxSearchDist));
 }
 
-float Map::_GetHeight(float x, float y, float z, bool pUseVmaps) const
+float Map::_GetHeight(float x, float y, float z, bool pUseVmaps /*= true*/, float maxSearchDist /*= DEFAULT_HEIGHT_SEARCH*/) const
 {
     // find raw .map surface under Z coordinates
-    float mapHeight;
+    float mapHeight = VMAP_INVALID_HEIGHT_VALUE;
     if (GridMap *gmap = const_cast<Map*>(this)->GetGrid(x, y))
     {
         float _mapheight = gmap->getHeight(x,y);
-
         // look from a bit higher pos to find the floor, ignore under surface case
         if (z + 2.0f > _mapheight)
             mapHeight = _mapheight;
-        else
-            mapHeight = VMAP_INVALID_HEIGHT_VALUE;
     }
-    else
-        mapHeight = VMAP_INVALID_HEIGHT_VALUE;
 
-    float vmapHeight;
+    float vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
     if (pUseVmaps)
     {
         VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
         if (vmgr->isHeightCalcEnabled())
-        {
-            // look from a bit higher pos to find the floor
-            vmapHeight = vmgr->getHeight(GetId(), x, y, z + 2.0f);
-        }
-        else
-            vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
+            vmapHeight = vmgr->getHeight(GetId(), x, y, z + 2.0f, maxSearchDist);   // look from a bit higher pos to find the floor
     }
-    else
-        vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
 
     // mapHeight set for any above raw ground Z or <= INVALID_HEIGHT
     // vmapheight set for any under Z value or <= INVALID_HEIGHT
@@ -1803,15 +1790,8 @@ float Map::_GetHeight(float x, float y, float z, bool pUseVmaps) const
         else
             return vmapHeight;                              // we have only vmapHeight (if have)
     }
-    else
-    {
-        if (!pUseVmaps)
-            return mapHeight;                               // explicitly use map data (if have)
-        else if (mapHeight > INVALID_HEIGHT && (z < mapHeight + 2 || z == MAX_HEIGHT))
-            return mapHeight;                               // explicitly use map data if original z < mapHeight but map found (z+2 > mapHeight)
-        else
-            return VMAP_INVALID_HEIGHT_VALUE;               // we not have any height
-    }
+
+    return mapHeight;                               // explicitly use map data
 }
 
 inline bool IsOutdoorWMO(uint32 mogpFlags, int32 adtId, int32 rootId, int32 groupId, WMOAreaTableEntry const* wmoEntry, AreaTableEntry const* atEntry, uint32 mapId)
@@ -1926,9 +1906,9 @@ ZLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidTyp
     if (!Trinity::IsValidMapCoord(x, y, z, 0))
         return LIQUID_MAP_NO_WATER;
 
-    /*if (vmgr->GetLiquidLevel(GetId(), x, y, z, ReqLiquidType, liquid_level, ground_level, liquid_type))
+    if (vmgr->GetLiquidLevel(GetId(), x, y, z, ReqLiquidType, liquid_level, ground_level, liquid_type))
     {
-        sLog.outDebug("getLiquidStatus(): vmap liquid level: %f ground: %f type: %u", liquid_level, ground_level, liquid_type);
+       // sLog.outDebug("getLiquidStatus(): vmap liquid level: %f ground: %f type: %u", liquid_level, ground_level, liquid_type);
         // Check water level and ground level
         if (liquid_level > ground_level && z > ground_level - 2)
         {
@@ -1952,7 +1932,7 @@ ZLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidTyp
                 return LIQUID_MAP_WATER_WALK;
             result = LIQUID_MAP_ABOVE_WATER;
         }
-    }*/
+    }
 
     if(GridMap* gmap = const_cast<Map*>(this)->GetGrid(x, y))
     {
@@ -1997,10 +1977,10 @@ uint32 Map::GetZoneId(uint16 areaflag,uint32 map_id)
         return 0;
 }
 
-bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, uint32 phasemask) const
+bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2) const
 {
     return VMAP::VMapFactory::createOrGetVMapManager()->isInLineOfSight(GetId(), x1, y1, z1, x2, y2, z2)
-            && _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2, phasemask);
+            && _dynamicTree.isInLineOfSight(x1, y1, z1, x2, y2, z2);
 }
 
 bool Map::IsInWater(float x, float y, float pZ, LiquidData *data) const
@@ -2398,6 +2378,20 @@ void Map::RemoveCreatureFromPool(Creature *cre, uint32 poolId)
     }
 }
 
+bool Map::SupportsHeroicMode(const MapEntry* mapEntry)
+{
+    if(!mapEntry)
+        return false;
+    if (mapEntry->resetTimeHeroic)
+        return true;
+
+    const InstanceTemplateAddon* instTempAddon = objmgr.GetInstanceTemplateAddon(mapEntry->MapID);
+    if(instTempAddon && instTempAddon->forceHeroicEnabled)
+        return true;
+
+    return false;
+}
+
 std::vector<Creature*> Map::GetAllCreaturesFromPool(uint32 poolId)
 {
     CreaturePoolMember::iterator itr = m_cpmembers.find(poolId);
@@ -2406,6 +2400,24 @@ std::vector<Creature*> Map::GetAllCreaturesFromPool(uint32 poolId)
 
     std::vector<Creature*> emptyVect;
     return emptyVect;
+}
+
+float Map::GetWaterOrGroundLevel(float x, float y, float z, float* ground /*= NULL*/, bool /*swim = false*/) const
+{
+    if (const_cast<Map*>(this)->GetGrid(x, y))
+    {
+        // we need ground level (including grid height version) for proper return water level in point
+        float ground_z = GetHeight(x, y, z, true, 50.0f);
+        if (ground)
+            *ground = ground_z;
+
+        LiquidData liquid_status;
+
+        ZLiquidStatus res = getLiquidStatus(x, y, ground_z, MAP_ALL_LIQUIDS, &liquid_status);
+        return res ? liquid_status.level : ground_z;
+    }
+
+    return VMAP_INVALID_HEIGHT_VALUE;
 }
 
 template void Map::Add(Corpse *);
@@ -2610,6 +2622,13 @@ void InstanceMap::Remove(Player *player, bool remove)
     Map::Remove(player, remove);
     // for normal instances schedule the reset after all players have left
     SetResetSchedule(true);
+}
+
+Player* Map::GetPlayerInMap(uint64 guid)
+{
+    Player * obj = HashMapHolder<Player>::Find(guid);
+    if(obj && obj->GetInstanceId() != GetInstanceId()) obj = NULL;
+    return obj;
 }
 
 Creature * Map::GetCreatureInMap(uint64 guid)
