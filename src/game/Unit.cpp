@@ -880,10 +880,20 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
 
         if (pVictim->GetTypeId() != TYPEID_PLAYER)
         {
-            if(spellProto && IsDamageToThreatSpell(spellProto))
+            if(spellProto && IsDamageToThreatSpell(spellProto)) {
+                //sLog.outString("DealDamage (IsDamageToThreatSpell), AddThreat : %f * 2 = %f",damage,damage*2);
                 pVictim->AddThreat(this, damage*2, damageSchoolMask, spellProto);
-            else
-                pVictim->AddThreat(this, damage, damageSchoolMask, spellProto);
+            } else {
+                float threat = damage;
+                if(spellProto)
+                {
+                    SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(spellProto->Id);
+                    if(threatSpell && threatSpell->pctMod != 1.0f)
+                        threat *= threatSpell->pctMod;
+                }
+                //sLog.outString("DealDamage, AddThreat : %f",threat);
+                pVictim->AddThreat(this, threat, damageSchoolMask, spellProto);
+            }
         }
         else                                                // victim is a player
         {
@@ -2155,13 +2165,13 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst(const Unit *pVictim, WeaponAttackT
     // Critical hit chance
     float crit_chance = GetUnitCriticalChance(attType, pVictim);
 
-    // stunned target cannot dodge and this is check in GetUnitDodgeChance() (returned 0 in this case)
+    // stunned target cannot dodge and this is checked in GetUnitDodgeChance() (returned 0 in this case)
     float dodge_chance = pVictim->GetUnitDodgeChance();
     float block_chance = pVictim->GetUnitBlockChance();
     float parry_chance = pVictim->GetUnitParryChance();
 
     // Useful if want to specify crit & miss chances for melee, else it could be removed
-    DEBUG_LOG("MELEE OUTCOME: miss %f crit %f dodge %f parry %f block %f", miss_chance,crit_chance,dodge_chance,parry_chance,block_chance);
+    DEBUG_LOG ("MELEE OUTCOME: miss %f crit %f dodge %f parry %f block %f", miss_chance,crit_chance,dodge_chance,parry_chance,block_chance);
 
     return RollMeleeOutcomeAgainst(pVictim, attType, int32(crit_chance*100), int32(miss_chance*100), int32(dodge_chance*100),int32(parry_chance*100),int32(block_chance*100), false);
 }
@@ -2211,21 +2221,24 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
     }
     else
     {
-        // Reduce dodge chance by attacker expertise rating
-        if (GetTypeId() == TYPEID_PLAYER)
-            dodge_chance -= int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType)*100);
-
-        // Modify dodge chance by attacker SPELL_AURA_MOD_COMBAT_RESULT_CHANCE
-        dodge_chance+= GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_COMBAT_RESULT_CHANCE, VICTIMSTATE_DODGE)*100;
-        dodge_chance = int32 (float (dodge_chance) * GetTotalAuraMultiplier(SPELL_AURA_MOD_ENEMY_DODGE));
-
-        tmp = dodge_chance;
-        if (   (tmp > 0)                                        // check if unit _can_ dodge
-            && ((tmp -= skillBonus) > 0)
-            && roll < (sum += tmp))
+        if(dodge_chance > 0) // check if unit _can_ dodge
         {
-            DEBUG_LOG ("RollMeleeOutcomeAgainst: DODGE <%d, %d)", sum-tmp, sum);
-            return MELEE_HIT_DODGE;
+            int32 real_dodge_chance = dodge_chance;
+            real_dodge_chance -= skillBonus;
+
+            // Reduce dodge chance by attacker expertise rating
+            if (GetTypeId() == TYPEID_PLAYER)
+                real_dodge_chance -= int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType)*100);
+            // Modify dodge chance by attacker SPELL_AURA_MOD_COMBAT_RESULT_CHANCE
+            real_dodge_chance+= GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_COMBAT_RESULT_CHANCE, VICTIMSTATE_DODGE)*100;
+            real_dodge_chance = int32 (float (real_dodge_chance) * GetTotalAuraMultiplier(SPELL_AURA_MOD_ENEMY_DODGE));
+
+            if (   (real_dodge_chance > 0)                                        
+                && roll < (sum += real_dodge_chance))
+            {
+                DEBUG_LOG ("RollMeleeOutcomeAgainst: DODGE <%d, %d)", sum-real_dodge_chance, sum);
+                return MELEE_HIT_DODGE;
+            }
         }
     }
 
@@ -2238,53 +2251,52 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
     }
     else
     {
-        // Reduce parry chance by attacker expertise rating
-        if (GetTypeId() == TYPEID_PLAYER)
-            parry_chance-= int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType)*100);
-
-        if(pVictim->GetTypeId()==TYPEID_PLAYER || !((pVictim->ToCreature())->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_PARRY) )
+        if(parry_chance > 0) // check if unit _can_ parry
         {
-            int32 tmp = int32(parry_chance);
+            int32 real_parry_chance = parry_chance;
+            real_parry_chance -= skillBonus;
 
-            if (   (tmp > 0)                                    // check if unit _can_ parry
-                && ((tmp -= skillBonus) > 0)
-                && (roll < (sum += tmp)))
+            // Reduce parry chance by attacker expertise rating
+            if (GetTypeId() == TYPEID_PLAYER)
+                real_parry_chance -= int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType)*100);
+
+            if (   (real_parry_chance > 0)     
+                && (roll < (sum += real_parry_chance)))
             {
-                DEBUG_LOG ("RollMeleeOutcomeAgainst: PARRY <%d, %d)", sum-tmp, sum);
+                DEBUG_LOG ("RollMeleeOutcomeAgainst: PARRY <%d, %d)", sum-real_parry_chance, sum);
                 ((Unit*)pVictim)->HandleParryRush();
                 return MELEE_HIT_PARRY;
             }
-        }
 
-        if(pVictim->GetTypeId()==TYPEID_PLAYER || !((pVictim->ToCreature())->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_BLOCK) )
-        {
-            tmp = block_chance;
-            if (   (tmp > 0)                                    // check if unit _can_ block
-                && ((tmp -= skillBonus) > 0)
-                && (roll < (sum += tmp)))
+            int32 real_block_chance = block_chance;
+            if(block_chance > 0) // check if unit _can_ block
+                real_block_chance -= skillBonus;
+
+            if (   (real_block_chance > 0)      
+                && (roll < (sum += real_block_chance)))
             {
                 // Critical chance
-                tmp = crit_chance + skillBonus2;
-                if ( GetTypeId() == TYPEID_PLAYER && SpellCasted && tmp > 0 )
+                int16 blocked_crit_chance = crit_chance + skillBonus2;
+                if ( GetTypeId() == TYPEID_PLAYER && SpellCasted && blocked_crit_chance > 0 )
                 {
-                    if ( roll_chance_i(tmp/100))
+                    if ( roll_chance_i(blocked_crit_chance/100))
                     {
                         DEBUG_LOG ("RollMeleeOutcomeAgainst: BLOCKED CRIT");
                         return MELEE_HIT_BLOCK_CRIT;
                     }
                 }
-                DEBUG_LOG ("RollMeleeOutcomeAgainst: BLOCK <%d, %d)", sum-tmp, sum);
+                DEBUG_LOG ("RollMeleeOutcomeAgainst: BLOCK <%d, %d)", sum-blocked_crit_chance, sum);
                 return MELEE_HIT_BLOCK;
             }
         }
     }
 
     // Critical chance
-    tmp = crit_chance + skillBonus2;
+    int32 real_crit_chance = crit_chance + skillBonus2;
 
-    if (tmp > 0 && roll < (sum += tmp))
+    if (real_crit_chance > 0 && roll < (sum += real_crit_chance))
     {
-        DEBUG_LOG ("RollMeleeOutcomeAgainst: CRIT <%d, %d)", sum-tmp, sum);
+        DEBUG_LOG ("RollMeleeOutcomeAgainst: CRIT <%d, %d)", sum-real_crit_chance, sum);
         if(GetTypeId() == TYPEID_UNIT && ((this->ToCreature())->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_CRIT))
             DEBUG_LOG ("RollMeleeOutcomeAgainst: CRIT DISABLED)");
         else
@@ -2574,29 +2586,20 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
 
     bool attackFromBehind = (!pVictim->HasInArc(M_PI,this) || spell->AttributesEx2 & SPELL_ATTR_EX2_BEHIND_TARGET);
 
-    //expertise can't negate both dodge & parry
-    int32 expertiseLeft = 0;
-    if (GetTypeId() == TYPEID_PLAYER)
-        expertiseLeft = int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType) * 100.0f);
-    sLog.outString("expertiseLeft = %i",expertiseLeft);
     // Roll dodge
-    int32 dodgeChance;
-    
+    int32 dodgeChance = int32(pVictim->GetUnitDodgeChance()*100.0f) - skillDiff * 4;
+    // Reduce enemy dodge chance by SPELL_AURA_MOD_COMBAT_RESULT_CHANCE
+    dodgeChance+= GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_COMBAT_RESULT_CHANCE, VICTIMSTATE_DODGE)*100;
+    dodgeChance = int32(float(dodgeChance) * GetTotalAuraMultiplier(SPELL_AURA_MOD_ENEMY_DODGE));
+
+    // Reduce dodge chance by attacker expertise rating
+    if (GetTypeId() == TYPEID_PLAYER)
+        dodgeChance-=int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType) * 100.0f);
+    if (dodgeChance < 0)
+        dodgeChance = 0;
+
     // Can`t dodge from behind in PvP (but its possible in PvE)
     if (GetTypeId() == TYPEID_PLAYER && pVictim->GetTypeId() == TYPEID_PLAYER && attackFromBehind)
-    {
-        dodgeChance = 0;
-    } else {
-        dodgeChance = int32(pVictim->GetUnitDodgeChance()*100.0f) - skillDiff * 4;
-        // Reduce enemy dodge chance by SPELL_AURA_MOD_COMBAT_RESULT_CHANCE
-        dodgeChance+= GetTotalAuraModifierByMiscValue(SPELL_AURA_MOD_COMBAT_RESULT_CHANCE, VICTIMSTATE_DODGE)*100;
-        dodgeChance = int32(float(dodgeChance) * GetTotalAuraMultiplier(SPELL_AURA_MOD_ENEMY_DODGE));
-        int32 diff = expertiseLeft - dodgeChance;
-        dodgeChance -= expertiseLeft;
-        expertiseLeft = diff > 0 ? diff : 0;
-    }
-
-    if (dodgeChance < 0)
         dodgeChance = 0;
 
     // Rogue talent`s cant be dodged
@@ -2618,18 +2621,18 @@ SpellMissInfo Unit::MeleeSpellHitResult(Unit *pVictim, SpellEntry const *spell)
         return SPELL_MISS_DODGE;
 
     // Roll parry
-    if(!attackFromBehind)  // Can`t parry from behind
-    {
-        int32 parryChance = int32(pVictim->GetUnitParryChance()*100.0f)  - skillDiff * 4;
-        // Reduce parry chance by attacker expertise rating
-        parryChance -= expertiseLeft;
-        if (parryChance < 0)
-            parryChance = 0;
+    int32 parryChance = int32(pVictim->GetUnitParryChance()*100.0f)  - skillDiff * 4;
+    // Reduce parry chance by attacker expertise rating
+    if (GetTypeId() == TYPEID_PLAYER)
+        parryChance-=int32((this->ToPlayer())->GetExpertiseDodgeOrParryReduction(attType) * 100.0f);
+    // Can`t parry from behind
+    if (parryChance < 0 || attackFromBehind)
+        parryChance = 0;
 
-        tmp += parryChance;
-        if (roll < tmp)
-            return SPELL_MISS_PARRY;
-    }
+    tmp += parryChance;
+    if (roll < tmp)
+        return SPELL_MISS_PARRY;
+
     return SPELL_MISS_NONE;
 }
 
@@ -2884,14 +2887,16 @@ float Unit::GetUnitParryChance() const
     }
     else if(GetTypeId() == TYPEID_UNIT)
     {
-        if(GetCreatureType() != CREATURE_TYPE_BEAST)
+        if(ToCreature()->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_PARRY)
+            chance = 0.0f;
+        else if(ToCreature()->isWorldBoss()) // Add some parry chance for bosses. Nobody seems to knows the exact rule but it's somewhere around 14%.
+            chance = 13.0f;
+        else if(GetCreatureType() != CREATURE_TYPE_BEAST)
         {
             chance = 5.0f;
             chance += GetTotalAuraModifier(SPELL_AURA_MOD_PARRY_PERCENT);
         }
-        // Add some parry chance for bosses. Nobody knows the rule but it's somewhere around 14%.
-        if(ToCreature()->isWorldBoss())
-            chance += 8.0f;
+
     }
 
     return chance > 0.0f ? chance : 0.0f;
@@ -2916,7 +2921,8 @@ float Unit::GetUnitBlockChance() const
     }
     else
     {
-        if(((Creature const*)this)->isTotem())
+        if(   (ToCreature()->GetCreatureInfo()->flags_extra & CREATURE_FLAG_EXTRA_NO_BLOCK)
+           || (ToCreature()->isTotem()) )
             return 0.0f;
         else
         {
@@ -7706,14 +7712,9 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     AuraList const& mModDamagePercentDone = GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_DONE);
     for(AuraList::const_iterator i = mModDamagePercentDone.begin(); i != mModDamagePercentDone.end(); ++i)
     {
-        if( ((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spellProto)) &&
-            (*i)->GetSpellProto()->EquippedItemClass == -1 &&
-                                                            // -1 == any item class (not wand then)
-            (*i)->GetSpellProto()->EquippedItemInventoryTypeMask == 0 )
-                                                            // 0 == any inventory type (not wand then)
-        {
+        if((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spellProto)
+            && ! ((*i)->GetSpellProto()->Attributes & SPELL_ATTR_ONLY_AFFECT_WEAPON))
             DoneTotalMod *= ((*i)->GetModifierValue() +100.0f)/100.0f;
-        }
     }
 
     uint32 creatureTypeMask = pVictim->GetCreatureTypeMask();
@@ -9186,6 +9187,7 @@ int32 Unit::ModifyHealth(int32 dVal)
     int32 curHealth = (int32)GetHealth();
 
     int32 val = dVal + curHealth;
+
     if(val <= 0)
     {
         SetHealth(0);
@@ -9657,14 +9659,14 @@ bool Unit::CanHaveThreatList() const
 
 //======================================================================
 
-float Unit::ApplyTotalThreatModifier(float threat, SpellSchoolMask schoolMask)
+void Unit::ApplyTotalThreatModifier(float& threat, SpellSchoolMask schoolMask)
 {
     if(!HasAuraType(SPELL_AURA_MOD_THREAT))
-        return threat;
+        return;
 
     SpellSchools school = GetFirstSchoolInMask(schoolMask);
-
-    return threat * m_threatModifier[school];
+    sLog.outString("ApplyTotalThreatModifier: %f",m_threatModifier[school]);
+    threat = threat * m_threatModifier[school];
 }
 
 //======================================================================

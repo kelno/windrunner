@@ -2952,19 +2952,6 @@ void Spell::EffectApplyAura(uint32 i)
             cTarget->RemoveCorpse();
         }
     }
-    /*
-    // Remove Stealth on Druid/Warrior shout
-    switch (m_spellInfo->SpellFamilyName)
-    {
-	    case SPELLFAMILY_WARRIOR:
-            if (m_spellInfo->SpellFamilyFlags & 0x0000002000020000LL)
-				 unitTarget->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK, 0, false);
-            break;
-	    case SPELLFAMILY_DRUID:
-            if (m_spellInfo->SpellFamilyFlags & 0x0000000000000408LL)
-			    unitTarget->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK, 0, false);
-            break;
-    }*/
 
     // Prayer of Mending (jump animation), we need formal caster instead original for correct animation
     if( m_spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && (m_spellInfo->SpellFamilyFlags & 0x00002000000000LL))
@@ -3508,9 +3495,7 @@ void Spell::EffectPersistentAA(uint32 i)
     Unit *caster = m_caster->GetEntry() == WORLD_TRIGGER ? m_originalCaster : m_caster;
     int32 duration = GetSpellDuration(m_spellInfo);
     DynamicObject* dynObj = new DynamicObject;
-    if(m_spellInfo->EffectImplicitTargetA[i] == TARGET_DEST_DYNOBJ_ENEMY ||
-       m_spellInfo->EffectImplicitTargetA[i] == TARGET_UNIT_AREA_ENEMY_DST)
-        radius = radius /2; // for some reason visual size in client seems doubled for these spells
+
     if(!dynObj->Create(objmgr.GenerateLowGuid(HIGHGUID_DYNAMICOBJECT), caster, m_spellInfo->Id, i, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, duration, radius))
     {
         delete dynObj;
@@ -3582,6 +3567,7 @@ void Spell::EffectEnergize(uint32 i)
 
     unitTarget->ModifyPower(power,damage);
     m_caster->SendEnergizeSpellLog(unitTarget, m_spellInfo->Id, damage, power);
+    m_caster->getHostilRefManager().threatAssist(unitTarget, float(damage) * 0.5f, m_spellInfo, false, true);
 
     // Mad Alchemist's Potion
     if (m_spellInfo->Id == 45051)
@@ -5139,6 +5125,9 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
                         break;
                     }
                 }
+
+                float threat = 14 * stack;
+                m_targets.getUnitTarget()->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
 
                 if(stack < 5)
                 {

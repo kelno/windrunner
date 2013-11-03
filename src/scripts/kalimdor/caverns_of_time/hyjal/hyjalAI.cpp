@@ -34,6 +34,7 @@ EndScriptData */
 #define SPAWN_NEAR_TOWER 2
 
 #define TEXT_ARCHIMONDE_AT_HORDE_RETREAT -1543998
+#define EMOTE_MASS_TELEPORT -1543997
 
 // Locations for summoning gargoyls and frost wyrms in special cases
 float SpawnPointSpecial[3][3]=
@@ -436,9 +437,13 @@ void hyjalAI::Aggro(Unit *who)
     if(IsDummy)return;
     for(uint8 i = 0; i < 2; ++i)
         if(Spell[i].Cooldown)
-            SpellTimer[i] = Spell[i].Cooldown;
+            SpellTimer[i] = Spell[i].Cooldown / 2;
 
     Talk(ATTACKED);
+
+    if(me->GetEntry() == CREATURE_JAINA)
+        if(pInstance)
+            pInstance->SetData(DATA_JAINAINCOMBAT,1); //Call for help
 }
 
 void hyjalAI::MoveInLineOfSight(Unit *who)
@@ -914,9 +919,6 @@ void hyjalAI::UpdateAI(const uint32 diff)
         {
             if(SpellTimer[i] < diff)
             {
-                if(m_creature->IsNonMeleeSpellCasted(false))
-                    m_creature->InterruptNonMeleeSpells(false);
-
                 Unit* target = NULL;
 
                 switch(Spell[i].TargetType)
@@ -928,8 +930,8 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
                 if(target && target->isAlive())
                 {
-                    DoCast(target, Spell[i].SpellId);
-                    SpellTimer[i] = Spell[i].Cooldown;
+                    if(DoCast(target, Spell[i].SpellId))
+                        SpellTimer[i] = Spell[i].Cooldown;
                 }
             }else SpellTimer[i] -= diff;
         }
@@ -1010,7 +1012,10 @@ void hyjalAI::WaypointReached(uint32 i)
         WaitForTeleport = true;
         TeleportTimer = 20000;
         if(m_creature->GetEntry() == JAINA)
+        {
+            DoScriptText(EMOTE_MASS_TELEPORT,me);
             m_creature->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+        }
         if(m_creature->GetEntry() == THRALL && DummyGuid)
         {
             Unit* Dummy = Unit::GetUnit((*m_creature),DummyGuid);
@@ -1019,6 +1024,7 @@ void hyjalAI::WaypointReached(uint32 i)
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->DoMassTeleport = true;
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->MassTeleportTimer = 20000;
                 Dummy->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+                DoScriptText(EMOTE_MASS_TELEPORT,Dummy);
             }
         }
         //do some talking

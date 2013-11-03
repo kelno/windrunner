@@ -325,6 +325,8 @@ struct npc_volcanoAI : public ScriptedAI
     { }
      
     uint32 UnderMapCheckTimer;
+    uint32 startTimer;
+    bool started;
     
     float currentX, currentY, currentZ, groundZ;
 
@@ -337,7 +339,8 @@ struct npc_volcanoAI : public ScriptedAI
 
         me->SetReactState(REACT_PASSIVE);
 
-        DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
+        started = false;
+        startTimer = 1500;
     }
     
     void UndermapCheck()
@@ -360,6 +363,15 @@ struct npc_volcanoAI : public ScriptedAI
             UndermapCheck();                
             UnderMapCheckTimer = 750;
         }else UnderMapCheckTimer -= diff;
+
+        if (!started && startTimer < diff)
+        { 
+            if(startTimer < diff)
+            {
+                DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
+                started = true;
+            } else startTimer -= diff;
+        } 
     }
 };
 

@@ -1298,26 +1298,45 @@ void Aura::HandleAddModifier(bool apply, bool Real)
 
     (m_target->ToPlayer())->AddSpellMod(m_spellmod, apply);
 
-    // reapply some passive spells after add/remove related spellmods
-    if(spellInfo->SpellFamilyName==SPELLFAMILY_WARRIOR && (spellFamilyMask & 0x0000100000000000LL))
+    //update already applied auras
+    /* This can't be done the right way atm because there is no easy way to recalculate the amount of an aura with the current implementation, a lot should be rewritten to handle this.
+    In the meantime, I'm just unapplying and re applying the aura.
+    */
+    if(   GetMiscValue() == SPELLMOD_ALL_EFFECTS
+       || GetMiscValue() == SPELLMOD_EFFECT1
+       || GetMiscValue() == SPELLMOD_EFFECT2
+       || GetMiscValue() == SPELLMOD_EFFECT3
+      )
     {
-        m_target->RemoveAurasDueToSpell(45471);
-
-        if(apply)
-            m_target->CastSpell(m_target,45471,true);
-    }
-
-    if(spellInfo->SpellFamilyName==SPELLFAMILY_PALADIN && (spellFamilyMask & 0x0000100000000000LL)) // Spiritual Attunement
-    {
-        if(m_target->HasAura(31785,0)) // rank 1
+        Unit::AuraMap& auraMap = m_target->GetAuras();
+        for(auto itr : auraMap)
         {
-            m_target->RemoveAurasDueToSpell(31785);
-            m_target->CastSpell(m_target,31785,true);
-        }
-        if(m_target->HasAura(33776,0)) // rank 2
-        {
-            m_target->RemoveAurasDueToSpell(33776);
-            m_target->CastSpell(m_target,33776,true);
+            Aura* aura = itr.second;
+            SpellEntry const *spellInfo = aura->GetSpellProto();
+            if(!spellInfo)
+                continue;
+            // only passive and permament auras-active auras should have amount set on spellcast and not be affected
+            // if aura is casted by others, it will not be affected
+            if ((aura->IsPassive() || aura->IsPermanent()) && (m_target->ToPlayer())->IsAffectedBySpellmod(spellInfo,m_spellmod))
+            {
+                uint8 index = aura->GetEffIndex();
+                if (  GetMiscValue() == SPELLMOD_ALL_EFFECTS
+                   || (GetMiscValue() == SPELLMOD_EFFECT1 && index == 0)
+                   || (GetMiscValue() == SPELLMOD_EFFECT2 && index == 1)
+                   || (GetMiscValue() == SPELLMOD_EFFECT3 && index == 2)
+                   )
+                {
+                    // hack for now : New aura just to get new amount
+                    Aura* temp = CreateAura(spellInfo, index, NULL, m_target, m_target);
+                    int32 amountValue = temp->GetModifierValuePerStack();
+
+                    //sLog.outString("HandleAddModifier(...) reapplying aura (%u,%i) with new amount %i",aura->GetId(),index,amountValue);
+                    AuraType type = (AuraType)spellInfo->EffectApplyAuraName[index];
+                    (*aura.*AuraHandler [type])(false,Real);
+                    aura->SetAmount(amountValue); //set amount after unapply, else we won't unapply correct amount
+                    (*aura.*AuraHandler [type])(true,Real);
+                }
+            }
         }
     }
 }
@@ -3812,10 +3831,12 @@ void Aura::HandleModThreat(bool apply, bool Real)
     if (level_diff > 0)
         m_modifier.m_amount += multiplier * level_diff;
 
+    //sLog.outString("HandleModThreat(apply = %s) (spell %u) : Modifier value = %i",apply?"true":"false",GetId(),GetModifierValue());
     for(int8 x=0;x < MAX_SPELL_SCHOOL;x++)
     {
         if(m_modifier.m_miscvalue & int32(1<<x))
         {
+            //sLog.outString("applying to school %i",x);
             if(m_target->GetTypeId() == TYPEID_PLAYER)
                 ApplyPercentModFloatVar(m_target->m_threatModifier[x], m_positive ? GetModifierValue() : -GetModifierValue(), apply);
         }
@@ -6370,7 +6391,12 @@ void Aura::PeriodicTick()
             //Do check before because m_modifier.auraName can be invalidate by DealDamage.
             bool procSpell = (m_modifier.m_auraname == SPELL_AURA_PERIODIC_HEAL && m_target != pCaster);
 
-            m_target->getHostilRefManager().threatAssist(pCaster, float(gain) * 0.5f, GetSpellProto());
+            float threat = float(gain) * 0.5f;
+            SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(GetSpellProto()->Id);
+            if(threatSpell && threatSpell->pctMod != 1.0f)
+                threat *= threatSpell->pctMod;
+
+            m_target->getHostilRefManager().threatAssist(pCaster, threat, GetSpellProto());
 
             Unit* target = m_target;                        // aura can be deleted in DealDamage
             SpellEntry const* spellProto = GetSpellProto();
@@ -6508,7 +6534,7 @@ void Aura::PeriodicTick()
         }
         case SPELL_AURA_PERIODIC_ENERGIZE:
         {
-            // ignore non positive values (can be result apply spellmods to aura damage
+            // ignore non positive values (can be result apply spellmods to aura damage)
             uint32 pdamage = GetModifierValue() > 0 ? GetModifierValue() : 0;
 
             sLog.outDetail("PeriodicTick: %u (TypeId: %u) energize %u (TypeId: %u) for %u dmg inflicted by %u",
@@ -6535,7 +6561,7 @@ void Aura::PeriodicTick()
             int32 gain = m_target->ModifyPower(power,pdamage);
 
             if(Unit* pCaster = GetCaster())
-                m_target->getHostilRefManager().threatAssist(pCaster, float(gain) * 0.5f, GetSpellProto());
+                m_target->getHostilRefManager().threatAssist(pCaster, float(gain) * 0.5f, GetSpellProto(),false,true); //to confirm : threat from energize spells is not subject to threat modifiers
             break;
         }
         case SPELL_AURA_OBS_MOD_MANA:
@@ -7138,9 +7164,15 @@ void Aura::HandleAuraApplyExtraFlag(bool apply, bool Real)
     {
     case PLAYER_EXTRA_DUEL_AREA:
         m_target->ToPlayer()->SetDuelArea(apply);
+        m_target->ToPlayer()->UpdateZone(m_target->GetZoneId());
         break;
     default:
         sLog.outError("HandleAuraApplyExtraFlag, flag %u not handled",m_modifier.m_miscvalue);
         break;
     }
+}
+
+void Aura::SetAmount(int32 newAmount)
+{
+    m_modifier.m_amount = newAmount;
 }

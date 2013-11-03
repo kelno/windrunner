@@ -1040,7 +1040,13 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
 
         int32 gain = unitTarget->ModifyHealth( int32(addhealth) );
 
-        unitTarget->getHostilRefManager().threatAssist(caster, float(gain) * 0.5f, m_spellInfo);
+        float threat = float(gain) * 0.5f;
+        SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(m_spellInfo->Id);
+        if(threatSpell && threatSpell->pctMod != 1.0f)
+            threat *= threatSpell->pctMod;
+
+        unitTarget->getHostilRefManager().threatAssist(caster, threat, m_spellInfo);
+
         if(caster->GetTypeId()==TYPEID_PLAYER)
             if(BattleGround *bg = (caster->ToPlayer())->GetBattleGround())
                 bg->UpdatePlayerScore((caster->ToPlayer()), SCORE_HEALING_DONE, gain);
@@ -1218,7 +1224,6 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
                 {
                     caster->SendSpellMiss(unitTarget, m_spellInfo->Id, SPELL_MISS_RESIST);
                     m_damage = 0;
-                    SendChannelUpdate(0);
                     finish();
                     return;
                 }
@@ -2288,10 +2293,8 @@ bool Spell::prepare(SpellCastTargets * targets, Aura* triggeredByAura)
     if(result != SPELL_CAST_OK && !IsAutoRepeat()) //always cast autorepeat dummy for triggering
     {
         if(triggeredByAura)
-        {
-            SendChannelUpdate(0);
             triggeredByAura->SetAuraDuration(0);
-        }
+
         SendCastResult(result);
         finish(false);
         return false;
@@ -2396,7 +2399,7 @@ void Spell::cancel()
             }
 
             m_caster->RemoveAurasByCasterSpell(m_spellInfo->Id, m_caster->GetGUID());
-            SendChannelUpdate(0);
+            SendChannelUpdate(0,m_spellInfo->Id);
             SendInterrupted(0);
             SendCastResult(SPELL_FAILED_INTERRUPTED);
 
@@ -2704,7 +2707,7 @@ void Spell::_handle_immediate_phase()
 {
     //sLog.outDebug("Spell %u - _handle_immediate_phase()", m_spellInfo->Id);
     // handle some immediate features of the spell here
-    HandleThreatSpells(m_spellInfo->Id);
+    HandleFlatThreat();
 
     m_needSpellLog = IsNeedSendToClient();
     for(uint32 j = 0;j<3;j++)
@@ -2862,7 +2865,7 @@ void Spell::update(uint32 difftime)
         cancel();
         return;
     }
-
+    
     // check if the player caster has moved before the spell finished
     if ((m_caster->GetTypeId() == TYPEID_PLAYER && m_timer != 0) &&
         (m_castPositionX != m_caster->GetPositionX() || m_castPositionY != m_caster->GetPositionY() || m_castPositionZ != m_caster->GetPositionZ()) &&
@@ -2910,13 +2913,17 @@ void Spell::update(uint32 difftime)
                 // check if there are alive targets left
                 if (!IsAliveUnitPresentInTargetList() && !(m_customAttr & SPELL_ATTR_CU_CAN_CHANNEL_DEAD_TARGET))
                 {
-                    SendChannelUpdate(0);
-
                     if (m_spellInfo->SpellVisual == 788 && m_spellInfo->SpellIconID == 113 && m_spellInfo->SpellFamilyName == 5) { // Drain soul exception, must remove aura on caster
                         if (m_caster->m_currentSpells[CURRENT_CHANNELED_SPELL])
                             m_caster->InterruptSpell(CURRENT_CHANNELED_SPELL, true, true);
                     }
 
+                    finish();
+                }
+
+                if(IsChanneledSpell(m_spellInfo) && m_targets.getUnitTarget() && !m_caster->IsWithinLOSInMap(m_targets.getUnitTarget()))
+                {
+                    m_caster->InterruptSpell(CURRENT_CHANNELED_SPELL, true, true);
                     finish();
                 }
 
@@ -2928,8 +2935,6 @@ void Spell::update(uint32 difftime)
 
             if(m_timer == 0)
             {
-                SendChannelUpdate(0);
-
                 // channeled spell processed independently for quest targeting
                 // cast at creature (or GO) quest objectives update at successful cast channel finished
                 // ignore autorepeat/melee casts for speed (not exist quest for spells (hm... )
@@ -2983,7 +2988,10 @@ void Spell::finish(bool ok)
     //sLog.outDebug("Spell %u - State : SPELL_STATE_FINISHED",m_spellInfo->Id);
 
     if(IsChanneledSpell(m_spellInfo))
+    {
+        SendChannelUpdate(0,m_spellInfo->Id);
         m_caster->UpdateInterruptMask();
+    }
     
     if(!m_caster->IsNonMeleeSpellCasted(false, false, true))
         m_caster->clearUnitState(UNIT_STAT_CASTING);
@@ -3411,6 +3419,14 @@ void Spell::SendChannelUpdate(uint32 time)
     m_caster->SendMessageToSet(&data,true);
 }
 
+void Spell::SendChannelUpdate(uint32 time, uint32 spellId)
+{
+    if(m_caster->GetUInt32Value(UNIT_CHANNEL_SPELL) != spellId)
+        return;
+
+    Spell::SendChannelUpdate(time);
+}
+
 void Spell::SendChannelStart(uint32 duration)
 {
     WorldObject* target = NULL;
@@ -3651,21 +3667,41 @@ void Spell::TakeReagents()
     }
 }
 
-void Spell::HandleThreatSpells(uint32 spellId)
+void Spell::HandleFlatThreat()
 {
-    if(!m_targets.getUnitTarget() || !spellId)
+    SpellThreatEntry const* threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(m_spellInfo->Id);
+    if(!threatSpell || threatSpell->flatMod == 0)
         return;
 
-    if(!m_targets.getUnitTarget()->CanHaveThreatList())
+    if ((m_spellInfo->AttributesEx  & SPELL_ATTR_EX_NO_THREAT) ||
+    (m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO))
         return;
 
-    SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(spellId);
-    if(!threatSpell)
+    uint8 targetListSize = m_UniqueTargetInfo.size();
+    if(targetListSize == 0)
         return;
 
-    m_targets.getUnitTarget()->AddThreat(m_caster, float(threatSpell->threat));
+    if(!IsPositiveSpell(m_spellInfo->Id))
+    {
+        for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
+        {
+            TargetInfo &target = *ihit;
+             Unit* targetUnit = ObjectAccessor::GetUnit(*m_caster, target.targetGUID);
+            if (!targetUnit)
+                continue;
 
-    DEBUG_LOG("Spell %u, rank %u, added an additional %i threat", spellId, spellmgr.GetSpellRank(spellId), threatSpell->threat);
+            if(target.missCondition==SPELL_MISS_NONE) //needed here?
+            {
+                float threat = threatSpell->flatMod / targetListSize;;
+                targetUnit->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
+            }
+            //sLog.outString("HandleFlatThreat(): Spell %u, rank %u, added an additional %f flat threat", spellmgr.GetSpellRank(m_spellInfo->Id), threat);
+        }
+        //devastate case done in SpellDamageWeaponDmg
+    } else { //positive spells
+        // not sure about that but it seems the flat threat bonus only apply once and not anew for every hit target
+        m_caster->getHostilRefManager().threatAssist(m_caster, threatSpell->flatMod, m_spellInfo);
+    }
 }
 
 void Spell::HandleEffects(Unit *pUnitTarget,Item *pItemTarget,GameObject *pGOTarget,uint32 i, float /*DamageMultiplier*/)
@@ -5051,7 +5087,7 @@ SpellFailedReason Spell::CheckItems()
     // if not item target then required item must be equipped
     else
     {
-        if(m_caster->GetTypeId() == TYPEID_PLAYER && !(m_caster->ToPlayer())->HasItemFitToSpellReqirements(m_spellInfo))
+        if(m_caster->GetTypeId() == TYPEID_PLAYER && !(m_caster->ToPlayer())->HasItemFitToSpellRequirements(m_spellInfo))
             return SPELL_FAILED_EQUIPPED_ITEM_CLASS;
     }
 

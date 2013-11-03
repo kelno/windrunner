@@ -301,6 +301,13 @@ void MotionMaster::MoveFollow(Unit* target, float dist, float angle, MovementSlo
     }
 }
 
+void MotionMaster::MovePoint(uint32 id, Unit* target)
+{
+    float x,y,z;
+    target->GetPosition(x,y,z);
+    MovePoint(id,x,y,z,true);
+}
+
 void MotionMaster::MovePoint(uint32 id, float x, float y, float z, bool usePathfinding, uint32 delay)
 {
 	if (delay > 0)

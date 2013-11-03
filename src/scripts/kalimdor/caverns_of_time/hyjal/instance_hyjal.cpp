@@ -60,6 +60,8 @@ struct instance_mount_hyjal : public ScriptedInstance
     uint32 RaidDamage;
     uint32 currentWave;
 
+    std::list<uint64> allianceArmy;
+
     void Initialize()
     {
         RageWinterchill = 0;
@@ -97,14 +99,14 @@ struct instance_mount_hyjal : public ScriptedInstance
     {
         switch(go->GetEntry())
         {
-            case 182060:
+            case GOBJECT_DOOR_ORC:
                 HordeGate = go->GetGUID();
                 if(allianceRetreat)
                     go->SetGoState(0);
                 else
                     go->SetGoState(1);
                 break;
-            case 182061:
+            case GOBJECT_DOOR_ELF:
                 ElfGate = go->GetGUID();
                 if(hordeRetreat)
                     go->SetGoState(0);
@@ -132,14 +134,22 @@ struct instance_mount_hyjal : public ScriptedInstance
     {
         switch(creature_entry)
         {
-            case 17767: RageWinterchill = creature->GetGUID(); break;
-            case 17808: Anetheron = creature->GetGUID(); break;
-            case 17888: Kazrogal = creature->GetGUID();  break;
-            case 17842: Azgalor = creature->GetGUID(); break;
-            case 17968: Archimonde = creature->GetGUID(); break;
-            case 17772: JainaProudmoore = creature->GetGUID(); break;
-            case 17852: Thrall = creature->GetGUID(); break;
-            case 17948: TyrandeWhisperwind = creature->GetGUID(); break;
+            case CREATURE_RAGE_WINTERCHILL: RageWinterchill = creature->GetGUID(); break;
+            case CREATURE_ANATHERON:        Anetheron = creature->GetGUID(); break;
+            case CREATURE_KAZROGAL:         Kazrogal = creature->GetGUID();  break;
+            case CREATURE_AZGALOR:          Azgalor = creature->GetGUID(); break;
+            case CREATURE_ARCHIMONDE:       Archimonde = creature->GetGUID(); break;
+            case CREATURE_JAINA:            JainaProudmoore = creature->GetGUID(); break;
+            case CREATURE_THRALL:           Thrall = creature->GetGUID(); break;
+            case CREATURE_TYRANDE:          TyrandeWhisperwind = creature->GetGUID(); break;
+
+            case CREATURE_ALLIANCE_FOOTMAN:
+            case CREATURE_ALLIANCE_KNIGHT:
+            case CREATURE_ALLIANCE_RIFLEMAN:
+            case CREATURE_ALLIANCE_SORCERESS:
+            case CREATURE_ALLIANCE_PRIEST:
+                allianceArmy.push_back(creature->GetGUID());
+                break;
         }
     }
 
@@ -243,6 +253,9 @@ struct instance_mount_hyjal : public ScriptedInstance
                 currentWave = data;
                 SaveToDB();
                 break;
+            case DATA_JAINAINCOMBAT:
+                JainaCallForHelp();
+                break;
         }
 
         if(data == DONE)
@@ -314,6 +327,23 @@ struct instance_mount_hyjal : public ScriptedInstance
             if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as IN_PROGRESS - reset it instead.
                 Encounters[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
+    }
+
+    void JainaCallForHelp()
+    {
+        Creature* Jaina = instance->GetCreatureInMap(JainaProudmoore);
+        if(!Jaina || !Jaina->getVictim()) return;
+        
+        for(auto itr : allianceArmy)
+        {
+            Creature* soldier =  instance->GetCreatureInMap(itr);
+            if(!soldier) continue;
+            if(soldier->isAlive() && !soldier->isInCombat())
+            {
+                soldier->SetInCombatWith(Jaina->getVictim());
+                soldier->AddThreat(Jaina->getVictim(), 0.0f);
+            }
+        }
     }
 };
 

@@ -19,6 +19,8 @@ struct hyjal_trashAI : public npc_escortAI
 
     void UpdateAI(const uint32 diff);
 
+    void MovementInform(uint32 MovementType, uint32 Data);
+
     void JustDied(Unit* killer);
 
     void DamageTaken(Unit *done_by, uint32 &damage);
@@ -35,6 +37,7 @@ struct hyjal_trashAI : public npc_escortAI
         bool useFlyPath;
         uint32 damageTaken;
         float DummyTarget[3];
+        bool cannibalism;
 
     //private:
 };

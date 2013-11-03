@@ -275,10 +275,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
 
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_SHADEOFAKAMAEVENT) != DONE)
             pInstance->SetData(DATA_SHADEOFAKAMAEVENT, NOT_STARTED);
-        else
-            return;
         
         Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID);
         if(akama)
@@ -313,6 +311,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             akama->AI()->message(AkamaMessages::MESSAGE_SHADE_DIED,0);
 
         summons.DespawnAll();
+        if(pInstance) pInstance->SetData(DATA_SHADEOFAKAMAEVENT, DONE);
     }
 
     void JustSummoned(Creature *summon) 
@@ -625,7 +624,6 @@ struct npc_akamaAI : public ScriptedAI
             startedMeleeCombat = true;
             break;
         case MESSAGE_SHADE_DIED:
-            if(pInstance) pInstance->SetData(DATA_SHADEOFAKAMAEVENT, DONE);
             me->InterruptNonMeleeSpells(false);
             me->SetReactState(REACT_PASSIVE);
             outroProgress = 1;

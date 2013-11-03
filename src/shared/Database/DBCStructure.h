@@ -712,7 +712,8 @@ struct SpellFocusObjectEntry
 struct SpellThreatEntry
 {
     uint32      spellId;
-    int32       threat;
+    int32       flatMod;
+    float       pctMod;
 };
 
 struct SpellRadiusEntry
