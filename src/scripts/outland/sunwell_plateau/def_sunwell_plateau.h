@@ -142,7 +142,7 @@ enum GameObjects
     GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT         = 188415,
 };
 
-enum Spells
+enum SunWellSpells
 {
     SPELL_RADIANCE                                  = 45769,
 };
