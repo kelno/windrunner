@@ -102,13 +102,6 @@ bool UnitAI::DoSpellAttackIfReady(uint32 spell)
 void UnitAI::SetCombatDistance(float dist, float angle)
 {
     m_combatDistance = dist;
-
-    if (m_allowCombatMovement)
-    {
-        me->GetMotionMaster()->Clear(true);
-        if (me->getVictim())
-            me->GetMotionMaster()->MoveChase(me->getVictim(), dist, angle);
-    }
 };
 
 void UnitAI::SetCombatMovementAllowed(bool allow)
@@ -117,18 +110,6 @@ void UnitAI::SetCombatMovementAllowed(bool allow)
         return;
 
     m_allowCombatMovement = allow;
-
-    if (allow)
-    {
-        me->GetMotionMaster()->Clear(true);
-        if (me->getVictim())
-            me->GetMotionMaster()->MoveChase(me->getVictim(), m_combatDistance);
-    }
-    else
-    {
-        me->GetMotionMaster()->Clear(true);
-        me->GetMotionMaster()->MoveIdle();
-    }
 }
 
 //Enable PlayerAI when charmed

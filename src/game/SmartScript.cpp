@@ -1080,8 +1080,21 @@ bool SmartScript::ProcessAction(SmartScriptHolder &e, Unit* unit, uint32 var0, u
         }
         case SMART_ACTION_RANGED_COMBAT:
         {
-            me->AI()->SetCombatDistance((float)e.action.raw.param1);
-            
+            float attackDistance = (float)e.action.raw.param1;
+            float AttackAngle = ((float)e.action.raw.param2/180)*M_PI;
+            if (me->getVictim())
+            {
+                if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+                {
+                    me->GetMotionMaster()->MoveChase(me->getVictim(), attackDistance, AttackAngle);
+                    me->CastStop();
+                }
+            }
+            else
+            {
+                me->StopMoving();
+                me->GetMotionMaster()->MoveIdle();
+            }
             break;
         }
         default:
