@@ -168,9 +168,6 @@ struct boss_sacrolashAI : public ScriptedAI
             pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
             pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
         }
-        
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
     
     void JustSummoned(Creature* pSummon)
@@ -527,8 +524,6 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
         
         m_creature->SetFullTauntImmunity(true);
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)
