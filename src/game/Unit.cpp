@@ -2267,7 +2267,10 @@ MeleeHitOutcome Unit::RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttack
                 ((Unit*)pVictim)->HandleParryRush();
                 return MELEE_HIT_PARRY;
             }
+        }
 
+        if(block_chance > 0)
+        {
             int32 real_block_chance = block_chance;
             if(block_chance > 0) // check if unit _can_ block
                 real_block_chance -= skillBonus;
@@ -2911,11 +2914,8 @@ float Unit::GetUnitBlockChance() const
     {
         Player const* player = (Player const*)this;
         if(player->CanBlock() )
-        {
-            Item *tmpitem = player->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
-            if(tmpitem && !tmpitem->IsBroken() && tmpitem->GetProto()->Block)
-                return GetFloatValue(PLAYER_BLOCK_PERCENTAGE);
-        }
+            return GetFloatValue(PLAYER_BLOCK_PERCENTAGE);
+
         // is player but has no block ability or no not broken shield equipped
         return 0.0f;
     }

@@ -480,8 +480,6 @@ Player::Player (WorldSession *session): Unit()
     lastLagReport = 0;
 
     smoothingSystem = new SmoothingSystem();
-    for (uint8 i=0; i<3; i++)
-        hasteRatings[i] = 0;
 }
 
 Player::~Player ()
@@ -5073,51 +5071,47 @@ void Player::UpdateHasteRating(CombatRating cr, int32 value, bool apply)
 {
     if(cr > CR_HASTE_SPELL || cr < CR_HASTE_MELEE)
     {
-        sLog.outDebug("UpdateHasteRating called with invalid combat rating %u",cr);
+        sLog.outError("UpdateHasteRating called with invalid combat rating %u",cr);
         return;
     }
     
-        //    sLog.outDebug("UpdateHasteRating(%u,%i,%s)",cr,value,apply?"true":"false");
+        //sLog.outString("UpdateHasteRating(%u,%i,%s)",cr,value,apply?"true":"false");
     float RatingCoeffecient = GetRatingCoefficient(cr);
-        //    sLog.outDebug("RatingCoeffecient : %f",RatingCoeffecient);
-    float mod = hasteRatings[cr-CR_HASTE_MELEE]/RatingCoeffecient; // Current mod
-        //    sLog.outDebug("Old mod : %f",mod);
-        //    sLog.outDebug("Previous rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
+
+    // calc rating before new rating was applied
+    uint32 oldRating = GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + cr) - (apply ? value : -value);
+    // Current mod
+    float oldMod = oldRating/RatingCoeffecient;     
+        //sLog.outString("Previous rating : %u",oldRating);
+        //sLog.outString("Previous mod : %f",oldMod);
+    float newMod = GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + cr)/RatingCoeffecient;
+        //sLog.outString("New rating : %u",GetUInt32Value(cr));
+        //sLog.outString("New mod : %f",newMod);
     switch(cr)
     {
     case CR_HASTE_MELEE:
-       //         sLog.outDebug("current attack time : %u", GetAttackTime(BASE_ATTACK));
+             //sLog.outString("Old attack time : %u", GetAttackTime(BASE_ATTACK));
         //unapply previous haste rating
-        ApplyAttackTimePercentMod(BASE_ATTACK,mod,false);
-        ApplyAttackTimePercentMod(OFF_ATTACK,mod,false);
-       //         sLog.outDebug("base atack time : %f",GetAttackTime(BASE_ATTACK));
-        hasteRatings[0] += apply ? value : -value;
-        mod = hasteRatings[0]/RatingCoeffecient;
-        ApplyAttackTimePercentMod(BASE_ATTACK,mod,true);
-        ApplyAttackTimePercentMod(OFF_ATTACK,mod,true);
-       //         sLog.outDebug("New attack time : %u", GetAttackTime(BASE_ATTACK));
+        ApplyAttackTimePercentMod(BASE_ATTACK,oldMod,false);
+        ApplyAttackTimePercentMod(OFF_ATTACK,oldMod,false);
+             //sLog.outString("base attack time (no haste): %u",GetAttackTime(BASE_ATTACK));
+        //apply new mod
+        ApplyAttackTimePercentMod(BASE_ATTACK,newMod,true);
+        ApplyAttackTimePercentMod(OFF_ATTACK,newMod,true);
+             //sLog.outString("New attack time : %u", GetAttackTime(BASE_ATTACK));
         break;
     case CR_HASTE_RANGED:
-       //         sLog.outDebug("current attack time : %u", GetAttackTime(RANGED_ATTACK));
-        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, false); //unapply previous haste rating
-      //          sLog.outDebug("base atack time : %f",GetAttackTime(RANGED_ATTACK));
-        hasteRatings[1] += apply ? value : -value;
-        mod = hasteRatings[1]/RatingCoeffecient;
-        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, true);
-       //         sLog.outDebug("New attack time : %u", GetAttackTime(RANGED_ATTACK));
+        ApplyAttackTimePercentMod(RANGED_ATTACK, oldMod, false);
+        ApplyAttackTimePercentMod(RANGED_ATTACK, newMod, true);
         break;
     case CR_HASTE_SPELL:
-        //        sLog.outDebug("current cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
-        ApplyCastTimePercentMod(mod,false); //unapply previous haste rating
-        //        sLog.outDebug("base cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
-        hasteRatings[2] += apply ? value : -value;
-        mod = hasteRatings[2]/RatingCoeffecient;
-        ApplyCastTimePercentMod(mod,true);
-        //        sLog.outDebug("New cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+            //sLog.outString("Old cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        ApplyCastTimePercentMod(oldMod,false); 
+            //sLog.outString("Base cast time (no haste): %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        ApplyCastTimePercentMod(newMod,true);
+            //sLog.outString("New cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
         break;
     }
-   // sLog.outDebug("New rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
-  //  sLog.outDebug("New mod : %f",mod);
 }
 
 void Player::SetRegularAttackTime()
@@ -7174,6 +7168,10 @@ void Player::_ApplyItemMods(Item *item, uint8 slot,bool apply)
     if( slot==EQUIPMENT_SLOT_RANGED )
         _ApplyAmmoBonuses();
 
+    //apply case is handled by spell 107 ("Block")
+    if (!apply && slot==EQUIPMENT_SLOT_OFFHAND && item->GetProto()->Block)
+        SetCanBlock(false);
+
     ApplyItemEquipSpell(item,apply);
     ApplyEnchantment(item, apply);
 
@@ -7822,6 +7820,7 @@ void Player::_ApplyAllItemMods()
 
             ApplyItemEquipSpell(m_items[i],true);
             ApplyEnchantment(m_items[i], true);
+            AddItemDependantAuras(m_items[i]);
         }
     }
 }
@@ -11110,15 +11109,15 @@ void Player::AddItemDependantAuras(Item* pItem)
         if (itr.second->state == PLAYERSPELL_REMOVED)
             continue;
         SpellEntry const* spellInfo = spellmgr.LookupSpell(itr.first);
-        if (!spellInfo || !IsPassiveSpell(spellInfo->Id) || HasAura(itr.first))
+        if (   !spellInfo 
+            || !IsPassiveSpell(spellInfo->Id) 
+            || spellInfo->EquippedItemClass == -1 //skip non item dependant spells
+            || HasAura(itr.first)
+           )
             continue;
         
-        sLog.outString("Checking out spell %u non applied atm",itr.first);
         if(pItem->IsFitToSpellRequirements(spellInfo))
-        {
-            sLog.outString("Casting it");
             CastSpell(this, itr.first, true);
-        }
     }
 }
 
@@ -13334,8 +13333,6 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
         }
     }
 
-    RewardReputation( pQuest );
-
     if( pQuest->GetRewSpellCast() > 0 )
         CastSpell( this, pQuest->GetRewSpellCast(), true);
     else if( pQuest->GetRewSpell() > 0)
@@ -13354,17 +13351,22 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
     else
         XP = q_status.m_rewarded ? 0 : uint32(pQuest->XPValue( this )*sWorld.getRate(RATE_XP_QUEST));
 
-    if ( getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL) )
-        GiveXP( XP , NULL );
-    else
-        ModifyMoney( int32(pQuest->GetRewMoneyMaxLevel() * sWorld.getRate(RATE_DROP_MONEY)) );
+    if(!pQuest->IsMarkedAsBugged()) //don't reward as much if the quest was auto completed
+    {
+        RewardReputation( pQuest );
 
-    // Give player extra money if GetRewOrReqMoney > 0 and get ReqMoney if negative
-    ModifyMoney( pQuest->GetRewOrReqMoney() );
+        if ( getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL) )
+            GiveXP( XP , NULL );
+        else
+            ModifyMoney( int32(pQuest->GetRewMoneyMaxLevel() * sWorld.getRate(RATE_DROP_MONEY)) );
 
-    // honor reward
-    if(pQuest->GetRewHonorableKills())
+        // Give player extra money if GetRewOrReqMoney > 0 and get ReqMoney if negative
+        ModifyMoney( pQuest->GetRewOrReqMoney() );
+
+         // honor reward
+        if(pQuest->GetRewHonorableKills())
         RewardHonor(NULL, 0, Trinity::Honor::hk_honor_at_level(getLevel(), pQuest->GetRewHonorableKills()));
+    }
 
     // title reward
     if(pQuest->GetCharTitleId())
@@ -13953,6 +13955,61 @@ void Player::SetQuestStatus( uint32 quest_id, QuestStatus status )
     }
 
     UpdateForQuestsGO();
+}
+
+void Player::AutoCompleteQuest( Quest const* qInfo )
+{
+    if(!qInfo) return;
+
+    // Add quest items for quests that require items
+    for (uint8 x = 0; x < QUEST_OBJECTIVES_COUNT; ++x)
+    {
+        uint32 id = qInfo->ReqItemId[x];
+        uint32 count = qInfo->ReqItemCount[x];
+        if(!id || !count)
+            continue;
+
+        uint32 curItemCount = GetItemCount(id,true);
+
+        ItemPosCountVec dest;
+        uint8 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, id, count-curItemCount );
+        if( msg == EQUIP_ERR_OK )
+        {
+            Item* item = StoreNewItem( dest, id, true);
+            SendNewItem(item,count-curItemCount,true,false);
+        } else {
+            ChatHandler(this).SendSysMessage("La quête ne peut pas être autocompletée car vos sacs sont pleins.");
+            return;
+        }
+    }
+
+    // All creature/GO slain/casted (not required, but otherwise it will display "Creature slain 0/10")
+    for(uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+    {
+        uint32 creature = qInfo->ReqCreatureOrGOId[i];
+        uint32 creaturecount = qInfo->ReqCreatureOrGOCount[i];
+
+        if(uint32 spell_id = qInfo->ReqSpell[i])
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                CastedCreatureOrGO(creature,0,spell_id);
+        }
+        else if(creature > 0)
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                KilledMonster(creature,0);
+        }
+        else if(creature < 0)
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                CastedCreatureOrGO(creature,0,0);
+        }
+    }
+
+    CompleteQuest(qInfo->GetQuestId());
+    ChatHandler(this).PSendSysMessage(LANG_BUGGY_QUESTS_AUTOCOMPLETE);
+
+    WorldDatabase.PExecute("update quest_bugs set completecount = completecount + 1 where entry = '%u'", qInfo->GetQuestId());
 }
 
 // not used in TrinIty, but used in scripting code

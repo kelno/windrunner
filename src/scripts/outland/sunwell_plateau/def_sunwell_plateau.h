@@ -139,7 +139,12 @@ enum Creatures
 
 enum GameObjects
 {
-    GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT       = 188415,
+    GAMEOBJECT_ORB_OF_THE_BLUE_DRAGONFLIGHT         = 188415,
+};
+
+enum SunWellSpells
+{
+    SPELL_RADIANCE                                  = 45769,
 };
 
 #endif
