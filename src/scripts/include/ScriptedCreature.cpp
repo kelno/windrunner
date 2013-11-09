@@ -304,6 +304,9 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
     if (!target)
         return false;
 
+    if (!target->isAlive())
+        return false;
+
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
         return false;
 
@@ -465,6 +468,7 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
  
         target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
         if(!target
+            || !target->isAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
             || dist && !m_creature->IsWithinCombatRange(target, dist)
             || auraCheck && target->HasAura(spellId, effIndex)
@@ -483,14 +487,15 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
     return NULL;
 }
 
-void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly)
+void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly, uint32 notHavingAuraId, uint8 effIndex)
 {
     std::list<HostilReference*> const& threatlist = me->getThreatManager().getThreatList();
     if (threatlist.empty())
         return;
 
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius)
+            && (!notHavingAuraId || !((*itr)->getTarget()->HasAura(notHavingAuraId, effIndex))) )
             targetList.push_back((*itr)->getTarget());
 
     if (targetList.size() < maxTargets)

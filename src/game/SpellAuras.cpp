@@ -409,26 +409,17 @@ m_periodicTimer(0), m_amplitude(0), m_PeriodicEventId(0), m_AuraDRGroup(DIMINISH
     m_effIndex = eff;
     SetModifier(AuraType(m_spellProto->EffectApplyAuraName[eff]), damage, m_spellProto->EffectAmplitude[eff], m_spellProto->EffectMiscValue[eff]);
 
-    // fix Mother Shahraz prismatic auras
     switch (m_spellProto->Id) {
-        case 40880:
-        case 40882:
-        case 40883:
-        case 40891:
-        case 40896:
-        case 40897:
-            m_modifier.m_auraname = SPELL_AURA_MOD_DAMAGE_PERCENT_TAKEN;
-            break;
-        case 44505:
+        case 44505: // "Drink Fel Infusion"
             if (eff == 0)
                 m_modifier.m_amount = 500;
             break;
-        case 34161:
+        case 34161: // "Wild Growth"
             if (eff == 0)
                 m_modifier.m_amount = 25;
             break;
-        case 39088:
-        case 39091:
+        case 39088: //"Positive Charge"
+        case 39091: //"Negative Charge"
             if (eff == 1)
                 m_periodicTimer = 61000;
             break;
@@ -1339,6 +1330,21 @@ void Aura::HandleAddModifier(bool apply, bool Real)
             }
         }
     }
+
+     // Spiritual Attunement hack
+    if(spellInfo->SpellFamilyName==SPELLFAMILY_PALADIN && (spellFamilyMask & 0x0000100000000000LL))
+    {
+        if(m_target->HasAura(31785,0)) // rank 1
+        {
+            m_target->RemoveAurasDueToSpell(31785);
+            m_target->CastSpell(m_target,31785,true);
+        }
+        if(m_target->HasAura(33776,0)) // rank 2
+        {
+            m_target->RemoveAurasDueToSpell(33776);
+            m_target->CastSpell(m_target,33776,true);
+        }
+    }
 }
 
 void Aura::TriggerSpell()
@@ -1809,7 +1815,6 @@ void Aura::TriggerSpell()
                     // Prismatic Shield
                     case 40879:
                     {
-                        target = caster;    //force self-cast
                         switch(rand()%6)
                         {
                         case 0: trigger_spell_id = 40880; break;

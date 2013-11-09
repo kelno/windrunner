@@ -9665,7 +9665,6 @@ void Unit::ApplyTotalThreatModifier(float& threat, SpellSchoolMask schoolMask)
         return;
 
     SpellSchools school = GetFirstSchoolInMask(schoolMask);
-    sLog.outString("ApplyTotalThreatModifier: %f",m_threatModifier[school]);
     threat = threat * m_threatModifier[school];
 }
 

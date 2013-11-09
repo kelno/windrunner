@@ -137,6 +137,7 @@ struct boss_supremusAI : public ScriptedAI
 
         SetPhase(1);
 
+        StopEruptions();
         summons.DespawnAll();
     }
 
@@ -229,7 +230,7 @@ struct boss_supremusAI : public ScriptedAI
             m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
             if(me->isInCombat())
             {
-                StopEruptions();
+                // StopEruptions(); //seems to be non blizz
                 DoResetThreat();
                 DoZoneInCombat();
                 DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
