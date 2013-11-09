@@ -438,6 +438,7 @@ bool Creature::UpdateEntry(uint32 Entry, uint32 team, const CreatureData *data )
         ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
+    UpdateMovementFlags();
     return true;
 }
 
@@ -462,6 +463,7 @@ void Creature::Update(uint32 diff)
             ((InstanceMap*)map)->GetInstanceData()->OnCreatureRespawn(this, GetEntry());
     }
 
+    UpdateMovementFlags();
     UpdateProhibitedSchools(diff);
 
     switch( m_deathState )
@@ -1816,23 +1818,23 @@ float Creature::GetAttackDistance(Unit const* pl) const
 
 void Creature::setDeathState(DeathState s)
 {
-	if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
-	{
-		m_corpseRemoveTime = time(NULL) + m_corpseDelay;
-	    m_respawnTime = time(NULL) + m_respawnDelay;        // respawn delay (spawntimesecs)
+    if ((s == JUST_DIED && !m_isDeadByDefault) || (s == JUST_ALIVED && m_isDeadByDefault))
+    {
+        m_corpseRemoveTime = time(NULL) + m_corpseDelay;
+        m_respawnTime = time(NULL) + m_respawnDelay;        // respawn delay (spawntimesecs)
 
-	    // always save boss respawn time at death to prevent crash cheating
-	    if (sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
-	        SaveRespawnTime();
+        // always save boss respawn time at death to prevent crash cheating
+        if (sWorld.getConfig(CONFIG_SAVE_RESPAWN_TIME_IMMEDIATELY) || isWorldBoss())
+            SaveRespawnTime();
 
-	    Map *map = FindMap();
-	    if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
-	        ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
-	}
-	Unit::setDeathState(s);
+        Map *map = FindMap();
+        if(map && map->IsDungeon() && ((InstanceMap*)map)->GetInstanceData())
+            ((InstanceMap*)map)->GetInstanceData()->OnCreatureDeath(this);
+    }
+    Unit::setDeathState(s);
 
-	if(s == JUST_DIED)
-	{
+    if(s == JUST_DIED)
+    {
         SetTarget(0);                // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
         SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 
@@ -1847,11 +1849,12 @@ void Creature::setDeathState(DeathState s)
 
         Unit::setDeathState(CORPSE);
     }
-	if(s == JUST_ALIVED)
+    if(s == JUST_ALIVED)
     {
-		clearUnitState(UNIT_STAT_ALL_STATE);
+        clearUnitState(UNIT_STAT_ALL_STATE);
+        UpdateMovementFlags();
 
-		Unit::setDeathState(ALIVE);
+        Unit::setDeathState(ALIVE);
 
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
@@ -2862,6 +2865,16 @@ bool Creature::SetHover(bool enable, bool packetOnly /*= false*/)
     data.append(GetPackGUID());
     SendMessageToSet(&data, false);
     return true;
+}
+
+void Creature::UpdateMovementFlags()
+{
+    // Do not update movement flags if creature is controlled by a player
+    if (isPossessedByPlayer())
+        return;
+
+    SetDisableGravity(GetCreatureInfo()->InhabitType & INHABIT_AIR);
+    SetSwim(GetCreatureInfo()->InhabitType & INHABIT_WATER && IsInWater());
 }
 
 bool Creature::isMoving()

@@ -1898,6 +1898,17 @@ uint8 Map::GetTerrainType(float x, float y) const
 
 ZLiquidStatus Map::getLiquidStatus(float x, float y, float z, uint8 ReqLiquidType, LiquidData *data) const
 {
+    //Hack in coilfang reservoir
+    //This map is not load (not exist)
+    //And we need LiquidType.dbc
+    if (GetAreaId(x, y, z) == 3607)
+    {
+        if (z < -21.35f)
+            return LIQUID_MAP_UNDER_WATER;
+        else
+            return LIQUID_MAP_NO_WATER;
+    }
+
     ZLiquidStatus result = LIQUID_MAP_NO_WATER;
     VMAP::IVMapManager* vmgr = VMAP::VMapFactory::createOrGetVMapManager();
     float liquid_level, ground_level = INVALID_HEIGHT;

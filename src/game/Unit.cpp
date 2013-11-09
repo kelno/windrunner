@@ -13010,9 +13010,15 @@ bool Unit::SetSwim(bool enable)
         return false;
 
     if (enable)
+    {
         AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+        AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+    }
     else
+    {
         RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+        RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+    }
 
     return true;
 }

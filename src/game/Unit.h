@@ -1688,7 +1688,7 @@ class Unit : public WorldObject
         time_t GetLastDamagedTime() const { return _lastDamagedTime; }
         void SetLastDamagedTime(time_t val) { _lastDamagedTime = val; }
 
-        bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING); }
+        bool IsLevitating() const { return HasUnitMovementFlag(MOVEMENTFLAG_LEVITATING) && !HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING); }
         bool IsWalking() const { return HasUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); }
         bool isMoving() const { return HasUnitMovementFlag(MOVEMENTFLAG_MOVING); }
         bool isMovingOrTurning() const { return HasUnitMovementFlag(MOVEMENTFLAG_MOVING | MOVEMENTFLAG_TURNING); }

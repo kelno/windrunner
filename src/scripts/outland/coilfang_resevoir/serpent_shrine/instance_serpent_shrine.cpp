@@ -215,11 +215,7 @@ struct instance_serpentshrine_cavern : public ScriptedInstance
                 if (i != targetList.end())
                 {
                     if(Creature* frenzy = (*i)->SummonCreature(MOB_COILFANG_FRENZY, (*i)->GetPositionX(), (*i)->GetPositionY(), (*i)->GetPositionZ(), (*i)->GetOrientation(), TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2000))
-                    {
                         frenzy->Attack((*i), false);
-                        frenzy->SetDisableGravity(true);
-                        frenzy->SetSwim(true);
-                    }
                 }
             }
             FrenzySpawnTimer = 2000;
