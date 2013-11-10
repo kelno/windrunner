@@ -14,6 +14,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+//TODO : Fix SPELL_BEAM_SINISTER sur les tanks?
 #include "precompiled.h"
 #include "def_black_temple.h"
 
@@ -44,8 +45,9 @@ enum Spells
     SPELL_BEAM_WICKED_TRIGGER       = 40866,
     SPELL_BEAM_SINFUL               = 40827,
     SPELL_BEAM_SINFUL_TRIGGER       = 40862,
-    SPELL_ATTRACTION                = 40871, //AoE damage
-    SPELL_ATTRACTION_VIS            = 41001, //only visual
+    SPELL_ATTRACTION_DUMMY          = 40870, //unused
+    SPELL_ATTRACTION                = 40871, //AoE damage + dummy aura on ally (modified to duration 2.0 instead of 1.1)
+    SPELL_ATTRACTION_VIS            = 41001, //only visual, periodically trigger 40870
     SPELL_SILENCING_SHRIEK          = 40823,
     SPELL_ENRAGE                    = 23537,
     SPELL_SABER_LASH                = 40810, //76k damage (43267 = same with 47500 damage )
@@ -54,7 +56,7 @@ enum Spells
     SPELL_TELEPORT_VISUAL           = 40869,
     SPELL_BERSERK                   = 45078,
     
-    SPELL_PRISMATIC_SHIELD          = 40879
+    SPELL_PRISMATIC_SHIELD          = 40879 //cast random prismatic auras
 };
 
 enum Timers 
@@ -64,13 +66,14 @@ enum Timers
     TIMER_PRISMATIC_SHIELD = 15000,
     TIMER_FATAL_ATTRACTION_FIRST = 12000,
     TIMER_SILENCING_SHRIEK = 30000,
+    TIMER_SABER_LASH_FIRST = 11000,
     TIMER_SABER_LASH = 35000,
     TIMER_ENRAGE = 600000
 };
 
 #define TIMER_RANDOM_YELL 70000 + rand()%41 * 1000
 #define TIMER_FATAL_ATTRACTION 18000 + rand()%7000
-
+/*
 uint32 PrismaticAuras[]=
 {
     40880,                                                  // Shadow
@@ -80,7 +83,7 @@ uint32 PrismaticAuras[]=
     40896,                                                  // Frost
     40897,                                                  // Holy
 };
-
+*/
 struct Locations
 {
     float x,y,z;
@@ -126,7 +129,7 @@ struct boss_shahrazAI : public ScriptedAI
     uint32 EnrageTimer;
     uint32 CheckPlayersUndermapTimer;
     uint32 TooFarAwayCheckTimer;
-    //uint32 ExplosionCount;
+    bool checkFatalAttractionDistance;
 
     bool Enraged;
 
@@ -135,20 +138,21 @@ struct boss_shahrazAI : public ScriptedAI
         if(pInstance && m_creature->isAlive())
             pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, NOT_STARTED);
 
-        for(uint8 i = 0; i<3; i++)
-            AttractionTargetGUID[i] = 0;
+        memset(AttractionTargetGUID, 0, sizeof(uint64) * 3);
 
         BeamTimer = TIMER_BEAM;
         CurrentBeam = rand()%4;                                    // 0 - Sinister, 1 - Vile, 2 - Wicked, 3 - Sinful
+        BeamCount = 0;
         PrismaticShieldTimer = 0;
         FatalAttractionTimer = TIMER_FATAL_ATTRACTION_FIRST;
         FatalAttractionExplodeTimer = -1;
         ShriekTimer = TIMER_SILENCING_SHRIEK;
-        SaberTimer = TIMER_SABER_LASH;
+        SaberTimer = TIMER_SABER_LASH_FIRST;
         RandomYellTimer = TIMER_RANDOM_YELL;
         EnrageTimer = TIMER_ENRAGE;
         CheckPlayersUndermapTimer = 5000;
         TooFarAwayCheckTimer = 1000;
+        checkFatalAttractionDistance = false;
 
         Enraged = false;
     }
@@ -167,13 +171,6 @@ struct boss_shahrazAI : public ScriptedAI
     {
         DoScriptText(RAND(SAY_SLAY1,SAY_SLAY2), m_creature);
     }
-    
-    // Called when saber lash hits a target
-    /*void SpellHitTarget(Unit *target, const SpellEntry *spell)
-    {
-        if(target && target->isAlive() && spell->Id == 40810)
-            target->AddAura(SPELL_SABER_LASH_IMM, target);
-    }*/
 
     void JustDied(Unit *victim)
     {
@@ -191,7 +188,7 @@ struct boss_shahrazAI : public ScriptedAI
         float Z = TeleportPoint[random].z;
         uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
-        SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
+        SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, NULL, 0); //SPELL_SABER_LASH_IMM
         if(targetList.size() == 3)
         {
             uint8 i = 0;
@@ -224,13 +221,6 @@ struct boss_shahrazAI : public ScriptedAI
         else
             TooFarAwayCheckTimer -= diff;
 
-        if(((m_creature->GetHealth()*100 / m_creature->GetMaxHealth()) < 10) && !Enraged)
-        {
-            Enraged = true;
-            DoCast(m_creature, SPELL_ENRAGE, true);
-            DoScriptText(SAY_ENRAGE, m_creature);
-        }
-        
         // Only check the last 3 teleported players
         if (CheckPlayersUndermapTimer < diff) {
             for (int i = 0; i < 3; i++) {
@@ -244,10 +234,13 @@ struct boss_shahrazAI : public ScriptedAI
             CheckPlayersUndermapTimer = 5000;
         }else CheckPlayersUndermapTimer -= diff;
 
-        // Randomly cast one beam
+        // Cast beam and randomize it every 4 beams
         if(BeamTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 15.0f, 80.0f, true); //prevent casting it on tanks
+            if(!target)
+                target = SelectUnit(SELECT_TARGET_RANDOM, 0.0f, 80.0f, true);
+
             if(!target)
                 return;
 
@@ -256,8 +249,7 @@ struct boss_shahrazAI : public ScriptedAI
             switch(CurrentBeam)
             {
                 case 0:
-                    if (m_creature->getVictim() && target != m_creature->getVictim())   // prevent casting this one on the main tank
-                        DoCast(target, SPELL_BEAM_SINISTER);
+                    DoCast(target, SPELL_BEAM_SINISTER);
                     break;
                 case 1:
                     DoCast(target, SPELL_BEAM_VILE);
@@ -269,26 +261,17 @@ struct boss_shahrazAI : public ScriptedAI
                     DoCast(target, SPELL_BEAM_SINFUL);
                     break;
             }
-            //BeamCount++;
+            BeamCount++;
             uint32 Beam = CurrentBeam;
-            //if(BeamCount > 3)
-            while(CurrentBeam == Beam)
-                CurrentBeam = rand()%3;
+            if(BeamCount > 3)
+            {
+                while(CurrentBeam == Beam) //pick a different one
+                    CurrentBeam = rand()%4;
+                BeamCount = 0;
+            }
 
         }else BeamTimer -= diff;
-        /*
-        // Random Prismatic Shield every 15 seconds.
-        if(PrismaticShieldTimer < diff)
-        {
-            uint32 random1 = rand()%6;
-            uint32 random2 = (random1 + rand()%5)%6; // must be different from random1
 
-            DoCastAOE(PrismaticAuras[random1], true);
-            DoCastAOE(PrismaticAuras[random2], true);
-
-            PrismaticShieldTimer = TIMER_PRISMATIC_SHIELD;
-        }else PrismaticShieldTimer -= diff;
-        */
         // Select 3 random targets, teleport to a random location then make them cast explosions until they get away from each other.
         if(FatalAttractionTimer < diff)
         {
@@ -296,101 +279,79 @@ struct boss_shahrazAI : public ScriptedAI
             {
                 DoScriptText(RAND(SAY_SPELL2,SAY_SPELL3), m_creature);
                 FatalAttractionExplodeTimer = 2500;
+                checkFatalAttractionDistance = false;
             }
             FatalAttractionTimer = TIMER_FATAL_ATTRACTION;
         }else FatalAttractionTimer -= diff;
-
+        
+        //Get targets & cast aoe
         if(FatalAttractionExplodeTimer < diff)
         {
-            Player* targets[3];
+            bool clear = true;
             for(uint8 i = 0; i < 3; ++i)
             {
-                if(AttractionTargetGUID[i])
+                if(!AttractionTargetGUID[i]) continue;
+
+                Player* p = Player::GetPlayer(AttractionTargetGUID[i]);
+                if(p && p->isAlive())
                 {
-                    targets[i] = Player::GetPlayer(AttractionTargetGUID[i]);
-                    if(targets[i])
-                    {
-                        if(targets[i] && targets[i]->isAlive())
-                            targets[i]->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
+                    //Clear fatal attraction target (only after first cast)
+                    if(checkFatalAttractionDistance)
+                    {  
+                        if(!p->HasAuraWithCasterNot(SPELL_ATTRACTION,1,p->GetGUID())) //dummy aura applied on close allies on every aoe for 2.0
+                        {
+                            p->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
+                            AttractionTargetGUID[i] = 0;
+                            continue;
+                        }
                     }
+
+                    // Else cast SPELL_ATTRACTION
+                    p->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
+                    clear = false;
                 }
             }
 
-            //check if we're clear
+            checkFatalAttractionDistance = true;
+            if(clear)
+                FatalAttractionExplodeTimer = -1;
+            else
+                FatalAttractionExplodeTimer = 1000;
+
+            /*
+            //cast aoe or clear effect
+            auto& m_threatlist = m_creature->getThreatManager().getThreatList();
             for(uint8 i = 0; i < 3; i++)
             {
                 if(!targets[i]) continue;
 
-                if(    !targets[0] || (targets[0] == targets[i]) || targets[0]->GetDistance2d(targets[i]) > 25
-                    && !targets[1] || (targets[1] == targets[i]) || targets[1]->GetDistance2d(targets[i]) > 25
-                    && !targets[2] || (targets[2] == targets[i]) || targets[2]->GetDistance2d(targets[i]) > 25 )
+                //check if we got anyone at less than 25 yards
+                bool clear = true;
+                for (auto itr : m_threatlist)
+                {
+                    if(!IS_PLAYER_GUID(itr->getUnitGuid()))
+                        continue;
+               
+                    if(targets[i]->GetGUID() != itr->getUnitGuid())
+                    {
+                        Player* p = me->GetMap()->GetPlayerInMap(itr->getUnitGuid());
+                        if(targets[i]->GetDistance2d(p) < 25)
+                        {
+                            clear = false;
+                            break;
+                        }
+                    }
+                }
+
+                if(clear)
                 {
                     targets[i]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
                     AttractionTargetGUID[i] = 0;
-                }
-            }
-            /*
-            if(targets[0] && targets[0]->isAlive())
-            {
-                bool isNear = false;
-                if(targets[1] && targets[1]->isAlive() && targets[0]->GetDistance2d(targets[1]) < 25)
-                    isNear = true;
-
-                if(!isNear)
-                    if(targets[2] && targets[2]->isAlive() && targets[0]->GetDistance2d(targets[2]) < 25)
-                        isNear = true;
-                
-                if(isNear)
-                    targets[0]->CastSpell(targets[0],SPELL_ATTRACTION,true);
-                else
-                {
-                    targets[0]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                    AttractionTargetGUID[0] = 0;
-                    targets[0] = NULL;
+                } else {
+                    targets[i]->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
                 }
             }
 
-            
-            if(targets[1] && targets[1]->isAlive())
-            {
-                bool isNear = false;
-                if(targets[0] && targets[0]->isAlive() && targets[1]->GetDistance2d(targets[0]) < 25)
-                    isNear = true;
-
-                if(!isNear)
-                    if(targets[2] && targets[2]->isAlive() && targets[1]->GetDistance2d(targets[2]) < 25)
-                        isNear = true;
-                
-                if(isNear)
-                    targets[1]->CastSpell(targets[1],SPELL_ATTRACTION,true);
-                else
-                {
-                    targets[1]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                    AttractionTargetGUID[1] = 0;
-                    targets[1] = NULL;
-                }
-            }
-
-            if(targets[2] && targets[2]->isAlive())
-            {
-                bool isNear = false;
-                if(targets[0] && targets[0]->isAlive() && targets[2]->GetDistance2d(targets[0]) < 25)
-                    isNear = true;
-
-                if(!isNear)
-                    if(targets[1] && targets[1]->isAlive() && targets[2]->GetDistance2d(targets[1]) < 25)
-                        isNear = true;
-
-                if(isNear)
-                    targets[2]->CastSpell(targets[1],SPELL_ATTRACTION,true);
-                else
-                {
-                    targets[2]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                    AttractionTargetGUID[2] = 0;
-                    targets[2] = NULL;
-                }
-            }
-            */
             bool allClear = true;
             for(uint8 i = 0; i < 3; i++)
             {
@@ -402,9 +363,10 @@ struct boss_shahrazAI : public ScriptedAI
                 FatalAttractionExplodeTimer = -1;
             else
                 FatalAttractionExplodeTimer = 1000;
+                */
 
         } else FatalAttractionExplodeTimer -= diff;
-
+        
         if(ShriekTimer < diff)
         {
             if(DoCast(m_creature->getVictim(), SPELL_SILENCING_SHRIEK))
