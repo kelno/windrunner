@@ -312,57 +312,56 @@ void ThreatContainer::update()
 HostilReference* ThreatContainer::selectNextVictim(Creature* pAttacker, HostilReference* pCurrentVictim)
 {
     HostilReference* currentRef = NULL;
-    HostilReference* fallback = NULL;
     bool found = false;
+    bool noPriorityTargetFound = false;
 
-    std::list<HostilReference*>::iterator lastRef = iThreatList.end();
-    lastRef--;
+    ThreatContainer::StorageType::const_iterator lastRef = iThreatList.end();
+    --lastRef;
 
-    for(std::list<HostilReference*>::iterator iter = iThreatList.begin(); iter != iThreatList.end() && !found; ++iter)
+    for (ThreatContainer::StorageType::const_iterator iter = iThreatList.begin(); iter != iThreatList.end() && !found;)
     {
         currentRef = (*iter);
 
         Unit* target = currentRef->getTarget();
-        assert(target);                                     // if the ref has status online the target must be there !
-        
-        if (!fallback)
-            fallback = currentRef;
+        ASSERT(target);                                     // if the ref has status online the target must be there !
 
-        // some units are preferred in comparison to others
-        if(iter != lastRef && (target->IsImmunedToDamage(pAttacker->GetMeleeDamageSchoolMask(), false) ||
-                target->hasUnitState(UNIT_STAT_CONFUSED) || (pAttacker->isWorldBoss() && target->HasAura(30300))
-                ) )
+        // some units are prefered in comparison to others
+        if (!noPriorityTargetFound && (target->IsImmunedToDamage(pAttacker->GetMeleeDamageSchoolMask()) || target->HasNegativeAuraWithInterruptFlag(AURA_INTERRUPT_FLAG_DAMAGE)))
         {
-            // current victim is a second choice target, so don't compare threat with it below
-            if(currentRef == pCurrentVictim)
-                pCurrentVictim = NULL;
-            continue;
+            if (iter != lastRef)
+            {
+                // current victim is a second choice target, so don't compare threat with it below
+                if (currentRef == pCurrentVictim)
+                    pCurrentVictim = NULL;
+                ++iter;
+                continue;
+            }
+            else
+            {
+                // if we reached to this point, everyone in the threatlist is a second choice target. In such a situation the target with the highest threat should be attacked.
+                noPriorityTargetFound = true;
+                iter = iThreatList.begin();
+                continue;
+            }
         }
 
-        if(!pAttacker->IsOutOfThreatArea(target))           // skip non attackable currently targets
+        if (pAttacker->CanCreatureAttack(target))           // skip non attackable currently targets
         {
-            if(pCurrentVictim)                              // select 1.3/1.1 better target in comparison current target
+            if (pCurrentVictim)                              // select 1.3/1.1 better target in comparison current target
             {
-                // Select target in range if stationary combat
-                if (pAttacker->IsCombatStationary()) {
-                    /*(pAttacker->ToCreature() && !pAttacker->ToCreature()->AI()->canReachByRangeAttack(target))
-                        found = false;
-                    else {*/
-                        found = true;
-                        break;
-                    //}
-                }
-                
                 // list sorted and and we check current target, then this is best case
-                if(pCurrentVictim == currentRef || currentRef->getThreat() <= 1.1f * pCurrentVictim->getThreat() )
+                if (pCurrentVictim == currentRef || currentRef->getThreat() <= 1.1f * pCurrentVictim->getThreat())
                 {
-                    currentRef = pCurrentVictim;            // for second case
+                    if (pCurrentVictim != currentRef && pAttacker->CanCreatureAttack(pCurrentVictim->getTarget()))
+                        currentRef = pCurrentVictim;            // for second case, if currentvictim is attackable
+
                     found = true;
                     break;
                 }
 
-                if( currentRef->getThreat() > 1.3f * pCurrentVictim->getThreat() ||
-                    currentRef->getThreat() > 1.1f * pCurrentVictim->getThreat() && pAttacker->IsWithinMeleeRange(target) )
+                if (currentRef->getThreat() > 1.3f * pCurrentVictim->getThreat() ||
+                    (currentRef->getThreat() > 1.1f * pCurrentVictim->getThreat() &&
+                    pAttacker->IsWithinMeleeRange(target)))
                 {                                           //implement 110% threat rule for targets in melee range
                     found = true;                           //and 130% rule for targets in ranged distances
                     break;                                  //for selecting alive targets
@@ -374,15 +373,11 @@ HostilReference* ThreatContainer::selectNextVictim(Creature* pAttacker, HostilRe
                 break;
             }
         }
+        ++iter;
     }
-    if(!found)
+
+    if (!found)
         currentRef = NULL;
-        
-    // Prevent evade if rooted and no one in melee range
-    if (!found && pAttacker->IsCombatStationary())
-        currentRef = pCurrentVictim;
-    if (!currentRef && pAttacker->IsCombatStationary()) // Happens when pulling a mob with a rooting aura, no pCurrentVictim
-        currentRef = fallback;
 
     return currentRef;
 }

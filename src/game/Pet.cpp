@@ -124,6 +124,17 @@ void Pet::AddToWorld()
         ObjectAccessor::Instance().AddObject(this);
         Unit::AddToWorld();
     }
+
+    // Prevent stuck pets when zoning. Pets default to "follow" when added to world
+    // so we'll reset flags and let the AI handle things
+    if (GetCharmInfo() && GetCharmInfo()->HasCommandState(COMMAND_FOLLOW))
+    {
+        GetCharmInfo()->SetIsCommandAttack(false);
+        GetCharmInfo()->SetIsCommandFollow(false);
+        GetCharmInfo()->SetIsAtStay(false);
+        GetCharmInfo()->SetIsFollowing(false);
+        GetCharmInfo()->SetIsReturning(false);
+    }
 }
 
 void Pet::RemoveFromWorld()
@@ -198,12 +209,12 @@ bool Pet::LoadPetFromDB( Unit* owner, uint32 petentry, uint32 petnumber, bool cu
     if (petentry == 19668 && owner->ToPlayer() && owner->ToPlayer()->GetSelection()) {
         target = ObjectAccessor::Instance().GetObjectInWorld(owner->ToPlayer()->GetSelection(), (Unit*)NULL);
         if (target && canAttack(target))
-            target->GetClosePoint(px, py, pz, GetObjectSize(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+            target->GetClosePoint(px, py, pz, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
         else
             target = NULL;
     }
     else
-        owner->GetClosePoint(px, py, pz, GetObjectSize(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
+        owner->GetClosePoint(px, py, pz, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
 
     Relocate(px, py, pz, owner->GetOrientation());
 

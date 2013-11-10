@@ -774,7 +774,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
         canBeRedeemed = false;
 
         me->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-        me->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        me->SetWalk(true);
         me->SetReactState(REACT_DEFENSIVE);
     }
 
@@ -877,7 +877,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
         EventRunning = true;
 
         me->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        me->SetWalk(false);
 
         Talk(43);
     }
@@ -1298,7 +1298,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
             }
             if (tyr)
             {
-                tyr->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+                tyr->SetWalk(false);
                 tyr->GetMotionMaster()->MovePoint(2, RemulosWP[1].x, RemulosWP[1].y, RemulosWP[1].z);
             }
             break;
@@ -1490,11 +1490,11 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
 //            newWP = true;
             break;
         case 2:
-            me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+            me->SetDisableGravity(true);
             break;
         case 3:
         {
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+            me->SetDisableGravity(false);
 //            me->SetOrientation(EranikusWP[3].o);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             combatPhase = true;
