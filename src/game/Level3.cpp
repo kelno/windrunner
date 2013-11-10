@@ -3868,6 +3868,7 @@ bool ChatHandler::HandleNpcInfoCommand(const char* /*args*/)
         SendSysMessage(LANG_NPCINFO_TRAINER);
     }
 
+    PSendSysMessage("movement : %u", target->GetUnitMovementFlags());
     return true;
 }
 

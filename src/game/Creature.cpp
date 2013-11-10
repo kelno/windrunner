@@ -2369,8 +2369,9 @@ bool Creature::LoadCreaturesAddon(bool reload)
     if (cainfo->emote != 0)
         SetUInt32Value(UNIT_NPC_EMOTESTATE, cainfo->emote);
 
-    if (cainfo->move_flags != 0)
-        SetUnitMovementFlags(cainfo->move_flags);
+    //Now movement flag is set dynamic
+    /*if (cainfo->move_flags != 0)
+        SetUnitMovementFlags(cainfo->move_flags);*/
 
     //Load Path
     if (cainfo->path_id != 0)
