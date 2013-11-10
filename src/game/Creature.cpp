@@ -2876,15 +2876,20 @@ void Creature::UpdateMovementFlags()
 
     // Set the movement flags if the creature is in that mode. (Only fly if actually in air, only swim if in water, etc)
     float ground = GetMap()->GetHeight(GetPositionX(), GetPositionY(), GetPositionZMinusOffset());
-
-    bool isInAir = (G3D::fuzzyGt(GetPositionZMinusOffset(), ground + 0.05f) || G3D::fuzzyLt(GetPositionZMinusOffset(), ground - 0.05f)); // Can be underground too, prevent the falling
+    bool isInAir = (G3D::fuzzyGt(GetPositionZMinusOffset(), ground + GetObjectSize()) || G3D::fuzzyLt(GetPositionZMinusOffset(), ground - GetObjectSize())); // Can be underground too, prevent the falling
 
     if (GetCreatureInfo()->InhabitType & INHABIT_AIR && isInAir && !IsFalling())
     {
-        if (GetCreatureInfo()->InhabitType & INHABIT_GROUND)
+        if (GetCreatureInfo()->InhabitType & INHABIT_GROUND && isMoving())
+        {
             SetCanFly(true);
+            SetDisableGravity(false);
+        }
         else
+        {
             SetDisableGravity(true);
+            SetCanFly(false);
+        }
     }
     else
     {
