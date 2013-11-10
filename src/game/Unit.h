@@ -1566,7 +1566,7 @@ class Unit : public WorldObject
         MotionMaster* GetMotionMaster() { return &i_motionMaster; }
 
         bool IsStopped() const { return !(hasUnitState(UNIT_STAT_MOVING)); }
-        void StopMoving(bool forceSendStop = false);
+        void StopMoving();
 
         bool IsFalling() const;
 
@@ -1791,6 +1791,7 @@ class Unit : public WorldObject
         bool HandleMendingAuraProc(Aura* triggeredByAura);
 
         void UpdateSplineMovement(uint32 t_diff);
+        void UpdateSplinePosition();
 
         uint32 m_state;                                     // Even derived shouldn't modify
         uint32 m_CombatTimer;

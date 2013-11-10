@@ -11405,25 +11405,18 @@ void Unit::SendPetAIReaction(uint64 guid)
 
 ///----------End of Pet responses methods----------
 
-void Unit::StopMoving(bool forceSendStop /*=false*/)
+void Unit::StopMoving()
 {
-	if (IsStopped() && !forceSendStop)
-	    return;
+    clearUnitState(UNIT_STAT_MOVING);
 
-	clearUnitState(UNIT_STAT_MOVING);
+    // not need send any packets if not in world or not moving
+    if (!IsInWorld() || movespline->Finalized())
+        return;
 
-	// prevent loose possess
-	if (isPossessed())
-	    return;
-
-	// not need send any packets if not in world
-	if (!IsInWorld())
-	    return;
-
-	Movement::MoveSplineInit init(this);
-	init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset(), false);
-	init.SetFacing(GetOrientation());
-	init.Launch();
+    // Update position now since Stop does not start a new movement that can be updated later
+    UpdateSplinePosition();
+    Movement::MoveSplineInit init(this);
+    init.Stop();
 }
 
 void Unit::SendMovementFlagUpdate()
@@ -13249,8 +13242,6 @@ void Unit::NearTeleportTo(float x, float y, float z, float orientation, bool cas
 
 void Unit::UpdateSplineMovement(uint32 t_diff)
 {
-    uint32 const positionUpdateDelay = 400;
-
     if (movespline->Finalized())
         return;
 
@@ -13262,15 +13253,20 @@ void Unit::UpdateSplineMovement(uint32 t_diff)
 
     m_movesplineTimer.Update(t_diff);
     if (m_movesplineTimer.Passed() || arrived)
-    {
-        m_movesplineTimer.Reset(positionUpdateDelay);
-        Movement::Location loc = movespline->ComputePosition();
+        UpdateSplinePosition();
+}
 
-        if (hasUnitState(UNIT_STAT_CANNOT_TURN))
-            loc.orientation = GetOrientation();
+void Unit::UpdateSplinePosition()
+{
+    static uint32 const positionUpdateDelay = 400;
 
-        UpdatePosition(loc.x, loc.y, loc.z, loc.orientation);
-    }
+    m_movesplineTimer.Reset(positionUpdateDelay);
+    Movement::Location loc = movespline->ComputePosition();
+
+    if (hasUnitState(UNIT_STAT_CANNOT_TURN))
+        loc.orientation = GetOrientation();
+
+    UpdatePosition(loc.x, loc.y, loc.z, loc.orientation);
 }
 
 void Unit::DisableSpline()

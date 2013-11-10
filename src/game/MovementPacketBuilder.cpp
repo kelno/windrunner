@@ -19,7 +19,7 @@
 
 #include "MovementPacketBuilder.h"
 #include "MoveSpline.h"
-#include "WorldPacket.h"
+#include "ByteBuffer.h"
 
 namespace Movement
 {
@@ -42,7 +42,7 @@ namespace Movement
         MonsterMoveFacingAngle  = 4
     };
 
-    void PacketBuilder::WriteCommonMonsterMovePart(const MoveSpline& move_spline, WorldPacket& data)
+    void PacketBuilder::WriteCommonMonsterMovePart(const MoveSpline& move_spline, ByteBuffer& data)
     {
         MoveSplineFlag splineflags = move_spline.splineflags;
 
@@ -73,6 +73,13 @@ namespace Movement
         // add fake Runmode flag - client has strange issues without that flag
         data << uint32(splineflags & ~MoveSplineFlag::Mask_No_Monster_Move | MoveSplineFlag::Runmode);
         data << move_spline.Duration();
+    }
+
+    void PacketBuilder::WriteStopMovement(Vector3 const& pos, uint32 splineId, ByteBuffer& data)
+    {
+        data << pos;
+        data << splineId;
+        data << uint8(MonsterMoveStop);
     }
 
     void WriteLinearPath(const Spline<int32>& spline, ByteBuffer& data)
@@ -110,7 +117,7 @@ namespace Movement
         data.append<Vector3>(&spline.getPoint(1), count);
     }
 
-    void PacketBuilder::WriteMonsterMove(const MoveSpline& move_spline, WorldPacket& data)
+    void PacketBuilder::WriteMonsterMove(const MoveSpline& move_spline, ByteBuffer& data)
     {
         WriteCommonMonsterMovePart(move_spline, data);
 

@@ -96,7 +96,7 @@ namespace Movement
         if (!args.Validate(unit))
             return 0;
 
-        unit->m_movementInfo.SetMovementFlags((MovementFlags)moveFlags);
+        unit->m_movementInfo.SetMovementFlags(moveFlags);
         move_spline.Initialize(args);
 
         WorldPacket data(SMSG_MONSTER_MOVE, 64);
@@ -106,6 +106,26 @@ namespace Movement
         unit->SendMessageToSet(&data, true);
 
         return move_spline.Duration();
+    }
+
+    void MoveSplineInit::Stop()
+    {
+        MoveSpline& move_spline = *unit->movespline;
+
+        // No need to stop if we are not moving
+        if (move_spline.Finalized())
+            return;
+
+        Location loc = move_spline.ComputePosition();
+        args.flags = MoveSplineFlag::Done;
+        unit->m_movementInfo.RemoveMovementFlag(MOVEMENTFLAG_FORWARD | MOVEMENTFLAG_SPLINE_ENABLED);
+        move_spline.Initialize(args);
+
+        WorldPacket data(SMSG_MONSTER_MOVE, 64);
+        data.append(unit->GetPackGUID());
+
+        PacketBuilder::WriteStopMovement(loc, args.splineId, data);
+        unit->SendMessageToSet(&data, true);
     }
 
     MoveSplineInit::MoveSplineInit(Unit* m) : unit(m)

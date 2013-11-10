@@ -46,6 +46,10 @@ namespace Movement
          */
         int32 Launch();
 
+        /*  Final pass of initialization that stops movement.
+         */
+        void Stop();
+
         /* Adds final facing animation
          * sets unit's facing to specified point/angle after all path done
          * you can have only one final facing: previous will be overriden
