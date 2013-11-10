@@ -1,20 +1,3 @@
-/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
-//TODO : Fix SPELL_BEAM_SINISTER sur les tanks?
 #include "precompiled.h"
 #include "def_black_temple.h"
 
@@ -120,7 +103,6 @@ struct boss_shahrazAI : public ScriptedAI
     uint32 BeamTimer;
     uint32 BeamCount;
     uint32 CurrentBeam;
-    uint32 PrismaticShieldTimer;
     uint32 FatalAttractionTimer;
     uint32 FatalAttractionExplodeTimer;
     uint32 ShriekTimer;
@@ -143,15 +125,14 @@ struct boss_shahrazAI : public ScriptedAI
         BeamTimer = TIMER_BEAM;
         CurrentBeam = rand()%4;                                    // 0 - Sinister, 1 - Vile, 2 - Wicked, 3 - Sinful
         BeamCount = 0;
-        PrismaticShieldTimer = 0;
         FatalAttractionTimer = TIMER_FATAL_ATTRACTION_FIRST;
         FatalAttractionExplodeTimer = -1;
         ShriekTimer = TIMER_SILENCING_SHRIEK;
         SaberTimer = TIMER_SABER_LASH_FIRST;
         RandomYellTimer = TIMER_RANDOM_YELL;
         EnrageTimer = TIMER_ENRAGE;
-        CheckPlayersUndermapTimer = 5000;
-        TooFarAwayCheckTimer = 1000;
+        CheckPlayersUndermapTimer = -1;
+        TooFarAwayCheckTimer = 2000;
         checkFatalAttractionDistance = false;
 
         Enraged = false;
@@ -188,7 +169,7 @@ struct boss_shahrazAI : public ScriptedAI
         float Z = TeleportPoint[random].z;
         uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
-        SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, NULL, 0); //SPELL_SABER_LASH_IMM
+        SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
         if(targetList.size() == 3)
         {
             uint8 i = 0;
@@ -216,7 +197,7 @@ struct boss_shahrazAI : public ScriptedAI
                 return;
             }
                 
-            TooFarAwayCheckTimer = 1000;
+            TooFarAwayCheckTimer = 2000;
         }
         else
             TooFarAwayCheckTimer -= diff;
@@ -231,7 +212,7 @@ struct boss_shahrazAI : public ScriptedAI
                 }
             }
             
-            CheckPlayersUndermapTimer = 5000;
+            CheckPlayersUndermapTimer = -1;
         }else CheckPlayersUndermapTimer -= diff;
 
         // Cast beam and randomize it every 4 beams
@@ -280,6 +261,7 @@ struct boss_shahrazAI : public ScriptedAI
                 DoScriptText(RAND(SAY_SPELL2,SAY_SPELL3), m_creature);
                 FatalAttractionExplodeTimer = 2500;
                 checkFatalAttractionDistance = false;
+                CheckPlayersUndermapTimer = 2500;
             }
             FatalAttractionTimer = TIMER_FATAL_ATTRACTION;
         }else FatalAttractionTimer -= diff;
@@ -317,53 +299,6 @@ struct boss_shahrazAI : public ScriptedAI
                 FatalAttractionExplodeTimer = -1;
             else
                 FatalAttractionExplodeTimer = 1000;
-
-            /*
-            //cast aoe or clear effect
-            auto& m_threatlist = m_creature->getThreatManager().getThreatList();
-            for(uint8 i = 0; i < 3; i++)
-            {
-                if(!targets[i]) continue;
-
-                //check if we got anyone at less than 25 yards
-                bool clear = true;
-                for (auto itr : m_threatlist)
-                {
-                    if(!IS_PLAYER_GUID(itr->getUnitGuid()))
-                        continue;
-               
-                    if(targets[i]->GetGUID() != itr->getUnitGuid())
-                    {
-                        Player* p = me->GetMap()->GetPlayerInMap(itr->getUnitGuid());
-                        if(targets[i]->GetDistance2d(p) < 25)
-                        {
-                            clear = false;
-                            break;
-                        }
-                    }
-                }
-
-                if(clear)
-                {
-                    targets[i]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                    AttractionTargetGUID[i] = 0;
-                } else {
-                    targets[i]->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
-                }
-            }
-
-            bool allClear = true;
-            for(uint8 i = 0; i < 3; i++)
-            {
-                if(AttractionTargetGUID[i] != 0)
-                    allClear = false;
-            }
-
-            if(allClear)
-                FatalAttractionExplodeTimer = -1;
-            else
-                FatalAttractionExplodeTimer = 1000;
-                */
 
         } else FatalAttractionExplodeTimer -= diff;
         
