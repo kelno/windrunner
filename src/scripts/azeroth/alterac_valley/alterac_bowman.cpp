@@ -69,9 +69,6 @@ struct alterac_bowmanAI : public ScriptedAI
                 target = who;
 	}
 
-    void Aggro(Unit* who)
-    {    }
-
     bool isValidTarget(Unit* target)
     {
         float distance = me->GetDistance(target);

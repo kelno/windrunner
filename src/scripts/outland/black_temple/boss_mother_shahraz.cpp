@@ -28,7 +28,7 @@ enum Spells
     SPELL_BEAM_WICKED_TRIGGER       = 40866,
     SPELL_BEAM_SINFUL               = 40827,
     SPELL_BEAM_SINFUL_TRIGGER       = 40862,
-    SPELL_ATTRACTION_DUMMY          = 40870, //unused
+    //SPELL_ATTRACTION_DUMMY          = 40870, //unused
     SPELL_ATTRACTION                = 40871, //AoE damage + dummy aura on ally (modified to duration 2.0 instead of 1.1)
     SPELL_ATTRACTION_VIS            = 41001, //only visual, periodically trigger 40870
     SPELL_SILENCING_SHRIEK          = 40823,
@@ -39,7 +39,13 @@ enum Spells
     SPELL_TELEPORT_VISUAL           = 40869,
     SPELL_BERSERK                   = 45078,
     
-    SPELL_PRISMATIC_SHIELD          = 40879 //cast random prismatic auras
+    SPELL_PRISMATIC_SHIELD          = 40879, //cast random prismatic aurasS
+ /*   SPELL_PRISMATIC_AURA_SHADOW     = 40880,
+    SPELL_PRISMATIC_AURA_FIRE       = 40882,
+    SPELL_PRISMATIC_AURA_NATURE     = 40883,
+    SPELL_PRISMATIC_AURA_ARCANE     = 40891,
+    SPELL_PRISMATIC_AURA_FROST      = 40896,
+    SPELL_PRISMATIC_AURA_HOLY       = 40897, */
 };
 
 enum Timers 
@@ -48,25 +54,14 @@ enum Timers
     TIMER_BEAM = 9000,
     TIMER_PRISMATIC_SHIELD = 15000,
     TIMER_FATAL_ATTRACTION_FIRST = 12000,
-    TIMER_SILENCING_SHRIEK = 30000,
-    TIMER_SABER_LASH_FIRST = 11000,
-    TIMER_SABER_LASH = 35000,
+    TIMER_SABER_LASH = 10000,
     TIMER_ENRAGE = 600000
 };
 
 #define TIMER_RANDOM_YELL 70000 + rand()%41 * 1000
 #define TIMER_FATAL_ATTRACTION 18000 + rand()%7000
-/*
-uint32 PrismaticAuras[]=
-{
-    40880,                                                  // Shadow
-    40882,                                                  // Fire
-    40883,                                                  // Nature
-    40891,                                                  // Arcane
-    40896,                                                  // Frost
-    40897,                                                  // Holy
-};
-*/
+#define TIMER_SILENCING_SHRIEK 20000 + rand()%5000
+
 struct Locations
 {
     float x,y,z;
@@ -128,7 +123,7 @@ struct boss_shahrazAI : public ScriptedAI
         FatalAttractionTimer = TIMER_FATAL_ATTRACTION_FIRST;
         FatalAttractionExplodeTimer = -1;
         ShriekTimer = TIMER_SILENCING_SHRIEK;
-        SaberTimer = TIMER_SABER_LASH_FIRST;
+        SaberTimer = TIMER_SABER_LASH;
         RandomYellTimer = TIMER_RANDOM_YELL;
         EnrageTimer = TIMER_ENRAGE;
         CheckPlayersUndermapTimer = -1;

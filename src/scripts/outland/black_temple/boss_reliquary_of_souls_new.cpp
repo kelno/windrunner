@@ -405,7 +405,7 @@ public:
             
             me->SetFullTauntImmunity(true);
             //me->SetNoCallAssistance(true);
-            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         }
         
         void evade()
