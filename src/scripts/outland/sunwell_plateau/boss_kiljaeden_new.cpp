@@ -1952,7 +1952,7 @@ public:
                 else
                     resetEvent(EVENT_STUN, 4000);
 
-                me->ApplySpellImmune(12889, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+                me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
                 me->addUnitState(UNIT_STAT_STUNNED);
 
                 me->CastSpell(me, 45893, true);

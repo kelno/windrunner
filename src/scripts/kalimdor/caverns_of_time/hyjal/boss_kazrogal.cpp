@@ -47,7 +47,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
     void Reset()
     {
-        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
 
         damageTaken = 0;
         CleaveTimer = TIMER_CLEAVE;
