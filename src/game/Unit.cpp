@@ -9618,40 +9618,32 @@ void Unit::setDeathState(DeathState s)
 
         if(IsNonMeleeSpellCasted(false))
             InterruptNonMeleeSpells(false);
+
+        UnsummonAllTotems();
+        RemoveAllAurasOnDeath();
     }
 
     if (s == JUST_DIED)
     {
-        RemoveAllAurasOnDeath();
-        UnsummonAllTotems();
-
         ModifyAuraState(AURA_STATE_HEALTHLESS_20_PERCENT, false);
         ModifyAuraState(AURA_STATE_HEALTHLESS_35_PERCENT, false);
         // remove aurastates allowing special moves
         ClearAllReactives();
         ClearDiminishings();
-
-        StopMoving();
         if (IsInWorld())
         {
             GetMotionMaster()->Clear(false);
             GetMotionMaster()->MoveIdle();
         }
-
+        StopMoving();
         DisableSpline();
         //without this when removing IncreaseMaxHealth aura player may stuck with 1 hp
         //do not why since in IncreaseMaxHealth currenthealth is checked
         SetHealth(0);
     }
     else if(s == JUST_ALIVED)
-    {
         RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE); // clear skinnable for creature and player (at battleground)
-    }
 
-    if (m_deathState != ALIVE && s == ALIVE)
-    {
-        //_ApplyAllAuraMods();
-    }
     m_deathState = s;
 }
 

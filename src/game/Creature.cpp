@@ -721,7 +721,7 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
 
     if(i_AI) delete i_AI;
 
-    i_motionMaster.Initialize();
+    Motion_Initialize();
 
     i_AI = ai ? ai : FactorySelector::selectAI(this);
     IsAIEnabled = true;     // Keep this when getting rid of old system
@@ -735,6 +735,21 @@ bool Creature::AIM_Initialize(CreatureAI* ai)
         m_AI->initialize();
     
     return true;
+}
+
+void Creature::Motion_Initialize()
+{
+    if (!m_formation)
+        i_motionMaster.Initialize();
+    else if (m_formation->getLeader() == this)
+    {
+        m_formation->FormationReset(false);
+        i_motionMaster.Initialize();
+    }
+    else if (m_formation->isFormed())
+        i_motionMaster.MoveIdle(); //wait the order of leader
+    else
+        i_motionMaster.Initialize();
 }
 
 bool Creature::Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, float x, float y, float z, float ang, const CreatureData *data)
@@ -1844,6 +1859,10 @@ void Creature::setDeathState(DeathState s)
             if (LootTemplates_Skinning.HaveLootFor(GetCreatureInfo()->SkinLootId))
             	SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
 
+        //Dismiss group if is leader
+        if (m_formation && m_formation->getLeader() == this)
+            m_formation->FormationReset(true);
+
         if ((canFly() || IsFlying()))
             i_motionMaster.MoveFall();
 
@@ -1851,25 +1870,20 @@ void Creature::setDeathState(DeathState s)
     }
     if(s == JUST_ALIVED)
     {
-        clearUnitState(UNIT_STAT_ALL_STATE);
-        UpdateMovementFlags();
-
-        Unit::setDeathState(ALIVE);
-
         SetHealth(GetMaxHealth());
         SetLootRecipient(NULL);
-
         ResetPlayerDamageReq();
 
-        CreatureInfo const *cinfo = GetCreatureInfo();
-        RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+        UpdateMovementFlags();
 
+        CreatureInfo const *cinfo = GetCreatureInfo();
         SetUInt32Value(UNIT_NPC_FLAGS, cinfo->npcflag);
+        clearUnitState(UNIT_STAT_ALL_STATE);
         SetMeleeDamageSchool(SpellSchools(cinfo->dmgschool));
         LoadCreaturesAddon(true);
-
+        Motion_Initialize();
         SetWalk(true);
-        i_motionMaster.Initialize();
+        Unit::setDeathState(ALIVE);
     }
 }
 

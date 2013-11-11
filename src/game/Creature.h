@@ -528,6 +528,7 @@ class Creature : public Unit
         bool IsInEvadeMode() const;
 
         bool AIM_Initialize(CreatureAI* ai = NULL);
+        void Motion_Initialize();
 
         CreatureAI* AI() { return (CreatureAI*)i_AI; }
         CreatureAINew* getAI() { return m_AI; }
