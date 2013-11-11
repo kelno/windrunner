@@ -482,7 +482,6 @@ struct boss_illidari_councilAI : public ScriptedAI
 #define TIMER_CONSECRATION_FIRST 10000
 #define TIMER_AURA 30000
 #define TIMER_AURA_FIRST 6000
-#define TIMER_SEAL 30000 + rand()%10000
 #define TIMER_SEAL_FIRST 15000 + rand()%5000
 #define TIMER_BLESSING 15000
 #define TIMER_JUDGEMENT 15000
@@ -574,7 +573,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                 spellid = SPELL_BLESS_PROTECTION;
 
             if(Unit* pUnit = SelectCouncilMember())
-                if(DoCast(pUnit,spellid))
+                if(DoCast(pUnit,spellid,true))
                 {
                     BlessingTimer = TIMER_BLESSING;
                     lastBlessing = !lastBlessing;
@@ -586,20 +585,16 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
         {
             if(me->HasAura(SPELL_SEAL_OF_COMMAND,0))
             {
-                if(DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_COMMAND))
-                {
-                    me->RemoveAurasDueToSpell(SPELL_SEAL_OF_COMMAND);
-                    JudgeTimer = -1;
-                }
+                DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_COMMAND);
+                me->RemoveAurasDueToSpell(SPELL_SEAL_OF_COMMAND);
             }
             if(me->HasAura(SPELL_SEAL_OF_BLOOD,0))
             {
-                if(DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_BLOOD))
-                {
-                    me->RemoveAurasDueToSpell(SPELL_SEAL_OF_BLOOD);
-                    JudgeTimer = -1;
-                }
+                DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_BLOOD);
+                me->RemoveAurasDueToSpell(SPELL_SEAL_OF_BLOOD);
             }
+            JudgeTimer = -1;
+            SealTimer = 0;
         } else JudgeTimer -= diff;
 
         if(ConsecrationTimer < diff)
@@ -632,7 +627,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
             if(DoCast(me, spellid,true))
             {
                 lastSeal = !lastSeal;
-                SealTimer = TIMER_SEAL;
+                SealTimer = -1;
                 JudgeTimer = TIMER_JUDGEMENT;
             }
         } else SealTimer -= diff;
@@ -812,7 +807,7 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 #define TIMER_VANISH 60000
 #define TIMER_VANISH_FIRST 25000
 #define TIMER_VANISH_DURATION 30000
-#define TIMER_ENVENOM 27000
+#define TIMER_ENVENOM 28500
 #define TIMER_WAIT_AFTER_VANISH 3000
 
 struct boss_veras_darkshadowAI : public boss_illidari_councilAI
