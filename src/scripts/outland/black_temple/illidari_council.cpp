@@ -97,11 +97,12 @@ static CouncilYells CouncilEnrage[]=
 #define SPELL_CONSECRATION         41541
 #define SPELL_HAMMER_OF_JUSTICE    41468
 #define SPELL_SEAL_OF_COMMAND      41469
-#define SPELL_JUDGEMENT_OF_COMMAND 41470
+//#define SPELL_JUDGEMENT_OF_COMMAND 41470
 #define SPELL_SEAL_OF_BLOOD        41459
-#define SPELL_JUDGEMENT_OF_BLOOD   41461
+//#define SPELL_JUDGEMENT_OF_BLOOD   41461
 #define SPELL_CHROMATIC_AURA       41453
 #define SPELL_DEVOTION_AURA        41452
+#define SPELL_JUDGEMENT            41467 //effect scripted in SpellEffects.cpp
 
 // Veras Darkshadow's spells
 #define SPELL_DEADLY_POISON        41485
@@ -504,7 +505,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
     void Reset()
     {
-        ConsecrationTimer = TIMER_CONSECRATION;
+        ConsecrationTimer = TIMER_CONSECRATION_FIRST;
         HammerOfJusticeTimer = TIMER_HAMMER_OF_JUSTICE_FIRST;
         SealTimer = TIMER_SEAL_FIRST;
         AuraTimer = TIMER_AURA_FIRST;
@@ -583,18 +584,11 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(JudgeTimer < diff)
         {
-            if(me->HasAura(SPELL_SEAL_OF_COMMAND,0))
+            if(DoCast(me->getVictim(),SPELL_JUDGEMENT))
             {
-                DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_COMMAND);
-                me->RemoveAurasDueToSpell(SPELL_SEAL_OF_COMMAND);
+                JudgeTimer = -1;
+                SealTimer = 2200; //just after finishing castign judgement (2s cast)
             }
-            if(me->HasAura(SPELL_SEAL_OF_BLOOD,0))
-            {
-                DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_BLOOD);
-                me->RemoveAurasDueToSpell(SPELL_SEAL_OF_BLOOD);
-            }
-            JudgeTimer = -1;
-            SealTimer = 0;
         } else JudgeTimer -= diff;
 
         if(ConsecrationTimer < diff)
