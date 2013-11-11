@@ -107,7 +107,8 @@ static CouncilYells CouncilEnrage[]=
 #define SPELL_DEADLY_POISON        41485
 #define SPELL_DEADLY_STRIKE        41480 //peridiodic apply SPELL_DEADLY_POISON on caster
 #define SPELL_ENVENOM              41487
-#define SPELL_VANISH               41479
+#define SPELL_VANISH               41476
+#define SPELL_VANISH_STUN          41479 //self 3s stun
 
 #define SPELL_BERSERK              41476
 
@@ -479,10 +480,11 @@ struct boss_illidari_councilAI : public ScriptedAI
 
 #define TIMER_CONSECRATION 30000
 #define TIMER_CONSECRATION_FIRST 10000
-#define TIMER_AURA 60000
+#define TIMER_AURA 30000
 #define TIMER_AURA_FIRST 6000
 #define TIMER_SEAL 30000 + rand()%10000
-#define TIMER_BLESSING 30000
+#define TIMER_SEAL_FIRST 15000 + rand()%5000
+#define TIMER_BLESSING 15000
 #define TIMER_JUDGEMENT 15000
 #define TIMER_HAMMER_OF_JUSTICE 20000
 #define TIMER_HAMMER_OF_JUSTICE_FIRST 10000
@@ -499,17 +501,19 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
     uint32 JudgeTimer;
     bool lastAura;
     bool lastBlessing;
+    bool lastSeal;
 
     void Reset()
     {
         ConsecrationTimer = TIMER_CONSECRATION;
         HammerOfJusticeTimer = TIMER_HAMMER_OF_JUSTICE_FIRST;
-        SealTimer = TIMER_SEAL;
+        SealTimer = TIMER_SEAL_FIRST;
         AuraTimer = TIMER_AURA_FIRST;
         BlessingTimer = TIMER_BLESSING;
-        JudgeTimer = TIMER_JUDGEMENT;
+        JudgeTimer = -1;
         lastAura = rand()%2;
         lastBlessing = rand()%2;
+        lastSeal = rand()%2;
 
         me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
@@ -563,20 +567,20 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(BlessingTimer < diff)
         {
-            uint32 spell;
+            uint32 spellid;
             if(lastBlessing == 1)
-                spell = SPELL_BLESS_SPELLWARD;
+                spellid = SPELL_BLESS_SPELLWARD;
             else
-                spell = SPELL_BLESS_PROTECTION;
+                spellid = SPELL_BLESS_PROTECTION;
 
             if(Unit* pUnit = SelectCouncilMember())
-                if(DoCast(pUnit,spell))
+                if(DoCast(pUnit,spellid))
                 {
                     BlessingTimer = TIMER_BLESSING;
                     lastBlessing = !lastBlessing;
                 }
 
-        }else BlessingTimer -= diff;
+        } else BlessingTimer -= diff;
 
         if(JudgeTimer < diff)
         {
@@ -585,7 +589,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                 if(DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_COMMAND))
                 {
                     me->RemoveAurasDueToSpell(SPELL_SEAL_OF_COMMAND);
-                    JudgeTimer = TIMER_JUDGEMENT;
+                    JudgeTimer = -1;
                 }
             }
             if(me->HasAura(SPELL_SEAL_OF_BLOOD,0))
@@ -593,16 +597,16 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                 if(DoCast(m_creature->getVictim(),SPELL_JUDGEMENT_OF_BLOOD))
                 {
                     me->RemoveAurasDueToSpell(SPELL_SEAL_OF_BLOOD);
-                    JudgeTimer = TIMER_JUDGEMENT;
+                    JudgeTimer = -1;
                 }
             }
-        }else JudgeTimer -= diff;
+        } else JudgeTimer -= diff;
 
         if(ConsecrationTimer < diff)
         {
             if(DoCast(me, SPELL_CONSECRATION))
                 ConsecrationTimer = TIMER_CONSECRATION;
-        }else ConsecrationTimer -= diff;
+        } else ConsecrationTimer -= diff;
 
         if(HammerOfJusticeTimer < diff)
         {
@@ -615,26 +619,29 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                         HammerOfJusticeTimer = TIMER_HAMMER_OF_JUSTICE;
                 }
             }
-        }else HammerOfJusticeTimer -= diff;
+        } else HammerOfJusticeTimer -= diff;
 
         if(SealTimer < diff)
         {
-            if(!me->IsNonMeleeSpellCasted(false))
+            uint32 spellid;
+            if(lastSeal == 1)
+                spellid = SPELL_SEAL_OF_COMMAND;
+            else
+                spellid = SPELL_SEAL_OF_BLOOD;
+
+            if(DoCast(me, spellid,true))
             {
-                switch(rand()%2)
-                {
-                    case 0: DoCast(me, SPELL_SEAL_OF_COMMAND);  break;
-                    case 1: DoCast(me, SPELL_SEAL_OF_BLOOD);    break;
-                }
+                lastSeal = !lastSeal;
                 SealTimer = TIMER_SEAL;
+                JudgeTimer = TIMER_JUDGEMENT;
             }
-        }else SealTimer -= diff;
+        } else SealTimer -= diff;
 
         if(AuraTimer < diff)
         {
             if(CastAuraOnCouncil())
                 AuraTimer = TIMER_AURA;
-        }else AuraTimer -= diff;
+        } else AuraTimer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -817,7 +824,6 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
     uint32 VanishTimer;
     uint32 VanishTimeLeft;
     uint32 EnvenomTimer;
-    uint32 AfterVanishWaitTimer;
 
     bool HasVanished;
 
@@ -827,7 +833,6 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         VanishTimer = TIMER_VANISH_FIRST;
         VanishTimeLeft = TIMER_VANISH_DURATION;
         EnvenomTimer = 0;
-        AfterVanishWaitTimer = 0;
 
         HasVanished = false;
         m_creature->SetVisibility(VISIBILITY_ON);
@@ -868,9 +873,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 }
             }else VanishTimer -= diff;
 
-            if(AfterVanishWaitTimer < diff)
-                DoMeleeAttackIfReady();
-            else AfterVanishWaitTimer -= diff;
+            DoMeleeAttackIfReady();
         }
         else
         {
@@ -883,7 +886,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 DoResetThreat();
                 if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
                     me->AddThreat(p, 3000.0f);
-                AfterVanishWaitTimer = TIMER_WAIT_AFTER_VANISH;
+                DoCast(me,SPELL_VANISH_STUN);
                 return;
             }else VanishTimeLeft -= diff;
 
