@@ -491,7 +491,7 @@ bool PetAI::CanAttack(Unit* target)
     // IMPORTANT: The order in which things are checked is important, be careful if you add or remove checks
 
     // Hmmm...
-    if (!target)
+    if (!target || !me->GetCharmInfo())
         return false;
 
     if (!target->isAlive())

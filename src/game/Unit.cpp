@@ -23,6 +23,7 @@
 #include "Formulas.h"
 #include "Pet.h"
 #include "Util.h"
+#include "TemporarySummon.h"
 #include "Totem.h"
 #include "Transports.h"
 #include "BattleGround.h"
@@ -2109,7 +2110,7 @@ bool Unit::canMelee( bool extra )
 
 void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool extra )
 {
-	if (ToPlayer() && ToPlayer()->isSpectator())
+    if (ToPlayer() && ToPlayer()->isSpectator())
         return;
 
     if(!extra && hasUnitState(UNIT_STAT_CANNOT_AUTOATTACK) || HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_PACIFIED) )
@@ -9796,22 +9797,61 @@ Unit* Creature::SelectVictim(bool evade)
     //next-victim-selection algorithm and evade mode are called
     //threat list sorting etc.
 
-    //This should not be called by unit who does not have a threatlist
-    //or who does not have threat (totem/pet/critter)
-    //otherwise enterevademode every update
-
     Unit* target = NULL;
-    if(!m_ThreatManager.isThreatListEmpty())
+    // First checking if we have some taunt on us
+    AuraList const& tauntAuras = GetAurasByType(SPELL_AURA_MOD_TAUNT);
+    if (!tauntAuras.empty())
     {
-        if(!HasAuraType(SPELL_AURA_MOD_TAUNT)) {
-            target = m_ThreatManager.getHostilTarget();
+        Unit* caster = tauntAuras.back()->GetCaster();
+
+        // The last taunt aura caster is alive an we are happy to attack him
+        if (caster && caster->isAlive())
+            return getVictim();
+        else if (tauntAuras.size() > 1)
+        {
+            // We do not have last taunt aura caster but we have more taunt auras,
+            // so find first available target
+
+            // Auras are pushed_back, last caster will be on the end
+            AuraList::const_iterator aura = --tauntAuras.end();
+            do
+            {
+                --aura;
+                caster = (*aura)->GetCaster();
+                if (caster && canSeeOrDetect(caster, true) && canAttack(caster) && caster->isInAccessiblePlaceFor(ToCreature()))
+                {
+                    target = caster;
+                    break;
+                }
+            } while (aura != tauntAuras.begin());
         }
-        else {
+        else
             target = getVictim();
-        }
     }
 
-    if(target)
+    if (CanHaveThreatList())
+    {
+        if (!target && !m_ThreatManager.isThreatListEmpty())
+            // No taunt aura or taunt aura caster is dead standard target selection
+            target = m_ThreatManager.getHostilTarget();
+    }
+    else if (!HasReactState(REACT_PASSIVE))
+    {
+        // We have player pet probably
+        target = getAttackerForHelper();
+        if (!target && isSummon())
+        {
+            if (Unit* owner = ToTempSummon()->GetSummoner())
+            {
+                if (owner->isInCombat())
+                    target = owner->getAttackerForHelper();
+            }
+        }
+    }
+    else
+        return NULL;
+
+    if (target && CanCreatureAttack(target))
     {
         SetInFront(target); 
         return target;
@@ -13018,10 +13058,7 @@ bool Unit::SetSwim(bool enable)
         return false;
 
     if (enable)
-    {
         AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
-        AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
-    }
     else
     {
         RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
@@ -13263,7 +13300,7 @@ void Unit::UpdateSplinePosition()
 
 void Unit::DisableSpline()
 {
-	RemoveUnitMovementFlag(MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
+    RemoveUnitMovementFlag(MOVEMENTFLAG_SPLINE_ENABLED|MOVEMENTFLAG_FORWARD);
     movespline->_Interrupt();
 }
 

@@ -276,6 +276,7 @@ class GameObject;
 class Item;
 class Pet;
 class Totem;
+class TemporarySummon;
 class Path;
 class PetAura;
 
@@ -1000,6 +1001,8 @@ class Unit : public WorldObject
             return !hasUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_FLEEING | UNIT_STAT_IN_FLIGHT |
                 UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED ) && GetOwnerGUID()==0;
         }
+
+        bool isSummon() const   { return m_unitTypeMask & UNIT_MASK_SUMMON; }
         bool isPet() const      { return m_unitTypeMask & UNIT_MASK_PET; }
         bool isTotem() const    { return m_unitTypeMask & UNIT_MASK_TOTEM; }
         Pet* SummonPet(uint32 entry, float x, float y, float z, float ang, uint32 despwtime);
@@ -1644,8 +1647,9 @@ class Unit : public WorldObject
         Creature* FindCreatureInGrid(uint32 entry, float range, bool isAlive);
         GameObject* FindGOInGrid(uint32 entry, float range);
         
-        Pet* ToPet(){ if(isPet()) return reinterpret_cast<Pet*>(this); else return NULL; } 
-        Totem* ToTotem(){ if(isTotem()) return reinterpret_cast<Totem*>(this); else return NULL; } 
+        Pet* ToPet(){ if(isPet()) return reinterpret_cast<Pet*>(this); else return NULL; }
+        Totem* ToTotem(){ if(isTotem()) return reinterpret_cast<Totem*>(this); else return NULL; }
+        TemporarySummon* ToTempSummon() { if (isSummon()) return reinterpret_cast<TemporarySummon*>(this); else return NULL; }
         
         void SetSummoner(Unit* summoner) { m_summoner = summoner->GetGUID(); }
         virtual Unit* GetSummoner() { return m_summoner ? Unit::GetUnit(*this, m_summoner) : NULL; }

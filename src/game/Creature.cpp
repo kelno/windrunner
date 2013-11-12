@@ -2807,6 +2807,14 @@ bool Creature::SetWalk(bool enable)
 
 bool Creature::SetSwim(bool enable)
 {
+    if (HasUnitMovementFlag(MOVEMENTFLAG_SWIMMING))
+    {
+        if (GetMap()->IsUnderWater(GetPositionX(), GetPositionY(), GetPositionZ()))
+            AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+        else
+            RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING);
+    }
+
     if (!Unit::SetSwim(enable))
         return false;
 
