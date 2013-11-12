@@ -587,7 +587,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
             if(DoCast(me->getVictim(),SPELL_JUDGEMENT))
             {
                 JudgeTimer = -1;
-                SealTimer = 2200; //just after finishing castign judgement (2s cast)
+                SealTimer = 2200; //just after finishing casting judgement (2s cast)
             }
         } else JudgeTimer -= diff;
 
@@ -618,7 +618,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
             else
                 spellid = SPELL_SEAL_OF_BLOOD;
 
-            if(DoCast(me, spellid,true))
+            if(DoCast(me,spellid))
             {
                 lastSeal = !lastSeal;
                 SealTimer = -1;
@@ -690,25 +690,15 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         if(BlizzardTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-            {
                 if(DoCast(target, SPELL_BLIZZARD))
-                {
                     BlizzardTimer = TIMER_BLIZZARD;
-                    FlamestrikeTimer += 5000;
-                }
-            }
         }else BlizzardTimer -= diff;
 
         if(FlamestrikeTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-            {
                 if(DoCast(target, SPELL_FLAMESTRIKE))
-                {
                     FlamestrikeTimer = TIMER_FLAMESTRIKE;
-                    BlizzardTimer += 5000;
-                }
-            }
         }else FlamestrikeTimer -= diff;
 
         if(ArcaneExplosionTimer < diff)
