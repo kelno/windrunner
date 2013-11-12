@@ -296,10 +296,10 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                 {
                     Phase1 = false;
 
-                    TargetThreat = DoGetThreat(target);
+                    //TargetThreat = DoGetThreat(target);
                     TargetGUID = target->GetGUID();
-                    if(DoGetThreat(target))
-                        DoModifyThreatPercent(target, -100);
+                    /*if(DoGetThreat(target))
+                        DoModifyThreatPercent(target, -100);*/
                     m_creature->AddThreat(target, 50000000.0f);
                     target->CastSpell(m_creature, SPELL_TAUNT_GURTOGG, true);
                     m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);

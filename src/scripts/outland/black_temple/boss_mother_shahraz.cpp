@@ -261,30 +261,31 @@ struct boss_shahrazAI : public ScriptedAI
             FatalAttractionTimer = TIMER_FATAL_ATTRACTION;
         }else FatalAttractionTimer -= diff;
         
-        //Get targets & cast aoe
+        //Check distance with 2 others players targeted by fatal attraction. Remove if distance with both > 25, re cast SPELL_ATTRACTION else.
         if(FatalAttractionExplodeTimer < diff)
         {
             bool clear = true;
-            for(uint8 i = 0; i < 3; ++i)
-            {
-                if(!AttractionTargetGUID[i]) continue;
+            Player* p[3];
+            for(uint8 i = 0; i < 3; i++)
+                p[i] = Player::GetPlayer(AttractionTargetGUID[i]);
 
-                Player* p = Player::GetPlayer(AttractionTargetGUID[i]);
-                if(p && p->isAlive())
+            for(uint8 i = 0; i < 3; i++)
+            {
+                if(p[i])
                 {
-                    //Clear fatal attraction target (only after first cast)
-                    if(checkFatalAttractionDistance)
-                    {  
-                        if(!p->HasAuraWithCasterNot(SPELL_ATTRACTION,1,p->GetGUID())) //dummy aura applied on close allies on every aoe for 2.0
+                    if(checkFatalAttractionDistance) //Clear fatal attraction target (only after first cast)
+                    {
+                        Player* other1 = p[(i+1)%3];
+                        Player* other2 = p[(i+2)%3];
+                        if(   (!other1 || other1->GetDistance2d(p[i]) > 25)
+                           && (!other2 || other2->GetDistance2d(p[i]) > 25) )
                         {
-                            p->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                            AttractionTargetGUID[i] = 0;
-                            continue;
+                             AttractionTargetGUID[i] = 0;
+                             p[i]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
+                             continue;
                         }
                     }
-
-                    // Else cast SPELL_ATTRACTION
-                    p->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
+                    p[i]->CastSpell((Unit*)NULL,SPELL_ATTRACTION,true);
                     clear = false;
                 }
             }
