@@ -636,24 +636,21 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
     }
 };
 
-#define TIMER_BLIZZARD 15000 + rand()%5000
-#define TIMER_FLAMESTRIKE 15000 + rand()%5000
+#define TIMER_AOE 12000
 #define TIMER_DAMPEN_MAGIC 67200
 
 struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
 {
     boss_high_nethermancer_zerevorAI(Creature *c) : boss_illidari_councilAI(c) {}
 
-    uint32 BlizzardTimer;
-    uint32 FlamestrikeTimer;
+    uint32 AoETimer;
     uint32 ArcaneBoltTimer;
     uint32 DampenMagicTimer;
     uint32 ArcaneExplosionTimer;
 
     void Reset()
     {
-        BlizzardTimer = TIMER_BLIZZARD;
-        FlamestrikeTimer = TIMER_FLAMESTRIKE;
+        AoETimer = TIMER_AOE;
         ArcaneBoltTimer = 500;
         DampenMagicTimer = 200;
         ArcaneExplosionTimer = 14000;
@@ -687,19 +684,13 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
                 DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
         }else DampenMagicTimer -= diff;
 
-        if(BlizzardTimer < diff)
+        if(AoETimer < diff)
         {
+            uint32 spellID = rand()%2 ? SPELL_BLIZZARD : SPELL_FLAMESTRIKE;
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                if(DoCast(target, SPELL_BLIZZARD))
-                    BlizzardTimer = TIMER_BLIZZARD;
-        }else BlizzardTimer -= diff;
-
-        if(FlamestrikeTimer < diff)
-        {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                if(DoCast(target, SPELL_FLAMESTRIKE))
-                    FlamestrikeTimer = TIMER_FLAMESTRIKE;
-        }else FlamestrikeTimer -= diff;
+                if(DoCast(target, spellID))
+                    AoETimer = TIMER_AOE;
+        } else AoETimer -= diff;
 
         if(ArcaneExplosionTimer < diff)
         {
@@ -719,7 +710,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
 #define TIMER_SMITE 10000
 #define TIMER_DIVINE_WRATH 10000
 #define TIMER_CIRCLE_OF_HEALING 15000
-#define TIMER_CIRCLE_OF_HEALING_FIRST 15000
+#define TIMER_CIRCLE_OF_HEALING_FIRST 40000
 #define TIMER_REFLECTIVE_SHIELD 35000 + rand()%10000
 
 struct boss_lady_malandeAI : public boss_illidari_councilAI
