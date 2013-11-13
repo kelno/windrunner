@@ -165,7 +165,7 @@ struct boss_shahrazAI : public ScriptedAI
         uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
         SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
-        if(targetList.size() == 3)
+        if(targetList.size() == 2 || targetList.size() == 3)
         {
             uint8 i = 0;
             for(auto target : targetList)
