@@ -298,7 +298,7 @@ struct mob_illidari_councilAI : public ScriptedAI
         {
             if(EndEventTimer <= diff)
             {
-                if(DeathCount > 3)
+                if(DeathCount >= 4)
                 {
                     if(pInstance)
                     {
@@ -313,7 +313,15 @@ struct mob_illidari_councilAI : public ScriptedAI
 
                 Creature* pMember = (Unit::GetCreature(*m_creature, Council[DeathCount]));
                 if(pMember && pMember->isAlive())
+                {
+                    for(auto itr : pMember->getThreatManager().getThreatList())
+                    {
+                        Player* p = me->GetPlayer(itr->getUnitGuid());
+                        if(p)
+                            p->RewardReputation(pMember,1.0f);
+                    }
                     pMember->DealDamage(pMember, pMember->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
+                }
                 ++DeathCount;
                 EndEventTimer = 1500;
             }else EndEventTimer -= diff;
