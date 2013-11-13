@@ -680,8 +680,11 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         if(DampenMagicTimer < diff)
         {
                 m_creature->InterruptNonMeleeSpells(false);
-                DoCast(m_creature, SPELL_DAMPEN_MAGIC, true);
-                DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
+                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true))
+                {
+                    DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
+                    ArcaneBoltTimer += 2000;
+                }
         }else DampenMagicTimer -= diff;
 
         if(AoETimer < diff)
@@ -748,31 +751,31 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
         if(EmpoweredSmiteTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-            {
-                DoCast(target, SPELL_EMPOWERED_SMITE);
-                EmpoweredSmiteTimer = TIMER_SMITE;
-            }
+                if(DoCast(target, SPELL_EMPOWERED_SMITE))
+                    EmpoweredSmiteTimer = TIMER_SMITE;
+
         }else EmpoweredSmiteTimer -= diff;
 
         if(CircleOfHealingTimer < diff)
         {
-            DoCast(m_creature, SPELL_CIRCLE_OF_HEALING);
-            CircleOfHealingTimer = TIMER_CIRCLE_OF_HEALING;
+            if(DoCast(m_creature, SPELL_CIRCLE_OF_HEALING))
+                CircleOfHealingTimer = TIMER_CIRCLE_OF_HEALING;
+
         }else CircleOfHealingTimer -= diff;
 
         if(DivineWrathTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-            {
-                DoCast(target, SPELL_DIVINE_WRATH);
-                DivineWrathTimer = TIMER_DIVINE_WRATH;
-            }
+                if(DoCast(target, SPELL_DIVINE_WRATH))
+                    DivineWrathTimer = TIMER_DIVINE_WRATH;
+
         }else DivineWrathTimer -= diff;
 
         if(ReflectiveShieldTimer < diff)
         {
-            DoCast(m_creature, SPELL_REFLECTIVE_SHIELD);
-            ReflectiveShieldTimer = TIMER_REFLECTIVE_SHIELD;
+            if(DoCast(m_creature, SPELL_REFLECTIVE_SHIELD))
+                ReflectiveShieldTimer = TIMER_REFLECTIVE_SHIELD;
+
         }else ReflectiveShieldTimer -= diff;
 
         DoMeleeAttackIfReady();
@@ -782,7 +785,7 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 #define TIMER_VANISH 60000
 #define TIMER_VANISH_FIRST 25000
 #define TIMER_VANISH_DURATION 30000
-#define TIMER_ENVENOM 28500
+#define TIMER_ENVENOM 26000
 #define TIMER_WAIT_AFTER_VANISH 3000
 
 struct boss_veras_darkshadowAI : public boss_illidari_councilAI
@@ -802,7 +805,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         appliedPoisonTarget = 0;
         VanishTimer = TIMER_VANISH_FIRST;
         VanishTimeLeft = TIMER_VANISH_DURATION;
-        EnvenomTimer = 0;
+        EnvenomTimer = -1;
 
         HasVanished = false;
         m_creature->SetVisibility(VISIBILITY_ON);
@@ -833,7 +836,6 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 {
                     VanishTimer = TIMER_VANISH;
                     VanishTimeLeft = TIMER_VANISH_DURATION;
-                    EnvenomTimer= TIMER_ENVENOM;
                     appliedPoisonTarget = 0;
                     HasVanished = true;
                     m_creature->SetVisibility(VISIBILITY_OFF);
@@ -865,17 +867,19 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 if(Unit* appliedPoisonTargetUnit = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 {
                     DoCast(appliedPoisonTargetUnit,SPELL_DEADLY_STRIKE,true);
+                    EnvenomTimer = TIMER_ENVENOM;
                     m_creature->GetMotionMaster()->MoveChase(appliedPoisonTargetUnit); //make sure to be near it when vanish end
                     me->AddThreat(appliedPoisonTargetUnit, 999000.0f); 
                     appliedPoisonTarget = appliedPoisonTargetUnit->GetGUID();
                 }
             }
 
-            if(EnvenomTimer < diff && appliedPoisonTarget)                   // Appear 2 seconds before becoming attackable (Shifting out of vanish)
+            if(EnvenomTimer < diff) 
             {
-                if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
-                    if(DoCast(p,SPELL_ENVENOM))
-                        EnvenomTimer = -1;
+                if(appliedPoisonTarget)
+                    if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
+                        if(DoCast(p,SPELL_ENVENOM))
+                            EnvenomTimer = -1;
 
             }else EnvenomTimer -= diff;
         }
