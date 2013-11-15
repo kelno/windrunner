@@ -196,6 +196,7 @@ SET(scripts_STAT_SRCS
     azeroth/zulgurub/def_zulgurub.h
     azeroth/zulgurub/instance_zulgurub.cpp
     custom/custom_example.cpp
+    custom/custom_gnominizer.cpp
     custom/custom_gossip_codebox.cpp
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
