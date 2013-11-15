@@ -573,7 +573,7 @@ void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count, float Base[4][3])
         UpdateWorldState(WORLD_STATE_WAVES, stateValue);    // Set world state to our current wave number
         UpdateWorldState(WORLD_STATE_ENEMY, 1);             // Enable world state
 
-        pInstance->SetData(DATA_TRASH, EnemyCount);         // Send data for instance script to update count
+        if(pInstance) pInstance->SetData(DATA_TRASH, EnemyCount);         // Send data for instance script to update count
 
         if(!Debug)
             NextWaveTimer = wave[Count].WaveTimer;
@@ -787,7 +787,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
         switch(m_creature->GetEntry())
         {
             case JAINA:
-                if(pInstance->GetData(DATA_ALLIANCE_RETREAT))
+                if(pInstance && pInstance->GetData(DATA_ALLIANCE_RETREAT))
                 {
                     m_creature->SetVisibility(VISIBILITY_OFF);
                     HideNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
@@ -799,7 +799,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
                 else m_creature->SetVisibility(VISIBILITY_ON);
                 break;
             case THRALL: //thrall
-                if(pInstance->GetData(DATA_HORDE_RETREAT))
+                if(pInstance && pInstance->GetData(DATA_HORDE_RETREAT))
                 {
                     m_creature->SetVisibility(VISIBILITY_OFF);
                     HideNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
