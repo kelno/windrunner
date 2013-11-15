@@ -307,23 +307,24 @@ struct mob_illidari_councilAI : public ScriptedAI
                         pInstance->SetData(DATA_ILLIDARICOUNCILEVENT, DONE);
                         //m_creature->SummonCreature(AKAMAID,746.466980f,304.394989f,311.90208f,6.272870f,TEMPSUMMON_DEAD_DESPAWN,0);
                     }
+                    DoZoneInCombat(); //be sure to have all players in threat list
+                    for(auto itr : m_creature->getThreatManager().getThreatList())
+                    {
+                        Player* p = me->GetPlayer(itr->getUnitGuid());
+                        if(p)
+                            for(uint8 i = 0; i < 4; i++)
+                                p->RewardReputation(m_creature,1.0f);
+                    }
                     m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                     return;
                 }
 
                 Creature* pMember = (Unit::GetCreature(*m_creature, Council[DeathCount]));
                 if(pMember && pMember->isAlive())
-                {
-                    for(auto itr : pMember->getThreatManager().getThreatList())
-                    {
-                        Player* p = me->GetPlayer(itr->getUnitGuid());
-                        if(p)
-                            p->RewardReputation(pMember,1.0f);
-                    }
                     pMember->DealDamage(pMember, pMember->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
-                }
+
                 ++DeathCount;
-                EndEventTimer = 1500;
+                EndEventTimer = 500;
             }else EndEventTimer -= diff;
         }
 
@@ -343,7 +344,7 @@ struct mob_illidari_councilAI : public ScriptedAI
                                 ++EvadeCheck;                   //If all members evade, we reset so that players can properly reset the event
                             else if(!Member->isAlive())         // If even one member dies, kill the rest, set instance data, and kill self.
                             {
-                                EndEventTimer = 1000;
+                                EndEventTimer = 500;
                                 CheckTimer = 0;
                                 return;
                             }
@@ -354,7 +355,7 @@ struct mob_illidari_councilAI : public ScriptedAI
                 if(EvadeCheck > 3)
                     Reset();
 
-                CheckTimer = 2000;
+                CheckTimer = 500;
             }else CheckTimer -= diff;
         }
 
@@ -682,7 +683,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
             return;
 
         //prefer staying at 15m
-        if(me->isMoving() && me->GetDistance2d(me->getVictim()) < 15)
+        if(me->isMoving() && me->GetDistance2d(me->getVictim()) < 15 && me->IsWithinLOSInMap(me->getVictim()))
             me->StopMoving();
 
         if(DampenMagicTimer < diff)
@@ -828,6 +829,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
     void JustDied(Unit *victim)
     {
         m_creature->SetVisibility(VISIBILITY_ON);
+        m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         DoScriptText(SAY_VERA_DEATH, m_creature);
     }
 
@@ -863,22 +865,27 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 HasVanished = false;
                 m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                Unit* currentTarget = me->getVictim();
                 DoResetThreat();
-                if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
-                    me->AddThreat(p, 3000.0f);
+                me->AddThreat(currentTarget, 2500.0f);
                 DoCast(me,SPELL_VANISH_STUN);
                 return;
             }else VanishTimeLeft -= diff;
 
             if(!appliedPoisonTarget)
             {
+                //random poison target
                 if(Unit* appliedPoisonTargetUnit = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 {
                     DoCast(appliedPoisonTargetUnit,SPELL_DEADLY_STRIKE,true);
                     EnvenomTimer = TIMER_ENVENOM;
-                    m_creature->GetMotionMaster()->MoveChase(appliedPoisonTargetUnit); //make sure to be near it when vanish end
-                    me->AddThreat(appliedPoisonTargetUnit, 999000.0f); 
                     appliedPoisonTarget = appliedPoisonTargetUnit->GetGUID();
+                }
+                //random target to target when vanish end
+                if(Unit* u = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                {
+                    m_creature->GetMotionMaster()->MoveChase(u); //make sure to be near it when vanish end
+                    me->AddThreat(u, 999000.0f);
                 }
             }
 
@@ -886,7 +893,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
             {
                 if(appliedPoisonTarget)
                     if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
-                        if(DoCast(p,SPELL_ENVENOM))
+                        if(DoCast(p,SPELL_ENVENOM,true))
                             EnvenomTimer = -1;
 
             }else EnvenomTimer -= diff;
