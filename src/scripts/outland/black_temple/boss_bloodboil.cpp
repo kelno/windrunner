@@ -64,8 +64,9 @@ enum Spells
     SPELL_FEL_RAGE_SCALE        = 46787,
 
     SPELL_CHARGE                = 40602,
-    SPELL_BERSERK               = 45078
+    SPELL_BERSERK               = 45078,
 
+    SPELL_SELFSTUN              = 53088, //2.5s stun
 };
 
 #define COORD_Z_HOME                64.0f
@@ -318,6 +319,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                     DoCast(m_creature, SPELL_FEL_RAGE_SELF);
 
                     DoScriptText(RAND(SAY_SPECIAL1,SAY_SPECIAL2), m_creature);
+                    DoCast(me,SPELL_SELFSTUN,true); //2,5 inactivity
 
                     FelGeyserTimer = 1000;
                     PhaseChangeTimer = 30000;

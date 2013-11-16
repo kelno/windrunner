@@ -106,7 +106,7 @@ static CouncilYells CouncilEnrage[]=
 
 // Veras Darkshadow's spells
 #define SPELL_DEADLY_POISON        41485
-#define SPELL_DEADLY_STRIKE        41480 //peridiodic apply SPELL_DEADLY_POISON on caster
+#define SPELL_DEADLY_STRIKE        41480 //aura on caster, peridiodic apply SPELL_DEADLY_POISON on caster's target
 #define SPELL_ENVENOM              41487
 #define SPELL_VANISH               41476
 #define SPELL_VANISH_STUN          41479 //self 3s stun
@@ -794,7 +794,6 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 #define TIMER_VANISH 60000
 #define TIMER_VANISH_FIRST 25000
 #define TIMER_VANISH_DURATION 30000
-#define TIMER_ENVENOM 26000
 #define TIMER_WAIT_AFTER_VANISH 3000
 
 struct boss_veras_darkshadowAI : public boss_illidari_councilAI
@@ -802,6 +801,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
     boss_veras_darkshadowAI(Creature *c) : boss_illidari_councilAI(c) {}
 
     uint64 appliedPoisonTarget;
+    uint64 changeTargetTimer;
 
     uint32 VanishTimer;
     uint32 VanishTimeLeft;
@@ -812,6 +812,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
     void Reset()
     {
         appliedPoisonTarget = 0;
+        changeTargetTimer = 0;
         VanishTimer = TIMER_VANISH_FIRST;
         VanishTimeLeft = TIMER_VANISH_DURATION;
         EnvenomTimer = -1;
@@ -835,11 +836,11 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!UpdateVictim())
-            return;
-
         if(!HasVanished)
         {
+            if(!UpdateVictim())
+                return;
+
             if(VanishTimer < diff)                    
             {
                 if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
@@ -852,6 +853,8 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                     m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                     DoCast(me,SPELL_VANISH,true); //just for combat log
                     DoResetThreat();
+                    me->AddAura(SPELL_DEADLY_STRIKE,me);
+                    changeTargetTimer = 0;
                 }
             }else VanishTimer -= diff;
 
@@ -859,6 +862,12 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         }
         else
         {
+            if(!me->getVictim())
+            {
+                EnterEvadeMode();
+                return;
+            }
+
             //end vanish
             if(VanishTimeLeft < diff)
             {
@@ -872,29 +881,25 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 return;
             }else VanishTimeLeft -= diff;
 
-            if(!appliedPoisonTarget)
+            if(changeTargetTimer < diff)
             {
-                //random poison target
-                if(Unit* appliedPoisonTargetUnit = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                {
-                    DoCast(appliedPoisonTargetUnit,SPELL_DEADLY_STRIKE,true);
-                    EnvenomTimer = TIMER_ENVENOM;
-                    appliedPoisonTarget = appliedPoisonTargetUnit->GetGUID();
-                }
-                //random target to target when vanish end
-                if(Unit* u = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                {
-                    m_creature->GetMotionMaster()->MoveChase(u); //make sure to be near it when vanish end
-                    me->AddThreat(u, 999000.0f);
-                }
-            }
+                 if(Unit* newTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                 {
+                     DoResetThreat();
+                     me->AddThreat(newTarget, 999000.0f);
+                     AttackStart(newTarget);
+                     EnvenomTimer = 4800;
+                     appliedPoisonTarget = newTarget->GetGUID();
+                     changeTargetTimer = 5000;
+                 }
+            } else changeTargetTimer -= diff;
 
             if(EnvenomTimer < diff) 
             {
                 if(appliedPoisonTarget)
                     if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
                         if(DoCast(p,SPELL_ENVENOM,true))
-                            EnvenomTimer = -1;
+                            appliedPoisonTarget = 0;
 
             }else EnvenomTimer -= diff;
         }

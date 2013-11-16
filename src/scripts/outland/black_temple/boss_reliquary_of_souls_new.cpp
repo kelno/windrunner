@@ -54,6 +54,7 @@ enum ReliquaryOfSoulsData {
     ENSLAVED_SOUL_PASSIVE           = 41535,
     SPELL_SOUL_RELEASE              = 41542,
     SPELL_SUBMERGE                  = 37550, //dropout 'head'
+    SPELL_SELFSTUN                  = 53088, //2.5s stun
     
     // Misc
     CREATURE_ENSLAVED_SOUL          = 23469,
@@ -751,8 +752,8 @@ public:
         {
             if(onSpawn)
             {
-                //me->SetNoCallAssistance(true);
-                doCast(me, ENSLAVED_SOUL_PASSIVE, true);
+                doCast(me,ENSLAVED_SOUL_PASSIVE, true);
+                doCast(me,SPELL_SELFSTUN,true); //2.5s inactivity
                 Creature* reliquary = me->GetMap()->GetCreatureInMap(reliquaryGUID);
                 if (reliquary)
                     reliquary->getAI()->message(DATA_SOUL_SPAWN, me->GetGUIDLow());
