@@ -72,6 +72,7 @@ UPDATE `creature_template` SET `speed` = 0.8 WHERE `entry` = 23111;
 
 #define SPELL_ATROPHY                   40327               // Shadowy Constructs use this when they get within melee range of a player
 #define SPELL_SHADOW_STRIKES            40334
+#define SPELL_SELFSTUN                  53088 //2.5s stun
 
 enum Timers
 {
@@ -148,6 +149,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
     boss_teron_gorefiendAI(Creature *c) : ScriptedAI(c), Summons(m_creature)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        introPlayed = false;
     }
 
     ScriptedInstance* pInstance;
@@ -162,6 +164,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
     uint64 AggroTargetGUID;
 
+    bool introPlayed;
     SummonList Summons;
 
     bool Intro;
@@ -195,7 +198,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         
         m_creature->addUnitState(UNIT_STAT_ROOT);
 
-        AggroTimer = 25000;
+        AggroTimer = 20000;
 
         Intro = false;
         DespawnConstructs();
@@ -210,33 +213,14 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
         m_creature->SetOrientation(o);
         m_creature->Relocate(x, y, z, o);
-        m_creature->StopMoving(); //to update orientation
-
+        m_creature->StopMoving(); //to update orientation 
+        
         //immune to some spirits spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40157, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40175, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40314, true);
 
-        /*
-         TAUNT IMMUNE - DIRTY WAY 
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31789, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39377, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 54794, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37017, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 37486, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 49613, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 694, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 25266, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 27344, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 6795, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 39270, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1161, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5209, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 355, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 34105, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 53477, true);
-        */
+        m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_NONE);
     }
 
     void MoveInLineOfSight(Unit *who)
@@ -253,22 +237,31 @@ struct boss_teron_gorefiendAI : public ScriptedAI
                 DoZoneInCombat();
             }*/
 
-            if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 40.0f) && (who->GetTypeId() == TYPEID_PLAYER))
+            if(!introPlayed)
             {
-                if(pInstance)
-                    pInstance->SetData(DATA_TERONGOREFIENDEVENT, IN_PROGRESS);
-
-                m_creature->GetMotionMaster()->Clear(false);
-                //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                DoScriptText(SAY_INTRO, m_creature);
-                m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_TALK);
-                AggroTargetGUID = who->GetGUID();
-                Intro = true;
-                m_creature->SetOrientation(3.14159);
+                if(!InCombat && !Intro && m_creature->IsWithinDistInMap(who, 90.0f) && (who->GetTypeId() == TYPEID_PLAYER))
+                {
+                    m_creature->GetMotionMaster()->Clear(false);
+                    //m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                    DoScriptText(SAY_INTRO, m_creature);
+                    m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_TALK);
+                    AggroTargetGUID = who->GetGUID();
+                    Intro = true;
+                    introPlayed = true;
+                }
+            } else {
+                if(!InCombat)
+                    AttackStart(who);
             }
         }
     }
     
+    void Aggro(Unit* who)
+    {
+        if(pInstance)
+            pInstance->SetData(DATA_TERONGOREFIENDEVENT, IN_PROGRESS);
+    }
+
     void JustSummoned(Creature* summon)
     {
         Summons.Summon(summon);
@@ -305,23 +298,6 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             case 0: DoScriptText(SAY_SLAY1, m_creature); break;
             case 1: DoScriptText(SAY_SLAY2, m_creature); break;
         }
-    }
-    
-    void DamageTaken(Unit* done_by, uint32 &damage)
-    {
-        /*
-        if (done_by->GetDisplayId() == 21300) //vengeful spirit
-        { 
-            DoModifyThreatPercent(done_by,-100);
-            damage = 0;
-            if (done_by->GetTypeId() == TYPEID_PLAYER) {
-                WorldPacket data(SMSG_CAST_FAILED, (4+2));              // prepare packet error message
-                data << uint32(0);                                      // spellId
-                data << uint8(SPELL_FAILED_IMMUNE);                     // reason
-                done_by->ToPlayer()->GetSession()->SendPacket(&data);               // send message: Invalid target
-            }
-        }
-        */
     }
     
     void DamageDeal(Unit* target, uint32 &damage)
@@ -403,7 +379,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             }else AggroTimer -= diff;
         }
 
-        if (m_creature->GetDistance(606.641, 402.173, 187.173) > 90.0f) {
+        if (me->isInCombat() && me->GetDistance(606.641, 402.173, 187.173) > 90.0f) {
             EnterEvadeMode();
             return;
         }
@@ -424,8 +400,8 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         if(ShadowOfDeathTimer < diff)
         {
             if (Unit* pShadowVictim = SelectUnit(1, 100, true, true, true, SPELL_SHADOW_OF_DEATH, 1)) {
-                if (pShadowVictim->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow()) //not tank?
-                    ShadowOfDeathTimer = 100;       // Delay to next world tick
+                if (pShadowVictim->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow()) //not tank
+                    ShadowOfDeathTimer = 0;       // Delay to next world tick
                 else {
                     if(DoCast(pShadowVictim, SPELL_SHADOW_OF_DEATH))
                         ShadowOfDeathTimer = TIMER_SHADOW_OF_DEATH;
@@ -564,6 +540,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
         m_creature->setActive(true);
         me->AddAura(SPELL_SHADOW_STRIKES,me);
         me->AddAura(SPELL_PASSIVE_SHADOWFORM,me);
+        me->AddAura(SPELL_SELFSTUN,me); //2.5s inactivity at spawn
         
         ResetCheckTimer = 1500;
     }
