@@ -1288,7 +1288,7 @@ class Unit : public WorldObject
         void RemoveSpellsCausingAura(AuraType auraType);
         void RemoveAuraTypeByCaster(AuraType auraType, uint64 casterGUID);
         void RemoveRankAurasDueToSpell(uint32 spellId);
-        bool RemoveNoStackAurasDueToAura(Aura *Aur);
+        void RemoveNoStackAurasDueToAura(Aura *Aur);
         void RemoveAurasWithInterruptFlags(uint32 flags, uint32 except = 0, bool withChanneled = true);
         void RemoveAurasWithAttribute(uint32 flags);
         void RemoveAurasWithCustomAttribute(uint32 flags);

@@ -1581,6 +1581,15 @@ bool SpellMgr::HasEffect(SpellEntry const* spellInfo, SpellEffects effect) const
     return false;
 }
 
+bool SpellMgr::IsPassiveStackableWithRanks(SpellEntry const* spellInfo) const
+{
+    if(  IsPassiveSpell(spellInfo->Id) 
+    && !(spellmgr.HasEffect(spellInfo,SPELL_EFFECT_APPLY_AURA) || spellmgr.HasEffect(spellInfo,SPELL_EFFECT_APPLY_AREA_AURA_PARTY)) )
+        return true;
+
+    return false;
+}
+
 SpellSpellGroupMapBounds SpellMgr::GetSpellSpellGroupMapBounds(uint32 spell_id) const
 {
     spell_id = GetFirstSpellInChain(spell_id);
@@ -2586,6 +2595,11 @@ void SpellMgr::LoadSpellCustomAttr()
         */
         switch (i)
         {
+        case 30708:
+        case 5672:
+        case 8178:
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_FORCE_STACK_ALLOWED;
+            break;
         case 1822: // Rank 1 to 5 Rake (Druid)
         case 1823:
         case 1824:

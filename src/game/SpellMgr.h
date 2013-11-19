@@ -47,7 +47,7 @@ enum SpellFailedReason
     SPELL_FAILED_ALREADY_HAVE_CHARM             = 0x05,
     SPELL_FAILED_ALREADY_HAVE_SUMMON            = 0x06,
     SPELL_FAILED_ALREADY_OPEN                   = 0x07,
-    SPELL_FAILED_AURA_BOUNCED                   = 0x08,
+    SPELL_FAILED_AURA_BOUNCED                   = 0x08, //"A more powerful spell is already active"
     SPELL_FAILED_AUTOTRACK_INTERRUPTED          = 0x09,
     SPELL_FAILED_BAD_IMPLICIT_TARGETS           = 0x0A,
     SPELL_FAILED_BAD_TARGETS                    = 0x0B,
@@ -774,6 +774,7 @@ inline bool IsProfessionOrRidingSkill(uint32 skill)
 #define SPELL_ATTR_CU_NO_SPELL_BONUS                0x01000000      // No spell healing/damage bonus is applied
 #define SPELL_ATTR_CU_CONE_180                      0x02000000
 #define SPELL_ATTR_CU_CAN_CHANNEL_DEAD_TARGET       0x04000000
+#define SPELL_ATTR_CU_FORCE_STACK_ALLOWED           0x08000000      // put this on the first rank spell if any
 
 typedef std::vector<uint32> SpellCustomAttribute;
 
@@ -988,6 +989,7 @@ class SpellMgr
         bool IsRankOf(SpellEntry const *spellInfo_1,uint32 spellId_2) const;
         static bool canStackSpellRanks(SpellEntry const *spellInfo);
         bool HasEffect(SpellEntry const* spellInfo, SpellEffects effect) const;
+        bool IsPassiveStackableWithRanks(SpellEntry const* spellInfo) const;
 
         SpellEntry const* SelectAuraRankForPlayerLevel(SpellEntry const* spellInfo, uint32 playerLevel) const;
 

@@ -442,6 +442,7 @@ class Spell
         void SetDelayStart(uint64 m_time) { m_delayStart = m_time; }
         uint64 GetDelayMoment() const { return m_delayMoment; }
 
+        bool IsMorePowerfullSpellActive(Unit* target) const;
         bool IsNeedSendToClient() const;
 
         CurrentSpellTypes GetCurrentContainer();

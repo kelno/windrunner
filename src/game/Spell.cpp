@@ -3818,6 +3818,9 @@ SpellFailedReason Spell::CheckCast(bool strict)
         if (target->isInFlight())
             return SPELL_FAILED_BAD_TARGETS;
 
+        if (IsMorePowerfullSpellActive(target))
+            return SPELL_FAILED_AURA_BOUNCED;
+
     } //end "if(target != m_caster)" block
 
     if(sWorld.getConfig(CONFIG_VMAP_INDOOR_CHECK) && m_caster->GetTypeId() == TYPEID_PLAYER && VMAP::VMapFactory::createOrGetVMapManager()->isLineOfSightCalcEnabled())
@@ -6027,4 +6030,22 @@ bool Spell::IsBinaryMagicResistanceSpell(SpellEntry const* spell)
     }
 
     return !doDamage;
+}
+
+bool Spell::IsMorePowerfullSpellActive(Unit* target) const
+{
+    Unit::AuraMap const& targetAuras = target->GetAuras();
+    for(auto appliedAura : targetAuras)
+    {
+        if(m_spellInfo->Id == appliedAura.second->GetId())
+            continue;
+
+        //already present aura is higher rank
+        if(spellmgr.IsHighRankOfSpell(appliedAura.second->GetId(),m_spellInfo->Id))
+            return true;
+
+        //ignore talents for now
+        //spells in the same group handled at aura application for now
+    }
+    return false;
 }

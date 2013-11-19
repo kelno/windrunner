@@ -3870,6 +3870,10 @@ bool Unit::AddAura(Aura *Aur)
         }
     }
 
+    RemoveNoStackAurasDueToAura(Aur);
+    if (Aur->IsRemoved())
+        return false;
+    /*
     // passive auras stack with all (except passive spell proc auras)
     if ((!Aur->IsPassive() || !IsPassiveStackableSpell(Aur->GetId())) &&
         !(Aur->GetId() == 20584 || Aur->GetId() == 8326 || Aur->GetId() == 28093))
@@ -3880,7 +3884,7 @@ bool Unit::AddAura(Aura *Aur)
             return false;                                   // couldn't remove conflicting aura with higher rank
         }
     }
-
+    */
     // update single target auras list (before aura add to aura list, to prevent unexpected remove recently added aura)
     if (Aur->IsSingleTarget() && Aur->GetTarget())
     {
@@ -3980,20 +3984,24 @@ void Unit::RemoveRankAurasDueToSpell(uint32 spellId)
     }
 }
 
-bool Unit::RemoveNoStackAurasDueToAura(Aura* aura)
+void Unit::RemoveNoStackAurasDueToAura(Aura* aura)
 {
     if (!aura)
-        return false;
+        return;
     
     SpellEntry const* spellProto = aura->GetSpellProto();
     if (!spellProto)
-        return false;
+        return;
 
      // passive spell special case (only non stackable with ranks)
-    //if (spellProto->IsPassiveStackableWithRanks())
-    if(IsPassiveSpell(spellProto->Id) && !spellmgr.HasEffect(spellProto,SPELL_EFFECT_APPLY_AURA))
-        return true;
-
+    if (spellmgr.IsPassiveStackableWithRanks(spellProto))
+        return;
+    /*
+    if(  IsPassiveSpell(spellProto->Id) 
+      && !(spellmgr.HasEffect(spellProto,SPELL_EFFECT_APPLY_AURA) || spellmgr.HasEffect(spellProto,SPELL_EFFECT_APPLY_AREA_AURA_PARTY))
+      )
+        return;
+        */
     bool remove = false;
     for (AuraMap::iterator i = m_Auras.begin(); i != m_Auras.end(); i++)
     {
@@ -4012,7 +4020,7 @@ bool Unit::RemoveNoStackAurasDueToAura(Aura* aura)
         remove = true;
     }
     
-    return true;
+    return;
 }
 
 void Unit::RemoveAura(uint32 spellId, uint32 effindex, Aura* except)

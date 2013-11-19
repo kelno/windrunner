@@ -367,7 +367,7 @@ enum SpellCategory
 #define SPELL_ATTR_EX4_USABLE_IN_ARENA            0x00020000            // 17 usable in arena
 #define SPELL_ATTR_EX4_AREA_TARGET_CHAIN          0x00040000            // 18 (NYI)hits area targets one after another instead of all at once
 #define SPELL_ATTR_EX4_UNK19                      0x00080000            // 19
-#define SPELL_ATTR_EX4_UNK20                      0x00100000            // 20
+#define SPELL_ATTR_EX4_NOT_CHECK_SELFCAST_POWER   0x00100000            // 20 supersedes message "More powerful spell applied" for self casts.
 #define SPELL_ATTR_EX4_UNK21                      0x00200000            // 21
 #define SPELL_ATTR_EX4_UNK22                      0x00400000            // 22
 #define SPELL_ATTR_EX4_UNK23                      0x00800000            // 23

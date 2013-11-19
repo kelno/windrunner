@@ -7232,6 +7232,10 @@ bool Aura::CanStackWith(Aura const* existingAura) const
         return true;
         */
 
+    if(   (spellmgr.GetSpellCustomAttr(GetId()) & SPELL_ATTR_CU_FORCE_STACK_ALLOWED) 
+       || (spellmgr.GetSpellCustomAttr( spellmgr.GetFirstSpellInChain(GetId())) & SPELL_ATTR_CU_FORCE_STACK_ALLOWED) )
+        return true;
+
     SpellEntry const* existingSpellInfo = existingAura->GetSpellProto();
     bool sameCaster = GetCasterGUID() == existingAura->GetCasterGUID();
 

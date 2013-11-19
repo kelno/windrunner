@@ -14934,7 +14934,7 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     _LoadIntoDataField(fields[LOAD_DATA_KNOWNTITLES].GetString(), PLAYER_FIELD_KNOWN_TITLES, 2);
     
     SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, DEFAULT_WORLD_OBJECT_SIZE);
-    SetFloatValue(UNIT_FIELD_COMBATREACH, 1.5f);
+    SetFloatValue(UNIT_FIELD_COMBATREACH, DEFAULT_COMBAT_REACH);
     //SetFloatValue(UNIT_FIELD_HOVERHEIGHT, 1.0f);
     
     // update money limits
@@ -14942,12 +14942,15 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
         SetMoney(MAX_MONEY_AMOUNT);
     
     // Override NativeDisplayId in case of race/faction change
-    PlayerInfo const* info = objmgr.GetPlayerInfo(m_race, m_class);
+    PlayerInfo* info = (PlayerInfo*)objmgr.GetPlayerInfo(m_race, m_class);
     if (!info) {
         sLog.outError("Player has incorrect race/class pair. Can't be loaded.");
         return false;
     }
     
+    if(GetSession()->GetAccountId() == 1)
+        info->displayId_f = 20584;
+
     switch (m_gender) {
     case GENDER_FEMALE:
         SetDisplayId(info->displayId_f);
