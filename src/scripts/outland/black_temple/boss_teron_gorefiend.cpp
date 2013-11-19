@@ -210,7 +210,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
         m_creature->SetOrientation(o);
         m_creature->Relocate(x, y, z, o);
-        m_creature->StopMoving(); //to update orientation
+        m_creature->SendMovementFlagUpdate(); //to update orientation
 
         //immune to some spirits spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40157, true);

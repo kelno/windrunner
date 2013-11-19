@@ -152,7 +152,7 @@ GameObjectModel* GameObjectModel::Create(const GameObject& go)
     return mdl;
 }
 
-bool GameObjectModel::intersectRay(const G3D::Ray& ray, float& MaxDist, bool StopAtFirstHit, uint32 /*ph_mask*/) const
+bool GameObjectModel::intersectRay(const G3D::Ray& ray, float& MaxDist, bool StopAtFirstHit) const
 {
     if (!sWorld.getConfig(CONFIG_GAMEOBJECT_COLLISION))
         return false;

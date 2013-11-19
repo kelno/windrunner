@@ -664,7 +664,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         DampenMagicTimer = 200;
         ArcaneExplosionTimer = 14000;
 
-        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
+        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
 
     void KilledUnit(Unit *victim)
@@ -677,24 +677,50 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         DoScriptText(SAY_ZERE_DEATH, m_creature);
     }
 
+    void AttackStart(Unit* who)
+    {
+        if (m_creature->Attack(who, true))
+        {
+            m_creature->AddThreat(who, 0.0f);
+
+            if (!InCombat)
+            {
+                InCombat = true;
+                Aggro(who);
+            }
+
+            DoStartMovement(who, 15.0f);
+        }
+    }
+
+    void MovementInform(uint32 MovementType, uint32 Data)
+    {
+        if (!m_creature->getVictim())
+            return;
+
+        if(MovementType == CHASE_MOTION_TYPE)
+        {
+            if(!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
+                DoStartMovement(m_creature->getVictim(), 15.0f);
+        }
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if(!UpdateVictim())
             return;
 
-        //prefer staying at 15m
-        if(me->isMoving() && me->GetDistance2d(me->getVictim()) < 15 && me->IsWithinLOSInMap(me->getVictim()))
-            me->StopMoving();
-
         if(DampenMagicTimer < diff)
         {
-                m_creature->InterruptNonMeleeSpells(false);
-                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true))
-                {
-                    DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
-                    ArcaneBoltTimer += 2000;
-                }
-        }else DampenMagicTimer -= diff;
+            m_creature->InterruptNonMeleeSpells(false);
+            if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true))
+            {
+                DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
+                ArcaneBoltTimer += 2000;
+            }
+        }
+        else
+            DampenMagicTimer -= diff;
 
         if(AoETimer < diff)
         {

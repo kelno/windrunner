@@ -164,7 +164,7 @@ void FollowerAI::EnterEvadeMode()
 
     if (HasFollowState(STATE_FOLLOW_INPROGRESS))
     {
-        if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == TARGETED_MOTION_TYPE)
+        if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == FOLLOW_MOTION_TYPE)
         {
             float fPosX, fPosY, fPosZ;
             m_creature->GetPosition(fPosX, fPosY, fPosZ);
@@ -173,7 +173,7 @@ void FollowerAI::EnterEvadeMode()
     }
     else
     {
-        if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == TARGETED_MOTION_TYPE)
+        if (m_creature->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
             m_creature->GetMotionMaster()->MoveTargetedHome();
     }
 
