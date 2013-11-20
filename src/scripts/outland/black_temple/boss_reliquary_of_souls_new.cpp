@@ -61,6 +61,7 @@ enum ReliquaryOfSoulsData {
     NUMBER_ENSLAVED_SOUL            = 15,
     DATA_SOUL_DEATH                 = 0,
     DATA_SOUL_SPAWN                 = 1,
+    DATA_ESSENCE_OF_ANGER_DEATH     = 2,
 
     CREATURE_RIFT_MARKER            = 23472,
     
@@ -170,25 +171,7 @@ public:
             if(rift)
                 rift->CastSpell(rift,SPELL_SUMMON_SOUL2,true,0,0,me->GetGUID());
         }
-        /*
-        // Used to transfer threat between phases
-        void mergeThreatList(Creature* essence)
-        {
-            if (!essence)
-                return;
-                
-            std::list<HostilReference*>& threatlist = essence->getThreatManager().getThreatList();
-            std::list<HostilReference*>::iterator itr = threatlist.begin();
-            for (; itr != threatlist.end(); itr++) {
-                Unit* unit = Unit::GetUnit(*me, (*itr)->getUnitGuid());
-                if (unit) {
-                    doModifyThreatPercent(unit, -100);
-                    float threat = essence->getThreatManager().getThreat(unit);
-                    me->AddThreat(unit, threat);
-                }
-            }
-        }
-        */
+
         void onDeath(Unit* killer)
         {
             if (instance) {
@@ -199,10 +182,14 @@ public:
         
         void message(uint32 id, uint32 data)
         {
-            if (id == DATA_SOUL_DEATH && data == 1)
-                soulDeathCount++;
-            else if (id == DATA_SOUL_SPAWN)
+            switch(id)
             {
+            case DATA_SOUL_DEATH:
+                if(data == 1)
+                    soulDeathCount++;;
+                break;
+            case DATA_SOUL_SPAWN:
+                {
                 soulCount++;
                 Creature* soul = me->GetMap()->GetCreatureInMap(MAKE_NEW_GUID(data, CREATURE_ENSLAVED_SOUL, HIGHGUID_UNIT));
                 if (soul)
@@ -214,6 +201,11 @@ public:
                         soul->AddThreat(target, 1500.0f);
                     }
                 }
+                }
+                break;
+            case DATA_ESSENCE_OF_ANGER_DEATH:
+                doCast(me, 7, true); //suicide
+                break;
             }
         }
         
@@ -270,29 +262,23 @@ public:
                     timer = 5000;
                     break;
                 case 3: // wait for essence to be done or die if this was last essence
-                    if (phase == PHASE_ANGER) {  // FIXME: How dumb is this..
-                        if (!essence->isAlive())
-                            doCast(me, 7, true);
-                        else
-                            return;
+                    if(phase == PHASE_ANGER)
+                        return;
+
+                    if (!essence->isAlive()) //debugging purpose for now
+                    {
+                        sLog.outError("RoS : Essence is dead (phase = %u), skipping animation",phase);
+                        step = 5; //goto despawn essence
+                        return;
                     }
-                    else {
-                        if (essence->isDead()) //debugging purpose for now
-                        {
-                            sLog.outError("RoS : Essence is dead (phase = %u), skipping animation",phase);
-                            essence->SetVisibility(VISIBILITY_OFF);
-                            step = 5;
-                            return;
-                        }
-                        if (essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
-                            //mergeThreatList(essence);
-                            essence->DeleteThreatList();
-                            essence->SetReactState(REACT_PASSIVE);
-                            essence->GetMotionMaster()->MoveFollow(me, 0, 0);
-                        }
-                        else
-                            return;
+                    if (essence->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE)) {
+                        //mergeThreatList(essence);
+                        essence->DeleteThreatList();
+                        essence->SetReactState(REACT_PASSIVE);
+                        essence->GetMotionMaster()->MoveFollow(me, 0, 0);
                     }
+                    else
+                        return;
                     timer = 1000;
                     break;
                 case 4: // wait for essence to reach me & close ribs
@@ -375,6 +361,7 @@ public:
     }
 };
 
+//Phase 1
 class Boss_essence_of_suffering : public CreatureScript
 {
 public:
@@ -492,6 +479,7 @@ public:
     }
 };
 
+//Phase 2
 class Boss_essence_of_desire : public CreatureScript
 {
 public:
@@ -505,7 +493,7 @@ public:
         //Debugging 
         void onDeath(Unit* killer) 
         {
-            sLog.outError("essence of desire died killed by a %s",killer->ToCreature() ? "creature" : "player");
+            sLog.outError("essence of desire died killed by a %s (guid : %u)",killer->ToCreature() ? "creature" : "player",killer->GetGUIDLow());
         }
 
         enum events {
@@ -550,7 +538,7 @@ public:
             }
             else {
                 int32 bp0 = damage / 2;
-                me->CastCustomSpell(attacker, AURA_OF_DESIRE_DAMAGE, &bp0, NULL, NULL, true);
+                me->CastCustomSpell(attacker, AURA_OF_DESIRE_DAMAGE, &bp0, nullptr, nullptr, true);
             }
         }
         
@@ -620,6 +608,7 @@ public:
     }
 };
 
+//Phase 3
 class Boss_essence_of_anger : public CreatureScript
 {
 public:
@@ -628,7 +617,8 @@ public:
     class Boss_essence_of_angerAI : public CreatureAINew
     {
     public:
-        Boss_essence_of_angerAI(Creature* creature) : CreatureAINew(creature) {}
+        Boss_essence_of_angerAI(Creature* creature) : CreatureAINew(creature) 
+        { }
         
         enum events {
             EV_CHECK_TANK   = 0,
@@ -677,6 +667,9 @@ public:
             Player* tank = me->GetPlayer(tankGUID);
             if(tank) tank->ApplySpellImmune(0, IMMUNITY_ID, SPELL_SPITE_TARGET, false);
             talk(TALK_ANGER_SAY_DEATH);
+
+            if (Creature* reliquary = me->GetSummoner()->ToCreature())
+                reliquary->getAI()->message(DATA_ESSENCE_OF_ANGER_DEATH, 0);
         }
         
         void onKill(Unit* victim)
