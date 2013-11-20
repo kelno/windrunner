@@ -39,8 +39,8 @@ struct npc_training_dummy : Scripted_NoMovementAI
     void Reset()
     {
         m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT, SPELL_EFFECT_KNOCK_BACK, true);
-        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
         m_creature->SetHealth(m_creature->GetMaxHealth()/5);
+        me->SetStunned(true);
     }
 
     void DamageTaken(Unit* done_by, uint32& damage)
@@ -54,13 +54,6 @@ struct npc_training_dummy : Scripted_NoMovementAI
 
         if (m_creature->GetHealth() < (m_creature->GetMaxHealth()/10.0f) || m_creature->GetHealth() > (m_creature->GetMaxHealth()/5.0f)) // allow players using finishers
             m_creature->SetHealth(m_creature->GetMaxHealth()/5);
-
-        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
-    }
-
-    void Aggro(Unit *who)
-    {
-        m_creature->SetUInt64Value(UNIT_FIELD_TARGET, m_creature->GetGUID()); // prevent from rotating
     }
 
     void UpdateAI(const uint32 diff)
