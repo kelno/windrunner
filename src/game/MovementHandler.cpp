@@ -238,7 +238,11 @@ void WorldSession::HandleMoveWorldportAckOpcode()
 
     // relocate the player to the teleport destination
     GetPlayer()->SetMapId(loc.m_mapId);
-    GetPlayer()->Relocate(loc.m_positionX, loc.m_positionY, loc.m_positionZ, loc.m_orientation);
+
+    float z = loc.m_positionZ;
+    if (GetPlayer()->HasUnitMovementFlag(MOVEMENTFLAG_HOVER))
+        z += 1.0f;
+    GetPlayer()->Relocate(loc.m_positionX, loc.m_positionY, z, loc.m_orientation);
 
     // since the MapId is set before the GetInstance call, the InstanceId must be set to 0
     // to let GetInstance() determine the proper InstanceId based on the player's binds
