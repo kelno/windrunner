@@ -36,7 +36,7 @@ enum Spells
 
     // Muru's spells
     SPELL_NEGATIVE_ENERGY       = 46009, //(this trigger 46008)
-    SPELL_DARKNESS              = 45999,
+    SPELL_DARKNESS_P1           = 45999, //pre effect, trigger 45996
     SPELL_OPEN_ALL_PORTALS      = 46177,
     SPELL_OPEN_PORTAL           = 45977,
     SPELL_OPEN_PORTAL_2         = 45976,
@@ -47,7 +47,7 @@ enum Spells
     SPELL_SUMMON_ENTROPIUS      = 46217,
 
     // Entropius's spells
-    SPELL_DARKNESS_E            = 46268,
+    SPELL_DARKNESS_P2           = 46268,
     SPELL_BLACKHOLE             = 46282,
     SPELL_NEGATIVE_ENERGY_E     = 46284,
     SPELL_ENTROPIUS_SPAWN       = 46223,
@@ -79,7 +79,10 @@ enum Spells
     SPELL_BLACKHOLE_VISUAL2     = 46235,
     SPELL_BLACKHOLE_GROW        = 46228,
     SPELL_BLACK_HOLE_EFFECT     = 46230,
-    SPELL_SINGULARITY           = 46238
+    SPELL_SINGULARITY           = 46238,
+
+    //Darkness (aka Void Zone) Spells (P2)
+    SPELL_VOID_ZONE_PERIODIC    = 46262,
 };
 
 enum BossTimers{
@@ -457,7 +460,7 @@ public:
                 float rayon = rand() % 25;
                 px = 1816.25f + cos(angle) * rayon;
                 py = 625.484f + sin(angle) * rayon;
-                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_E, false);
+                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_P2, false);
 
                 Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
@@ -688,7 +691,7 @@ public:
                 {
                     if (!DarkFiend)
                     {
-                        doCast((Unit*)NULL, SPELL_DARKNESS, false);
+                        doCast((Unit*)NULL, SPELL_DARKNESS_P1, false);
                         DarknessTimer = 3000;
                         DarkFiend = true;
                     }
@@ -915,6 +918,7 @@ public:
     }
 };
 
+//P2 darkness summoned npc
 class npc_darkness : public CreatureScript
 {
 public:
@@ -926,6 +930,7 @@ public:
         npc_darknessAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+            me->SetFloatValue(UNIT_FIELD_COMBATREACH, 0 ); //fix aoe radius
         }
 
         ScriptedInstance* pInstance;
@@ -937,20 +942,22 @@ public:
         void onReset(bool onSpawn)
         {
             WaitTimer = 3000;
-            DarknessTimer = 3000;
+            //DarknessTimer = 3000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
+            //doCast(me,SPELL_VOID_ZONE_PERIODIC,true); //already done via db
             
-            setZoneInCombat(true);
+            //setZoneInCombat(true);
         }
 
         void update(const uint32 diff)
         {
+            /*
             if (DarknessTimer <= diff)
             {
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 3.5f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 3.0f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
@@ -989,7 +996,7 @@ public:
             }
             else
                 DarknessTimer -= diff;
-
+            */
             if (!Spawned)
             {
                 if (WaitTimer <= diff)
