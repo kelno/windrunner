@@ -70,7 +70,7 @@ enum Spells
 
     //Dark Fiend Spells
     SPELL_DARKFIEND_AOE         = 45944,
-    SPELL_DARKFIEND_VISUAL      = 45936,
+    SPELL_DARKFIEND_DEATH_VISUAL= 45936,
     SPELL_DARKFIEND_SKIN        = 45934,
 
     //Black Hole Spells
@@ -141,7 +141,7 @@ public:
         void onReset(bool onSpawn)
         {
             phase = 0;
-            phaseTimer = 5000;
+            phaseTimer = 7000; //inactivity before continuing
             DespawnTimer = 15000;
             SpellTimer = 300;
             SingularityTimer = 300;
@@ -154,6 +154,9 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
 
             guidPlayerCD.clear();
+            if(!pInstance)
+                return;
+
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
             if (!players.isEmpty())
             {
@@ -352,7 +355,7 @@ public:
 
         void onReset(bool onSpawn)
         {
-            BlackHoleSummonTimer = 27000;
+            BlackHoleSummonTimer = 16000;
             EnrageTimer = 600000;
             phaseTimer = 1000;
             phase = 0;
@@ -387,12 +390,14 @@ public:
 
         void onSummon(Creature* summoned)
         {
+            /* Need to get correct visual
             switch(summoned->GetEntry())
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
             }
+            */
             Summons.Summon(summoned);
         }
 
@@ -555,12 +560,14 @@ public:
 
         void onSummon(Creature* summoned)
         {
+            /* Need to get correct visual
             switch(summoned->GetEntry())
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
                     break;
             }
+            */
             Summons.Summon(summoned);
         }
 	
@@ -1017,6 +1024,11 @@ public:
         uint32 phase;
         uint32 phaseTimer;
 
+        void onDeath(Unit* killer)
+        {
+            doCast(me,SPELL_DARKFIEND_DEATH_VISUAL,true); //Visuel effect on death
+        }
+
         void onReset(bool /*onSpawn*/)
         {
             phase = 0;
@@ -1107,6 +1119,7 @@ class npc_void_sentinel : public CreatureScript
             me->SetFullTauntImmunity(true);
 
             me->addUnitState(UNIT_STAT_STUNNED);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         }
 
         void onDeath(Unit* killer)
