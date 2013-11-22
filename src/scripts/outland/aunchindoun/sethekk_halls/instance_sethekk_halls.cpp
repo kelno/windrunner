@@ -77,7 +77,8 @@ struct instance_sethekk_halls : public ScriptedInstance
         {
             case ANZU_SUMMONER:
                 return summonerGUID;
-                break;
+            default:
+                return 0;
         }
     }
 };

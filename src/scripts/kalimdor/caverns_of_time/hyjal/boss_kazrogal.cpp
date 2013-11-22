@@ -3,26 +3,31 @@
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_CLEAVE 31436
-#define SPELL_WARSTOMP 31480
-#define SPELL_MARK 31447
+enum Spells
+{
+    SPELL_CLEAVE    = 31436,
+    SPELL_WARSTOMP  = 31480,
+    SPELL_MARK      = 31447,
+};
 
-#define SOUND_ONDEATH 11018
+enum Timers
+{
+    TIMER_WARSTOMP_FIRST  = 10000,
+    TIMER_CLEAVE          = 10000,
+    TIMER_MARK_FIRST      = 45000,
+};
+#define TIMER_WARSTOMP 5000 + rand()%25000; //5-30s
 
-#define SAY_ONSLAY1 "Shaza-Kiel!"
-#define SAY_ONSLAY2 "You... are nothing!"
-#define SAY_ONSLAY3 "Miserable nuisance!"
-#define SOUND_ONSLAY1 11017
-#define SOUND_ONSLAY2 11053
-#define SOUND_ONSLAY3 11054
-
-#define SAY_MARK1 "Your death will be a painful one."
-#define SAY_MARK2 "You... are marked."
-#define SOUND_MARK1 11016
-#define SOUND_MARK2 11052
-
-#define SAY_ONAGGRO "Cry for mercy! Your meaningless lives will soon be forfeit."
-#define SOUND_ONAGGRO 11015
+enum Texts
+{
+	SAY_ONSLAY1 = -1801031,
+	SAY_ONSLAY2 = -1801032,
+	SAY_ONSLAY3 = -1801033,
+	SAY_MARK1 = -1801034,
+	SAY_MARK2 = -1801035,
+	SAY_ONAGGRO = -1801036,
+    SOUND_ONDEATH = 11018
+};
 
 struct boss_kazrogalAI : public hyjal_trashAI
 {
@@ -31,12 +36,6 @@ struct boss_kazrogalAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         go = false;
         pos = 0;
-        SpellEntry *TempSpell = (SpellEntry*)spellmgr.LookupSpell(SPELL_MARK);
-        if(TempSpell && TempSpell->EffectImplicitTargetA[0] != 1)
-        {
-            TempSpell->EffectImplicitTargetA[0] = 1;
-            TempSpell->EffectImplicitTargetB[0] = 0;
-        }
     }
 
     uint32 CleaveTimer;
@@ -48,11 +47,13 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
     void Reset()
     {
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
+
         damageTaken = 0;
-        CleaveTimer = 5000;
-        WarStompTimer = 15000;
-        MarkTimer = 45000;
-        MarkTimerBase = 45000;
+        CleaveTimer = TIMER_CLEAVE;
+        WarStompTimer = TIMER_WARSTOMP_FIRST;
+        MarkTimer = TIMER_MARK_FIRST;
+        MarkTimerBase = TIMER_MARK_FIRST;
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, NOT_STARTED);
@@ -62,27 +63,13 @@ struct boss_kazrogalAI : public hyjal_trashAI
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, IN_PROGRESS);
-        DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
-        DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONAGGRO,me);
     }
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%3)
-        {
-            case 0:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY1);
-                DoYell(SAY_ONSLAY1, LANG_UNIVERSAL, NULL);
-                break;
-            case 1:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY2);
-                DoYell(SAY_ONSLAY2, LANG_UNIVERSAL, NULL);
-                break;
-            case 2:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY3);
-                DoYell(SAY_ONSLAY3, LANG_UNIVERSAL, NULL);
-                break;
-        }
+        DoScriptText(SAY_ONSLAY1 - rand()%3,me);
     }
 
     void WaypointReached(uint32 i)
@@ -101,6 +88,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
         hyjal_trashAI::JustDied(victim);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, DONE);
+
         DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
     }
 
@@ -135,46 +123,28 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature, SPELL_CLEAVE);
-            CleaveTimer = 6000+rand()%15000;
+            if(DoCast(m_creature, SPELL_CLEAVE))
+                CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
         if(WarStompTimer < diff)
         {
-            DoCast(m_creature, SPELL_WARSTOMP);
-            WarStompTimer = 60000;
+            if(DoCast(m_creature, SPELL_WARSTOMP))
+                WarStompTimer = TIMER_WARSTOMP;
         }else WarStompTimer -= diff;
 
         if(m_creature->HasAura(SPELL_MARK,0))
             m_creature->RemoveAurasDueToSpell(SPELL_MARK);
         if(MarkTimer < diff)
         {
-            //cast dummy, useful for bos addons
-            m_creature->CastCustomSpell(m_creature, SPELL_MARK, NULL, NULL, NULL, false, NULL, NULL, m_creature->GetGUID());
-
-            std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
-            for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
+            if(DoCast(me,SPELL_MARK))
             {
-                Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-                if (target && target->GetTypeId() == TYPEID_PLAYER && target->getPowerType() == POWER_MANA)
-                {
-                    target->CastSpell(target, SPELL_MARK,true);//only cast on mana users
-                }
-            }
-            MarkTimerBase -= 5000;
-            if(MarkTimerBase < 5500)
-                MarkTimerBase = 5500;
-            MarkTimer = MarkTimerBase;
-            switch(rand()%3)
-            {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_MARK1);
-                    DoYell(SAY_MARK1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_MARK2);
-                    DoYell(SAY_MARK2, LANG_UNIVERSAL, NULL);
-                    break;
+                MarkTimerBase -= 5000;
+                if(MarkTimerBase < 5500)
+                    MarkTimerBase = 5500;
+                MarkTimer = MarkTimerBase;
+                if(rand()%2)
+                    DoScriptText(SAY_MARK1 - rand()%2,me);
             }
         }else MarkTimer -= diff;
 

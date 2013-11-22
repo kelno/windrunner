@@ -741,7 +741,6 @@ struct npc_skullocAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         m_creature->SetReactState(REACT_PASSIVE);
-        m_creature->SetHasChangedReactState();
         
         step5Timer = 0;
     }
@@ -1161,6 +1160,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
             plr->PlaySound(GetSoundForButton(BEAM_YELLOW), false);
             return SPELL_BEAM_YELLOW;
         }
+        return 0;
     }
     
     uint32 GetSpellForBeam(uint8 beam)
@@ -1174,6 +1174,8 @@ struct npc_simon_bunnyAI : public ScriptedAI
             return SPELL_BEAM_RED;
         case BEAM_YELLOW:
             return SPELL_BEAM_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1188,6 +1190,8 @@ struct npc_simon_bunnyAI : public ScriptedAI
             return SOUND_RED;
         case BEAM_YELLOW:
             return SOUND_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1529,6 +1533,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             plr->PlaySound(GetSoundForButton(BEAM_YELLOW), false);
             return SPELL_BEAM_YELLOW;
         }
+        return 0;
     }
     
     uint32 GetSpellForBeam(uint8 beam)
@@ -1542,6 +1547,8 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             return SPELL_BEAM_RED;
         case BEAM_YELLOW:
             return SPELL_BEAM_YELLOW;
+        default:
+            return 0;
         }
     }
 
@@ -1556,6 +1563,8 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
             return SOUND_RED;
         case BEAM_YELLOW:
             return SOUND_YELLOW;
+        default:
+            return 0;
         }
     }
 

@@ -190,30 +190,30 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-void ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return;
+        return false;
 
     //m_creature->StopMoving();
-    m_creature->CastSpell(victim, spellId, triggered);
+    return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-void ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return;
+        return false;
 
-    m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-void ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return;
+        return false;
 
     m_creature->StopMoving();
-    m_creature->CastSpell(who, spellInfo, triggered);
+    return m_creature->CastSpell(who, spellInfo, triggered);
 }
 
 void ScriptedAI::DoSay(const char* text, uint32 language, Unit* target, bool SayEmote)
@@ -304,6 +304,9 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
     if (!target)
         return false;
 
+    if (!target->isAlive())
+        return false;
+
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
         return false;
 
@@ -386,6 +389,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -434,6 +438,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
             target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
             if(!target
                 || playerOnly && target->GetTypeId() != TYPEID_PLAYER
+                || target->getTransForm() == FORM_SPIRITOFREDEMPTION
                 || distNear && m_creature->IsWithinCombatRange(target, distNear) 
                 || distFar && !m_creature->IsWithinCombatRange(target, distFar)
               )
@@ -463,6 +468,7 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
  
         target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
         if(!target
+            || !target->isAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
             || dist && !m_creature->IsWithinCombatRange(target, dist)
             || auraCheck && target->HasAura(spellId, effIndex)
@@ -481,14 +487,15 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
     return NULL;
 }
 
-void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly)
+void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly, uint32 notHavingAuraId, uint8 effIndex)
 {
     std::list<HostilReference*> const& threatlist = me->getThreatManager().getThreatList();
     if (threatlist.empty())
         return;
 
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius)
+            && (!notHavingAuraId || !((*itr)->getTarget()->HasAura(notHavingAuraId, effIndex))) )
             targetList.push_back((*itr)->getTarget());
 
     if (targetList.size() < maxTargets)

@@ -58,8 +58,12 @@ struct instance_black_temple : public ScriptedInstance
     uint64 BloodElfCouncilVoice;
     uint64 IllidanStormrage;
     uint64 TeronGorefiend;
+    uint64 ReliquaryOfSouls;
 
+    uint64 GateOpeningAnnouncer;
     uint64 NajentusGate;
+    uint32 NajentusGateTimer;
+    bool NajentusGateTimed;
     uint64 MainTempleDoors;
     uint64 ShadeOfAkamaDoor;
     uint64 CommonDoor;//Teron
@@ -91,8 +95,12 @@ struct instance_black_temple : public ScriptedInstance
         BloodElfCouncilVoice = 0;
         IllidanStormrage = 0;
         TeronGorefiend = 0;
+        ReliquaryOfSouls = 0;
 
+        GateOpeningAnnouncer = 0;
         NajentusGate    = 0;
+        NajentusGateTimer = 0;
+        NajentusGateTimed = false;
         MainTempleDoors = 0;
         ShadeOfAkamaDoor= 0;
         CommonDoor              = 0;//teron
@@ -137,6 +145,7 @@ struct instance_black_temple : public ScriptedInstance
         case 23426:    IllidariCouncil = creature->GetGUID();           break;
         case 23499:    BloodElfCouncilVoice = creature->GetGUID();      break;
         case 22871:    TeronGorefiend = creature->GetGUID();            break;
+        case 22856:    ReliquaryOfSouls = creature->GetGUID();          break;
         case 22844:
         case 22845:
         case 22846:
@@ -149,6 +158,7 @@ struct instance_black_temple : public ScriptedInstance
             else
                 ashtongues.push_back(creature->GetGUID());
             break;
+        case 30000:    GateOpeningAnnouncer = creature->GetGUID();      break; //summoned by najentus on death
         }
     }
     
@@ -221,6 +231,7 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_GAMEOBJECT_SUPREMUS_DOORS:   return MainTempleDoors;
         case DATA_BLOOD_ELF_COUNCIL_VOICE:     return BloodElfCouncilVoice;
         case DATA_TERON:                       return TeronGorefiend;
+        case DATA_RELIQUARY_OF_SOULS:          return ReliquaryOfSouls;
         }
 
         return 0;
@@ -233,13 +244,14 @@ struct instance_black_temple : public ScriptedInstance
         case DATA_HIGHWARLORDNAJENTUSEVENT:
             if(data == DONE)
             {
-                HandleGameObject(NajentusGate, true);
+                NajentusGateTimed = true;
+                NajentusGateTimer = 5000;
             }
             m_auiEncounter[0] = data;break;
         case DATA_SUPREMUSEVENT:
             if(data == DONE)
             {
-                HandleGameObject(NajentusGate, true);
+                HandleGameObject(MainTempleDoors, true);
             }
             m_auiEncounter[1] = data; break;
         case DATA_SHADEOFAKAMAEVENT:
@@ -250,8 +262,8 @@ struct instance_black_temple : public ScriptedInstance
             m_auiEncounter[2] = data;
             
             if (data == DONE) {
-                for (std::list<uint64>::const_iterator itr = ashtongues.begin(); itr != ashtongues.end(); itr++) {
-                    if (Creature* tmp = instance->GetCreatureInMap(*itr))
+                for (auto itr : ashtongues) {
+                    if (Creature* tmp = instance->GetCreatureInMap(itr))
                         tmp->setFaction(1820);
                 }
             }
@@ -320,6 +332,21 @@ struct instance_black_temple : public ScriptedInstance
         }
 
         return 0;
+    }
+
+    void Update(uint32 diff)
+    {
+        if(NajentusGateTimed)
+        {
+            if(NajentusGateTimer < diff)
+            {
+                HandleGameObject(NajentusGate, true);
+                NajentusGateTimed = false;
+
+                Creature* c = instance->GetCreatureInMap(GateOpeningAnnouncer);
+                if(c) DoScriptText(EMOTE_NAJENTUS_DOOR_OPENING, c); //May be hacky, any way yo get a normal emote without the name of the creature in the beginning?
+            } else NajentusGateTimer -= diff;
+        }
     }
 
    std::string GetSaveData()

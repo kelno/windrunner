@@ -33,7 +33,7 @@ EndScriptData */
 #define LOCALE_TRICK_OR_TREAT_3 "Süßes oder Saures!"
 #define LOCALE_TRICK_OR_TREAT_6 "¡Truco o trato!"
 
-bool isEventActive()
+bool isHalloweenEventActive()
 {
     const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
     bool active = activeEvents.find(HALLOWEEN_EVENTID) != activeEvents.end();
@@ -46,7 +46,7 @@ bool GossipHello_npc_innkeeper(Player *player, Creature *_Creature)
     if (_Creature->isQuestGiver())
         player->PrepareQuestMenu( _Creature->GetGUID() );
 
-    if (isEventActive()&& !player->GetAura(SPELL_TRICK_OR_TREATED,0))
+    if (isHalloweenEventActive()&& !player->GetAura(SPELL_TRICK_OR_TREATED,0))
     {
         char* localizedEntry;
         switch (player->GetSession()->GetSessionDbLocaleIndex())
@@ -77,7 +77,7 @@ bool GossipHello_npc_innkeeper(Player *player, Creature *_Creature)
 
 bool GossipSelect_npc_innkeeper(Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
-    if (action == GOSSIP_ACTION_INFO_DEF+HALLOWEEN_EVENTID && isEventActive() && !player->GetAura(SPELL_TRICK_OR_TREATED,0))
+    if (action == GOSSIP_ACTION_INFO_DEF+HALLOWEEN_EVENTID && isHalloweenEventActive() && !player->GetAura(SPELL_TRICK_OR_TREATED,0))
     {
         player->CLOSE_GOSSIP_MENU();
         player->CastSpell(player, SPELL_TRICK_OR_TREATED, true);

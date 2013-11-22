@@ -47,7 +47,6 @@ enum {
 };
 
 enum {
-    CREATURE_ARCHIMONDE             = 17968,
     CREATURE_DOOMFIRE               = 18095,
     CREATURE_DOOMFIRE_TARGETING     = 18104,
     CREATURE_ANCIENT_WISP           = 17946,

@@ -543,6 +543,8 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             return ORI_NW;
         if (deltaRow == 0 && deltaCol == -1)
             return ORI_NE;
+
+        return 0;
     }
     
     bool HandlePieceMove(Creature* piece, uint64 trigger)

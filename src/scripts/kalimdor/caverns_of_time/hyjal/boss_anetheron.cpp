@@ -3,38 +3,36 @@
 #include "def_hyjal.h"
 #include "hyjal_trash.h"
 
-#define SPELL_CARRION_SWARM 31306
-#define SPELL_SLEEP 31298
-#define SPELL_VAMPIRIC_AURA 38196
-#define SPELL_INFERNO 31299
+enum Spells
+{
+    SPELL_CARRION_SWARM  = 31306,
+    SPELL_SLEEP          = 31298,
+    SPELL_VAMPIRIC_AURA  = 38196,
+    SPELL_INFERNO        = 31299
+};
 
-#define SAY_ONDEATH "The clock... is still... ticking."
-#define SOUND_ONDEATH 10982
+enum Timers
+{
+    TIMER_INFERNO             = 50000,
+    TIMER_INFERNO_START       = 20000,
+    TIMER_SLEEP               = 20000,
+    TIMER_CARRION_SWARM       = 15000,
+    TIMER_CARRION_SWARM_FIRST = 25000
+};
 
-#define SAY_ONSLAY1 "Your hopes are lost!"
-#define SAY_ONSLAY2 "Scream for me!"
-#define SAY_ONSLAY3 "Pity, no time for a slow death!"
-#define SOUND_ONSLAY1 10981
-#define SOUND_ONSLAY2 11038
-#define SOUND_ONSLAY3 11039
-
-#define SAY_SWARM1 "The swarm is eager to feed!"
-#define SAY_SWARM2 "Pestilence upon you!"
-#define SOUND_SWARM1 10979
-#define SOUND_SWARM2 11037
-
-#define SAY_SLEEP1 "You look tired..."
-#define SAY_SLEEP2 "Sweet dreams..."
-#define SOUND_SLEEP1 10978
-#define SOUND_SLEEP2 11545
-
-#define SAY_INFERNO1 "Let fire rain from above!"
-#define SAY_INFERNO2 "Earth and sky shall burn!"
-#define SOUND_INFERNO1 10980
-#define SOUND_INFERNO2 11036
-
-#define SAY_ONAGGRO "You are defenders of a doomed world! Flee here, and perhaps you will prolong your pathetic lives!"
-#define SOUND_ONAGGRO 10977
+enum Texts {
+	SAY_ONDEATH = -1801010,
+	SAY_ONSLAY1 = -1801011,
+	SAY_ONSLAY2 = -1801012,
+	SAY_ONSLAY3 = -1801013,
+	SAY_SWARM1 = -1801014,
+	SAY_SWARM2 = -1801015,
+	SAY_SLEEP1 = -1801016,
+	SAY_SLEEP2 = -1801017,
+	SAY_INFERNO1 = -1801018,
+	SAY_INFERNO2 = -1801019,
+	SAY_ONAGGRO = -1801020
+};
 
 struct boss_anetheronAI : public hyjal_trashAI
 {
@@ -53,7 +51,6 @@ struct boss_anetheronAI : public hyjal_trashAI
 
     uint32 SwarmTimer;
     uint32 SleepTimer;
-    uint32 AuraTimer;
     uint32 InfernoTimer;
     bool go;
     uint32 pos;
@@ -61,10 +58,11 @@ struct boss_anetheronAI : public hyjal_trashAI
     void Reset()
     {
         damageTaken = 0;
-        SwarmTimer = 45000;
-        SleepTimer = 60000;
-        AuraTimer = 5000;
-        InfernoTimer = 45000;
+        SwarmTimer = TIMER_CARRION_SWARM_FIRST;
+        SleepTimer = TIMER_SLEEP;
+        InfernoTimer = TIMER_INFERNO_START;
+
+        DoCast(m_creature, SPELL_VAMPIRIC_AURA,true);
 
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, NOT_STARTED);
@@ -74,27 +72,13 @@ struct boss_anetheronAI : public hyjal_trashAI
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, IN_PROGRESS);
-        DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
-        DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONAGGRO,me);
     }
 
     void KilledUnit(Unit *victim)
     {
-        switch(rand()%3)
-        {
-            case 0:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY1);
-                DoYell(SAY_ONSLAY1, LANG_UNIVERSAL, NULL);
-                break;
-            case 1:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY2);
-                DoYell(SAY_ONSLAY2, LANG_UNIVERSAL, NULL);
-                break;
-            case 2:
-                DoPlaySoundToSet(m_creature, SOUND_ONSLAY3);
-                DoYell(SAY_ONSLAY3, LANG_UNIVERSAL, NULL);
-                break;
-        }
+        DoScriptText(SAY_ONSLAY1 - rand()%3,me);
     }
 
     void WaypointReached(uint32 i)
@@ -113,8 +97,8 @@ struct boss_anetheronAI : public hyjal_trashAI
         hyjal_trashAI::JustDied(victim);
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, DONE);
-        DoPlaySoundToSet(m_creature, SOUND_ONDEATH);
-        DoYell(SAY_ONDEATH, LANG_UNIVERSAL, NULL);
+
+        DoScriptText(SAY_ONDEATH,me);
     }
 
     void UpdateAI(const uint32 diff)
@@ -149,20 +133,10 @@ struct boss_anetheronAI : public hyjal_trashAI
         if(SwarmTimer < diff)
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,100,true);
-            if(target)
-                DoCast(target,SPELL_CARRION_SWARM);
-
-            SwarmTimer = 45000+rand()%15000;
-            switch(rand()%2)
+            if(target && DoCast(target,SPELL_CARRION_SWARM))
             {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_SWARM1);
-                    DoYell(SAY_SWARM1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_SWARM2);
-                    DoYell(SAY_SWARM2, LANG_UNIVERSAL, NULL);
-                    break;
+                SwarmTimer = TIMER_CARRION_SWARM;
+                DoScriptText(SAY_SWARM1 - rand()%2,me);
             }
         }else SwarmTimer -= diff;
 
@@ -174,38 +148,16 @@ struct boss_anetheronAI : public hyjal_trashAI
                 if(target)
                     target->CastSpell(target,SPELL_SLEEP,true);
             }
-            SleepTimer = 60000;
-            switch(rand()%2)
-            {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_SLEEP1);
-                    DoYell(SAY_SLEEP1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_SLEEP2);
-                    DoYell(SAY_SLEEP2, LANG_UNIVERSAL, NULL);
-                    break;
-            }
+            SleepTimer = TIMER_SLEEP;
+            DoScriptText(SAY_SLEEP1 - rand()%2,me);
         }else SleepTimer -= diff;
-        if(AuraTimer < diff)
-        {
-            DoCast(m_creature, SPELL_VAMPIRIC_AURA,true);
-            AuraTimer = 10000+rand()%10000;
-        }else AuraTimer -= diff;
+
         if(InfernoTimer < diff)
         {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,100,true), SPELL_INFERNO);
-            InfernoTimer = 45000;
-            switch(rand()%2)
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,100,true), SPELL_INFERNO))
             {
-                case 0:
-                    DoPlaySoundToSet(m_creature, SOUND_INFERNO1);
-                    DoYell(SAY_INFERNO1, LANG_UNIVERSAL, NULL);
-                    break;
-                case 1:
-                    DoPlaySoundToSet(m_creature, SOUND_INFERNO2);
-                    DoYell(SAY_INFERNO2, LANG_UNIVERSAL, NULL);
-                    break;
+                InfernoTimer = TIMER_INFERNO;
+                DoScriptText(SAY_INFERNO1 - rand()%2,me);
             }
         }else InfernoTimer -= diff;
 
@@ -218,8 +170,16 @@ CreatureAI* GetAI_boss_anetheron(Creature *_Creature)
     return new boss_anetheronAI (_Creature);
 }
 
-#define SPELL_IMMOLATION 31303
-#define SPELL_INFERNO_EFFECT 31302
+enum InfernoSpells
+{
+    SPELL_IMMOLATION     = 31303,
+    SPELL_INFERNO_EFFECT = 31302
+};
+
+enum InfernoTimers
+{
+    TIMER_IMMOLATION     = 2000
+};
 
 struct mob_towering_infernalAI : public ScriptedAI
 {
@@ -238,7 +198,7 @@ struct mob_towering_infernalAI : public ScriptedAI
     void Reset()
     {
         DoCast(m_creature, SPELL_INFERNO_EFFECT);
-        ImmolationTimer = 5000;
+        ImmolationTimer = TIMER_IMMOLATION;
         CheckTimer = 5000;
     }
 
@@ -290,7 +250,7 @@ struct mob_towering_infernalAI : public ScriptedAI
         if(ImmolationTimer < diff)
         {
             DoCast(m_creature, SPELL_IMMOLATION);
-            ImmolationTimer = 5000;
+            ImmolationTimer = TIMER_IMMOLATION;
         }else ImmolationTimer -= diff;
 
         DoMeleeAttackIfReady();

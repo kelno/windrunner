@@ -456,7 +456,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             SaveToDB();
     }
 
-    void Update(uint32 const diff)
+    void Update(uint32 diff)
     {
         if (!IceBarrierDone) {
             if (IceBarrierTimer <= diff) {

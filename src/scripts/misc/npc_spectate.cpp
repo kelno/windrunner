@@ -59,6 +59,18 @@ std::string GetClassNameById(uint8 id)
     return sClass;
 }
 
+std::string GetApproximatedRating(uint32 rating)
+{
+    if (rating >= 2200)
+        return "2200+";
+    else if (rating >= 1900)
+        return "1900+";
+    else if (rating >= 1500)
+        return "1500+";
+    else
+        return "1500-";
+}
+
 std::string GetGamesStringData(BattleGround *arena)
 {
 	std::string data = "";
@@ -87,7 +99,7 @@ std::string GetGamesStringData(BattleGround *arena)
 	    if (arena->isRated())
 	    {
 	    	std::stringstream ss;
-	    	ss << team->GetRating();
+	    	ss << GetApproximatedRating(team->GetRating());
 	    	data += "(" + ss.str() + ")";
 	    }
 	    else
@@ -170,7 +182,7 @@ void ShowPage(Player *player, uint32 page, ArenaType type)
     }
 
     player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Retour", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    //player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Refresh", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3 + type);
+    player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "Refresh", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3 + type);
 }
 
 void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
