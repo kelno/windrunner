@@ -117,8 +117,6 @@ struct boss_brutallusAI : public ScriptedAI
         }
         
         m_creature->SetFullTauntImmunity(false);
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)
@@ -395,7 +393,7 @@ struct boss_brutallusAI : public ScriptedAI
     }
 
     void MoveInLineOfSight(Unit *who) {
-        if (!who->isTargetableForAttack() || !m_creature->IsHostileTo(who))
+        if (!me->canAttack(who) || !m_creature->IsHostileTo(who))
             return;
 
         if (pInstance && Intro)

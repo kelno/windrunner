@@ -161,7 +161,7 @@ struct mob_doomfireAI : public ScriptedAI
         // Do not do anything if who does not exist, or we are refreshing our timer, or who is Doomfire, Archimonde or Doomfire targetting
         if(!who || who == m_creature || RefreshTimer || who->GetEntry() == CREATURE_ANCIENT_WISP ||
             who->GetEntry() == CREATURE_ARCHIMONDE || who->GetEntry() == CREATURE_DOOMFIRE ||
-            who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !who->isTargetableForAttack())
+            who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !me->canAttack(who))
             return;
 
         if(m_creature->GetDistance2d(who) <= 1.5f)
@@ -252,7 +252,7 @@ struct mob_doomfire_targettingAI : public ScriptedAI
     {
         // Do not do anything if who does not exist, or who is Doomfire, Archimonde or Doomfire targetting
         if(!who || who == m_creature || who->GetEntry() == CREATURE_ARCHIMONDE
-            || who->GetEntry() == CREATURE_DOOMFIRE || who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !who->isTargetableForAttack())
+            || who->GetEntry() == CREATURE_DOOMFIRE || who->GetEntry() == CREATURE_DOOMFIRE_TARGETING || !me->canAttack(who))
             return;
 
         m_creature->AddThreat(who, 0.0f);

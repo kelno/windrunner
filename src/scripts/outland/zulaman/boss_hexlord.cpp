@@ -553,7 +553,7 @@ struct boss_alyson_antilleAI : public boss_hexlord_addAI
         if (!who)
             return;
 
-        if (who->isTargetableForAttack())
+        if (me->canAttack(who))
         {
             if(m_creature->Attack(who, false))
             {
@@ -638,7 +638,7 @@ struct boss_gazakrothAI : public boss_hexlord_addAI
         if (!who)
             return;
 
-        if (who->isTargetableForAttack())
+        if (me->canAttack(who))
         {
             if(m_creature->Attack(who, false))
             {
@@ -758,7 +758,7 @@ struct boss_slitherAI : public boss_hexlord_addAI
         if (!who)
             return;
 
-        if (who->isTargetableForAttack())
+        if (me->canAttack(who))
         {
             if(m_creature->Attack(who, false))
             {

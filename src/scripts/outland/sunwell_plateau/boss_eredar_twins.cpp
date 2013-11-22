@@ -149,7 +149,7 @@ struct boss_sacrolashAI : public ScriptedAI
             }
         }
             
-        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         
         // Alythess spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45230, true);
@@ -168,9 +168,6 @@ struct boss_sacrolashAI : public ScriptedAI
             pInstance->RemoveAuraOnAllPlayers(SPELL_DARK_TOUCHED);
             pInstance->RemoveAuraOnAllPlayers(SPELL_FLAME_TOUCHED);
         }
-        
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
     
     void JustSummoned(Creature* pSummon)
@@ -513,7 +510,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         if (pInstance && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != DONE && pInstance->GetData(DATA_EREDAR_TWINS_EVENT) != IN_PROGRESS)
             pInstance->SetData(DATA_EREDAR_TWINS_EVENT, NOT_STARTED);
             
-        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         
         // Sacrolash spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45347, true);
@@ -523,12 +520,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45256, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45348, true);
         
+        //curse of tongue (no longuer necessary but show a nice "immune"
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1714, true);
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
         
         m_creature->SetFullTauntImmunity(true);
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)
@@ -588,7 +584,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         if (!who || m_creature->getVictim())
             return;
 
-        if (who->isTargetableForAttack() && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
+        if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
 
             //float attackRadius = m_creature->GetAttackDistance(who);
             if (m_creature->IsWithinDistInMap(who, 45.0f) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))

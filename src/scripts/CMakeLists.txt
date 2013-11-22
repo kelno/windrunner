@@ -6,6 +6,8 @@ SET(scripts_STAT_SRCS
     include/FollowerAI.cpp
     include/FollowerAI.h
     include/GenericCreature.cpp
+	include/SimpleCooldown.h
+	include/SimpleCooldown.cpp
     include/ScriptedCreature.cpp
     include/ScriptedCreature.h
     include/ScriptedGossip.h
@@ -194,6 +196,7 @@ SET(scripts_STAT_SRCS
     azeroth/zulgurub/def_zulgurub.h
     azeroth/zulgurub/instance_zulgurub.cpp
     custom/custom_example.cpp
+    custom/custom_gnominizer.cpp
     custom/custom_gossip_codebox.cpp
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
@@ -319,14 +322,12 @@ SET(scripts_STAT_SRCS
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
     misc/npc_mylittlebombling.cpp
+	misc/npc_firework_controller.cpp
     outdoor/boss_azuregos.cpp
     outdoor/boss_doomwalker.cpp
     outdoor/boss_doomlord_kazzak.cpp
-    outdoor/boss_emeriss.cpp
+	outdoor/boss_dragonsofnightmare.cpp
     outdoor/boss_kruul.cpp
-    outdoor/boss_lethon.cpp
-    outdoor/boss_taerar.cpp
-    outdoor/boss_ysondre.cpp
     outland/aunchindoun/auchenai_crypts/boss_exarch_maladaar.cpp
     outland/aunchindoun/auchenai_crypts/boss_shirrak_the_dead_watcher.cpp
     outland/aunchindoun/mana_tombs/boss_nexusprince_shaffar.cpp
@@ -348,7 +349,6 @@ SET(scripts_STAT_SRCS
     outland/black_temple/boss_bloodboil.cpp
     outland/black_temple/boss_illidan.cpp
     outland/black_temple/boss_mother_shahraz.cpp
-    outland/black_temple/boss_reliquary_of_souls.cpp
     outland/black_temple/boss_reliquary_of_souls_new.cpp
     outland/black_temple/boss_shade_of_akama.cpp
     outland/black_temple/boss_supremus.cpp
@@ -455,6 +455,26 @@ SET(scripts_STAT_SRCS
     outland/zulaman/zulaman.cpp
 )
     
+MACRO(ADD_MSVC_PRECOMPILED_HEADER PrecompiledHeader PrecompiledSource SourcesVar)
+IF(MSVC)
+GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
+SET(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
+SET(Sources ${${SourcesVar}})
+
+SET_SOURCE_FILES_PROPERTIES(${PrecompiledSource}
+	PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+	OBJECT_OUTPUTS "${PrecompiledBinary}")
+SET_SOURCE_FILES_PROPERTIES(${Sources}
+	PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\""
+   OBJECT_DEPENDS "${PrecompiledBinary}")  
+# Add precompiled header to SourcesVar
+LIST(APPEND ${SourcesVar} ${PrecompiledSource})
+ENDIF(MSVC)
+ENDMACRO(ADD_MSVC_PRECOMPILED_HEADER)
+
 #add_definitions(-D_TRINITY_SCRIPT_CONFIG='"${CONF_DIR}/trinitycore.conf"')
+IF (WIN32 AND MSVC)
+	ADD_MSVC_PRECOMPILED_HEADER("precompiled.h" "precompiled.cpp" ${scripts_STAT_SRCS})
+ENDIF()
 add_library(scripts STATIC ${scripts_STAT_SRCS})
 ADD_DEPENDENCIES(game scripts revision.h)

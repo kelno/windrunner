@@ -14,64 +14,92 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Boss_Supremus
-SD%Complete: 95
-SDComment: Need to implement molten punch
-SDCategory: Black Temple
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_black_temple.h"
 
-#define EMOTE_NEW_TARGET            -1564010
-#define EMOTE_PUNCH_GROUND          -1564011                //DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
-#define EMOTE_GROUND_CRACK          -1564012
+#define EMOTE_NEW_TARGET             -1564010
+#define EMOTE_PUNCH_GROUND           -1564011                //DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
+#define EMOTE_GROUND_CRACK           -1564012
 
 //Spells
-#define SPELL_MOLTEN_PUNCH          40126
-#define SPELL_HATEFUL_STRIKE        41926
-#define SPELL_MOLTEN_FLAME          40980
-#define SPELL_VOLCANIC_ERUPTION     40117
-#define SPELL_VOLCANIC_SUMMON       40276
-#define SPELL_BERSERK               45078
-#define SPELL_CHARGE                41581
+#define SPELL_MOLTEN_PUNCH           40126 // Summon flamme
+#define SPELL_HATEFUL_STRIKE         41926
+#define SPELL_MOLTEN_FLAME           40980
+#define SPELL_VOLCANIC_ERUPTION      40117 // eruption visual aura + trigger SPELL_VOLCANIC_GEYSER (modified duration index)
+#define SPELL_VOLCANIC_GEYSER        42055 //18 secs aura triggered by SPELL_VOLCANIC_ERUPTION (trigger SPELL_VOLCANIC_GEYSER_DAMAGE every sec)
+#define SPELL_VOLCANIC_GEYSER_DAMAGE 42052
+#define SPELL_VOLCANIC_SUMMON        40276 // (modified duration index)
+#define SPELL_BERSERK                45078
+#define SPELL_CHARGE                 41581
 
-#define CREATURE_VOLCANO            23085
-#define CREATURE_STALKER            23095
+#define TIMER_VOLCANO                10000
+#define TIMER_VOLCANO_FIRST          2500
+#define TIMER_HATEFUL_STRIKE         5000
+#define TIMER_BERSERK                900000 // 15 minute enrage
+#define TIMER_MOLTEN_PUNCH           20000
+#define TIMER_PHASE_LENGHT           60000
+#define TIMER_SWITCH_TARGET          10000
 
+#define CREATURE_VOLCANO             23085
+#define CREATURE_STALKER             23095 //summoned by molten punch, has CREATURE_FLAG_EXTRA_TRIGGER and spell[0]=40980 -> cast it at spawn
+
+// spell SPELL_MOLTEN_FLAME is set in database and is autocasted at spawn
 struct molten_flameAI : public ScriptedAI
 {
-    float destX, destY, destZ;
-    float currentX, currentY, currentZ, groundZ;
+    ScriptedInstance* pInstance;
+    Unit* currentTarget;
     
+    float x, y, z, groundZ;
+
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
-        me->GetNearPoint(me, destX, destY, destZ, 1, 50, M_PI*2*rand_norm());
-        me->GetMotionMaster()->MovePoint(0, destX, destY, destZ);
+        pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        currentTarget = nullptr;
     }
     
-    void Reset() {
-        float x,y,z;
-        m_creature->GetPosition(x,y,z);
-        z = m_creature->GetMap()->GetHeight(x, y, z);
-        m_creature->Relocate(x,y,z,0);
-    }
-    
-    void Aggro(Unit *who) {}
-
-    void MoveInLineOfSight(Unit *who)
+    void UndermapCheck()
     {
-        return; // paralyze the npc
+
+        x = m_creature->GetPositionX();
+        y = m_creature->GetPositionY();
+        z = m_creature->GetPositionZ();
+        groundZ = z;
+            
+        m_creature->UpdateGroundPositionZ(x, z, groundZ);
+            
+        if (z < groundZ)
+            DoTeleportTo(x, y, groundZ);
+
+    }
+
+    void Reset() 
+    {
+        UndermapCheck();
+        me->SetReactState(REACT_PASSIVE);
+    }
+
+    void RandomizeTarget()
+    {
+        if(!pInstance) 
+            return;
+
+        DoZoneInCombat();
+        Creature* supremus = me->GetMap()->GetCreatureInMap(pInstance->GetData64(DATA_SUPREMUS));
+        if(!supremus) 
+            return;
+        
+        if( !(currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,20.0f,100.0f,true)) )
+            currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
+
+        if(currentTarget)
+            me->GetMotionMaster()->MoveFollowOnPoint(currentTarget);
     }
     
-    // At each update, check if we are not under the map. If it's the case, just teleport 
     void UpdateAI(uint32 const diff)
     {
-        float x,y,z;
-        m_creature->GetPosition(x,y,z);
-        z = m_creature->GetMap()->GetHeight(x, y, z);
-        m_creature->Relocate(x,y,z,0);
+        //change target if we reached it
+        if(!currentTarget || me->GetDistance(currentTarget) < 2.0f)
+            RandomizeTarget();
     }
 };
 
@@ -91,34 +119,26 @@ struct boss_supremusAI : public ScriptedAI
     uint32 HatefulStrikeTimer;
     uint32 BerserkTimer;
 
-    bool Phase1;
+    uint8 currentPhase;
 
     SummonList summons;
 
     void Reset()
     {
-        if(pInstance)
-        {
-            if(m_creature->isAlive())
-            {
-                pInstance->SetData(DATA_SUPREMUSEVENT, NOT_STARTED);
-                //ToggleDoors(true);
-            }
-            //else ToggleDoors(false);
-        }
+        if(pInstance && me->isAlive())
+            pInstance->SetData(DATA_SUPREMUSEVENT, NOT_STARTED);
 
-        HatefulStrikeTimer = 5000;
-        SummonFlameTimer = 20000;
-        SwitchTargetTimer = 90000;
-        PhaseSwitchTimer = 60000;
-        SummonVolcanoTimer = 5000;
-        BerserkTimer = 900000;                              // 15 minute enrage
+        PhaseSwitchTimer = TIMER_PHASE_LENGHT;
+        HatefulStrikeTimer = TIMER_HATEFUL_STRIKE;
+        SummonFlameTimer = TIMER_MOLTEN_PUNCH;
+        SwitchTargetTimer = TIMER_SWITCH_TARGET;
+        SummonVolcanoTimer = TIMER_VOLCANO_FIRST;
+        BerserkTimer = TIMER_BERSERK;                              // 15 minute enrage
 
-        Phase1 = true;
+        SetPhase(1);
+
+        StopEruptions();
         summons.DespawnAll();
-
-        m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
-        m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
     }
 
     void Aggro(Unit *who)
@@ -129,44 +149,55 @@ struct boss_supremusAI : public ScriptedAI
             pInstance->SetData(DATA_SUPREMUSEVENT, IN_PROGRESS);
     }
 
-    void ToggleDoors(bool close)
-    {
-        if(GameObject* Doors = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GAMEOBJECT_SUPREMUS_DOORS)))
-        {
-            if(close) Doors->SetGoState(1);                 // Closed
-            else Doors->SetGoState(0);                      // Open
-        }
-    }
-
     void JustDied(Unit *killer)
     {
         if(pInstance)
-        {
             pInstance->SetData(DATA_SUPREMUSEVENT, DONE);
-            ToggleDoors(false);
-        }
+
         summons.DespawnAll();
     }
 
-    void JustSummoned(Creature *summon) {summons.Summon(summon);}
-    void SummonedCreatureDespawn(Creature *summon) {summons.Despawn(summon);}
-
-    Unit* CalculateHatefulStrikeTarget()
+    void JustSummoned(Creature *summon) 
     {
-        uint32 health = 0;
-        Unit* target = NULL;
+        summons.Summon(summon);
+    }
 
-        std::list<HostilReference*>& m_threatlist = m_creature->getThreatManager().getThreatList();
-        std::list<HostilReference*>::iterator i = m_threatlist.begin();
-        for (i = m_threatlist.begin(); i!= m_threatlist.end();++i)
+    void SummonedCreatureDespawn(Creature *summon) 
+    {
+        summons.Despawn(summon);
+    }
+
+    void StopEruptions()
+    {
+        for(auto cGUID : summons)
         {
-            Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
-            if(pUnit && m_creature->IsWithinMeleeRange(pUnit))
+            Creature* volcano = me->GetMap()->GetCreatureInMap(cGUID);
+            if(volcano && volcano->HasAura(SPELL_VOLCANIC_ERUPTION, 0))
+                volcano->RemoveAura(SPELL_VOLCANIC_ERUPTION, 0); //remove visual
+            if(volcano && volcano->HasAura(SPELL_VOLCANIC_GEYSER,0))
+                volcano->RemoveAura(SPELL_VOLCANIC_GEYSER,0); //remove damage effect
+        }
+    }
+
+    Player* CalculateHatefulStrikeTarget()
+    {
+        uint32 maxhealthfound = 0;
+        Player* target = NULL;
+
+        auto& m_threatlist = m_creature->getThreatManager().getThreatList();
+        for (auto i : m_threatlist)
+        {
+            if(!IS_PLAYER_GUID(i->getUnitGuid()))
+                continue;
+
+            me->AddThreat(0,0);
+            Player* p = me->GetMap()->GetPlayerInMap(i->getUnitGuid());
+            if(p && me->IsWithinMeleeRange(p))
             {
-                if(pUnit->GetHealth() > health)
+                if(p->GetHealth() > maxhealthfound)
                 {
-                    health = pUnit->GetHealth();
-                    target = pUnit;
+                    maxhealthfound = p->GetHealth();
+                    target = p;
                 }
             }
         }
@@ -174,89 +205,111 @@ struct boss_supremusAI : public ScriptedAI
         return target;
     }
 
+    void ChaseNewRandomTarget()
+    {
+        if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
+        {
+            if(m_creature->GetDistance2d(m_creature->getVictim()) > 40)
+                m_creature->CastSpell(m_creature->getVictim(),SPELL_CHARGE,false);
+                        
+            DoResetThreat();
+            m_creature->AddThreat(target, 5000000.0f);
+            DoScriptText(EMOTE_NEW_TARGET, m_creature);
+            SwitchTargetTimer = TIMER_SWITCH_TARGET;
+        }
+    }
+
+    void SetPhase(uint8 phase)
+    {
+        if(phase == 1)
+        {
+            currentPhase = 1;
+            PhaseSwitchTimer = TIMER_PHASE_LENGHT;
+            m_creature->SetSpeed(MOVE_RUN, 1.2f);
+            m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
+            m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
+            if(me->isInCombat())
+            {
+                // StopEruptions(); //seems to be non blizz
+                DoResetThreat();
+                DoZoneInCombat();
+                DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
+            }
+        }
+        else if(phase == 2)
+        {
+            currentPhase = 2;
+            PhaseSwitchTimer = TIMER_PHASE_LENGHT;
+            DoResetThreat();
+            SwitchTargetTimer = TIMER_SWITCH_TARGET;
+            SummonVolcanoTimer = TIMER_VOLCANO_FIRST;
+            m_creature->SetSpeed(MOVE_RUN, 0.9f);
+            DoZoneInCombat();
+            m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
+            m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
+            SwitchTargetTimer = 0;
+        }
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if (!UpdateVictim())
             return;
-
-        if(!m_creature->HasAura(SPELL_BERSERK, 0))
+        
+        if(PhaseSwitchTimer < diff)
         {
-            if(BerserkTimer < diff)
+            if(currentPhase == 1)
+                SetPhase(2);
+            else
+                SetPhase(1);
+        }else PhaseSwitchTimer -= diff;
+
+        if(BerserkTimer < diff)
+        {
+            if(!m_creature->HasAura(SPELL_BERSERK, 0))
                 DoCast(m_creature, SPELL_BERSERK);
-            else BerserkTimer -= diff;
         }
+        else BerserkTimer -= diff;
 
         if(SummonFlameTimer < diff)
         {
             DoCast(m_creature, SPELL_MOLTEN_PUNCH);
-            SummonFlameTimer = 20000;
+            SummonFlameTimer = TIMER_MOLTEN_PUNCH;
         }else SummonFlameTimer -= diff;
 
-        if(Phase1)
+        switch(currentPhase)
         {
+        case 1:
+
             if(HatefulStrikeTimer < diff)
             {
-                if(Unit* target = CalculateHatefulStrikeTarget())
+                if(Player* target = CalculateHatefulStrikeTarget())
                 {
                     DoCast(target, SPELL_HATEFUL_STRIKE);
-                    HatefulStrikeTimer = 5000;
+                    HatefulStrikeTimer = TIMER_HATEFUL_STRIKE;
                 }
             }else HatefulStrikeTimer -= diff;
-        }
 
-        if(!Phase1)
-        {
+            break;
+        case 2:
+
             if(SwitchTargetTimer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
-                {
-                    if(m_creature->GetDistance2d(m_creature->getVictim()) > 40)
-                        m_creature->CastSpell(m_creature->getVictim(),SPELL_CHARGE,false);
-                        
-                    DoResetThreat();
-                    m_creature->AddThreat(target, 5000000.0f);
-                    DoScriptText(EMOTE_NEW_TARGET, m_creature);
-                    SwitchTargetTimer = 10000;
-                }
+                ChaseNewRandomTarget();
             }else SwitchTargetTimer -= diff;
 
             if(SummonVolcanoTimer < diff)
             {
-                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 999, true))
+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true))
                 {
                     DoCast(target, SPELL_VOLCANIC_SUMMON);
                     DoScriptText(EMOTE_GROUND_CRACK, m_creature);
-                    SummonVolcanoTimer = 10000;
+                    SummonVolcanoTimer = TIMER_VOLCANO;
                 }
             }else SummonVolcanoTimer -= diff;
-        }
 
-        if(PhaseSwitchTimer < diff)
-        {
-            if(!Phase1)
-            {
-                Phase1 = true;
-                DoResetThreat();
-                PhaseSwitchTimer = 60000;
-                m_creature->SetSpeed(MOVE_RUN, 1.2f);
-                DoZoneInCombat();
-                m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
-                m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
-                DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
-            }
-            else
-            {
-                Phase1 = false;
-                DoResetThreat();
-                SwitchTargetTimer = 10000;
-                SummonVolcanoTimer = 2000;
-                PhaseSwitchTimer = 60000;
-                m_creature->SetSpeed(MOVE_RUN, 0.9f);
-                DoZoneInCombat();
-                m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-                m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
-            }
-        }else PhaseSwitchTimer -= diff;
+            break;
+        }
 
         DoMeleeAttackIfReady();
     }
@@ -265,87 +318,72 @@ struct boss_supremusAI : public ScriptedAI
 struct npc_volcanoAI : public ScriptedAI
 {
     npc_volcanoAI(Creature *c) : ScriptedAI(c)
-    {
-        pInstance = ((ScriptedInstance*)c->GetInstanceData());
-    }
-
-    ScriptedInstance *pInstance;
-
-    uint32 CheckTimer;
+    { }
+     
     uint32 UnderMapCheckTimer;
-    bool Eruption;
+    uint32 startTimer;
+    bool started;
     
     float currentX, currentY, currentZ, groundZ;
 
     void Reset()
     {
-        CheckTimer = 1500;
-        UnderMapCheckTimer = 750;
-        Eruption = false;
+        UnderMapCheckTimer = 0;
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+
+        me->SetReactState(REACT_PASSIVE);
+
+        started = false;
+        startTimer = 1500;
     }
-
-    void Aggro(Unit *who) {}
-
-    void MoveInLineOfSight(Unit *who)
+    
+    void UndermapCheck()
     {
-        return; // paralyze the npc
+        currentX = m_creature->GetPositionX();
+        currentY = m_creature->GetPositionY();
+        currentZ = m_creature->GetPositionZ();
+        groundZ = currentZ;
+            
+        m_creature->UpdateGroundPositionZ(currentX, currentY, groundZ);
+            
+        if (currentZ < groundZ)
+            DoTeleportTo(currentX, currentY, groundZ);
     }
 
     void UpdateAI(const uint32 diff)
-    {
-        if(CheckTimer < diff)
-        {
-            uint64 SupremusGUID = pInstance->GetData64(DATA_SUPREMUS);
-            Creature* Supremus = (Unit::GetCreature((*m_creature), SupremusGUID));
-            if(!Eruption && Supremus && !((boss_supremusAI*)Supremus->AI())->Phase1)
-            {
-                Eruption = true;
-                DoCast(m_creature, SPELL_VOLCANIC_ERUPTION);
-            }
-            else if((Eruption && Supremus && ((boss_supremusAI*)Supremus->AI())->Phase1) || !Supremus)
-            {
-                if(m_creature->HasAura(SPELL_VOLCANIC_ERUPTION, 0))
-                    m_creature->RemoveAura(SPELL_VOLCANIC_ERUPTION, 0);
-                    
-                // Kill itself to despawn the volcano
-                m_creature->DisappearAndDie();
-            }
-            CheckTimer = 1500;
-        }else CheckTimer -= diff;
-        
+    {        
         if (UnderMapCheckTimer < diff)
         {
-            currentX = m_creature->GetPositionX();
-            currentY = m_creature->GetPositionY();
-            currentZ = m_creature->GetPositionZ();
-            groundZ = currentZ;
-            
-            m_creature->UpdateGroundPositionZ(currentX, currentY, groundZ);
-            
-            if (currentZ < groundZ)
-                DoTeleportTo(currentX, currentY, groundZ);
-                
+            UndermapCheck();                
             UnderMapCheckTimer = 750;
         }else UnderMapCheckTimer -= diff;
+
+        if (!started && startTimer < diff)
+        { 
+            if(startTimer < diff)
+            {
+                DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
+                started = true;
+            } else startTimer -= diff;
+        } 
     }
 };
 
-CreatureAI* GetAI_boss_supremus(Creature *_Creature)
+CreatureAI* GetAI_boss_supremus(Creature* c)
 {
-    return new boss_supremusAI (_Creature);
+    return new boss_supremusAI (c);
 }
 
-CreatureAI* GetAI_molten_flame(Creature *_Creature)
+CreatureAI* GetAI_molten_flame(Creature* c)
 {
-    return new molten_flameAI (_Creature);
+    return new molten_flameAI (c);
 }
 
-CreatureAI* GetAI_npc_volcano(Creature *_Creature)
+CreatureAI* GetAI_npc_volcano(Creature* c)
 {
-    return new npc_volcanoAI (_Creature);
+    return new npc_volcanoAI (c);
 }
 
 void AddSC_boss_supremus()

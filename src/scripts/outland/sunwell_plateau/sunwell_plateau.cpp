@@ -107,7 +107,6 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         felLightningTimer = 5000;
         
         m_creature->SetReactState(REACT_DEFENSIVE);
-        m_creature->SetHasChangedReactState();
 
         if (isActivated)
         {
@@ -1257,7 +1256,6 @@ struct npc_doomfire_destroyerAI : public ScriptedAI
     void Reset()
     {
         summonTimer = 10000;
-        DoCast(m_creature, SPELL_SW_RADIANCE);
         Summons.DespawnAll();
     }
 

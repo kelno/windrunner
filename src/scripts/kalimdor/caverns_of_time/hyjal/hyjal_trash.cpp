@@ -141,7 +141,7 @@ float HordeOverrunWP[21][3]=//waypoints in the horde base used in the end in the
 
 void hyjal_trashAI::Reset(){}
 
-hyjal_trashAI::hyjal_trashAI(Creature *c) : npc_escortAI(c)
+hyjal_trashAI::hyjal_trashAI(Creature *c) : npc_escortAI(c), cannibalism(false)
 {
     pInstance = ((ScriptedInstance*)c->GetInstanceData());
     IsEvent = false;
@@ -153,6 +153,7 @@ hyjal_trashAI::hyjal_trashAI(Creature *c) : npc_escortAI(c)
     faction = 0;
     useFlyPath = false;
     damageTaken = 0;
+    cannibalism = false;
     Reset();
 }
 
@@ -362,6 +363,38 @@ void hyjal_trashAI::UpdateAI(const uint32 diff)
                 Start(true, true, true);
             }
         }
+    }
+
+    
+    if(m_creature->GetEntry() == GHOUL && !cannibalism)
+    {
+        if(((float)me->GetHealth() / me->GetMaxHealth()) < 0.2f)
+        {
+            Player* result = NULL;
+
+            Trinity::CannibalizeObjectCheck u_check(me, 30.0f);
+            Trinity::PlayerSearcher<Trinity::CannibalizeObjectCheck > searcher(result, u_check);
+            me->VisitNearbyGridObject(30.0f, searcher);
+            if(!result)
+                me->VisitNearbyWorldObject(30.0f, searcher);
+
+            if(result)
+            {
+                cannibalism = true;
+                me->GetMotionMaster()->MovePoint(9999,result);
+            }
+        }
+    }
+}
+
+void hyjal_trashAI::MovementInform(uint32 MovementType, uint32 data)
+{
+    if(data == 9999)
+    {
+        me->AttackStop();
+        DoCast(me,31537); //cannibalism
+    } else {
+        npc_escortAI::MovementInform(MovementType,data);
     }
 }
 
@@ -1341,71 +1374,6 @@ CreatureAI* GetAI_mob_gargoyle(Creature* _Creature)
     return new mob_gargoyleAI(_Creature);
 }
 
-#define SPELL_EXPLODING_SHOT 7896
-
-struct alliance_riflemanAI : public Scripted_NoMovementAI
-{
-    alliance_riflemanAI(Creature *c) : Scripted_NoMovementAI(c)
-    {
-        Reset();
-    }
-
-    uint32 ExplodeTimer;
-
-    void JustDied(Unit*)
-    {
-    }
-
-    void Reset()
-    {
-        m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_RANGED);
-        ExplodeTimer = 5000+rand()%5000;
-    }
-
-    void MoveInLineOfSight(Unit *who)
-    {
-        if (!who || m_creature->getVictim())
-            return;
-
-        if (who->isTargetableForAttack() && m_creature->IsHostileTo(who))
-        {
-            float attackRadius = m_creature->GetAttackDistance(who);
-            if (m_creature->IsWithinDistInMap(who, 30))
-            {
-                AttackStart(who);
-            }
-        }
-    }
-
-    void Aggro(Unit *who)
-    {
-    }
-
-    void UpdateAI(const uint32 diff)
-    {
-        //Check if we have a target
-        if (!UpdateVictim())
-            return;
-        if(ExplodeTimer < diff)
-        {
-            if (!m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
-            {
-                EnterEvadeMode();
-                return;
-            }
-            int dmg = 500+rand()%700;
-            m_creature->CastCustomSpell(m_creature->getVictim(), SPELL_EXPLODING_SHOT, &dmg, 0, 0, false);
-            ExplodeTimer = 5000+rand()%5000;
-        }else ExplodeTimer -= diff;
-        DoMeleeAttackIfReady();
-    }
-};
-
-CreatureAI* GetAI_alliance_rifleman(Creature* _Creature)
-{
-    return new alliance_riflemanAI(_Creature);
-}
-
 void AddSC_hyjal_trash()
 {
     Script *newscript = new Script;
@@ -1451,10 +1419,5 @@ void AddSC_hyjal_trash()
     newscript = new Script;
     newscript->Name = "mob_gargoyle";
     newscript->GetAI = &GetAI_mob_gargoyle;
-    newscript->RegisterSelf();
-
-    newscript = new Script;
-    newscript->Name = "alliance_rifleman";
-    newscript->GetAI = &GetAI_alliance_rifleman;
     newscript->RegisterSelf();
 }
