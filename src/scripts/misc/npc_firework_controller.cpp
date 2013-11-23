@@ -1,13 +1,14 @@
 #include "precompiled.h"
 #include "MapManager.h"
 
-#define ORI_MAX 0.5
+#define MORPH_MAX 0.5
 
 enum Firework
 {
     GOSSIP_START,
     GOSSIP_SELECT_EVENT,
     GOSSIP_RELOAD,
+    GOSSIP_PRELOAD,
 
     GOBJECT_RAMP = 34,
     CREATURE_LAUNCHER = 1412,
@@ -37,16 +38,17 @@ enum Firework
 
 struct FireworkEvent {
 
-    FireworkEvent(uint32 spellorGobId, float size, uint8 posX, uint8 posY, float oriX = 0.0f, float oriY = 0.0f) :
-        spellorGobId(spellorGobId),size(size),posX(posX),posY(posY),oriX(oriX),oriY(oriY) 
+    FireworkEvent(uint32 spellorGobId, float size, uint8 posX, uint8 posY, float ori = 0.0f, float morphX = 0.0f, float morphY = 0.0f) :
+        spellorGobId(spellorGobId),size(size),posX(posX),posY(posY),ori(ori),morphX(morphX),morphY(morphY) 
     { }
 
     uint32 spellorGobId;
     float size;
 	uint8 posX;
 	uint8 posY;
-	float oriX;
-	float oriY;
+    float ori;
+	float morphX;
+	float morphY;
 };
 
 struct firework_controllerAI : public ScriptedAI
@@ -54,7 +56,6 @@ struct firework_controllerAI : public ScriptedAI
     firework_controllerAI(Creature* creature) : 
         ScriptedAI(creature),
         cellSize(3.0f),
-        gridSize(25),
         eventId(0)
 	{
         SetupEvent();
@@ -62,12 +63,11 @@ struct firework_controllerAI : public ScriptedAI
 
     float gridStartX, gridStartY, gridZ;
     float cellSize;
-    uint8 gridSize;
     uint32 endTime;
     uint8 eventId;
 
     uint32 lastEventTime; //time of the last event
-    uint32 currentTime; //time counter (increment with each updateAI)
+    int currentTime; //time counter (increment with each updateAI)
     bool eventStarted;
 
     std::multimap<uint32,FireworkEvent*> eventMap;
@@ -82,17 +82,17 @@ struct firework_controllerAI : public ScriptedAI
         lastEventTime = 0;
 	}
 
-    bool AddEvent(uint32 time, uint32 spellorGobId, float size, uint8 posX, uint8 posY, float oriX = 0.0f, float oriY = 0.0f)
+    bool AddEvent(uint32 time, uint32 spellorGobId, float size, uint8 posX, uint8 posY, float ori = 0.0f, float morphX = 0.0f, float morphY = 0.0f)
     {
         if(!spellorGobId)
 		    return false;
-	    if(posX >= gridSize || posY >= gridSize)
-		    return false;
-	    if(oriX < -ORI_MAX || oriY < -ORI_MAX || oriX > ORI_MAX || oriY > ORI_MAX)
-		    return false;
+	    if(morphX < -MORPH_MAX || morphX > MORPH_MAX)
+            morphX = MORPH_MAX;
+        if(morphY < -MORPH_MAX || morphY > MORPH_MAX)
+		    morphY = MORPH_MAX;
 		
-        FireworkEvent* event = new FireworkEvent(spellorGobId,size,posX,posY,oriX,oriY);
-	    //...
+        FireworkEvent* event = new FireworkEvent(spellorGobId,size,posX,posY,ori,morphX,morphY);
+
         eventMap.insert(std::make_pair(time,event));
 
         if(time > endTime)
@@ -103,13 +103,14 @@ struct firework_controllerAI : public ScriptedAI
 
     void SetupEvent()
     {
+        Reset();
         eventMap.clear();
         endTime = 0;
-        QueryResult* result = WorldDatabase.PQuery("SELECT time, spell, posX, posY, oriX, oriY FROM game_event_fireworks WHERE groupid = %u",eventId); //order by is here to handle non race specific spells first
+        QueryResult* result = WorldDatabase.PQuery("SELECT time, spellorgob, size, posX, posY, ori, morphX, morphY FROM game_event_fireworks WHERE groupid = %u ORDER BY time",eventId);
         if (result) {
             do {
                 Field* fields = result->Fetch();
-                if(!AddEvent(fields[0].GetUInt32(),fields[1].GetUInt32(), fields[2].GetUInt8(),fields[3].GetUInt8(),fields[4].GetFloat(), fields[5].GetFloat()))
+                if(!AddEvent(fields[0].GetUInt32(),fields[1].GetUInt32(), fields[2].GetFloat(),fields[3].GetUInt8(),fields[4].GetUInt8(), fields[5].GetFloat(),fields[6].GetFloat(),fields[7].GetFloat()))
                     sLog.outError("firework_controller : invalid db entry");
             } while (result->NextRow());
         }
@@ -122,17 +123,6 @@ struct firework_controllerAI : public ScriptedAI
         realPositionY = gridStartY + posY * cellSize;
     }
 
-    float GetAdaptedGobSize(uint32 spellId)
-    {
-        switch(spellId)
-        {
-            //...
-        default:
-            return 1.0f;
-            break;
-        }
-    }
-
     void ExecEvent(FireworkEvent* event)
     {
         float x,y,z;
@@ -140,31 +130,29 @@ struct firework_controllerAI : public ScriptedAI
         z = gridZ;
         if(event->spellorGobId < 100000) //if it's a spell
         {    
-            if(Creature* c = me->SummonCreature(CREATURE_LAUNCHER,x,y,z,0,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,3000))
+            if(Creature* c = me->SummonCreature(CREATURE_LAUNCHER,x,y,z,event->ori,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,6000))
             {
                 c->SetFloatValue(OBJECT_FIELD_SCALE_X, event->size);
                 c->CastSpell(c,event->spellorGobId,true);
             }
-            //si ça marche pas invoquer la créature etout
-            if(GameObject* gob = me->SummonGameObject(GOBJECT_RAMP,x,y,z,0.0f,event->oriX,event->oriY,0,0,0))
-            {
-                gob->SetFloatValue(OBJECT_FIELD_SCALE_X, GetAdaptedGobSize(event->spellorGobId) * event->size);
-                //Update model for client
-                Map* map = MapManager::Instance().GetMap(me->GetMapId(),me); 
-                map->Remove(gob,false); 
-                map->Add(gob);
-                gob->CastSpell(nullptr,event->spellorGobId);
-                gob->Delete();
-            }
         } else {
-            if(GameObject* gob = me->SummonGameObject(event->spellorGobId,x,y,z,0.0f,event->oriX,event->oriY,0,0,0))
+            if(GameObject* gob = me->SummonGameObject(event->spellorGobId,x,y,z,event->ori,event->morphX,event->morphY,0,0,0))
             {
-                gob->SetFloatValue(OBJECT_FIELD_SCALE_X, GetAdaptedGobSize(event->spellorGobId) * event->size);
+                gob->SetFloatValue(OBJECT_FIELD_SCALE_X, event->size);
                 Map* map = MapManager::Instance().GetMap(me->GetMapId(),me); 
                 map->Remove(gob,false); 
                 map->Add(gob);
                 gob->Delete(); //this trigger explosion
             }
+        }
+    }
+
+    void Preload() //gobject arent shown properly the first time
+    {
+        for (auto itr : eventMap)
+        {
+            if(itr.second->spellorGobId > 100000) //only needed for gobject
+                ExecEvent(itr.second);
         }
     }
 
@@ -182,12 +170,12 @@ struct firework_controllerAI : public ScriptedAI
                 break;
 
             // skip if already done
-            if(lastEventTime == it1->first) 
+            if(lastEventTime >= it1->first) 
             {
                 it2++;
                 continue;
             }
-
+            
             lastEventTime = it1->first;
             do
             {
@@ -206,6 +194,7 @@ bool GossipHello_firework_controller(Player *player, Creature *_Creature)
     player->ADD_GOSSIP_ITEM( 0, "(Re)start event", GOSSIP_SENDER_MAIN, GOSSIP_START);
     player->ADD_GOSSIP_ITEM_EXTENDED( 0, "Change Event", GOSSIP_SENDER_MAIN, GOSSIP_SELECT_EVENT, "", 0, true);
     player->ADD_GOSSIP_ITEM( 0, "Reload event", GOSSIP_SENDER_MAIN, GOSSIP_RELOAD);
+    player->ADD_GOSSIP_ITEM( 0, "Preload spells", GOSSIP_SENDER_MAIN, GOSSIP_PRELOAD);
         
 	player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
 
@@ -224,6 +213,9 @@ bool GossipSelect_firework_controller(Player *pPlayer, Creature* c, uint32 sende
         ((firework_controllerAI*)c->AI())->Reset();
         ((firework_controllerAI*)c->AI())->SetupEvent();
         break;
+    case GOSSIP_PRELOAD:
+        ((firework_controllerAI*)c->AI())->Preload();
+        break;
     }
     pPlayer->CLOSE_GOSSIP_MENU();
     return true;
@@ -235,9 +227,30 @@ bool GossipSelectWithCode_firework_controller( Player *player, Creature *c, uint
     {
         uint8 event = (uint8)atoi(Code);
         ((firework_controllerAI*)c->AI())->eventId = event;
+        ((firework_controllerAI*)c->AI())->SetupEvent();
     }
 	
     player->CLOSE_GOSSIP_MENU();
+
+    return true;
+}
+
+bool ReceiveEmote_firework_controller(Player* p, Creature* c, uint32 emote)
+{
+    if(!p->isGameMaster())
+        return true;
+
+    switch(emote)
+    {
+    case TEXTEMOTE_HUG:
+        ((firework_controllerAI*)c->AI())->Reset();
+        ((firework_controllerAI*)c->AI())->SetupEvent();
+        break;
+    case TEXTEMOTE_KISS:
+        ((firework_controllerAI*)c->AI())->Reset();
+        ((firework_controllerAI*)c->AI())->eventStarted = true;
+        break;
+    }
 
     return true;
 }
@@ -257,5 +270,6 @@ void AddSC_firework_controller()
     newscript->pGossipHello = &GossipHello_firework_controller;
     newscript->pGossipSelect = &GossipSelect_firework_controller;
 	newscript->pGossipSelectWithCode = &GossipSelectWithCode_firework_controller;
+    newscript->pReceiveEmote = &ReceiveEmote_firework_controller;
     newscript->RegisterSelf();
 }
