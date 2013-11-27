@@ -260,7 +260,7 @@ uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell)
 {
     SpellCastTimesEntry const *spellCastTimeEntry = sSpellCastTimesStore.LookupEntry(spellInfo->CastingTimeIndex);
 
-    // not all spells have cast time index and this is all is pasiive abilities
+    // not all spells have cast time index (all are passives)
     if(!spellCastTimeEntry)
         return 0;
 
@@ -271,7 +271,7 @@ uint32 GetSpellCastTime(SpellEntry const* spellInfo, Spell const* spell)
 
     if (spell && spell->m_spellInfo->Id != 8690)
     {
-       // sLog.outDebug("GetSpellCastTime spell %u - castTime %u",spellInfo->Id,castTime);
+        // sLog.outDebug("GetSpellCastTime spell %u - castTime %u",spellInfo->Id,castTime);
         if(Player* modOwner = spell->GetCaster()->GetSpellModOwner())
             modOwner->ApplySpellMod(spellInfo->Id, SPELLMOD_CASTING_TIME, castTime, spell);
 
@@ -1110,36 +1110,31 @@ void SpellMgr::LoadSpellAffects()
 
 bool SpellMgr::IsAffectedBySpell(SpellEntry const *spellInfo, uint32 spellId, uint8 effectId, uint64 familyFlags) const
 {
-    //sLog.outString("Bouh1 %u %u", spellInfo->Id, spellId);
     // false for spellInfo == NULL
     if (!spellInfo)
         return false;
-    //sLog.outString("Bouh2 %u", spellInfo->Id);
+
     SpellEntry const *affect_spell = spellmgr.LookupSpell(spellId);
     // false for affect_spell == NULL
     if (!affect_spell)
         return false;
-    //sLog.outString("Bouh3 %u", spellInfo->Id);
+
     // False if spellFamily not equal
     if (affect_spell->SpellFamilyName != spellInfo->SpellFamilyName)
         return false;
-    //sLog.outString("Bouh4 %u", spellInfo->Id);
+
     // If familyFlags == 0
     if (!familyFlags)
     {
         // Get it from spellAffect table
         familyFlags = GetSpellAffectMask(spellId,effectId);
-        //sLog.outString("Bouh5 %u", spellInfo->Id);
         // false if familyFlags == 0
         if (!familyFlags)
             return false;
-        //sLog.outString("Bouh6 %u", spellInfo->Id);
     }
     // true
-    //sLog.outString("Magebouh "I64FMTD" "I64FMTD, familyFlags, spellInfo->SpellFamilyFlags);
     if (familyFlags & spellInfo->SpellFamilyFlags)
         return true;
-    //sLog.outString("Bouh7 %u", spellInfo->Id);
         
     return false;
 }
@@ -2365,7 +2360,7 @@ void SpellMgr::LoadSpellCustomAttr()
                     mSpellCustomAttr[i] |= SPELL_ATTR_CU_AURA_HOT;
                     break;
                 case SPELL_AURA_MOD_ROOT:
-                    mSpellCustomAttr[i] |= SPELL_ATTR_CU_AURA_CC;
+                //    mSpellCustomAttr[i] |= SPELL_ATTR_CU_AURA_CC;
                     mSpellCustomAttr[i] |= SPELL_ATTR_CU_MOVEMENT_IMPAIR;
                     break;
                 case SPELL_AURA_MOD_DECREASE_SPEED:
@@ -2418,10 +2413,17 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_CONE_BACK;
             
         if (spellInfo->Dispel == DISPEL_POISON)
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_CANNOT_BE_REFLECTED;
+            spellInfo->AttributesEx |= SPELL_ATTR_EX_CANT_BE_REDIRECTED;
             
-        if (spellInfo->SpellIconID == 104 && spellInfo->AttributesEx == 0x4044)
+        if (spellInfo->SpellIconID == 104 && spellInfo->AttributesEx == 0x4044) //First Aid
             spellInfo->InterruptFlags |= SPELL_INTERRUPT_FLAG_MOVEMENT;
+
+        if (   (spellInfo->SpellIconID == 267 && spellInfo->SpellFamilyName == 9)  //Hunter: Mend pet
+            || (spellInfo->SpellIconID == 534) // Hunter: Heal pet
+            || (spellInfo->SpellIconID == 1874 && spellInfo->SpellFamilyName == 6) //holy nova
+            || (spellInfo->SpellVisual == 367 && spellInfo->SpellIconID == 338)  // Mana Spring Totem
+           ) 
+            spellInfo->AttributesEx |= SPELL_ATTR_EX_NO_THREAT;
 
         /* X */
         /* This code explicitly sets bleed effect mechanic of the direct damage effect of certain physical spells. MECHANIC_BLEED in the overall SpellEntry.Mechanic 
@@ -2453,6 +2455,10 @@ void SpellMgr::LoadSpellCustomAttr()
 
         switch(i)
         {
+        case 379: //earth shield heal effect
+        case 33076: //Prayer of mending
+            mSpellCustomAttr[i] |= SPELL_ATTR_CU_THREAT_GOES_TO_CURRENT_CASTER;
+            break;
         case 26029: // dark glare
         case 37433: // spout
         case 43140: case 43215: // flame breath
@@ -2506,7 +2512,7 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->MaxAffectedTargets = 4;
             break;
         case 46008: //Negative Energy
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             // no break
         case 42005: // Bloodboil
         case 38296: //Spitfire Totem
@@ -2647,8 +2653,6 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 46394:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
-            // no break
         case 45661:
         case 45665:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
@@ -2670,12 +2674,12 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->EffectImplicitTargetA[0] = TARGET_DST_TARGET_ENEMY;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             break;
         case 45230:
         case 45235:
         case 45246:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             // no break
         case 45232:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
@@ -2687,15 +2691,14 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             break;
         case 45342: // Alythess Conflagration
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             // no break
         case 45329: // Sacrolash Show nova
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             break;
         case 45348: // Alythess SPELL_FLAME_TOUCHED
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             // no break
         case 45347: // Sacrolash SPELL_DARK_TOUCHED
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
@@ -2709,7 +2712,7 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->MaxAffectedTargets = 5;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_ARMOR;
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_PLAYERS_ONLY;
             break;
         case 45111:
@@ -2868,11 +2871,10 @@ void SpellMgr::LoadSpellCustomAttr()
         case 25275:
         case 27577:
         case 27826: // Warrior intercept END
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_CANNOT_BE_REFLECTED;
+            spellInfo->AttributesEx |= SPELL_ATTR_EX_CANT_BE_REDIRECTED;
             break;
         case 41360:
             spellInfo->AttributesEx2 |= SPELL_ATTR_EX2_CANT_CRIT;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_CANNOT_BE_REFLECTED;
             break;
         case 5530:
             spellInfo->Effect[1] = 0;
@@ -2958,10 +2960,9 @@ void SpellMgr::LoadSpellCustomAttr()
             spellInfo->EffectTriggerSpell[1] = 24870;
             spellInfo->EffectImplicitTargetA[1] = TARGET_UNIT_CASTER;
             break;
-        case 5171:
-        case 6774:
+        case 5171: //Slice and Dice rank 1
+        case 6774: //Slice and Dice rank 2
             spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_PUT_ONLY_CASTER_IN_COMBAT;
             //spellInfo->AttributesEx |= SPELL_ATTR_EX_NOT_BREAK_STEALTH; // Check if it wasn't changed later (in 3.x)
             break;
         case 20625:
@@ -2987,7 +2988,6 @@ void SpellMgr::LoadSpellCustomAttr()
             break;
         case 31944:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_IGNORE_CASTER_LOS;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
             break;
         case 32911:
             spellInfo->EffectTriggerSpell[0] = 32910;
@@ -3042,7 +3042,7 @@ void SpellMgr::LoadSpellCustomAttr()
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_REMOVE_ON_INSTANCE_ENTER;
             break;
         case 45996:
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_DONE_BONUS;
             // no break
         case 46009: // M'uru and Entropius spells
         case 45999:
@@ -3062,7 +3062,8 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45714: // Fog corruption
         case 45717: // Fog corruption
         case 45726: // Fog corruption
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX3_CANT_MISS;
             break;
         case 26102: // Sandblast (Ouro)
         case 19272:
@@ -3074,7 +3075,6 @@ void SpellMgr::LoadSpellCustomAttr()
             break;
         case 46579: //Deathfrost
         case 31024: //Living Ruby Pendant
-        case 37284: //Scalding Water
         case 20911:
         case 20912:
         case 20913:
@@ -3083,8 +3083,10 @@ void SpellMgr::LoadSpellCustomAttr()
         case 25899:
         case 27169:
         case 40470: //Paladin Tier 6 Trinket
+        case 40471: //trinket heal effect
+        case 40472: //trinket damage effect
         case 13897: //Fiery Weapon
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_DONE_BONUS;
             break;
         case 45770:
         case 19516:
@@ -3109,6 +3111,31 @@ void SpellMgr::LoadSpellCustomAttr()
         	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
         	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
         	break;
+        case 45284:
+        case 45286:
+        case 45287:
+        case 45288:
+        case 45289:
+        case 45290:
+        case 45291:
+        case 45292:
+        case 45293:
+        case 45294:
+        case 45295:
+        case 45296:
+        case 45297:
+        case 45298:
+        case 45299:
+        case 45300:
+        case 45301:
+        case 45302:
+        case 33201: // Reflective Shield
+        case 33202:
+        case 33203:
+        case 33204:
+        case 33205:
+        case 33219:
+            spellInfo->AttributesEx |= SPELL_ATTR_EX_NO_THREAT;
         default:
             break;
         }
@@ -3439,6 +3466,10 @@ bool IsSpellAllowedInLocation(SpellEntry const *spellInfo,uint32 map_id,uint32 z
 {
     // normal case
     if( spellInfo->AreaId && spellInfo->AreaId != zone_id && spellInfo->AreaId != area_id )
+        return false;
+
+    MapEntry const* mapEntry = sMapStore.LookupEntry(map_id);
+    if (mapEntry && mapEntry->IsRaid() && spellInfo->AttributesEx6 & SPELL_ATTR_EX6_NOT_IN_RAID_INSTANCE)
         return false;
 
     // elixirs (all area dependent elixirs have family SPELLFAMILY_POTION, use this for speedup)
@@ -3829,4 +3860,57 @@ DiminishingReturnsType GetDiminishingReturnsGroupType(DiminishingGroup group)
 SpellEntry* SpellMgr::LookupSpell(uint32 id)
 {
     return objmgr.GetSpellTemplate(id);
+}
+
+float SpellMgr::GetSpellThreatModPercent(SpellEntry const* spellInfo) const
+{
+    if(spellInfo)
+    {
+        SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(spellInfo->Id);
+        if(threatSpell)
+            return threatSpell->pctMod;
+
+        //try to get first in chain
+        uint32 firstSpellId = spellmgr.GetFirstSpellInChain(spellInfo->Id);
+        if(!firstSpellId)
+            return 1.0f;
+
+        //see if we have this one in store
+        threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(firstSpellId);
+        if(threatSpell)
+            return threatSpell->pctMod;
+    }
+    return 1.0f;
+}
+
+int SpellMgr::GetSpellThreatModFlat(SpellEntry const* spellInfo) const
+{
+    if(!spellInfo)
+        return 0;
+
+    SpellThreatEntry const* threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(spellInfo->Id);
+    int32 flatMod = 0;
+    if(!threatSpell) 
+    {
+        //try to get first in chain
+        uint32 firstSpellId = spellmgr.GetFirstSpellInChain(spellInfo->Id);
+        if(!firstSpellId)
+            return 0;
+
+        //see if we have this one in store
+        threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(firstSpellId);
+        if(!threatSpell)
+            return 0;
+
+        //get spell info and create a new adapted flatMod
+        SpellEntry const* spellInfoFirstInChain = spellmgr.LookupSpell(firstSpellId);
+        if(!spellInfoFirstInChain)
+            return 0;
+
+        flatMod = (threatSpell->flatMod / (float)spellInfoFirstInChain->spellLevel) * spellInfo->spellLevel;
+    } else {
+        flatMod = threatSpell->flatMod;
+    }
+
+    return flatMod;
 }

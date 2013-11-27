@@ -314,8 +314,8 @@ pAuraHandler AuraHandler[TOTAL_AURAS]=
     &Aura::HandleUnused,                                    //256 unused
     &Aura::HandleUnused,                                    //257 unused
     &Aura::HandleUnused,                                    //258 unused
-    &Aura::HandleUnused,                                    //259 unused
-    &Aura::HandleAuraApplyExtraFlag,                        //260 SPELL_AURA_APPLY_EXTRA_FLAG - custom on WM
+    &Aura::HandleAuraImmunityId,                            //259 SPELL_AURA_APPLY_IMMUNITY_ID - WM custom
+    &Aura::HandleAuraApplyExtraFlag,                        //260 SPELL_AURA_APPLY_EXTRA_FLAG - WM custom
     &Aura::HandleNULL                                       //261 SPELL_AURA_261 some phased state (44856 spell)
 };
 
@@ -405,6 +405,9 @@ m_periodicTimer(0), m_amplitude(0), m_PeriodicEventId(0), m_AuraDRGroup(DIMINISH
 
     if(modOwner)
         modOwner->ApplySpellMod(GetId(), SPELLMOD_ACTIVATION_TIME, m_periodicTimer);
+
+    if(m_spellProto->AttributesEx5 & SPELL_ATTR_EX5_START_PERIODIC_AT_APPLY)
+        m_periodicTimer = 0;
 
     m_effIndex = eff;
     SetModifier(AuraType(m_spellProto->EffectApplyAuraName[eff]), damage, m_spellProto->EffectAmplitude[eff], m_spellProto->EffectMiscValue[eff]);
@@ -1308,7 +1311,7 @@ void Aura::HandleAddModifier(bool apply, bool Real)
                 continue;
             // only passive and permament auras-active auras should have amount set on spellcast and not be affected
             // if aura is casted by others, it will not be affected
-            if ((aura->IsPassive() || aura->IsPermanent()) && (m_target->ToPlayer())->IsAffectedBySpellmod(spellInfo,m_spellmod))
+            if ((aura->IsPassive() || aura->IsPermanent()) && aura->GetCasterGUID() == m_target->GetGUID() && (m_target->ToPlayer())->IsAffectedBySpellmod(spellInfo,m_spellmod))
             {
                 uint8 index = aura->GetEffIndex();
                 if (  GetMiscValue() == SPELLMOD_ALL_EFFECTS
@@ -1323,8 +1326,9 @@ void Aura::HandleAddModifier(bool apply, bool Real)
 
                     //sLog.outString("HandleAddModifier(...) reapplying aura (%u,%i) with new amount %i",aura->GetId(),index,amountValue);
                     AuraType type = (AuraType)spellInfo->EffectApplyAuraName[index];
+                    //unapply current aura, change amount then re apply it
                     (*aura.*AuraHandler [type])(false,Real);
-                    aura->SetAmount(amountValue); //set amount after unapply, else we won't unapply correct amount
+                    aura->SetAmount(amountValue);
                     (*aura.*AuraHandler [type])(true,Real);
                 }
             }
@@ -2119,7 +2123,7 @@ void Aura::TriggerSpell()
     }
     if(!GetSpellMaxRange(sSpellRangeStore.LookupEntry(triggeredSpellInfo->rangeIndex)))
         target = m_target;    //for druid dispel poison
-    m_target->CastSpell(target, triggeredSpellInfo, true, 0, this, originalCasterGUID, true);
+    m_target->CastSpell(target, triggeredSpellInfo, true, 0, this, originalCasterGUID, caster->isTotem() ? true : false);
 }
 
 Unit* Aura::GetTriggerTarget() const
@@ -2450,9 +2454,24 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
     {
         case SPELLFAMILY_GENERIC:
         {
-            //Akama's canalist channeling, remove 40520 (slow aura) stack
-            if ( GetId()== 40401 ) 
+            switch (GetId())
             {
+            case 46230: //Muru black hole bump
+            {
+                m_target->ApplySpellImmune(0, IMMUNITY_ID, 46264, apply); //immune to void zone (p2)
+                return;
+            }
+            case 45043: // Power circle (Muru trinket)
+                if(caster)
+                {
+                    if(apply)
+                        caster->CastSpell(caster,45044,true); //45044 = 320 spell power aura
+                    else
+                        caster->RemoveAurasDueToSpell(45044);
+                }
+                return;
+            case 40401: //Akama's canalist channeling, remove 40520 (slow aura) stac
+                {
                 Aura* stack = m_target->GetAura(40520,0);
                 if(stack)
                 {
@@ -2464,11 +2483,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     stack->ApplyModifier(true,true);
                     //how to update visual stack count on client?
                 }
+                }
                 return;
-            }
-            // Unstable Power
-            if( GetId()==24658 )
-            {
+            case 24658: // Unstable Power
+                {
                 uint32 spellId = 24659;
                 if (apply)
                 {
@@ -2480,11 +2498,10 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     return;
                 }
                 m_target->RemoveAurasDueToSpell(spellId);
+                }
                 return;
-            }
-            // Restless Strength
-            if( GetId()==24661 )
-            {
+            case 24661: // Restless Strength
+                {
                 uint32 spellId = 24662;
                 if (apply)
                 {
@@ -2496,42 +2513,38 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                     return;
                 }
                 m_target->RemoveAurasDueToSpell(spellId);
+                }
                 return;
-            }
-            // Victorious
-            if(GetId()==32216 && m_target->getClass()==CLASS_WARRIOR)
-            {
+            case 32216: // Victorious
                 m_target->ModifyAuraState(AURA_STATE_WARRIOR_VICTORY_RUSH, apply);
                 return;
-            }
-            //Summon Fire Elemental
-            if (GetId() == 40133 && caster)
-            {
-                Unit *owner = caster->GetOwner();
-                if (owner && owner->GetTypeId() == TYPEID_PLAYER)
+            case 40133: //Summon Fire Elemental
+                if(caster)
                 {
-                    if(apply)
-                        owner->CastSpell(owner,8985,true);
-                    else
-                        (owner->ToPlayer())->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
+                    Unit *owner = caster->GetOwner();
+                    if (owner && owner->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if(apply)
+                            owner->CastSpell(owner,8985,true);
+                        else
+                            (owner->ToPlayer())->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
+                    }
+                }
+                return;
+            case 40132: //Summon Earth Elemental
+                if(caster)
+                {
+                    Unit *owner = caster->GetOwner();
+                    if (owner && owner->GetTypeId() == TYPEID_PLAYER)
+                    {
+                        if(apply)
+                            owner->CastSpell(owner,19704,true);
+                        else
+                            (owner->ToPlayer())->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
+                    }
                 }
                 return;
             }
-
-            //Summon Earth Elemental
-            if (GetId() == 40132 && caster)
-            {
-                Unit *owner = caster->GetOwner();
-                if (owner && owner->GetTypeId() == TYPEID_PLAYER)
-                {
-                    if(apply)
-                        owner->CastSpell(owner,19704,true);
-                    else
-                        (owner->ToPlayer())->RemovePet(NULL, PET_SAVE_NOT_IN_SLOT, true);
-                }
-                return;
-            }
-
             break;
         }
         case SPELLFAMILY_MAGE:
@@ -2595,6 +2608,29 @@ void Aura::HandleAuraDummy(bool apply, bool Real)
                 }
 
                 (m_target->ToPlayer())->AddSpellMod(m_spellmod, apply);
+                return;
+            }
+            // Idol of the Raven Goddess
+            if ( GetId() == 39926 && m_target->GetTypeId()==TYPEID_PLAYER )
+            {
+                /* FIXME : Tree of life aura has not familyFlags, how can we apply a spellmod on it?
+                if(apply)
+                {
+                    SpellModifier *mod = new SpellModifier;
+                    mod->op = SPELLMOD_DOT;
+                    mod->value = m_modifier.m_amount;
+                    mod->type = SPELLMOD_FLAT;
+                    mod->spellId = GetId(); //tree of life aura
+                    mod->effectId = m_effIndex;
+                    mod->lastAffected = NULL;
+                    mod->mask = 0x001000000000LL;
+                    mod->charges = 0;
+
+                    m_spellmod = mod;
+                }
+
+                (m_target->ToPlayer())->AddSpellMod(m_spellmod, apply);
+                */
                 return;
             }
             break;
@@ -3983,7 +4019,6 @@ void Aura::HandleAuraModDecreaseSpeed(bool /*apply*/, bool Real)
             break;
     }
 
-	//m_target->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
     m_target->UpdateSpeed(MOVE_RUN, true, false);
     m_target->UpdateSpeed(MOVE_SWIM, true, false);
     m_target->UpdateSpeed(MOVE_FLIGHT, true, false);
@@ -4310,7 +4345,7 @@ void Aura::HandlePeriodicTriggerSpell(bool apply, bool Real)
         m_target->CastSpell(m_target, 33686, true, 0, this);
         
     // Windfury && Tremor && Earthbind totems
-    if ((m_spellProto->Id == 8515 || m_spellProto->Id == 10609 || m_spellProto->Id == 10612 || m_spellProto->Id == 25581 || m_spellProto->Id == 25582 || m_spellProto->SpellIconID == 1676 || m_spellProto->Id == 8145 || m_spellProto->Id == 6474) && apply && Real)
+    if ((GetSpellProto()->AttributesEx5 & SPELL_ATTR_EX5_START_PERIODIC_AT_APPLY) || (m_spellProto->Id == 8515 || m_spellProto->Id == 10609 || m_spellProto->Id == 10612 || m_spellProto->Id == 25581 || m_spellProto->Id == 25582 || m_spellProto->SpellIconID == 1676 || m_spellProto->Id == 8145 || m_spellProto->Id == 6474) && apply && Real)
         m_periodicTimer = 0;
 }
 
@@ -5144,28 +5179,9 @@ void Aura::HandleAuraModCritPercent(bool apply, bool Real)
     if(m_target->GetTypeId()!=TYPEID_PLAYER)
         return;
 
-    // apply item specific bonuses for already equipped weapon
-    if(Real)
-    {
-        for(int i = 0; i < MAX_ATTACK; ++i)
-            if(Item* pItem = (m_target->ToPlayer())->GetWeaponForAttack(WeaponAttackType(i)))
-                (m_target->ToPlayer())->_ApplyWeaponDependentAuraCritMod(pItem,WeaponAttackType(i),this,apply);
-    }
-
-    // mods must be applied base at equipped weapon class and subclass comparison
-    // with spell->EquippedItemClass and  EquippedItemSubClassMask and EquippedItemInventoryTypeMask
-    // m_modifier.m_miscvalue comparison with item generated damage types
-
-    if (GetSpellProto()->EquippedItemClass == -1)
-    {
-        (m_target->ToPlayer())->HandleBaseModValue(CRIT_PERCENTAGE,         FLAT_MOD, float (GetModifierValue()), apply);
-        (m_target->ToPlayer())->HandleBaseModValue(OFFHAND_CRIT_PERCENTAGE, FLAT_MOD, float (GetModifierValue()), apply);
-        (m_target->ToPlayer())->HandleBaseModValue(RANGED_CRIT_PERCENTAGE,  FLAT_MOD, float (GetModifierValue()), apply);
-    }
-    else
-    {
-        // done in Player::_ApplyWeaponDependentAuraMods
-    }
+    (m_target->ToPlayer())->HandleBaseModValue(CRIT_PERCENTAGE,         FLAT_MOD, float (GetModifierValue()), apply);
+    (m_target->ToPlayer())->HandleBaseModValue(OFFHAND_CRIT_PERCENTAGE, FLAT_MOD, float (GetModifierValue()), apply);
+    (m_target->ToPlayer())->HandleBaseModValue(RANGED_CRIT_PERCENTAGE,  FLAT_MOD, float (GetModifierValue()), apply);
 }
 
 void Aura::HandleModHitChance(bool apply, bool Real)
@@ -5320,14 +5336,6 @@ void Aura::HandleAuraModRangedAttackPowerOfStatPercent(bool apply, bool Real)
 /********************************/
 void Aura::HandleModDamageDone(bool apply, bool Real)
 {
-    // apply item specific bonuses for already equipped weapon
-    if(Real && m_target->GetTypeId()==TYPEID_PLAYER)
-    {
-        for(int i = 0; i < MAX_ATTACK; ++i)
-            if(Item* pItem = (m_target->ToPlayer())->GetWeaponForAttack(WeaponAttackType(i)))
-                (m_target->ToPlayer())->_ApplyWeaponDependentAuraDamageMod(pItem,WeaponAttackType(i),this,apply);
-    }
-
     // m_modifier.m_miscvalue is bitmask of spell schools
     // 1 ( 0-bit ) - normal school damage (SPELL_SCHOOL_MASK_NORMAL)
     // 126 - full bitmask all magic damages (SPELL_SCHOOL_MASK_MAGIC) including wands
@@ -5337,18 +5345,13 @@ void Aura::HandleModDamageDone(bool apply, bool Real)
     // with spell->EquippedItemClass and  EquippedItemSubClassMask and EquippedItemInventoryTypeMask
     // m_modifier.m_miscvalue comparison with item generated damage types
 
-    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_NORMAL) != 0)
+    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_NORMAL))
     {
-        // apply generic physical damage bonuses including wand case
-        if (GetSpellProto()->EquippedItemClass == -1 || m_target->GetTypeId() != TYPEID_PLAYER)
+        if (m_target->GetTypeId() != TYPEID_PLAYER)
         {
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_VALUE, float(GetModifierValue()), apply);
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_VALUE, float(GetModifierValue()), apply);
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_RANGED, TOTAL_VALUE, float(GetModifierValue()), apply);
-        }
-        else
-        {
-            // done in Player::_ApplyWeaponDependentAuraMods
         }
 
         if(m_target->GetTypeId() == TYPEID_PLAYER)
@@ -5357,20 +5360,11 @@ void Aura::HandleModDamageDone(bool apply, bool Real)
                 m_target->ApplyModUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_POS,GetModifierValue(),apply);
             else
                 m_target->ApplyModUInt32Value(PLAYER_FIELD_MOD_DAMAGE_DONE_NEG,GetModifierValue(),apply);
+
+            //apply damage to already equipped weapon
+            for(UnitMods mod = UNIT_MOD_DAMAGE_MAINHAND; mod <= UNIT_MOD_DAMAGE_RANGED; mod = (UnitMods)(mod +1))
+                m_target->ToPlayer()->HandleStatModifier(mod, TOTAL_VALUE, float(GetModifierValue()),apply);
         }
-    }
-
-    // Skip non magic case for speedup
-    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_MAGIC) == 0)
-        return;
-
-    if( GetSpellProto()->EquippedItemClass != -1 || GetSpellProto()->EquippedItemInventoryTypeMask != 0 )
-    {
-        // wand magic case (skip generic to all item spell bonuses)
-        // done in Player::_ApplyWeaponDependentAuraMods
-
-        // Skip item specific requirements for not wand magic damage
-        return;
     }
 
     // Magic damage modifiers implemented in Unit::SpellDamageBonus
@@ -5401,14 +5395,6 @@ void Aura::HandleModDamageDone(bool apply, bool Real)
 
 void Aura::HandleModDamagePercentDone(bool apply, bool Real)
 {
-    // apply item specific bonuses for already equipped weapon
-    if(Real && m_target->GetTypeId()==TYPEID_PLAYER)
-    {
-        for(int i = 0; i < MAX_ATTACK; ++i)
-            if(Item* pItem = (m_target->ToPlayer())->GetWeaponForAttack(WeaponAttackType(i)))
-                (m_target->ToPlayer())->_ApplyWeaponDependentAuraDamageMod(pItem,WeaponAttackType(i),this,apply);
-    }
-
     // m_modifier.m_miscvalue is bitmask of spell schools
     // 1 ( 0-bit ) - normal school damage (SPELL_SCHOOL_MASK_NORMAL)
     // 126 - full bitmask all magic damages (SPELL_SCHOOL_MASK_MAGIC) including wand
@@ -5418,35 +5404,25 @@ void Aura::HandleModDamagePercentDone(bool apply, bool Real)
     // with spell->EquippedItemClass and  EquippedItemSubClassMask and EquippedItemInventoryTypeMask
     // m_modifier.m_miscvalue comparison with item generated damage types
 
-    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_NORMAL) != 0)
+    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_NORMAL))
     {
         // apply generic physical damage bonuses including wand case
-        if (GetSpellProto()->EquippedItemClass == -1 || m_target->GetTypeId() != TYPEID_PLAYER)
+        if (m_target->GetTypeId() != TYPEID_PLAYER)
         {
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_MAINHAND, TOTAL_PCT, float(GetModifierValue()), apply);
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_OFFHAND, TOTAL_PCT, float(GetModifierValue()), apply);
             m_target->HandleStatModifier(UNIT_MOD_DAMAGE_RANGED, TOTAL_PCT, float(GetModifierValue()), apply);
         }
-        else
-        {
-            // done in Player::_ApplyWeaponDependentAuraMods
-        }
+
         // For show in client
         if(m_target->GetTypeId() == TYPEID_PLAYER)
+        {
             m_target->ApplyModSignedFloatValue(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT,m_modifier.m_amount/100.0f,apply);
-    }
 
-    // Skip non magic case for speedup
-    if((m_modifier.m_miscvalue & SPELL_SCHOOL_MASK_MAGIC) == 0)
-        return;
-
-    if( GetSpellProto()->EquippedItemClass != -1 || GetSpellProto()->EquippedItemInventoryTypeMask != 0 )
-    {
-        // wand magic case (skip generic to all item spell bonuses)
-        // done in Player::_ApplyWeaponDependentAuraMods
-
-        // Skip item specific requirements for not wand magic damage
-        return;
+            //apply damage to already equipped weapon
+            for(UnitMods mod = UNIT_MOD_DAMAGE_MAINHAND; mod <= UNIT_MOD_DAMAGE_RANGED; mod = (UnitMods)(mod +1))
+                m_target->ToPlayer()->HandleStatModifier(mod, TOTAL_PCT, float(GetModifierValue()),apply);
+        }
     }
 
     // Magic damage percent modifiers implemented in Unit::SpellDamageBonus
@@ -5455,6 +5431,7 @@ void Aura::HandleModDamagePercentDone(bool apply, bool Real)
         for(int i = SPELL_SCHOOL_HOLY; i < MAX_SPELL_SCHOOL; ++i)
             m_target->ApplyModSignedFloatValue(PLAYER_FIELD_MOD_DAMAGE_DONE_PCT+i,m_modifier.m_amount/100.0f,apply);
             
+    //Netherspite (Karazhan) nether beam UGLY HACK
     if (Real && !apply && GetId() == 30423 && !m_target->HasAura(30423) && !m_target->HasAura(30463))
         m_target->AddAura(38639, m_target);
 }
@@ -6335,7 +6312,7 @@ void Aura::PeriodicTick()
                 return;
 
             // heal for caster damage (must be alive)
-            if(m_target != pCaster && GetSpellProto()->SpellVisual==163 && !pCaster->isAlive())
+            if(m_target != pCaster && GetSpellProto()->SpellVisual==163 && !pCaster->isAlive()) //Health Funnel
                 return;
             
             // Hunter's Mend pet
@@ -6392,10 +6369,7 @@ void Aura::PeriodicTick()
             //Do check before because m_modifier.auraName can be invalidate by DealDamage.
             bool procSpell = (m_modifier.m_auraname == SPELL_AURA_PERIODIC_HEAL && m_target != pCaster);
 
-            float threat = float(gain) * 0.5f;
-            SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(GetSpellProto()->Id);
-            if(threatSpell && threatSpell->pctMod != 1.0f)
-                threat *= threatSpell->pctMod;
+            float threat = float(gain) * 0.5f * spellmgr.GetSpellThreatModPercent(GetSpellProto());
 
             m_target->getHostilRefManager().threatAssist(pCaster, threat, GetSpellProto());
 
@@ -6404,7 +6378,7 @@ void Aura::PeriodicTick()
             bool haveCastItem = GetCastItemGUID()!=0;
 
             // heal for caster damage
-            if(m_target!=pCaster && spellProto->SpellVisual==163)
+            if(m_target!=pCaster && spellProto->SpellVisual==163) //Health Funnel
             {
                 uint32 dmg = spellProto->manaPerSecond;
                 if(pCaster->GetHealth() <= dmg && pCaster->GetTypeId()==TYPEID_PLAYER)
@@ -7154,6 +7128,14 @@ void Aura::HandleAuraCloneCaster(bool apply, bool Real)
         m_target->SetDisplayId(m_target->GetNativeDisplayId());
         m_target->RemoveFlag(UNIT_FIELD_FLAGS_2, UNIT_FLAG2_MIRROR_IMAGE);
     }
+}
+
+void Aura::HandleAuraImmunityId(bool apply, bool Real)
+{
+    if(!m_target || !m_modifier.m_miscvalue)
+        return;
+
+    m_target->ApplySpellImmune(0, IMMUNITY_ID, m_modifier.m_miscvalue, apply);
 }
 
 void Aura::HandleAuraApplyExtraFlag(bool apply, bool Real)

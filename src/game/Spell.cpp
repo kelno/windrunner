@@ -386,15 +386,15 @@ Spell::Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 origi
     
     m_script = sScriptMgr.getSpellScript(this);
 
-    if(m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC && !IsAreaOfEffectSpell(m_spellInfo) && (m_spellInfo->AttributesEx2 & 0x4)==0)
+    if(   !(m_spellInfo->AttributesEx & SPELL_ATTR_EX_CANT_BE_REDIRECTED)
+       && m_spellInfo->DmgClass == SPELL_DAMAGE_CLASS_MAGIC 
+       && !IsAreaOfEffectSpell(m_spellInfo) && (m_spellInfo->AttributesEx2 & 0x4)==0)
     {
         for(int j=0;j<3;j++)
         {
             if (m_spellInfo->Effect[j]==0)
                 continue;
 
-            if (spellmgr.GetSpellCustomAttr(m_spellInfo->Id) & SPELL_ATTR_CU_CANNOT_BE_REFLECTED)
-                m_canReflect = false;
             else if(!IsPositiveTarget(m_spellInfo->EffectImplicitTargetA[j],m_spellInfo->EffectImplicitTargetB[j]))
                 m_canReflect = true;
             else if (m_IsTriggeredSpell)
@@ -741,6 +741,9 @@ void Spell::prepareDataForTriggerSystem()
     if (m_CastItem)
        m_canTrigger = false;
 
+    if(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_CANT_TRIGGER_PROC)
+        m_canTrigger = false;
+
     // Get data for type of attack and fill base info for trigger
     switch (m_spellInfo->DmgClass)
     {
@@ -1043,12 +1046,10 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
 
         int32 gain = unitTarget->ModifyHealth( int32(addhealth) );
 
-        float threat = float(gain) * 0.5f;
-        SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(m_spellInfo->Id);
-        if(threatSpell && threatSpell->pctMod != 1.0f)
-            threat *= threatSpell->pctMod;
+        float threat = float(gain) * 0.5f * spellmgr.GetSpellThreatModPercent(m_spellInfo);
 
-        unitTarget->getHostilRefManager().threatAssist(caster, threat, m_spellInfo);
+        Unit* threatTarget = (m_customAttr & SPELL_ATTR_CU_THREAT_GOES_TO_CURRENT_CASTER || !m_originalCaster)? m_caster : m_originalCaster;
+        unitTarget->getHostilRefManager().threatAssist(threatTarget, threat, m_spellInfo);
 
         if(caster->GetTypeId()==TYPEID_PLAYER)
             if(BattleGround *bg = (caster->ToPlayer())->GetBattleGround())
@@ -1141,9 +1142,7 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
         if(  !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO) 
           && !(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NO_THREAT) )
         {
-            //if (m_caster->GetTypeId() != TYPEID_UNIT || m_caster->HasInThreatList(unit->GetGUID()))
-            //sLog.outString("Pom %s %s", m_caster->GetName(), unit->GetName()); 
-            m_caster->CombatStart(unit,!(bool)m_IsTriggeredSpell); //A triggered spell should not be considered as a pvp action
+            m_caster->CombatStart(unit,!m_IsTriggeredSpell); //A triggered spell should not be considered as a pvp action
         }
         else if(m_customAttr & SPELL_ATTR_CU_AURA_CC)
         {
@@ -1172,10 +1171,12 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
     Unit *caster = m_originalCasterGUID ? m_originalCaster : m_caster;
 
     // Recheck immune (only for delayed spells)
-    if( m_spellInfo->speed &&
-        !(m_spellInfo->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY)
-        && (unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo),true) ||
-        unit->IsImmunedToSpell(m_spellInfo,true) ))
+    if(    m_spellInfo->speed
+        && !(m_spellInfo->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY)
+        && !(m_spellInfo->AttributesEx & SPELL_ATTR_EX_UNAFFECTED_BY_SCHOOL_IMMUNE)
+        && (   unit->IsImmunedToDamage(GetSpellSchoolMask(m_spellInfo),true)
+            || unit->IsImmunedToSpell(m_spellInfo,true) )
+      )
     {
         caster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_IMMUNE);
         m_damage = 0;
@@ -1214,9 +1215,9 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
                 return;
             }
             unit->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_HITBYSPELL);
-            
+
             if(m_customAttr & SPELL_ATTR_CU_AURA_CC)
-                unit->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CC);
+                unit->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_CAST);
         }
         else
         {
@@ -1237,8 +1238,9 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
             if( unit->isInCombat() && !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO) )
             {
-                caster->SetInCombatState(unit->GetCombatTimer() > 0);
-                unit->getHostilRefManager().threatAssist(caster, 0.0f);
+                //threat to current caster instead of original caster
+                m_caster->SetInCombatState(unit->GetCombatTimer() > 0);
+                unit->getHostilRefManager().threatAssist(m_caster, 0.0f);
             }
         }
     }
@@ -1331,15 +1333,6 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
             }
         }
     }
-
-    //This is not needed with procflag patch
-    /*if(m_originalCaster)
-    {
-        if(m_customAttr & SPELL_ATTR_CU_EFFECT_HEAL)
-            m_originalCaster->ProcDamageAndSpell(unit, PROC_FLAG_HEAL, PROC_FLAG_NONE, 0, GetSpellSchoolMask(m_spellInfo), m_spellInfo);
-        if(m_originalCaster != unit && (m_customAttr & SPELL_ATTR_CU_EFFECT_DAMAGE))
-            m_originalCaster->ProcDamageAndSpell(unit, PROC_FLAG_HIT_SPELL, PROC_FLAG_STRUCK_SPELL, 0, GetSpellSchoolMask(m_spellInfo), m_spellInfo);
-    }*/
 }
 
 void Spell::DoAllEffectOnTarget(GOTargetInfo *target)
@@ -2607,9 +2600,8 @@ void Spell::handle_immediate()
             //apply haste mods
             m_caster->ModSpellCastTime(m_spellInfo, duration, this);
             // Apply duration mod
-            if(m_spellInfo->AttributesEx5 & SPELL_ATTR_EX5_HASTE_AFFECT_DURATION)
-                if (Player* modOwner = m_caster->GetSpellModOwner())
-                    modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
+            if (Player* modOwner = m_caster->GetSpellModOwner())
+                modOwner->ApplySpellMod(m_spellInfo->Id, SPELLMOD_DURATION, duration);
             m_spellState = SPELL_STATE_CASTING;
             //sLog.outDebug("Spell %u - SPELL_STATE_CASTING",m_spellInfo->Id);
             m_caster->AddInterruptMask(m_spellInfo->ChannelInterruptFlags);
@@ -3652,12 +3644,13 @@ void Spell::TakeReagents()
 
 void Spell::HandleFlatThreat()
 {
-    SpellThreatEntry const* threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(m_spellInfo->Id);
-    if(!threatSpell || threatSpell->flatMod == 0)
+    if ((m_spellInfo->AttributesEx  & SPELL_ATTR_EX_NO_THREAT) ||
+        (m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO))
         return;
 
-    if ((m_spellInfo->AttributesEx  & SPELL_ATTR_EX_NO_THREAT) ||
-    (m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO))
+    int32 flatMod = spellmgr.GetSpellThreatModFlat(m_spellInfo);
+
+    if(flatMod == 0)
         return;
 
     uint8 targetListSize = m_UniqueTargetInfo.size();
@@ -3675,15 +3668,18 @@ void Spell::HandleFlatThreat()
 
             if(target.missCondition==SPELL_MISS_NONE) //needed here?
             {
-                float threat = threatSpell->flatMod / targetListSize;;
+                float threat = flatMod / targetListSize;;
                 targetUnit->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
             }
             //sLog.outString("HandleFlatThreat(): Spell %u, rank %u, added an additional %f flat threat", spellmgr.GetSpellRank(m_spellInfo->Id), threat);
         }
         //devastate case done in SpellDamageWeaponDmg
-    } else { //positive spells
+    }
+    else
+    {
+        //positive spells
         // not sure about that but it seems the flat threat bonus only apply once and not anew for every hit target
-        m_caster->getHostilRefManager().threatAssist(m_caster, threatSpell->flatMod, m_spellInfo);
+        m_caster->getHostilRefManager().threatAssist(m_caster, flatMod, m_spellInfo);
     }
 }
 

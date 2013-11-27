@@ -902,17 +902,14 @@ uint32 Unit::DealDamage(Unit *pVictim, uint32 damage, CleanDamage const* cleanDa
 
         if (pVictim->GetTypeId() != TYPEID_PLAYER)
         {
-            if(spellProto && IsDamageToThreatSpell(spellProto)) {
+            if(spellProto && IsDamageToThreatSpell(spellProto))
+            {
                 //sLog.outString("DealDamage (IsDamageToThreatSpell), AddThreat : %f * 2 = %f",damage,damage*2);
                 pVictim->AddThreat(this, damage*2, damageSchoolMask, spellProto);
-            } else {
-                float threat = damage;
-                if(spellProto)
-                {
-                    SpellThreatEntry const *threatSpell = sSpellThreatStore.LookupEntry<SpellThreatEntry>(spellProto->Id);
-                    if(threatSpell && threatSpell->pctMod != 1.0f)
-                        threat *= threatSpell->pctMod;
-                }
+            }
+            else
+            {
+                float threat = damage * spellmgr.GetSpellThreatModPercent(spellProto);
                 //sLog.outString("DealDamage, AddThreat : %f",threat);
                 pVictim->AddThreat(this, threat, damageSchoolMask, spellProto);
             }
@@ -1314,7 +1311,7 @@ void Unit::CalculateSpellDamageTaken(SpellNonMeleeDamage *damageInfo, int32 dama
                 damageInfo->HitInfo|= SPELL_HIT_TYPE_CRIT;
                 damage = SpellCriticalBonus(spellInfo, damage, pVictim);
                 // Resilience - reduce crit damage
-                if (pVictim->GetTypeId()==TYPEID_PLAYER && !(spellmgr.GetSpellCustomAttr(spellInfo->Id) & SPELL_ATTR_CU_NO_RESIST))
+                if (pVictim->GetTypeId()==TYPEID_PLAYER && !(spellInfo->AttributesEx4 & SPELL_ATTR_EX4_IGNORE_RESISTANCES))
                     damage -= (pVictim->ToPlayer())->GetSpellCritDamageReduction(damage);
             }
         }
@@ -1793,26 +1790,30 @@ void Unit::CalcAbsorbResist(Unit *pVictim,SpellSchoolMask schoolMask, DamageEffe
     SpellEntry const* spellProto = spellmgr.LookupSpell(spellId);
 
     // Magic damage, check for resists
-    if(  (!spellId || !(spellmgr.GetSpellCustomAttr(spellId) & SPELL_ATTR_CU_NO_RESIST)) // Has not SPELL_ATTR_CU_NO_RESIST
-      && (schoolMask & SPELL_SCHOOL_MASK_SPELL)                                          // Is magic and not holy
-      && (!spellProto || !Spell::IsBinaryMagicResistanceSpell(spellProto))               // Non binary spell (this was already handled in DoSpellHitOnUnit) (see Spell::IsBinaryMagicResistanceSpell for more)
+    if(  (schoolMask & SPELL_SCHOOL_MASK_SPELL)                                          // Is magic and not holy
+         && (  !spellProto 
+               || !Spell::IsBinaryMagicResistanceSpell(spellProto) 
+               || !(spellProto->AttributesEx4 & SPELL_ATTR_EX4_IGNORE_RESISTANCES) 
+               || !(spellProto->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS) ) // Non binary spell (this was already handled in DoSpellHitOnUnit) (see Spell::IsBinaryMagicResistanceSpell for more)
       )              
     {
         // Get base victim resistance for school
-        uint32 resistance = (float)pVictim->GetResistance(GetFirstSchoolInMask(schoolMask));
-        // Ignore resistance by self SPELL_AURA_MOD_TARGET_RESISTANCE aura
+        int32 resistance = (float)pVictim->GetResistance(GetFirstSchoolInMask(schoolMask));
+        // Ignore resistance by self SPELL_AURA_MOD_TARGET_RESISTANCE aura (aka spell penetration)
         resistance += (float)GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, schoolMask);
+        // Resistance can't be negative
+        
+        if(resistance < 0) 
+            resistance = 0;
 
         float fResistance = (float)resistance * (float)(0.15f / getLevel()); //% from 0.0 to 1.0
-
-        if (fResistance < 0.0f)
-            fResistance = 0.0f;
-
-        //"For non-binary spells only: Each difference in level gives a 2% resistance chance that cannot be negated (by spell penetration or otherwise)."
+     
+        //can't seem to find the proper rule for this... meanwhile let's have use an approximation
         int32 levelDiff = pVictim->getLevel() - getLevel();
         if(levelDiff > 0)
-            fResistance += (float)levelDiff * 0.02f;
+            fResistance += (int32) ((levelDiff<3?levelDiff:3) * (0.006f)); //Cap it a 3 level diff, probably not blizz but this doesn't change anything at HL and is A LOT less boring for people pexing
 
+        // Resistance can't be more than 75%
         if (fResistance > 0.75f)
             fResistance = 0.75f;
 
@@ -2120,7 +2121,7 @@ void Unit::AttackerStateUpdate (Unit *pVictim, WeaponAttackType attType, bool ex
         return;
         
     CombatStart(pVictim);
-    RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ATTACK);
+    RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_MELEE_ATTACK);
     
     if (pVictim->GetTypeId() == TYPEID_UNIT && (pVictim->ToCreature())->IsAIEnabled)
         (pVictim->ToCreature())->AI()->AttackedBy(this);
@@ -2382,10 +2383,7 @@ uint32 Unit::CalculateDamage(WeaponAttackType attType, bool normalized, SpellEnt
     float min_damage, max_damage;
 
     if (normalized && GetTypeId()==TYPEID_PLAYER) {
-        if (spellProto && spellProto->SpellFamilyFlags & 0x400000000LL) // Mutilate (left hand) shouldn't be reduced by offhand malus
-            (this->ToPlayer())->CalculateMinMaxDamage(BASE_ATTACK,normalized,min_damage, max_damage, target);
-        else
-            (this->ToPlayer())->CalculateMinMaxDamage(attType,normalized,min_damage, max_damage, target);
+        (this->ToPlayer())->CalculateMinMaxDamage(attType,normalized,min_damage, max_damage, target);
     }
     else
     {
@@ -2669,19 +2667,15 @@ float Unit::GetAverageSpellResistance(Unit* caster, SpellSchoolMask damageSchool
     if(!caster)
         return 0;
 
-    uint32 resistance = GetResistance(GetFirstSchoolInMask(damageSchoolMask));
-    int penetration = caster->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, damageSchoolMask); // spell penetration
+    int32 resistance = GetResistance(GetFirstSchoolInMask(damageSchoolMask));
+    resistance += caster->GetTotalAuraModifierByMiscMask(SPELL_AURA_MOD_TARGET_RESISTANCE, damageSchoolMask); // spell penetration
 
-    if(penetration >= resistance)
-    	resistance = 0;
-    else
-        resistance -= penetration;
+    if(resistance < 0)
+        resistance = 0;
 
     float resistChance = (0.75f * resistance / (caster->getLevel() * 5));
     if(resistChance > 0.75f)
         resistChance = 0.75f;
-    else if(resistChance < 0.0f)
-        resistChance = 0.0f;
 
     return resistChance;
 }
@@ -2791,10 +2785,6 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
     if (pVictim->GetTypeId()==TYPEID_UNIT && (pVictim->ToCreature())->IsInEvadeMode())
         return SPELL_MISS_EVADE;
 
-    // If Spel has this flag cannot be resisted/immuned/etc
-    if (spell->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY)
-        return SPELL_MISS_NONE;
-
     // Check for immune (use charges)
     if (pVictim->IsImmunedToSpell(spell,true))
         return SPELL_MISS_IMMUNE;
@@ -2806,7 +2796,8 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
         return SPELL_MISS_NONE;
 
     // Check for immune (use charges)
-    if (pVictim->IsImmunedToDamage(GetSpellSchoolMask(spell),true))
+    if (!(spell->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY)
+        && pVictim->IsImmunedToDamage(GetSpellSchoolMask(spell),true))
         return SPELL_MISS_IMMUNE;
 
     if(this == pVictim)
@@ -2843,8 +2834,9 @@ SpellMissInfo Unit::SpellHitResult(Unit *pVictim, SpellEntry const *spell, bool 
     }
 
     //Check magic resistance for binaries spells (see IsBinaryMagicResistanceSpell(...) for more details). This check is not rolled inside attack table.
-    if(  !(spellmgr.GetSpellCustomAttr(spell->Id) & SPELL_ATTR_CU_NO_RESIST)
-        && Spell::IsBinaryMagicResistanceSpell(spell))
+    if(    Spell::IsBinaryMagicResistanceSpell(spell)
+        && !(spell->AttributesEx4 & SPELL_ATTR_EX4_IGNORE_RESISTANCES) 
+        && !(spell->AttributesEx3 & SPELL_ATTR_EX3_CANT_MISS)  )
     {
         float random = (float)rand()/(float)RAND_MAX;
         float resistChance = pVictim->GetAverageSpellResistance(this,(SpellSchoolMask)spell->SchoolMask);
@@ -6799,7 +6791,7 @@ bool Unit::HandleProcTriggerSpell(Unit *pVictim, uint32 damage, Aura* triggeredB
     }
 
     // default case
-    if(!target || target!=this && !target->isAlive())
+    if(!target || target!=this && (!target->isAlive() || !target->isAttackableByAOE()))
         return false;
 
     // apply spell cooldown before casting to prevent triggering spells with SPELL_EFFECT_ADD_EXTRA_ATTACKS if spell has hidden cooldown
@@ -7674,7 +7666,7 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     if(!spellProto || !pVictim || damagetype==DIRECT_DAMAGE )
         return pdamage;
         
-    if (spellmgr.GetSpellCustomAttr(spellProto->Id) & SPELL_ATTR_CU_NO_SPELL_BONUS)
+    if (spellProto->AttributesEx3 & SPELL_ATTR_EX3_NO_DONE_BONUS)
         return pdamage;
 
     //if(spellProto->SchoolMask == SPELL_SCHOOL_MASK_NORMAL)
@@ -7745,8 +7737,11 @@ uint32 Unit::SpellDamageBonus(Unit *pVictim, SpellEntry const *spellProto, uint3
     AuraList const& mModDamagePercentDone = GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_DONE);
     for(AuraList::const_iterator i = mModDamagePercentDone.begin(); i != mModDamagePercentDone.end(); ++i)
     {
-        if((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spellProto)
-            && ! ((*i)->GetSpellProto()->Attributes & SPELL_ATTR_ONLY_AFFECT_WEAPON))
+        //Some auras affect only weapons, like wand spec (6057) or 2H spec (12714)
+        if((*i)->GetSpellProto()->Attributes & SPELL_ATTR_AFFECT_WEAPON && (*i)->GetSpellProto()->EquippedItemClass != -1) 
+            continue;
+
+        if((*i)->GetModifier()->m_miscvalue & GetSpellSchoolMask(spellProto))
             DoneTotalMod *= ((*i)->GetModifierValue() +100.0f)/100.0f;
     }
 
@@ -8327,7 +8322,7 @@ uint32 Unit::SpellHealingBonus(SpellEntry const *spellProto, uint32 healamount, 
         if(Unit* owner = GetOwner())
             return owner->SpellHealingBonus(spellProto, healamount, damagetype, pVictim);
             
-    if (spellProto && spellmgr.GetSpellCustomAttr(spellProto->Id) & SPELL_ATTR_CU_NO_SPELL_BONUS)
+    if (spellProto && spellProto->AttributesEx3 & SPELL_ATTR_EX3_NO_DONE_BONUS)
         return healamount;
 
     // Healing Done
@@ -8636,6 +8631,19 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo, bool useCharges)
             return false;
     }
 
+    //Single spells immunity
+    SpellImmuneList const& idList = m_spellImmune[IMMUNITY_ID];
+    for(SpellImmuneList::const_iterator itr = idList.begin(); itr != idList.end(); ++itr)
+    {
+        if(itr->type == spellInfo->Id)
+        {
+            return true;
+        }
+    }
+
+    if(spellInfo->Attributes & SPELL_ATTR_UNAFFECTED_BY_INVULNERABILITY)
+        return false;
+
     SpellImmuneList const& dispelList = m_spellImmune[IMMUNITY_DISPEL];
     for(SpellImmuneList::const_iterator itr = dispelList.begin(); itr != dispelList.end(); ++itr)
         if(itr->type == spellInfo->Dispel)
@@ -8656,15 +8664,6 @@ bool Unit::IsImmunedToSpell(SpellEntry const* spellInfo, bool useCharges)
     for(SpellImmuneList::const_iterator itr = mechanicList.begin(); itr != mechanicList.end(); ++itr)
     {
         if(itr->type == spellInfo->Mechanic)
-        {
-            return true;
-        }
-    }
-
-    SpellImmuneList const& idList = m_spellImmune[IMMUNITY_ID];
-    for(SpellImmuneList::const_iterator itr = idList.begin(); itr != idList.end(); ++itr)
-    {
-        if(itr->type == spellInfo->Id)
         {
             return true;
         }
@@ -9254,8 +9253,8 @@ void Unit::ModSpellCastTime(SpellEntry const* spellProto, int32 & castTime, Spel
 
      if (spellProto->Attributes & SPELL_ATTR_RANGED && !(spellProto->AttributesEx2 & SPELL_ATTR_EX2_AUTOREPEAT_FLAG))
             castTime = int32 (float(castTime) * m_modAttackSpeedPct[RANGED_ATTACK]);
-     else // TODO: fix it
-        if(spellProto->SpellFamilyName) // some magic spells doesn't have dmgType == SPELL_DAMAGE_CLASS_MAGIC (arcane missiles/evocation)
+     else 
+        if(spellProto->SpellFamilyName || (spellProto->AttributesEx5 & SPELL_ATTR_EX5_HASTE_AFFECT_DURATION) )
             castTime = int32( float(castTime) * GetFloatValue(UNIT_MOD_CAST_SPEED));
 }
 
@@ -12196,7 +12195,7 @@ void Unit::Kill(Unit *pVictim, bool durabilityLoss)
         if(!cVictim->isPet())
         {
             cVictim->DeleteThreatList();
-            if(!cVictim->GetFormation()) //only added when the whole group is dead for formation
+            if(!cVictim->GetFormation() || !cVictim->GetFormation()->isLootLinked(cVictim)) //the flag is set when whole group is dead for those with linked loot 
                 cVictim->SetFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
         }
 

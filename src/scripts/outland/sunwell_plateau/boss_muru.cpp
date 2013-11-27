@@ -36,7 +36,7 @@ enum Spells
 
     // Muru's spells
     SPELL_NEGATIVE_ENERGY       = 46009, //(this trigger 46008)
-    SPELL_DARKNESS              = 45999,
+    SPELL_DARKNESS_P1           = 45999, //pre effect, trigger 45996
     SPELL_OPEN_ALL_PORTALS      = 46177,
     SPELL_OPEN_PORTAL           = 45977,
     SPELL_OPEN_PORTAL_2         = 45976,
@@ -47,7 +47,7 @@ enum Spells
     SPELL_SUMMON_ENTROPIUS      = 46217,
 
     // Entropius's spells
-    SPELL_DARKNESS_E            = 46268,
+    SPELL_DARKNESS_P2           = 46268,
     SPELL_BLACKHOLE             = 46282,
     SPELL_NEGATIVE_ENERGY_E     = 46284,
     SPELL_ENTROPIUS_SPAWN       = 46223,
@@ -70,7 +70,7 @@ enum Spells
 
     //Dark Fiend Spells
     SPELL_DARKFIEND_AOE         = 45944,
-    SPELL_DARKFIEND_VISUAL      = 45936,
+    SPELL_DARKFIEND_DEATH_VISUAL= 45936,
     SPELL_DARKFIEND_SKIN        = 45934,
 
     //Black Hole Spells
@@ -79,7 +79,10 @@ enum Spells
     SPELL_BLACKHOLE_VISUAL2     = 46235,
     SPELL_BLACKHOLE_GROW        = 46228,
     SPELL_BLACK_HOLE_EFFECT     = 46230,
-    SPELL_SINGULARITY           = 46238
+    SPELL_SINGULARITY           = 46238,
+
+    //Darkness (aka Void Zone) Spells (P2)
+    SPELL_VOID_ZONE_PERIODIC    = 46262,
 };
 
 enum BossTimers{
@@ -141,7 +144,7 @@ public:
         void onReset(bool onSpawn)
         {
             phase = 0;
-            phaseTimer = 5000;
+            phaseTimer = 7000; //inactivity before continuing
             DespawnTimer = 15000;
             SpellTimer = 300;
             SingularityTimer = 300;
@@ -154,6 +157,9 @@ public:
             me->SetReactState(REACT_AGGRESSIVE);
 
             guidPlayerCD.clear();
+            if(!pInstance)
+                return;
+
             Map::PlayerList const& players = pInstance->instance->GetPlayers();
             if (!players.isEmpty())
             {
@@ -352,7 +358,7 @@ public:
 
         void onReset(bool onSpawn)
         {
-            BlackHoleSummonTimer = 27000;
+            BlackHoleSummonTimer = 16000;
             EnrageTimer = 600000;
             phaseTimer = 1000;
             phase = 0;
@@ -387,12 +393,14 @@ public:
 
         void onSummon(Creature* summoned)
         {
+            /* Need to get correct visual
             switch(summoned->GetEntry())
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned,SPELL_DARKFIEND_VISUAL,false);
                     break;
             }
+            */
             Summons.Summon(summoned);
         }
 
@@ -452,7 +460,7 @@ public:
                 float rayon = rand() % 25;
                 px = 1816.25f + cos(angle) * rayon;
                 py = 625.484f + sin(angle) * rayon;
-                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_E, false);
+                me->CastSpell(px, py, 71.0f, SPELL_DARKNESS_P2, false);
 
                 Unit* random = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true);
                 if (!random)
@@ -555,12 +563,14 @@ public:
 
         void onSummon(Creature* summoned)
         {
+            /* Need to get correct visual
             switch(summoned->GetEntry())
             {
                 case CREATURE_DARK_FIENDS:
                     summoned->CastSpell(summoned, SPELL_DARKFIEND_VISUAL, false);
                     break;
             }
+            */
             Summons.Summon(summoned);
         }
 	
@@ -681,7 +691,7 @@ public:
                 {
                     if (!DarkFiend)
                     {
-                        doCast((Unit*)NULL, SPELL_DARKNESS, false);
+                        doCast((Unit*)NULL, SPELL_DARKNESS_P1, false);
                         DarknessTimer = 3000;
                         DarkFiend = true;
                     }
@@ -909,6 +919,7 @@ public:
     }
 };
 
+//P2 darkness summoned npc
 class npc_darkness : public CreatureScript
 {
 public:
@@ -920,6 +931,7 @@ public:
         npc_darknessAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+            me->SetFloatValue(UNIT_FIELD_COMBATREACH, 0 ); //fix aoe radius
         }
 
         ScriptedInstance* pInstance;
@@ -931,20 +943,22 @@ public:
         void onReset(bool onSpawn)
         {
             WaitTimer = 3000;
-            DarknessTimer = 3000;
+            //DarknessTimer = 3000;
             bool Spawned = false;
             me->addUnitState(UNIT_STAT_STUNNED);
+            //doCast(me,SPELL_VOID_ZONE_PERIODIC,true); //already done via db
             
-            setZoneInCombat(true);
+            //setZoneInCombat(true);
         }
 
         void update(const uint32 diff)
         {
+            /*
             if (DarknessTimer <= diff)
             {
                 std::list<Unit*> players;
                 players.clear();
-                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 3.5f, true);
+                selectUnitList(players, 25, SELECT_TARGET_RANDOM, 3.0f, true);
                 for (std::list<Unit*>::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* plr = (*itr)->ToPlayer();
@@ -983,7 +997,7 @@ public:
             }
             else
                 DarknessTimer -= diff;
-
+            */
             if (!Spawned)
             {
                 if (WaitTimer <= diff)
@@ -1017,6 +1031,11 @@ public:
 
         uint32 phase;
         uint32 phaseTimer;
+
+        void onDeath(Unit* killer)
+        {
+            doCast(me,SPELL_DARKFIEND_DEATH_VISUAL,true); //Visuel effect on death
+        }
 
         void onReset(bool /*onSpawn*/)
         {
@@ -1108,6 +1127,7 @@ class npc_void_sentinel : public CreatureScript
             me->SetFullTauntImmunity(true);
 
             me->addUnitState(UNIT_STAT_STUNNED);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
         }
 
         void onDeath(Unit* killer)

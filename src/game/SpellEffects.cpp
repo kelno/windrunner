@@ -2955,10 +2955,10 @@ void Spell::EffectApplyAura(uint32 i)
     if( m_spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && (m_spellInfo->SpellFamilyFlags & 0x00002000000000LL))
         m_caster->CastSpell(unitTarget, 41637, true, NULL, Aur, m_originalCasterGUID);
         
-    //remove stealth on hostile targets
+    //remove stealth on hostile targets (need to find the correct rule)
     if (caster->IsHostileTo(unitTarget) 
         && !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
-        && m_spellInfo->Id != 13810 && m_spellInfo->Id != 3600) //not ice trap & earthbind
+        && m_spellInfo->EffectApplyAuraName[i] != SPELL_AURA_MOD_DECREASE_SPEED) //not ice trap & earthbind
         unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 }
 
@@ -4117,8 +4117,10 @@ void Spell::EffectDispel(uint32 i)
     std::vector <Aura *> dispel_list;
     if (unitTarget->IsHostileTo(m_caster))   // TODO: Better fix would be if unitTarget is creature, then add CombatStart
     {
-        if (unitTarget->ToCreature() && !(unitTarget->ToCreature()->isPet()))
+        if (unitTarget->GetTypeId() == TYPEID_UNIT)
             unitTarget->AddThreat(m_caster, 0.0f);
+        
+        m_caster->CombatStart(unitTarget); 
     }
 
     // Create dispel mask by dispel type
@@ -4136,7 +4138,7 @@ void Spell::EffectDispel(uint32 i)
                 if (!aur->IsPositive())
                     positive = false;
                 else
-                    positive = (aur->GetSpellProto()->AttributesEx & SPELL_ATTR_EX_NEGATIVE)==0;
+                    positive = !(aur->GetSpellProto()->AttributesEx & SPELL_ATTR_EX_NEGATIVE);
 
                 // do not remove positive auras if friendly target
                 //               negative auras if non-friendly target
@@ -4158,7 +4160,7 @@ void Spell::EffectDispel(uint32 i)
         for (int32 count=0; count < damage && list_size > 0; ++count)
         {
             // Random select buff for dispel
-          Aura *aur = dispel_list[m_caster->GetMap()->urand(0, list_size-1)];
+            Aura *aur = dispel_list[m_caster->GetMap()->urand(0, list_size-1)];
 
             SpellEntry const* spellInfo = aur->GetSpellProto();
             // Base dispel chance
@@ -5086,6 +5088,7 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
     float totalDamagePercentMod  = 1.0f;                    // applied to final bonus+weapon damage
     int32 fixed_bonus = 0;
     int32 spell_bonus = 0;                                  // bonus specific for spell
+    float meleeDamageModifier = 1.0f;
 
     switch(m_spellInfo->SpellFamilyName)
     {
@@ -5160,6 +5163,11 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
             // Mutilate (for each hand)
             else if(m_spellInfo->SpellFamilyFlags & 0x600000000LL)
             {
+                //*2 damage for fixed bonus on offhand :
+                if(m_attackType == OFF_ATTACK)
+                    meleeDamageModifier *= 2.0f;
+
+                //150% damage if poisoned
                 Unit::AuraMap const& auras = unitTarget->GetAuras();
                 for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
                 {
@@ -5233,7 +5241,7 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
                 break;                                      // not weapon damage effect, just skip
         }
     }
-
+    
     // apply to non-weapon bonus weapon total pct effect, weapon total flat effect included in weapon damage
     if(fixed_bonus || spell_bonus)
     {
@@ -5246,12 +5254,12 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
             case RANGED_ATTACK: unitMod = UNIT_MOD_DAMAGE_RANGED;   break;
         }
 
-        float weapon_total_pct  = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
+        meleeDamageModifier *= m_caster->GetModifierValue(unitMod, TOTAL_PCT);
 
         if(fixed_bonus)
-            fixed_bonus = int32(fixed_bonus * weapon_total_pct);
+            fixed_bonus = int32(fixed_bonus * meleeDamageModifier);
         if(spell_bonus)
-            spell_bonus = int32(spell_bonus * weapon_total_pct);
+            spell_bonus = int32(spell_bonus * meleeDamageModifier);
     }
 
     int32 weaponDamage = m_caster->CalculateDamage(m_attackType, normalized, m_spellInfo, unitTarget);
