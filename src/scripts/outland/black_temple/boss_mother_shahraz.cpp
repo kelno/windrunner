@@ -213,9 +213,9 @@ struct boss_shahrazAI : public ScriptedAI
         // Cast beam and randomize it every 4 beams
         if(BeamTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 15.0f, 80.0f, true); //prevent casting it on tanks
+            Unit* target = SelectUnit(0,15.0f,80.0f,true,true,false,SPELL_ATTRACTION_VIS,0); //prevent casting it on tanks + fatal attraction targets
             if(!target)
-                target = SelectUnit(SELECT_TARGET_RANDOM, 0.0f, 80.0f, true);
+                target = SelectUnit(0,0.0f,80.0f,true,true,false,SPELL_ATTRACTION_VIS,0);
 
             if(!target)
                 return;

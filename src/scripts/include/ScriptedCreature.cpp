@@ -456,7 +456,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 }
 
 // selects random unit not having aura
-Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
+Unit* ScriptedAI::SelectUnit( uint32 position, float distNear, float distFar, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
 {
     std::list<HostilReference*> m_threatlist = m_creature->getThreatManager().getThreatList();
     std::list<HostilReference*>::iterator i;
@@ -470,11 +470,11 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
         if(!target
             || !target->isAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-            || dist && !m_creature->IsWithinCombatRange(target, dist)
+            || distNear && m_creature->IsWithinCombatRange(target, distNear)
+            || distFar && !m_creature->IsWithinCombatRange(target, distFar)
             || auraCheck && target->HasAura(spellId, effIndex)
             || exceptPossesed && target->isPossessed()
             || exceptPossesed && target->isPossessing()
-            
             )
         {
             m_threatlist.erase(i);
