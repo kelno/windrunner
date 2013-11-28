@@ -1132,8 +1132,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
 {
     npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
     {
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        
+        me->SetDisableGravity(true);
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     

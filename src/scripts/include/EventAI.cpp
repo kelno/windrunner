@@ -675,10 +675,13 @@ struct Mob_EventAI : public ScriptedAI
                             //Melee current victim if flag not set
                             if (!(param3 & CAST_NO_MELEE_IF_OOM))
                             {
-                                SetCombatDistance(0.0f);
-                                AttackAngle = 0;
+                                if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
+                                {
+                                    m_combatDistance = 0.0f;
+                                    AttackAngle = 0.0f;
 
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                                    me->GetMotionMaster()->MoveChase(me->getVictim(), m_combatDistance, AttackAngle);
+                                }
                             }
 
                         }else
@@ -792,11 +795,31 @@ struct Mob_EventAI : public ScriptedAI
                 //Allow movement (create new targeted movement gen if none exist already)
                 if (IsCombatMovementAllowed())
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                    Unit* victim = me->getVictim();
+                    if (me->isInCombat() && victim)
+                    {
+                        if (me->IsWithinMeleeRange(victim))
+                        {
+                            me->addUnitState(UNIT_STAT_MELEE_ATTACKING);
+                            me->SendAttackStart(victim);
+                        }
+                        if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+                            me->GetMotionMaster()->MoveChase(victim, GetCombatDistance(), AttackAngle); // Targeted movement generator will start melee automatically, no need to send it explicitly
+                    }
                 }
                 else
                 {
-                    m_creature->GetMotionMaster()->MoveIdle();
+                    if (me->isInCombat())
+                    {
+                        Unit* victim = me->getVictim();
+                        if (victim && me->IsWithinMeleeRange(victim))
+                        {
+                            me->clearUnitState(UNIT_STAT_MELEE_ATTACKING);
+                            me->SendAttackStop(victim);
+                        }
+                        if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == CHASE_MOTION_TYPE)
+                            me->GetMotionMaster()->MoveIdle();
+                    }
                 }
             }
             break;
@@ -862,11 +885,11 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case ACTION_T_RANGED_MOVEMENT:
             {
-                SetCombatDistance((float)param1);
+                m_combatDistance = (float)param1;
                 AttackAngle = ((float)param2/180)*M_PI;
-                if (IsCombatMovementAllowed())
+                if (m_allowCombatMovement)
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                    me->GetMotionMaster()->MoveChase(me->getVictim(), m_combatDistance, AttackAngle);
                 }
             }
             break;

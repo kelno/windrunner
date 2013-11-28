@@ -197,12 +197,11 @@ struct mob_ashtongue_channelerAI : public ScriptedAI
             if(me->GetDistance2d(shade) < 20.0f && me->IsWithinLOSInMap(shade))
             {
                 if(me->isMoving())
-                {
-                    me->GetMotionMaster()->Clear(false);
-                    me->GetMotionMaster()->MoveIdle();
-                }
+                    me->StopMoving();
                 me->CastSpell(shade, SPELL_SHADE_SOUL_CHANNEL, false);
-            } else {
+            }
+            else
+            {
                 if(!me->isMoving())
                     me->GetMotionMaster()->MoveFollow(shade,10.0f,(float)rand()/1000); //random angle to avoid packing
             }
@@ -393,7 +392,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         Creature* Defender = me->SummonCreature(CREATURE_DEFENDER, spawnLocations[ran].x, spawnLocations[ran].y, spawnLocations[ran].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
         if(Defender)
         {
-            Defender->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            Defender->SetWalk(false);
             if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
             {
                 float x, y, z;
@@ -758,7 +757,7 @@ struct npc_akamaAI : public ScriptedAI
             break;
 
         case 1:
-            me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
+            me->SetWalk(true);
             me->GetMotionMaster()->MovePoint(1, AkamaWP[1].x, AkamaWP[1].y, AkamaWP[1].z);
             outroProgress = 0; // This is re set to 2 in MovementInform when point reached
             break;
@@ -917,4 +916,3 @@ void AddSC_boss_shade_of_akama()
     newscript->pGossipSelect = &GossipSelect_npc_akama;
     newscript->RegisterSelf();
 }
-
