@@ -273,6 +273,13 @@ struct boss_shahrazAI : public ScriptedAI
             {
                 if(p[i])
                 {
+                    //remove dead targets
+                    if(!p[i]->isAlive() || p[i]->getTransForm() == FORM_SPIRITOFREDEMPTION)
+                    {
+                        AttractionTargetGUID[i] = 0;
+                        continue;
+                    }
+
                     if(checkFatalAttractionDistance) //Clear fatal attraction target (only after first cast)
                     {
                         Player* other1 = p[(i+1)%3];
