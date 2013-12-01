@@ -595,7 +595,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                 spellid = SPELL_BLESS_PROTECTION;
 
             if(Unit* pUnit = SelectCouncilMember())
-                if(DoCast(pUnit,spellid,true))
+                if(DoCast(pUnit,spellid,true) == SPELL_CAST_OK)
                 {
                     BlessingTimer = TIMER_BLESSING;
                     lastBlessing = !lastBlessing;
@@ -605,7 +605,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(JudgeTimer < diff)
         {
-            if(DoCast(me->getVictim(),SPELL_JUDGEMENT))
+            if(DoCast(me->getVictim(),SPELL_JUDGEMENT) == SPELL_CAST_OK)
             {
                 JudgeTimer = -1;
                 SealTimer = 2200; //just after finishing casting judgement (2s cast)
@@ -614,7 +614,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(ConsecrationTimer < diff)
         {
-            if(DoCast(me, SPELL_CONSECRATION))
+            if(DoCast(me, SPELL_CONSECRATION) == SPELL_CAST_OK)
                 ConsecrationTimer = TIMER_CONSECRATION;
         } else ConsecrationTimer -= diff;
 
@@ -625,7 +625,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
                 // is in ~10-40 yd range
                 if(me->GetDistance2d(target) > 10)
                 {
-                    if(DoCast(target, SPELL_HAMMER_OF_JUSTICE))
+                    if(DoCast(target, SPELL_HAMMER_OF_JUSTICE) == SPELL_CAST_OK)
                         HammerOfJusticeTimer = TIMER_HAMMER_OF_JUSTICE;
                 }
             }
@@ -639,7 +639,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
             else
                 spellid = SPELL_SEAL_OF_BLOOD;
 
-            if(DoCast(me,spellid))
+            if(DoCast(me,spellid) == SPELL_CAST_OK)
             {
                 lastSeal = !lastSeal;
                 SealTimer = -1;
@@ -701,7 +701,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         if(DampenMagicTimer < diff)
         {
                 m_creature->InterruptNonMeleeSpells(false);
-                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true))
+                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true) == SPELL_CAST_OK)
                 {
                     DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
                     ArcaneBoltTimer += 2000;
@@ -712,20 +712,20 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         {
             uint32 spellID = rand()%2 ? SPELL_BLIZZARD : SPELL_FLAMESTRIKE;
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                if(DoCast(target, spellID))
+                if(DoCast(target, spellID) == SPELL_CAST_OK)
                     AoETimer = TIMER_AOE;
         } else AoETimer -= diff;
 
         if(ArcaneExplosionTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 8, true))
-                if(DoCast(target, SPELL_ARCANE_EXPLOSION))
+                if(DoCast(target, SPELL_ARCANE_EXPLOSION) == SPELL_CAST_OK)
                     ArcaneExplosionTimer = 3000;
         }else ArcaneExplosionTimer -= diff;
 
         if(ArcaneBoltTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(), SPELL_ARCANE_BOLT))
+            if(DoCast(m_creature->getVictim(), SPELL_ARCANE_BOLT) == SPELL_CAST_OK)
                 ArcaneBoltTimer = 3000;
         } else ArcaneBoltTimer -= diff;       
     }
@@ -771,14 +771,14 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 
         if(EmpoweredSmiteTimer < diff)
         {
-            if(DoCast(me->getVictim(), SPELL_EMPOWERED_SMITE))
+            if(DoCast(me->getVictim(), SPELL_EMPOWERED_SMITE) == SPELL_CAST_OK)
                 EmpoweredSmiteTimer = TIMER_SMITE;
 
         }else EmpoweredSmiteTimer -= diff;
 
         if(CircleOfHealingTimer < diff)
         {
-            if(DoCast(m_creature, SPELL_CIRCLE_OF_HEALING))
+            if(DoCast(m_creature, SPELL_CIRCLE_OF_HEALING) == SPELL_CAST_OK)
                 CircleOfHealingTimer = TIMER_CIRCLE_OF_HEALING;
 
         }else CircleOfHealingTimer -= diff;
@@ -786,14 +786,14 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
         if(DivineWrathTimer < diff)
         {
             if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                if(DoCast(target, SPELL_DIVINE_WRATH))
+                if(DoCast(target, SPELL_DIVINE_WRATH) == SPELL_CAST_OK)
                     DivineWrathTimer = TIMER_DIVINE_WRATH;
 
         }else DivineWrathTimer -= diff;
 
         if(ReflectiveShieldTimer < diff)
         {
-            if(DoCast(m_creature, SPELL_REFLECTIVE_SHIELD))
+            if(DoCast(m_creature, SPELL_REFLECTIVE_SHIELD) == SPELL_CAST_OK)
                 ReflectiveShieldTimer = TIMER_REFLECTIVE_SHIELD;
 
         }else ReflectiveShieldTimer -= diff;
@@ -931,7 +931,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
             {
                 if(appliedPoisonTarget)
                     if(Player* p = me->GetMap()->GetPlayerInMap(appliedPoisonTarget))
-                        if(DoCast(p,SPELL_ENVENOM,true))
+                        if(DoCast(p,SPELL_ENVENOM,true) == SPELL_CAST_OK)
                             appliedPoisonTarget = 0;
 
             }else EnvenomTimer -= diff;

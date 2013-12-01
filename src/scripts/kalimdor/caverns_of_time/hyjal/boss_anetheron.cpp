@@ -133,7 +133,7 @@ struct boss_anetheronAI : public hyjal_trashAI
         if(SwarmTimer < diff)
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0,100,true);
-            if(target && DoCast(target,SPELL_CARRION_SWARM))
+            if(target && DoCast(target,SPELL_CARRION_SWARM) == SPELL_CAST_OK)
             {
                 SwarmTimer = TIMER_CARRION_SWARM;
                 DoScriptText(SAY_SWARM1 - rand()%2,me);
@@ -154,7 +154,7 @@ struct boss_anetheronAI : public hyjal_trashAI
 
         if(InfernoTimer < diff)
         {
-            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,100,true), SPELL_INFERNO))
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0,100,true), SPELL_INFERNO) == SPELL_CAST_OK)
             {
                 InfernoTimer = TIMER_INFERNO;
                 DoScriptText(SAY_INFERNO1 - rand()%2,me);
