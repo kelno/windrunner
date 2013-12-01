@@ -2649,14 +2649,14 @@ void SpellMgr::LoadSpellCustomAttr()
         case 45662:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
             spellInfo->AttributesEx2 |= SPELL_ATTR_EX2_CANT_CRIT;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_DONE_BONUS;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             break;
         case 46394:
         case 45661:
         case 45665:
             spellInfo->DmgClass = SPELL_DAMAGE_CLASS_MAGIC;
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             break;
         case 45401:
             spellInfo->procChance = 15;
@@ -3079,12 +3079,8 @@ void SpellMgr::LoadSpellCustomAttr()
         case 19516:
             mSpellCustomAttr[i] |= SPELL_ATTR_CU_SAME_STACK_DIFF_CASTERS;
             break;
-        case 29943: // TEMP: For a event from Gashrok! NOT BLIZZLIKE
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_INITIAL_AGGRO;
-            break;
         case 45391: // Vapor Select
-            mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
             spellInfo->MaxAffectedTargets = 1;
             break;
         case 45892:
@@ -3095,9 +3091,9 @@ void SpellMgr::LoadSpellCustomAttr()
         case 47002:
         case 46931:
         case 45402:
-        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_RESIST;
-        	mSpellCustomAttr[i] |= SPELL_ATTR_CU_NO_SPELL_BONUS;
-        	break;
+            spellInfo->AttributesEx3 |= SPELL_ATTR_EX3_NO_DONE_BONUS;
+            spellInfo->AttributesEx4 |= SPELL_ATTR_EX4_IGNORE_RESISTANCES;
+            break;
         case 45284:
         case 45286:
         case 45287:

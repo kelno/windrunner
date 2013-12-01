@@ -145,7 +145,8 @@ struct boss_shahrazAI : public ScriptedAI
         case 3: angle = M_PI/4;    break;
         }
         float X,Y,Z;
-        me->GetGroundPointAroundUnit(X, Y, Z, 40.0f, angle);
+        X = 0; Y = 0; Z = 0;
+        //me->GetGroundPointAroundUnit(X, Y, Z, 40.0f, angle);
         //hack to avoid teleportation inside wall
         if(X > 982.5)
             X = 982.5;
