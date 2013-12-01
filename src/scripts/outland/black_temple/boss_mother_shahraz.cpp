@@ -203,7 +203,11 @@ struct boss_shahrazAI : public ScriptedAI
                 if (Player* plr = Unit::GetPlayer(AttractionTargetGUID[i])) {
                     float z = plr->GetPositionZ();
                     if (z < 189)      // Player seems to be undermap (ugly hack, isn't it ?)
+                    {
                         DoTeleportPlayer(plr, 945.6173, 198.3479, 192.00, 4.674);
+                        AttractionTargetGUID[i] = 0;
+                        plr->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
+                    }
                 }
             }
             
@@ -213,10 +217,7 @@ struct boss_shahrazAI : public ScriptedAI
         // Cast beam and randomize it every 4 beams
         if(BeamTimer < diff)
         {
-            Unit* target = SelectUnit(0,15.0f,80.0f,true,true,false,SPELL_ATTRACTION_VIS,0); //prevent casting it on tanks + fatal attraction targets
-            if(!target)
-                target = SelectUnit(0,0.0f,80.0f,true,true,false,SPELL_ATTRACTION_VIS,0);
-
+            Unit* target = SelectUnit(0,0.0f,80.0f,true,true,false,SPELL_ATTRACTION_VIS,0);
             if(!target)
                 return;
 

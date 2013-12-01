@@ -113,6 +113,11 @@ static CouncilYells CouncilEnrage[]=
 
 #define SPELL_BERSERK              41476
 
+enum Messages
+{
+    VERAS_HAS_VANISHED,
+};
+
 struct mob_blood_elf_council_voice_triggerAI : public ScriptedAI
 {
     mob_blood_elf_council_voice_triggerAI(Creature* c) : ScriptedAI(c)
@@ -261,6 +266,7 @@ struct mob_illidari_councilAI : public ScriptedAI
 
         if(target && target->isAlive())
         {
+            // /!\ Not same order as in mob_blood_elf_council_voice_triggerAI
             Council[0] = pInstance->GetData64(DATA_GATHIOSTHESHATTERER);
             Council[1] = pInstance->GetData64(DATA_HIGHNETHERMANCERZEREVOR);
             Council[2] = pInstance->GetData64(DATA_LADYMALANDE);
@@ -539,12 +545,18 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
     Unit* SelectCouncilMember()
     {
-        Unit* pUnit = me;
-        uint32 member = urand(0, 3);
+        Unit* target = me;
+        Creature* veras = Unit::GetCreature((*me),Council[3]);
+        uint8 member;
+        //do not target Veras while he is stealthed
+        if(veras && veras->AI()->message(VERAS_HAS_VANISHED,0))
+           member = 0; //not sure about this but this could explain why malande seems to be targeted more often
+        else
+           member = urand(0, 3);
 
         if(member != 2)                                     // No need to create another pointer to us using Unit::GetUnit
-            pUnit = Unit::GetUnit((*me), Council[member]);
-        return pUnit;
+            target = Unit::GetUnit((*me), Council[member]);
+        return target;
     }
 
     bool CastAuraOnCouncil()
@@ -759,9 +771,8 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 
         if(EmpoweredSmiteTimer < diff)
         {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                if(DoCast(target, SPELL_EMPOWERED_SMITE))
-                    EmpoweredSmiteTimer = TIMER_SMITE;
+            if(DoCast(me->getVictim(), SPELL_EMPOWERED_SMITE))
+                EmpoweredSmiteTimer = TIMER_SMITE;
 
         }else EmpoweredSmiteTimer -= diff;
 
@@ -809,6 +820,14 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
 
     bool HasVanished;
 
+    uint64 message(uint32 id, uint64 data) 
+    { 
+        if(id == VERAS_HAS_VANISHED)
+            return HasVanished; 
+
+        return 0;
+    }
+
     void Reset()
     {
         appliedPoisonTarget = 0;
@@ -832,6 +851,20 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         m_creature->SetVisibility(VISIBILITY_ON);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         DoScriptText(SAY_VERA_DEATH, m_creature);
+    }
+
+    //try to exclude the mage tank
+    Unit* GetPoisonTarget()
+    {
+        ScriptedAI* zerevorAI;
+        Creature* zerevor = Unit::GetCreature(*m_creature, Council[1]);
+        if(zerevor)
+            zerevorAI = static_cast<ScriptedAI*>(zerevor->AI());
+        if(zerevorAI)
+            return zerevorAI->SelectUnit(SELECT_TARGET_RANDOM, 1); //except mage tank
+
+        //else select it myself
+        return SelectUnit(SELECT_TARGET_RANDOM, 0);
     }
 
     void UpdateAI(const uint32 diff)
@@ -883,7 +916,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
 
             if(changeTargetTimer < diff)
             {
-                 if(Unit* newTarget = SelectUnit(SELECT_TARGET_RANDOM, 0))
+                 if(Unit* newTarget = GetPoisonTarget())
                  {
                      DoResetThreat();
                      me->AddThreat(newTarget, 999000.0f);
