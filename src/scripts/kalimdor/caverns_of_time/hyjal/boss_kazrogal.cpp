@@ -123,13 +123,13 @@ struct boss_kazrogalAI : public hyjal_trashAI
 
         if(CleaveTimer < diff)
         {
-            if(DoCast(m_creature, SPELL_CLEAVE))
+            if(DoCast(m_creature, SPELL_CLEAVE) == SPELL_CAST_OK)
                 CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
         if(WarStompTimer < diff)
         {
-            if(DoCast(m_creature, SPELL_WARSTOMP))
+            if(DoCast(m_creature, SPELL_WARSTOMP) == SPELL_CAST_OK)
                 WarStompTimer = TIMER_WARSTOMP;
         }else WarStompTimer -= diff;
 
@@ -137,7 +137,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
             m_creature->RemoveAurasDueToSpell(SPELL_MARK);
         if(MarkTimer < diff)
         {
-            if(DoCast(me,SPELL_MARK))
+            if(DoCast(me,SPELL_MARK) == SPELL_CAST_OK)
             {
                 MarkTimerBase -= 5000;
                 if(MarkTimerBase < 5500)

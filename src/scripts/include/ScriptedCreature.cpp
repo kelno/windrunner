@@ -190,27 +190,29 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
+    //remove this?
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    //m_creature->StopMoving();
     return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
+    //remove this?
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+uint32 ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
+    //remove this?
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     m_creature->StopMoving();
     return m_creature->CastSpell(who, spellInfo, triggered);

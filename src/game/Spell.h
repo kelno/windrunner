@@ -340,14 +340,15 @@ class Spell
         void EffectRedirectThreat(uint32 i);
         void EffectForceCastWithValue(uint32 i);
 
-        Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL, bool skipCheck = false, bool forceVMAP = false );
+        Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL, bool skipCheck = false );
         ~Spell();
 
-        bool prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
+        //return SpellFailedReason
+        uint32 prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
         void cancel();
         void update(uint32 difftime);
         void cast(bool skipCheck = false);
-        void finish(bool ok = true);
+        void finish(bool ok = true, bool cancelChannel = true);
         void TakePower();
         void TakeReagents();
         void TakeCastItem();
@@ -612,7 +613,6 @@ class Spell
         float m_castPositionZ;
         float m_castOrientation;
         bool m_IsTriggeredSpell;
-        bool m_forceVMAP;
 
         // if need this can be replaced by Aura copy
         // we can't store original aura link to prevent access to deleted auras
@@ -674,7 +674,6 @@ namespace Trinity
                     case SPELL_TARGETS_ALLY:
                         if(!itr->getSource()->isAttackableByAOE() || !i_caster->IsFriendlyTo( itr->getSource() ))
                             continue;
-                        //cannot target self. Really really really not sure about this flag
                         if((spellmgr.GetSpellCustomAttr(i_spell.m_spellInfo->Id) & SPELL_ATTR_CU_AOE_CANT_TARGET_SELF) && i_caster == itr->getSource() )
                             continue;
 
