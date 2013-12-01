@@ -62,29 +62,6 @@ enum Timers
 #define TIMER_FATAL_ATTRACTION 18000 + rand()%7000
 #define TIMER_SILENCING_SHRIEK 20000 + rand()%5000
 
-struct Locations
-{
-    float x,y,z;
-};
-
-static Locations TeleportPoint[]=
-{
-    /*{959.996, 212.576, 193.843},
-    {932.537, 231.813, 193.838},
-    {958.675, 254.767, 193.822},
-    {946.955, 201.316, 192.535},
-    {944.294, 149.676, 197.551},
-    {930.548, 284.888, 193.367},
-    {965.997, 278.398, 195.777}*/
-    {959.996, 212.576, 195.215},
-    {932.537, 231.813, 195.215},
-    {958.675, 254.767, 195.215},
-    {946.955, 201.316, 192.535},
-    {944.294, 149.676, 200.175},
-    {930.548, 284.888, 195.215},
-    {965.997, 278.398, 198.215}
-};
-
 struct boss_shahrazAI : public ScriptedAI
 {
     boss_shahrazAI(Creature *c) : ScriptedAI(c)
@@ -158,10 +135,27 @@ struct boss_shahrazAI : public ScriptedAI
 
     bool TeleportPlayers()
     {
-        uint32 random = rand()%7;
-        float X = TeleportPoint[random].x;
-        float Y = TeleportPoint[random].y;
-        float Z = TeleportPoint[random].z;
+        uint8 random = rand()%4;
+        float angle = 0;
+        switch(random)
+        {
+        case 0: angle = -M_PI/4;   break;
+        case 1: angle = -3*M_PI/4; break;
+        case 2: angle = 3*M_PI/4;  break;
+        case 3: angle = M_PI/4;    break;
+        }
+        float X,Y,Z;
+        me->GetGroundPointAroundUnit(X, Y, Z, 40.0f, angle);
+        //hack to avoid teleportation inside wall
+        if(X > 982.5)
+            X = 982.5;
+        else if (X < 912.2)
+            X = 912.2;
+        if(Z < 191.2)
+            Z = 191.2;
+
+        //check los depuis 947.060974, 210.599945, 213.451401
+
         uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
         SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
