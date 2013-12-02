@@ -13554,3 +13554,11 @@ void Unit::HandleParryRush()
     else
         setAttackTimer(BASE_ATTACK, (int)newAttackTime );
 }
+
+bool Unit::IsFlying() const
+{
+    if (GetTypeId() == TYPEID_UNIT)
+        return HasUnitMovementFlag(MOVEMENTFLAG_CAN_FLY | MOVEMENTFLAG_LEVITATING);
+
+    return HasUnitMovementFlag(MOVEMENTFLAG_FLYING2);
+}

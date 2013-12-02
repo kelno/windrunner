@@ -173,8 +173,12 @@ m_isBeingEscorted(false)
     m_CreatureSpellCooldowns.clear();
     m_CreatureCategoryCooldowns.clear();
     m_GlobalCooldown = 0;
+
     DisableReputationGain = false;
+
     TriggerJustRespawned = false;
+
+    m_useUpdateMouvementFlag = true;
 }
 
 Creature::~Creature()
@@ -2893,7 +2897,7 @@ bool Creature::SetHover(bool enable, bool packetOnly /*= false*/)
 void Creature::UpdateMovementFlags()
 {
     // Do not update movement flags if creature is controlled by a player
-    if (isPossessedByPlayer())
+    if (isPossessedByPlayer() || !m_useUpdateMouvementFlag)
         return;
 
     // Set the movement flags if the creature is in that mode. (Only fly if actually in air, only swim if in water, etc)

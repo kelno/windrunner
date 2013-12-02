@@ -1157,7 +1157,7 @@ class Unit : public WorldObject
         bool isGuard() const  { return HasFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GUARD); }
 
         bool isInFlight()  const { return hasUnitState(UNIT_STAT_IN_FLIGHT); }
-        bool IsFlying() const   { return HasUnitMovementFlag(MOVEMENTFLAG_FLYING2 | MOVEMENTFLAG_LEVITATING); }
+        bool IsFlying() const;
 
         bool isInCombat()  const { return HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT); }
         void CombatStart(Unit* target, bool updatePvP = true);

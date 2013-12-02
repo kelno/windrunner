@@ -153,6 +153,9 @@ public:
         	BreathCount = 0;
         	demonicCount = 0;
 
+                // Disable automatic update mouvement flag (sometimes ground is detect in fly :s)
+                me->setUseUpdateMouvementFlag(false);
+
         	setPhase(PHASE_NULL);
         	if (onSpawn)
         	    setPhase(PHASE_INTRO);

@@ -734,6 +734,8 @@ class Creature : public Unit
         bool IsBeingEscorted() { return m_isBeingEscorted; }
         void SetEscorted(bool status) { m_isBeingEscorted = status; }
 
+        void setUseUpdateMouvementFlag(bool state) { m_useUpdateMouvementFlag = state; }
+
     protected:
         bool CreateFromProto(uint32 guidlow,uint32 Entry,uint32 team, const CreatureData *data = NULL);
         bool InitEntry(uint32 entry, uint32 team=ALLIANCE, const CreatureData* data=NULL);
@@ -814,6 +816,8 @@ class Creature : public Unit
 
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
+
+        bool m_useUpdateMouvementFlag;
 };
 
 class AssistDelayEvent : public BasicEvent
