@@ -2072,6 +2072,9 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
 
         std::list<Unit*> unitList;
 
+        if (m_spellInfo->Id == 45782)
+            radius = 10.0f;
+
         switch(cur)
         {
             case TARGET_UNIT_AREA_ENEMY_SRC:
