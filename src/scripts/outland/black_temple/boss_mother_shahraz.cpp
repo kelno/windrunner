@@ -147,16 +147,6 @@ struct boss_shahrazAI : public ScriptedAI
         float X,Y,Z;
         me->GetFirstCollisionPosition(X, Y, Z, 40.0f, angle);
 
-        //hack to avoid teleportation inside wall
-        if(X > 982.5)
-            X = 982.5;
-        else if (X < 912.2)
-            X = 912.2;
-        if(Z < 191.2)
-            Z = 191.2;
-
-        //check los depuis 947.060974, 210.599945, 213.451401
-
         uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
         SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
