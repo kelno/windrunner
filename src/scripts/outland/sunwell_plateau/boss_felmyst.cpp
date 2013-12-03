@@ -364,6 +364,9 @@ public:
 
             switch (id)
             {
+                case 1:
+                    flightPhase++;
+                    break;
                 case 2:
                     me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
                     disableEvent(EVENT_FOG_CORRUPTION);
@@ -471,10 +474,21 @@ public:
                         break;
                     case 1:
                         me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
-                        flightPhaseTimer = 36000;
+                        flightPhaseTimer = 34000;
                         flightPhase++;
                         break;
                     case 2:
+                        if (!direction)
+                            me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
+                        else
+                            me->GetMotionMaster()->MovePoint(1, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
+
+                        flightPhase++;
+                        break;
+                    case 3:
+                        // Wait mouvement inform
+                        break;
+                    case 4:
                         if (!direction)
                             me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
                         else
@@ -484,7 +498,7 @@ public:
                         flightPhaseTimer = 2500;
                         flightPhase++;
                         break;
-                    case 3:
+                    case 5:
                         doCast(me, SPELL_FOG_BREATH, false);
                         if (!direction)
                             me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
@@ -502,20 +516,18 @@ public:
 
                         flightPhase++;
                         break;
-                    case 4:
-                        flightPhaseTimer = 1;
+                    case 6:
                         flightPhase++;
                         if(BreathCount < 3)
-                            flightPhase = 2;
+                            flightPhase = 4;
                         break;
-                    case 5:
+                    case 7:
                         me->SetSpeed(MOVE_RUN, 1.3f, true);
                         if (!origin)
                             me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
                         else
                             me->GetMotionMaster()->MovePoint(3, 1491.119995, 553.672974, 24.921900);
 
-                        flightPhaseTimer = 1;
                         flightPhase++;
                         break;
                     default:
