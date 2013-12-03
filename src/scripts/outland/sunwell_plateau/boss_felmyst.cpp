@@ -675,6 +675,7 @@ public:
                         {
                             Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
                             Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
+                            Fog->getAI()->message(1, 1);
                         }
 
                         scheduleEvent(EVENT_FOG_CORRUPTION, 500);
@@ -771,6 +772,12 @@ public:
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
         }
 
+        void message(uint32 id, uint32 data)
+        {
+            if (id == 1)
+                disableEvent(EVENT_DEAD);
+        }
+ 
         void attackStart(Unit* /*victim*/) {}
 
         void update(uint32 const diff)
