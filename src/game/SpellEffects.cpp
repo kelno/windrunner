@@ -2417,14 +2417,14 @@ void Spell::EffectForceCast(uint32 i)
             m_caster->getVictim()->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
             break;
         case 45391:
-        	unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
-        	break;
+            unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+            break;
         case 45388:
-        	unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
-        	break;
+            unitTarget->CastSpell(m_caster, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+            break;
         case 45782:
-        	unitTarget->CastSpell((Unit*)NULL, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
-        	break;
+            unitTarget->CastSpell((Unit*)NULL, triggered_spell_id, true, NULL, NULL, m_originalCasterGUID);
+            break;
         default:
             unitTarget->CastSpell(unitTarget,spellInfo,true,NULL,NULL,m_originalCasterGUID);
             break;
@@ -5995,13 +5995,13 @@ void Spell::EffectScriptEffect(uint32 effIndex)
         // Fog of corruption
         case 45714:
         {
-        	unitTarget->CastSpell(m_caster, m_spellInfo->EffectBasePoints[0], true);
+            unitTarget->CastSpell(m_caster, m_spellInfo->EffectBasePoints[0], true);
             return;
         }
         case 45717:
         {
-        	m_caster->CastSpell(unitTarget, 45726, true);
-        	return;
+            m_caster->CastSpell(unitTarget, 45726, true);
+            return;
         }
         // Burn 
         case 45151:
