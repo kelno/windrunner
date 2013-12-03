@@ -823,7 +823,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
     uint64 message(uint32 id, uint64 data) 
     { 
         if(id == VERAS_HAS_VANISHED)
-            return HasVanished; 
+            return HasVanished || VanishTimer > (TIMER_VANISH - 5000); // also give some time when we just got out of vanish
 
         return 0;
     }
