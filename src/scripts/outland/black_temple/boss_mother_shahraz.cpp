@@ -39,7 +39,7 @@ enum Spells
     SPELL_TELEPORT_VISUAL           = 40869,
     SPELL_BERSERK                   = 45078,
     
-    SPELL_PRISMATIC_SHIELD          = 40879, //cast random prismatic aurasS
+    SPELL_PRISMATIC_SHIELD          = 40879, //cast random prismatic auras
  /*   SPELL_PRISMATIC_AURA_SHADOW     = 40880,
     SPELL_PRISMATIC_AURA_FIRE       = 40882,
     SPELL_PRISMATIC_AURA_NATURE     = 40883,
@@ -131,6 +131,16 @@ struct boss_shahrazAI : public ScriptedAI
             pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, DONE);
 
         DoScriptText(SAY_DEATH, m_creature);
+
+        //clear attraction visual
+        for (int i = 0; i < 3; i++) 
+        {
+            if (Player* plr = Unit::GetPlayer(AttractionTargetGUID[i])) 
+            {
+                //AttractionTargetGUID[i] = 0;
+                plr->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
+            }
+        }
     }
 
     bool TeleportPlayers()
@@ -165,6 +175,28 @@ struct boss_shahrazAI : public ScriptedAI
         }
         return false;
     }
+    void UglyUndermapCheck(const uint32& diff)
+    {
+        // Only check the last 3 teleported players
+        if (CheckPlayersUndermapTimer < diff) 
+        {
+            for (int i = 0; i < 3; i++) 
+            {
+                if (Player* plr = Unit::GetPlayer(AttractionTargetGUID[i])) 
+                {
+                    float z = plr->GetPositionZ();
+                    if (z < 189)      // Player seems to be undermap (ugly hack, isn't it ?)
+                    {
+                        DoTeleportPlayer(plr, 945.6173, 198.3479, 192.00, 4.674);
+                        AttractionTargetGUID[i] = 0;
+                        plr->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
+                    }
+                }
+            }
+            
+            CheckPlayersUndermapTimer = -1;
+        }else CheckPlayersUndermapTimer -= diff;
+    }
 
     void UpdateAI(const uint32 diff)
     {
@@ -181,24 +213,9 @@ struct boss_shahrazAI : public ScriptedAI
         }
         else
             TooFarAwayCheckTimer -= diff;
-
-        // Only check the last 3 teleported players
-        if (CheckPlayersUndermapTimer < diff) {
-            for (int i = 0; i < 3; i++) {
-                if (Player* plr = Unit::GetPlayer(AttractionTargetGUID[i])) {
-                    float z = plr->GetPositionZ();
-                    if (z < 189)      // Player seems to be undermap (ugly hack, isn't it ?)
-                    {
-                        DoTeleportPlayer(plr, 945.6173, 198.3479, 192.00, 4.674);
-                        AttractionTargetGUID[i] = 0;
-                        plr->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-                    }
-                }
-            }
-            
-            CheckPlayersUndermapTimer = -1;
-        }else CheckPlayersUndermapTimer -= diff;
-
+        
+        UglyUndermapCheck(diff);
+        
         // Cast beam and randomize it every 4 beams
         if(BeamTimer < diff)
         {
@@ -259,14 +276,14 @@ struct boss_shahrazAI : public ScriptedAI
             {
                 if(p[i])
                 {
-                    //remove dead targets
-                    if(!p[i]->isAlive() || p[i]->getTransForm() == FORM_SPIRITOFREDEMPTION)
+                    //remove invalid targets (gm, dead, etc)
+                    if(!me->canAttack(p[i]),true)
                     {
                         AttractionTargetGUID[i] = 0;
                         continue;
                     }
 
-                    if(checkFatalAttractionDistance) //Clear fatal attraction target (only after first cast)
+                    if(checkFatalAttractionDistance) //Clear fatal attraction target if needed (only after first cast, to give some time to te player to be teleported)
                     {
                         Player* other1 = p[(i+1)%3];
                         Player* other2 = p[(i+2)%3];

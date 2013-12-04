@@ -1,26 +1,3 @@
-/* Copyright (C) 2006 - 2009 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
-/* ScriptData
-SDName: Illidari_Council
-SD%Complete: 95
-SDComment: Circle of Healing not working properly.
-SDCategory: Black Temple
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_black_temple.h"
 #include "Spell.h"
@@ -543,16 +520,18 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
         DoScriptText(SAY_GATH_DEATH, me);
     }
 
-    Unit* SelectCouncilMember()
+    Unit* SelectCouncilMember(bool magicWard)
     {
         Unit* target = me;
-        Creature* veras = Unit::GetCreature((*me),Council[3]);
-        uint8 member;
-        //do not target Veras while he is stealthed
-        if(veras && veras->AI()->message(VERAS_HAS_VANISHED,0))
-           member = 0; //not sure about this but this could explain why malande seems to be targeted more often
-        else
-           member = urand(0, 3);
+        uint8 member = urand(0, 3);
+        if(member == 3) // do not target Veras while he is stealthed
+        {
+            if(Creature* veras = Unit::GetCreature((*me),Council[3]))
+                if(veras->AI()->message(VERAS_HAS_VANISHED,0))
+                    member = 0; //do not rerand, not sure about this but this could explain why malande seems to be targeted more often
+        }
+        if(member == 1 && magicWard) //avoid magic protection on zerevor
+            member = 0;
 
         if(member != 2)                                     // No need to create another pointer to us using Unit::GetUnit
             target = Unit::GetUnit((*me), Council[member]);
@@ -588,13 +567,9 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(BlessingTimer < diff)
         {
-            uint32 spellid;
-            if(lastBlessing == 1)
-                spellid = SPELL_BLESS_SPELLWARD;
-            else
-                spellid = SPELL_BLESS_PROTECTION;
+            uint32 spellid = lastBlessing ? SPELL_BLESS_SPELLWARD : SPELL_BLESS_PROTECTION;
 
-            if(Unit* pUnit = SelectCouncilMember())
+            if(Unit* pUnit = SelectCouncilMember(lastBlessing))
                 if(DoCast(pUnit,spellid,true) == SPELL_CAST_OK)
                 {
                     BlessingTimer = TIMER_BLESSING;
