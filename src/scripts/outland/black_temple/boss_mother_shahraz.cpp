@@ -29,7 +29,7 @@ enum Spells
     SPELL_BEAM_SINFUL               = 40827,
     SPELL_BEAM_SINFUL_TRIGGER       = 40862,
     //SPELL_ATTRACTION_DUMMY          = 40870, //unused
-    SPELL_ATTRACTION                = 40871, //AoE damage + dummy aura on ally (modified to duration 2.0 instead of 1.1)
+    SPELL_ATTRACTION                = 40871, //AoE damage + dummy aura on ally
     SPELL_ATTRACTION_VIS            = 41001, //only visual, periodically trigger 40870
     SPELL_SILENCING_SHRIEK          = 40823,
     SPELL_ENRAGE                    = 23537,
@@ -84,7 +84,6 @@ struct boss_shahrazAI : public ScriptedAI
     uint32 CheckPlayersUndermapTimer;
     uint32 TooFarAwayCheckTimer;
     bool checkFatalAttractionDistance;
-
     bool Enraged;
 
     void Reset()
@@ -134,13 +133,8 @@ struct boss_shahrazAI : public ScriptedAI
 
         //clear attraction visual
         for (int i = 0; i < 3; i++) 
-        {
             if (Player* plr = Unit::GetPlayer(AttractionTargetGUID[i])) 
-            {
-                //AttractionTargetGUID[i] = 0;
                 plr->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
-            }
-        }
     }
 
     bool TeleportPlayers()
@@ -155,9 +149,8 @@ struct boss_shahrazAI : public ScriptedAI
         case 3: angle = M_PI/4;    break;
         }
         float X,Y,Z;
-        me->GetFirstCollisionPosition(X, Y, Z, 40.0f, angle);
+        me->GetFirstCollisionPosition(X, Y, Z, 40.0f, angle, true);
 
-        uint8 teleportedCount = 0;
         std::list<Unit*> targetList;
         SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
         if(targetList.size() == 2 || targetList.size() == 3)
@@ -175,9 +168,10 @@ struct boss_shahrazAI : public ScriptedAI
         }
         return false;
     }
+
     void UglyUndermapCheck(const uint32& diff)
     {
-        // Only check the last 3 teleported players
+        // Only check fatal attraction targets
         if (CheckPlayersUndermapTimer < diff) 
         {
             for (int i = 0; i < 3; i++) 
@@ -224,27 +218,22 @@ struct boss_shahrazAI : public ScriptedAI
                 return;
 
             BeamTimer = 9000;
-
+            uint32 beamId = 0;
             switch(CurrentBeam)
             {
-                case 0:
-                    DoCast(target, SPELL_BEAM_SINISTER);
-                    break;
-                case 1:
-                    DoCast(target, SPELL_BEAM_VILE);
-                    break;
-                case 2:
-                    DoCast(target, SPELL_BEAM_WICKED);
-                    break;
-                case 3:
-                    DoCast(target, SPELL_BEAM_SINFUL);
-                    break;
+                case 0: beamId = SPELL_BEAM_SINISTER; break;
+                case 1: beamId = SPELL_BEAM_VILE; break;
+                case 2: beamId = SPELL_BEAM_WICKED; break;
+                case 3: beamId = SPELL_BEAM_SINFUL; break;
             }
+
+            DoCast(target, beamId);
             BeamCount++;
-            uint32 Beam = CurrentBeam;
-            if(BeamCount > 3)
+            uint32 lastBeam = CurrentBeam;
+            //change beam every 3
+            if(BeamCount >= 3)
             {
-                while(CurrentBeam == Beam) //pick a different one
+                while(CurrentBeam == lastBeam) //pick a different one
                     CurrentBeam = rand()%4;
                 BeamCount = 0;
             }
@@ -259,12 +248,12 @@ struct boss_shahrazAI : public ScriptedAI
                 DoScriptText(RAND(SAY_SPELL2,SAY_SPELL3), m_creature);
                 FatalAttractionExplodeTimer = 2500;
                 checkFatalAttractionDistance = false;
-                CheckPlayersUndermapTimer = 2500;
+                CheckPlayersUndermapTimer = 2000;
             }
             FatalAttractionTimer = TIMER_FATAL_ATTRACTION;
         }else FatalAttractionTimer -= diff;
         
-        //Check distance with 2 others players targeted by fatal attraction. Remove if distance with both > 25, re cast SPELL_ATTRACTION else.
+        //Check distance with 2 others players targeted by fatal attraction. Remove if distance with both > 25, re cast explosion else.
         if(FatalAttractionExplodeTimer < diff)
         {
             bool clear = true;
@@ -277,9 +266,10 @@ struct boss_shahrazAI : public ScriptedAI
                 if(p[i])
                 {
                     //remove invalid targets (gm, dead, etc)
-                    if(!me->canAttack(p[i]),true)
+                    if(!me->canAttack(p[i],true))
                     {
                         AttractionTargetGUID[i] = 0;
+                        p[i]->RemoveAurasDueToSpell(SPELL_ATTRACTION_VIS);
                         continue;
                     }
 
