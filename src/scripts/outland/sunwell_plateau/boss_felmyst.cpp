@@ -474,7 +474,7 @@ public:
                         break;
                     case 1:
                         me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
-                        flightPhaseTimer = 33000;
+                        flightPhaseTimer = 31000;
                         flightPhase++;
                         break;
                     case 2:
