@@ -491,6 +491,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
     uint32 AuraTimer;
     uint32 BlessingTimer;
     uint32 JudgeTimer;
+    uint32 combatTimer;
     bool lastAura;
     bool lastBlessing;
     bool lastSeal;
@@ -506,6 +507,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
         lastAura = rand()%2;
         lastBlessing = rand()%2;
         lastSeal = rand()%2;
+        combatTimer = 0;
 
         me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
@@ -523,18 +525,19 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
     Unit* SelectCouncilMember(bool magicWard)
     {
         Unit* target = me;
-        uint8 member = urand(0, 3);
-        if(member == 3) // do not target Veras while he is stealthed
+        uint8 member = urand(0, 2);
+
+        if(member == 2) // do not target Veras while he is stealthed
         {
+            member = 3; // member 2 is actually gathios which can't be targeted
             if(Creature* veras = Unit::GetCreature((*me),Council[3]))
                 if(veras->AI()->message(VERAS_HAS_VANISHED,0))
                     member = 0; //do not rerand, not sure about this but this could explain why malande seems to be targeted more often
         }
-        if(member == 1 && magicWard) //avoid magic protection on zerevor
+        if(member == 1 && magicWard && combatTimer < 20000) //avoid magic protection on zerevor at combat start
             member = 0;
 
-        if(member != 2)                                     // No need to create another pointer to us using Unit::GetUnit
-            target = Unit::GetUnit((*me), Council[member]);
+        target = Unit::GetUnit((*me), Council[member]);
         return target;
     }
 
@@ -564,6 +567,8 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
     {
         if(!UpdateVictim())
             return;
+
+        combatTimer += diff;
 
         if(BlessingTimer < diff)
         {
