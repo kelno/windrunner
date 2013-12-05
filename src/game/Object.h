@@ -584,6 +584,7 @@ class WorldObject : public Object, public WorldLocation
         }
 
         float GetObjectSize() const;
+
         bool IsPositionValid() const;
         void UpdateGroundPositionZ(float x, float y, float &z) const;
 
@@ -592,8 +593,8 @@ class WorldObject : public Object, public WorldLocation
         void GetRandomNearPosition(Position &pos, float radius);
 
         void UpdateAllowedPositionZ(float x, float y, float &z) const;
-        void MovePositionToFirstCollision(Position &pos, float dist, float angle);
-        void GetFirstCollisionPosition(Position &pos, float dist, float angle);
+        void MovePositionToFirstCollision(Position &pos, float dist, float angle, bool keepZ = false);
+        void GetFirstCollisionPosition(Position &pos, float dist, float angle, bool keepZ = false);
 
         void GetRandomPoint( float x, float y, float z, float distance, float &rand_x, float &rand_y, float &rand_z ) const;
 

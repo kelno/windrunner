@@ -6061,3 +6061,4 @@ bool Spell::IsBinaryMagicResistanceSpell(SpellEntry const* spell)
 
     return !doDamage;
 }
+

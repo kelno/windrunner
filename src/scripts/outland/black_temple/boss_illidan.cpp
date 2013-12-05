@@ -545,7 +545,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
     }
 
     void EnterPhase(PhaseIllidan NextPhase);
-    void CastEyeBlast();
+    bool CastEyeBlast();
     void SummonFlamesOfAzzinoth();
     void SummonMaiev();
     void HandleTalkSequence();
@@ -783,20 +783,20 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_SHEAR:
-                DoCast(m_creature->getVictim(), SPELL_SHEAR);
-                Timer[EVENT_SHEAR] = 25000 + (rand()%16 * 1000);
+                if(DoCast(m_creature->getVictim(), SPELL_SHEAR) == SPELL_CAST_OK)
+                    Timer[EVENT_SHEAR] = 25000 + (rand()%16 * 1000);
                 break;
 
             case EVENT_FLAME_CRASH:
-                DoCast(m_creature->getVictim(), SPELL_FLAME_CRASH);
-                Timer[EVENT_FLAME_CRASH] = 30000 + rand()%10000;
+                if(DoCast(m_creature->getVictim(), SPELL_FLAME_CRASH) == SPELL_CAST_OK)
+                    Timer[EVENT_FLAME_CRASH] = 30000 + rand()%10000;
                 break;
 
             case EVENT_PARASITIC_SHADOWFIEND:
                 {
                     if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
-                        m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true);
-                    Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
+                        if(m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true) == SPELL_CAST_OK)
+                            Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
                 }break;
 
             case EVENT_PARASITE_CHECK:
@@ -810,8 +810,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
                 //PHASE_NORMAL_2
             case EVENT_AGONIZING_FLAMES:
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_AGONIZING_FLAMES);
-                Timer[EVENT_AGONIZING_FLAMES] = 0;
+                if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_AGONIZING_FLAMES) == SPELL_CAST_OK)
+                    Timer[EVENT_AGONIZING_FLAMES] = 0;
                 break;
 
             case EVENT_TRANSFORM_NORMAL:
@@ -820,8 +820,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
                 //PHASE_NORMAL_MAIEV
             case EVENT_ENRAGE:
-                DoCast(m_creature, SPELL_ENRAGE);
-                Timer[EVENT_ENRAGE] = 0;
+                if(DoCast(m_creature, SPELL_ENRAGE) == SPELL_CAST_OK)
+                    Timer[EVENT_ENRAGE] = 0;
                 break;
 
             default:
@@ -840,13 +840,13 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_DARK_BARRAGE:
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE);
-                Timer[EVENT_DARK_BARRAGE] = 0;
+                if(DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE) == SPELL_CAST_OK)
+                    Timer[EVENT_DARK_BARRAGE] = 0;
                 break;
 
             case EVENT_EYE_BLAST:
-                CastEyeBlast();
-                Timer[EVENT_EYE_BLAST] = 30000 + rand()%10000;
+                if(CastEyeBlast())
+                    Timer[EVENT_EYE_BLAST] = 30000 + rand()%10000;
                 break;
 
             case EVENT_MOVE_POINT:
@@ -873,19 +873,21 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 30);
                 else
                     m_creature->GetMotionMaster()->MoveIdle();
-                DoCast(m_creature->getVictim(), SPELL_SHADOW_BLAST);
-                Timer[EVENT_SHADOW_BLAST] = 4000;
+                if(DoCast(m_creature->getVictim(), SPELL_SHADOW_BLAST) == SPELL_CAST_OK)
+                    Timer[EVENT_SHADOW_BLAST] = 4000;
                 break;
             case EVENT_SHADOWDEMON:
                 m_creature->InterruptNonMeleeSpells(true);
-                DoCast(m_creature, SPELL_SUMMON_SHADOWDEMON);
-                Timer[EVENT_SHADOWDEMON] = 0;
-                Timer[EVENT_FLAME_BURST] += 10000;
+                if(DoCast(m_creature, SPELL_SUMMON_SHADOWDEMON) == SPELL_CAST_OK)
+                {
+                    Timer[EVENT_SHADOWDEMON] = 0;
+                    Timer[EVENT_FLAME_BURST] += 10000;
+                }
                 break;
             case EVENT_FLAME_BURST:
                 m_creature->InterruptNonMeleeSpells(true);
-                DoCast(m_creature, SPELL_FLAME_BURST);
-                Timer[EVENT_FLAME_BURST] = 15000;
+                if(DoCast(m_creature, SPELL_FLAME_BURST) == SPELL_CAST_OK)
+                    Timer[EVENT_FLAME_BURST] = 15000;
                 break;
             case EVENT_TRANSFORM_DEMON:
                 EnterPhase(PHASE_TRANSFORM_SEQUENCE);
@@ -924,7 +926,7 @@ struct flame_of_azzinothAI : public ScriptedAI
             m_creature->AddThreat(target, 5000000.0f);
             AttackStart(target);
             DoCast(target, SPELL_CHARGE);
-            DoTextEmote("sets its gaze on $N!", target);
+            DoTextEmote("pose son regard sur %n !", target); //"sets its gaze on $N!"
         }
     }
 
@@ -1006,6 +1008,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         JustCreated = true;
         baseFaction = me->getFaction();
+        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
     }
 
     bool JustCreated;
@@ -1030,7 +1033,6 @@ struct npc_akama_illidanAI : public ScriptedAI
 
     void Reset()
     {
-        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
         WalkCount = 0;
         if(pInstance)
         {
@@ -1195,7 +1197,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(NextPhase)
         {
         case PHASE_CHANNEL:
-            me->setFaction(baseFaction);
+            me->setFaction(baseFaction); //restore our faction
             BeginChannel();
             Timer = 5000;
             ChannelCount = 0;
@@ -2054,7 +2056,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
 }
 
 
-void boss_illidan_stormrageAI::CastEyeBlast()
+bool boss_illidan_stormrageAI::CastEyeBlast()
 {
     m_creature->InterruptNonMeleeSpells(false);
 
@@ -2081,7 +2083,7 @@ void boss_illidan_stormrageAI::CastEyeBlast()
     final.y = 2 * final.y - initial.y;
 
     Creature* Trigger = m_creature->SummonCreature(23069, initial.x, initial.y, initial.z, 0, TEMPSUMMON_TIMED_DESPAWN, 13000);
-    if(!Trigger) return;
+    if(!Trigger) return false;
 
     Trigger->SetSpeed(MOVE_WALK, 3);
     Trigger->SetWalk(true);
@@ -2089,7 +2091,10 @@ void boss_illidan_stormrageAI::CastEyeBlast()
 
     //Trigger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, Trigger->GetGUID());
-    DoCast(Trigger, SPELL_EYE_BLAST, true);
+    if(DoCast(Trigger, SPELL_EYE_BLAST, true) == SPELL_CAST_OK)
+        return true;
+
+    return false;
 }
 
 void boss_illidan_stormrageAI::SummonFlamesOfAzzinoth()

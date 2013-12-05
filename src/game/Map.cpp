@@ -2894,6 +2894,3 @@ void BattleGroundMap::UnloadAll()
 
     Map::UnloadAll();
 }
-
-/*--------------------------TRINITY-------------------------*/
-

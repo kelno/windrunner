@@ -321,6 +321,7 @@ class Map : public GridRefManager<NGridType>, public Trinity::ObjectLevelLockabl
         float GetWaterOrGroundLevel(float x, float y, float z, float* ground = NULL, bool swim = false) const;
 
         bool isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2) const;
+
         void Balance() { _dynamicTree.balance(); }
         void Remove(const GameObjectModel& mdl) { _dynamicTree.remove(mdl); }
         void Insert(const GameObjectModel& mdl) { _dynamicTree.insert(mdl); }

@@ -6516,10 +6516,20 @@ void Spell::EffectSummonTotem(uint32 i)
     if (m_caster->GetTypeId()==TYPEID_PLAYER)
         team = (m_caster->ToPlayer())->GetTeam();
 
+    Position pos;
+    float angle = slot < MAX_TOTEM ? M_PI/MAX_TOTEM - (slot*2*M_PI/MAX_TOTEM) : 0;
+    m_caster->GetFirstCollisionPosition(pos, 4.5f, angle);
+    pos.SetOrientation(m_caster->GetOrientation());
+
     Totem* pTotem = new Totem;
 
-    float angle = slot < MAX_TOTEM ? M_PI/MAX_TOTEM - (slot*2*M_PI/MAX_TOTEM) : 0;
+    if(!pTotem->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), m_caster->GetMap(), m_spellInfo->EffectMiscValue[i], team, pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation))
+    {
+        delete pTotem;
+        return;
+    }
 
+    /*
     float cx,cy,cz;
     float dx,dy,dz;
     float angle2 = unitTarget->GetOrientation();
@@ -6595,11 +6605,8 @@ void Spell::EffectSummonTotem(uint32 i)
     if( fabs( dz - m_caster->GetPositionZ() ) > 5 )
         dz = m_caster->GetPositionZ();
 
-    if(!pTotem->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), m_caster->GetMap(), m_spellInfo->EffectMiscValue[i], team, dx, dy, dz, m_caster->GetOrientation() ))
-    {
-        delete pTotem;
-        return;
-    }
+    pTotem->Relocate(dx, dy, dz, m_caster->GetOrientation());
+    */
 
     if(slot < MAX_TOTEM)
         m_caster->m_TotemSlot[slot] = pTotem->GetGUID();

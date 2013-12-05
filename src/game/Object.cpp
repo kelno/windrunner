@@ -1134,7 +1134,7 @@ bool WorldObject::GetDistanceOrder(WorldObject const* obj1, WorldObject const* o
     return distsq1 < distsq2;
 }
 
-void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float angle)
+void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float angle, bool keepZ)
 {
     angle += GetOrientation();
     float destx, desty, destz, ground, floor;
@@ -1149,9 +1149,13 @@ void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float 
         return;
     }
 
-    ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
-    floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
-    destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+    if (keepZ)
+        destz = pos.m_positionZ;
+    {
+        ground = GetMap()->GetHeight(destx, desty, MAX_HEIGHT, true);
+        floor = GetMap()->GetHeight(destx, desty, pos.m_positionZ, true);
+        destz = fabs(ground - pos.m_positionZ) <= fabs(floor - pos.m_positionZ) ? ground : floor;
+    }
 
     bool col = VMAP::VMapFactory::createOrGetVMapManager()->getObjectHitPos(GetMapId(), pos.m_positionX, pos.m_positionY, pos.m_positionZ+0.5f, destx, desty, destz+0.5f, destx, desty, destz, -0.5f);
 
@@ -1202,10 +1206,10 @@ void WorldObject::MovePositionToFirstCollision(Position &pos, float dist, float 
     pos.SetOrientation(GetOrientation());
 }
 
-void WorldObject::GetFirstCollisionPosition(Position &pos, float dist, float angle)
+void WorldObject::GetFirstCollisionPosition(Position &pos, float dist, float angle, bool keepZ)
 {
     GetPosition(&pos);
-    MovePositionToFirstCollision(pos, dist, angle);
+    MovePositionToFirstCollision(pos, dist, angle, keepZ);
 }
 
 void WorldObject::UpdateAllowedPositionZ(float x, float y, float &z) const
@@ -2111,3 +2115,4 @@ void WorldObject::GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList
 
     cell.Visit(pair, visitor, *(this->GetMap()));
 }
+
