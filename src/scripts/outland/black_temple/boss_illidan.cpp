@@ -2078,27 +2078,9 @@ bool boss_illidan_stormrageAI::CastEyeBlast()
 {
     m_creature->InterruptNonMeleeSpells(false);
 
-    // spawn at get closer eyeBlast point
-    float distx, disty, dist[2];
-    for(uint8 i = 0; i < 2; ++i)
-    {
-        distx = EyeBlast[i].x - HoverPosition[HoverPoint].x;
-        disty = EyeBlast[i].y - HoverPosition[HoverPoint].y;
-        dist[i] = distx * distx + disty * disty;
-    }
-    Locations initial = EyeBlast[dist[0] < dist[1] ? 0 : 1];
-
-    // move to closer glaive position
-    for(uint8 i = 0; i < 2; ++i)
-    {
-        distx = GlaivePosition[i].x - HoverPosition[HoverPoint].x;
-        disty = GlaivePosition[i].y - HoverPosition[HoverPoint].y;
-        dist[i] = distx * distx + disty * disty;
-    }
-    Locations final = GlaivePosition[dist[0] < dist[1] ? 0 : 1];
-
-    final.x = 2 * final.x - initial.x;
-    final.y = 2 * final.y - initial.y;
+    // get random spawn point and random destination
+    Locations initial = EyeBlast[rand()%2];
+    Locations final = GlaivePosition[rand()%2];
 
     Creature* Trigger = m_creature->SummonCreature(DEMON_FIRE, initial.x, initial.y, initial.z, 0, TEMPSUMMON_TIMED_DESPAWN, 13000);
     if(!Trigger) return false;
