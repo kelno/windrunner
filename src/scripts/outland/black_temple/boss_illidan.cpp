@@ -69,8 +69,8 @@ EndScriptData */
 enum Spells
 {
     // Normal Form
-    SPELL_SHEAR                   = 41032,, // Reduces Max. Health by = 60,% for = 7, seconds. Can stack = 19, times. = 1,.5 second cast
-    SPELL_FLAME_CRASH             = 40832,, // Summons an invis/unselect passive mob that has an aura of flame in a circle around him.
+    SPELL_SHEAR                   = 41032, // Reduces Max. Health by = 60,% for = 7, seconds. Can stack = 19, times. = 1,.5 second cast
+    SPELL_FLAME_CRASH             = 40832, // Summons an invis/unselect passive mob that has an aura of flame in a circle around him.
     SPELL_DRAW_SOUL               = 40904, // = 5,k Shadow Damage in front of him. Heals Illidan for = 100,k health (script effect)
     SPELL_PARASITIC_SHADOWFIEND   = 41917, // DoT of = 3,k Shadow every = 2, seconds. Lasts = 10, seconds. (Script effect: Summon = 2, parasites once the debuff has ticked off)
     SPELL_PARASITIC_SHADOWFIEND2  = 41914, // Used by Parasitic
@@ -1803,7 +1803,7 @@ struct shadow_demonAI : public ScriptedAI
         {
             me->AddThreat(target, 5000000.0f);
             me->AI()->AttackStart(target);
-        }break;
+        }
     }
 
     void UpdateAI(const uint32 diff)
