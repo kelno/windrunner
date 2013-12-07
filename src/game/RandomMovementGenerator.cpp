@@ -33,7 +33,10 @@ template<>
 void
 RandomMovementGenerator<Creature>::_setRandomLocation(Creature* creature)
 {
-	float respX, respY, respZ, respO, destX, destY, destZ, travelDistZ;
+    if (creature->hasUnitState(UNIT_STAT_NOT_MOVE))
+        return;
+
+    float respX, respY, respZ, respO, destX, destY, destZ, travelDistZ;
     creature->GetHomePosition(respX, respY, respZ, respO);
     Map const* map = creature->GetBaseMap();
 
@@ -121,7 +124,7 @@ RandomMovementGenerator<Creature>::Initialize(Creature* creature)
     if (!wander_distance)
         wander_distance = creature->GetRespawnRadius();
 
-    creature->addUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    creature->addUnitState(UNIT_STAT_ROAMING);
     _setRandomLocation(creature);
 }
 
@@ -136,15 +139,15 @@ template<>
 void
 RandomMovementGenerator<Creature>::Finalize(Creature* creature)
 {
-	creature->clearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
-	creature->SetWalk(false);
+    creature->clearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    creature->SetWalk(false);
 }
 
 template<>
 bool
 RandomMovementGenerator<Creature>::Update(Creature* creature, const uint32 &diff)
 {
-    if(creature->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED))
+    if (creature->hasUnitState(UNIT_STAT_NOT_MOVE))
     {
     	i_nextMoveTime.Reset(0);  // Expire the timer
         creature->clearUnitState(UNIT_STAT_ROAMING_MOVE);

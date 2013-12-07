@@ -34,7 +34,7 @@
 template<class T, typename D>
 void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool updateDestination)
 {
-	if (!i_target.isValid() || !i_target->IsInWorld())
+    if (!i_target.isValid() || !i_target->IsInWorld())
         return;
 
     if( owner->hasUnitState(UNIT_STAT_NOT_MOVE) )
@@ -49,8 +49,8 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
     {
         if (!i_offset)
         {
-        	// to nearest contact position
-        	i_target->GetRandomContactPoint(owner, x, y, z, 0, CONTACT_DISTANCE);
+            // to nearest contact position
+            i_target->GetRandomContactPoint(owner, x, y, z, 0, CONTACT_DISTANCE);
         }
         else
         {
@@ -111,7 +111,6 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
     D::_addUnitStateMove(owner);
     i_targetReached = false;
     i_recalculateTravel = false;
-    owner->addUnitState(UNIT_STAT_CHASE);
 
     Movement::MoveSplineInit init(owner);
     init.MovebyPath(i_path->getFullPath());
@@ -127,65 +126,65 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
 template<class T, typename D>
 bool TargetedMovementGeneratorMedium<T, D>::Update(T* owner, const uint32 & time_diff)
 {
-	if (!i_target.isValid() || !i_target->IsInWorld())
-	    return false;
+    if (!i_target.isValid() || !i_target->IsInWorld())
+        return false;
 
-	if (!owner || !owner->isAlive())
-	    return false;
+    if (!owner || !owner->isAlive())
+        return false;
 
-	if (owner->hasUnitState(UNIT_STAT_NOT_MOVE))
+    if (owner->hasUnitState(UNIT_STAT_NOT_MOVE))
     {
-	    D::_clearUnitStateMove(owner);
-	    return true;
+        D::_clearUnitStateMove(owner);
+        return true;
     }
 
-	// prevent movement while casting spells with cast time or channel time
-	if (owner->IsNonMeleeSpellCasted(false, false, true))
+    // prevent movement while casting spells with cast time or channel time
+    if (owner->IsNonMeleeSpellCasted(false, false, true))
     {
-	    if (!owner->IsStopped())
-	        owner->StopMoving();
-	    return true;
-	}
+        if (!owner->IsStopped())
+            owner->StopMoving();
+        return true;
+    }
 
-	// prevent crash after creature killed pet
-	if (static_cast<D*>(this)->_lostTarget(owner))
+    // prevent crash after creature killed pet
+    if (static_cast<D*>(this)->_lostTarget(owner))
     {
-	    D::_clearUnitStateMove(owner);
-	    return true;
-	}
+        D::_clearUnitStateMove(owner);
+        return true;
+    }
 
-	bool targetMoved = false;
+    bool targetMoved = false;
     i_recheckDistance.Update(time_diff);
-	if (i_recheckDistance.Passed())
+    if (i_recheckDistance.Passed())
     {
-	    i_recheckDistance.Reset(100);
-	    //More distance let have better performance, less distance let have more sensitive reaction at target move.
-	    float allowed_dist = owner->GetCombatReach() + sWorld.getRate(RATE_TARGET_POS_RECALCULATION_RANGE);
-	    G3D::Vector3 dest = owner->movespline->FinalDestination();
+        i_recheckDistance.Reset(100);
+        //More distance let have better performance, less distance let have more sensitive reaction at target move.
+        float allowed_dist = owner->GetCombatReach() + sWorld.getRate(RATE_TARGET_POS_RECALCULATION_RANGE);
+        G3D::Vector3 dest = owner->movespline->FinalDestination();
 
-	    if (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->canFly())
-	    	targetMoved = (i_target->GetDistanceSqr(dest.x, dest.y, dest.z) >= allowed_dist * allowed_dist);
-	    else
-	    	targetMoved = (i_target->GetDistance2d(dest.x, dest.y) >= allowed_dist);
-	}
+        if (owner->GetTypeId() == TYPEID_UNIT && owner->ToCreature()->canFly())
+            targetMoved = (i_target->GetDistanceSqr(dest.x, dest.y, dest.z) >= allowed_dist * allowed_dist);
+        else
+            targetMoved = (i_target->GetDistance2d(dest.x, dest.y) >= allowed_dist);
+    }
 
     if (i_recalculateTravel || targetMoved)
         _setTargetLocation(owner, targetMoved);
 
-	if (owner->movespline->Finalized())
-	{
-	    static_cast<D*>(this)->MovementInform(owner);
-	    if (i_angle == 0.f && !owner->HasInArc(0.01f, i_target.getTarget()))
-	        owner->SetInFront(i_target.getTarget());
+    if (owner->movespline->Finalized())
+    {
+        static_cast<D*>(this)->MovementInform(owner);
+        if (i_angle == 0.f && !owner->HasInArc(0.01f, i_target.getTarget()))
+            owner->SetInFront(i_target.getTarget());
 
-	    if (!i_targetReached)
-	    {
-	        i_targetReached = true;
-	        static_cast<D*>(this)->_reachTarget(owner);
-	    }
-	}
+        if (!i_targetReached)
+        {
+            i_targetReached = true;
+            static_cast<D*>(this)->_reachTarget(owner);
+        }
+    }
 
-	return true;
+    return true;
 }
 
 //-----------------------------------------------//
@@ -199,7 +198,7 @@ void ChaseMovementGenerator<T>::_reachTarget(T* owner)
 template<>
 void ChaseMovementGenerator<Player>::Initialize(Player* owner)
 {
-    owner->addUnitState(UNIT_STAT_CHASE | UNIT_STAT_CHASE_MOVE);
+    owner->addUnitState(UNIT_STAT_CHASE);
     _setTargetLocation(owner, true);
 }
 
@@ -207,7 +206,7 @@ template<>
 void ChaseMovementGenerator<Creature>::Initialize(Creature* owner)
 {
     owner->SetWalk(false);
-    owner->addUnitState(UNIT_STAT_CHASE | UNIT_STAT_CHASE_MOVE);
+    owner->addUnitState(UNIT_STAT_CHASE);
 
     _setTargetLocation(owner, true);
 }
@@ -221,7 +220,7 @@ void ChaseMovementGenerator<T>::Finalize(T* owner)
 template<class T>
 void ChaseMovementGenerator<T>::Reset(T* owner)
 {
-	Initialize(owner);
+    Initialize(owner);
 }
 
 template<class T>
@@ -274,7 +273,7 @@ void FollowMovementGenerator<Creature>::_updateSpeed(Creature* owner)
 template<>
 void FollowMovementGenerator<Player>::Initialize(Player* owner)
 {
-    owner->addUnitState(UNIT_STAT_FOLLOW | UNIT_STAT_FOLLOW_MOVE);
+    owner->addUnitState(UNIT_STAT_FOLLOW);
     _updateSpeed(owner);
     _setTargetLocation(owner, true);
 }
@@ -282,7 +281,7 @@ void FollowMovementGenerator<Player>::Initialize(Player* owner)
 template<>
 void FollowMovementGenerator<Creature>::Initialize(Creature* owner)
 {
-    owner->addUnitState(UNIT_STAT_FOLLOW | UNIT_STAT_FOLLOW_MOVE);
+    owner->addUnitState(UNIT_STAT_FOLLOW);
     _updateSpeed(owner);
     _setTargetLocation(owner, true);
 }

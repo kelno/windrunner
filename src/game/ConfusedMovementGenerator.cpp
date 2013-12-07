@@ -44,7 +44,6 @@ ConfusedMovementGenerator<T>::Initialize(T* unit)
         return;
 
     unit->StopMoving();
-    unit->addUnitState(UNIT_STAT_CONFUSED_MOVE);
 }
 
 template<class T>
@@ -57,7 +56,7 @@ ConfusedMovementGenerator<T>::Reset(T* unit)
         return;
 
     unit->StopMoving();
-    unit->addUnitState(UNIT_STAT_CONFUSED | UNIT_STAT_CONFUSED_MOVE);
+    unit->addUnitState(UNIT_STAT_CONFUSED);
 }
 
 template<class T>
@@ -67,7 +66,7 @@ ConfusedMovementGenerator<T>::Update(T* unit, const uint32 &diff)
     if(!unit)
         return true;
 
-    if(unit->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED))
+    if(unit->hasUnitState(UNIT_STAT_NOT_MOVE))
         return true;
 
     if( i_nextMoveTime.Passed() )
@@ -84,11 +83,11 @@ ConfusedMovementGenerator<T>::Update(T* unit, const uint32 &diff)
         i_nextMoveTime.Update(diff);
         if( i_nextMoveTime.Passed() )
         {
-        	// start moving
-        	unit->addUnitState(UNIT_STAT_CONFUSED_MOVE);
-        	float dest = 4.0f * (float)rand_norm() - 2.0f;
+            // start moving
+            unit->addUnitState(UNIT_STAT_CONFUSED_MOVE);
+            float dest = 4.0f * (float)rand_norm() - 2.0f;
 
-        	Position pos;
+            Position pos;
             pos.Relocate(i_x, i_y, i_z);
             unit->MovePositionToFirstCollision(pos, dest, 0.0f);
 

@@ -28,27 +28,27 @@ IdleMovementGenerator si_idleMovement;
 // But it should not be sent otherwise there are many redundent packets
 void IdleMovementGenerator::Initialize(Unit* owner)
 {
-	Reset(owner);
+    Reset(owner);
 }
 
 void
 IdleMovementGenerator::Reset(Unit* owner)
 {
-	if (!owner->IsStopped())
-	    owner->StopMoving();
+    if (!owner->IsStopped())
+        owner->StopMoving();
 }
 
 void RotateMovementGenerator::Initialize(Unit* owner)
 {
-	if (!owner->IsStopped())
-		owner->StopMoving();
+    if (!owner->IsStopped())
+        owner->StopMoving();
 
-	if (owner->getVictim())
-	    owner->SetInFront(owner->getVictim());
+    if (owner->getVictim())
+        owner->SetInFront(owner->getVictim());
 
-	owner->addUnitState(UNIT_STAT_ROTATING);
+    owner->addUnitState(UNIT_STAT_ROTATING);
 
-	owner->AttackStop();
+    owner->AttackStop();
 }
 
 bool RotateMovementGenerator::Update(Unit* owner, const uint32& diff)
@@ -83,9 +83,9 @@ void RotateMovementGenerator::Finalize(Unit* unit)
     {
     	if (unit->GetSummoner())
         {
-    		if (unit->GetSummoner()->ToCreature())
-    		    if (unit->GetSummoner()->ToCreature()->getAI())
-    		        unit->GetSummoner()->ToCreature()->getAI()->summonedMovementInform(unit->ToCreature(), ROTATE_MOTION_TYPE, 0);
+    	    if (unit->GetSummoner()->ToCreature())
+    	        if (unit->GetSummoner()->ToCreature()->getAI())
+    	            unit->GetSummoner()->ToCreature()->getAI()->summonedMovementInform(unit->ToCreature(), ROTATE_MOTION_TYPE, 0);
     	}
 
         if (unit->ToCreature()->getAI())

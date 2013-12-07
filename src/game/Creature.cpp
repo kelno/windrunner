@@ -1641,6 +1641,7 @@ bool Creature::LoadFromDB(uint32 guid, Map *map)
     if(m_respawnTime)                          // respawn on Update
     {
         m_deathState = DEAD;
+        addUnitState(UNIT_STAT_DIED);
         if(canFly())
         {
             float tz = GetMap()->GetHeight(data->posX,data->posY,data->posZ,false);
@@ -1854,6 +1855,7 @@ void Creature::setDeathState(DeathState s)
 
     if(s == JUST_DIED)
     {
+        addUnitState(UNIT_STAT_DIED);
         SetTarget(0);                // remove target selection in any cases (can be set at aura remove in Unit::setDeathState)
         SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_NONE);
 

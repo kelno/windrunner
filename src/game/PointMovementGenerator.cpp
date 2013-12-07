@@ -36,7 +36,7 @@ void PointMovementGenerator<T>::Initialize(T* unit)
     if (!unit->IsStopped())
         unit->StopMoving();
 
-    unit->addUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    unit->addUnitState(UNIT_STAT_ROAMING);
 
     if (id == 1005)
         return;
@@ -59,7 +59,7 @@ bool PointMovementGenerator<T>::Update(T* unit, const uint32 &diff)
     if(!unit)
         return false;
 
-    if(unit->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED))
+    if(unit->hasUnitState(UNIT_STAT_NOT_MOVE))
     {
     	unit->clearUnitState(UNIT_STAT_ROAMING_MOVE);
         return true;
@@ -88,11 +88,11 @@ bool PointMovementGenerator<T>::Update(T* unit, const uint32 &diff)
 template<class T>
 void PointMovementGenerator<T>:: Finalize(T* unit)
 {
-	if (unit->hasUnitState(UNIT_STAT_CHARGING))
-	    unit->clearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    if (unit->hasUnitState(UNIT_STAT_CHARGING))
+        unit->clearUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
 
-	if (unit->movespline->Finalized())
-	    MovementInform(unit);
+    if (unit->movespline->Finalized())
+        MovementInform(unit);
 }
 
 template<class T>
@@ -101,7 +101,7 @@ void PointMovementGenerator<T>::Reset(T* unit)
     if (!unit->IsStopped())
         unit->StopMoving();
 
-    unit->addUnitState(UNIT_STAT_ROAMING | UNIT_STAT_ROAMING_MOVE);
+    unit->addUnitState(UNIT_STAT_ROAMING);
 }
 
 template<class T>
@@ -111,12 +111,12 @@ void PointMovementGenerator<T>::MovementInform(T* /*unit*/)
 
 template <> void PointMovementGenerator<Creature>::MovementInform(Creature* unit)
 {
-	if (unit->GetSummoner())
-	{
-		if (unit->GetSummoner()->ToCreature())
-	        if (unit->GetSummoner()->ToCreature()->getAI())
-	        	unit->GetSummoner()->ToCreature()->getAI()->summonedMovementInform(unit, POINT_MOTION_TYPE, id);
-	}
+    if (unit->GetSummoner())
+    {
+        if (unit->GetSummoner()->ToCreature())
+            if (unit->GetSummoner()->ToCreature()->getAI())
+                unit->GetSummoner()->ToCreature()->getAI()->summonedMovementInform(unit, POINT_MOTION_TYPE, id);
+    }
 
     if (unit->getAI())
         unit->getAI()->onMovementInform(POINT_MOTION_TYPE, id);

@@ -119,7 +119,7 @@ FleeingMovementGenerator<T>::Initialize(T* owner)
         return;
 
     owner->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_FLEEING);
-    owner->addUnitState(UNIT_STAT_FLEEING | UNIT_STAT_FLEEING_MOVE);
+    owner->addUnitState(UNIT_STAT_FLEEING);
     _setTargetLocation(owner);
 }
 

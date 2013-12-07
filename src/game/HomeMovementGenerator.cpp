@@ -34,11 +34,11 @@ HomeMovementGenerator<Creature>::Initialize(Creature* owner)
 void
 HomeMovementGenerator<Creature>::Finalize(Creature* owner)
 {
-	if (arrived)
-	{
-		owner->clearUnitState(UNIT_STAT_EVADE);
-		owner->SetWalk(true);
-		owner->LoadCreaturesAddon(true);
+    if (arrived)
+    {
+        owner->clearUnitState(UNIT_STAT_EVADE);
+        owner->SetWalk(true);
+        owner->LoadCreaturesAddon(true);
         if (owner->IsAIEnabled)
         {
             owner->AI()->JustReachedHome();
@@ -59,7 +59,7 @@ HomeMovementGenerator<Creature>::_setTargetLocation(Creature* owner)
     if( !owner )
         return;
 
-    if( owner->hasUnitState(UNIT_STAT_ROOT | UNIT_STAT_STUNNED | UNIT_STAT_DISTRACTED) )
+    if( owner->hasUnitState(UNIT_STAT_NOT_MOVE) )
         return;
 
     Movement::MoveSplineInit init(owner);
@@ -82,7 +82,7 @@ HomeMovementGenerator<Creature>::_setTargetLocation(Creature* owner)
 bool
 HomeMovementGenerator<Creature>::Update(Creature* owner, const uint32& time_diff)
 {
-	arrived = owner->movespline->Finalized();
-	return !arrived;
+    arrived = owner->movespline->Finalized();
+    return !arrived;
 }
 
