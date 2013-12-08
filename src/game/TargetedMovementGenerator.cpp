@@ -101,9 +101,18 @@ void TargetedMovementGeneratorMedium<T, D>::_setTargetLocation(T* owner, bool up
         && owner->hasUnitState(UNIT_STAT_FOLLOW));
 
     bool result = i_path->Update(x, y, z, false, forceDest);
-    if (!result || (i_path->getPathType() & PATHFIND_NOPATH))
+    if (i_path->getPathType() & (PATHFIND_NOPATH | PATHFIND_INCOMPLETE))
     {
-        // Cant reach target
+        if (owner->isPet())
+        {
+            i_path->BuildShortcut();
+            owner->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
+            i_path = new PathInfo(owner, x, y, z, true, true);
+        }
+    }
+
+    if (!result)
+    {
         i_recalculateTravel = true;
         return;
     }

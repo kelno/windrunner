@@ -86,13 +86,13 @@ PathInfo::~PathInfo() {}
 bool PathInfo::Update(const float destX, const float destY, const float destZ,
                       bool useStraightPath, bool forceDest)
 {
-	float x, y, z;
-	m_sourceUnit->GetPosition(x, y, z);
-	G3D::Vector3 newStart(x, y, z);
-	setStartPosition(newStart);
+    float x, y, z;
+    m_sourceUnit->GetPosition(x, y, z);
+    G3D::Vector3 newStart(x, y, z);
+    setStartPosition(newStart);
 
-	G3D::Vector3 newDest(destX, destY, destZ);
-	G3D::Vector3 oldDest = getEndPosition();
+    G3D::Vector3 newDest(destX, destY, destZ);
+    G3D::Vector3 oldDest = getEndPosition();
     setEndPosition(newDest);
 
     m_useStraightPath = useStraightPath;
@@ -246,7 +246,6 @@ void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
     bool farFromPoly = (distToStartPoly > 7.0f || distToEndPoly > 7.0f);
     if (farFromPoly)
     {
-
         bool buildShotrcut = false;
         if (m_sourceUnit->GetTypeId() == TYPEID_UNIT)
         {
@@ -291,7 +290,6 @@ void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
     // just need to move in straight line
     if (startPoly == endPoly)
     {
-
         BuildShortcut();
 
         m_pathPolyRefs[0] = startPoly;
@@ -331,7 +329,6 @@ void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
 
     if (startPolyFound && endPolyFound)
     {
-
         // we moved along the path and the target did not move out of our old poly-path
         // our path is a simple subpath case, we have all the data we need
         // just "cut" it out
@@ -341,7 +338,6 @@ void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
     }
     else if (startPolyFound && !endPolyFound)
     {
-
         // we are moving on the old path but target moved out
         // so we have atleast part of poly-path ready
 
@@ -396,7 +392,6 @@ void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
     }
     else
     {
-
         // either we have no path at all -> first run
         // or something went really wrong -> we aren't moving along the path to the target
         // just generate new path
