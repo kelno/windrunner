@@ -156,7 +156,7 @@ namespace Movement
         {
             PathInfo path(unit);
             bool result = path.Update(dest.x, dest.y, dest.z, false, forceDestination);
-            if (result)
+            if (result && !(path.getPathType() & PATHFIND_NOPATH))
             {
                 MovebyPath(path.getFullPath());
                 return;
