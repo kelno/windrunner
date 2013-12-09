@@ -474,7 +474,7 @@ public:
                         break;
                     case 1:
                         me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
-                        flightPhaseTimer = 31000;
+                        flightPhaseTimer = 24000;
                         flightPhase++;
                         break;
                     case 2:
@@ -648,7 +648,7 @@ public:
                         if (demonicCount >= 2)
                             disableEvent(EVENT_DEMONIC_VAPOR);
 
-                        scheduleEvent(EVENT_DEMONIC_VAPOR, 15000);
+                        scheduleEvent(EVENT_DEMONIC_VAPOR, 11000);
                         break;
                     case EVENT_FOG_CORRUPTION:
                     {

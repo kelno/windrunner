@@ -115,6 +115,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         }
 
         DoCast(m_creature, SPELL_SW_RADIANCE);
+        DoCast(m_creature, 39551);
     }
     
     void JustDied(Unit* killer)
@@ -125,6 +126,9 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void Aggro(Unit *pWho)
     {
+        // For security
+        m_creature->RemoveAurasDueToSpell(39551);
+
         DoScriptText(YELL_AGGRO, m_creature);
     }
     
@@ -172,7 +176,8 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     
     void Reset()
     {
-        m_creature->SetSpeed(MOVE_WALK, 1.0f);
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
+        m_creature->SetWalk(true);
 
         DoCast(m_creature, SPELL_SW_RADIANCE);
         DoCast(m_creature, SPELL_DUAL_WIELD, true);
@@ -209,7 +214,8 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true))
         {
             m_creature->SetReactState(REACT_PASSIVE);
-            m_creature->SetSpeed(MOVE_WALK, 4.0f);
+            m_creature->SetSpeed(MOVE_RUN, 4.0f);
+            m_creature->SetWalk(false);
             m_creature->GetMotionMaster()->MovementExpired(false);
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
@@ -225,6 +231,9 @@ struct npc_sunblade_scoutAI : public ScriptedAI
 
     void Aggro(Unit *pWho)
     {
+        // For security (just change MOVE_RUN, MoveChase set run move type)
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
+
         DoScriptText(YELL_AGGRO2, m_creature);
     }
     
@@ -239,6 +248,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 AttackStart(puller);
                 if (target->ToCreature())
                 {
+                    target->RemoveAurasDueToSpell(39551);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                     DoScriptText(YELL_ACTIVATE, target->ToCreature());
@@ -250,6 +260,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 AttackStart(me->SelectNearestTarget(50.0f));
                 if (target->ToCreature())
                 {
+                    target->RemoveAurasDueToSpell(39551);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                      DoScriptText(YELL_ACTIVATE, target->ToCreature());
@@ -271,7 +282,8 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                     m_creature->StopMoving();
                     DoCast(protector, SPELL_ACTIVATE_PROTEC);
                     m_creature->SetInFront(protector);
-                    m_creature->SetSpeed(MOVE_WALK, 1.0f);
+                    m_creature->SetSpeed(MOVE_RUN, 1.0f);
+                    m_creature->SetWalk(true);
                     sinisterStrikeTimer = 2000;
                 }
             }
