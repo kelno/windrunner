@@ -304,8 +304,7 @@ struct boss_brutallusAI : public ScriptedAI
             break;
         case 15:
             DoScriptText(YELL_INTRO_KILL_MADRIGOSA, me);
-            me->SetOrientation(0.14f);
-            me->StopMoving();
+            me->SetFacingTo(0.14f);
             Madrigosa->setDeathState(CORPSE);
             Madrigosa->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
             IntroPhaseTimer = 8000;

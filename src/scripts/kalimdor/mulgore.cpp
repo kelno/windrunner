@@ -106,11 +106,9 @@ struct npc_kyle_frenziedAI : public ScriptedAI
                 {
                 Unit *plr = Unit::GetUnit((*m_creature),player);
                 if(plr)
-                    m_creature->SetOrientation(m_creature->GetAngle(plr));
+                    m_creature->SetFacingToObject(plr);
+
                 m_creature->HandleEmoteCommand(EMOTE_STATE_USESTANDING);    //eat
-                WorldPacket data;
-                m_creature->BuildHeartBeatMsg(&data);
-                m_creature->SendMessageToSet(&data,true);
                 wait = 3000;
                 STATE = 2;
                 break;

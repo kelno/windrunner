@@ -890,9 +890,8 @@ public:
                 	{
                 		if (pSummoned->GetGUID() == soldiersGuid[0])
                 		{
-                			pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                		    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                		    pSummoned->SendMovementFlagUpdate();
+                		    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                                    pSummoned->SetFacingTo(SoldierMiddle[0].m_fO);
                 		}
                 		else
                 		{
@@ -940,8 +939,7 @@ public:
                 		if (pSummoned->GetGUID() == soldiersGuid[10])
                 		{
                 		    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                	        pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
-                	        pSummoned->SendMovementFlagUpdate();
+                                    pSummoned->SetFacingTo(SoldierMiddle[1].m_fO);
                 		}
                 		else
                 		{
@@ -960,24 +958,18 @@ public:
                 }
                 else if (uiPointId == 2)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                		pSummoned->ForcedDespawn(1000);
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                        pSummoned->ForcedDespawn(1000);
                 }
                 else if (uiPointId == 10)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                	    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                	    pSummoned->SendMovementFlagUpdate();
-                	}
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                        pSummoned->SetFacingTo(SoldierMiddle[0].m_fO);
                 }
                 else if (uiPointId == 11)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                	    pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
-                	    pSummoned->SendMovementFlagUpdate();
-                	}
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                        pSummoned->SetFacingTo(SoldierMiddle[1].m_fO);
                 }
             }
 

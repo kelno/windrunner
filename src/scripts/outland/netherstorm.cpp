@@ -437,11 +437,9 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
         angle_ardonis = ardonis->GetAngle(pathaleon->GetPositionX(), pathaleon->GetPositionY());
 
         //Turn Dawnforge and update
-        m_creature->SetOrientation(angle_dawnforge);
-        m_creature->SendUpdateToPlayer(player);
+        m_creature->SetFacingTo(angle_dawnforge);
         //Turn Ardonis and update
-        ardonis->SetOrientation(angle_ardonis);
-        ardonis->SendUpdateToPlayer(player);
+        ardonis->SetFacingTo(angle_ardonis);
 
         //Set them to kneel
         m_creature->SetStandState(PLAYER_STATE_KNEEL);
@@ -462,11 +460,9 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
             angle_ardonis = ardonis->GetAngle(m_creature->GetPositionX(), m_creature->GetPositionY());
 
             //Turn Dawnforge and update
-            m_creature->SetOrientation(angle_dawnforge);
-            m_creature->SendUpdateToPlayer(player);
+            m_creature->SetFacingTo(angle_dawnforge);
             //Turn Ardonis and update
-            ardonis->SetOrientation(angle_ardonis);
-            ardonis->SendUpdateToPlayer(player);
+            ardonis->SetFacingTo(angle_ardonis);
 
             //Set state
             m_creature->SetStandState(PLAYER_STATE_NONE);

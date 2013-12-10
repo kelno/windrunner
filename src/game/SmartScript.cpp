@@ -826,10 +826,12 @@ bool SmartScript::ProcessAction(SmartScriptHolder &e, Unit* unit, uint32 var0, u
             }
         case SMART_ACTION_SET_ORIENTATION:
             {
-                if (!me) return true;
+                if (!me)
+                    return true;
+
                 ObjectList* targets = GetTargets(e, unit);
                 if (e.GetTargetType() == SMART_TARGET_POSITION)
-                    me->SetOrientation(e.target.o);
+                    me->SetFacingTo(e.target.o);
                 else if (targets && !targets->empty())
                     me->SetFacingToObject((*targets->begin()));
                 break;

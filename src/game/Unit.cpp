@@ -389,7 +389,10 @@ void Unit::SetFacingToObject(WorldObject* object)
         return;
 
     /// @todo figure out under what conditions creature will move towards object instead of facing it where it currently is.
-    SetFacingTo(GetAngle(object));
+    Movement::MoveSplineInit init(this);
+    init.MoveTo(GetPositionX(), GetPositionY(), GetPositionZMinusOffset());
+    init.SetFacing(GetAngle(object));   // when on transport, GetAngle will still return global coordinates (and angle) that needs transforming
+    init.Launch();
 }
 
 void Unit::resetAttackTimer(WeaponAttackType type)

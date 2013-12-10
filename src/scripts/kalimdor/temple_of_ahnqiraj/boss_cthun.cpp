@@ -320,10 +320,8 @@ struct eye_of_cthunAI : public Scripted_NoMovementAI
 
                     //Set angle and cast
                     if (ClockWise)
-                        m_creature->SetOrientation(DarkGlareAngle + ((float)DarkGlareTick*PI/35));
-                    else m_creature->SetOrientation(DarkGlareAngle - ((float)DarkGlareTick*PI/35));
-
-                    m_creature->StopMoving();
+                        m_creature->SetFacingTo(DarkGlareAngle + ((float)DarkGlareTick*PI/35));
+                    else m_creature->SetFacingTo(DarkGlareAngle - ((float)DarkGlareTick*PI/35));
 
                     //Actual dark glare cast, maybe something missing here?
                     m_creature->CastSpell(m_creature, SPELL_DARK_GLARE, false);

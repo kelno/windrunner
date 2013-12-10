@@ -1437,8 +1437,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
             case 5:me->SetWalk(true);return 3000;
             case 6:me->GetMotionMaster()->MovePoint(0, -707.702f, 2749.038f, 101.590f);return 2000;
             case 7:me->GetMotionMaster()->MovePoint(0, -710.810f, 2748.376f, 101.590f);return 2100;
-            case 8:me->SetOrientation(colonel);
-                   me->SendMovementFlagUpdate();return 2000;
+            case 8:me->SetFacingTo(colonel);return 2000;
             case 9:me->CastSpell(me, SPELL_EXORCIM , false);return 10000;
             case 10:DoScriptText(SAY_BARADA3, me,0); return 10000;
             case 11:DoScriptText(SAY_COLONEL2, pColonel, 0);return 8000;
