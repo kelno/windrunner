@@ -181,7 +181,10 @@ void CreatureAI::EnterEvadeMode()
     me->ResetPlayerDamageReq();
 
     if(me->isAlive())
+    {
+        me->addUnitState(UNIT_STAT_EVADE);
         me->GetMotionMaster()->MoveTargetedHome();
+    }
     
     me->SetLastDamagedTime(0);
 }

@@ -4256,7 +4256,7 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 void Player::KillPlayer()
 {
     if (IsFlying() && !GetTransport())
-        i_motionMaster.MoveFall();
+        i_motionMaster->MoveFall();
 
     if(isInDuelArea())
     {

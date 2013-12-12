@@ -1567,7 +1567,7 @@ class Unit : public WorldObject
         static Player* GetPlayer(uint64 guid);
         static Creature* GetCreature(WorldObject& object, uint64 guid);
 
-        MotionMaster* GetMotionMaster() { return &i_motionMaster; }
+        MotionMaster* GetMotionMaster() { return i_motionMaster; }
 
         bool IsStopped() const { return !(hasUnitState(UNIT_STAT_MOVING)); }
         void StopMoving();
@@ -1771,7 +1771,7 @@ class Unit : public WorldObject
 
         virtual SpellSchoolMask GetMeleeDamageSchoolMask() const;
 
-        MotionMaster i_motionMaster;
+        MotionMaster* i_motionMaster;
 
         uint32 m_reactiveTimer[MAX_REACTIVE];
 

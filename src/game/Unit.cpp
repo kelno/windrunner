@@ -141,7 +141,7 @@ bool IsPassiveStackableSpell( uint32 spellId )
 }
 
 Unit::Unit()
-: WorldObject(), i_motionMaster(this), m_ThreatManager(this), m_HostilRefManager(this)
+: WorldObject(), i_motionMaster(new MotionMaster(this)), m_ThreatManager(this), m_HostilRefManager(this)
 , m_IsInNotifyList(false), m_Notified(false), IsAIEnabled(false), NeedChangeAI(false)
 , i_AI(NULL), i_disabledAI(NULL), m_removedAurasCount(0), m_procDeep(0), m_unitTypeMask(UNIT_MASK_NONE)
 , _lastDamagedTime(0), movespline(new Movement::MoveSpline()), m_movesplineTimer(400)
@@ -275,6 +275,7 @@ Unit::~Unit()
             }
     }
 
+    delete i_motionMaster;
     if(m_charmInfo) delete m_charmInfo;
     delete movespline;
 
@@ -353,7 +354,7 @@ void Unit::Update( uint32 p_time )
 
     UpdateSplineMovement(p_time);
     if(!IsUnitRotating())
-        i_motionMaster.UpdateMotion(p_time);
+        i_motionMaster->UpdateMotion(p_time);
     else
         AutoRotate(p_time);
 }
