@@ -136,17 +136,20 @@ void MotionMaster::UpdateMotion(uint32 diff)
 
 void MotionMaster::DirectClean(bool reset)
 {
-	while (size() > 1)
-	{
-	    MovementGenerator *curr = top();
-	    pop();
-	    if (curr) DirectDelete(curr);
-	}
+    while (size() > 1)
+    {
+        MovementGenerator *curr = top();
+        pop();
+        if (curr) DirectDelete(curr);
+    }
 
-	if (needInitTop())
-	    InitTop();
+    if (empty())
+        return;
+
+    if (needInitTop())
+        InitTop();
     else if (reset)
-	    top()->Reset(_owner);
+        top()->Reset(_owner);
 }
 
 void MotionMaster::DelayedClean()
@@ -162,35 +165,35 @@ void MotionMaster::DelayedClean()
 
 void MotionMaster::DirectExpire(bool reset)
 {
-	if (size() > 1)
-	{
-	    MovementGenerator *curr = top();
-	    pop();
-	    DirectDelete(curr);
+    if (size() > 1)
+    {
+        MovementGenerator *curr = top();
+        pop();
+        DirectDelete(curr);
     }
 
-    while (!top())
-	    --_top;
+    while (!empty() && !top())
+        --_top;
 
-	if (empty())
-	    Initialize();
-	else if (needInitTop())
-	    InitTop();
-	else if (reset)
-	    top()->Reset(_owner);
+    if (empty())
+        Initialize();
+    else if (needInitTop())
+        InitTop();
+    else if (reset)
+        top()->Reset(_owner);
 }
 
 void MotionMaster::DelayedExpire()
 {
-	if (size() > 1)
-	{
-	    MovementGenerator *curr = top();
-	    pop();
-	    DelayedDelete(curr);
-	}
+    if (size() > 1)
+    {
+        MovementGenerator *curr = top();
+        pop();
+        DelayedDelete(curr);
+    }
 
-	while (!top())
-	    --_top;
+    while (!empty() && !top())
+        --_top;
 }
 
 void MotionMaster::MoveIdle(MovementSlot slot)
