@@ -19,3 +19,6 @@ UPDATE `creature_template` SET `AIName` = '', `ScriptName` = '' WHERE `entry` = 
 UPDATE `spell_template` SET `effectBasePoints1` = '45716' WHERE `id` = 45714;
 
 UPDATE `creature_template` SET `minmana` = '3387', `maxmana` = '3387' WHERE `entry` = 25038;
+
+UPDATE `spell_template` SET `rangeIndex` = 3, `effectRadiusIndex1` = 9 WHERE `id` = 45782;
+UPDATE `spell_template` SET `effectRadiusIndex1` = 8, `effectImplicitTargetA1` = 73 WHERE `id` = 45392;
