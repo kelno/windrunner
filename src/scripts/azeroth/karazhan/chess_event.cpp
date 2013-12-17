@@ -1038,10 +1038,8 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         me->CombatStop();
         
         if (spellId != SPELL_MOVE_1 && spellId != SPELL_MOVE_2 && spellId != SPELL_MOVE_3 && spellId != SPELL_MOVE_4 && 
-                spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING) {
-            me->SetOrientation(orientations[currentOrientation]);
-            me->SendMovementFlagUpdate();
-        }
+                spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING)
+            me->SetFacingTo(orientations[currentOrientation]);
     }
     
     void KilledUnit(Unit* victim)
@@ -1150,10 +1148,9 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             if (Creature* medivh = Creature::GetCreature(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH))) {
                 int result = ((npc_echo_of_medivhAI*)medivh->AI())->HandlePieceRotate(me, target->GetGUID());
                 if (result != -1) {
-                    me->SetOrientation(orientations[result]);
-                    me->SendMovementFlagUpdate();
-                    currentOrientation = ChessOrientationType(result);
                     me->CombatStop();
+                    me->SetFacingTo(orientations[result]);
+                    currentOrientation = ChessOrientationType(result);
                 }
             }
         }

@@ -30,7 +30,6 @@ using G3D::Vector3;
 
 namespace VMAP
 {
-
     class MapRayCallback
     {
         public:
@@ -154,6 +153,11 @@ namespace VMAP
     bool StaticMapTree::isInLineOfSight(const Vector3& pos1, const Vector3& pos2) const
     {
         float maxDist = (pos2 - pos1).magnitude();
+        // return false if distance is over max float, in case of cheater teleporting to the end of the universe
+        if (maxDist == std::numeric_limits<float>::max() ||
+            maxDist == std::numeric_limits<float>::infinity())
+            return false;
+
         // valid map coords should *never ever* produce float overflow, but this would produce NaNs too
         ASSERT(maxDist < std::numeric_limits<float>::max());
         // prevent NaN values which can cause BIH intersection to enter infinite loop
@@ -220,11 +224,12 @@ namespace VMAP
     float StaticMapTree::getHeight(const Vector3& pPos, float maxSearchDist) const
     {
         float height = G3D::inf();
-        Vector3 dir = Vector3(0,0,-1);
+        Vector3 dir = Vector3(0, 0, -1);
         G3D::Ray ray(pPos, dir);   // direction with length of 1
-        if (getIntersectionTime(ray, maxSearchDist, false))
+        float maxDist = maxSearchDist;
+        if (getIntersectionTime(ray, maxDist, false))
         {
-            height = pPos.z - maxSearchDist;
+            height = pPos.z - maxDist;
         }
         return(height);
     }

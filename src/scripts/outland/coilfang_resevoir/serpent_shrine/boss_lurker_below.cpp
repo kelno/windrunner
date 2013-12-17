@@ -102,7 +102,7 @@ class Boss_Lurker_Below : public CreatureScript
 
             void onReset(bool onSpawn)
             {
-                me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING + MOVEMENTFLAG_LEVITATING);
+                me->SetSwim(true);
                 summons.DespawnAll();
 
                 if (_instance)
@@ -347,10 +347,7 @@ class Boss_Lurker_Below : public CreatureScript
                         me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
                         if (rotateState == 1)
-                        {
-                            me->SetOrientation(lastOrientation);
-                            me->StopMoving();
-                        }
+                            me->SetFacingTo(lastOrientation);
                         else if (rotateState == 2)
                         {
                             Map* pMap = me->GetMap();
@@ -388,10 +385,8 @@ class Boss_Lurker_Below : public CreatureScript
                             }
                         }
                         else if (rotateState == 3)
-                        {
-                        	me->SetOrientation(lastOrientation);
-                        	me->StopMoving();
-                        }
+                            me->SetFacingTo(lastOrientation);
+
                         break;
                     case SUBMERGED:
                         if (submergeState == 1)

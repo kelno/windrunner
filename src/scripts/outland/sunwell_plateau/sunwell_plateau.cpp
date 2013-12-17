@@ -115,6 +115,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
         }
 
         DoCast(m_creature, SPELL_SW_RADIANCE);
+        DoCast(m_creature, 39551);
     }
     
     void JustDied(Unit* killer)
@@ -125,6 +126,9 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void Aggro(Unit *pWho)
     {
+        // For security
+        m_creature->RemoveAurasDueToSpell(39551);
+
         DoScriptText(YELL_AGGRO, m_creature);
     }
     
@@ -172,57 +176,91 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     
     void Reset()
     {
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
+        m_creature->SetWalk(true);
+
         DoCast(m_creature, SPELL_SW_RADIANCE);
         DoCast(m_creature, SPELL_DUAL_WIELD, true);
+
         sinisterStrikeTimer = 0;
         pullerGUID = 0;
         protector = NULL;
         hasActivated = false;
     }
-    
-    void Aggro(Unit *pWho)
+
+    bool UpdateVictim(bool evade = true)
     {
+        if (hasActivated)
+        {
+            if(!me->isInCombat())
+                return false;
+
+            if(Unit *victim = me->SelectVictim(evade)) 
+                AttackStart(victim);
+
+            return me->getVictim();
+        }
+    }
+
+    void MoveInLineOfSight(Unit *pWho)
+    {
+        if(me->getVictim())
+            return;
+
+        if(!m_creature->canStartAttack(pWho))
+            return;
+
         pullerGUID = pWho->GetGUID();
-        if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
+        if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true))
+        {
             m_creature->SetReactState(REACT_PASSIVE);
-            m_creature->SetSpeed(MOVE_WALK, 4.0f);
+            m_creature->SetSpeed(MOVE_RUN, 4.0f);
+            m_creature->SetWalk(false);
+            m_creature->GetMotionMaster()->MovementExpired(false);
             m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
             m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
         }
         else
         {
-            m_creature->clearUnitState(UNIT_STAT_ROOT);
+            hasActivated = true;
             m_creature->SetReactState(REACT_AGGRESSIVE);
             AttackStart(me->SelectNearestTarget(50.0f));
             sinisterStrikeTimer = 2000;
         }
+    }
+
+    void Aggro(Unit *pWho)
+    {
+        // For security (just change MOVE_RUN, MoveChase set run move type)
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
 
         DoScriptText(YELL_AGGRO2, m_creature);
     }
     
     void OnSpellFinish(Unit *caster, uint32 spellId, Unit *target, bool ok)
     {
-        if (spellId == 46475 && ok) {
-            if (Unit* puller = Unit::GetUnit(*m_creature, pullerGUID)) {
-                //puller = SelectUnit(SELECT_TARGET_RANDOM, 0);
-                m_creature->SetUInt64Value(UNIT_FIELD_TARGET, puller->GetGUID());
-                m_creature->SetReactState(REACT_AGGRESSIVE);
-                m_creature->clearUnitState(UNIT_STAT_ROOT);
-                if (target->ToCreature()) {
-                    target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
+        if (spellId == 46475 && ok)
+        {
+            hasActivated = true;
+            m_creature->SetReactState(REACT_AGGRESSIVE);
+            if (Unit* puller = Unit::GetUnit(*m_creature, pullerGUID))
+            {
+                AttackStart(puller);
+                if (target->ToCreature())
+                {
+                    target->RemoveAurasDueToSpell(39551);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                     DoScriptText(YELL_ACTIVATE, target->ToCreature());
+                    target->ToCreature()->AI()->AttackStart(puller);
                 }
-                target->GetMotionMaster()->MoveChase(puller);
-                target->Attack(puller, true);
-                m_creature->GetMotionMaster()->MoveChase(puller);
-                AttackStart(puller);
             }
-            else {
+            else
+            {
                 AttackStart(me->SelectNearestTarget(50.0f));
-                if (target->ToCreature()) {
-                    target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
+                if (target->ToCreature())
+                {
+                    target->RemoveAurasDueToSpell(39551);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
                      DoScriptText(YELL_ACTIVATE, target->ToCreature());
@@ -230,23 +268,22 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 }
             }
         }
-
-        m_creature->clearUnitState(UNIT_STAT_ROOT);
-        m_creature->SetReactState(REACT_AGGRESSIVE);
     }
     
     void UpdateAI(uint32 const diff)
     {
-        if (!hasActivated) {
-            if (protector) {
-                if (m_creature->GetDistance(protector) <= 15.0f) {
+        if (!hasActivated)
+        {
+            if (protector)
+            {
+                if (m_creature->GetDistance(protector) <= 15.0f)
+                {
                     m_creature->GetMotionMaster()->MovementExpired(false);
                     m_creature->StopMoving();
-                    m_creature->addUnitState(UNIT_STAT_ROOT);
                     DoCast(protector, SPELL_ACTIVATE_PROTEC);
                     m_creature->SetInFront(protector);
-                    hasActivated = true;
-                    m_creature->SetSpeed(MOVE_WALK, 1.0f);
+                    m_creature->SetSpeed(MOVE_RUN, 1.0f);
+                    m_creature->SetWalk(true);
                     sinisterStrikeTimer = 2000;
                 }
             }
@@ -1132,8 +1169,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
 {
     npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
     {
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        
+        me->SetDisableGravity(true);
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
     

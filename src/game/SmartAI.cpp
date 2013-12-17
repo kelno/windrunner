@@ -427,6 +427,9 @@ void SmartAI::MovepointReached(uint32 id)
 
 void SmartAI::MovementInform(uint32 MovementType, uint32 Data)
 {
+    if ((MovementType == POINT_MOTION_TYPE && Data == SMART_ESCORT_LAST_OOC_POINT) || MovementType == FOLLOW_MOTION_TYPE)
+        me->clearUnitState(UNIT_STAT_EVADE);
+
     GetScript()->ProcessEventsFor(SMART_EVENT_MOVEMENTINFORM, NULL, MovementType, Data);
     if (MovementType != POINT_MOTION_TYPE || !HasEscortState(SMART_ESCORT_ESCORTING))
         return;
@@ -439,6 +442,7 @@ void SmartAI::EnterEvadeMode()
         return;
 
     me->RemoveAllAuras();
+    me->addUnitState(UNIT_STAT_EVADE);
     me->DeleteThreatList();
     me->CombatStop(true);
     me->LoadCreaturesAddon();
@@ -717,24 +721,18 @@ uint64 SmartAI::GetGUID(int32 id)
 
 void SmartAI::SetRun(bool run)
 {
-    if (run)
-        me->RemoveUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
-    else
-        me->AddUnitMovementFlag(0x00000100/*MOVEMENTFLAG_WALKING*/);
+    me->SetWalk(!run);
     mRun = run;
 }
 
 void SmartAI::SetFly(bool bFly)
 {
-    me->SetFlying(bFly);
+    me->SetDisableGravity(bFly);
 }
 
 void SmartAI::SetSwimm(bool bSwimm)
 {
-    if (bSwimm)
-        me->AddUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
-    else
-        me->RemoveUnitMovementFlag(MOVEMENTFLAG_SWIMMING);
+    me->SetSwim(bSwimm);
 }
 
 void SmartAI::sGossipHello(Player* player)

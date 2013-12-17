@@ -95,12 +95,9 @@ struct boss_broggokAI : public ScriptedAI
 
     void MovementInform(uint32 uiMotionType, uint32 uiPointId)
     {
-        if (uiMotionType == POINT_MOTION_TYPE) {
-            if (GameObject* pFrontDoor = me->FindNearestGameObject(181819, 60.0f)) {
-                me->SetOrientation(me->GetAngle(pFrontDoor->GetPositionX(), pFrontDoor->GetPositionY()));
-                me->SendMovementFlagUpdate();
-            }
-        }
+        if (uiMotionType == POINT_MOTION_TYPE)
+            if (GameObject* pFrontDoor = me->FindNearestGameObject(181819, 60.0f))
+                me->SetFacingTo(me->GetAngle(pFrontDoor->GetPositionX(), pFrontDoor->GetPositionY()));
     }
 
     void UpdateAI(const uint32 diff)

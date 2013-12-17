@@ -450,7 +450,7 @@ namespace VMAP
     */
 
     //int gGetHeightCounter = 0;
-    float VMapManager::getHeight(unsigned int pMapId, float x, float y, float z)
+    float VMapManager::getHeight(unsigned int pMapId, float x, float y, float z, float maxSearchDist)
     {
         float height = VMAP_INVALID_HEIGHT_VALUE;           //no height
         if(isHeightCalcEnabled() && iInstanceMapTrees.containsKey(pMapId))

@@ -47,6 +47,7 @@
 #include "TargetedMovementGenerator.h"                      // for HandleNpcUnFollowCommand
 #include "MoveMap.h"                                        // for mmap manager
 #include "PathFinder.h"                                     // for mmap commands
+#include "MoveSplineInitArgs.h"
 
 static uint32 ReputationRankStrIndex[MAX_REPUTATION_RANK] =
 {
@@ -997,17 +998,8 @@ bool ChatHandler::HandleNpcAddCommand(const char* args)
     Map *map = chr->GetMap();
 
     Creature* pCreature = new Creature;
-    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT), map, id, (uint32)teamval))
+    if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT), map, id, (uint32)teamval, x, y, z, o))
     {
-        delete pCreature;
-        return false;
-    }
-
-    pCreature->Relocate(x,y,z,o);
-
-    if(!pCreature->IsPositionValid())
-    {
-        sLog.outError("ERROR: Creature (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
         delete pCreature;
         return false;
     }
@@ -2696,17 +2688,9 @@ bool ChatHandler::HandleWpModifyCommand(const char* args)
                 wpCreature->AddObjectToRemoveList();
                 // re-create
                 Creature* wpCreature2 = new Creature;
-                if (!wpCreature2->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT, true), map, VISUAL_WAYPOINT, 0))
+                if (!wpCreature2->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT, true), map, VISUAL_WAYPOINT, 0, chr->GetPositionX(), chr->GetPositionY(), chr->GetPositionZ(), chr->GetOrientation()))
                 {
                     PSendSysMessage(LANG_WAYPOINT_VP_NOTCREATED, VISUAL_WAYPOINT);
-                    delete wpCreature2;
-                    return false;
-                }
-                wpCreature2->Relocate(chr->GetPositionX(), chr->GetPositionY(), chr->GetPositionZ(), chr->GetOrientation());
-
-                if(!wpCreature2->IsPositionValid())
-                {
-                    sLog.outError("ERROR: Creature (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",wpCreature2->GetGUIDLow(),wpCreature2->GetEntry(),wpCreature2->GetPositionX(),wpCreature2->GetPositionY());
                     delete wpCreature2;
                     return false;
                 }
@@ -2904,19 +2888,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             /*float o = chr->GetOrientation();
 
             Creature* wpCreature = new Creature;
-            if (!wpCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT, true), map, id, 0))
+            if (!wpCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT, true), map, id, 0, x, y, z, o))
             {
                 PSendSysMessage(LANG_WAYPOINT_VP_NOTCREATED, id);
-                delete wpCreature;
-                delete result;
-                return false;
-            }
-
-            wpCreature->Relocate(x, y, z, o);
-
-            if(!wpCreature->IsPositionValid())
-            {
-                sLog.outError("ERROR: Creature (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",wpCreature->GetGUIDLow(),wpCreature->GetEntry(),wpCreature->GetPositionX(),wpCreature->GetPositionY());
                 delete wpCreature;
                 delete result;
                 return false;
@@ -2967,19 +2941,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
         Map *map = chr->GetMap();
         /*
         Creature* pCreature = new Creature;
-        if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true),map, id, 0))
+        if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true),map, id, 0, x, y, z, o))
         {
             PSendSysMessage(LANG_WAYPOINT_VP_NOTCREATED, id);
-            delete pCreature;
-            delete result;
-            return false;
-        }
-
-        pCreature->Relocate(x, y, z, o);
-
-        if(!pCreature->IsPositionValid())
-        {
-            sLog.outError("ERROR: Creature (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
             delete pCreature;
             delete result;
             return false;
@@ -3033,19 +2997,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
         Map *map = chr->GetMap();
         /*
         Creature* pCreature = new Creature;
-        if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), map, id, 0))
+        if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), map, id, 0, x, y, z, o))
         {
             PSendSysMessage(LANG_WAYPOINT_NOTCREATED, id);
-            delete pCreature;
-            delete result;
-            return false;
-        }
-
-        pCreature->Relocate(x, y, z, o);
-
-        if(!pCreature->IsPositionValid())
-        {
-            sLog.outError("ERROR: Creature (guidlow %d, entry %d) not created. Suggested coordinates isn't valid (X: %f Y: %f)",pCreature->GetGUIDLow(),pCreature->GetEntry(),pCreature->GetPositionX(),pCreature->GetPositionY());
             delete pCreature;
             delete result;
             return false;
@@ -3870,17 +3824,16 @@ bool ChatHandler::HandleNpcUnFollowCommand(const char* /*args*/)
     }
 
     if (/*creature->GetMotionMaster()->empty() ||*/
-        creature->GetMotionMaster()->GetCurrentMovementGeneratorType ()!=TARGETED_MOTION_TYPE)
+        creature->GetMotionMaster()->GetCurrentMovementGeneratorType () != FOLLOW_MOTION_TYPE)
     {
         PSendSysMessage(LANG_CREATURE_NOT_FOLLOW_YOU, creature->GetName());
         SetSentErrorMessage(true);
         return false;
     }
 
-    TargetedMovementGenerator<Creature> const* mgen
-        = static_cast<TargetedMovementGenerator<Creature> const*>((creature->GetMotionMaster()->top()));
+    TargetedMovementGeneratorMedium<Creature, FollowMovementGenerator<Creature> > const* mgen = static_cast<TargetedMovementGeneratorMedium<Creature, FollowMovementGenerator<Creature> > const*>((creature->GetMotionMaster()->top()));
 
-    if(mgen->GetTarget()!=player)
+    if(mgen->GetTarget() != player)
     {
         PSendSysMessage(LANG_CREATURE_NOT_FOLLOW_YOU, creature->GetName());
         SetSentErrorMessage(true);
@@ -4395,15 +4348,15 @@ bool ChatHandler::HandleMmapPathCommand(const char* args)
 
     // path
     PathInfo path(target, x, y, z, useStraightPath);
-    PointPath pointPath = path.getFullPath();
+    Movement::PointsArray const&  pointPath = path.getFullPath();
     PSendSysMessage("%s's path to %s:", target->GetName(), player->GetName());
     PSendSysMessage("Building %s", useStraightPath ? "StraightPath" : "SmoothPath");
     PSendSysMessage("length %i type %u", pointPath.size(), path.getPathType());
 
-    PathNode start = path.getStartPosition();
-    PathNode next = path.getNextPosition();
-    PathNode end = path.getEndPosition();
-    PathNode actualEnd = path.getActualEndPosition();
+    G3D::Vector3 const& start = path.getStartPosition();
+    G3D::Vector3 const& next = path.getNextPosition();
+    G3D::Vector3 const& end = path.getEndPosition();
+    G3D::Vector3 const& actualEnd = path.getActualEndPosition();
 
     PSendSysMessage("start      (%.3f, %.3f, %.3f)", start.x, start.y, start.z);
     PSendSysMessage("next       (%.3f, %.3f, %.3f)", next.x, next.y, next.z);

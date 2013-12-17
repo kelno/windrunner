@@ -148,8 +148,8 @@ struct boss_shahrazAI : public ScriptedAI
         case 2: angle = 3*M_PI/4;  break;
         case 3: angle = M_PI/4;    break;
         }
-        float X,Y,Z;
-        me->GetFirstCollisionPosition(X, Y, Z, 40.0f, angle, true);
+        Position pos;
+        me->GetFirstCollisionPosition(pos, 40.0f, angle, true);
 
         std::list<Unit*> targetList;
         SelectUnitList(targetList, 3, SELECT_TARGET_RANDOM, 120.0f, true, SPELL_SABER_LASH_IMM, 0);
@@ -161,7 +161,7 @@ struct boss_shahrazAI : public ScriptedAI
                 AttractionTargetGUID[i] = target->GetGUID();
                 target->CastSpell(target, SPELL_TELEPORT_VISUAL, true);
                 DoCast(target,SPELL_ATTRACTION_VIS,true);
-                DoTeleportPlayer(target, X, Y, Z, target->GetOrientation());
+                DoTeleportPlayer(target, pos.m_positionX, pos.m_positionY, pos.m_positionZ, target->GetOrientation());
                 i++;
             }
             return true;

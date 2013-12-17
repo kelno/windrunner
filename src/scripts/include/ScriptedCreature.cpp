@@ -98,9 +98,9 @@ void ScriptedAI::AttackStart(Unit* who)
 {
     if (!who)
         return;
-    
+
     bool melee = (GetCombatDistance() > ATTACK_DISTANCE) ? me->GetDistance(who) <= ATTACK_DISTANCE : true;
-    if (m_creature->Attack(who, melee))
+    if (m_creature->Attack(who, true))
     {
         m_creature->AddThreat(who, 0.0f);
         if (!InCombat)
@@ -166,12 +166,12 @@ void ScriptedAI::JustRespawned()
     Reset();
 }
 
-void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle)
+void ScriptedAI::DoStartMovement(Unit* victim, float distance, float angle, bool strictDist)
 {
     if (!victim)
         return;
 
-    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle);
+    m_creature->GetMotionMaster()->MoveChase(victim, distance, angle, strictDist);
 }
 
 void ScriptedAI::DoStartNoMovement(Unit* victim)
@@ -826,7 +826,8 @@ void ScriptedAI::DoModifyThreatPercent(Unit *pUnit, int32 pct)
 void ScriptedAI::DoTeleportTo(float x, float y, float z, uint32 time)
 {
     m_creature->Relocate(x,y,z);
-    m_creature->SendMonsterMove(x, y, z, time);
+    float speed = me->GetDistance(x, y, z) / ((float)time * 0.001f);
+    m_creature->MonsterMoveWithSpeed(x, y, z, speed);
 }
 
 void ScriptedAI::DoTeleportPlayer(Unit* pUnit, float x, float y, float z, float o)

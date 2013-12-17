@@ -126,7 +126,7 @@ struct ScriptedAI : public CreatureAI
     //*************
 
     //Start movement toward victim
-    void DoStartMovement(Unit* victim, float distance = 0, float angle = 0);
+    void DoStartMovement(Unit* victim, float distance = 0, float angle = 0, bool strictDist = false);
 
     //Start no movement on victim
     void DoStartNoMovement(Unit* victim);

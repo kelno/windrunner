@@ -30,7 +30,6 @@
 #include "UpdateMask.h"
 #include "Path.h"
 #include "WaypointMovementGenerator.h"
-#include "DestinationHolderImp.h"
 
 #include <cassert>
 
@@ -189,19 +188,15 @@ void WorldSession::HandleActivateTaxiFarOpcode ( WorldPacket & recv_data )
 void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& recvPacket)
 {
     PROFILE;
-    
-    MovementInfo movementInfo;
-    uint32 MovementFlags;
 
-    recvPacket >> MovementFlags;
-    recvPacket >> movementInfo.unk1;
-    recvPacket >> movementInfo.time;
-    recvPacket >> movementInfo.x;
-    recvPacket >> movementInfo.y;
-    recvPacket >> movementInfo.z;
-    recvPacket >> movementInfo.o;
-    GetPlayer()->SetPosition(movementInfo.x, movementInfo.y, movementInfo.z, movementInfo.o);
+    MovementInfo movementInfo;
+    ReadMovementInfo(recvPacket, &movementInfo);
+
+    uint32 unk;
+    recvPacket >> unk;
+
     GetPlayer()->m_movementInfo = movementInfo;
+
     GetPlayer()->m_anti_lastmovetime = movementInfo.time;
 
     // in taxi flight packet received in 2 case:
@@ -223,7 +218,7 @@ void WorldSession::HandleTaxiNextDestinationOpcode(WorldPacket& recvPacket)
             FlightPathMovementGenerator* flight = (FlightPathMovementGenerator*)(GetPlayer()->GetMotionMaster()->top());
 
             flight->SetCurrentNodeAfterTeleport();
-            PathNode const& node = flight->GetPath()[flight->GetCurrentNode()];
+            TaxiPathNode const& node = flight->GetPath()[flight->GetCurrentNode()];
             flight->SkipCurrentNode();
 
             GetPlayer()->TeleportTo(curDestNode->map_id,node.x,node.y,node.z,GetPlayer()->GetOrientation());

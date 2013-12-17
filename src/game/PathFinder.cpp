@@ -25,18 +25,36 @@
 #include "../recastnavigation/Detour/Include/DetourCommon.h"
 
 ////////////////// PathInfo //////////////////
+PathInfo::PathInfo(const Unit* owner, bool useStraightPath, bool forceDest) :
+    m_polyLength(0), m_type(PATHFIND_BLANK),
+    m_useStraightPath(useStraightPath), m_forceDestination(forceDest),
+    m_pointPathLimit(MAX_POINT_PATH_LENGTH), m_sourceUnit(owner), m_navMesh(NULL), m_navMeshQuery(NULL)
+{
+    uint32 mapId = m_sourceUnit->GetMapId();
+    if (MMAP::MMapFactory::IsPathfindingEnabled(mapId))
+    {
+        MMAP::MMapManager* mmap = MMAP::MMapFactory::createOrGetMMapManager();
+        m_navMesh = mmap->GetNavMesh(mapId);
+        m_navMeshQuery = mmap->GetNavMeshQuery(mapId, m_sourceUnit->GetInstanceId());
+        if (m_navMeshQuery && m_navMesh != m_navMeshQuery->getNavMesh())
+            sLog.outError("NAVMESH: navmesh from pathinfo and from nmquery don't match. MapId %d, instanceId %d", mapId, m_sourceUnit->GetInstanceId());
+    }
+
+    createFilter();
+}
+
 PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, const float destZ,
                    bool useStraightPath, bool forceDest) :
     m_polyLength(0), m_type(PATHFIND_BLANK),
     m_useStraightPath(useStraightPath), m_forceDestination(forceDest),
-    m_sourceUnit(owner), m_navMesh(NULL), m_navMeshQuery(NULL)
+    m_pointPathLimit(MAX_POINT_PATH_LENGTH), m_sourceUnit(owner), m_navMesh(NULL), m_navMeshQuery(NULL)
 {
-    PathNode endPoint(destX, destY, destZ);
+	G3D::Vector3 endPoint(destX, destY, destZ);
     setEndPosition(endPoint);
 
     float x,y,z;
     m_sourceUnit->GetPosition(x, y, z);
-    PathNode startPoint(x, y, z);
+    G3D::Vector3 startPoint(x, y, z);
     setStartPosition(startPoint);
 
     uint32 mapId = m_sourceUnit->GetMapId();
@@ -45,7 +63,7 @@ PathInfo::PathInfo(const Unit* owner, const float destX, const float destY, cons
         MMAP::MMapManager* mmap = MMAP::MMapFactory::createOrGetMMapManager();
         m_navMesh = mmap->GetNavMesh(mapId);
         m_navMeshQuery = mmap->GetNavMeshQuery(mapId, m_sourceUnit->GetInstanceId());
-        if (m_navMesh != m_navMeshQuery->getNavMesh())
+        if (m_navMeshQuery && m_navMesh != m_navMeshQuery->getNavMesh())
             sLog.outError("NAVMESH: navmesh from pathinfo and from nmquery don't match. MapId %d, instanceId %d", mapId, m_sourceUnit->GetInstanceId());
     }
 
@@ -68,15 +86,14 @@ PathInfo::~PathInfo() {}
 bool PathInfo::Update(const float destX, const float destY, const float destZ,
                       bool useStraightPath, bool forceDest)
 {
-    PathNode newDest(destX, destY, destZ);
-    PathNode oldDest = getEndPosition();
-    setEndPosition(newDest);
-
     float x, y, z;
     m_sourceUnit->GetPosition(x, y, z);
-    PathNode newStart(x, y, z);
-    PathNode oldStart = getStartPosition();
+    G3D::Vector3 newStart(x, y, z);
     setStartPosition(newStart);
+
+    G3D::Vector3 newDest(destX, destY, destZ);
+    G3D::Vector3 oldDest = getEndPosition();
+    setEndPosition(newDest);
 
     m_useStraightPath = useStraightPath;
     m_forceDestination = forceDest;
@@ -121,7 +138,7 @@ bool PathInfo::Update(const float destX, const float destY, const float destZ,
         // our target is not moving - we just coming closer
         // we are moving on precalculated path - enjoy the ride
 
-        m_pathPoints.crop(1, 0);
+        crop(1, 0);
         setNextPosition(m_pathPoints[1]);
 
         return false;
@@ -203,7 +220,7 @@ dtPolyRef PathInfo::getPolyByLocation(const float* point, float *distance)
     return INVALID_POLYREF;
 }
 
-void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
+void PathInfo::BuildPolyPath(G3D::Vector3 startPos, G3D::Vector3 endPos)
 {
     // *** getting start/end poly logic ***
 
@@ -229,13 +246,12 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
     bool farFromPoly = (distToStartPoly > 7.0f || distToEndPoly > 7.0f);
     if (farFromPoly)
     {
-
         bool buildShotrcut = false;
         if (m_sourceUnit->GetTypeId() == TYPEID_UNIT)
         {
             Creature* owner = (Creature*)m_sourceUnit;
 
-            PathNode p = (distToStartPoly > 7.0f) ? startPos : endPos;
+            G3D::Vector3 p = (distToStartPoly > 7.0f) ? startPos : endPos;
             if (m_sourceUnit->GetBaseMap()->IsUnderWater(p.x, p.y, p.z))
             {
                 if (owner->canSwim())
@@ -261,7 +277,7 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
             if (DT_SUCCESS == m_navMeshQuery->closestPointOnPoly(endPoly, endPoint, closestPoint))
             {
                 dtVcopy(endPoint, closestPoint);
-                setActualEndPosition(PathNode(endPoint[2],endPoint[0],endPoint[1]));
+                setActualEndPosition(G3D::Vector3(endPoint[2],endPoint[0],endPoint[1]));
             }
 
             m_type = PATHFIND_INCOMPLETE;
@@ -274,7 +290,6 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
     // just need to move in straight line
     if (startPoly == endPoly)
     {
-
         BuildShortcut();
 
         m_pathPolyRefs[0] = startPoly;
@@ -314,7 +329,6 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
 
     if (startPolyFound && endPolyFound)
     {
-
         // we moved along the path and the target did not move out of our old poly-path
         // our path is a simple subpath case, we have all the data we need
         // just "cut" it out
@@ -324,7 +338,6 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
     }
     else if (startPolyFound && !endPolyFound)
     {
-
         // we are moving on the old path but target moved out
         // so we have atleast part of poly-path ready
 
@@ -379,7 +392,6 @@ void PathInfo::BuildPolyPath(PathNode startPos, PathNode endPos)
     }
     else
     {
-
         // either we have no path at all -> first run
         // or something went really wrong -> we aren't moving along the path to the target
         // just generate new path
@@ -434,7 +446,7 @@ void PathInfo::BuildPointPath(float *startPoint, float *endPoint)
                 NULL,               // [out] flags
                 NULL,               // [out] shortened path
                 (int*)&pointCount,
-                MAX_POINT_PATH_LENGTH);   // maximum number of points/polygons to use
+                m_pointPathLimit);   // maximum number of points/polygons to use
     }
     else
     {
@@ -446,7 +458,7 @@ void PathInfo::BuildPointPath(float *startPoint, float *endPoint)
                 pathPoints,         // [out] path corner points
                 (int*)&pointCount,
                 usedOffmesh,
-                MAX_POINT_PATH_LENGTH);    // maximum number of points
+                m_pointPathLimit);    // maximum number of points
     }
 
     if (pointCount < 2 || dtResult != DT_SUCCESS)
@@ -458,6 +470,12 @@ void PathInfo::BuildPointPath(float *startPoint, float *endPoint)
         m_type = PATHFIND_NOPATH;
         return;
     }
+    else if (pointCount == m_pointPathLimit)
+    {
+    	BuildShortcut();
+    	m_type = PATHFIND_SHORT;
+    	return;
+    }
 
     // we need to flash our poly path to prevent it being used as subpath next cycle
     // in case of off mesh connection was used
@@ -466,7 +484,7 @@ void PathInfo::BuildPointPath(float *startPoint, float *endPoint)
 
     m_pathPoints.resize(pointCount);
     for (uint32 i = 0; i < pointCount; ++i)
-        m_pathPoints.set(i, PathNode(pathPoints[i*VERTEX_SIZE+2], pathPoints[i*VERTEX_SIZE], pathPoints[i*VERTEX_SIZE+1]));
+        m_pathPoints[i] = G3D::Vector3(pathPoints[i*VERTEX_SIZE+2], pathPoints[i*VERTEX_SIZE], pathPoints[i*VERTEX_SIZE+1]);
 
     // first point is always our current location - we need the next one
     setNextPosition(m_pathPoints[1]);
@@ -491,8 +509,8 @@ void PathInfo::BuildShortcut()
     m_pathPoints.resize(2);
 
     // set start and a default next position
-    m_pathPoints.set(0, getStartPosition());
-    m_pathPoints.set(1, getActualEndPosition());
+    m_pathPoints[0] = getStartPosition();
+    m_pathPoints[1] = getActualEndPosition();
 
     setNextPosition(getActualEndPosition());
     m_type = PATHFIND_SHORTCUT;

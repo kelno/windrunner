@@ -826,12 +826,14 @@ bool SmartScript::ProcessAction(SmartScriptHolder &e, Unit* unit, uint32 var0, u
             }
         case SMART_ACTION_SET_ORIENTATION:
             {
-                if (!me) return true;
+                if (!me)
+                    return true;
+
                 ObjectList* targets = GetTargets(e, unit);
                 if (e.GetTargetType() == SMART_TARGET_POSITION)
-                    me->SetOrientation(e.target.o);
+                    me->SetFacingTo(e.target.o);
                 else if (targets && !targets->empty())
-                    me->SetFacing(0, (*targets->begin()));
+                    me->SetFacingToObject((*targets->begin()));
                 break;
             }
         /*case SMART_ACTION_PLAYMOVIE:      //FIXME
@@ -1080,8 +1082,21 @@ bool SmartScript::ProcessAction(SmartScriptHolder &e, Unit* unit, uint32 var0, u
         }
         case SMART_ACTION_RANGED_COMBAT:
         {
-            me->AI()->SetCombatDistance((float)e.action.raw.param1);
-            
+            float attackDistance = (float)e.action.raw.param1;
+            float AttackAngle = ((float)e.action.raw.param2/180)*M_PI;
+            if (me->getVictim())
+            {
+                if (me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+                {
+                    me->GetMotionMaster()->MoveChase(me->getVictim(), attackDistance, AttackAngle);
+                    me->CastStop();
+                }
+            }
+            else
+            {
+                me->StopMoving();
+                me->GetMotionMaster()->MoveIdle();
+            }
             break;
         }
         default:

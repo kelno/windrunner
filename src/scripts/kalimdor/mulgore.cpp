@@ -91,7 +91,7 @@ struct npc_kyle_frenziedAI : public ScriptedAI
             z = (z2 <= INVALID_HEIGHT) ? z : z2;
             m_creature->SetDefaultMovementType(IDLE_MOTION_TYPE);       //there is other way to stop waypoint movement?
             m_creature->GetMotionMaster()->Initialize();
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+            m_creature->SetWalk(false);
             m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
         }
     }
@@ -106,11 +106,9 @@ struct npc_kyle_frenziedAI : public ScriptedAI
                 {
                 Unit *plr = Unit::GetUnit((*m_creature),player);
                 if(plr)
-                    m_creature->SetOrientation(m_creature->GetAngle(plr));
+                    m_creature->SetFacingToObject(plr);
+
                 m_creature->HandleEmoteCommand(EMOTE_STATE_USESTANDING);    //eat
-                WorldPacket data;
-                m_creature->BuildHeartBeatMsg(&data);
-                m_creature->SendMessageToSet(&data,true);
                 wait = 3000;
                 STATE = 2;
                 break;
