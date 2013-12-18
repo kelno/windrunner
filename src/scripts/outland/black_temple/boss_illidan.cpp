@@ -819,7 +819,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                     Timer[EVENT_AGONIZING_FLAMES] = 0;
                 break;
 
-            case EVENT_TRANSFORM_NORMAL:
+            case EVENT_TRANSFORM_NORMAL: //transform from normal to demon
                 EnterPhase(PHASE_TRANSFORM_SEQUENCE);
                 break;
 
