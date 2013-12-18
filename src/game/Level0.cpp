@@ -1533,6 +1533,7 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     uint64 account_id = m_session->GetAccountId();
     QueryResult* result = NULL;
     Field* fields = NULL;
+    bool force = (cForce && strcmp(cForce,"forcer") == 0);
     
     if (!sWorld.getConfig(CONFIG_FACTION_CHANGE_ENABLED)) {
         PSendSysMessage("Le changement de race/faction est actuellement désactivé.");
@@ -1570,7 +1571,7 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
         return false;
     }
     
-    if (m_session->GetPlayer()->getLevel() < 10) {
+    if (!force && m_session->GetPlayer()->getLevel() < 10) {
         PSendSysMessage(LANG_FACTIONCHANGE_LEVEL_MIN);
         SetSentErrorMessage(true);
         return false;
@@ -1612,7 +1613,7 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
         return false;
     }
     
-    if ((!cForce || strcmp(cForce,"forcer")) && m_account != t_account) {
+    if (!force && m_account != t_account) {
         PSendSysMessage("Le personnage modèle doit être présent sur votre compte.");
         SetSentErrorMessage(true);
         return false;
@@ -1755,7 +1756,7 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
     for (spell_itr = myInfo->spell.begin(); spell_itr != myInfo->spell.end(); ++spell_itr) {
         uint16 tspell = spell_itr->first;
         if (tspell)
-            plr->removeSpell(tspell,spell_itr->second);
+            plr->removeSpell(tspell,false);
     }
     // Add new race starting spells
     for (spell_itr = targetInfo->spell.begin(); spell_itr != targetInfo->spell.end(); ++spell_itr) {
@@ -1876,22 +1877,26 @@ bool ChatHandler::HandleRaceOrFactionChange(const char* args)
         }
     }
 
+    
     // Spells, priest specific
-    result = WorldDatabase.PQuery("SELECT spell1, spell2 FROM player_factionchange_spells_priest_specific WHERE race1 IN (0,%u) AND race2 IN (0,%u)", m_race, t_race);
-    if (result) {
-        do {
-            Field* fields = result->Fetch();
+    if(plr->getClass() == CLASS_PRIEST)
+    {
+        result = WorldDatabase.PQuery("SELECT spell1, spell2 FROM player_factionchange_spells_priest_specific WHERE race1 IN (0,%u) AND race2 IN (0,%u) ORDER BY race1,race2", m_race, t_race); //order by is here to handle non race specific spells first
+        if (result) {
+            do {
+                Field* fields = result->Fetch();
             
-            uint32 from = fields[0].GetUInt32();
-            uint32 to = fields[1].GetUInt32();
+                uint32 from = fields[0].GetUInt32();
+                uint32 to = fields[1].GetUInt32();
 
-            if (plr->HasSpell(from))
-                plr->removeSpell(from);
+                if (plr->HasSpell(from))
+                    plr->removeSpell(from);
 
-            if (to != 0)
-                plr->learnSpell(to);
+                if (to != 0)
+                    plr->learnSpell(to);
 
-        } while (result->NextRow());
+            } while (result->NextRow());
+        }
     }
 
     // Items

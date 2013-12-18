@@ -571,7 +571,7 @@ bool ChatHandler::HandleReloadInstanceTemplateAddonCommand(const char* arg)
 {
     sLog.outString( "Re-Loading Instance Templates Addon..." );
     objmgr.LoadInstanceTemplateAddon();
-    SendGlobalGMSysMessage("DB table `quest_template_addon` reloaded.");
+    SendGlobalGMSysMessage("DB table `instance_template_addon` reloaded.");
     return true;
 }
 
@@ -4276,6 +4276,80 @@ bool ChatHandler::HandleSetValue(const char* args)
     return true;
 }
 
+bool ChatHandler::HandleSetValue64(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* px = strtok((char*)args, " ");
+    char* py = strtok(NULL, " ");
+    char* pz = strtok(NULL, " ");
+
+    if (!px || !py)
+        return false;
+
+    Unit* target = getSelectedUnit();
+    if(!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint64 guid = target->GetGUID();
+
+    uint32 field = (uint32)atoi(px);
+    if(field >= target->GetValuesCount()-1)
+    {
+        PSendSysMessage(LANG_TOO_BIG_INDEX, field, GUID_LOPART(guid), target->GetValuesCount());
+        return false;
+    }
+    uint64 value;
+
+    value = (uint64)atoi(py);
+    target->SetUInt64Value( field , value );
+    PSendSysMessage(LANG_SET_UINT_FIELD, GUID_LOPART(guid), field,value);
+
+    return true;
+}
+
+bool ChatHandler::HandleSetValueFloat(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* px = strtok((char*)args, " ");
+    char* py = strtok(NULL, " ");
+    char* pz = strtok(NULL, " ");
+
+    if (!px || !py)
+        return false;
+
+    Unit* target = getSelectedUnit();
+    if(!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint64 guid = target->GetGUID();
+
+    uint32 field = (uint32)atoi(px);
+    if(field >= target->GetValuesCount()-1)
+    {
+        PSendSysMessage(LANG_TOO_BIG_INDEX, field, GUID_LOPART(guid), target->GetValuesCount());
+        return false;
+    }
+    float value;
+
+    value = (float)atof(py);
+    target->SetFloatValue( field , value );
+    PSendSysMessage(LANG_SET_FLOAT_FIELD, GUID_LOPART(guid), field,value);
+
+    return true;
+}
+
 bool ChatHandler::HandleGetValue(const char* args)
 {
     if(!*args)
@@ -4319,6 +4393,76 @@ bool ChatHandler::HandleGetValue(const char* args)
         fValue = target->GetFloatValue( Opcode );
         PSendSysMessage(LANG_GET_FLOAT_FIELD, GUID_LOPART(guid), Opcode, fValue);
     }
+
+    return true;
+}
+
+bool ChatHandler::HandleGetValue64(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* px = strtok((char*)args, " ");
+    char* pz = strtok(NULL, " ");
+
+    if (!px)
+        return false;
+
+    Unit* target = getSelectedUnit();
+    if(!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint64 guid = target->GetGUID();
+
+    uint32 field = (uint32)atoi(px);
+    if(field >= target->GetValuesCount()-1)
+    {
+        PSendSysMessage(LANG_TOO_BIG_INDEX, field, GUID_LOPART(guid), target->GetValuesCount());
+        return false;
+    }
+    uint64 value;
+
+    value = target->GetUInt64Value( field );
+    PSendSysMessage(LANG_GET_UINT_FIELD, GUID_LOPART(guid), field, value);
+
+    return true;
+}
+
+bool ChatHandler::HandleGetValueFloat(const char* args)
+{
+    if(!*args)
+        return false;
+
+    char* px = strtok((char*)args, " ");
+    char* pz = strtok(NULL, " ");
+
+    if (!px)
+        return false;
+
+    Unit* target = getSelectedUnit();
+    if(!target)
+    {
+        SendSysMessage(LANG_SELECT_CHAR_OR_CREATURE);
+        SetSentErrorMessage(true);
+        return false;
+    }
+
+    uint64 guid = target->GetGUID();
+
+    uint32 field = (uint32)atoi(px);
+    if(field >= target->GetValuesCount()-1)
+    {
+        PSendSysMessage(LANG_TOO_BIG_INDEX, field, GUID_LOPART(guid), target->GetValuesCount());
+        return false;
+    }
+    float value;
+
+    value = target->GetFloatValue( field );
+    PSendSysMessage(LANG_GET_FLOAT_FIELD, GUID_LOPART(guid), field, value);
 
     return true;
 }
@@ -5147,7 +5291,7 @@ bool ChatHandler::HandleCompleteQuest(const char* args)
     if (questbug)
         WorldDatabase.PExecute("UPDATE quest_bugs SET completecount = completecount+1 WHERE entry = %u", entry);
     else
-        WorldDatabase.PExecute("INSERT INTO quest_bugs VALUES (%u, 1, 1, '')", entry);
+        WorldDatabase.PExecute("INSERT INTO quest_bugs VALUES (%u, 1, 0, '')", entry);
     
     return true;
 }

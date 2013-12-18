@@ -296,19 +296,17 @@ void Spell::EffectInstaKill(uint32 /*i*/)
 
 void Spell::EffectEnvironmentalDMG(uint32 i)
 {
+    if (!unitTarget || !unitTarget->isAlive())
+        return;
+
     uint32 absorb = 0;
     uint32 resist = 0;
-
-    // Note: this hack with damage replace required until GO casting not implemented
-    // environment damage spells already have around enemies targeting but this not help in case not existed GO casting support
-    // currently each enemy selected explicitly and self cast damage, we prevent apply self casted spell bonuses/etc
-    damage = m_spellInfo->EffectBasePoints[i]+m_spellInfo->EffectBaseDice[i];
 
     m_caster->CalcAbsorbResist(m_caster,GetSpellSchoolMask(m_spellInfo), SPELL_DIRECT_DAMAGE, damage, &absorb, &resist, m_spellInfo->Id);
 
     m_caster->SendSpellNonMeleeDamageLog(m_caster, m_spellInfo->Id, damage, GetSpellSchoolMask(m_spellInfo), absorb, resist, false, 0, false);
-    if(m_caster->GetTypeId() == TYPEID_PLAYER)
-        (m_caster->ToPlayer())->EnvironmentalDamage(DAMAGE_FIRE,damage);
+    if(unitTarget->GetTypeId() == TYPEID_PLAYER)
+        (unitTarget->ToPlayer())->EnvironmentalDamage(DAMAGE_FIRE,damage);
 }
 
 void Spell::EffectSchoolDMG(uint32 effect_idx)
@@ -356,12 +354,6 @@ void Spell::SpellDamageSchoolDmg(uint32 effect_idx)
                         {
                             damage = 0;
                         }
-                        break;
-                    }
-                    // Saber lash immune (Shahraz)
-                    case 40810:
-                    {
-                        unitTarget->CastSpell(unitTarget, 43690, true);
                         break;
                     }
                     case 45189: //Dawnblade Attack
@@ -2188,19 +2180,20 @@ void Spell::EffectDummy(uint32 i)
                     for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin();ihit != m_UniqueTargetInfo.end();++ihit)
                         ihit->effectMask &= ~(1<<1);
 
-                    // not empty (checked)
+                    // select up to 3 random targets
                     Unit::AttackerSet const& attackers = unitTarget->getAttackers();
-
-                    // chance to be selected from list
-                    float chance = 100.0f/attackers.size();
-                    uint32 count=0;
-                    for(Unit::AttackerSet::const_iterator aItr = attackers.begin(); aItr != attackers.end() && count < 3; ++aItr)
+                    std::set<Unit*> targetSet (attackers);
+                    size_t setSize = targetSet.size();
+                    while (setSize > 3)
                     {
-                        if(!roll_chance_f(chance))
-                            continue;
-                        ++count;
-                        AddUnitTarget((*aItr), 1);
+                        std::set<Unit*>::iterator itr = targetSet.begin();
+                        std::advance(itr, urand(0, setSize - 1));
+                        targetSet.erase(itr);
+                        --setSize;
                     }
+
+                    for(auto itr : targetSet)
+                        AddUnitTarget(itr, 1);
 
                     // now let next effect cast spell at each target.
                     return;
@@ -2854,10 +2847,7 @@ void Spell::EffectApplyAura(uint32 i)
     Unit* caster = m_originalCasterGUID ? m_originalCaster : m_caster;
     if(!caster)
         return;
-            
-    if (m_spellInfo->Id == 40880 || m_spellInfo->Id == 40882 || m_spellInfo->Id == 40883 || m_spellInfo->Id == 40891 || m_spellInfo->Id == 40896 || m_spellInfo->Id == 40897)   // Sharaz prismatic auras
-        unitTarget = caster;
-    
+
     // Some level depends spells
     int multiplier = 0;
     int level_diff = 0;
@@ -2926,7 +2916,7 @@ void Spell::EffectApplyAura(uint32 i)
             spellId = 41425;                                // Hypothermia
         else if (m_spellInfo->Mechanic == MECHANIC_BANDAGE) // Bandages
             spellId = 11196;                                // Recently Bandaged
-        else if( (m_spellInfo->AttributesEx & 0x20) && (m_spellInfo->AttributesEx2 & 0x20000) )
+        else if( (m_spellInfo->AttributesEx & SPELL_ATTR_EX_NOT_BREAK_STEALTH)  && (m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_NOT_RESET_AUTOSHOT) )
             spellId = 23230;                                // Blood Fury - Healing Reduction
 
         SpellEntry const *AdditionalSpellInfo = spellmgr.LookupSpell(spellId);
@@ -2952,28 +2942,15 @@ void Spell::EffectApplyAura(uint32 i)
             cTarget->RemoveCorpse();
         }
     }
-    /*
-    // Remove Stealth on Druid/Warrior shout
-    switch (m_spellInfo->SpellFamilyName)
-    {
-	    case SPELLFAMILY_WARRIOR:
-            if (m_spellInfo->SpellFamilyFlags & 0x0000002000020000LL)
-				 unitTarget->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK, 0, false);
-            break;
-	    case SPELLFAMILY_DRUID:
-            if (m_spellInfo->SpellFamilyFlags & 0x0000000000000408LL)
-			    unitTarget->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TALK, 0, false);
-            break;
-    }*/
 
     // Prayer of Mending (jump animation), we need formal caster instead original for correct animation
     if( m_spellInfo->SpellFamilyName == SPELLFAMILY_PRIEST && (m_spellInfo->SpellFamilyFlags & 0x00002000000000LL))
         m_caster->CastSpell(unitTarget, 41637, true, NULL, Aur, m_originalCasterGUID);
         
-    //remove stealth on hostile targets
+    //remove stealth on hostile targets (need to find the correct rule)
     if (caster->IsHostileTo(unitTarget) 
         && !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
-        && m_spellInfo->Id != 13810 && m_spellInfo->Id != 3600) //not ice trap & earthbind
+        && m_spellInfo->EffectApplyAuraName[i] != SPELL_AURA_MOD_DECREASE_SPEED) //not ice trap & earthbind
         unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 }
 
@@ -3508,6 +3485,7 @@ void Spell::EffectPersistentAA(uint32 i)
     Unit *caster = m_caster->GetEntry() == WORLD_TRIGGER ? m_originalCaster : m_caster;
     int32 duration = GetSpellDuration(m_spellInfo);
     DynamicObject* dynObj = new DynamicObject;
+
     if(!dynObj->Create(objmgr.GenerateLowGuid(HIGHGUID_DYNAMICOBJECT), caster, m_spellInfo->Id, i, m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ, duration, radius))
     {
         delete dynObj;
@@ -3579,6 +3557,7 @@ void Spell::EffectEnergize(uint32 i)
 
     unitTarget->ModifyPower(power,damage);
     m_caster->SendEnergizeSpellLog(unitTarget, m_spellInfo->Id, damage, power);
+    m_caster->getHostilRefManager().threatAssist(unitTarget, float(damage) * 0.5f, m_spellInfo, false, true);
 
     // Mad Alchemist's Potion
     if (m_spellInfo->Id == 45051)
@@ -4128,14 +4107,12 @@ void Spell::EffectDispel(uint32 i)
 
     // Fill possible dispel list
     std::vector <Aura *> dispel_list;
-    if (unitTarget->IsHostileTo(m_caster) && (m_spellInfo->SpellVisual != 3299 && m_spellInfo->SpellIconID != 218) /* Arcane Shot */)   // TODO: Better fix would be if unitTarget is creature, then add CombatStart
+    if (unitTarget->IsHostileTo(m_caster))   // TODO: Better fix would be if unitTarget is creature, then add CombatStart
     {
-        if (unitTarget->ToCreature() && !(unitTarget->ToCreature()->isPet()))
-            unitTarget->ToCreature()->AI()->AttackStart(m_caster);
-        m_caster->SetInCombatWith(unitTarget);
-        unitTarget->SetInCombatWith(m_caster);
-        if (unitTarget->IsSitState())
-            unitTarget->SetStandState(UNIT_STAND_STATE_STAND);
+        if (unitTarget->GetTypeId() == TYPEID_UNIT)
+            unitTarget->AddThreat(m_caster, 0.0f);
+        
+        m_caster->CombatStart(unitTarget); 
     }
 
     // Create dispel mask by dispel type
@@ -4153,7 +4130,7 @@ void Spell::EffectDispel(uint32 i)
                 if (!aur->IsPositive())
                     positive = false;
                 else
-                    positive = (aur->GetSpellProto()->AttributesEx & SPELL_ATTR_EX_NEGATIVE)==0;
+                    positive = !(aur->GetSpellProto()->AttributesEx & SPELL_ATTR_EX_NEGATIVE);
 
                 // do not remove positive auras if friendly target
                 //               negative auras if non-friendly target
@@ -4175,7 +4152,7 @@ void Spell::EffectDispel(uint32 i)
         for (int32 count=0; count < damage && list_size > 0; ++count)
         {
             // Random select buff for dispel
-          Aura *aur = dispel_list[m_caster->GetMap()->urand(0, list_size-1)];
+            Aura *aur = dispel_list[m_caster->GetMap()->urand(0, list_size-1)];
 
             SpellEntry const* spellInfo = aur->GetSpellProto();
             // Base dispel chance
@@ -5107,6 +5084,7 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
     float totalDamagePercentMod  = 1.0f;                    // applied to final bonus+weapon damage
     int32 fixed_bonus = 0;
     int32 spell_bonus = 0;                                  // bonus specific for spell
+    float meleeDamageModifier = 1.0f;
 
     switch(m_spellInfo->SpellFamilyName)
     {
@@ -5140,6 +5118,9 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
                         break;
                     }
                 }
+
+                float threat = 14 * stack;
+                m_targets.getUnitTarget()->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
 
                 if(stack < 5)
                 {
@@ -5178,6 +5159,11 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
             // Mutilate (for each hand)
             else if(m_spellInfo->SpellFamilyFlags & 0x600000000LL)
             {
+                //*2 damage for fixed bonus on offhand :
+                if(m_attackType == OFF_ATTACK)
+                    meleeDamageModifier *= 2.0f;
+
+                //150% damage if poisoned
                 Unit::AuraMap const& auras = unitTarget->GetAuras();
                 for(Unit::AuraMap::const_iterator itr = auras.begin(); itr!=auras.end(); ++itr)
                 {
@@ -5251,7 +5237,7 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
                 break;                                      // not weapon damage effect, just skip
         }
     }
-
+    
     // apply to non-weapon bonus weapon total pct effect, weapon total flat effect included in weapon damage
     if(fixed_bonus || spell_bonus)
     {
@@ -5264,15 +5250,15 @@ void Spell::SpellDamageWeaponDmg(uint32 i)
             case RANGED_ATTACK: unitMod = UNIT_MOD_DAMAGE_RANGED;   break;
         }
 
-        float weapon_total_pct  = m_caster->GetModifierValue(unitMod, TOTAL_PCT);
+        meleeDamageModifier *= m_caster->GetModifierValue(unitMod, TOTAL_PCT);
 
         if(fixed_bonus)
-            fixed_bonus = int32(fixed_bonus * weapon_total_pct);
+            fixed_bonus = int32(fixed_bonus * meleeDamageModifier);
         if(spell_bonus)
-            spell_bonus = int32(spell_bonus * weapon_total_pct);
+            spell_bonus = int32(spell_bonus * meleeDamageModifier);
     }
 
-    int32 weaponDamage = m_caster->CalculateDamage(m_attackType, normalized, m_spellInfo);
+    int32 weaponDamage = m_caster->CalculateDamage(m_attackType, normalized, m_spellInfo, unitTarget);
 
     // Sequence is important
     for (int j = 0; j < 3; ++j)
@@ -6153,6 +6139,23 @@ void Spell::EffectScriptEffect(uint32 effIndex)
             }
             return;
         }
+        case 41467: //Illidari council : Gathios Judgement
+        {
+            if (unitTarget)
+            {
+                if(m_caster->HasAura(41469)) //SPELL_SEAL_OF_COMMAND
+                {
+                    m_caster->RemoveAurasDueToSpell(41469);
+                    m_caster->CastSpell(unitTarget,41470,false); //SPELL_JUDGEMENT_OF_COMMAND
+                }
+                else if (m_caster->HasAura(41459)) //SPELL_SEAL_OF_BLOOD
+                {
+                    m_caster->RemoveAurasDueToSpell(41459);
+                    m_caster->CastSpell(unitTarget,41461,false); //SPELL_JUDGEMENT_OF_BLOOD
+                }
+            }
+            return;
+        }
     }
 
     if(!unitTarget || !unitTarget->isAlive()) // can we remove this check?
@@ -6531,9 +6534,9 @@ void Spell::EffectSummonTotem(uint32 i)
         delete pTotem;
         return;
     }
-
+    
     float angle = slot < MAX_TOTEM ? M_PI/MAX_TOTEM - (slot*2*M_PI/MAX_TOTEM) : 0;
-
+    /*
     float cx,cy,cz;
     float dx,dy,dz;
     float angle2 = unitTarget->GetOrientation();
@@ -6609,6 +6612,11 @@ void Spell::EffectSummonTotem(uint32 i)
         dz = m_caster->GetPositionZ();
 
     pTotem->Relocate(dx, dy, dz, m_caster->GetOrientation());
+    */
+    float x,y,z;
+    m_caster->GetFirstCollisionPosition(x,y,z, 4.5f, angle);
+    pTotem->Relocate(x, y, z, m_caster->GetOrientation());
+
 
     if(slot < MAX_TOTEM)
         m_caster->m_TotemSlot[slot] = pTotem->GetGUID();

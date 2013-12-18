@@ -190,30 +190,32 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-void ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
+    //remove this?
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    //m_creature->StopMoving();
-    m_creature->CastSpell(victim, spellId, triggered);
+    return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-void ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
+    //remove this?
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-void ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+uint32 ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
+    //remove this?
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     m_creature->StopMoving();
-    m_creature->CastSpell(who, spellInfo, triggered);
+    return m_creature->CastSpell(who, spellInfo, triggered);
 }
 
 void ScriptedAI::DoSay(const char* text, uint32 language, Unit* target, bool SayEmote)
@@ -302,6 +304,9 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
         return false;
 
     if (!target)
+        return false;
+
+    if (!target->isAlive())
         return false;
 
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
@@ -453,7 +458,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 }
 
 // selects random unit not having aura
-Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
+Unit* ScriptedAI::SelectUnit( uint32 position, float distNear, float distFar, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
 {
     std::list<HostilReference*> m_threatlist = m_creature->getThreatManager().getThreatList();
     std::list<HostilReference*>::iterator i;
@@ -465,12 +470,13 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
  
         target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
         if(!target
+            || !target->isAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-            || dist && !m_creature->IsWithinCombatRange(target, dist)
+            || distNear && m_creature->IsWithinCombatRange(target, distNear)
+            || distFar && !m_creature->IsWithinCombatRange(target, distFar)
             || auraCheck && target->HasAura(spellId, effIndex)
             || exceptPossesed && target->isPossessed()
             || exceptPossesed && target->isPossessing()
-            
             )
         {
             m_threatlist.erase(i);
@@ -483,14 +489,15 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
     return NULL;
 }
 
-void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly)
+void ScriptedAI::SelectUnitList(std::list<Unit*> &targetList, uint32 maxTargets, SelectAggroTarget targetType, float radius, bool playersOnly, uint32 notHavingAuraId, uint8 effIndex)
 {
     std::list<HostilReference*> const& threatlist = me->getThreatManager().getThreatList();
     if (threatlist.empty())
         return;
 
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius)
+            && (!notHavingAuraId || !((*itr)->getTarget()->HasAura(notHavingAuraId, effIndex))) )
             targetList.push_back((*itr)->getTarget());
 
     if (targetList.size() < maxTargets)

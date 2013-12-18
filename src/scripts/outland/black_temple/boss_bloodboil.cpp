@@ -64,8 +64,9 @@ enum Spells
     SPELL_FEL_RAGE_SCALE        = 46787,
 
     SPELL_CHARGE                = 40602,
-    SPELL_BERSERK               = 45078
+    SPELL_BERSERK               = 45078,
 
+    SPELL_SELFSTUN              = 53088, //2.5s stun
 };
 
 #define COORD_Z_HOME                64.0f
@@ -142,7 +143,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
       /*  m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false); // FIXME: false? Typo?
         m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false); */
         m_creature->SetFullTauntImmunity(true);
-        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_CASTING_SPEED, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
 
     void Aggro(Unit *who)
@@ -232,14 +233,14 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
 
         if(FelBreathTimer < diff)
         {
-            DoCast(m_creature->getVictim(),Phase1 ? SPELL_FELBREATH_1 : SPELL_FELBREATH_2);
-            FelBreathTimer = 25000;
+            if(DoCast(m_creature->getVictim(),Phase1 ? SPELL_FELBREATH_1 : SPELL_FELBREATH_2) == SPELL_CAST_OK)
+                FelBreathTimer = 25000;
         }else FelBreathTimer -= diff;
         
         if(EjectTimer < diff)
         {
-            DoCast(m_creature->getVictim(),Phase1 ? SPELL_EJECT_1 : SPELL_EJECT_2);
-            EjectTimer = 15000;
+            if(DoCast(m_creature->getVictim(),Phase1 ? SPELL_EJECT_1 : SPELL_EJECT_2) == SPELL_CAST_OK)
+                EjectTimer = 15000;
         }else EjectTimer -= diff;
 
         if(Charge_Timer < diff)
@@ -253,16 +254,15 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         {
             if(BewilderingStrikeTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_BEWILDERING_STRIKE);
-                BewilderingStrikeTimer = 20000;
+                if(DoCast(m_creature->getVictim(), SPELL_BEWILDERING_STRIKE) == SPELL_CAST_OK)
+                    BewilderingStrikeTimer = 20000;
             }else BewilderingStrikeTimer -= diff;
 
             if(BloodboilTimer < diff)
             {
                 if(BloodboilCount < 5)                      // Only cast it five times.
                 {
-                    CastBloodboil(); // Causes issues on windows, so is commented out.
-                    //DoCast(m_creature->getVictim(), SPELL_BLOODBOIL);
+                    CastBloodboil();
                     ++BloodboilCount;
                     BloodboilTimer = 10000;
                 }
@@ -270,8 +270,8 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             
             if(ArcingSmashTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_ARCING_SMASH_1);
-                ArcingSmashTimer = 10000;
+                if(DoCast(m_creature->getVictim(), SPELL_ARCING_SMASH_1) == SPELL_CAST_OK)
+                    ArcingSmashTimer = 10000;
             }else ArcingSmashTimer -= diff;
         }
 
@@ -279,8 +279,8 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         {
             if(FelGeyserTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_FEL_GEYSER);
-                FelGeyserTimer = 30000;
+                if(DoCast(m_creature->getVictim(), SPELL_FEL_GEYSER) == SPELL_CAST_OK)
+                    FelGeyserTimer = 30000;
             }else FelGeyserTimer -= diff;
 
             if(m_creature->getVictim() && m_creature->getVictim()->IsImmunedToDamage(SPELL_SCHOOL_MASK_ALL,true))
@@ -296,10 +296,10 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                 {
                     Phase1 = false;
 
-                    TargetThreat = DoGetThreat(target);
+                    //TargetThreat = DoGetThreat(target);
                     TargetGUID = target->GetGUID();
-                    if(DoGetThreat(target))
-                        DoModifyThreatPercent(target, -100);
+                    /*if(DoGetThreat(target))
+                        DoModifyThreatPercent(target, -100);*/
                     m_creature->AddThreat(target, 50000000.0f);
                     target->CastSpell(m_creature, SPELL_TAUNT_GURTOGG, true);
                     m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
@@ -318,6 +318,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
                     DoCast(m_creature, SPELL_FEL_RAGE_SELF);
 
                     DoScriptText(RAND(SAY_SPECIAL1,SAY_SPECIAL2), m_creature);
+                    DoCast(me,SPELL_SELFSTUN,true); //2,5 inactivity
 
                     FelGeyserTimer = 1000;
                     PhaseChangeTimer = 30000;

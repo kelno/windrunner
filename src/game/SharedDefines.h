@@ -232,7 +232,7 @@ enum SpellCategory
 #define SPELL_ATTR_OUTDOORS_ONLY                  0x00008000            // 15 Only useable outdoors.
 #define SPELL_ATTR_NOT_SHAPESHIFT                 0x00010000            // 16 Not while shapeshifted
 #define SPELL_ATTR_ONLY_STEALTHED                 0x00020000            // 17 Must be in stealth
-#define SPELL_ATTR_DONT_AFFECT_SHEATH_STATE       0x00040000            // 18 client won't hide unit weapons in sheath on cast/channel
+#define SPELL_ATTR_AFFECT_WEAPON                  0x00040000                 // 18 (OLD : SPELL_ATTR_DONT_AFFECT_SHEATH_STATE : client won't hide unit weapons in sheath on cast/channel) New name to confirm, but for the example, compare theses spells : 6057, 12714, 16542, 20200. First two have the flag and should apply to weapon, the two lasts haven't and should apply to all damages.
 #define SPELL_ATTR_LEVEL_DAMAGE_CALCULATION       0x00080000            // 19 spelldamage depends on caster level
 #define SPELL_ATTR_STOP_ATTACK_TARGET             0x00100000            // 20 Stop attack after use this spell (and not begin attack if use)
 #define SPELL_ATTR_IMPOSSIBLE_DODGE_PARRY_BLOCK   0x00200000            // 21 Cannot be dodged/parried/blocked
@@ -282,7 +282,7 @@ enum SpellCategory
 
 #define SPELL_ATTR_EX2_CAN_TARGET_DEAD            0x00000001            // 0
 #define SPELL_ATTR_EX2_UNK1                       0x00000002            // 1
-#define SPELL_ATTR_EX2_UNK2                       0x00000004            // 2 boss spells?
+#define SPELL_ATTR_EX2_CAN_TARGET_NOT_IN_LOS      0x00000004            // 2
 #define SPELL_ATTR_EX2_UNK3                       0x00000008            // 3
 #define SPELL_ATTR_EX2_DISPLAY_IN_STANCE_BAR      0x00000010            // 4 client displays icon in stance bar when learned, even if not shapeshift
 #define SPELL_ATTR_EX2_AUTOREPEAT_FLAG            0x00000020            // 5
@@ -322,7 +322,7 @@ enum SpellCategory
 #define SPELL_ATTR_EX3_UNK6                       0x00000040            // 6
 #define SPELL_ATTR_EX3_STACK_FOR_DIFF_CASTERS     0x00000080            // 7 separate stack for every caster
 #define SPELL_ATTR_EX3_PLAYERS_ONLY               0x00000100            // 8 Player only?
-#define SPELL_ATTR_EX3_UNK9                       0x00000200            // 9
+#define SPELL_ATTR_EX3_UNK9                       0x00000200            // 9 //TC : SPELL_ATTR3_TRIGGERED_CAN_TRIGGER_PROC_2
 #define SPELL_ATTR_EX3_MAIN_HAND                  0x00000400            // 10 Main hand weapon required
 #define SPELL_ATTR_EX3_BATTLEGROUND               0x00000800            // 11 Can casted only on battleground
 #define SPELL_ATTR_EX3_ONLY_TARGET_GHOSTS         0x00001000            // 12

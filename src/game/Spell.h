@@ -342,11 +342,12 @@ class Spell
         Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 originalCasterGUID = 0, Spell** triggeringContainer = NULL, bool skipCheck = false );
         ~Spell();
 
-        void prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
+        //return SpellFailedReason
+        uint32 prepare(SpellCastTargets * targets, Aura* triggeredByAura = NULL);
         void cancel();
         void update(uint32 difftime);
         void cast(bool skipCheck = false);
-        void finish(bool ok = true);
+        void finish(bool ok = true, bool cancelChannel = true);
         void TakePower();
         void TakeReagents();
         void TakeCastItem();
@@ -398,12 +399,13 @@ class Spell
         void SendLogExecute();
         void SendInterrupted(uint8 result);
         void SendChannelUpdate(uint32 time);
+        void SendChannelUpdate(uint32 time, uint32 spellId); //only update if channeling given spell
         void SendChannelStart(uint32 duration);
         void SendResurrectRequest(Player* target);
         void SendPlaySpellVisual(uint32 SpellID);
 
         void HandleEffects(Unit *pUnitTarget,Item *pItemTarget,GameObject *pGOTarget,uint32 i, float DamageMultiplier = 1.0);
-        void HandleThreatSpells(uint32 spellId);
+        void HandleFlatThreat();
         //void HandleAddAura(Unit* Target);
 
         const SpellEntry * const m_spellInfo;
@@ -420,6 +422,10 @@ class Spell
         bool IsNextMeleeSwingSpell() const
         {
             return m_spellInfo->Attributes & (SPELL_ATTR_ON_NEXT_SWING_1|SPELL_ATTR_ON_NEXT_SWING_2);
+        }
+        static bool IsNextMeleeSwingSpell(SpellEntry const* spellInfo)
+        {
+            return spellInfo && spellInfo->Attributes & (SPELL_ATTR_ON_NEXT_SWING_1|SPELL_ATTR_ON_NEXT_SWING_2);
         }
         bool IsRangedSpell() const
         {
@@ -463,8 +469,6 @@ class Spell
         SpellScript* getScript() { return m_script; }
         
         bool DoesApplyAuraName(uint32 name);
-
-        static bool IsBinaryMagicResistanceSpell(SpellEntry const* spell);
 
     protected:
         bool HasGlobalCooldown();
@@ -613,7 +617,7 @@ class Spell
         SpellEntry const* m_triggeredByAuraSpell;
 
         uint32 m_customAttr;
-        bool m_skipCheck;
+        bool m_skipHitCheck;
 
         SpellScript* m_script;
 };
@@ -658,8 +662,7 @@ namespace Trinity
                     case SPELL_TARGETS_ALLY:
                         if(!itr->getSource()->isAttackableByAOE() || !i_caster->IsFriendlyTo( itr->getSource() ))
                             continue;
-                        //cannot target self. Really really really not sure about this flag
-                        if((i_spell.m_spellInfo->AttributesEx4) & 0x2000 && i_caster == itr->getSource() )
+                        if((spellmgr.GetSpellCustomAttr(i_spell.m_spellInfo->Id) & SPELL_ATTR_CU_AOE_CANT_TARGET_SELF) && i_caster == itr->getSource() )
                             continue;
                         break;
                     case SPELL_TARGETS_ENEMY:

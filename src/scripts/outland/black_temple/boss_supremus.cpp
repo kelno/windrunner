@@ -14,13 +14,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-/* ScriptData
-SDName: Boss_Supremus
-SD%Complete: 95
-SDComment: Need to implement molten punch
-SDCategory: Black Temple
-EndScriptData */
-
 #include "precompiled.h"
 #include "def_black_temple.h"
 
@@ -144,6 +137,7 @@ struct boss_supremusAI : public ScriptedAI
 
         SetPhase(1);
 
+        StopEruptions();
         summons.DespawnAll();
     }
 
@@ -179,7 +173,9 @@ struct boss_supremusAI : public ScriptedAI
         {
             Creature* volcano = me->GetMap()->GetCreatureInMap(cGUID);
             if(volcano && volcano->HasAura(SPELL_VOLCANIC_ERUPTION, 0))
-                volcano->RemoveAura(SPELL_VOLCANIC_ERUPTION, 0);
+                volcano->RemoveAura(SPELL_VOLCANIC_ERUPTION, 0); //remove visual
+            if(volcano && volcano->HasAura(SPELL_VOLCANIC_GEYSER,0))
+                volcano->RemoveAura(SPELL_VOLCANIC_GEYSER,0); //remove damage effect
         }
     }
 
@@ -234,7 +230,7 @@ struct boss_supremusAI : public ScriptedAI
             m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
             if(me->isInCombat())
             {
-                StopEruptions();
+                // StopEruptions(); //seems to be non blizz
                 DoResetThreat();
                 DoZoneInCombat();
                 DoScriptText(EMOTE_PUNCH_GROUND, m_creature);
@@ -325,6 +321,8 @@ struct npc_volcanoAI : public ScriptedAI
     { }
      
     uint32 UnderMapCheckTimer;
+    uint32 startTimer;
+    bool started;
     
     float currentX, currentY, currentZ, groundZ;
 
@@ -337,7 +335,8 @@ struct npc_volcanoAI : public ScriptedAI
 
         me->SetReactState(REACT_PASSIVE);
 
-        DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
+        started = false;
+        startTimer = 1500;
     }
     
     void UndermapCheck()
@@ -360,6 +359,15 @@ struct npc_volcanoAI : public ScriptedAI
             UndermapCheck();                
             UnderMapCheckTimer = 750;
         }else UnderMapCheckTimer -= diff;
+
+        if (!started)
+        { 
+            if(startTimer < diff)
+            {
+                DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
+                started = true;
+            } else startTimer -= diff;
+        } 
     }
 };
 

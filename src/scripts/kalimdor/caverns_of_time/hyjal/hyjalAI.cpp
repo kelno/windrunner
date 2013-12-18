@@ -32,6 +32,10 @@ EndScriptData */
 #define SPAWN_GARG_GATE 0
 #define SPAWN_WYRM_GATE 1
 #define SPAWN_NEAR_TOWER 2
+
+#define TEXT_ARCHIMONDE_AT_HORDE_RETREAT -1543998
+#define EMOTE_MASS_TELEPORT -1543997
+
 // Locations for summoning gargoyls and frost wyrms in special cases
 float SpawnPointSpecial[3][3]=
 {
@@ -433,9 +437,13 @@ void hyjalAI::Aggro(Unit *who)
     if(IsDummy)return;
     for(uint8 i = 0; i < 2; ++i)
         if(Spell[i].Cooldown)
-            SpellTimer[i] = Spell[i].Cooldown;
+            SpellTimer[i] = Spell[i].Cooldown / 2;
 
     Talk(ATTACKED);
+
+    if(me->GetEntry() == CREATURE_JAINA)
+        if(pInstance)
+            pInstance->SetData(DATA_JAINAINCOMBAT,1); //Call for help
 }
 
 void hyjalAI::MoveInLineOfSight(Unit *who)
@@ -565,7 +573,7 @@ void hyjalAI::SummonNextWave(Wave wave[18], uint32 Count, float Base[4][3])
         UpdateWorldState(WORLD_STATE_WAVES, stateValue);    // Set world state to our current wave number
         UpdateWorldState(WORLD_STATE_ENEMY, 1);             // Enable world state
 
-        pInstance->SetData(DATA_TRASH, EnemyCount);         // Send data for instance script to update count
+        if(pInstance) pInstance->SetData(DATA_TRASH, EnemyCount);         // Send data for instance script to update count
 
         if(!Debug)
             NextWaveTimer = wave[Count].WaveTimer;
@@ -599,8 +607,6 @@ void hyjalAI::StartEvent(Player* player)
     NextWaveTimer = 15000;
     CheckTimer = 5000;
     PlayerGUID = player->GetGUID();
-
-    m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
 
     UpdateWorldState(WORLD_STATE_WAVES, 0);
     UpdateWorldState(WORLD_STATE_ENEMY, 0);
@@ -684,6 +690,7 @@ void hyjalAI::Retreat()
             AddWaypoint(1,JainaWPs[1][0],JainaWPs[1][1],JainaWPs[1][2]);
             Start(false, false, false);
             SetDespawnAtEnd(false);//move to center of alliance base
+            Talk(SUCCESS);
         }
         if(Faction == 1)
         {
@@ -697,7 +704,9 @@ void hyjalAI::Retreat()
             }
             AddWaypoint(0,JainaDummySpawn[1][0],JainaDummySpawn[1][1],JainaDummySpawn[1][2]);
             Start(false, false, false);
-            SetDespawnAtEnd(false);//move to center of alliance base
+            SetDespawnAtEnd(false);//move to center of horde base
+            if(Creature* archimonde = me->GetMap()->GetCreature(pInstance->GetData64(DATA_ARCHIMONDE)))
+                DoScriptText(TEXT_ARCHIMONDE_AT_HORDE_RETREAT, archimonde); //Not ok, not enough range
         }
     }
     SpawnVeins();
@@ -778,7 +787,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
         switch(m_creature->GetEntry())
         {
             case JAINA:
-                if(pInstance->GetData(DATA_ALLIANCE_RETREAT))
+                if(pInstance && pInstance->GetData(DATA_ALLIANCE_RETREAT))
                 {
                     m_creature->SetVisibility(VISIBILITY_OFF);
                     HideNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
@@ -790,7 +799,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
                 else m_creature->SetVisibility(VISIBILITY_ON);
                 break;
             case THRALL: //thrall
-                if(pInstance->GetData(DATA_HORDE_RETREAT))
+                if(pInstance && pInstance->GetData(DATA_HORDE_RETREAT))
                 {
                     m_creature->SetVisibility(VISIBILITY_OFF);
                     HideNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
@@ -863,6 +872,7 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
         if(NextWaveTimer < diff)
         {
+            m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             if(Faction == 0)
                 SummonNextWave(AllianceWaves, WaveCount, AllianceBase);
             else if(Faction == 1)
@@ -887,12 +897,11 @@ void hyjalAI::UpdateAI(const uint32 diff)
                     }
                     else if(BossGUID[i] == BossGUID[1])
                     {
-                        Talk(SUCCESS);
                         SecondBossDead = true;
                     }
                     EventBegun = false;
                     CheckTimer = 0;
-                    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+                    m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP); 
                     BossGUID[i] = 0;
                     UpdateWorldState(WORLD_STATE_ENEMY, 0); // Reset world state for enemies to disable it
                 }
@@ -910,9 +919,6 @@ void hyjalAI::UpdateAI(const uint32 diff)
         {
             if(SpellTimer[i] < diff)
             {
-                if(m_creature->IsNonMeleeSpellCasted(false))
-                    m_creature->InterruptNonMeleeSpells(false);
-
                 Unit* target = NULL;
 
                 switch(Spell[i].TargetType)
@@ -924,8 +930,8 @@ void hyjalAI::UpdateAI(const uint32 diff)
 
                 if(target && target->isAlive())
                 {
-                    DoCast(target, Spell[i].SpellId);
-                    SpellTimer[i] = Spell[i].Cooldown;
+                    if(DoCast(target, Spell[i].SpellId))
+                        SpellTimer[i] = Spell[i].Cooldown;
                 }
             }else SpellTimer[i] -= diff;
         }
@@ -1003,11 +1009,13 @@ void hyjalAI::WaypointReached(uint32 i)
 {
     if(i == 1 || (i == 0 && m_creature->GetEntry() == THRALL))
     {
-        m_creature->Yell("Hurry, we don't have much time",0,0);
         WaitForTeleport = true;
         TeleportTimer = 20000;
         if(m_creature->GetEntry() == JAINA)
+        {
+            DoScriptText(EMOTE_MASS_TELEPORT,me);
             m_creature->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+        }
         if(m_creature->GetEntry() == THRALL && DummyGuid)
         {
             Unit* Dummy = Unit::GetUnit((*m_creature),DummyGuid);
@@ -1016,6 +1024,7 @@ void hyjalAI::WaypointReached(uint32 i)
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->DoMassTeleport = true;
                 ((hyjalAI*)(Dummy->ToCreature())->AI())->MassTeleportTimer = 20000;
                 Dummy->CastSpell(m_creature,SPELL_MASS_TELEPORT,false);
+                DoScriptText(EMOTE_MASS_TELEPORT,Dummy);
             }
         }
         //do some talking

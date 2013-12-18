@@ -66,68 +66,72 @@ EndScriptData */
 #define SOUND_ENRAGE          11474
 
 /************** Spells *************/
-// Normal Form
-#define SPELL_SHEAR                     41032 // Reduces Max. Health by 60% for 7 seconds. Can stack 19 times. 1.5 second cast
-#define SPELL_FLAME_CRASH               40832 // Summons an invis/unselect passive mob that has an aura of flame in a circle around him.
-#define SPELL_DRAW_SOUL                 40904 // 5k Shadow Damage in front of him. Heals Illidan for 100k health (script effect)
-#define SPELL_PARASITIC_SHADOWFIEND     41917 // DoT of 3k Shadow every 2 seconds. Lasts 10 seconds. (Script effect: Summon 2 parasites once the debuff has ticked off)
-#define SPELL_PARASITIC_SHADOWFIEND2    41914 // Used by Parasitic
-#define SPELL_SUMMON_PARASITICS         41915 // Summons 2 Parasitic Shadowfiends on the target. It's supposed to be cast as soon as the Parasitic Shadowfiend debuff is gone, but the spells aren't linked :(
-#define SPELL_AGONIZING_FLAMES          40932 // 4k fire damage initial to target and anyone w/i 5 yards. PHASE 3 ONLY
-#define SPELL_ENRAGE                    40683 // Increases damage by 50% and attack speed by 30%. 20 seconds, PHASE 5 ONLY
-// Flying (Phase 2)
-#define SPELL_THROW_GLAIVE              39635 // Throws a glaive on the ground
-#define SPELL_THROW_GLAIVE2             39849 // Animation for the above spell
-#define SPELL_GLAIVE_RETURNS            39873 // Glaive flies back to Illidan
-#define SPELL_FIREBALL                  40598 // 2.5k-3.5k damage in 10 yard radius. 2 second cast time.
-#define SPELL_DARK_BARRAGE              40585 // 10 second channeled spell, 3k shadow damage per second.
-// Demon Form
-#define SPELL_DEMON_TRANSFORM_1         40511 // First phase of animations for transforming into Dark Illidan (fall to ground)
-#define SPELL_DEMON_TRANSFORM_2         40398 // Second phase of animations (kneel)
-#define SPELL_DEMON_TRANSFORM_3         40510 // Final phase of animations (stand up and roar)
-#define SPELL_DEMON_FORM                40506 // Transforms into Demon Illidan. Has an Aura of Dread on him.
-#define SPELL_SHADOW_BLAST              41078 // 8k - 11k Shadow Damage. Targets highest threat. Has a splash effect, damaging anyone in 20 yards of the target.
-#define SPELL_FLAME_BURST               41126 // Hurls fire at entire raid for ~3.5k damage every 10 seconds. Resistable. (Does not work: Script effect)
-#define SPELL_FLAME_BURST_EFFECT        41131 // The actual damage. Have each player cast it on itself (workaround)
-// Other Illidan spells
-#define SPELL_KNEEL                     39656 // Before beginning encounter, this is how he appears (talking to skully).
-#define SPELL_SHADOW_PRISON             40647 // Illidan casts this spell to immobilize entire raid when he summons Maiev.
-#define SPELL_DEATH                     41220 // This spell doesn't do anything except stun Illidan and set him on his knees.
-#define SPELL_BERSERK                   45078 // Damage increased by 500%, attack speed by 150%
-#define SPELL_DUAL_WIELD                42459
-//Phase Normal spells
-#define SPELL_FLAME_CRASH_EFFECT        40836 // Firey blue ring of circle that the other flame crash summons
-#define SPELL_SUMMON_SHADOWDEMON        41117 // Summon four shadowfiends
-#define SPELL_SHADOWFIEND_PASSIVE       41913 // Passive aura for shadowfiends
-#define SPELL_SHADOW_DEMON_PASSIVE      41079 // Adds the "shadowform" aura to Shadow Demons.
-#define SPELL_CONSUME_SOUL              41080 // Once the Shadow Demons reach their target, they use this to kill them
-#define SPELL_PARALYZE                  41083 // Shadow Demons cast this on their target
-#define SPELL_PURPLE_BEAM               39123 // Purple Beam connecting Shadow Demon to their target
-//Phase Flight spells
-#define SPELL_AZZINOTH_CHANNEL          39857 // Glaives cast it on Flames. Not sure if this is the right spell.
-#define SPELL_EYE_BLAST_TRIGGER         40017 // This summons Demon Form every few seconds and deals ~20k damage in its radius
-#define SPELL_EYE_BLAST                 39908 // This does the blue flamey animation.
-#define SPELL_BLAZE_EFFECT              40610 // Green flame on the ground, triggers damage (5k) every few seconds
-#define SPELL_BLAZE_SUMMON              40637 // Summons the Blaze creature
-#define SPELL_DEMON_FIRE                40029 // Blue fire trail left by Eye Blast. Deals 2k per second if players stand on it.
-#define SPELL_FLAME_BLAST               40631 // Flames of Azzinoth use this. Frontal cone AoE 7k-9k damage.
-#define SPELL_CHARGE                    41581 //40602 // Flames of Azzinoth charges whoever is too far from them. They enrage after this. For simplicity, we'll use the same enrage as Illidan.
-#define SPELL_FLAME_ENRAGE              45078
-//Akama spells
-#define SPELL_AKAMA_DOOR_CHANNEL        41268 // Akama's channel spell on the door before the Temple Summit
-#define SPELL_DEATHSWORN_DOOR_CHANNEL   41269 // Olum and Udalo's channel spell on the door before the Temple Summit
-#define SPELL_AKAMA_DOOR_FAIL           41271 // Not sure where this is really used...
-#define SPELL_HEALING_POTION            40535 // Akama uses this to heal himself to full.
-#define SPELL_CHAIN_LIGHTNING           40536 // 6938 to 8062 for 5 targets
-//Maiev spells
-#define SPELL_CAGE_TRAP_DUMMY           40761 // Put this in DB for cage trap GO.
-#define SPELL_CAGED                     40695 // Caged Trap triggers will cast this on Illidan if he is within 3 yards
-#define SPELL_CAGE_TRAP_SUMMON          40694 // Summons a Cage Trap GO (bugged) on the ground along with a Cage Trap Disturb Trigger mob (working)
-#define SPELL_CAGE_TRAP_BEAM            40713 // 8 Triggers on the ground in an octagon cast spells like this on Illidan 'caging him'
-#define SPELL_TELEPORT_VISUAL           41232 // Teleport visual for Maiev
-#define SPELL_SHADOW_STRIKE             40685 // 4375 to 5625 every 3 seconds for 12 seconds
-#define SPELL_THROW_DAGGER              41152 // 5400 to 6600 damage, need dagger
-#define SPELL_FAN_BLADES                39954 // bugged visual
+enum Spells
+{
+    // Normal Form
+    SPELL_SHEAR                   = 41032, // Reduces Max. Health by = 60,% for = 7, seconds. Can stack = 19, times. = 1,.5 second cast
+    SPELL_FLAME_CRASH             = 40832, // Summons an invis/unselect passive mob that has an aura of flame in a circle around him.
+    SPELL_DRAW_SOUL               = 40904, // = 5,k Shadow Damage in front of him. Heals Illidan for = 100,k health (script effect)
+    SPELL_PARASITIC_SHADOWFIEND   = 41917, // DoT of = 3,k Shadow every = 2, seconds. Lasts = 10, seconds. (Script effect: Summon = 2, parasites once the debuff has ticked off)
+    SPELL_PARASITIC_SHADOWFIEND2  = 41914, // Used by Parasitic
+    SPELL_SUMMON_PARASITICS       = 41915, // Summons = 2, Parasitic Shadowfiends on the target. It's supposed to be cast as soon as the Parasitic Shadowfiend debuff is gone, but the spells aren't linked :(
+    SPELL_AGONIZING_FLAMES        = 40932, // = 4,k fire damage initial to target and anyone w/i = 5, yards. PHASE = 3, ONLY
+    SPELL_ENRAGE                  = 40683, // Increases damage by = 50,% and attack speed by = 30,%. = 20, seconds, PHASE = 5, ONLY
+    // Flying (Phase = 2,)
+    SPELL_THROW_GLAIVE            = 39635, // Throws a glaive on the ground
+    SPELL_THROW_GLAIVE2           = 39849, // Animation for the above spell
+    SPELL_GLAIVE_RETURNS          = 39873, // Glaive flies back to Illidan
+    SPELL_FIREBALL                = 40598, // = 2,.5k-3.5k damage in = 10, yard radius. = 2, second cast time.
+    SPELL_DARK_BARRAGE            = 40585, // = 10, second channeled spell, = 3,k shadow damage per second.
+    // Demon Form
+    SPELL_DEMON_TRANSFORM_1       = 40511, // First phase of animations for transforming into Dark Illidan (fall to ground)
+    SPELL_DEMON_TRANSFORM_2       = 40398, // Second phase of animations (kneel)
+    SPELL_DEMON_TRANSFORM_3       = 40510, // Final phase of animations (stand up and roar)
+    SPELL_DEMON_FORM              = 40506, // Transforms into Demon Illidan. Has an Aura of Dread on him.
+    SPELL_SHADOW_BLAST            = 41078, // = 8,k - = 11,k Shadow Damage. Targets highest threat. Has a splash effect, damaging anyone in = 20, yards of the target.
+    SPELL_FLAME_BURST             = 41126, // Hurls fire at entire raid for ~3.5k damage every = 10, seconds. Resistable. (Does not work: Script effect)
+    SPELL_FLAME_BURST_EFFECT      = 41131, // The actual damage. Have each player cast it on itself (workaround)
+    // Other Illidan spells
+    SPELL_KNEEL                   = 39656, // Before beginning encounter, this is how he appears (talking to skully).
+    SPELL_SHADOW_PRISON           = 40647, // Illidan casts this spell to immobilize entire raid when he summons Maiev.
+    SPELL_DEATH                   = 41220, // This spell doesn't do anything except stun Illidan and set him on his knees.
+    SPELL_BERSERK                 = 45078, // Damage increased by = 500,%, attack speed by = 150,%
+    SPELL_DUAL_WIELD              = 42459,
+    //Phase Normal spells
+    SPELL_FLAME_CRASH_EFFECT      = 40836, // Firey blue ring of circle that the other flame crash summons
+    SPELL_SUMMON_SHADOWDEMON      = 41117, // Summon four shadowfiends
+    SPELL_SHADOWFIEND_PASSIVE     = 41913, // Passive aura for shadowfiends
+    SPELL_SHADOW_DEMON_PASSIVE    = 41079, // Adds the "shadowform" aura to Shadow Demons.
+    SPELL_CONSUME_SOUL            = 41080, // Once the Shadow Demons reach their target, they use this to kill them
+    SPELL_PARALYZE                = 41083, // Shadow Demons cast this on their target
+    SPELL_PURPLE_BEAM             = 39123, // Purple Beam connecting Shadow Demon to their target
+    //Phase Flight spells
+    SPELL_AZZINOTH_CHANNEL        = 39857, // Glaives cast it on Flames. Not sure if this is the right spell.
+    SPELL_EYE_BLAST_TRIGGER       = 40017, // This summons Demon Form every few seconds and deals ~20k damage in its radius
+    SPELL_EYE_BLAST               = 39908, // This does the blue flamey animation.
+    SPELL_BLAZE_EFFECT            = 40610, // Green flame on the ground, triggers damage (5k) every few seconds
+    SPELL_BLAZE_SUMMON            = 40637, // Summons the Blaze creature
+    SPELL_DEMON_FIRE              = 40029, // Blue fire trail left by Eye Blast. Deals = 2,k per second if players stand on it.
+    SPELL_FLAME_BLAST             = 40631, // Flames of Azzinoth use this. Frontal cone AoE = 7,k-9k damage.
+    SPELL_CHARGE                  = 41581, //40602 // Flames of Azzinoth charges whoever is too far from them. They enrage after this. For simplicity, we'll use the same enrage as Illidan.
+    SPELL_FLAME_ENRAGE            = 45078,
+    SPELL_SELFSTUN                = 53088, //2.5s stun
+    //Akama spells
+    SPELL_AKAMA_DOOR_CHANNEL      = 41268, // Akama's channel spell on the door before the Temple Summit
+    SPELL_DEATHSWORN_DOOR_CHANNEL = 41269, // Olum and Udalo's channel spell on the door before the Temple Summit
+    SPELL_AKAMA_DOOR_FAIL         = 41271, // Not sure where this is really used...
+    SPELL_HEALING_POTION          = 40535, // Akama uses this to heal himself to full.
+    SPELL_CHAIN_LIGHTNING         = 40536, // = 6938, to = 8062, for = 5, targets
+    //Maiev spells
+    SPELL_CAGE_TRAP_DUMMY         = 40761, // Put this in DB for cage trap GO.
+    SPELL_CAGED                   = 40695, // Caged Trap triggers will cast this on Illidan if he is within = 3, yards
+    SPELL_CAGE_TRAP_SUMMON        = 40694, // Summons a Cage Trap GO (bugged) on the ground along with a Cage Trap Disturb Trigger mob (working)
+    SPELL_CAGE_TRAP_BEAM          = 40713, // = 8, Triggers on the ground in an octagon cast spells like this on Illidan 'caging him'
+    SPELL_TELEPORT_VISUAL         = 41232, // Teleport visual for Maiev
+    SPELL_SHADOW_STRIKE           = 40685, // = 4375, to = 5625, every = 3, seconds for = 12, seconds
+    SPELL_THROW_DAGGER            = 41152, // = 5400, to = 6600, damage, need dagger
+    SPELL_FAN_BLADES              = 39954, // bugged visual
+};
 
 // Other defines
 #define CENTER_X            676.740
@@ -545,7 +549,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
     }
 
     void EnterPhase(PhaseIllidan NextPhase);
-    void CastEyeBlast();
+    bool CastEyeBlast();
     void SummonFlamesOfAzzinoth();
     void SummonMaiev();
     void HandleTalkSequence();
@@ -602,6 +606,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
             break;
         case 6://fly to hover point
+            HoverPoint = rand()%4; //randomize first hover point
             m_creature->GetMotionMaster()->MovePoint(0, HoverPosition[HoverPoint].x, HoverPosition[HoverPoint].y, HoverPosition[HoverPoint].z);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
@@ -640,7 +645,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                     GlaiveGUID[i] = 0;
                 }
             }
-            Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 4000;
             break;
         case 10://attack
             DoResetThreat();
@@ -783,20 +788,20 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_SHEAR:
-                DoCast(m_creature->getVictim(), SPELL_SHEAR);
-                Timer[EVENT_SHEAR] = 25000 + (rand()%16 * 1000);
+                if(DoCast(m_creature->getVictim(), SPELL_SHEAR) == SPELL_CAST_OK)
+                    Timer[EVENT_SHEAR] = 10000 + (rand()%5000);
                 break;
 
             case EVENT_FLAME_CRASH:
-                DoCast(m_creature->getVictim(), SPELL_FLAME_CRASH);
-                Timer[EVENT_FLAME_CRASH] = 30000 + rand()%10000;
+                if(DoCast(m_creature->getVictim(), SPELL_FLAME_CRASH) == SPELL_CAST_OK)
+                    Timer[EVENT_FLAME_CRASH] = 23000 + rand()%4000;
                 break;
 
             case EVENT_PARASITIC_SHADOWFIEND:
                 {
                     if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
-                        m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true);
-                    Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
+                        if(m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true) == SPELL_CAST_OK)
+                            Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
                 }break;
 
             case EVENT_PARASITE_CHECK:
@@ -805,23 +810,23 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_DRAW_SOUL:
                 DoCast(m_creature->getVictim(), SPELL_DRAW_SOUL);
-                Timer[EVENT_DRAW_SOUL] = 50000 + rand()%10000;
+                Timer[EVENT_DRAW_SOUL] = 28000 + rand()%4000;
                 break;
 
                 //PHASE_NORMAL_2
             case EVENT_AGONIZING_FLAMES:
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_AGONIZING_FLAMES);
-                Timer[EVENT_AGONIZING_FLAMES] = 0;
+                if(DoCast(SelectUnit(SELECT_TARGET_RANDOM,0), SPELL_AGONIZING_FLAMES) == SPELL_CAST_OK)
+                    Timer[EVENT_AGONIZING_FLAMES] = 0;
                 break;
 
-            case EVENT_TRANSFORM_NORMAL:
+            case EVENT_TRANSFORM_NORMAL: //transform from normal to demon
                 EnterPhase(PHASE_TRANSFORM_SEQUENCE);
                 break;
 
                 //PHASE_NORMAL_MAIEV
             case EVENT_ENRAGE:
-                DoCast(m_creature, SPELL_ENRAGE);
-                Timer[EVENT_ENRAGE] = 0;
+                if(DoCast(m_creature, SPELL_ENRAGE) == SPELL_CAST_OK)
+                    Timer[EVENT_ENRAGE] = 0;
                 break;
 
             default:
@@ -840,19 +845,19 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_DARK_BARRAGE:
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE);
-                Timer[EVENT_DARK_BARRAGE] = 0;
+                if(DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE) == SPELL_CAST_OK)
+                    Timer[EVENT_DARK_BARRAGE] = 0;
                 break;
 
             case EVENT_EYE_BLAST:
-                CastEyeBlast();
-                Timer[EVENT_EYE_BLAST] = 30000 + rand()%10000;
+                if(CastEyeBlast())
+                    Timer[EVENT_EYE_BLAST] = 45000;
                 break;
 
             case EVENT_MOVE_POINT:
                 Phase = PHASE_FLIGHT_SEQUENCE;
                 Timer[EVENT_FLIGHT_SEQUENCE] = 0;//do not start Event when changing hover point
-                HoverPoint += (rand()%3 + 1);
+                HoverPoint += (rand()%3 + 1); //randomize a different hover point
                 if(HoverPoint > 3)
                     HoverPoint -= 4;
                 m_creature->GetMotionMaster()->MovePoint(0, HoverPosition[HoverPoint].x, HoverPosition[HoverPoint].y, HoverPosition[HoverPoint].z);
@@ -873,19 +878,21 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                     m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 30);
                 else
                     m_creature->GetMotionMaster()->MoveIdle();
-                DoCast(m_creature->getVictim(), SPELL_SHADOW_BLAST);
-                Timer[EVENT_SHADOW_BLAST] = 4000;
+                if(DoCast(m_creature->getVictim(), SPELL_SHADOW_BLAST) == SPELL_CAST_OK)
+                    Timer[EVENT_SHADOW_BLAST] = 4000;
                 break;
             case EVENT_SHADOWDEMON:
                 m_creature->InterruptNonMeleeSpells(true);
-                DoCast(m_creature, SPELL_SUMMON_SHADOWDEMON);
-                Timer[EVENT_SHADOWDEMON] = 0;
-                Timer[EVENT_FLAME_BURST] += 10000;
+                if(DoCast(m_creature, SPELL_SUMMON_SHADOWDEMON) == SPELL_CAST_OK)
+                {
+                    Timer[EVENT_SHADOWDEMON] = 0;
+                    Timer[EVENT_FLAME_BURST] += 10000;
+                }
                 break;
             case EVENT_FLAME_BURST:
                 m_creature->InterruptNonMeleeSpells(true);
-                DoCast(m_creature, SPELL_FLAME_BURST);
-                Timer[EVENT_FLAME_BURST] = 15000;
+                if(DoCast(m_creature, SPELL_FLAME_BURST) == SPELL_CAST_OK)
+                    Timer[EVENT_FLAME_BURST] = 20000;
                 break;
             case EVENT_TRANSFORM_DEMON:
                 EnterPhase(PHASE_TRANSFORM_SEQUENCE);
@@ -901,7 +908,11 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
 struct flame_of_azzinothAI : public ScriptedAI
 {
-    flame_of_azzinothAI(Creature *c) : ScriptedAI(c) {}
+    flame_of_azzinothAI(Creature *c) : ScriptedAI(c) 
+    {
+        DoCast(me,SPELL_SELFSTUN,true); //2.5sec inactivity at spawn        
+        me->ApplySpellImmune(0, IMMUNITY_SCHOOL, SPELL_SCHOOL_MASK_FIRE, true);
+    }
 
     uint32 FlameBlastTimer;
     uint32 CheckTimer;
@@ -924,10 +935,11 @@ struct flame_of_azzinothAI : public ScriptedAI
             m_creature->AddThreat(target, 5000000.0f);
             AttackStart(target);
             DoCast(target, SPELL_CHARGE);
-            DoTextEmote("sets its gaze on $N!", target);
+            DoTextEmote("pose son regard sur %n !", target); //"sets its gaze on $N!"
         }
     }
 
+    //Enrage if too far from glaive
     void EnrageCheck()
     {
         if(GETUNIT(Glaive, GlaiveGUID))
@@ -944,11 +956,12 @@ struct flame_of_azzinothAI : public ScriptedAI
                     AttackStart(m_creature->getVictim());
                 }
             }
+            /*
             else if(!m_creature->HasAura(SPELL_AZZINOTH_CHANNEL, 0))
             {
                 Glaive->CastSpell(m_creature, SPELL_AZZINOTH_CHANNEL, false);
                 m_creature->RemoveAurasDueToSpell(SPELL_FLAME_ENRAGE);
-            }
+            } */
         }
     }
 
@@ -1006,6 +1019,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         JustCreated = true;
         baseFaction = me->getFaction();
+        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
     }
 
     bool JustCreated;
@@ -1030,7 +1044,6 @@ struct npc_akama_illidanAI : public ScriptedAI
 
     void Reset()
     {
-        me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
         WalkCount = 0;
         if(pInstance)
         {
@@ -1195,7 +1208,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(NextPhase)
         {
         case PHASE_CHANNEL:
-            me->setFaction(baseFaction);
+            me->setFaction(baseFaction); //restore our faction
             BeginChannel();
             Timer = 5000;
             ChannelCount = 0;
@@ -1763,7 +1776,11 @@ bool GOHello_cage_trap(Player* plr, GameObject* go)
 
 struct shadow_demonAI : public ScriptedAI
 {
-    shadow_demonAI(Creature *c) : ScriptedAI(c) {}
+    shadow_demonAI(Creature *c) : ScriptedAI(c) 
+    {
+        DoZoneInCombat();
+        SelectRandomTarget();
+    }
 
     uint64 TargetGUID;
 
@@ -1781,22 +1798,32 @@ struct shadow_demonAI : public ScriptedAI
             target->RemoveAurasDueToSpell(SPELL_PARALYZE);
     }
 
+    void SelectRandomTarget()
+    {
+        if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 999, true)) // only on players.
+        {
+            me->AddThreat(target, 5000000.0f);
+            me->AI()->AttackStart(target);
+        }
+    }
+
     void UpdateAI(const uint32 diff)
     {
         if(!UpdateVictim()) return;
 
-        if(m_creature->getVictim()->GetTypeId() != TYPEID_PLAYER) return; // Only cast the below on players.
-
         if(!m_creature->getVictim()->HasAura(SPELL_PARALYZE, 0))
         {
             TargetGUID = m_creature->getVictim()->GetGUID();
-            m_creature->AddThreat(m_creature->getVictim(), 10000000.0f);
             DoCast(m_creature->getVictim(), SPELL_PURPLE_BEAM, true);
             DoCast(m_creature->getVictim(), SPELL_PARALYZE, true);
         }
+
         // Kill our target if we're very close.
         if(m_creature->IsWithinDistInMap(m_creature->getVictim(), 3))
+        {
             DoCast(m_creature->getVictim(), SPELL_CONSUME_SOUL);
+            SelectRandomTarget();
+        }
     }
 };
 
@@ -1947,12 +1974,6 @@ void boss_illidan_stormrageAI::JustSummoned(Creature* summon)
             if(target)
                 summon->AI()->AttackStart(target);
         }break;
-    case SHADOW_DEMON:
-        if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 999, true)) // only on players.
-        {
-            summon->AddThreat(target, 5000000.0f);
-            summon->AI()->AttackStart(target);
-        }break;
     case MAIEV_SHADOWSONG:
         {
             summon->SetVisibility(VISIBILITY_OFF); // Leave her invisible until she has to talk
@@ -2054,13 +2075,11 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
 }
 
 
-void boss_illidan_stormrageAI::CastEyeBlast()
+bool boss_illidan_stormrageAI::CastEyeBlast()
 {
     m_creature->InterruptNonMeleeSpells(false);
 
-    DoYell(SAY_EYE_BLAST, LANG_UNIVERSAL, NULL);
-    DoPlaySoundToSet(m_creature, SOUND_EYE_BLAST);
-
+    // spawn trigger at closer eyeBlast point
     float distx, disty, dist[2];
     for(uint8 i = 0; i < 2; ++i)
     {
@@ -2069,6 +2088,8 @@ void boss_illidan_stormrageAI::CastEyeBlast()
         dist[i] = distx * distx + disty * disty;
     }
     Locations initial = EyeBlast[dist[0] < dist[1] ? 0 : 1];
+
+    // move trigger to closer glaive position
     for(uint8 i = 0; i < 2; ++i)
     {
         distx = GlaivePosition[i].x - HoverPosition[HoverPoint].x;
@@ -2080,8 +2101,8 @@ void boss_illidan_stormrageAI::CastEyeBlast()
     final.x = 2 * final.x - initial.x;
     final.y = 2 * final.y - initial.y;
 
-    Creature* Trigger = m_creature->SummonCreature(23069, initial.x, initial.y, initial.z, 0, TEMPSUMMON_TIMED_DESPAWN, 13000);
-    if(!Trigger) return;
+    Creature* Trigger = m_creature->SummonCreature(DEMON_FIRE, initial.x, initial.y, initial.z, 0, TEMPSUMMON_TIMED_DESPAWN, 13000);
+    if(!Trigger) return false;
 
     Trigger->SetSpeed(MOVE_WALK, 3);
     Trigger->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
@@ -2089,7 +2110,15 @@ void boss_illidan_stormrageAI::CastEyeBlast()
 
     //Trigger->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     m_creature->SetUInt64Value(UNIT_FIELD_TARGET, Trigger->GetGUID());
-    DoCast(Trigger, SPELL_EYE_BLAST, true);
+    //SPELL_DEMON_FIRE is cast via creature_template
+    if(DoCast(Trigger, SPELL_EYE_BLAST) == SPELL_CAST_OK)
+    {
+        DoYell(SAY_EYE_BLAST, LANG_UNIVERSAL, NULL);
+        DoPlaySoundToSet(m_creature, SOUND_EYE_BLAST);
+        return true;
+    }
+
+    return false;
 }
 
 void boss_illidan_stormrageAI::SummonFlamesOfAzzinoth()

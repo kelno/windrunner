@@ -84,7 +84,9 @@ extern void AddSC_onevents();
 extern void AddSC_npc_lottery();
 extern void AddSC_theinform();
 extern void AddSC_mylittlebombling();
+extern void AddSC_firework_controller();
 extern void AddSC_npc_interpreter();
+extern void AddSC_custom_gnominizer();
 
 extern void AddSC_catapultmaster();
 extern void AddSC_npc_teleporter();
@@ -1095,7 +1097,7 @@ void ScriptMgr::LoadDatabase()
 
                 case EVENT_T_AGGRO:
                 case EVENT_T_DEATH:
-                case EVENT_T_EVADE:
+                case EVENT_T_RESET:
                 case EVENT_T_SPAWNED:
                 case EVENT_T_REACHED_HOME:
                     {
@@ -1474,7 +1476,9 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_npc_lottery();
 	AddSC_theinform();
     AddSC_mylittlebombling();
+    AddSC_firework_controller();
     AddSC_npc_interpreter();
+    AddSC_custom_gnominizer();
 
     AddSC_npc_teleporter();
     AddSC_npc_teleporter_pvpzone();

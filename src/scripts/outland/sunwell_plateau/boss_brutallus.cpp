@@ -117,8 +117,6 @@ struct boss_brutallusAI : public ScriptedAI
         }
         
         m_creature->SetFullTauntImmunity(false);
-        me->RemoveAurasDueToSpell(45769);
-        me->CastSpell(me, 45769, true);
     }
 
     void Aggro(Unit *who)

@@ -29,6 +29,31 @@
 #define DATA_RAIDDAMAGE           18
 #define DATA_RESET_RAIDDAMAGE     19
 #define DATA_CURRENT_WAVE         20
+#define DATA_JAINAINCOMBAT        21
+
+enum HyjalCreatures
+{
+    CREATURE_RAGE_WINTERCHILL   = 17767,
+    CREATURE_ANATHERON          = 17808,
+    CREATURE_KAZROGAL           = 17888,
+    CREATURE_AZGALOR            = 17842,
+    CREATURE_ARCHIMONDE         = 17968,
+    CREATURE_JAINA              = 17772,
+    CREATURE_THRALL             = 17852,
+    CREATURE_TYRANDE            = 17948,
+
+    CREATURE_ALLIANCE_FOOTMAN   = 17919,
+    CREATURE_ALLIANCE_KNIGHT    = 17920,
+    CREATURE_ALLIANCE_RIFLEMAN  = 17921,
+    CREATURE_ALLIANCE_SORCERESS = 17922,
+    CREATURE_ALLIANCE_PRIEST    = 17928,
+};
+
+enum HyjalGobjects
+{
+    GOBJECT_DOOR_ORC = 182060, // teleport door leading to orc encampment
+    GOBJECT_DOOR_ELF = 182061, // teleport door leading to elf encampment
+};
 
 #define ERROR_INST_DATA     "TSCR: Instance data not set properly for Mount Hyjal. Encounters will be buggy"
 #endif
