@@ -1067,7 +1067,6 @@ void World::LoadConfigSettings(bool reload)
 
     m_configs[CONFIG_MAX_WHO] = sConfig.GetIntDefault("MaxWhoListReturns", 49);
     m_configs[CONFIG_PET_LOS] = sConfig.GetBoolDefault("vmap.petLOS", false);
-    m_configs[CONFIG_VMAP_TOTEM] = sConfig.GetBoolDefault("vmap.totem", false);
     
     m_configs[CONFIG_PREMATURE_BG_REWARD] = sConfig.GetBoolDefault("Battleground.PrematureReward", true);
     m_configs[CONFIG_BG_START_MUSIC] = sConfig.GetBoolDefault("MusicInBattleground", false);
@@ -1146,6 +1145,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_ARENA_SEASON] = sConfig.GetIntDefault("Arena.Season", 0);
 
     m_configs[CONFIG_IRC_ENABLED] = sConfig.GetBoolDefault("IRC.Enabled", false);
+    m_configs[CONFIG_IRC_COMMANDS] = sConfig.GetBoolDefault("IRC.Commands", false);
     
     m_configs[CONFIG_SPAM_REPORT_THRESHOLD] = sConfig.GetIntDefault("Spam.Report.Threshold", 3);
     m_configs[CONFIG_SPAM_REPORT_PERIOD] = sConfig.GetIntDefault("Spam.Report.Period", 120); // In seconds
@@ -1165,7 +1165,11 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD] = sConfig.GetIntDefault("ArenaServer.PlayerRepartitionThreshold", 0);
 
     m_configs[CONFIG_SMOOTHED_CHANCE_ENABLED] = sConfig.GetBoolDefault("SmoothedChance.Enabled", 0);
-    m_configs[CONFIG_SMOOTHED_CHANCE_INFLUENCE] = sConfig.GetIntDefault("SmoothedChance.Influence", 5);
+    m_configs[CONFIG_SMOOTHED_CHANCE_INFLUENCE] = sConfig.GetIntDefault("SmoothedChance.Influence", 0);
+
+    m_configs[CONFIG_TESTSERVER_ENABLE] = sConfig.GetBoolDefault("TestServer.Enabled", 0);
+    m_configs[CONFIG_TESTSERVER_DISABLE_GLANCING] = sConfig.GetBoolDefault("TestServer.DisableGlancing", 0);
+    m_configs[CONFIG_TESTSERVER_DISABLE_MAINHAND] = sConfig.GetIntDefault("TestServer.DisableMainHand", 0);
 }
 
 extern void LoadGameObjectModelList();
@@ -1472,7 +1476,7 @@ void World::SetInitialWorldSettings()
     sSmartWaypointMgr.LoadFromDB();
 
     sLog.outString( "Loading Creature Formations..." );
-    sFormationMgr.LoadCreatureFormations();
+    sCreatureGroupMgr.LoadCreatureFormations();
     
     sLog.outString("Loading Conditions...");
     sConditionMgr.LoadConditions();

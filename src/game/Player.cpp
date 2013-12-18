@@ -484,10 +484,6 @@ Player::Player (WorldSession *session): Unit()
     
     _lastSpamAlert = 0;
     lastLagReport = 0;
-
-    smoothingSystem = new SmoothingSystem();
-    for (uint8 i=0; i<3; i++)
-        hasteRatings[i] = 0;
 }
 
 Player::~Player ()
@@ -3158,7 +3154,8 @@ bool Player::addSpell(uint32 spell_id, bool active, bool learning, bool loading,
             (spell_id == 33948 && m_form == FORM_FLIGHT) ||
             (spell_id == 40121 && m_form == FORM_FLIGHT_EPIC) )
                                                             //Check CasterAuraStates
-            if (!spellInfo->CasterAuraState || HasAuraState(AuraState(spellInfo->CasterAuraState)))
+            if (   (!spellInfo->CasterAuraState || HasAuraState(AuraState(spellInfo->CasterAuraState)))
+                && HasItemFitToSpellRequirements(spellInfo) )
                 CastSpell(this, spell_id, true);
     }
     else if( IsSpellHaveEffect(spellInfo,SPELL_EFFECT_SKILL_STEP) )
@@ -4260,12 +4257,6 @@ void Player::ResurrectPlayer(float restore_percent, bool applySickness)
 
 void Player::KillPlayer()
 {
-    if(isInDuelArea())
-    {
-        ResurrectPlayer(1.0f);
-        return;
-    }
-
     SetMovement(MOVE_ROOT);
 
     StopMirrorTimers();                                     //disable timers(bars)
@@ -4601,11 +4592,14 @@ void Player::RepopAtGraveyard()
 
     AreaTableEntry const *zone = GetAreaEntryByAreaID(GetAreaId());
 
+    bool inDuelArea = isInDuelArea();
     // Such zones are considered unreachable as a ghost and the player must be automatically revived
-    if(!isAlive() && zone && zone->flags & AREA_FLAG_NEED_FLY || GetTransport() || (zone && GetPositionZ() < zone->maxDepth) || (zone && zone->ID == 2257))
+    if(!isAlive() && zone && zone->flags & AREA_FLAG_NEED_FLY || GetTransport() || (zone && GetPositionZ() < zone->maxDepth) || (zone && zone->ID == 2257) || inDuelArea)
     {
         ResurrectPlayer(0.5f);
         SpawnCorpseBones();
+        if(inDuelArea)
+            return; //stay where we are
     }
 
     WorldSafeLocsEntry const *ClosestGrave = NULL;
@@ -5073,51 +5067,47 @@ void Player::UpdateHasteRating(CombatRating cr, int32 value, bool apply)
 {
     if(cr > CR_HASTE_SPELL || cr < CR_HASTE_MELEE)
     {
-        sLog.outDebug("UpdateHasteRating called with invalid combat rating %u",cr);
+        sLog.outError("UpdateHasteRating called with invalid combat rating %u",cr);
         return;
     }
     
-        //    sLog.outDebug("UpdateHasteRating(%u,%i,%s)",cr,value,apply?"true":"false");
+        //sLog.outString("UpdateHasteRating(%u,%i,%s)",cr,value,apply?"true":"false");
     float RatingCoeffecient = GetRatingCoefficient(cr);
-        //    sLog.outDebug("RatingCoeffecient : %f",RatingCoeffecient);
-    float mod = hasteRatings[cr-CR_HASTE_MELEE]/RatingCoeffecient; // Current mod
-        //    sLog.outDebug("Old mod : %f",mod);
-        //    sLog.outDebug("Previous rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
+
+    // calc rating before new rating was applied
+    uint32 oldRating = GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + cr) - (apply ? value : -value);
+    // Current mod
+    float oldMod = oldRating/RatingCoeffecient;     
+        //sLog.outString("Previous rating : %u",oldRating);
+        //sLog.outString("Previous mod : %f",oldMod);
+    float newMod = GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + cr)/RatingCoeffecient;
+        //sLog.outString("New rating : %u",GetUInt32Value(cr));
+        //sLog.outString("New mod : %f",newMod);
     switch(cr)
     {
     case CR_HASTE_MELEE:
-       //         sLog.outDebug("current attack time : %u", GetAttackTime(BASE_ATTACK));
+             //sLog.outString("Old attack time : %u", GetAttackTime(BASE_ATTACK));
         //unapply previous haste rating
-        ApplyAttackTimePercentMod(BASE_ATTACK,mod,false);
-        ApplyAttackTimePercentMod(OFF_ATTACK,mod,false);
-       //         sLog.outDebug("base atack time : %f",GetAttackTime(BASE_ATTACK));
-        hasteRatings[0] += apply ? value : -value;
-        mod = hasteRatings[0]/RatingCoeffecient;
-        ApplyAttackTimePercentMod(BASE_ATTACK,mod,true);
-        ApplyAttackTimePercentMod(OFF_ATTACK,mod,true);
-       //         sLog.outDebug("New attack time : %u", GetAttackTime(BASE_ATTACK));
+        ApplyAttackTimePercentMod(BASE_ATTACK,oldMod,false);
+        ApplyAttackTimePercentMod(OFF_ATTACK,oldMod,false);
+             //sLog.outString("base attack time (no haste): %u",GetAttackTime(BASE_ATTACK));
+        //apply new mod
+        ApplyAttackTimePercentMod(BASE_ATTACK,newMod,true);
+        ApplyAttackTimePercentMod(OFF_ATTACK,newMod,true);
+             //sLog.outString("New attack time : %u", GetAttackTime(BASE_ATTACK));
         break;
     case CR_HASTE_RANGED:
-       //         sLog.outDebug("current attack time : %u", GetAttackTime(RANGED_ATTACK));
-        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, false); //unapply previous haste rating
-      //          sLog.outDebug("base atack time : %f",GetAttackTime(RANGED_ATTACK));
-        hasteRatings[1] += apply ? value : -value;
-        mod = hasteRatings[1]/RatingCoeffecient;
-        ApplyAttackTimePercentMod(RANGED_ATTACK, mod, true);
-       //         sLog.outDebug("New attack time : %u", GetAttackTime(RANGED_ATTACK));
+        ApplyAttackTimePercentMod(RANGED_ATTACK, oldMod, false);
+        ApplyAttackTimePercentMod(RANGED_ATTACK, newMod, true);
         break;
     case CR_HASTE_SPELL:
-        //        sLog.outDebug("current cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
-        ApplyCastTimePercentMod(mod,false); //unapply previous haste rating
-        //        sLog.outDebug("base cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
-        hasteRatings[2] += apply ? value : -value;
-        mod = hasteRatings[2]/RatingCoeffecient;
-        ApplyCastTimePercentMod(mod,true);
-        //        sLog.outDebug("New cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+            //sLog.outString("Old cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        ApplyCastTimePercentMod(oldMod,false); 
+            //sLog.outString("Base cast time (no haste): %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
+        ApplyCastTimePercentMod(newMod,true);
+            //sLog.outString("New cast time : %f",GetFloatValue(UNIT_MOD_CAST_SPEED));
         break;
     }
-   // sLog.outDebug("New rating : %i",hasteRatings[cr-CR_HASTE_MELEE]);
-  //  sLog.outDebug("New mod : %f",mod);
 }
 
 void Player::SetRegularAttackTime()
@@ -7185,16 +7175,16 @@ void Player::_ApplyItemMods(Item *item, uint8 slot,bool apply)
     if(!proto)
         return;
 
-    sLog.outDetail("applying mods for item %u ",item->GetGUIDLow());
-
-    uint32 attacktype = Player::GetAttackBySlot(slot);
-    if(attacktype < MAX_ATTACK)
-        _ApplyWeaponDependentAuraMods(item,WeaponAttackType(attacktype),apply);
+    //sLog.outDetail("applying mods for item %u ",item->GetGUIDLow());
 
     _ApplyItemBonuses(proto,slot,apply);
 
     if( slot==EQUIPMENT_SLOT_RANGED )
         _ApplyAmmoBonuses();
+
+    //apply case is handled by spell 107 ("Block")
+    if (!apply && slot==EQUIPMENT_SLOT_OFFHAND && item->GetProto()->Block)
+        SetCanBlock(false);
 
     ApplyItemEquipSpell(item,apply);
     ApplyEnchantment(item, apply);
@@ -7374,6 +7364,8 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto,uint8 slot,bool apply)
         attType = OFF_ATTACK;
     }
 
+    _ApplyWeaponOnlyDamageMods(attType,apply);
+
     if (proto->Damage[0].DamageMin > 0 )
     {
         damage = apply ? proto->Damage[0].DamageMin : BASE_MINDAMAGE;
@@ -7404,74 +7396,44 @@ void Player::_ApplyItemBonuses(ItemPrototype const *proto,uint8 slot,bool apply)
         UpdateDamagePhysical(attType);
 }
 
-void Player::_ApplyWeaponDependentAuraMods(Item *item,WeaponAttackType attackType,bool apply)
+void Player::_ApplyWeaponOnlyDamageMods(WeaponAttackType attType, bool apply)
 {
+    BaseModGroup modCrit = BASEMOD_END;
+    UnitMods modDamage = UNIT_MOD_END;
+
+    switch(attType)
+    {
+        case BASE_ATTACK:   
+            modCrit = CRIT_PERCENTAGE;        
+            modDamage = UNIT_MOD_DAMAGE_MAINHAND;
+            break;
+        case OFF_ATTACK:    
+            modCrit = OFFHAND_CRIT_PERCENTAGE;
+            modDamage = UNIT_MOD_DAMAGE_OFFHAND;
+            break;
+        case RANGED_ATTACK: 
+            modCrit = RANGED_CRIT_PERCENTAGE; 
+            modDamage = UNIT_MOD_DAMAGE_RANGED;
+            break;
+        default: 
+            return;
+    }
+
+    //Apply all auras with SPELL_ATTR_AFFECT_WEAPON only
     AuraList const& auraCritList = GetAurasByType(SPELL_AURA_MOD_CRIT_PERCENT);
-    for(AuraList::const_iterator itr = auraCritList.begin(); itr!=auraCritList.end();++itr)
-        _ApplyWeaponDependentAuraCritMod(item,attackType,*itr,apply);
+    for(auto itr : auraCritList)
+        if(itr->GetSpellProto()->SchoolMask & SPELL_SCHOOL_NORMAL)
+            HandleBaseModValue(modCrit, FLAT_MOD, float (itr->GetModifierValue()), apply);
 
     AuraList const& auraDamageFlatList = GetAurasByType(SPELL_AURA_MOD_DAMAGE_DONE);
-    for(AuraList::const_iterator itr = auraDamageFlatList.begin(); itr!=auraDamageFlatList.end();++itr)
-        _ApplyWeaponDependentAuraDamageMod(item,attackType,*itr,apply);
+    for(auto itr : auraDamageFlatList)
+        if(itr->GetSpellProto()->SchoolMask & SPELL_SCHOOL_NORMAL)
+            HandleStatModifier(modDamage, TOTAL_VALUE, float(itr->GetModifierValue()),apply);
 
     AuraList const& auraDamagePCTList = GetAurasByType(SPELL_AURA_MOD_DAMAGE_PERCENT_DONE);
-    for(AuraList::const_iterator itr = auraDamagePCTList.begin(); itr!=auraDamagePCTList.end();++itr)
-        _ApplyWeaponDependentAuraDamageMod(item,attackType,*itr,apply);
-}
-
-void Player::_ApplyWeaponDependentAuraCritMod(Item *item, WeaponAttackType attackType, Aura* aura, bool apply)
-{
-    // generic not weapon specific case processes in aura code
-    if(aura->GetSpellProto()->EquippedItemClass == -1)
-        return;
-
-    BaseModGroup mod = BASEMOD_END;
-    switch(attackType)
-    {
-        case BASE_ATTACK:   mod = CRIT_PERCENTAGE;        break;
-        case OFF_ATTACK:    mod = OFFHAND_CRIT_PERCENTAGE;break;
-        case RANGED_ATTACK: mod = RANGED_CRIT_PERCENTAGE; break;
-        default: return;
-    }
-
-    if (item->IsFitToSpellRequirements(aura->GetSpellProto()))
-    {
-        HandleBaseModValue(mod, FLAT_MOD, float (aura->GetModifierValue()), apply);
-    }
-}
-
-void Player::_ApplyWeaponDependentAuraDamageMod(Item *item, WeaponAttackType attackType, Aura* aura, bool apply)
-{
-    // ignore spell mods for not wands
-    Modifier const* modifier = aura->GetModifier();
-    if((modifier->m_miscvalue & SPELL_SCHOOL_MASK_NORMAL)==0 && (getClassMask() & CLASSMASK_WAND_USERS)==0)
-        return;
-
-    // generic not weapon specific case processes in aura code
-    if(aura->GetSpellProto()->EquippedItemClass == -1)
-        return;
-
-    UnitMods unitMod = UNIT_MOD_END;
-    switch(attackType)
-    {
-        case BASE_ATTACK:   unitMod = UNIT_MOD_DAMAGE_MAINHAND; break;
-        case OFF_ATTACK:    unitMod = UNIT_MOD_DAMAGE_OFFHAND;  break;
-        case RANGED_ATTACK: unitMod = UNIT_MOD_DAMAGE_RANGED;   break;
-        default: return;
-    }
-
-    UnitModifierType unitModType = TOTAL_VALUE;
-    switch(modifier->m_auraname)
-    {
-        case SPELL_AURA_MOD_DAMAGE_DONE:         unitModType = TOTAL_VALUE; break;
-        case SPELL_AURA_MOD_DAMAGE_PERCENT_DONE: unitModType = TOTAL_PCT;   break;
-        default: return;
-    }
-
-    if (item->IsFitToSpellRequirements(aura->GetSpellProto()))
-    {
-        HandleStatModifier(unitMod, unitModType, float(aura->GetModifierValue()),apply);
-    }
+    for(auto itr : auraDamagePCTList)
+        if(itr->GetSpellProto()->SchoolMask & SPELL_SCHOOL_NORMAL)
+            HandleStatModifier(modDamage, TOTAL_PCT, float(itr->GetModifierValue()),apply);
 }
 
 void Player::ApplyItemEquipSpell(Item *item, bool apply, bool form_change)
@@ -7724,9 +7686,12 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
                 continue;
             }
 
-            // do not allow proc windfury totem from yellow attacks
-            if(spell && spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && spellInfo->SpellFamilyFlags & 0x200000000LL)
-                return;
+            // do not allow proc windfury totem from yellow attacks except for attacks on next swing
+            if(spell 
+                && !Spell::IsNextMeleeSwingSpell(spell)
+                && spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN 
+                && spellInfo->SpellFamilyFlags & 0x200000000LL)
+                return; 
 
             // not allow proc extra attack spell at extra attack
             if( m_extraAttacks && IsSpellHaveEffect(spellInfo, SPELL_EFFECT_ADD_EXTRA_ATTACKS) )
@@ -7788,10 +7753,7 @@ void Player::_RemoveAllItemMods()
             if(!proto)
                 continue;
 
-            uint32 attacktype = Player::GetAttackBySlot(i);
-            if(attacktype < MAX_ATTACK)
-                _ApplyWeaponDependentAuraMods(m_items[i],WeaponAttackType(attacktype),false);
-
+            RemoveItemDependentAurasAndCasts(m_items[i]);
             _ApplyItemBonuses(proto,i, false);
 
             if( i == EQUIPMENT_SLOT_RANGED )
@@ -7812,10 +7774,6 @@ void Player::_ApplyAllItemMods()
             ItemPrototype const *proto = m_items[i]->GetProto();
             if(!proto)
                 continue;
-
-            uint32 attacktype = Player::GetAttackBySlot(i);
-            if(attacktype < MAX_ATTACK)
-                _ApplyWeaponDependentAuraMods(m_items[i],WeaponAttackType(attacktype),true);
 
             _ApplyItemBonuses(proto,i, true);
 
@@ -7841,6 +7799,7 @@ void Player::_ApplyAllItemMods()
 
             ApplyItemEquipSpell(m_items[i],true);
             ApplyEnchantment(m_items[i], true);
+            AddItemDependantAuras(m_items[i]);
         }
     }
 }
@@ -11118,6 +11077,31 @@ Item* Player::EquipNewItem( uint16 pos, uint32 item, bool update )
     return NULL;
 }
 
+// update auras from itemclass restricted spells
+void Player::AddItemDependantAuras(Item* pItem)
+{
+    ItemPrototype const* proto = pItem->GetProto();
+    if(!proto) return;
+
+    const PlayerSpellMap& pSpellMap = GetSpellMap();
+    for (auto itr : pSpellMap) {
+        if (itr.second->state == PLAYERSPELL_REMOVED)
+            continue;
+
+        SpellEntry const* spellInfo = spellmgr.LookupSpell(itr.first);
+        if (   !spellInfo 
+            || (spellInfo->Effect[0] == SPELL_EFFECT_PROFICIENCY || spellInfo->Effect[1] == SPELL_EFFECT_PROFICIENCY) //these need to be excepted else client wont properly show weapon skill
+            || !IsPassiveSpell(spellInfo->Id) 
+            || spellInfo->EquippedItemClass == -1 //skip non item dependant spells
+            || HasAura(itr.first)
+           )
+            continue;
+
+        if(pItem->IsFitToSpellRequirements(spellInfo))
+            CastSpell(this, itr.first, true);
+    }
+}
+
 Item* Player::EquipItem( uint16 pos, Item *pItem, bool update )
 {
     if( pItem )
@@ -11143,6 +11127,7 @@ Item* Player::EquipItem( uint16 pos, Item *pItem, bool update )
                     AddItemsSetItem(this,pItem);
 
                 _ApplyItemMods(pItem, slot, true);
+                AddItemDependantAuras(pItem);
 
                 if(pProto && isInCombat()&& pProto->Class == ITEM_CLASS_WEAPON && m_weaponChangeTimer == 0)
                 {
@@ -13329,8 +13314,6 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
         }
     }
 
-    RewardReputation( pQuest );
-
     if( pQuest->GetRewSpellCast() > 0 )
         CastSpell( this, pQuest->GetRewSpellCast(), true);
     else if( pQuest->GetRewSpell() > 0)
@@ -13349,17 +13332,22 @@ void Player::RewardQuest( Quest const *pQuest, uint32 reward, Object* questGiver
     else
         XP = q_status.m_rewarded ? 0 : uint32(pQuest->XPValue( this )*sWorld.getRate(RATE_XP_QUEST));
 
-    if ( getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL) )
-        GiveXP( XP , NULL );
-    else
-        ModifyMoney( int32(pQuest->GetRewMoneyMaxLevel() * sWorld.getRate(RATE_DROP_MONEY)) );
+    if(!sWorld.getConfig(CONFIG_BUGGY_QUESTS_AUTOCOMPLETE) || !pQuest->IsMarkedAsBugged()) //don't reward as much if the quest was auto completed
+    {
+        RewardReputation( pQuest );
 
-    // Give player extra money if GetRewOrReqMoney > 0 and get ReqMoney if negative
-    ModifyMoney( pQuest->GetRewOrReqMoney() );
+        if ( getLevel() < sWorld.getConfig(CONFIG_MAX_PLAYER_LEVEL) )
+            GiveXP( XP , NULL );
+        else
+            ModifyMoney( int32(pQuest->GetRewMoneyMaxLevel() * sWorld.getRate(RATE_DROP_MONEY)) );
 
-    // honor reward
-    if(pQuest->GetRewHonorableKills())
+        // Give player extra money if GetRewOrReqMoney > 0 and get ReqMoney if negative
+        ModifyMoney( pQuest->GetRewOrReqMoney() );
+
+         // honor reward
+        if(pQuest->GetRewHonorableKills())
         RewardHonor(NULL, 0, Trinity::Honor::hk_honor_at_level(getLevel(), pQuest->GetRewHonorableKills()));
+    }
 
     // title reward
     if(pQuest->GetCharTitleId())
@@ -13948,6 +13936,61 @@ void Player::SetQuestStatus( uint32 quest_id, QuestStatus status )
     }
 
     UpdateForQuestsGO();
+}
+
+void Player::AutoCompleteQuest( Quest const* qInfo )
+{
+    if(!qInfo) return;
+
+    // Add quest items for quests that require items
+    for (uint8 x = 0; x < QUEST_OBJECTIVES_COUNT; ++x)
+    {
+        uint32 id = qInfo->ReqItemId[x];
+        uint32 count = qInfo->ReqItemCount[x];
+        if(!id || !count)
+            continue;
+
+        uint32 curItemCount = GetItemCount(id,true);
+
+        ItemPosCountVec dest;
+        uint8 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, id, count-curItemCount );
+        if( msg == EQUIP_ERR_OK )
+        {
+            Item* item = StoreNewItem( dest, id, true);
+            SendNewItem(item,count-curItemCount,true,false);
+        } else {
+            ChatHandler(this).SendSysMessage("La quête ne peut pas être autocompletée car vos sacs sont pleins.");
+            return;
+        }
+    }
+
+    // All creature/GO slain/casted (not required, but otherwise it will display "Creature slain 0/10")
+    for(uint8 i = 0; i < QUEST_OBJECTIVES_COUNT; i++)
+    {
+        uint32 creature = qInfo->ReqCreatureOrGOId[i];
+        uint32 creaturecount = qInfo->ReqCreatureOrGOCount[i];
+
+        if(uint32 spell_id = qInfo->ReqSpell[i])
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                CastedCreatureOrGO(creature,0,spell_id);
+        }
+        else if(creature > 0)
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                KilledMonster(creature,0);
+        }
+        else if(creature < 0)
+        {
+            for(uint16 z = 0; z < creaturecount; ++z)
+                CastedCreatureOrGO(creature,0,0);
+        }
+    }
+
+    CompleteQuest(qInfo->GetQuestId());
+    ChatHandler(this).PSendSysMessage(LANG_BUGGY_QUESTS_AUTOCOMPLETE);
+
+    WorldDatabase.PExecute("update quest_bugs set completecount = completecount + 1 where entry = '%u'", qInfo->GetQuestId());
 }
 
 // not used in TrinIty, but used in scripting code
@@ -15232,6 +15275,26 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
     
+    /* To be removed one daaaay */
+    if(m_class == CLASS_PALADIN)
+        if(!HasSpell(53087)) // Salvation (-50% threat passive)
+            addSpell(53087,true);
+    if(m_class == CLASS_WARRIOR)
+        if(!HasSpell(45471)) // "Defiance Expertise Passive (DND)"
+            addSpell(45471,true);
+    if(m_race == RACE_ORC)
+        if(!HasSpell(20574))
+            addSpell(20574,true); //Axe Specialization
+    if(m_race == RACE_TROLL)
+        if(m_class == CLASS_ROGUE)
+        {
+            if(!HasSpell(26297)) // Berserker
+                addSpell(26297,true);
+        } else {
+            if(HasSpell(26297))
+                removeSpell(26297);
+        }
+
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
 
@@ -17829,8 +17892,8 @@ bool Player::IsAffectedBySpellmod(SpellEntry const *spellInfo, SpellModifier *mo
             return false;
     }
     
-    //if (spellInfo && spell)
-        //sLog.outString("IsAffectedBySpellmod2: spell %u against spell %u: %u %u %u", spellInfo->Id, spell->m_spellInfo->Id, mod->op, mod->type, mod->value);
+/*    if (spellInfo && spell)
+        sLog.outString("IsAffectedBySpellmod2: spell %u against spell %u: %u %u %u", spellInfo->Id, spell->m_spellInfo->Id, mod->op, mod->type, mod->value);*/
 
     return spellmgr.IsAffectedBySpell(spellInfo,mod->spellId,mod->effectId,mod->mask);
 }
@@ -19985,7 +20048,7 @@ OutdoorPvP * Player::GetOutdoorPvP() const
     return sOutdoorPvPMgr.GetOutdoorPvPToZoneId(GetZoneId());
 }
 
-bool Player::HasItemFitToSpellReqirements(SpellEntry const* spellInfo, Item const* ignoreItem)
+bool Player::HasItemFitToSpellRequirements(SpellEntry const* spellInfo, Item const* ignoreItem)
 {
     if(spellInfo->EquippedItemClass < 0)
         return true;
@@ -20023,13 +20086,14 @@ bool Player::HasItemFitToSpellReqirements(SpellEntry const* spellInfo, Item cons
             break;
         }
         default:
-            sLog.outError("HasItemFitToSpellReqirements: Not handled spell requirement for item class %u",spellInfo->EquippedItemClass);
+            sLog.outError("HasItemFitToSpellRequirements: Not handled spell requirement for item class %u",spellInfo->EquippedItemClass);
             break;
     }
 
     return false;
 }
 
+// Recheck auras requiring a specific item class/subclass
 void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
 {
     AuraMap& auras = GetAuras();
@@ -20037,16 +20101,12 @@ void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
     {
         Aura* aura = itr->second;
 
-        // skip passive (passive item dependent spells work in another way) and not self applied auras
         SpellEntry const* spellInfo = aura->GetSpellProto();
-        if(aura->IsPassive() ||  aura->GetCasterGUID()!=GetGUID())
-        {
-            ++itr;
-            continue;
-        }
-
-        // skip if not item dependent or have alternative item
-        if(HasItemFitToSpellReqirements(spellInfo,pItem))
+        
+        if(   HasItemFitToSpellRequirements(spellInfo,pItem) // skip if not item dependent or have alternative item
+           || aura->GetCasterGUID() != GetGUID()
+           || (spellInfo->Effect[0] == SPELL_EFFECT_PROFICIENCY || spellInfo->Effect[1] == SPELL_EFFECT_PROFICIENCY) //these need to be excepted else client wont properly show weapon skill
+          )
         {
             ++itr;
             continue;
@@ -20061,7 +20121,7 @@ void Player::RemoveItemDependentAurasAndCasts( Item * pItem )
     for (uint32 i = 0; i < CURRENT_MAX_SPELL; i++)
     {
         if( m_currentSpells[i] && m_currentSpells[i]->getState()!=SPELL_STATE_DELAYED &&
-            !HasItemFitToSpellReqirements(m_currentSpells[i]->m_spellInfo,pItem) )
+            !HasItemFitToSpellRequirements(m_currentSpells[i]->m_spellInfo,pItem) )
             InterruptSpell(i);
     }
 }
@@ -20165,7 +20225,7 @@ bool Player::RewardPlayerAndGroupAtKill(Unit* pVictim)
 
                         pGroupGuy->GiveXP(itr_xp, pVictim);
                         if(Pet* pet = pGroupGuy->GetPet())
-                            pet->GivePetXP(itr_xp/2);
+                            pet->GivePetXP((float)itr_xp/1.5);
                     }
 
                     // quest objectives updated only for alive group member or dead but with not released body
@@ -21354,56 +21414,6 @@ bool Player::ShouldGoToSecondaryArenaZone()
     }
 
     return false;
-}
-
-SmoothingSystem::SmoothingSystem()
-{
-    totals = new uint32[SMOOTH_MAX];
-    successes = new uint32[SMOOTH_MAX];
-    for(int i = 0; i < SMOOTH_MAX;i++)
-    {
-        totals[i] = 1;
-        successes[i] = 0;
-    }
-}
-
-/* chance in percentage 0.0f -> 1.0f */
-void SmoothingSystem::ApplySmoothedChance(SmoothType type, float& chance)
-{
-    if(type >= SMOOTH_MAX)
-        return;
-
-    float influence = (float)sWorld.getConfig(CONFIG_SMOOTHED_CHANCE_INFLUENCE) /10.0f; //default value of CONFIG_SMOOTHED_CHANCE_INFLUENCE = 10
-    uint32 currentSuccesses = successes[type];
-    uint32 currentTotal = totals[type];
-    float successRate = ((float)currentSuccesses/currentTotal);
-    float difference = chance - successRate; //if positive, should raise chance
-    
-    sLog.outDebug("type = %u",type);
-    sLog.outDebug("currentSuccesses %u - currentSuccesses %u - chance %f - successRate %f - difference %f - influence %f",currentSuccesses,currentTotal,chance,successRate,difference,influence);
-
-    chance += chance * influence * difference;
-    if(chance < 0.0f)
-        chance = 0.0f;
-    sLog.outDebug("final chance %f",chance);
-}
-void SmoothingSystem::UpdateSmoothedChance(SmoothType type, bool success)
-{
-    if(!sWorld.getConfig(CONFIG_SMOOTHED_CHANCE_ENABLED) || type >= SMOOTH_MAX)
-        return;
-
-    uint32& currentSuccesses = successes[type];
-    uint32& currentTotal = totals[type];
-
-    if(currentTotal == -1) //will never happens in any realistic world but lets do this the clean way
-    {
-        currentTotal = 0;
-        currentSuccesses = 0;
-    }
-
-    currentTotal++;
-    if(success)
-        currentSuccesses++;
 }
 
 bool Player::isInDuelArea() const

@@ -62,7 +62,7 @@ enum SpellAuraInterruptFlags
 {
     AURA_INTERRUPT_FLAG_HITBYSPELL          = 0x00000001,   // 0    removed when getting hit by a negative spell?
     AURA_INTERRUPT_FLAG_DAMAGE              = 0x00000002,   // 1    removed by any damage
-    AURA_INTERRUPT_FLAG_CC                  = 0x00000004,   // 2    crowd control
+    AURA_INTERRUPT_FLAG_CAST                = 0x00000004,   // 2    cast any spells
     AURA_INTERRUPT_FLAG_MOVE                = 0x00000008,   // 3    removed by any movement
     AURA_INTERRUPT_FLAG_TURNING             = 0x00000010,   // 4    removed by any turning
     AURA_INTERRUPT_FLAG_JUMP                = 0x00000020,   // 5    removed by entering combat
@@ -72,8 +72,8 @@ enum SpellAuraInterruptFlags
     AURA_INTERRUPT_FLAG_NOT_SHEATHED        = 0x00000200,   // 9    removed by unsheathing
     AURA_INTERRUPT_FLAG_TALK                = 0x00000400,   // 10   talk to npc / loot? action on creature
     AURA_INTERRUPT_FLAG_USE                 = 0x00000800,   // 11   mine/use/open action on gameobject
-    AURA_INTERRUPT_FLAG_ATTACK              = 0x00001000,   // 12   removed by attacking
-    AURA_INTERRUPT_FLAG_CAST                = 0x00002000,   // 13   ???
+    AURA_INTERRUPT_FLAG_MELEE_ATTACK        = 0x00001000,   // 12   removed by attacking
+    AURA_INTERRUPT_FLAG_SPELL_ATTACK        = 0x00002000,   // 13   ???
     AURA_INTERRUPT_FLAG_UNK14               = 0x00004000,   // 14
     AURA_INTERRUPT_FLAG_TRANSFORM           = 0x00008000,   // 15   removed by transform?
     AURA_INTERRUPT_FLAG_UNK16               = 0x00010000,   // 16
@@ -363,8 +363,8 @@ enum DeathState
 {
     ALIVE       = 0,
     JUST_DIED   = 1,
-    CORPSE      = 2,
-    DEAD        = 3,
+    CORPSE      = 2, //dead and corpse still spawned
+    DEAD        = 3, //dead and corpse disappeared
     JUST_ALIVED = 4,
     DEAD_FALLING= 5
 };
@@ -1009,6 +1009,7 @@ class Unit : public WorldObject
         void SetAttackTime(WeaponAttackType att, uint32 val) { SetFloatValue(UNIT_FIELD_BASEATTACKTIME+att,val*m_modAttackSpeedPct[att]); }
         void ApplyAttackTimePercentMod(WeaponAttackType att,float val, bool apply);
         void ApplyCastTimePercentMod(float val, bool apply);
+        void HandleParryRush();
         
         SheathState GetSheath() const { return SheathState(GetByteValue(UNIT_FIELD_BYTES_2, 0)); }
         virtual void SetSheath( SheathState sheathed ) { SetByteValue(UNIT_FIELD_BYTES_2, 0, sheathed); }
@@ -1089,7 +1090,7 @@ class Unit : public WorldObject
         float GetWeaponProcChance() const;
         float GetPPMProcChance(uint32 WeaponSpeed, float PPM) const;
 
-        MeleeHitOutcome RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttackType attType) const;
+        MeleeHitOutcome RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttackType attType, SpellSchoolMask schoolMask) const;
         MeleeHitOutcome RollMeleeOutcomeAgainst (const Unit *pVictim, WeaponAttackType attType, int32 crit_chance, int32 miss_chance, int32 dodge_chance, int32 parry_chance, int32 block_chance, bool SpellCasted ) const;
 
         bool isVendor()       const { return HasFlag( UNIT_NPC_FLAGS, UNIT_NPC_FLAG_VENDOR ); }
@@ -1131,11 +1132,11 @@ class Unit : public WorldObject
         uint32 GetAuraCount(uint32 spellId) const;
         bool HasAuraType(AuraType auraType) const;
         bool HasAuraTypeWithFamilyFlags(AuraType auraType, uint32 familyName,  uint64 familyFlags) const;
-        bool HasAura(uint32 spellId, uint32 effIndex) const
+        bool HasAura(uint32 spellId, uint32 effIndex = 0) const
             { return m_Auras.find(spellEffectPair(spellId, effIndex)) != m_Auras.end(); }
-        bool HasAura(uint32 spellId) const 
-            { return m_Auras.find(spellEffectPair(spellId, 0)) != m_Auras.end(); }
         bool HasAuraWithMechanic(Mechanics mechanic) const;
+        bool HasAuraWithCaster(uint32 spellId, uint32 effIndex, uint64 owner) const;
+        bool HasAuraWithCasterNot(uint32 spellId, uint32 effIndex, uint64 owner) const;
 
         bool virtual HasSpell(uint32 /*spellID*/) const { return false; }
 
@@ -1158,13 +1159,13 @@ class Unit : public WorldObject
         void SendHealSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage, bool critical = false);
         void SendEnergizeSpellLog(Unit *pVictim, uint32 SpellID, uint32 Damage,Powers powertype);
         uint32 SpellNonMeleeDamageLog(Unit *pVictim, uint32 spellID, uint32 damage, bool isTriggeredSpell = false, bool useSpellDamage = true);
-        void CastSpell(Unit* Victim, uint32 spellId, bool triggered, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastSpell(Unit* Victim,SpellEntry const *spellInfo, bool triggered, Item *castItem= NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastCustomSpell(Unit* Victim, uint32 spellId, int32 const* bp0, int32 const* bp1, int32 const* bp2, bool triggered, Item *castItem= NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastCustomSpell(uint32 spellId, SpellValueMod mod, uint32 value, Unit* Victim = NULL, bool triggered = true, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastCustomSpell(uint32 spellId, CustomSpellValues const &value, Unit* Victim = NULL, bool triggered = true, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastSpell(float x, float y, float z, uint32 spellId, bool triggered, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
-        void CastSpell(GameObject *go, uint32 spellId, bool triggered, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
+        uint32 CastSpell(Unit* Victim, uint32 spellId, bool triggered, Item* castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0 );
+        uint32 CastSpell(Unit* Victim,SpellEntry const* spellInfo, bool triggered, Item* castItem= NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0 );
+        uint32 CastCustomSpell(Unit* Victim, uint32 spellId, int32 const* bp0, int32 const* bp1, int32 const* bp2, bool triggered, Item *castItem= NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
+        uint32 CastCustomSpell(uint32 spellId, SpellValueMod mod, uint32 value, Unit* Victim = NULL, bool triggered = true, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
+        uint32 CastCustomSpell(uint32 spellId, CustomSpellValues const &value, Unit* Victim = NULL, bool triggered = true, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
+        uint32 CastSpell(float x, float y, float z, uint32 spellId, bool triggered, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
+        uint32 CastSpell(GameObject *go, uint32 spellId, bool triggered, Item *castItem = NULL, Aura* triggeredByAura = NULL, uint64 originalCaster = 0);
         void AddAura(uint32 spellId, Unit *target);
 
         bool IsDamageToThreatSpell(SpellEntry const * spellInfo) const;
@@ -1273,9 +1274,11 @@ class Unit : public WorldObject
         void RemoveSingleAuraFromStack(uint32 spellId, uint32 effindex);
         void RemoveAurasDueToSpell(uint32 spellId, Aura* except = NULL);
         void RemoveAurasDueToItemSpell(Item* castItem,uint32 spellId);
+        void RemoveAurasByCasterSpell(uint32 spellId, uint32 effIndex, uint64 casterGUID);
         void RemoveAurasByCasterSpell(uint32 spellId, uint64 casterGUID);
         void SetAurasDurationByCasterSpell(uint32 spellId, uint64 casterGUID, int32 duration);
         Aura* GetAuraByCasterSpell(uint32 spellId, uint64 casterGUID);
+        Aura* GetAuraByCasterSpell(uint32 spellId, uint32 effIndex, uint64 casterGUID);
         void RemoveAurasDueToSpellByDispel(uint32 spellId, uint64 casterGUID, Unit *dispeler);
         void RemoveAurasDueToSpellBySteal(uint32 spellId, uint64 casterGUID, Unit *stealer);
         void RemoveAurasDueToSpellByCancel(uint32 spellId);
@@ -1387,7 +1390,8 @@ class Unit : public WorldObject
         virtual void UpdateMaxPower(Powers power) = 0;
         virtual void UpdateAttackPowerAndDamage(bool ranged = false) = 0;
         virtual void UpdateDamagePhysical(WeaponAttackType attType) = 0;
-        float GetTotalAttackPowerValue(WeaponAttackType attType, Unit* victim = NULL) const;
+        float GetTotalAttackPowerValue(WeaponAttackType attType, Unit* victim = nullptr) const;
+        float GetAPBonusVersus(WeaponAttackType attType, Unit* victim) const;
         float GetWeaponDamageRange(WeaponAttackType attType ,WeaponDamageRange type) const;
         void SetBaseWeaponDamage(WeaponAttackType attType ,WeaponDamageRange damageRange, float value) { m_weaponDamage[attType][damageRange] = value; }
 
@@ -1423,7 +1427,7 @@ class Unit : public WorldObject
         // Threat related methods
         bool CanHaveThreatList() const;
         void AddThreat(Unit* pVictim, float threat, SpellSchoolMask schoolMask = SPELL_SCHOOL_MASK_NORMAL, SpellEntry const *threatSpell = NULL);
-        float ApplyTotalThreatModifier(float threat, SpellSchoolMask schoolMask = SPELL_SCHOOL_MASK_NORMAL);
+        void ApplyTotalThreatModifier(float& threat, SpellSchoolMask schoolMask = SPELL_SCHOOL_MASK_NORMAL);
         void DeleteThreatList();
         void TauntApply(Unit* pVictim);
         void TauntFadeOut(Unit *taunter);
@@ -1477,7 +1481,7 @@ class Unit : public WorldObject
         void RemoveAllGameObjects();
         DynamicObject *GetDynObject(uint32 spellId, uint32 effIndex);
         DynamicObject *GetDynObject(uint32 spellId);
-        uint32 CalculateDamage(WeaponAttackType attType, bool normalized, SpellEntry const* spellProto = NULL);
+        uint32 CalculateDamage(WeaponAttackType attType, bool normalized, SpellEntry const* spellProto = NULL, Unit* target = NULL);
         float GetAPMultiplier(WeaponAttackType attType, bool normalized);
         void ModifyAuraState(AuraState flag, bool apply);
         bool HasAuraState(AuraState flag) const { return HasFlag(UNIT_FIELD_AURASTATE, 1<<(flag-1)); }

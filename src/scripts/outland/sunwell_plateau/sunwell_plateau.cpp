@@ -1256,7 +1256,6 @@ struct npc_doomfire_destroyerAI : public ScriptedAI
     void Reset()
     {
         summonTimer = 10000;
-        DoCast(m_creature, SPELL_SW_RADIANCE);
         Summons.DespawnAll();
     }
 

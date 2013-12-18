@@ -36,6 +36,7 @@ class ChatCommand
         const char *       Name;
         uint32             SecurityLevel;                   // function pointer required correct align (use uint32)
         bool               AllowConsole;
+        bool               AllowIRC;
         bool (ChatHandler::*Handler)(const char* args);
         std::string        Help;
         ChatCommand *      ChildCommands;
@@ -507,7 +508,8 @@ class ChatHandler
         bool HandlePlaySound2Command(const char* args);
         bool HandleSendChannelNotifyCommand(const char* args);
         bool HandleSendChatMsgCommand(const char* args);
-        bool HandleRenameCommand(const char * args);
+        bool HandleRenameCommand(const char* args);
+        bool HandleRenameArenaTeamCommand(const char* args);
         bool HandleLoadPDumpCommand(const char *args);
         bool HandleWritePDumpCommand(const char *args);
         bool HandleCastCommand(const char *args);
@@ -552,7 +554,11 @@ class ChatHandler
 
         //! Development Commands
         bool HandleSetValue(const char* args);
+        bool HandleSetValue64(const char* args);
+        bool HandleSetValueFloat(const char* args);
         bool HandleGetValue(const char* args);
+        bool HandleGetValue64(const char* args);
+        bool HandleGetValueFloat(const char* args);
         bool HandleSet32Bit(const char* args);
         bool HandleMod32Value(const char* args);
         bool HandleAddQuest(const char * args);

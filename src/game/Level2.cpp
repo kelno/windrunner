@@ -1053,7 +1053,6 @@ bool ChatHandler::HandleNpcDeleteCommand(const char* args)
     }
 
     // Delete the creature
-    unit->CombatStop();
     unit->DeleteFromDB();
     unit->CleanupsBeforeDelete();
     unit->AddObjectToRemoveList();
@@ -2902,7 +2901,7 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
 
             Player *chr = m_session->GetPlayer();
             Map *map = chr->GetMap();
-            float o = chr->GetOrientation();
+            /*float o = chr->GetOrientation();
 
             Creature* wpCreature = new Creature;
             if (!wpCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT, true), map, id, 0))
@@ -2929,12 +2928,13 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             wpCreature->SaveToDB(map->GetId(), (1 << map->GetSpawnMode()));
             wpCreature->LoadFromDB(wpCreature->GetDBTableGUIDLow(),map);
             map->Add(wpCreature);
-
-            if(target)
+            */
+            chr->SummonCreature(id,x,y,z,0,TEMPSUMMON_CORPSE_DESPAWN,10);
+            /*if(target)
             {
                 wpCreature->SetDisplayId(target->GetDisplayId());
                 wpCreature->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.5);
-            }
+            }*/
         }
         while( result->NextRow() );
 
@@ -2963,9 +2963,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
         uint32 id = VISUAL_WAYPOINT;
 
         Player *chr = m_session->GetPlayer();
-        float o = chr->GetOrientation();
+        //float o = chr->GetOrientation();
         Map *map = chr->GetMap();
-
+        /*
         Creature* pCreature = new Creature;
         if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true),map, id, 0))
         {
@@ -2994,7 +2994,8 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             pCreature->SetDisplayId(target->GetDisplayId());
             pCreature->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.5);
         }
-
+        */
+        chr->SummonCreature(id,x,y,z,0,TEMPSUMMON_CORPSE_DESPAWN,10);
         // Cleanup memory
         delete result;
         return true;
@@ -3028,9 +3029,9 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
         uint32 id = VISUAL_WAYPOINT;
 
         Player *chr = m_session->GetPlayer();
-        float o = chr->GetOrientation();
+        //float o = chr->GetOrientation();
         Map *map = chr->GetMap();
-
+        /*
         Creature* pCreature = new Creature;
         if (!pCreature->Create(objmgr.GenerateLowGuid(HIGHGUID_UNIT,true), map, id, 0))
         {
@@ -3059,7 +3060,8 @@ bool ChatHandler::HandleWpShowCommand(const char* args)
             pCreature->SetDisplayId(target->GetDisplayId());
             pCreature->SetFloatValue(OBJECT_FIELD_SCALE_X, 0.5);
         }
-
+        */
+        chr->SummonCreature(id,x,y,z,0,TEMPSUMMON_CORPSE_DESPAWN,10);
         // Cleanup memory
         delete result;
         return true;
@@ -3169,6 +3171,45 @@ bool ChatHandler::HandleRenameCommand(const char* args)
         PSendSysMessage(LANG_RENAME_PLAYER_GUID, oldname.c_str(), GUID_LOPART(targetGUID));
         CharacterDatabase.PExecute("UPDATE characters SET at_login = at_login | '1' WHERE guid = '%u'", GUID_LOPART(targetGUID));
     }
+
+    return true;
+}
+
+bool ChatHandler::HandleRenameArenaTeamCommand(const char* args)
+{
+    char* playerName = strtok((char*)args, " ");
+    char* newName = strtok(NULL, "");
+    if(!playerName || !newName)
+        return false;
+
+    Player* target = NULL;
+    uint64 targetGUID = 0;
+    std::string stringName = playerName;
+
+    targetGUID = objmgr.GetPlayerGUIDByName(stringName);
+
+    if(!targetGUID)
+    {
+        PSendSysMessage("Joueur introuvable.");
+        return true;
+    }
+
+    uint32 arenateamid = 0;
+    QueryResult* result = CharacterDatabase.PQuery("SELECT arenateamid FROM arena_team_member WHERE guid = '%u'", targetGUID);
+    if(result)
+    {
+        Field* charfields = result->Fetch();
+        arenateamid = charfields[0].GetUInt32();
+        delete(result);
+    } else {
+        PSendSysMessage("Erreur (le joueur n'a pas d'équipe?).");
+        return false;
+    }
+
+    result = CharacterDatabase.PQuery("UPDATE arena_team SET name = '%s' WHERE arenateamid = '%u'", newName, arenateamid);
+    //also try to update online players ?
+
+    PSendSysMessage("Nom de la team %u changé vers \"%s\"",arenateamid,newName);
 
     return true;
 }
@@ -4124,14 +4165,14 @@ bool ChatHandler::HandleNpcAddFormationCommand(const char* args)
     {
         SendSysMessage(LANG_SELECT_CREATURE);
         SetSentErrorMessage(true);
-        return false;
+        return true;
     }
 
     uint32 lowguid = pCreature->GetDBTableGUIDLow();
     if(pCreature->GetFormation())
     {
         PSendSysMessage("Selected creature is already member of group %u", pCreature->GetFormation()->GetId());
-        return false;
+        return true;
     }
 
     if (!lowguid)
@@ -4149,7 +4190,7 @@ bool ChatHandler::HandleNpcAddFormationCommand(const char* args)
     CreatureGroupMap[lowguid] = group_member;
     pCreature->SearchFormation();
 
-    WorldDatabase.PExecute("INSERT INTO `creature_formations` (`leaderGUID`, `memberGUID`, `dist_min`, `angle`, `groupAI`) VALUES ('%u','%u','%f', '%f', '%u')",
+    WorldDatabase.PExecute("REPLACE INTO `creature_formations` (`leaderGUID`, `memberGUID`, `dist_min`, `angle`, `groupAI`) VALUES ('%u','%u','%f', '%f', '%u')",
         leaderGUID, lowguid, group_member->follow_dist_min, group_member->follow_angle, group_member->groupAI);
 
     PSendSysMessage("Creature %u added to formation with leader %u", lowguid, leaderGUID);

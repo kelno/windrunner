@@ -196,6 +196,7 @@ SET(scripts_STAT_SRCS
     azeroth/zulgurub/def_zulgurub.h
     azeroth/zulgurub/instance_zulgurub.cpp
     custom/custom_example.cpp
+    custom/custom_gnominizer.cpp
     custom/custom_gossip_codebox.cpp
     custom/custom_lottery.cpp
     custom/custom_npc_rez.cpp
@@ -321,6 +322,7 @@ SET(scripts_STAT_SRCS
     misc/npc_xp_blocker.cpp
     misc/npcs_special.cpp
     misc/npc_mylittlebombling.cpp
+	misc/npc_firework_controller.cpp
     outdoor/boss_azuregos.cpp
     outdoor/boss_doomwalker.cpp
     outdoor/boss_doomlord_kazzak.cpp

@@ -196,14 +196,15 @@ struct mob_ashtongue_channelerAI : public ScriptedAI
 
             if(me->GetDistance2d(shade) < 20.0f && me->IsWithinLOSInMap(shade))
             {
-                me->GetMotionMaster()->Clear(false);
-                me->GetMotionMaster()->MoveIdle();
+                if(me->isMoving())
+                {
+                    me->GetMotionMaster()->Clear(false);
+                    me->GetMotionMaster()->MoveIdle();
+                }
                 me->CastSpell(shade, SPELL_SHADE_SOUL_CHANNEL, false);
             } else {
                 if(!me->isMoving())
-                {
-                    me->GetMotionMaster()->MoveChase(shade);
-                }
+                    me->GetMotionMaster()->MoveFollow(shade,10.0f,(float)rand()/1000); //random angle to avoid packing
             }
             updateTimer = TIMER_CHANNELER_UPDATE;
         } else updateTimer -= diff;
@@ -274,10 +275,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STUN);
 
-        if(pInstance)
+        if(pInstance && pInstance->GetData(DATA_SHADEOFAKAMAEVENT) != DONE)
             pInstance->SetData(DATA_SHADEOFAKAMAEVENT, NOT_STARTED);
-        else
-            return;
         
         Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID);
         if(akama)
@@ -288,7 +287,8 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                 akama->Respawn();
         }
 
-        spawnChannelers();
+        if(!me->isDead())
+            spawnChannelers();
     }
 
     void JustReachedHome() 
@@ -311,6 +311,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             akama->AI()->message(AkamaMessages::MESSAGE_SHADE_DIED,0);
 
         summons.DespawnAll();
+        if(pInstance) pInstance->SetData(DATA_SHADEOFAKAMAEVENT, DONE);
     }
 
     void JustSummoned(Creature *summon) 
@@ -359,7 +360,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,100.0f,true);
                     if(target) {
                         spawn->AI()->AttackStart(target);
-                        spawn->AddThreat(target, 1000.0f);
+                        spawn->AddThreat(target, 500.0f);
                     }
                     if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
                         spawn->AddThreat(akama,1.0f);
@@ -378,9 +379,11 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             Sorcerer->SetUInt64Value(UNIT_FIELD_TARGET, me->GetGUID());
             channelers.push_back(Sorcerer->GetGUID());
             //avoir channelers packing
+            /*
             float x,y,z;
             Sorcerer->GetRandomContactPoint(me,x,y,z,0,20.0f);
             Sorcerer->GetMotionMaster()->MovePoint(0,x,y,z);
+            */
         }
     }
 
@@ -397,7 +400,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                 akama->GetPosition(x,y,z);
                 Defender->GetMotionMaster()->MovePoint(0, x, y, z);
                 Defender->AI()->AttackStart(akama);
-                Defender->AddThreat(akama, 1000.0f);
+                Defender->AddThreat(akama, 500.0f);
             }
         }
     }
@@ -621,7 +624,6 @@ struct npc_akamaAI : public ScriptedAI
             startedMeleeCombat = true;
             break;
         case MESSAGE_SHADE_DIED:
-            if(pInstance) pInstance->SetData(DATA_SHADEOFAKAMAEVENT, DONE);
             me->InterruptNonMeleeSpells(false);
             me->SetReactState(REACT_PASSIVE);
             outroProgress = 1;
