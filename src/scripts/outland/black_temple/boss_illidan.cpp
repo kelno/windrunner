@@ -100,7 +100,7 @@ enum Spells
     //Phase Normal spells
     SPELL_FLAME_CRASH_EFFECT      = 40836, // Firey blue ring of circle that the other flame crash summons
     SPELL_SUMMON_SHADOWDEMON      = 41117, // Summon four shadowfiends
-    SPELL_SHADOWFIEND_PASSIVE     = 41913, // Passive aura for shadowfiends
+    SPELL_SHADOWFIEND_PASSIVE     = 41913, // Passive aura for shadowfiends, modified : effectApplyAuraName1 = 4
     SPELL_SHADOW_DEMON_PASSIVE    = 41079, // Adds the "shadowform" aura to Shadow Demons.
     SPELL_CONSUME_SOUL            = 41080, // Once the Shadow Demons reach their target, they use this to kill them
     SPELL_PARALYZE                = 41083, // Shadow Demons cast this on their target
@@ -165,14 +165,14 @@ enum CreatureEntry
 enum PhaseIllidan
 {
     PHASE_ILLIDAN_NULL          =   0,
-    PHASE_NORMAL                =   1,
-    PHASE_FLIGHT                =   2,
-    PHASE_NORMAL_2              =   3,
-    PHASE_DEMON                 =   4,
-    PHASE_NORMAL_MAIEV          =   5,
+    PHASE_NORMAL                =   1, //aka Phase 1
+    PHASE_FLIGHT                =   2, //aka Phase 2 : randomizing flight points and casting spells
+    PHASE_NORMAL_2              =   3, //aka Phase 3 : when both flames are dead, alternated with PHASE_DEMON
+    PHASE_DEMON                 =   4, //aka Phase 4 : alternated with PHASE_NORMAL_2 or PHASE_NORMAL_MAIEV
+    PHASE_NORMAL_MAIEV          =   5, //aka Phase 5 : alternated with PHASE_DEMON when reached 30%
     PHASE_TALK_SEQUENCE         =   6,
-    PHASE_FLIGHT_SEQUENCE       =   7,
-    PHASE_TRANSFORM_SEQUENCE    =   8,
+    PHASE_FLIGHT_SEQUENCE       =   7, //dust off, going into position, enter PHASE_FLIGHT and resume after both flamme are dead, then land
+    PHASE_TRANSFORM_SEQUENCE    =   8, //enter or leave PHASE_DEMON
     PHASE_ILLIDAN_MAX           =   9,
 };//Maiev uses the same phase
 
@@ -199,7 +199,7 @@ enum EventIllidan
     EVENT_PARASITE_CHECK        =   6,
     EVENT_DRAW_SOUL             =   7,
     EVENT_AGONIZING_FLAMES      =   8,
-    EVENT_TRANSFORM_NORMAL      =   9,
+    EVENT_TRANSFORM_NORMAL      =   9, //from normal to demon
     EVENT_ENRAGE                =   10,
     //flight phase
     EVENT_FIREBALL              =   2,
@@ -210,7 +210,7 @@ enum EventIllidan
     EVENT_SHADOW_BLAST          =   2,
     EVENT_FLAME_BURST           =   3,
     EVENT_SHADOWDEMON           =   4,
-    EVENT_TRANSFORM_DEMON       =   5,
+    EVENT_TRANSFORM_DEMON       =   5, //from demon to normal
     //sequence phase
     EVENT_TALK_SEQUENCE         =   2,
     EVENT_FLIGHT_SEQUENCE       =   2,
@@ -230,11 +230,11 @@ enum EventMaiev
 static EventIllidan MaxTimer[]=
 {
     EVENT_NULL,
-    EVENT_DRAW_SOUL,
-    EVENT_MOVE_POINT,
-    EVENT_TRANSFORM_NORMAL,
-    EVENT_TRANSFORM_DEMON,
-    EVENT_ENRAGE,
+    EVENT_DRAW_SOUL, //Phase 1
+    EVENT_MOVE_POINT, //Phase 2
+    EVENT_TRANSFORM_NORMAL, //Phase 3
+    EVENT_TRANSFORM_DEMON, //Phase 4
+    EVENT_ENRAGE, //Phase 5
     EVENT_TALK_SEQUENCE,
     EVENT_FLIGHT_SEQUENCE,
     EVENT_TRANSFORM_SEQUENCE
@@ -413,7 +413,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 if(summon->GetGUID() == FlameGUID[i])
                     FlameGUID[i] = 0;
 
-            if(!FlameGUID[0] && !FlameGUID[1] && Phase != PHASE_ILLIDAN_NULL)
+            if(!FlameGUID[0] && !FlameGUID[1] && Phase == PHASE_FLIGHT)
             {
                 m_creature->InterruptNonMeleeSpells(true);
                 EnterPhase(PHASE_FLIGHT_SEQUENCE);
@@ -608,11 +608,14 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         case 6://fly to hover point
             HoverPoint = rand()%4; //randomize first hover point
             m_creature->GetMotionMaster()->MovePoint(0, HoverPosition[HoverPoint].x, HoverPosition[HoverPoint].y, HoverPosition[HoverPoint].z);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            Timer[EVENT_FLIGHT_SEQUENCE] = 0; //reset to 1000 on MovementInform
             break;
         case 7://return to center
             m_creature->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, CENTER_Z);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            /* On movement inform, EnterPhase(PHASE_FLIGHT)
+            We will resume this sequence when both flammes are dead, see SummonedCreatureDespawn(...)
+            */
             break;
         case 8://glaive return
             for(uint8 i = 0; i < 2; i++)
@@ -748,7 +751,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 HandleTalkSequence();
             break;
 
-        case PHASE_FLIGHT_SEQUENCE:
+        case PHASE_FLIGHT_SEQUENCE: //end via SummonedCreatureDespawn
             if(Event == EVENT_FLIGHT_SEQUENCE)
                 HandleFlightSequence();
             break;
@@ -762,6 +765,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         if(m_creature->IsNonMeleeSpellCasted(false))
             return;
 
+        //Handle various spells for each phases
         if(Phase == PHASE_NORMAL || Phase == PHASE_NORMAL_2 || Phase == PHASE_NORMAL_MAIEV && !m_creature->HasAura(SPELL_CAGED, 0))
         {
             switch(Event)
@@ -800,8 +804,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             case EVENT_PARASITIC_SHADOWFIEND:
                 {
                     if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
-                        if(m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true) == SPELL_CAST_OK)
-                            Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
+                        m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true);
+                    Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
                 }break;
 
             case EVENT_PARASITE_CHECK:
@@ -809,8 +813,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 break;
 
             case EVENT_DRAW_SOUL:
-                DoCast(m_creature->getVictim(), SPELL_DRAW_SOUL);
-                Timer[EVENT_DRAW_SOUL] = 28000 + rand()%4000;
+                if(DoCast(m_creature->getVictim(), SPELL_DRAW_SOUL) == SPELL_CAST_OK)
+                    Timer[EVENT_DRAW_SOUL] = 28000 + rand()%4000;
                 break;
 
                 //PHASE_NORMAL_2
@@ -844,6 +848,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 Timer[EVENT_FIREBALL] = 3000;
                 break;
 
+            //25% chance to be cast each time we enter PHASE_FLIGHT
             case EVENT_DARK_BARRAGE:
                 if(DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0f, true), SPELL_DARK_BARRAGE) == SPELL_CAST_OK)
                     Timer[EVENT_DARK_BARRAGE] = 0;
@@ -856,7 +861,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_MOVE_POINT:
                 Phase = PHASE_FLIGHT_SEQUENCE;
-                Timer[EVENT_FLIGHT_SEQUENCE] = 0;//do not start Event when changing hover point
+                Timer[EVENT_FLIGHT_SEQUENCE] = 100000; //do not start Event when changing hover point. HACK : Still set this to 100000 to avoid being stuck in case of problem.
                 HoverPoint += (rand()%3 + 1); //randomize a different hover point
                 if(HoverPoint > 3)
                     HoverPoint -= 4;
