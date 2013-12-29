@@ -1097,7 +1097,7 @@ void ScriptMgr::LoadDatabase()
 
                 case EVENT_T_AGGRO:
                 case EVENT_T_DEATH:
-                case EVENT_T_EVADE:
+                case EVENT_T_RESET:
                 case EVENT_T_SPAWNED:
                 case EVENT_T_REACHED_HOME:
                     {

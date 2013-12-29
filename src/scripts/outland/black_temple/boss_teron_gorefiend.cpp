@@ -119,7 +119,7 @@ struct mob_doom_blossomAI : public ScriptedAI
 
         if (ShadowBoltTimer <= diff)
         {
-            if(Unit* u = SelectUnit(0, 100, true, false, true, 0, 0))
+            if(Unit* u = SelectUnit(0, 0.0f, 100.0f, true, false, true, 0, 0))
             {
                 DoCast(u, SPELL_SHADOWBOLT, true);
                 ShadowBoltTimer = TIMER_SHADOW_BOLT;
@@ -423,7 +423,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
         if(ShadowOfDeathTimer < diff)
         {
-            if (Unit* pShadowVictim = SelectUnit(1, 100, true, true, true, SPELL_SHADOW_OF_DEATH, 1)) {
+            if (Unit* pShadowVictim = SelectUnit(1, 0.0f, 100.0f, true, true, true, SPELL_SHADOW_OF_DEATH, 1)) {
                 if (pShadowVictim->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow()) //not tank?
                     ShadowOfDeathTimer = 100;       // Delay to next world tick
                 else {
@@ -448,7 +448,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
         if(IncinerateTimer < diff)
         {
-            Unit* target = SelectUnit(1, 100, true, false, true, 0, 0);
+            Unit* target = SelectUnit(1, 0.0f, 100.0f, true, false, true, 0, 0);
             if(!target)
                 target = m_creature->getVictim();
 
@@ -615,7 +615,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
             if (Creature* Teron = (Unit::GetCreature((*m_creature), TeronGUID)))
                 SetThreatList(Teron);
                 
-            if (Unit* u = SelectUnit(0, 100, true, true, true, SPELL_SHADOW_OF_DEATH, 1))
+            if (Unit* u = SelectUnit(0, 0.0f, 100.0f, true, true, true, SPELL_SHADOW_OF_DEATH, 1))
                 m_creature->AI()->AttackStart(u);
 
             SetAggro = false;

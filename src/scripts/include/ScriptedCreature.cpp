@@ -190,27 +190,29 @@ void ScriptedAI::DoStopAttack()
     }
 }
 
-bool ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
+    //remove this?
     if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    //m_creature->StopMoving();
     return m_creature->CastSpell(victim, spellId, triggered);
 }
 
-bool ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
+uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
+    //remove this?
     if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
 }
 
-bool ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
+uint32 ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
 {
+    //remove this?
     if (!who || m_creature->IsNonMeleeSpellCasted(false))
-        return false;
+        return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     m_creature->StopMoving();
     return m_creature->CastSpell(who, spellInfo, triggered);
@@ -456,7 +458,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 }
 
 // selects random unit not having aura
-Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
+Unit* ScriptedAI::SelectUnit( uint32 position, float distNear, float distFar, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex)
 {
     std::list<HostilReference*> m_threatlist = m_creature->getThreatManager().getThreatList();
     std::list<HostilReference*>::iterator i;
@@ -470,11 +472,11 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float dist, bool playerOnly, bool
         if(!target
             || !target->isAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
-            || dist && !m_creature->IsWithinCombatRange(target, dist)
+            || distNear && m_creature->IsWithinCombatRange(target, distNear)
+            || distFar && !m_creature->IsWithinCombatRange(target, distFar)
             || auraCheck && target->HasAura(spellId, effIndex)
             || exceptPossesed && target->isPossessed()
             || exceptPossesed && target->isPossessing()
-            
             )
         {
             m_threatlist.erase(i);

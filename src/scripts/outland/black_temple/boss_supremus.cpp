@@ -360,7 +360,7 @@ struct npc_volcanoAI : public ScriptedAI
             UnderMapCheckTimer = 750;
         }else UnderMapCheckTimer -= diff;
 
-        if (!started && startTimer < diff)
+        if (!started)
         { 
             if(startTimer < diff)
             {
