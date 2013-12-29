@@ -360,7 +360,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,100.0f,true);
                     if(target) {
                         spawn->AI()->AttackStart(target);
-                        spawn->AddThreat(target, 1000.0f);
+                        spawn->AddThreat(target, 500.0f);
                     }
                     if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
                         spawn->AddThreat(akama,1.0f);
@@ -400,7 +400,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
                 akama->GetPosition(x,y,z);
                 Defender->GetMotionMaster()->MovePoint(0, x, y, z);
                 Defender->AI()->AttackStart(akama);
-                Defender->AddThreat(akama, 1000.0f);
+                Defender->AddThreat(akama, 500.0f);
             }
         }
     }

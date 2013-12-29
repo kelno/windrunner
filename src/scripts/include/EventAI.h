@@ -16,7 +16,7 @@ enum Event_Types
     EVENT_T_AGGRO                   = 4,    //NONE
     EVENT_T_KILL                    = 5,    //RepeatMin, RepeatMax
     EVENT_T_DEATH                   = 6,    //NONE
-    EVENT_T_EVADE                   = 7,    //NONE
+    EVENT_T_RESET                   = 7,    //NONE
     EVENT_T_SPELLHIT                = 8,    //SpellID, School, RepeatMin, RepeatMax
     EVENT_T_RANGE                   = 9,    //MinDist, MaxDist, RepeatMin, RepeatMax
     EVENT_T_OOC_LOS                 = 10,   //NoHostile, NoFriendly, RepeatMin, RepeatMax

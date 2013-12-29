@@ -134,12 +134,12 @@ struct ScriptedAI : public CreatureAI
     //Stop attack of current victim
     void DoStopAttack();
 
-    //Cast spell by Id, return if spell was successfully casted (=/= spell successfully hit)
-    bool DoCast(Unit* victim, uint32 spellId, bool triggered = false);
-    bool DoCastAOE(uint32 spellId, bool triggered = false);
+    //Cast spell by Id, return SpellFailedReason
+    uint32 DoCast(Unit* victim, uint32 spellId, bool triggered = false);
+    uint32 DoCastAOE(uint32 spellId, bool triggered = false);
 
     //Cast spell by spell info
-    bool DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered = false);
+    uint32 DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered = false);
 
     //Creature say
     void DoSay(const char* text, uint32 language, Unit* target, bool SayEmote = false);
@@ -190,7 +190,7 @@ struct ScriptedAI : public CreatureAI
     Unit* SelectUnit(SelectAggroTarget target, uint32 position);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position, float dist, bool playerOnly);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position, float distNear, float distFar, bool playerOnly);
-    Unit* SelectUnit(uint32 position, float dist, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex);
+    Unit* SelectUnit(uint32 position, float distMin, float distMax, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex);
     void SelectUnitList(std::list<Unit*> &targetList, uint32 num, SelectAggroTarget target, float dist, bool playerOnly, uint32 notHavingAuraId = 0, uint8 effIndex = 0);
 
     //Returns spells that meet the specified criteria from the creatures spell list

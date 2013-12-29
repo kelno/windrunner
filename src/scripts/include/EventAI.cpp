@@ -236,7 +236,7 @@ struct Mob_EventAI : public ScriptedAI
             {
             }
             break;
-        case EVENT_T_EVADE:
+        case EVENT_T_RESET:
             {
             }
             break;
@@ -1069,6 +1069,9 @@ struct Mob_EventAI : public ScriptedAI
                             error_db_log("TSCR: Creature %u using Event %u (Type = %u) has InitialMax < InitialMin. Event disabled.", m_creature->GetEntry(), (*i).Event.event_id, (*i).Event.event_type);
                     }
                     break;
+                case EVENT_T_RESET:
+                    ProcessEvent(*i);
+                    break;
                 //default:
                     //TODO: enable below code line / verify this is correct to enable events previously disabled (ex. aggro yell), instead of enable this in void Aggro()
                     //(*i).Enabled = true;
@@ -1097,13 +1100,6 @@ struct Mob_EventAI : public ScriptedAI
         ScriptedAI::EnterEvadeMode();
 
         IsFleeing = false;
-
-        //Handle Evade events
-        for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)
-        {
-            if ((*i).Event.event_type == EVENT_T_EVADE)
-                ProcessEvent(*i);
-        }
     }
 
     void JustDied(Unit* killer)
