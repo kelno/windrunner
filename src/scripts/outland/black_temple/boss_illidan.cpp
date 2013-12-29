@@ -1784,7 +1784,6 @@ struct shadow_demonAI : public ScriptedAI
     shadow_demonAI(Creature *c) : ScriptedAI(c) 
     {
         DoZoneInCombat();
-        SelectRandomTarget();
     }
 
     uint64 TargetGUID;
@@ -1795,6 +1794,7 @@ struct shadow_demonAI : public ScriptedAI
     {
         TargetGUID = 0;
         m_creature->CastSpell(m_creature, SPELL_SHADOW_DEMON_PASSIVE, true);
+        SelectRandomTarget();
     }
 
     void JustDied(Unit *killer)
