@@ -1,7 +1,9 @@
 #include "precompiled.h"
 #include "MapManager.h"
+#include "GameEvent.h"
 
 #define MORPH_MAX 0.5
+#define HOUR 3600
 
 enum Firework
 {
@@ -52,6 +54,7 @@ struct firework_controllerAI : public ScriptedAI
         eventId(0)
 	{
         SetupEvent();
+        lastHourDone = time(NULL) / HOUR;
     } 
 
     float gridStartX, gridStartY, gridZ;
@@ -62,6 +65,8 @@ struct firework_controllerAI : public ScriptedAI
     uint32 lastEventTime; //time of the last event
     int currentTime; //time counter (increment with each updateAI)
     bool eventStarted;
+
+    uint32 lastHourDone;
 
     std::multimap<uint32,FireworkEvent*> eventMap;
     
@@ -147,7 +152,7 @@ struct firework_controllerAI : public ScriptedAI
     {
         for (auto itr : eventMap)
         {
-            if(itr.second->spellorGobId > 100000) //only needed for gobject
+            if(itr.second->spellorGobId > 100000) //only needed for gobjects
                 ExecEvent(itr.second);
         }
     }
@@ -155,7 +160,17 @@ struct firework_controllerAI : public ScriptedAI
 	void UpdateAI(uint32 const diff)
 	{
         if(!eventStarted)
+        {
+            uint32 currentHour = time(NULL) / HOUR;
+            if(isEventActive() && currentHour != lastHourDone)
+            {
+                Reset();
+                eventStarted = true;
+                lastHourDone = currentHour;
+            }
+            
             return;
+        }
 
         currentTime += diff;
 
@@ -183,6 +198,14 @@ struct firework_controllerAI : public ScriptedAI
         if(currentTime > endTime)
             eventStarted = false;
 	}
+
+    bool isEventActive()
+    {
+        const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+        bool active = activeEvents.find(6) != activeEvents.end();
+
+        return active;
+    }
 };
 
 bool GossipHello_firework_controller(Player *player, Creature *_Creature)
