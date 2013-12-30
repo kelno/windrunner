@@ -27,13 +27,6 @@ enum Firework
     GOB_ROCKET_GREEN = 180855,
     GOB_ROCKET_WHITE = 180857,
     GOB_ROCKET_YELLOW = 180858,
-
-    GOB_ROCKET_RED_BIG = 180860,
-    GOB_ROCKET_BLUE_BIG = 180861,
-    GOB_ROCKET_GREEN_BIG = 180862,
-    GOB_ROCKET_PURPLE_BIG = 180863,
-    GOB_ROCKET_WHITE_BIG = 180864,
-    GOB_ROCKET_YELLOW_BIG = 180865,
 };
 
 struct FireworkEvent {
@@ -128,10 +121,13 @@ struct firework_controllerAI : public ScriptedAI
         float x,y,z;
         GetTargetCoords(event->posX,event->posY,x,y);
         z = gridZ;
+        me->UpdateAllowedPositionZ(x, y, z);
         if(event->spellorGobId < 100000) //if it's a spell
         {    
             if(Creature* c = me->SummonCreature(CREATURE_LAUNCHER,x,y,z,event->ori,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,6000))
             {
+                c->SetDisplayId(11686); //invisible model
+                c->SetFlying(true);
                 c->SetFloatValue(OBJECT_FIELD_SCALE_X, event->size);
                 c->CastSpell(c,event->spellorGobId,true);
             }
