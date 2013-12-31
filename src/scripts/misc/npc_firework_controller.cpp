@@ -74,6 +74,7 @@ struct firework_controllerAI : public ScriptedAI
         me->GetPosition(gridStartX,gridStartY,gridZ);
         me->SetReactState(REACT_PASSIVE);
         me->SetVisibility(VISIBILITY_OFF);
+        me->SetFlying(true);
 
         eventStarted = false;
         currentTime = 0;
