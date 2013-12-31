@@ -172,3 +172,10 @@ void guardAI::UpdateAI(const uint32 diff)
     }
 }
 
+bool guardAI::isNewYearEventActive()
+{
+    const GameEvent::ActiveEvents& activeEvents = gameeventmgr.GetActiveEventList();
+    bool active = activeEvents.find(6) != activeEvents.end();
+
+    return active;
+}

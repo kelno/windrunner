@@ -5,6 +5,8 @@
 #ifndef SC_GUARDAI_H
 #define SC_GUARDAI_H
 
+#include "GameEvent.h"
+
 #define GENERIC_CREATURE_COOLDOWN 5000
 
 struct guardAI : public ScriptedAI
@@ -21,6 +23,8 @@ struct guardAI : public ScriptedAI
     void JustDied(Unit *Killer);
 
     void UpdateAI(const uint32 diff);
+
+    bool isNewYearEventActive();
 };
 #endif
 
