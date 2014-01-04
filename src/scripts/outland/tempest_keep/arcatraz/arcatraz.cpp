@@ -296,12 +296,15 @@ struct npc_warden_mellicharAI : public ScriptedAI
     uint32 EventProgress_Timer;
     uint32 Phase;
 
+    uint64 aggroTarget;
+
     void Reset()
     {
         IsRunning = false;
         CanSpawn = false;
+        aggroTarget = 0;
 
-        EventProgress_Timer = 22000;
+        EventProgress_Timer = 1000; //24000;
         Phase = 1;
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_NON_ATTACKABLE);
@@ -325,9 +328,12 @@ struct npc_warden_mellicharAI : public ScriptedAI
             if (who->GetTypeId() != TYPEID_PLAYER)
                 return;
 
-            float attackRadius = m_creature->GetAttackDistance(who)/10;
+            float attackRadius = m_creature->GetAttackDistance(who)/5;
             if( m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->IsWithinLOSInMap(who) )
+            {
                 Aggro(who);
+                aggroTarget = who->GetGUID();
+            }
         }
     }
 
@@ -413,7 +419,10 @@ struct npc_warden_mellicharAI : public ScriptedAI
             if( pInstance )
             {
                 if( pInstance->GetData(TYPE_HARBINGERSKYRISS) == FAIL )
+                {
                     Reset();
+                    return;
+                }
             }
 
             if( CanSpawn )
@@ -422,13 +431,15 @@ struct npc_warden_mellicharAI : public ScriptedAI
                 if( Phase != 7 )
                     DoCast(m_creature,SPELL_TARGET_OMEGA);
 
+                
+                Creature* summon = NULL;
                 switch( Phase )
                 {
                     case 2:
                         switch( rand()%2 )
                         {
-                            case 0: m_creature->SummonCreature(ENTRY_TRICKSTER,478.326,-148.505,42.56,3.19,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
-                            case 1: m_creature->SummonCreature(ENTRY_PH_HUNTER,478.326,-148.505,42.56,3.19,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 0: summon = m_creature->SummonCreature(ENTRY_TRICKSTER,478.326,-148.505,42.56,3.19,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 1: summon = m_creature->SummonCreature(ENTRY_PH_HUNTER,478.326,-148.505,42.56,3.19,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
                         }
                         break;
                     case 3:
@@ -440,22 +451,28 @@ struct npc_warden_mellicharAI : public ScriptedAI
                     case 5:
                         switch( rand()%2 )
                         {
-                            case 0: m_creature->SummonCreature(ENTRY_AKKIRIS,420.179,-174.396,42.58,0.02,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
-                            case 1: m_creature->SummonCreature(ENTRY_SULFURON,420.179,-174.396,42.58,0.02,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 0: summon = m_creature->SummonCreature(ENTRY_AKKIRIS,420.179,-174.396,42.58,0.02,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 1: summon = m_creature->SummonCreature(ENTRY_SULFURON,420.179,-174.396,42.58,0.02,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
                         }
                         break;
                     case 6:
                         switch( rand()%2 )
                         {
-                            case 0: m_creature->SummonCreature(ENTRY_TW_DRAK,471.795,-174.58,42.58,3.06,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
-                            case 1: m_creature->SummonCreature(ENTRY_BL_DRAK,471.795,-174.58,42.58,3.06,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 0: summon = m_creature->SummonCreature(ENTRY_TW_DRAK,471.795,-174.58,42.58,3.06,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
+                            case 1: summon = m_creature->SummonCreature(ENTRY_BL_DRAK,471.795,-174.58,42.58,3.06,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000); break;
                         }
                         break;
                     case 7:
-                        m_creature->SummonCreature(ENTRY_SKYRISS,445.763,-191.639,44.64,1.60,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000);
+                        summon = m_creature->SummonCreature(ENTRY_SKYRISS,445.763,-191.639,44.64,1.60,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,600000);
                         DoScriptText(YELL_WELCOME, m_creature);
                         break;
                 }
+                if(summon)
+                {
+                    if(Player* pl = me->GetMap()->GetPlayerInMap(aggroTarget))
+                        summon->AI()->AttackStart(pl);
+                }
+
                 CanSpawn = false;
                 ++Phase;
             }
