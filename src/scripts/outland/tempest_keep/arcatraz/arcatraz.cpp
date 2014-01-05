@@ -304,7 +304,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
         CanSpawn = false;
         aggroTarget = 0;
 
-        EventProgress_Timer = 1000; //24000;
+        EventProgress_Timer = 24000;
         Phase = 1;
 
         m_creature->SetFlag(UNIT_FIELD_FLAGS,UNIT_FLAG_NON_ATTACKABLE);
