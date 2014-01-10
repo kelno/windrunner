@@ -1731,6 +1731,8 @@ struct cage_trap_triggerAI : public ScriptedAI
                         who->RemoveAurasDueToSpell(SPELL_ENRAGE); // Dispel his enrage
                     //if(GameObject* CageTrap = GameObject::GetGameObject(*m_creature, CageTrapGUID))
                     //    CageTrap->SetLootState(GO_JUST_DEACTIVATED);
+
+                    //Summon octogon
                 }
             }
         }
@@ -1739,17 +1741,18 @@ struct cage_trap_triggerAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         if(DespawnTimer)
-            if(DespawnTimer < diff)
+            if(DespawnTimer <= diff)
                 m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             else DespawnTimer -= diff;
 
-            //if(IllidanGUID && !SummonedBeams)
-            //{
-            //    if(Unit* Illidan = Unit::GetUnit(*m_creature, IllidanGUID)
-            //    {
-            //        //TODO: Find proper spells and properly apply 'caged' Illidan effect
-            //    }
-            //}
+        if(IllidanGUID && !SummonedBeams)
+        {
+            if(Unit* Illidan = Unit::GetUnit(*m_creature, IllidanGUID))
+            {
+                Illidan->CastSpell(Illidan,SPELL_CAGE_TRAP_BEAM,true);
+                //TODO: Find proper spells and properly apply 'caged' Illidan effect
+            }
+         }
     }
 };
 

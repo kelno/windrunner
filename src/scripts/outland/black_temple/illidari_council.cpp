@@ -678,14 +678,17 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
         if(me->isMoving() && me->GetDistance2d(me->getVictim()) < 15 && me->IsWithinLOSInMap(me->getVictim()))
             me->StopMoving();
 
+        if(!me->IsWithinLOSInMap(me->getVictim()))
+            me->GetMotionMaster()->MoveChase(me->getVictim());
+
         if(DampenMagicTimer < diff)
         {
-                m_creature->InterruptNonMeleeSpells(false);
-                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true) == SPELL_CAST_OK)
-                {
-                    DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
-                    ArcaneBoltTimer += 2000;
-                }
+            m_creature->InterruptNonMeleeSpells(false);
+            if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true) == SPELL_CAST_OK)
+            {
+                DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
+                ArcaneBoltTimer += 2000;
+            }
         }else DampenMagicTimer -= diff;
 
         if(AoETimer < diff)
@@ -889,7 +892,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 Unit* currentTarget = me->getVictim();
                 DoResetThreat();
-                me->AddThreat(currentTarget, 2500.0f);
+                me->AddThreat(currentTarget, 1200.0f);
                 DoCast(me,SPELL_VANISH_STUN);
                 return;
             }else VanishTimeLeft -= diff;
