@@ -1380,12 +1380,16 @@ public:
                                 sy = ShieldOrbLocations[0][1] + sin(ShieldOrbLocations[i][1]);
                                 if (Creature* orb = me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000))
                                 {
-                                	orb->SetSummoner(me);
-                                	orb->getAI()->setZoneInCombat(true);
+                                    orb->SetSummoner(me);
+                                    orb->getAI()->setZoneInCombat(true);
+                                    orb->getAI()->setPhase(getPhase());
                                 }
                             }
 
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
+                            if (getPhase() == PHASE_SACRIFICE)
+                                disableEvent(EVENT_SUMMON_SHILEDORB);
+
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast((Unit*)NULL, SPELL_SHADOW_SPIKE);
@@ -1858,7 +1862,7 @@ public:
 
                 if (onSpawn)
                 {
-                    addEvent(EVENT_SHADOWBOLT_S, 500, 1000, EVENT_FLAG_DELAY_IF_CASTING);
+                    addEvent(EVENT_SHADOWBOLT_S, 500, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4));
                 }
                 else
                 {
