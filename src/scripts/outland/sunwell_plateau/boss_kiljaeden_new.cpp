@@ -1829,8 +1829,8 @@ public:
         private:
             bool PointReached;
             bool Clockwise;
-            bool checkTimer;
-    
+            uint32 checkTimer;
+
             ScriptedInstance *pInstance;
 
             float x, y, r, c, mx, my;
@@ -1915,11 +1915,11 @@ public:
                         y = my + r * sin(c);
                         x = mx + r * cos(c);
                     }
-            
+
                     PointReached = false;
-                    checkTimer = 2000;
-            
-                    me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z, true);
+                    checkTimer = 1000;
+
+                    me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z);
             
                     c += 3.1415926535/32;
                     if (c > 2*3.1415926535)
@@ -1928,9 +1928,9 @@ public:
                 else
                 {
                     if (checkTimer <= diff)
-                	    PointReached = true;
-                	else
-                		checkTimer -= diff;
+                        PointReached = true;
+                    else
+                        checkTimer -= diff;
                 }
 
                 if (!updateVictim())
