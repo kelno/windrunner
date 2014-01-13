@@ -1869,7 +1869,6 @@ public:
                     resetEvent(EVENT_SHADOWBOLT_S, 500, 1000);
                 }
 
-                me->SetDisableGravity(true);
                 me->SetFullTauntImmunity(true);
             }
 
