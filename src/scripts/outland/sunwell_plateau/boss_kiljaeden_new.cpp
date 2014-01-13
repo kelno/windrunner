@@ -197,7 +197,8 @@ float ShieldOrbLocations[4][2]=
     {12.0f, 3.14f*3.8f}          // Third one spawns (?)
 };
 
-float OrbLocations[4][5] = {
+float OrbLocations[4][5] =
+{
     (1694.48f, 674.29f,  28.0502f, 4.86985f),
     (1745.68f, 621.823f, 28.0505f, 2.93777f),
     (1704.14f, 583.591f, 28.1696f, 1.59003f),
@@ -415,7 +416,6 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
 
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
-        	plr->CastSpell((Unit*)NULL, SPELL_POSSESS_DRAKE_IMMUNE, true);
         	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
@@ -464,7 +464,7 @@ public:
                 FindOrbs();
                 OrbsEmpowered = 0;
                 EmpowerCount = 0;
-                me->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                me->SetDisableGravity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->setActive(true);
                 Searched = false;
@@ -701,7 +701,7 @@ public:
                     case CREATURE_ANVEENA:
                     {
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                        summoned->SetFlying(true);
+                        summoned->SetDisableGravity(true);
                         summoned->SendMovementFlagUpdate();
                         summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
                         break;
@@ -727,7 +727,7 @@ public:
                     case NPC_CORE_ENTROPIUS:
                     	summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         summoned->CastSpell(summoned, SPELL_ENTROPIUS_BODY, true);
-                        summoned->SetFlying(true);
+                        summoned->SetDisableGravity(true);
                         summoned->SendMovementFlagUpdate();
                         m_EntropiusGuid = summoned->GetGUID();
                         break;
@@ -762,10 +762,10 @@ public:
                     case POINT_TELEPORT_KALECGOS:
                     	if (Creature* pKalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
                     	{
-                            pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
-                            pKalec->SetFlying(false);
-                            pKalec->SendMovementFlagUpdate();
-                        }
+                    		pKalec->CastSpell(pKalec, SPELL_KALEC_TELEPORT, true);
+                    		pKalec->SetDisableGravity(false);
+                    		pKalec->SendMovementFlagUpdate();
+                    	}
                         break;
                     case POINT_SUMMON_SHATTERED:
                     	if (Creature *portal = me->SummonCreature(NPC_BOSS_PORTAL, aOutroLocations[0].m_fX, aOutroLocations[0].m_fY, aOutroLocations[0].m_fZ, aOutroLocations[0].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
@@ -866,7 +866,11 @@ public:
                     	for (uint8 i = 0; i < 20; i++)
                     	{
                     	    if (Creature* soldier = pInstance->instance->GetCreatureInMap(soldiersGuid[i]))
+                    	    {
+                    	    	soldier->SetWalk(false);
+                    	    	soldier->SetSpeed(MOVE_RUN, 1.0f);
                     	    	soldier->GetMotionMaster()->MovePoint(2, SoldierLocations[i].m_fX, SoldierLocations[i].m_fY, SoldierLocations[i].m_fZ, false);
+                    	    }
                     	}
                     	break;
                     case POINT_EVENT_VELEN_EXIT:
@@ -884,33 +888,33 @@ public:
 
                 if (uiPointId == 0)
                 {
-                	if (pSummoned->GetEntry() == NPC_RIFTWALKER)
-                	{
-                		if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
-                			pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
-                	}
-                	else if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                		if (pSummoned->GetGUID() == soldiersGuid[0])
-                		{
-                			pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                		    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                		    pSummoned->SendMovementFlagUpdate();
-                		}
-                		else
-                		{
-                			if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[0]))
-                			{
-                				float sx, sy;
-                				float angle = m_currentAngleFirst * (2*M_PI) / 360;
-                				float rayon = 5;
-                				sx = bigBoss->GetPositionX() + cos(angle) * rayon;
-                				sy = bigBoss->GetPositionY() + sin(angle) * rayon;
-                				pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, bigBoss->GetPositionZ(), false);
-                				m_currentAngleFirst = m_currentAngleFirst + 36;
-                			}
-                		}
-                	}
+                    if (pSummoned->GetEntry() == NPC_RIFTWALKER)
+                    {
+                        if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                            pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
+                    }
+                    else if (pSummoned->GetEntry() == NPC_SOLDIER)
+                    {
+                        if (pSummoned->GetGUID() == soldiersGuid[0])
+                        {
+                            pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
+                            pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
+                            pSummoned->SendMovementFlagUpdate();
+                        }
+                        else
+                        {
+                            pSummoned->SetWalk(true);
+                            pSummoned->SetSpeed(MOVE_WALK, 1.0f);
+
+                            float sx, sy;
+                            float angle = m_currentAngleFirst * (2*M_PI) / 360;
+                            float rayon = 5.0f;
+                            sx = SoldierMiddle[0].m_fX + cos(angle) * rayon;
+                            sy = SoldierMiddle[0].m_fY + sin(angle) * rayon;
+                            pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, SoldierMiddle[0].m_fZ, false);
+                            m_currentAngleFirst = m_currentAngleFirst + 36;
+                        }
+                    }
                 }
                 else if (uiPointId == 1)
                 {
@@ -943,44 +947,44 @@ public:
                 		if (pSummoned->GetGUID() == soldiersGuid[10])
                 		{
                 		    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                	        pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
-                	        pSummoned->SendMovementFlagUpdate();
+                                    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
+                                    pSummoned->SendMovementFlagUpdate();
                 		}
                 		else
                 		{
-                		    if (Creature* bigBoss = me->GetMap()->GetCreature(soldiersGuid[10]))
-                		    {
-                		        float sx, sy;
-                		        float angle = m_currentAngleSecond * (2*M_PI) / 360;
-                		        float rayon = 5;
-                		        sx = bigBoss->GetPositionX() + cos(angle) * rayon;
-                		        sy = bigBoss->GetPositionY() + sin(angle) * rayon;
-                		        pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, bigBoss->GetPositionZ(), false);
-                		        m_currentAngleSecond = m_currentAngleSecond + 36;
-                		    }
+                			pSummoned->SetWalk(true);
+                			pSummoned->SetSpeed(MOVE_WALK, 1.0f);
+
+                		    float sx, sy;
+                		    float angle = m_currentAngleSecond * (2*M_PI) / 360;
+                		    float rayon = 5.0f;
+                		    sx = SoldierMiddle[1].m_fX + cos(angle) * rayon;
+                		    sy = SoldierMiddle[1].m_fY + sin(angle) * rayon;
+                		    pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, SoldierMiddle[1].m_fZ, false);
+                		    m_currentAngleSecond = m_currentAngleSecond + 36;
                 		}
                 	}
                 }
                 else if (uiPointId == 2)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                		pSummoned->ForcedDespawn(1000);
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                        pSummoned->ForcedDespawn(1000);
                 }
                 else if (uiPointId == 10)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                	    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                	    pSummoned->SendMovementFlagUpdate();
-                	}
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                    {
+                        pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
+                        pSummoned->SendMovementFlagUpdate();
+                    }
                 }
                 else if (uiPointId == 11)
                 {
-                	if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                	    pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
-                	    pSummoned->SendMovementFlagUpdate();
-                	}
+                    if (pSummoned->GetEntry() == NPC_SOLDIER)
+                    {
+                        pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
+                        pSummoned->SendMovementFlagUpdate();
+                    }
                 }
             }
 
@@ -1075,6 +1079,7 @@ public:
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
+
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
 	    {
@@ -1097,7 +1102,7 @@ public:
                     // Phase 3
                     addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                    addEvent(EVENT_DARKNESS, 45000, 45000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                    addEvent(EVENT_DARKNESS, 75000, 75000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     addEvent(EVENT_SINISTER_REFLECTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                     // Phase 4
@@ -1114,7 +1119,7 @@ public:
                     // Phase 3
                     resetEvent(EVENT_SHADOW_SPIKE, 4000);
                     resetEvent(EVENT_FLAME_DART, 3000);
-                    resetEvent(EVENT_DARKNESS, 45000);
+                    resetEvent(EVENT_DARKNESS, 75000);
                     resetEvent(EVENT_ORBS_EMPOWER, 35000);
                     resetEvent(EVENT_SINISTER_REFLECTION, 500);
                     // Phase 4
@@ -1131,6 +1136,62 @@ public:
                 me->addUnitState(UNIT_STAT_STUNNED);
             }
 
+            void onEnterPhase(uint32 newPhase)
+            {
+                switch (newPhase)
+                {
+                    case PHASE_DARKNESS:
+                    	// Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 10000, 15000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+
+                    	talk(SAY_KJ_PHASE3);
+                    	break;
+                    case PHASE_ARMAGEDDON:
+                        // Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 10000, 15000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+                    	// Phase 3
+                    	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
+                    	scheduleEvent(EVENT_FLAME_DART, 3000);
+                    	scheduleEvent(EVENT_DARKNESS, 45000);
+                    	scheduleEvent(EVENT_ORBS_EMPOWER, 35000);
+                    	scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
+
+                    	talk(SAY_KJ_PHASE4);
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SINISTER_REFLECTION);
+                    	enableEvent(EVENT_SHADOW_SPIKE);
+                    	enableEvent(EVENT_ORBS_EMPOWER);
+                    	break;
+                    case PHASE_SACRIFICE:
+                    	// Phase 2
+                    	scheduleEvent(EVENT_SOUL_FLAY, 1000);
+                    	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
+                    	scheduleEvent(EVENT_FIRE_BLOOM, 40000, 40000);
+                    	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
+                        // Phase 3
+                    	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
+                    	scheduleEvent(EVENT_FLAME_DART, 3000);
+                    	scheduleEvent(EVENT_DARKNESS, 25000);
+                    	scheduleEvent(EVENT_ORBS_EMPOWER, 500);
+                    	scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
+                    	// Phase 4
+                    	scheduleEvent(EVENT_ARMAGEDDON, 21000);
+
+                    	talk(SAY_KJ_PHASE5);
+                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
+                    	enableEvent(EVENT_SINISTER_REFLECTION);
+                    	enableEvent(EVENT_SHADOW_SPIKE);
+                    	enableEvent(EVENT_ORBS_EMPOWER);
+                    	break;
+                }
+            }
+
             void onSummon(Creature* summoned)
             {
                 Summons.Summon(summoned);
@@ -1141,10 +1202,6 @@ public:
                         summoned->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         summoned->getAI()->setZoneInCombat(true);
                         break;
-                    case CREATURE_SHIELD_ORB:
-                    	summoned->SetFlying(true);
-                    	summoned->SendMovementFlagUpdate();
-                    	break;
                 }
             }
 
@@ -1203,14 +1260,11 @@ public:
                     	}
                         break;
                     case SAY_KJ_PHASE5:
-                    	talk(SAY_KJ_PHASE5);
-                    	setPhase(PHASE_SACRIFICE);
-                    	me->addUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(true, UNIT_STAT_STUNNED);
                     	break;
                     case POINT_END_STUN:
-                    	me->clearUnitState(UNIT_STAT_STUNNED);
                     	me->SetControlled(false, UNIT_STAT_STUNNED);
+                    	setPhase(PHASE_SACRIFICE);
                     	break;
                 }
             }
@@ -1219,7 +1273,7 @@ public:
             {
                 if (annimSpawnTimer)
                 {
-                    me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
+                    me->SetTarget(0);
                     if (annimSpawnTimer <= diff)
                     {
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -1272,14 +1326,25 @@ public:
                     	SetNewArray(thirdDialogue);
                         thirdDialogueStep = true;
                         StartNextDialogueText(SAY_KALEC_3);
-                        doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                        enableEvent(EVENT_SHADOW_SPIKE);
                     }
                 }
 
                 if (me->hasUnitState(UNIT_STAT_CASTING) || me->hasUnitState(UNIT_STAT_STUNNED))
                     return;
+
+                //Phase 3
+                if (getPhase() <= PHASE_NORMAL)
+                {
+                    if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
+                        setPhase(PHASE_DARKNESS);
+                }
+
+                //Phase 4
+                if (getPhase() <= PHASE_DARKNESS)
+                {
+                    if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
+                        setPhase(PHASE_ARMAGEDDON);
+                }
 
                 while (executeEvent(diff, m_currEvent))
                 {
@@ -1315,16 +1380,19 @@ public:
                                 sy = ShieldOrbLocations[0][1] + sin(ShieldOrbLocations[i][1]);
                                 if (Creature* orb = me->SummonCreature(CREATURE_SHIELD_ORB, sx, sy, SHIELD_ORB_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000))
                                 {
-                                	orb->SetSummoner(me);
-                                	orb->getAI()->setZoneInCombat(true);
+                                    orb->SetSummoner(me);
+                                    orb->getAI()->setZoneInCombat(true);
+                                    orb->getAI()->setPhase(getPhase());
                                 }
                             }
 
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 25000, 30000);
+                            if (getPhase() == PHASE_SACRIFICE)
+                                disableEvent(EVENT_SUMMON_SHILEDORB);
+
                             break;
                         case EVENT_SHADOW_SPIKE:
                             doCast((Unit*)NULL, SPELL_SHADOW_SPIKE);
-                            scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
                             disableEvent(EVENT_SHADOW_SPIKE);
                             break;
                         case EVENT_FLAME_DART:
@@ -1349,15 +1417,14 @@ public:
                                     ((boss_kalecgos_kj::boss_kalecgos_kjAI*)kalec->getAI())->EmpowerOrb(false);
 
                             }
-                            scheduleEvent(EVENT_ORBS_EMPOWER, (getPhase() == PHASE_SACRIFICE) ? 45000 : 35000);
-                            scheduleEvent(EVENT_DARKNESS, 30000);
+
                             disableEvent(EVENT_ORBS_EMPOWER);
                             break;
                         case EVENT_SINISTER_REFLECTION:
                         	talk(SAY_KJ_REFLECTION);
                             doCast((Unit*)NULL, SPELL_SINISTER_REFLECTION, true);
 
-                        	scheduleEvent(EVENT_SINISTER_REFLECTION, 150000, 165000);
+                            disableEvent(EVENT_SINISTER_REFLECTION);
                         	break;
                         case EVENT_ARMAGEDDON:
                         {
@@ -1367,33 +1434,6 @@ public:
                             break;
                         }
                     }
-                }
-
-                //Phase 3
-                if (getPhase() <= PHASE_NORMAL)
-                {
-                    if (getPhase() == PHASE_NORMAL && me->IsBelowHPPercent(85))
-                    {
-                        talk(SAY_KJ_PHASE3);
-                        setPhase(PHASE_DARKNESS);
-                    }
-                    else
-                        return;
-                }
-
-                //Phase 4
-                if (getPhase() <= PHASE_DARKNESS)
-                {
-                    if (getPhase() == PHASE_DARKNESS && me->IsBelowHPPercent(55))
-                    {
-                    	doCast(NULL, SPELL_DESTROY_DRAKES, true);
-                        talk(SAY_KJ_PHASE4);
-                        setPhase(PHASE_ARMAGEDDON);
-                        enableEvent(EVENT_ORBS_EMPOWER);
-                        enableEvent(EVENT_SHADOW_SPIKE);
-                    }
-                    else
-                        return;
                 }
             }
     };
@@ -1793,10 +1833,10 @@ public:
         private:
             bool PointReached;
             bool Clockwise;
-            uint32 CheckTimer;
-    
+            uint32 checkTimer;
+
             ScriptedInstance *pInstance;
-    
+
             float x, y, r, c, mx, my;
         public:
             mob_shield_orbAI(Creature* creature) : CreatureAINew(creature)
@@ -1808,14 +1848,13 @@ public:
             {
                 PointReached = true;
 
-                CheckTimer = 1000;
-        
                 r = 17;
                 c = 0;
+                checkTimer = 2000;
         
                 mx = ShieldOrbLocations[0][0];
                 my = ShieldOrbLocations[0][1];
-        
+
                 if (rand()%2)
                     Clockwise = true;
                 else
@@ -1823,13 +1862,27 @@ public:
 
                 if (onSpawn)
                 {
-                    addEvent(EVENT_SHADOWBOLT_S, 500, 1000, EVENT_FLAG_DELAY_IF_CASTING);
+                    addEvent(EVENT_SHADOWBOLT_S, 500, 1000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4));
                 }
                 else
                 {
                     resetEvent(EVENT_SHADOWBOLT_S, 500, 1000);
                 }
+
+                me->SetDisableGravity(true);
                 me->SetFullTauntImmunity(true);
+            }
+
+            void attackStart(Unit* victim)
+            {
+            	if (me->Attack(victim, false))
+            	{
+            	    if (!aiInCombat())
+            	    {
+            	        setAICombat(true);
+            	        onCombatStart(victim);
+            	    }
+            	}
             }
 
             void onMovementInform(uint32 type, uint32 /*id*/)
@@ -1866,11 +1919,11 @@ public:
                         y = my + r * sin(c);
                         x = mx + r * cos(c);
                     }
-            
+
                     PointReached = false;
-                    CheckTimer = 1000;
-            
-                    me->GetMotionMaster()->MovePoint(1,x, y, SHIELD_ORB_Z);
+                    checkTimer = 1000;
+
+                    me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z);
             
                     c += 3.1415926535/32;
                     if (c > 2*3.1415926535)
@@ -1878,13 +1931,10 @@ public:
                 }
                 else
                 {
-                    if (CheckTimer <= diff)
-                    {
-                        doTeleportTo(x, y, SHIELD_ORB_Z);
+                    if (checkTimer <= diff)
                         PointReached = true;
-                    }
                     else
-                        CheckTimer -= diff;
+                        checkTimer -= diff;
                 }
 
                 if (!updateVictim())
@@ -2146,30 +2196,6 @@ public:
     }
 };
 
-//AI for Power of the Blue Flight
-class npc_power_blue_flight : public CreatureScript
-{
-public:
-	npc_power_blue_flight() : CreatureScript("npc_power_blue_flight") {}
-
-    class npc_power_blue_flightAI : public CreatureAINew
-    {
-        private:
-            ScriptedInstance *pInstance;
-
-        public:
-            npc_power_blue_flightAI(Creature* creature) : CreatureAINew(creature)
-            {
-                pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-            }
-    };
-
-    CreatureAINew* getAI(Creature* creature)
-    {
-        return new npc_power_blue_flightAI(creature);
-    }
-};
-
 void AddSC_boss_kiljaeden_new()
 {
     Script* newscript;
@@ -2188,5 +2214,4 @@ void AddSC_boss_kiljaeden_new()
     sScriptMgr.addScript(new mob_armageddon());
     sScriptMgr.addScript(new mob_shield_orb());
     sScriptMgr.addScript(new mob_sinster_reflection());
-    sScriptMgr.addScript(new npc_power_blue_flight());
 }
