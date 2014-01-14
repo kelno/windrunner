@@ -104,7 +104,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
             }
             GameObject* Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
             if( Door )
-                Door->SetGoState(0);                        // Open the big encounter door. Close it in Aggro and open it only in JustDied(and here)
+                Door->SetGoState(GO_STATE_ACTIVE);                        // Open the big encounter door. Close it in Aggro and open it only in JustDied(and here)
                                                             // Small door opened after event are expected to be closed by default
             // Set Inst data for encounter
             if (m_creature->isDead())
@@ -189,7 +189,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
         {
             GameObject* EncounterDoor = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
             if( EncounterDoor )
-                EncounterDoor->SetGoState(1);               //Close the encounter door, open it in JustDied/Reset
+                EncounterDoor->SetGoState(GO_STATE_READY);               //Close the encounter door, open it in JustDied/Reset
         }
     }
 
@@ -211,7 +211,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
             {
                 // Make the crystal attackable
                 // We also remove NON_ATTACKABLE in case the database has it set.
-                CrystalChosen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
+                CrystalChosen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 CrystalChosen->CastSpell(m_creature, SPELL_MANA_RAGE, true);
                 IsDraining = true;
             }
@@ -235,11 +235,11 @@ struct boss_selin_fireheartAI : public ScriptedAI
 
         GameObject* EncounterDoor = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
         if( EncounterDoor )
-            EncounterDoor->SetGoState(0);                   // Open the encounter door
+            EncounterDoor->SetGoState(GO_STATE_ACTIVE);                   // Open the encounter door
 
         GameObject* ContinueDoor = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_DOOR));
         if( ContinueDoor )
-            ContinueDoor->SetGoState(0);                    // Open the door leading further in
+            ContinueDoor->SetGoState(GO_STATE_ACTIVE);                    // Open the door leading further in
 
     }
 

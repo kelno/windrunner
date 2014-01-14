@@ -149,15 +149,15 @@ struct boss_kalecgosAI : public ScriptedAI
 
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if (Door)
-            Door->SetGoState(0);
+            Door->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
         if (Wall1 && m_creature->isAlive())
-            Wall1->SetGoState(1);
+            Wall1->SetGoState(GO_STATE_READY);
         else if (Wall1 && m_creature->isDead())
-            Wall1->SetGoState(0);
+            Wall1->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
         if (Wall2)
-            Wall2->SetGoState(0);
+            Wall2->SetGoState(GO_STATE_ACTIVE);
 
         m_creature->setFaction(14);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
@@ -187,11 +187,11 @@ struct boss_kalecgosAI : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
             
             GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
-            if(Door) Door->SetGoState(0);
+            if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
-            if(Wall1) Wall1->SetGoState(0);
+            if(Wall1) Wall1->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
-            if(Wall2) Wall2->SetGoState(0);
+            if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
         }
         
         // Raid wipe
@@ -231,11 +231,11 @@ struct boss_kalecgosAI : public ScriptedAI
         m_creature->SetStandState(PLAYER_STATE_NONE);
         DoScriptText(SAY_EVIL_AGGRO, m_creature);
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-        if(Door) Door->SetGoState(1);
+        if(Door) Door->SetGoState(GO_STATE_READY);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if(Wall1) Wall1->SetGoState(1);
+        if(Wall1) Wall1->SetGoState(GO_STATE_READY);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-        if(Wall2) Wall2->SetGoState(1);
+        if(Wall2) Wall2->SetGoState(GO_STATE_READY);
         DoZoneInCombat();
         CloseDoorsTimer = 5000;
         
@@ -443,11 +443,11 @@ struct boss_sathrovarrAI : public ScriptedAI
             pInstance->SetData(DATA_KALECGOS_EVENT, DONE);
             
         GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
-        if(Door) Door->SetGoState(0);
+        if(Door) Door->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
-        if(Wall1) Wall1->SetGoState(0);
+        if(Wall1) Wall1->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
-        if(Wall2) Wall2->SetGoState(0);
+        if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             
         // Remove invisibility auras
         m_creature->RemoveAurasDueToSpell(44800);
@@ -729,11 +729,11 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             m_creature->DeleteThreatList();
             m_creature->CombatStop();
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-            if(Door) Door->SetGoState(0);
+            if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
 			if(Wall1) Wall1->SetGoState(!isFriendly);
 			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Wall2) Wall2->SetGoState(0);
+			if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             TalkSequence++;
         }
         if(TalkTimer <= diff)

@@ -991,11 +991,13 @@ struct npc_akama_illidanAI : public ScriptedAI
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         JustCreated = true;
+        introDone = false;
         baseFaction = me->getFaction();
         me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
     }
 
     bool JustCreated;
+    bool introDone;
     ScriptedInstance* pInstance;
 
     PhaseAkama Phase;
@@ -1145,8 +1147,7 @@ struct npc_akama_illidanAI : public ScriptedAI
     {
         m_creature->setActive(true);
         m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        //if(!JustCreated)
-            //return;
+        introDone = true;
 
         float x, y, z;
         if(GETGO(Gate, GateGUID))
@@ -1181,6 +1182,11 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(NextPhase)
         {
         case PHASE_CHANNEL:
+            if(introDone) //then skip this phase
+            {
+                EnterPhase(PHASE_WALK);
+                return;
+            }
             me->setFaction(baseFaction); //restore our faction
             me->SetVisibility(VISIBILITY_ON); //case it's not done already
             BeginChannel();
