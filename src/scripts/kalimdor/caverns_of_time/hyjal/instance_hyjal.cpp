@@ -102,16 +102,16 @@ struct instance_mount_hyjal : public ScriptedInstance
             case GOBJECT_DOOR_ORC:
                 HordeGate = go->GetGUID();
                 if(allianceRetreat)
-                    go->SetGoState(0);
+                    go->SetGoState(GO_STATE_ACTIVE);
                 else
-                    go->SetGoState(1);
+                    go->SetGoState(GO_STATE_READY);
                 break;
             case GOBJECT_DOOR_ELF:
                 ElfGate = go->GetGUID();
                 if(hordeRetreat)
-                    go->SetGoState(0);
+                    go->SetGoState(GO_STATE_ACTIVE);
                 else
-                    go->SetGoState(1);
+                    go->SetGoState(GO_STATE_READY);
                 break;
         }
     }

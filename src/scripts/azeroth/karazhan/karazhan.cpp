@@ -152,13 +152,13 @@ struct npc_barnesAI : public npc_escortAI
              if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
              {
                 if (RaidWiped)
-                    Door->SetGoState(0);
+                    Door->SetGoState(GO_STATE_ACTIVE);
                 else
-                    Door->SetGoState(1);
+                    Door->SetGoState(GO_STATE_READY);
              }
 
              if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                Curtain->SetGoState(1);
+                Curtain->SetGoState(GO_STATE_READY);
         }
     }
 
@@ -187,7 +187,7 @@ struct npc_barnesAI : public npc_escortAI
                 if(pInstance)
                 {
                     if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-                        Door->SetGoState(1);
+                        Door->SetGoState(GO_STATE_READY);
                 }
                 IsBeingEscorted = false;
                 PerformanceReady = true;
@@ -267,7 +267,7 @@ struct npc_barnesAI : public npc_escortAI
                         return;
 
                     if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                        Curtain->SetGoState(0);
+                        Curtain->SetGoState(GO_STATE_ACTIVE);
 
                     CurtainTimer = 0;
                 }else CurtainTimer -= diff;
@@ -321,7 +321,7 @@ struct npc_barnesAI : public npc_escortAI
         pInstance->SetData(DATA_OPERA_EVENT, IN_PROGRESS);
 
         if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-            Door->SetGoState(0);
+            Door->SetGoState(GO_STATE_ACTIVE);
 
         m_creature->CastSpell(m_creature, SPELL_TUXEDO, true);
         m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);

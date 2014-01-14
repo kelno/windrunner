@@ -402,7 +402,7 @@ struct npc_isla_starmaneAI : public npc_escortAI
             {
             GameObject* Cage = FindGameObject(GO_CAGE, 10, m_creature);
             if(Cage)
-                Cage->SetGoState(0);
+                Cage->SetGoState(GO_STATE_ACTIVE);
             }break;
         case 2: DoScriptText(SAY_PROGRESS_1, m_creature, player); break;
         case 5: DoScriptText(SAY_PROGRESS_2, m_creature, player); break;
@@ -631,7 +631,7 @@ struct npc_kaliri_egg_triggerAI : public ScriptedAI
         cell.Visit(pair, go_searcher, *m_creature->GetMap());
 
         if(eggGO)
-            eggGO->SetGoState(1);
+            eggGO->SetGoState(GO_STATE_READY);
     }
 
     void Aggro(Unit *who) {}
@@ -655,7 +655,7 @@ struct npc_kaliri_egg_triggerAI : public ScriptedAI
             cell.Visit(pair, go_searcher, *m_creature->GetMap());
 
             if(eggGO)
-                eggGO->SetGoState(0);
+                eggGO->SetGoState(GO_STATE_ACTIVE);
                 
             caster->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
@@ -679,7 +679,7 @@ bool EffectDummyCreature_npc_kaliri_egg_trigger(Unit* caster, uint32 spellId, ui
         cell.Visit(pair, go_searcher, *target->GetMap());
 
         if(eggGO)
-            eggGO->SetGoState(0);
+            eggGO->SetGoState(GO_STATE_ACTIVE);
 
         caster->DealDamage(target, target->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
