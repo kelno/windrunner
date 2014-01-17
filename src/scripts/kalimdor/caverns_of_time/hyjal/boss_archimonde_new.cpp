@@ -260,7 +260,7 @@ public:
             me->CastSpell(me, SPELL_DOOMFIRE_SPAWN, true);
             _archimondeGUID = NULL;
             _Archimonde = NULL;
-            _CurrentTarget = NULL;
+            _CurrentTarget = FindNewFriend();
 
             if (_instance)
             {
@@ -270,11 +270,14 @@ public:
                     _Archimonde = Unit::GetUnit((*me), _archimondeGUID);
                     if (_Archimonde)
                     {
-                        _LastX = _Archimonde->GetPositionX(); //to dont initially go beneath Archimonde
+                        _LastX = _Archimonde->GetPositionX(); //= set current orientation toward exterior
                         _LastY = _Archimonde->GetPositionY();
                     }
                 }
             }
+            
+            if(!_CurrentTarget)
+                turnAround(); //no target found, go the other way. This is to prevent some abuses.
         }
 
         void update(uint32 const diff)
@@ -363,7 +366,7 @@ public:
             {
                 if (Player* i_pl = i->getSource())
                 {	
-                    if  (i_pl->isAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
+                    if  (i_pl->isAttackableByAOE() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
                     {
                         float AngleWithTarget = GetAngleWithTarget(i_pl);
                         float AngularDifference = GetAngularDifference(_CurrentAngle, AngleWithTarget);
@@ -372,7 +375,7 @@ public:
                     }
                 }
             }
-            if(target_list.size())
+            if(target_list.size() > 0)
                 NewFriend = *(target_list.begin()+rand()%target_list.size());
 
             return NewFriend; //Player* or NULL
@@ -407,6 +410,12 @@ public:
                 angle = 180 + RadianToDegree(atan((_CurrentY - _LastY)/(_CurrentX - _LastX)));
 
             return angle;
+        }
+
+        void turnAround()
+        {
+            _LastX += (_CurrentX - _LastX)*2;
+            _LastY += (_CurrentY - _LastY)*2;
         }
 
         float GetAngularDifference(float ang1, float ang2)
@@ -666,25 +675,19 @@ public:
                     scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                     break;
                 case EV_DOOMFIRE:
-                    float x, y, z;
-                    if (rand()%2)
-                        x = me->GetPositionX() - 10 - rand()%5;
-                    else
-                        x = me->GetPositionX() + 10 + rand()%5;
+                    //spawn at random position at 13m
+                    float x, y, z, tX, tY, tZ;
+                    me->GetPosition(x,y,z);
+                    tX = x + cos(rand()%6) * 13;
+                    tY = y + sin(rand()%6) * 13;
 
-                    if (rand()%2)
-                        y = me->GetPositionY() - 10 - rand()%5;
+                    tZ = z + 1.5f;
+                    me->UpdateGroundPositionZ(tX, tY, tZ);
+                    tZ += 1.0f;
+                    if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, tX, tY, tZ, 0, TEMPSUMMON_TIMED_DESPAWN, (rand()%5000 + 15000)))
+                        sLog.outDebug("[ARCHIMONDE] Spawned Doomfire at %f %f %f", x, y, z);
                     else
-                        y = me->GetPositionY() + 10 + rand()%5;
-                    //x = me->GetPositionX() - 5 + rand()%15;
-                    //y = me->GetPositionY() - 5 + rand()%15;
-                    z = me->GetPositionZ() + 1.5f;
-                    me->UpdateGroundPositionZ(x, y, z);
-                    z += 1.0f;
-                    if (me->SummonCreature(CREATURE_DOOMFIRE_TARGETING, x, y, z, rand()%6, TEMPSUMMON_TIMED_DESPAWN, (rand()%5000 + 15000)))
-                        sLog.outString("[ARCHIMONDE] Spawned Doomfire at %f %f %f", x, y, z);
-                    else
-                        sLog.outString("[ARCHIMONDE] Failed to spawn Doomfire");
+                        sLog.outDebug("[ARCHIMONDE] Failed to spawn Doomfire");
                     talk(YELL_DOOMFIRE);
                     
                     scheduleEvent(EV_DOOMFIRE, 10000);
