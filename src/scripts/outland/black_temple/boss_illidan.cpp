@@ -1168,12 +1168,13 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         if(GETCRE(Illidan, IllidanGUID))
         {
-            Illidan->RemoveAurasDueToSpell(SPELL_KNEEL);
+            //Illidan->RemoveAurasDueToSpell(SPELL_KNEEL);
+            Illidan->SetStandState(UNIT_STAND_STATE_STAND); //kneel up
             Illidan->AddThreat(m_creature,99999.0f); //be sure we won't face another target for now
             m_creature->SetInFront(Illidan);
             Illidan->SetInFront(m_creature);
-            m_creature->GetMotionMaster()->MoveIdle();
-            Illidan->GetMotionMaster()->MoveIdle();
+            m_creature->SendMovementFlagUpdate();
+            Illidan->SendMovementFlagUpdate();
             ((boss_illidan_stormrageAI*)Illidan->AI())->AkamaGUID = m_creature->GetGUID();
             ((boss_illidan_stormrageAI*)Illidan->AI())->EnterPhase(PHASE_TALK_SEQUENCE);
         }
@@ -1314,6 +1315,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         case 4:
             m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             m_creature->SetOrientation(0); //face the door
+            m_creature->SendMovementFlagUpdate();
             councilEventDone = true;
             DoScriptText(SAY_AKAMA_STANDASIDE, me);
             Phase = PHASE_AKAMA_NULL;
@@ -2058,6 +2060,7 @@ void boss_illidan_stormrageAI::Reset()
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 0);
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 0);
     m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+    m_creature->SetStandState(UNIT_STAND_STATE_KNEEL);
     m_creature->setActive(false);
     Summons.DespawnAll();
 }
