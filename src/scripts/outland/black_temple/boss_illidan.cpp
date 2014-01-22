@@ -93,7 +93,6 @@ enum Spells
     SPELL_FLAME_BURST             = 41126, // Hurls fire at entire raid for ~3.5k damage every = 10, seconds. Resistable. (Does not work: Script effect)
     SPELL_FLAME_BURST_EFFECT      = 41131, // The actual damage. Have each player cast it on itself (workaround)
     // Other Illidan spells
-    SPELL_KNEEL                   = 39656, // Before beginning encounter, this is how he appears (talking to skully).
     SPELL_SHADOW_PRISON           = 40647, // Illidan casts this spell to immobilize entire raid when he summons Maiev.
     SPELL_DEATH                   = 41220, // This spell doesn't do anything except stun Illidan and set him on his knees.
     SPELL_BERSERK                 = 45078, // Damage increased by = 500,%, attack speed by = 150,%
@@ -146,7 +145,7 @@ enum Spells
 enum CreatureEntry
 {
     EMPTY                   =       0,
-    AKAMA                   =   22990,
+    AKAMA                   =   23089,
     ILLIDAN_STORMRAGE       =   22917,
     BLADE_OF_AZZINOTH       =   22996,
     FLAME_OF_AZZINOTH       =   22997,
@@ -253,6 +252,7 @@ struct Yells
 
 static Yells Conversation[]=
 {
+    {0, ILLIDAN_STORMRAGE, 6000, false},
     {-1566018, ILLIDAN_STORMRAGE, 8000, true},
     {0, ILLIDAN_STORMRAGE, 5000, 396, true},
     {-1566019, AKAMA, 7000, 25, true},
@@ -331,12 +331,12 @@ static Locations AkamaWP[]=
 {
     {770.01, 304.50, 312.29}, // Bottom of the first stairs, at the doors
     {780.66, 304.50, 319.74}, // Top of the first stairs
-    {790.13, 319.68, 319.76}, // Bottom of the second stairs (left from the entrance)
-    {787.17, 347.38, 341.42}, // Top of the second stairs
-    {781.34, 350.31, 341.44}, // Bottom of the third stairs
-    {762.60, 361.06, 353.60}, // Top of the third stairs
-    {750.52, 373.95, 353.00}, // Before the door-thingy
-    {743.82, 342.21, 353.00}, // Somewhere further
+    {788.08, 285.88, 322.49}, // Bottom of the second stairs (right from the entrance)
+    {784.33, 262.27, 341.46}, // Top of the second stairs
+    {780.72, 257.71, 341.58}, // Bottom of the third stairs
+    {762.89, 245.76, 353.65}, // Top of the third stairs
+    {750.08, 237.49, 353.01}, // Before the door-thingy
+    {742.85, 270.06, 353.00}, // Somewhere further
     {732.69, 305.13, 353.00}, // In front of Illidan - (8)
     {738.11, 365.44, 353.00}, // in front of the door-thingy (the other one!)
     {792.18, 366.62, 341.42}, // Down the first flight of stairs
@@ -503,7 +503,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
                 m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 45479);
             else
                 m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 45481);
-            m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
         }
     }
 
@@ -644,7 +644,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         case 10://attack
             DoResetThreat();
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
-            m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
             EnterPhase(PHASE_NORMAL_2);
             break;
         default:
@@ -668,7 +668,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         {
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 45479); // Requip warglaives if needed
             m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 45481);
-            m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
         }
         else
         {
@@ -705,6 +705,16 @@ struct boss_illidan_stormrageAI : public ScriptedAI
     {
         if((!UpdateVictim()) && Phase < PHASE_TALK_SEQUENCE)
             return;
+        
+        if(me->getVictim() && (me->getVictim()->GetEntry() == AKAMA || me->getVictim()->GetEntry() == MAIEV_SHADOWSONG))
+        {
+            //Reset if no other targets
+            if(me->getThreatManager().getThreatList().size() == 1)
+            {
+                EnterEvadeMode();
+                return;
+            }
+        }
 
         Event = EVENT_NULL;
         for(uint32 i = 1; i <= MaxTimer[Phase]; i++)
@@ -1168,8 +1178,6 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         if(GETCRE(Illidan, IllidanGUID))
         {
-            //Illidan->RemoveAurasDueToSpell(SPELL_KNEEL);
-            Illidan->SetStandState(UNIT_STAND_STATE_STAND); //kneel up
             Illidan->AddThreat(m_creature,99999.0f); //be sure we won't face another target for now
             m_creature->SetInFront(Illidan);
             Illidan->SetInFront(m_creature);
@@ -1180,11 +1188,20 @@ struct npc_akama_illidanAI : public ScriptedAI
         }
     }
 
+    void OpenUpperDoors()
+    {
+        for(uint8 i = 0; i < 2; i++)
+            if(GETGO(Door, DoorGUID[i]))
+                Door->SetUInt32Value(GAMEOBJECT_STATE, 0);
+    }
+
     void BeginChannel()
     {
         GateGUID = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_GATE);
         DoorGUID[0] = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_DOOR_R);
         DoorGUID[1] = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_DOOR_L);
+
+        OpenUpperDoors();
 
         m_creature->SetSpeed(MOVE_RUN, 1.0f);
 
@@ -1223,23 +1240,22 @@ struct npc_akama_illidanAI : public ScriptedAI
             Timer = 1;
             ChannelCount = 0;
             me->setFaction(baseFaction); //restore our faction
+            m_creature->SetSheath(SHEATH_STATE_UNARMED);
             break;
         case PHASE_READY:
-            m_creature->SetHomePosition(AkamaWP[6].x, AkamaWP[6].y, AkamaWP[6].z, 4.1); //upstairs
+            m_creature->SetHomePosition(AkamaWP[6].x, AkamaWP[6].y, AkamaWP[6].z, 2.0); //upstairs
             if(GETCRE(Illidan, IllidanGUID))
             {
                 ((boss_illidan_stormrageAI*)Illidan->AI())->DeleteFromThreatList(m_creature->GetGUID());
                 me->SetInFront(Illidan);
+                me->SendMovementFlagUpdate();
             }
             m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
 
-            //open upper doors
-            for(uint8 i = 0; i < 2; i++)
-                if(GETGO(Door, DoorGUID[i]))
-                    Door->SetUInt32Value(GAMEOBJECT_STATE, 0);
+            OpenUpperDoors();
             break;
         case PHASE_WALK:
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
             m_creature->RemoveFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_GOSSIP);
             if(Phase == PHASE_READY) 
                 WalkCount = 7;
@@ -1266,11 +1282,10 @@ struct npc_akama_illidanAI : public ScriptedAI
             }
             break;
         case PHASE_FIGHT_ILLIDAN:
+            me->SetReactState(REACT_DEFENSIVE); //else the MoveChase in AttackStart fails
             if(GETUNIT(Illidan, IllidanGUID))
-            {
-                m_creature->AddThreat(Illidan, 10000000.0f);
-                m_creature->GetMotionMaster()->MoveChase(Illidan);
-            }
+                AttackStart(Illidan,true);
+
             Timer = 30000; //chain lightning
             break;
         case PHASE_FIGHT_MINIONS:
@@ -1295,6 +1310,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         switch(CouncilIntroCount)
         {
         case 0:
+            m_creature->SetSheath(SHEATH_STATE_UNARMED);
             m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             m_creature->SetVisibility(VISIBILITY_ON);
             m_creature->GetMotionMaster()->MovePoint(WalkCount, AkamaWPCouncil[1].x, AkamaWPCouncil[1].y, AkamaWPCouncil[1].z); //go trough door
@@ -1313,6 +1329,7 @@ struct npc_akama_illidanAI : public ScriptedAI
             Timer = 0;
             break;
         case 4:
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
             m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             m_creature->SetOrientation(0); //face the door
             m_creature->SendMovementFlagUpdate();
@@ -2107,28 +2124,31 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
     switch(TalkCount)
     {
     case 0:
+        m_creature->SetStandState(UNIT_STAND_STATE_STAND); //kneel up
+        break;
+    case 1:
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         break;
-    case 8:
+    case 9:
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 45479); // Equip our warglaives!
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 45481);
-        m_creature->SetByteValue(UNIT_FIELD_BYTES_2, 0, SHEATH_STATE_MELEE );
+        m_creature->SetSheath(SHEATH_STATE_MELEE);
         m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
         break;
-    case 9:
+    case 10:
         if(GETCRE(Akama, AkamaGUID))
         {
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             DoResetThreat();
-            m_creature->AddThreat(Akama, 100.0f);
+            m_creature->AddThreat(Akama, -9999999.0f);
             ((npc_akama_illidanAI*)Akama->AI())->EnterPhase(PHASE_FIGHT_ILLIDAN);
             EnterPhase(PHASE_NORMAL);
         }
         break;
-    case 10:
+    case 11:
         SummonMaiev();
         break;
-    case 11:
+    case 12:
         if(GETUNIT(Maiev, MaievGUID))
         {
             Maiev->SetVisibility(VISIBILITY_ON); // Maiev is now visible
@@ -2138,20 +2158,21 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
             Maiev->GetMotionMaster()->MoveIdle();
             m_creature->GetMotionMaster()->MoveIdle();
         }break;
-    case 14:
+    case 15:
         if(GETCRE(Maiev, MaievGUID))
         {
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             Maiev->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             Maiev->AddThreat(m_creature, 10000000.0f); // Have Maiev add a lot of threat on us so that players don't pull her off if they damage her via AOE
             Maiev->AI()->AttackStart(m_creature); // Force Maiev to attack us.
+            me->AddThreat(Maiev, -9999999.0f); //do not allow her to tank
             EnterPhase(PHASE_NORMAL_MAIEV);
         }break;
-    case 15:
+    case 16:
         DoCast(m_creature, SPELL_DEATH); // Animate his kneeling + stun him
         Summons.DespawnAll();
         break;
-    case 17:
+    case 18:
         if(GETUNIT(Akama, AkamaGUID))
         {
             if(!m_creature->IsWithinDistInMap(Akama, 15))
@@ -2167,7 +2188,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
             }
         }
         break;
-    case 19: // Make Maiev leave
+    case 20: // Make Maiev leave
         if(GETUNIT(Maiev, MaievGUID))
         {
             Maiev->CastSpell(Maiev, SPELL_TELEPORT_VISUAL, true);
@@ -2175,7 +2196,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
             m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1,PLAYER_STATE_DEAD);
         }
         break;
-    case 21: // Kill ourself.
+    case 22: // Kill ourself.
         m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         break;
     default:
