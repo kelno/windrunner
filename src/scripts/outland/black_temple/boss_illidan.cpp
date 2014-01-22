@@ -31,9 +31,20 @@ EndScriptData */
 
 /************* Quotes and Sounds ***********************/
 // Gossip for when a player clicks Akama
-#define GOSSIP_ITEM           450
+#define GOSSIP_INTRO           450
+#define GOSSIP_START           452
+#define MENU_INTRO             451
+#define MENU_START             453
 
 // Yells for/by Akama
+#define SAY_AKAMA_INTRO1      -1566032 //intro after council
+#define SAY_AKAMA_INTRO2      -1566033
+#define SAY_AKAMA_STANDASIDE  -1566034
+#define SAY_AKAMA_CHANNELFAIL -1566035
+#define SAY_UDALO_NOTALONE    -1566036
+#define SAY_OLUM_NOTALONE     -1566037
+#define SAY_AKAMA_THANKS      -1566038
+
 #define SAY_AKAMA_BEWARE      -1566000
 #define SAY_AKAMA_MINION      -1566001
 #define SAY_AKAMA_LEAVE       -1566002
@@ -169,13 +180,15 @@ enum PhaseIllidan
 
 enum PhaseAkama
 {
-    PHASE_AKAMA_NULL        =   0,
-    PHASE_CHANNEL           =   1,
-    PHASE_WALK              =   2,
-    PHASE_TALK              =   3,
-    PHASE_FIGHT_ILLIDAN     =   4,
-    PHASE_FIGHT_MINIONS     =   5,
-    PHASE_RETURN            =   6,
+    PHASE_AKAMA_NULL,
+    PHASE_COUNCIL_INTRO,
+    PHASE_CHANNEL, //channeling and going upstairs
+    PHASE_READY, //waiting just before Illidan
+    PHASE_WALK, //before AND when returning back to fight elites
+    PHASE_TALK,
+    PHASE_FIGHT_ILLIDAN,
+    PHASE_FIGHT_MINIONS,
+    PHASE_RETURN,
 };
 
 enum EventIllidan
@@ -307,6 +320,13 @@ static Locations EyeBlast[]=
     {713.145081, 305.173889, 354}
 };
 
+static Locations AkamaWPCouncil[]=
+{
+    {612.28, 305.63, 271.8}, //behind the council door
+    {660.89, 305.57, 271.69}, //talk spot
+    {755.77, 304.29, 312.18}, //second talk spot (in front of the doors)
+};
+
 static Locations AkamaWP[]=
 {
     {770.01, 304.50, 312.29}, // Bottom of the first stairs, at the doors
@@ -315,7 +335,7 @@ static Locations AkamaWP[]=
     {787.17, 347.38, 341.42}, // Top of the second stairs
     {781.34, 350.31, 341.44}, // Bottom of the third stairs
     {762.60, 361.06, 353.60}, // Top of the third stairs
-    {756.35, 360.52, 353.27}, // Before the door-thingy
+    {750.52, 373.95, 353.00}, // Before the door-thingy
     {743.82, 342.21, 353.00}, // Somewhere further
     {732.69, 305.13, 353.00}, // In front of Illidan - (8)
     {738.11, 365.44, 353.00}, // in front of the door-thingy (the other one!)
@@ -994,10 +1014,19 @@ struct npc_akama_illidanAI : public ScriptedAI
         introDone = false;
         baseFaction = me->getFaction();
         me->setFaction(35); //temporary set to be sure to avoid the akama wandering all over the instance bug
+
+        if(pInstance && pInstance->GetData(DATA_ILLIDARICOUNCILEVENT) != DONE)
+        {
+            councilEventDone = false;
+            me->Relocate(AkamaWPCouncil[0].x, AkamaWPCouncil[0].y, AkamaWPCouncil[0].z); //behind council door
+        } else
+            councilEventDone = true;
     }
 
     bool JustCreated;
     bool introDone;
+    bool councilEventDone;
+
     ScriptedInstance* pInstance;
 
     PhaseAkama Phase;
@@ -1007,9 +1036,10 @@ struct npc_akama_illidanAI : public ScriptedAI
     uint64 IllidanGUID;
     uint64 ChannelGUID;
     uint64 SpiritGUID[2];
-    uint64 GateGUID;
-    uint64 DoorGUID[2];
+    uint64 GateGUID; //below stairs
+    uint64 DoorGUID[2]; //upstairs
 
+    uint32 CouncilIntroCount;
     uint32 ChannelCount;
     uint32 WalkCount;
     uint32 TalkCount;
@@ -1056,9 +1086,14 @@ struct npc_akama_illidanAI : public ScriptedAI
         SpiritGUID[0] = 0;
         SpiritGUID[1] = 0;
 
-        Phase = PHASE_AKAMA_NULL;
+        if(introDone)
+            Phase = PHASE_READY;
+        else
+            Phase = PHASE_AKAMA_NULL;
+        
         Timer = 0;
 
+        CouncilIntroCount = 0;
         ChannelCount = 0;
         WalkCount = 0;
         TalkCount = 0;
@@ -1066,8 +1101,8 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         KillAllElites();
 
-        m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 0); // Database sometimes has strange values..
         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
         m_creature->setActive(false);
         if (pInstance->GetData(DATA_ILLIDARICOUNCILEVENT) != DONE)
             m_creature->SetVisibility(VISIBILITY_OFF);
@@ -1134,6 +1169,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         if(GETCRE(Illidan, IllidanGUID))
         {
             Illidan->RemoveAurasDueToSpell(SPELL_KNEEL);
+            Illidan->AddThreat(m_creature,99999.0f); //be sure we won't face another target for now
             m_creature->SetInFront(Illidan);
             Illidan->SetInFront(m_creature);
             m_creature->GetMotionMaster()->MoveIdle();
@@ -1145,10 +1181,21 @@ struct npc_akama_illidanAI : public ScriptedAI
 
     void BeginChannel()
     {
-        m_creature->setActive(true);
-        m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        introDone = true;
+        GateGUID = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_GATE);
+        DoorGUID[0] = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_DOOR_R);
+        DoorGUID[1] = pInstance->GetData64(DATA_GAMEOBJECT_ILLIDAN_DOOR_L);
 
+        m_creature->SetSpeed(MOVE_RUN, 1.0f);
+
+        for(uint8 i = 0; i < 2; ++i)
+            if(Creature* Spirit = m_creature->SummonCreature(i ? SPIRIT_OF_UDALO : SPIRIT_OF_OLUM, SpiritSpawns[i].x, SpiritSpawns[i].y, SpiritSpawns[i].z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 360000))
+            {
+                Spirit->SetVisibility(VISIBILITY_OFF);
+                Spirit->RemoveFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_GOSSIP);
+                SpiritGUID[i] = Spirit->GetGUID();
+            }
+
+                
         float x, y, z;
         if(GETGO(Gate, GateGUID))
             Gate->GetPosition(x, y, z);
@@ -1157,23 +1204,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         {
             ChannelGUID = Channel->GetGUID();
             Channel->SetUInt32Value(UNIT_FIELD_DISPLAYID, 11686); // Invisible but spell visuals can still be seen.
-            m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-            DoCast(Channel, SPELL_AKAMA_DOOR_FAIL);
         }
-
-        for(uint8 i = 0; i < 2; ++i)
-            if(Creature* Spirit = m_creature->SummonCreature(i ? SPIRIT_OF_OLUM : SPIRIT_OF_UDALO, SpiritSpawns[i].x, SpiritSpawns[i].y, SpiritSpawns[i].z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 360000))
-            {
-                Spirit->SetVisibility(VISIBILITY_OFF);
-                SpiritGUID[i] = Spirit->GetGUID();
-            }
-    }
-
-    void BeginWalk()
-    {
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
-        m_creature->SetSpeed(MOVE_RUN, 1.0f);
-        m_creature->GetMotionMaster()->MovePoint(0, AkamaWP[WalkCount].x, AkamaWP[WalkCount].y, AkamaWP[WalkCount].z);
     }
 
     void EnterPhase(PhaseAkama NextPhase)
@@ -1181,22 +1212,36 @@ struct npc_akama_illidanAI : public ScriptedAI
         if(!pInstance)  return;
         switch(NextPhase)
         {
-        case PHASE_CHANNEL:
-            if(introDone) //then skip this phase
-            {
-                EnterPhase(PHASE_WALK);
-                return;
-            }
+        case PHASE_COUNCIL_INTRO:
             me->setFaction(baseFaction); //restore our faction
-            me->SetVisibility(VISIBILITY_ON); //case it's not done already
+            CouncilIntroCount = 0;
+            Timer = 1;
+            break;
+        case PHASE_CHANNEL:
             BeginChannel();
-            Timer = 5000;
+            Timer = 1;
             ChannelCount = 0;
-            m_creature->SetHomePosition(AkamaWP[1].x, AkamaWP[1].y, AkamaWP[1].z, 0);
+            me->setFaction(baseFaction); //restore our faction
+            break;
+        case PHASE_READY:
+            m_creature->SetHomePosition(AkamaWP[6].x, AkamaWP[6].y, AkamaWP[6].z, 4.1); //upstairs
+            if(GETCRE(Illidan, IllidanGUID))
+            {
+                ((boss_illidan_stormrageAI*)Illidan->AI())->DeleteFromThreatList(m_creature->GetGUID());
+                me->SetInFront(Illidan);
+            }
+            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
+            //open upper doors
+            for(uint8 i = 0; i < 2; i++)
+                if(GETGO(Door, DoorGUID[i]))
+                    Door->SetUInt32Value(GAMEOBJECT_STATE, 0);
             break;
         case PHASE_WALK:
-            if(Phase == PHASE_CHANNEL)
-                WalkCount = 0;
+            m_creature->RemoveFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_GOSSIP);
+            if(Phase == PHASE_READY) 
+                WalkCount = 7;
             else if(Phase == PHASE_TALK)
             {
                 if(GETCRE(Illidan, IllidanGUID))
@@ -1205,8 +1250,7 @@ struct npc_akama_illidanAI : public ScriptedAI
                 m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 WalkCount++;
             }
-            BeginWalk();
-            Timer = 0;
+            Timer = 1;
             break;
         case PHASE_TALK:
             if(Phase == PHASE_WALK)
@@ -1236,7 +1280,6 @@ struct npc_akama_illidanAI : public ScriptedAI
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             KillAllElites();
             WalkCount = 0;
-            BeginWalk();
             Timer = 1;
             break;
         default:
@@ -1244,6 +1287,38 @@ struct npc_akama_illidanAI : public ScriptedAI
         }
         Phase = NextPhase;
         Event = false;
+    }
+
+    void HandleCouncilIntro()
+    {
+        switch(CouncilIntroCount)
+        {
+        case 0:
+            m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            m_creature->SetVisibility(VISIBILITY_ON);
+            m_creature->GetMotionMaster()->MovePoint(WalkCount, AkamaWPCouncil[1].x, AkamaWPCouncil[1].y, AkamaWPCouncil[1].z); //go trough door
+            Timer = 0;
+            break;
+        case 1:
+            DoScriptText(SAY_AKAMA_INTRO1,me);
+            Timer = 5000;
+            break;
+        case 2:
+            DoScriptText(SAY_AKAMA_INTRO2,me);
+            Timer = 6000;
+            break;
+        case 3:
+            m_creature->GetMotionMaster()->MovePoint(WalkCount, AkamaWPCouncil[2].x, AkamaWPCouncil[2].y, AkamaWPCouncil[2].z); //upstairs
+            Timer = 0;
+            break;
+        case 4:
+            m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            m_creature->SetOrientation(0); //face the door
+            councilEventDone = true;
+            DoScriptText(SAY_AKAMA_STANDASIDE, me);
+            Phase = PHASE_AKAMA_NULL;
+        }
+        CouncilIntroCount++;
     }
 
     void HandleTalkSequence()
@@ -1272,7 +1347,7 @@ struct npc_akama_illidanAI : public ScriptedAI
     void HandleChannelSequence()
     {
         Unit* Channel, *Spirit[2];
-        if(ChannelCount <= 5)
+        if(ChannelCount <= 10)
         {
             Channel = Unit::GetUnit((*m_creature), ChannelGUID);
             Spirit[0] = Unit::GetUnit((*m_creature), SpiritGUID[0]);
@@ -1283,22 +1358,44 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         switch(ChannelCount)
         {
-        case 0: // channel failed
+        case 0:
+            m_creature->setActive(true);
+            m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
+            introDone = true;
+            Timer = 4000;
+            break;
+        case 1:
+            DoCast(Channel, SPELL_AKAMA_DOOR_FAIL);
+            Timer = 5000;
+            break;
+        case 2: // channel failed
             m_creature->InterruptNonMeleeSpells(true);
             Timer = 2000;
             break;
-        case 1: // spirit appear
-            Spirit[0]->SetVisibility(VISIBILITY_ON);
-            Spirit[1]->SetVisibility(VISIBILITY_ON);
-            Timer = 2000;
+        case 3:
+            DoScriptText(SAY_AKAMA_CHANNELFAIL,me);
+            Timer = 2500;
             break;
-        case 2: // spirit help
+        case 4: // spirit appear
+            Spirit[0]->SetVisibility(VISIBILITY_ON);
+            Timer = 1500;
+            break;
+        case 5:
+            DoScriptText(SAY_UDALO_NOTALONE,Spirit[0]);
+            Spirit[1]->SetVisibility(VISIBILITY_ON);
+            Timer = 3000;
+            break;
+        case 6:
+            DoScriptText(SAY_OLUM_NOTALONE,Spirit[1]);
+            Timer = 3000;
+            break;
+        case 7: // spirit help
             DoCast(Channel, SPELL_AKAMA_DOOR_CHANNEL);
             Spirit[0]->CastSpell(Channel, SPELL_DEATHSWORN_DOOR_CHANNEL,false);
             Spirit[1]->CastSpell(Channel, SPELL_DEATHSWORN_DOOR_CHANNEL,false);
             Timer = 5000;
             break;
-        case 3: //open the gate
+        case 8: //open the gate
             m_creature->InterruptNonMeleeSpells(true);
             Spirit[0]->InterruptNonMeleeSpells(true);
             Spirit[1]->InterruptNonMeleeSpells(true);
@@ -1306,23 +1403,32 @@ struct npc_akama_illidanAI : public ScriptedAI
                 Gate->SetUInt32Value(GAMEOBJECT_STATE, 0);
             Timer = 2000;
             break;
-        case 4:
+        case 9:
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_SALUTE);
+            DoScriptText(SAY_AKAMA_THANKS,me);
             Spirit[0]->SetVisibility(VISIBILITY_OFF);
             Spirit[1]->SetVisibility(VISIBILITY_OFF);
             Timer = 2000;
             break;
-        case 5:
-            DoScriptText(SAY_AKAMA_BEWARE, me);
+        case 10:
             Channel->setDeathState(JUST_DIED);
             Spirit[0]->setDeathState(JUST_DIED);
             Spirit[1]->setDeathState(JUST_DIED);
             Timer = 3000;
             break;
-        case 6:
-            EnterPhase(PHASE_WALK);
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+            m_creature->GetMotionMaster()->MovePoint(0, AkamaWP[ChannelCount-11].x, AkamaWP[ChannelCount-11].y, AkamaWP[ChannelCount-11].z); // WP 0 to 6
+            Timer = 0;
             break;
-        default:
+        case 18:
+            DoScriptText(SAY_AKAMA_BEWARE, me);
+            EnterPhase(PHASE_READY); //wait for players to ask to start
             break;
         }
         ChannelCount++;
@@ -1332,11 +1438,6 @@ struct npc_akama_illidanAI : public ScriptedAI
     {
         switch(WalkCount)
         {
-        case 6:
-            for(uint8 i = 0; i < 2; i++)
-                if(GETGO(Door, DoorGUID[i]))
-                    Door->SetUInt32Value(GAMEOBJECT_STATE, 0);
-            break;
         case 8:
             if(Phase == PHASE_WALK)
                 EnterPhase(PHASE_TALK);
@@ -1363,7 +1464,11 @@ struct npc_akama_illidanAI : public ScriptedAI
             if (Check_Timer <= diff)
             {
                 if(pInstance && pInstance->GetData(DATA_ILLIDARICOUNCILEVENT) == DONE)
+                {
                     m_creature->SetVisibility(VISIBILITY_ON);
+                    if(!councilEventDone)
+                        EnterPhase(PHASE_COUNCIL_INTRO);
+                }
 
                 Check_Timer = 5000;
             } else Check_Timer -= diff;
@@ -1381,6 +1486,9 @@ struct npc_akama_illidanAI : public ScriptedAI
         {
             switch(Phase)
             {
+            case PHASE_COUNCIL_INTRO:
+                HandleCouncilIntro();
+                break;
             case PHASE_CHANNEL:
                 HandleChannelSequence();
                 break;
@@ -1644,18 +1752,25 @@ struct boss_maievAI : public ScriptedAI
 
 bool GossipSelect_npc_akama_at_illidan(Player *player, Creature *_Creature, uint32 sender, uint32 action)
 {
-    if(action == GOSSIP_ACTION_INFO_DEF) // Time to begin the Event
-    {
-        player->CLOSE_GOSSIP_MENU();
+    if(((npc_akama_illidanAI*)_Creature->AI())->Phase == PHASE_READY)
+        ((npc_akama_illidanAI*)_Creature->AI())->EnterPhase(PHASE_WALK); //walk to illidan and start fight
+    else
         ((npc_akama_illidanAI*)_Creature->AI())->EnterPhase(PHASE_CHANNEL);
-    }
+
+    player->CLOSE_GOSSIP_MENU();
     return true;
 }
 
 bool GossipHello_npc_akama_at_illidan(Player *player, Creature *_Creature)
 {
-    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
-    player->SEND_GOSSIP_MENU(10465, _Creature->GetGUID());
+    if(((npc_akama_illidanAI*)_Creature->AI())->Phase == PHASE_READY)
+    {
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_START, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        player->SEND_GOSSIP_MENU(MENU_START, _Creature->GetGUID());
+    } else {
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_INTRO, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        player->SEND_GOSSIP_MENU(MENU_INTRO, _Creature->GetGUID());
+    }
 
     return true;
 }
@@ -2001,6 +2116,7 @@ void boss_illidan_stormrageAI::HandleTalkSequence()
         if(GETCRE(Akama, AkamaGUID))
         {
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
+            DoResetThreat();
             m_creature->AddThreat(Akama, 100.0f);
             ((npc_akama_illidanAI*)Akama->AI())->EnterPhase(PHASE_FIGHT_ILLIDAN);
             EnterPhase(PHASE_NORMAL);
@@ -2191,6 +2307,7 @@ void boss_illidan_stormrageAI::EnterPhase(PhaseIllidan NextPhase)
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
         m_creature->GetMotionMaster()->Clear(false);
         m_creature->AttackStop();
+        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
         break;
     case PHASE_FLIGHT_SEQUENCE:
         if(Phase == PHASE_NORMAL) //lift off
