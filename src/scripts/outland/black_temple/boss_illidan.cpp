@@ -1112,7 +1112,7 @@ struct npc_akama_illidanAI : public ScriptedAI
         KillAllElites();
 
         m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+        m_creature->SetSheath(SHEATH_STATE_UNARMED);
         m_creature->setActive(false);
         if (pInstance->GetData(DATA_ILLIDARICOUNCILEVENT) != DONE)
             m_creature->SetVisibility(VISIBILITY_OFF);
@@ -1282,6 +1282,7 @@ struct npc_akama_illidanAI : public ScriptedAI
             }
             break;
         case PHASE_FIGHT_ILLIDAN:
+            m_creature->SetSheath(SHEATH_STATE_MELEE);
             me->SetReactState(REACT_DEFENSIVE); //else the MoveChase in AttackStart fails
             if(GETUNIT(Illidan, IllidanGUID))
                 AttackStart(Illidan,true);
@@ -1329,7 +1330,6 @@ struct npc_akama_illidanAI : public ScriptedAI
             Timer = 0;
             break;
         case 4:
-            m_creature->SetSheath(SHEATH_STATE_MELEE);
             m_creature->SetFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
             m_creature->SetOrientation(0); //face the door
             m_creature->SendMovementFlagUpdate();
@@ -1759,7 +1759,7 @@ struct boss_maievAI : public ScriptedAI
                 if(GETCRE(Illidan, IllidanGUID))
                     ((boss_illidan_stormrageAI*)Illidan->AI())->DeleteFromThreatList(m_creature->GetGUID());
                 m_creature->AttackStop();
-                Timer[EVENT_MAIEV_STEALTH] = 60000; //reappear after 1 minute
+                Timer[EVENT_MAIEV_STEALTH] = 30000; //reappear after 30s
                 MaxTimer = 1;
             }
 
