@@ -43,7 +43,7 @@ struct DragonOfNightmareAI_template : public ScriptedAI
     SimpleCooldown* SCDNoxiousBreath;
     SimpleCooldown* SCDSeepingFog;
     
-    void Aggro(Unit *Who)
+    void EnterCombat(Unit *Who)
     {
     }
     
@@ -137,7 +137,7 @@ struct DragonOfNightmareAI_template : public ScriptedAI
         for (std::list<HostilReference*>::iterator itr = threatList.begin(); itr != threatList.end(); ++itr) 
         {
             Unit* unit = Unit::GetUnit((*me), (*itr)->getUnitGuid());
-            if (unit && unit->isAlive() && unit->HasAura(SPELL_MARK_OF_NATURE,0))
+            if (unit && unit->IsAlive() && unit->HasAura(SPELL_MARK_OF_NATURE,0))
             {
                 //DoCast(unit,SPELL_AURA_OF_NATURE_STUN,true);
                 unit->CastSpell(unit,SPELL_AURA_OF_NATURE_STUN,true);
@@ -189,7 +189,7 @@ struct DreamFogAI : public ScriptedAI
         Dragon=me->GetCreature(*me,me->GetOwnerGUID());
         setTargetFromDragon();
     }
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
     
     void Reset()
     {
@@ -316,7 +316,7 @@ struct shadowSpiritAI : public ScriptedAI
         SCDTimerUpdateMovement = new SimpleCooldown(1000);
         SCDFreezeWhenJustSpawn= new SimpleCooldown(1500);
     }
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
     
     void JustDied(Unit *victim)
     {
@@ -413,7 +413,7 @@ struct LethonAI : public DragonOfNightmareAI_template
         me->SetFloatValue(UNIT_FIELD_RANGEDATTACKTIME, 1.5f);
     }
     
-    void Aggro(Unit* u)
+    void EnterCombat(Unit* u)
     {
         DoYell(YELL_ON_AGGRO_LETHON,LANG_UNIVERSAL,NULL);
         return;
@@ -444,7 +444,7 @@ struct LethonAI : public DragonOfNightmareAI_template
         for (std::list<HostilReference*>::iterator itr = threatList.begin(); itr != threatList.end(); ++itr) 
         {
             Unit* unit = Unit::GetUnit((*me), (*itr)->getUnitGuid());
-            if (unit && unit->isAlive())
+            if (unit && unit->IsAlive())
                 targets.push_back(unit);
         }
         // On zigouille les unités interressantes. Enfin facon de parler :p
@@ -543,7 +543,7 @@ struct EmerissAI : public DragonOfNightmareAI_template
         SCDVolatileInfection = new SimpleCooldown (TIMER_VOLATILE_INFECTION_EMERISS,1000); // On lance une SB dès le début
     }
     
-    void Aggro(Unit* u)
+    void EnterCombat(Unit* u)
     {
         DoYell(YELL_ON_AGGRO_EMERISS,LANG_UNIVERSAL,NULL);
         return;
@@ -666,13 +666,13 @@ struct boss_shadeoftaerarAI : public ScriptedAI
         SCDPoisonBreath->resetAtStart();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if(!Taerar || Taerar->isDead() || !Taerar->isInCombat() )
+        if(!Taerar || Taerar->isDead() || !Taerar->IsInCombat() )
         {
             // Suicide
             Instakill(me);
@@ -683,10 +683,10 @@ struct boss_shadeoftaerarAI : public ScriptedAI
             return;
         
         if(SCDPoisonCLoud->CheckAndUpdate(diff))
-            DoCast(m_creature->getVictim(),SPELL_POISONCLOUD_SHADES);
+            DoCast(m_creature->GetVictim(),SPELL_POISONCLOUD_SHADES);
         
         if(SCDPoisonBreath->CheckAndUpdate(diff))
-            DoCast(m_creature->getVictim(),SPELL_POISONBREATH_SHADES);
+            DoCast(m_creature->GetVictim(),SPELL_POISONBREATH_SHADES);
 
         DoMeleeAttackIfReady();
     }
@@ -727,7 +727,7 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
         resetShadesPointer();
     }
     
-    void Aggro(Unit* u)
+    void EnterCombat(Unit* u)
     {
         DoYell(YELL_ON_AGGRO_TAERAR,LANG_UNIVERSAL,NULL);
         return;
@@ -800,7 +800,7 @@ struct boss_taerarAI : public DragonOfNightmareAI_template
     
     void spawnShadesOfTaerar()
     {
-        if(!me->isInCombat()) // évite l'invocation de shades au reset (arrive souvent)
+        if(!me->IsInCombat()) // évite l'invocation de shades au reset (arrive souvent)
         {
             return;
         }
@@ -925,7 +925,7 @@ struct npc_dementeddruidsAI : public ScriptedAI
         SCDSilence->resetAtStart();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -948,13 +948,13 @@ struct npc_dementeddruidsAI : public ScriptedAI
             return;
         }
         
-        if(Ysondre->isDead() || !Ysondre->isInCombat())
+        if(Ysondre->isDead() || !Ysondre->IsInCombat())
         {
             Instakill(me);
         }
         
         if(SCDMoonFire->CheckAndUpdate(diff))
-            DoCast(me->getVictim(),SPELL_MOONFIRE_DRUID,false);
+            DoCast(me->GetVictim(),SPELL_MOONFIRE_DRUID,false);
         
         
         Unit* TargetRandom;
@@ -1004,7 +1004,7 @@ struct boss_ysondreAI : public DragonOfNightmareAI_template
         SCDLightningWave->resetAtStart();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(YELL_ON_AGGRO_YSONDRE,LANG_UNIVERSAL,NULL);
     }

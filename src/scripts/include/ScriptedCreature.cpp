@@ -84,7 +84,7 @@ void ScriptedAI::AttackStart(Unit* who, bool melee)
         if (!InCombat)
         {
             InCombat = true;
-            Aggro(who);
+            EnterCombat(who);
         }
 
         if(melee)
@@ -106,7 +106,7 @@ void ScriptedAI::AttackStart(Unit* who)
         if (!InCombat)
         {
             InCombat = true;
-            Aggro(who);
+            EnterCombat(who);
         }
 
         if(IsCombatMovementAllowed())
@@ -121,14 +121,14 @@ void ScriptedAI::AttackStart(Unit* who)
 void ScriptedAI::UpdateAI(const uint32 diff)
 {
     //Check if we have a current target
-    if (m_creature->isAlive() && UpdateVictim())
+    if (m_creature->IsAlive() && UpdateVictim())
     {
         if (m_creature->isAttackReady() )
         {
             //If we are within range melee the target
-            if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            if (m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             {
-                m_creature->AttackerStateUpdate(m_creature->getVictim());
+                m_creature->AttackerStateUpdate(m_creature->GetVictim());
                 m_creature->resetAttackTimer();
             }
         }
@@ -144,11 +144,11 @@ void ScriptedAI::EnterEvadeMode()
     m_creature->LoadCreaturesAddon();
     m_creature->SetLootRecipient(NULL);
 
-    if(m_creature->isAlive())
+    if(m_creature->IsAlive())
     {
         if(Unit* owner = m_creature->GetOwner())
         {
-            if(owner->isAlive())
+            if(owner->IsAlive())
                 m_creature->GetMotionMaster()->MoveFollow(owner,PET_FOLLOW_DIST,PET_FOLLOW_ANGLE);
         }
         else
@@ -184,7 +184,7 @@ void ScriptedAI::DoStartNoMovement(Unit* victim)
 
 void ScriptedAI::DoStopAttack()
 {
-    if (m_creature->getVictim() != NULL)
+    if (m_creature->GetVictim() != NULL)
     {
         m_creature->AttackStop();
     }
@@ -193,7 +193,7 @@ void ScriptedAI::DoStopAttack()
 uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     //remove this?
-    if (!victim || m_creature->hasUnitState(UNIT_STAT_CASTING) && !triggered)
+    if (!victim || m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
         return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     return m_creature->CastSpell(victim, spellId, triggered);
@@ -202,7 +202,7 @@ uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
     //remove this?
-    if(!triggered && m_creature->hasUnitState(UNIT_STAT_CASTING))
+    if(!triggered && m_creature->HasUnitState(UNIT_STAT_CASTING))
         return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
@@ -306,7 +306,7 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
     if (!target)
         return false;
 
-    if (!target->isAlive())
+    if (!target->IsAlive())
         return false;
 
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
@@ -470,7 +470,7 @@ Unit* ScriptedAI::SelectUnit( uint32 position, float distNear, float distFar, bo
  
         target = Unit::GetUnit(*m_creature,(*i)->getUnitGuid());
         if(!target
-            || !target->isAlive()
+            || !target->IsAlive()
             || playerOnly && target->GetTypeId() != TYPEID_PLAYER
             || distNear && m_creature->IsWithinCombatRange(target, distNear)
             || distFar && !m_creature->IsWithinCombatRange(target, distFar)
@@ -781,7 +781,7 @@ void ScriptedAI::DoZoneInCombat(Unit* pUnit, bool force)
     for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
     {
         if (Player* i_pl = i->getSource())
-            if (i_pl->isAlive())
+            if (i_pl->IsAlive())
             {
                 pUnit->SetInCombatWith(i_pl);
                 i_pl->SetInCombatWith(pUnit);
@@ -850,7 +850,7 @@ void ScriptedAI::DoTeleportAll(float x, float y, float z, float o)
     Map::PlayerList const &PlayerList = map->GetPlayers();
     for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
         if (Player* i_pl = i->getSource())
-            if (i_pl->isAlive())
+            if (i_pl->IsAlive())
                 i_pl->TeleportTo(m_creature->GetMapId(), x, y, z, o, TELE_TO_NOT_LEAVE_COMBAT);
 }
 
@@ -920,7 +920,7 @@ std::list<Creature*> ScriptedAI::DoFindFriendlyMissingBuff(float range, uint32 s
 
 /*void Scripted_NoMovementAI::MoveInLineOfSight(Unit *who)
 {
-    if( !m_creature->getVictim() && m_creature->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
+    if( !m_creature->GetVictim() && m_creature->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
     {
         if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
             return;

@@ -45,7 +45,7 @@ struct boss_ebonrocAI : public ScriptedAI
         Heal_Timer = 1000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -58,25 +58,25 @@ struct boss_ebonrocAI : public ScriptedAI
         //Shadowflame Timer
         if (ShadowFlame_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWFLAME);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWFLAME);
             ShadowFlame_Timer = 12000 + rand()%3000;
         }else ShadowFlame_Timer -= diff;
 
         //Wing Buffet Timer
         if (WingBuffet_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WINGBUFFET);
+            DoCast(m_creature->GetVictim(),SPELL_WINGBUFFET);
             WingBuffet_Timer = 25000;
         }else WingBuffet_Timer -= diff;
 
         //Shadow of Ebonroc Timer
         if (ShadowOfEbonroc_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWOFEBONROC);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWOFEBONROC);
             ShadowOfEbonroc_Timer = 25000 + rand()%10000;
         }else ShadowOfEbonroc_Timer -= diff;
 
-        if (m_creature->getVictim()->HasAura(SPELL_SHADOWOFEBONROC,0))
+        if (m_creature->GetVictim()->HasAura(SPELL_SHADOWOFEBONROC,0))
         {
             if (Heal_Timer < diff)
             {

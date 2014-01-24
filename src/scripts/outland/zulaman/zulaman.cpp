@@ -56,7 +56,7 @@ struct npc_forest_frogAI : public ScriptedAI
 
     void Reset() { }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void DoSpawnRandom()
     {
@@ -119,7 +119,7 @@ struct npc_zulaman_hostageAI : public ScriptedAI
     bool IsLoot;
     uint64 PlayerGUID;
     void Reset() {}
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void JustDied(Unit *)
     {
         Player* player = Unit::GetPlayer(PlayerGUID);
@@ -206,7 +206,7 @@ struct TRINITY_DLL_DECL npc_harrison_jonesAI : public ScriptedAI
         deathTimer = 0;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void IncreaseClick(uint64 pGUID)
     {
@@ -366,7 +366,7 @@ struct TRINITY_DLL_DECL npc_amanishi_lookoutAI : public ScriptedAI
             pInstance->SetData(DATA_GAUNTLET, NOT_STARTED);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void MoveInLineOfSight(Unit *pWho)
     {
@@ -423,7 +423,7 @@ struct TRINITY_DLL_DECL npc_amanishi_tempestAI : public ScriptedAI
         thunderclapTimer = 3000;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         if (pInstance && pInstance->GetData(DATA_GAUNTLET) == IN_PROGRESS)
             pInstance->SetData(DATA_GAUNTLET, DONE);
@@ -435,7 +435,7 @@ struct TRINITY_DLL_DECL npc_amanishi_tempestAI : public ScriptedAI
             return;
             
         if (thunderclapTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_THUNDERCLAP);
+            DoCast(m_creature->GetVictim(), SPELL_THUNDERCLAP);
             thunderclapTimer = 8000;
         }
         else
@@ -468,14 +468,14 @@ struct TRINITY_DLL_DECL npc_amanishi_berserkerAI : public ScriptedAI
         MightyBlowTimer = 5000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff) {
         if (!UpdateVictim())
             return;
             
         if (MightyBlowTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_MIGHTY_BLOW, true);
+            DoCast(m_creature->GetVictim(), SPELL_MIGHTY_BLOW, true);
             MightyBlowTimer = 12000;
         } else MightyBlowTimer -= diff;
         
@@ -522,7 +522,7 @@ struct npc_amanishi_scoutAI : public ScriptedAI
         hasRunToDrum = false;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         if (GameObject *amaniDrum = m_creature->FindGOInGrid(GO_AMANI_DRUM, 50.0f))
             m_creature->GetMotionMaster()->MovePoint(0, amaniDrum->GetPositionX(), amaniDrum->GetPositionY(), amaniDrum->GetPositionZ());
@@ -600,7 +600,7 @@ struct mob_akilzon_gauntletAI : public ScriptedAI
     
     ScriptedInstance* pInstance;
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MovementInform(uint32 type, uint32 id)
     {

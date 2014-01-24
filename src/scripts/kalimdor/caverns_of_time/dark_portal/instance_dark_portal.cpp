@@ -191,7 +191,7 @@ struct instance_dark_portal : public ScriptedInstance
                 {
                     if (Unit *medivh = Unit::GetUnit(*player,MedivhGUID))
                     {
-                        if (medivh->isAlive())
+                        if (medivh->IsAlive())
                         {
                             medivh->DealDamage(medivh, medivh->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                             // Despawn current boss

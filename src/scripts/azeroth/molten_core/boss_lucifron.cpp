@@ -99,15 +99,15 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_IMPENDINGDOOM:
-                    doCast(me->getVictim(), SPELL_IMPENDINGDOOM);
+                    doCast(me->GetVictim(), SPELL_IMPENDINGDOOM);
                     scheduleEvent(EV_IMPENDINGDOOM, urand(15000, 20000));
                     break;
                 case EV_LUCIFRONCURSE:
-                    doCast(me->getVictim(), SPELL_LUCIFRONCURSE);
+                    doCast(me->GetVictim(), SPELL_LUCIFRONCURSE);
                     scheduleEvent(EV_LUCIFRONCURSE, urand(15000, 20000));
                     break;
                 case EV_SHADOWSHOCK:
-                    doCast(me->getVictim(), SPELL_SHADOWSHOCK);
+                    doCast(me->GetVictim(), SPELL_SHADOWSHOCK);
                     scheduleEvent(EV_SHADOWSHOCK, 4000);
                     break;
                 }
@@ -168,11 +168,11 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_DOMINATE_MIND:
-                    doCast(me->getVictim(), SPELL_DOMINATE_MIND);
+                    doCast(me->GetVictim(), SPELL_DOMINATE_MIND);
                     scheduleEvent(EV_DOMINATE_MIND, 15000);
                     break;
                 case EV_CLEAVE:
-                    doCast(me->getVictim(), SPELL_CLEAVE);
+                    doCast(me->GetVictim(), SPELL_CLEAVE);
                     scheduleEvent(EV_CLEAVE, 6000);
                     break;
                 }

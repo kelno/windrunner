@@ -119,7 +119,7 @@ struct npc_giltharesAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         //not always use
         if (rand()%4)
@@ -236,7 +236,7 @@ struct npc_taskmaster_fizzuleAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -332,11 +332,11 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
         BigWill = 0;
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void MoveInLineOfSight(Unit* pWho)
     {
-        if(!pWho || (!pWho->isAlive())) return;
+        if(!pWho || (!pWho->IsAlive())) return;
 
         if (m_creature->IsWithinDistInMap(pWho, 10.0f) && (pWho->GetTypeId() == TYPEID_PLAYER) && CAST_PLR(pWho)->GetQuestStatus(1719) == QUEST_STATUS_INCOMPLETE && !EventInProgress)
         {
@@ -358,7 +358,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
             if(!pWarrior)
                 return;
 
-            if(!pWarrior->isAlive() && pWarrior->GetQuestStatus(1719) == QUEST_STATUS_INCOMPLETE) {
+            if(!pWarrior->IsAlive() && pWarrior->GetQuestStatus(1719) == QUEST_STATUS_INCOMPLETE) {
                 EventInProgress = false;
                 DoScriptText(SAY_TWIGGY_FLATHEAD_DOWN, m_creature);
                 pWarrior->FailQuest(1719);
@@ -369,7 +369,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
                     {
                         Creature* pCreature = Unit::GetCreature((*m_creature), AffrayChallenger[i]);
                         if(pCreature) {
-                            if(pCreature->isAlive())
+                            if(pCreature->IsAlive())
                             {
                                 pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
                                 pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -385,7 +385,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
                 {
                     Creature* pCreature = Unit::GetCreature((*m_creature), BigWill);
                     if(pCreature) {
-                        if(pCreature->isAlive()) {
+                        if(pCreature->IsAlive()) {
                             pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
                             pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             pCreature->setDeathState(JUST_DIED);
@@ -429,7 +429,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
                         if (AffrayChallenger[i])
                         {
                             Creature* pCreature = Unit::GetCreature((*m_creature), AffrayChallenger[i]);
-                            if((!pCreature || (!pCreature->isAlive())) && !Challenger_down[i])
+                            if((!pCreature || (!pCreature->IsAlive())) && !Challenger_down[i])
                             {
                                 DoScriptText(SAY_TWIGGY_FLATHEAD_DOWN, m_creature);
                                 Challenger_down[i] = true;
@@ -445,7 +445,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
                     {
                         DoScriptText(SAY_TWIGGY_FLATHEAD_FRAY, m_creature);
                         Creature* pCreature = Unit::GetCreature((*m_creature), AffrayChallenger[Wave]);
-                        if(pCreature && (pCreature->isAlive()))
+                        if(pCreature && (pCreature->IsAlive()))
                         {
                             pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                             pCreature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -472,7 +472,7 @@ struct npc_twiggy_flatheadAI : public ScriptedAI
                     else if (Wave >= 6 && EventBigWill && BigWill)
                     {
                         Creature* pCreature = Unit::GetCreature((*m_creature), BigWill);
-                        if (!pCreature || !pCreature->isAlive())
+                        if (!pCreature || !pCreature->IsAlive())
                         {
                             DoScriptText(SAY_TWIGGY_FLATHEAD_OVER, m_creature);
                             EventInProgress = false;
@@ -540,7 +540,7 @@ struct npc_wizzlecrank_shredderAI : public npc_escortAI
         }
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void WaypointReached(uint32 uiPointId)
     {
@@ -757,7 +757,7 @@ struct npc_regthar_deathgateAI : public ScriptedAI
         kromzar = false;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void JustSummoned(Creature* summoned)
     {
@@ -955,7 +955,7 @@ struct npc_gilthares_fireboughAI : public npc_escortAI
     
     bool completed;
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void Reset()
     {

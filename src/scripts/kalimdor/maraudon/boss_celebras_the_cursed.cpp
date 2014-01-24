@@ -42,7 +42,7 @@ struct celebras_the_cursedAI : public ScriptedAI
         CorruptForces_Timer = 30000;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void JustDied(Unit* Killer)
     {
@@ -67,7 +67,7 @@ struct celebras_the_cursedAI : public ScriptedAI
         //EntanglingRoots
         if (EntanglingRoots_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ENTANGLINGROOTS);
+            DoCast(m_creature->GetVictim(),SPELL_ENTANGLINGROOTS);
             EntanglingRoots_Timer = 20000;
         }else EntanglingRoots_Timer -= diff;
 

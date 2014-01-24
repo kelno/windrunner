@@ -48,7 +48,7 @@ struct boss_void_reaverAI : public ScriptedAI
 
         Enraged = false;
 
-        if (pInstance && m_creature->isAlive())
+        if (pInstance && m_creature->IsAlive())
             pInstance->SetData(DATA_VOIDREAVEREVENT, NOT_STARTED);
             
          m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
@@ -68,7 +68,7 @@ struct boss_void_reaverAI : public ScriptedAI
             pInstance->SetData(DATA_VOIDREAVEREVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
 
@@ -88,7 +88,7 @@ struct boss_void_reaverAI : public ScriptedAI
         {
             //if (!m_creature->IsNonMeleeSpellCasted(false))
             //{
-                //DoCast(m_creature->getVictim(),SPELL_POUNDING); //Not correct, or maybe the spell is not considered as AoE as it should
+                //DoCast(m_creature->GetVictim(),SPELL_POUNDING); //Not correct, or maybe the spell is not considered as AoE as it should
                 //cast Pounding on ALL the players in ThreatList that are <= 18 yards from Void Reaver
                 //I hope it won't cause freezes...
                 Unit *target = NULL;
@@ -98,7 +98,7 @@ struct boss_void_reaverAI : public ScriptedAI
                     target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
                     Creature *cr = target ? target->ToCreature() : NULL;
                     Player *pl = target ? target->ToPlayer() : NULL;
-                    if (target && (pl || (cr && cr->isPet())) && target->GetDistance2d(m_creature) <= 18)
+                    if (target && (pl || (cr && cr->IsPet())) && target->GetDistance2d(m_creature) <= 18)
                     {
                         sLog.outString("Casting Pounding on %s", target->GetName());
                         DoCast(target, SPELL_POUNDING);
@@ -128,7 +128,7 @@ struct boss_void_reaverAI : public ScriptedAI
                         continue;
                     
                                                                 //18 yard radius minimum
-                    if(target && target->GetTypeId() == TYPEID_PLAYER && target->isAlive() && target->GetDistance2d(m_creature) >= 18)
+                    if(target && target->GetTypeId() == TYPEID_PLAYER && target->IsAlive() && target->GetDistance2d(m_creature) >= 18)
                         target_list.push_back(target);
                     target = NULL;
                 }
@@ -137,8 +137,8 @@ struct boss_void_reaverAI : public ScriptedAI
 
                 if (target)
                     m_creature->CastSpell(target->GetPositionX(),target->GetPositionY(),target->GetPositionZ(), SPELL_ARCANE_ORB, false);
-                else if (m_creature->getVictim())   // If no target >= 18 meters, cast Arcane Orb on the tank
-                    m_creature->CastSpell(m_creature->getVictim()->GetPositionX(),m_creature->getVictim()->GetPositionY(),m_creature->getVictim()->GetPositionZ(), SPELL_ARCANE_ORB, false);
+                else if (m_creature->GetVictim())   // If no target >= 18 meters, cast Arcane Orb on the tank
+                    m_creature->CastSpell(m_creature->GetVictim()->GetPositionX(),m_creature->GetVictim()->GetPositionY(),m_creature->GetVictim()->GetPositionZ(), SPELL_ARCANE_ORB, false);
 
                 ArcaneOrb_Timer = 3000;
             //}
@@ -150,11 +150,11 @@ struct boss_void_reaverAI : public ScriptedAI
         {
             //if (!m_creature->IsNonMeleeSpellCasted(false))
             //{
-                DoCast(m_creature->getVictim(),SPELL_KNOCK_AWAY);
+                DoCast(m_creature->GetVictim(),SPELL_KNOCK_AWAY);
 
                 //Drop 25% aggro
-                if(DoGetThreat(m_creature->getVictim()))
-                    DoModifyThreatPercent(m_creature->getVictim(),-25);
+                if(DoGetThreat(m_creature->GetVictim()))
+                    DoModifyThreatPercent(m_creature->GetVictim(),-25);
 
                 KnockAway_Timer = 30000;
             //}

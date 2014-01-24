@@ -86,7 +86,7 @@ struct mob_voidtravelerAI : public ScriptedAI
         sacrificed = false;
     }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void UpdateAI(const uint32 diff)
     {
@@ -120,7 +120,7 @@ struct mob_voidtravelerAI : public ScriptedAI
                 move = 500;
                 return;
             }
-            if(!Vorpil->isInCombat() || Vorpil->isDead())
+            if(!Vorpil->IsInCombat() || Vorpil->isDead())
             {
                 m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 return;
@@ -205,7 +205,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             for (int i = 0;i < 5; i ++)
             {
                 Unit *Portal = Unit::GetUnit((*m_creature), PortalsGuid[i]);
-                if (Portal && Portal->isAlive())
+                if (Portal && Portal->IsAlive())
                     Portal->DealDamage(Portal, Portal->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 PortalsGuid[i] = 0;
             }
@@ -248,7 +248,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             pInstance->SetData(DATA_GRANDMASTERVORPILEVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {
@@ -264,7 +264,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if(who && !m_creature->getVictim() && m_creature->canStartAttack(who))
+        if(who && !m_creature->GetVictim() && m_creature->canStartAttack(who))
             AttackStart(who);
         if (!Intro && who && m_creature->IsWithinLOSInMap(who)&& m_creature->IsWithinDistInMap(who, 100) && m_creature->IsHostileTo(who))
         {
@@ -300,7 +300,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             Map::PlayerList const &PlayerList = map->GetPlayers();
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 if (Player* i_pl = i->getSource())
-                    if (i_pl->isAlive() && !i_pl->HasAura(SPELL_BANISH,0))
+                    if (i_pl->IsAlive() && !i_pl->HasAura(SPELL_BANISH,0))
                         i_pl->TeleportTo(m_creature->GetMapId(), VorpilPosition[0],VorpilPosition[1],VorpilPosition[2], 0, TELE_TO_NOT_LEAVE_COMBAT);
 
             m_creature->Relocate(VorpilPosition[0],VorpilPosition[1],VorpilPosition[2]);

@@ -57,7 +57,7 @@ struct boss_general_angerforgeAI : public ScriptedAI
         Medics = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -112,21 +112,21 @@ struct boss_general_angerforgeAI : public ScriptedAI
         //MightyBlow_Timer
         if (MightyBlow_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MIGHTYBLOW);
+            DoCast(m_creature->GetVictim(),SPELL_MIGHTYBLOW);
             MightyBlow_Timer = 18000;
         }else MightyBlow_Timer -= diff;
 
         //HamString_Timer
         if (HamString_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMSTRING);
+            DoCast(m_creature->GetVictim(),SPELL_HAMSTRING);
             HamString_Timer = 15000;
         }else HamString_Timer -= diff;
 
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 9000;
         }else Cleave_Timer -= diff;
 
@@ -136,9 +136,9 @@ struct boss_general_angerforgeAI : public ScriptedAI
             if (Adds_Timer < diff)
             {
                 // summon 3 Adds every 25s
-                SummonAdds(m_creature->getVictim());
-                SummonAdds(m_creature->getVictim());
-                SummonAdds(m_creature->getVictim());
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
+                SummonAdds(m_creature->GetVictim());
 
                 Adds_Timer = 25000;
             } else Adds_Timer -= diff;
@@ -147,8 +147,8 @@ struct boss_general_angerforgeAI : public ScriptedAI
         //Summon Medics
         if ( !Medics && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 21 )
         {
-            SummonMedics(m_creature->getVictim());
-            SummonMedics(m_creature->getVictim());
+            SummonMedics(m_creature->GetVictim());
+            SummonMedics(m_creature->GetVictim());
             Medics = true;
         }
 

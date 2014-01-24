@@ -208,7 +208,7 @@ public:
             {
                 if (Player* i_pl = i->getSource())
                 {
-                    if (i_pl->isAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(me) <= 3)
+                    if (i_pl->IsAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(me) <= 3)
                     {
                         //i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
                         i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true);
@@ -290,7 +290,7 @@ public:
                     _Archimonde = Unit::GetUnit((*me), _archimondeGUID);
                 }
 
-                if(_Archimonde && _Archimonde->isAlive() && _Archimonde->isInCombat())
+                if(_Archimonde && _Archimonde->IsAlive() && _Archimonde->IsInCombat())
                 {
                     if(_SummonTimer < diff)
                     {
@@ -609,7 +609,7 @@ public:
 
         void update(uint32 const diff)
         {
-            if (!me->isInCombat()) {
+            if (!me->IsInCombat()) {
                 if (_checkTimer <= diff) {
                     // Visibility check
                     if ((_instance->GetData(DATA_AZGALOREVENT) < DONE) && ((me->GetVisibility() != VISIBILITY_OFF) || (me->getFaction() != 35))) {
@@ -652,7 +652,7 @@ public:
                 _under10Percent = true;
                 enableEvent(EV_UNDER_10_PERCENT);
                 enableEvent(EV_UNDER_10_PERCENT2);
-                doCast(me->getVictim(), SPELL_PROTECTION_OF_ELUNE, true);
+                doCast(me->GetVictim(), SPELL_PROTECTION_OF_ELUNE, true);
             }
                 
             updateEvents(diff);
@@ -660,7 +660,7 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_FEAR:
-                    doCast(me->getVictim(), SPELL_FEAR);
+                    doCast(me->GetVictim(), SPELL_FEAR);
                     scheduleEvent(EV_FEAR, 42000);
                     delayEvent(EV_AIR_BURST, 5000);
                     break;
@@ -715,7 +715,7 @@ public:
                     _enraged = true;
                     break;
                 case EV_ENRAGE_CAST:
-                    doCast(me->getVictim(), SPELL_HAND_OF_DEATH);
+                    doCast(me->GetVictim(), SPELL_HAND_OF_DEATH);
                     scheduleEvent(EV_ENRAGE_CAST, 2000);
                     break;
                 case EV_UNLEASH_SOULCHARGE:
@@ -734,7 +734,7 @@ public:
                     }
                         
                     Trinity::RandomResizeList(unleashSpells, 1);
-                    doCast(me->getVictim(), unleashSpells.front(), true);
+                    doCast(me->GetVictim(), unleashSpells.front(), true);
                     
                     scheduleEvent(EV_UNLEASH_SOULCHARGE, 2000, 10000);
                     switch (unleashSpells.front()) {
@@ -772,11 +772,11 @@ public:
     private:
         bool _canUseFingerOfDeath()
         {
-            Unit* victim = me->getVictim();
+            Unit* victim = me->GetVictim();
             if (victim && me->IsWithinDistInMap(victim, me->GetAttackDistance(victim)))
                 return false;
                 
-            if (victim && victim->isAlive()) {
+            if (victim && victim->IsAlive()) {
                 float x, y, z, zHeightMap;
                 me->GetPosition(x, y, z);
                 zHeightMap = me->GetMap()->GetHeight(x, y, z);
@@ -794,7 +794,7 @@ public:
             std::list<HostilReference*>::iterator itr = threatList.begin();
             for (; itr != threatList.end(); ++itr) {
                 Unit* unit = Unit::GetUnit((*me), (*itr)->getUnitGuid());
-                if (unit && unit->isAlive())
+                if (unit && unit->IsAlive())
                     targets.push_back(unit);
             }
 
@@ -807,7 +807,7 @@ public:
                 if (!me->IsWithinDistInMap(target, me->GetAttackDistance(target)) && abs(me->GetPositionZ() - target->GetPositionZ()) < 5.0f)
                     return true; // Cast Finger of Death
                 else // This target is closest, he is our new tank
-                    me->AddThreat(target, doGetThreat(me->getVictim()));
+                    me->AddThreat(target, doGetThreat(me->GetVictim()));
             }
 
             return false;

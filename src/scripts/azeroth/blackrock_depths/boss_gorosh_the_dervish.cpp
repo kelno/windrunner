@@ -42,7 +42,7 @@ struct boss_gorosh_the_dervishAI : public ScriptedAI
         MortalStrike_Timer = 22000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -62,7 +62,7 @@ struct boss_gorosh_the_dervishAI : public ScriptedAI
         //MortalStrike_Timer
         if (MortalStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 15000;
         }else MortalStrike_Timer -= diff;
 

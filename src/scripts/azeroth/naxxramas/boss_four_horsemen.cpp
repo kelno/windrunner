@@ -62,7 +62,7 @@
             ShieldWall2 = true;
         }
 
-        void Aggro(Unit *who)
+        void EnterCombat(Unit *who)
         {
             DoScriptText(SAY_BLAU_AGGRO, m_creature);
         }
@@ -85,7 +85,7 @@
             // Mark of Blaumeux
             if (Mark_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_MARK_OF_BLAUMEUX);
+                DoCast(m_creature->GetVictim(),SPELL_MARK_OF_BLAUMEUX);
                 Mark_Timer = 12000;
             }else Mark_Timer -= diff;
 
@@ -110,7 +110,7 @@
            // Void Zone
            if (VoidZone_Timer < diff)
            {
-               DoCast(m_creature->getVictim(),SPELL_VOIDZONE);
+               DoCast(m_creature->GetVictim(),SPELL_VOIDZONE);
                VoidZone_Timer = 12000;
            }else VoidZone_Timer -= diff;
 
@@ -149,7 +149,7 @@
        {
        }
 
-       void Aggro(Unit *who)
+       void EnterCombat(Unit *who)
        {
            switch(rand()%3)
            {
@@ -197,7 +197,7 @@
    #define SAY_KORT_DEATH              -1533057
 
    #define SPELL_MARK_OF_KORTHAZZ      28832
-   #define SPELL_METEOR                26558                   // m_creature->getVictim() auto-area spell but with a core problem
+   #define SPELL_METEOR                26558                   // m_creature->GetVictim() auto-area spell but with a core problem
 
    #define C_SPIRIT_OF_KORTHAZZ        16778
 
@@ -218,7 +218,7 @@
            ShieldWall2 = true;
        }
 
-       void Aggro(Unit *who)
+       void EnterCombat(Unit *who)
        {
            DoScriptText(SAY_KORT_AGGRO, m_creature);
        }
@@ -241,7 +241,7 @@
            // Mark of Korthazz
            if (Mark_Timer < diff)
            {
-               DoCast(m_creature->getVictim(),SPELL_MARK_OF_KORTHAZZ);
+               DoCast(m_creature->GetVictim(),SPELL_MARK_OF_KORTHAZZ);
                Mark_Timer = 12000;
            }else Mark_Timer -= diff;
 
@@ -266,7 +266,7 @@
            // Meteor
            if (Meteor_Timer < diff)
            {
-               DoCast(m_creature->getVictim(),SPELL_METEOR);
+               DoCast(m_creature->GetVictim(),SPELL_METEOR);
                Meteor_Timer = 20000;                           // wrong
           }else Meteor_Timer -= diff;
 
@@ -313,7 +313,7 @@
            ShieldWall2 = true;
        }
 
-       void Aggro(Unit *who)
+       void EnterCombat(Unit *who)
        {
            DoScriptText(SAY_ZELI_AGGRO, m_creature);
        }
@@ -337,7 +337,7 @@
            // Mark of Zeliek
            if (Mark_Timer < diff)
            {
-               DoCast(m_creature->getVictim(),SPELL_MARK_OF_ZELIEK);
+               DoCast(m_creature->GetVictim(),SPELL_MARK_OF_ZELIEK);
                Mark_Timer = 12000;
            }else Mark_Timer -= diff;
 
@@ -362,7 +362,7 @@
            // Holy Wrath
            if (HolyWrath_Timer < diff)
            {
-               DoCast(m_creature->getVictim(),SPELL_HOLY_WRATH);
+               DoCast(m_creature->GetVictim(),SPELL_HOLY_WRATH);
                HolyWrath_Timer = 12000;
            }else HolyWrath_Timer -= diff;
 

@@ -94,7 +94,7 @@ struct boss_hakkarAI : public ScriptedAI
         Enraged = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -107,14 +107,14 @@ struct boss_hakkarAI : public ScriptedAI
         //BloodSiphon_Timer
         if (BloodSiphon_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BLOODSIPHON);
+            DoCast(m_creature->GetVictim(),SPELL_BLOODSIPHON);
             BloodSiphon_Timer = 90000;
         }else BloodSiphon_Timer -= diff;
 
         //CorruptedBlood_Timer
         if (CorruptedBlood_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CORRUPTEDBLOOD);
+            DoCast(m_creature->GetVictim(),SPELL_CORRUPTEDBLOOD);
             CorruptedBlood_Timer = 30000 + rand()%15000;
         }else CorruptedBlood_Timer -= diff;
 
@@ -151,7 +151,7 @@ struct boss_hakkarAI : public ScriptedAI
                 {
                     if (AspectOfJeklik_Timer < diff)
                     {
-                        DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_JEKLIK);
+                        DoCast(m_creature->GetVictim(),SPELL_ASPECT_OF_JEKLIK);
                         AspectOfJeklik_Timer = 10000 + rand()%4000;
                     }else AspectOfJeklik_Timer -= diff;
                 }
@@ -168,7 +168,7 @@ struct boss_hakkarAI : public ScriptedAI
                 {
                     if (AspectOfVenoxis_Timer < diff)
                     {
-                        DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_VENOXIS);
+                        DoCast(m_creature->GetVictim(),SPELL_ASPECT_OF_VENOXIS);
                         AspectOfVenoxis_Timer = 8000;
                     }else AspectOfVenoxis_Timer -= diff;
                 }
@@ -185,7 +185,7 @@ struct boss_hakkarAI : public ScriptedAI
                 {
                     if (AspectOfMarli_Timer < diff)
                     {
-                        DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_MARLI);
+                        DoCast(m_creature->GetVictim(),SPELL_ASPECT_OF_MARLI);
                         AspectOfMarli_Timer = 10000;
                     }else AspectOfMarli_Timer -= diff;
 

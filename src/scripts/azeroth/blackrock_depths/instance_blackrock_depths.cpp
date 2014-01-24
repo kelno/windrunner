@@ -369,7 +369,7 @@ struct instance_blackrock_depths : public ScriptedInstance
             {
                 if (Creature* boss = Creature::GetCreature((*player), TombBossGUIDs[i]))
                 {
-                    if (!boss->isAlive())
+                    if (!boss->IsAlive())
                     {//do not call EnterEvadeMode(), it will create infinit loops
                         boss->Respawn();
                         boss->RemoveAllAuras();

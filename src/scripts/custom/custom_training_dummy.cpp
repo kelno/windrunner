@@ -47,7 +47,7 @@ struct npc_training_dummy : Scripted_NoMovementAI
     {
         if (done_by->GetTypeId() == TYPEID_PLAYER)
             attackers[done_by->GetGUID()] = 8000;
-        else if (done_by->ToCreature() && done_by->ToCreature()->isPet()) {
+        else if (done_by->ToCreature() && done_by->ToCreature()->IsPet()) {
             if (Unit* owner = done_by->ToCreature()->GetOwner())
                 attackers[owner->GetGUID()] = 8000;
         }

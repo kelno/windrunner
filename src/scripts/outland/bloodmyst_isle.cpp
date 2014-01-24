@@ -44,7 +44,7 @@ struct mob_webbed_creatureAI : public ScriptedAI
     {
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
     }
 
@@ -168,7 +168,7 @@ struct npc_razormawAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
         me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);

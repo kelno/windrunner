@@ -76,7 +76,7 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
     }
 
-    void Aggro(Unit *who) {
+    void EnterCombat(Unit *who) {
         DoScriptText(YELL_AGGRO, m_creature);
     }
 
@@ -96,22 +96,22 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
             return;
 
         if (WhirlwindTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND);
+            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND);
             WhirlwindTimer =  (8+rand()%10)*1000;
         } else WhirlwindTimer -= diff;
 
         if (Whirlwind2Timer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
+            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = (7+rand()%18)*1000;
         } else Whirlwind2Timer -= diff;
 
         if (KnockdownTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_KNOCKDOWN);
+            DoCast(m_creature->GetVictim(), SPELL_KNOCKDOWN);
             KnockdownTimer = (10+rand()%5)*1000;
         } else KnockdownTimer -= diff;
 
         if (FrenzyTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FRENZY);
+            DoCast(m_creature->GetVictim(), SPELL_FRENZY);
             FrenzyTimer = (20+rand()%5)*1000;
         } else FrenzyTimer -= diff;
 

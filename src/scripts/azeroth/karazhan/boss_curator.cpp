@@ -91,7 +91,7 @@ struct boss_curatorAI : public ScriptedAI
             pInstance->SetData(DATA_CURATOR_EVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
 

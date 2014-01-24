@@ -214,7 +214,7 @@ class Boss_Ragnaros : public CreatureScript
                         if (Unit* pTarget = summoned->getAI()->selectUnit(SELECT_TARGET_RANDOM, 0, 80, true))
                             target = pTarget;
                         else
-                            target = me->getVictim();
+                            target = me->GetVictim();
 
                         if(target)
                         {
@@ -269,7 +269,7 @@ class Boss_Ragnaros : public CreatureScript
 
             bool UpdateMeleeVictim()
             {
-                if (me->IsWithinMeleeRange(me->getVictim()))
+                if (me->IsWithinMeleeRange(me->GetVictim()))
                     return true;
                 else
                 {
@@ -299,7 +299,7 @@ class Boss_Ragnaros : public CreatureScript
 
             void onDamageTaken(Unit* who, uint32& /* Damage */)
             {  
-                if (who->hasUnitState(UNIT_STAT_MELEE_ATTACKING) && rand()%100 < MELTWEAPON_CHANCE)
+                if (who->HasUnitState(UNIT_STAT_MELEE_ATTACKING) && rand()%100 < MELTWEAPON_CHANCE)
                     doCast(who, SPELL_MELT_WEAPON, true);
             }
  
@@ -413,7 +413,7 @@ class Boss_Ragnaros : public CreatureScript
                         }
                         break;
                     case EMERGED:
-                        if (!me->getVictim())
+                        if (!me->GetVictim())
                             return;
  
                         //Wrath Of Ragnaros
@@ -481,8 +481,8 @@ class Boss_Ragnaros : public CreatureScript
                         {
                             MagmaBlast_Wait_Timer = 2000;
                             //Elemental Fire
-                            if (!me->getVictim()->HasAura(SPELL_ELEMENTAL_FIRE, 1)) //index 0 = damage, 1 = aura
-                                doCast(me->getVictim(),SPELL_ELEMENTAL_FIRE, false);
+                            if (!me->GetVictim()->HasAura(SPELL_ELEMENTAL_FIRE, 1)) //index 0 = damage, 1 = aura
+                                doCast(me->GetVictim(),SPELL_ELEMENTAL_FIRE, false);
                         }
                         doMeleeAttackIfReady();
                         break;
@@ -507,7 +507,7 @@ class Boss_Ragnaros : public CreatureScript
                         break;
                 }
                 //Lava Splash
-                if (me->isInCombat())
+                if (me->IsInCombat())
                 {
                     if (LavaSplash_Timer < diff)
                     {

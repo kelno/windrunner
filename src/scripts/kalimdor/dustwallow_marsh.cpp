@@ -63,7 +63,7 @@ struct mobs_risen_husk_spiritAI : public ScriptedAI
         IntangiblePresence_Timer = 5000;
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void DamageTaken(Unit* pDoneBy, uint32 &damage)
     {
@@ -80,14 +80,14 @@ struct mobs_risen_husk_spiritAI : public ScriptedAI
         if (ConsumeFlesh_Timer < diff)
         {
             if( m_creature->GetEntry() == 23555 )
-                DoCast(m_creature->getVictim(),SPELL_CONSUME_FLESH);
+                DoCast(m_creature->GetVictim(),SPELL_CONSUME_FLESH);
             ConsumeFlesh_Timer = 15000;
         } else ConsumeFlesh_Timer -= diff;
 
         if (IntangiblePresence_Timer < diff)
         {
             if( m_creature->GetEntry() == 23554 )
-                DoCast(m_creature->getVictim(),SPELL_INTANGIBLE_PRESENCE);
+                DoCast(m_creature->GetVictim(),SPELL_INTANGIBLE_PRESENCE);
             IntangiblePresence_Timer = 20000;
         } else IntangiblePresence_Timer -= diff;
 
@@ -127,7 +127,7 @@ struct npc_deserter_agitatorAI : public ScriptedAI
         m_creature->setFaction(894);
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 };
 
 CreatureAI* GetAI_npc_deserter_agitator(Creature* pCreature)
@@ -234,7 +234,7 @@ struct npc_overlord_mokmorokkAI : public ScriptedAI
         m_creature->DeleteThreatList();
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void UpdateAI(const uint32 diff)
     {
@@ -243,7 +243,7 @@ struct npc_overlord_mokmorokkAI : public ScriptedAI
             
         if (m_creature->GetHealth() < (m_creature->GetMaxHealth()/5.0f)) //at 20%, he stops fighting and complete the quest
         {
-            player = CAST_PLR(m_creature->getVictim());
+            player = CAST_PLR(m_creature->GetVictim());
             
             if (player && player->GetQuestStatus(QUEST_CHALLENGE_OVERLORD) == QUEST_STATUS_INCOMPLETE)
                 player->KilledMonster(4500, m_creature->GetGUID());
@@ -332,7 +332,7 @@ struct npc_private_hendelAI : public ScriptedAI
 
     void AttackedBy(Unit* pAttacker)
     {
-        if (m_creature->getVictim())
+        if (m_creature->GetVictim())
             return;
 
         if (m_creature->IsFriendlyTo(pAttacker))
@@ -341,7 +341,7 @@ struct npc_private_hendelAI : public ScriptedAI
         AttackStart(pAttacker);
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void DamageTaken(Unit* pDoneBy, uint32 &uiDamage)
     {
@@ -445,7 +445,7 @@ struct npc_stinkyAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         DoScriptText(SAY_ATTACKED_1, me, pWho);
     }
@@ -565,7 +565,7 @@ struct npc_ogronAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         
     }
@@ -751,7 +751,7 @@ struct npc_captured_totemAI : public Scripted_NoMovementAI
         me->setFaction(35);
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
     }
     
@@ -786,7 +786,7 @@ struct SearingWhelpAI : public ScriptedAI
         SCDBdf = new SimpleCooldown(TIMER_FIREBALL);
     }
     
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if(who)
             DoCast(who,SPELL_FIREBALL,false);
@@ -802,8 +802,8 @@ struct SearingWhelpAI : public ScriptedAI
         if (!UpdateVictim())
             return;
         
-        if(SCDBdf->CheckAndUpdate(diff) && me->getVictim())
-            DoCast(me->getVictim(),SPELL_FIREBALL,false);
+        if(SCDBdf->CheckAndUpdate(diff) && me->GetVictim())
+            DoCast(me->GetVictim(),SPELL_FIREBALL,false);
         
         DoMeleeAttackIfReady();
     }

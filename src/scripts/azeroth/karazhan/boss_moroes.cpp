@@ -110,7 +110,7 @@ struct boss_moroesAI : public ScriptedAI
         DoZoneInCombat();
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         StartEvent();
 
@@ -149,7 +149,7 @@ struct boss_moroesAI : public ScriptedAI
 
             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
-                if (i->getSource()->isAlive() && i->getSource()->HasAura(SPELL_GARROTE,0))
+                if (i->getSource()->IsAlive() && i->getSource()->HasAura(SPELL_GARROTE,0))
                     i->getSource()->RemoveAurasDueToSpell(SPELL_GARROTE);
             }
         }
@@ -214,7 +214,7 @@ struct boss_moroesAI : public ScriptedAI
             if (AddGUID[i])
             {
                 Temp = Creature::GetCreature((*m_creature),AddGUID[i]);
-                if (Temp && Temp->isAlive())
+                if (Temp && Temp->IsAlive())
                 {
                     (*Temp).GetMotionMaster()->Clear(true);
                     Temp->DealDamage(Temp, Temp->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -233,9 +233,9 @@ struct boss_moroesAI : public ScriptedAI
             if (AddGUID[i])
             {
                 Temp = Creature::GetCreature((*m_creature),AddGUID[i]);
-                if (Temp && Temp->isAlive())
+                if (Temp && Temp->IsAlive())
                 {
-                    Temp->AI()->AttackStart(m_creature->getVictim());
+                    Temp->AI()->AttackStart(m_creature->GetVictim());
                     DoZoneInCombat(Temp);
                 }else
                     EnterEvadeMode();
@@ -268,9 +268,9 @@ struct boss_moroesAI : public ScriptedAI
                 if (AddGUID[i])
                 {
                     Temp = Unit::GetCreature((*m_creature),AddGUID[i]);
-                    if (Temp && Temp->isAlive())
-                        if (!Temp->getVictim() )
-                            Temp->AI()->AttackStart(m_creature->getVictim());
+                    if (Temp && Temp->IsAlive())
+                        if (!Temp->GetVictim() )
+                            Temp->AI()->AttackStart(m_creature->GetVictim());
                 }
             }
             CheckAdds_Timer = 5000;
@@ -289,7 +289,7 @@ struct boss_moroesAI : public ScriptedAI
 
             if (Gouge_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_GOUGE);
+                DoCast(m_creature->GetVictim(), SPELL_GOUGE);
                 Gouge_Timer = 40000;
             }else Gouge_Timer -= diff;
 
@@ -345,7 +345,7 @@ struct boss_moroes_guestAI : public ScriptedAI
             pInstance->SetData(DATA_MOROES_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AcquireGUID()
     {
@@ -371,7 +371,7 @@ struct boss_moroes_guestAI : public ScriptedAI
         if(TempGUID)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), TempGUID);
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
                 return pUnit;
         }
 
@@ -421,7 +421,7 @@ struct boss_baroness_dorothea_millstipeAI : public boss_moroes_guestAI
 
         if(MindFlay_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MINDFLY);
+            DoCast(m_creature->GetVictim(),SPELL_MINDFLY);
             MindFlay_Timer = 12000;                         //3sec channeled
         }else MindFlay_Timer -= diff;
 
@@ -483,13 +483,13 @@ struct boss_baron_rafe_dreugerAI : public boss_moroes_guestAI
 
         if(JudgementOfCommand_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_JUDGEMENTOFCOMMAND);
+            DoCast(m_creature->GetVictim(),SPELL_JUDGEMENTOFCOMMAND);
             JudgementOfCommand_Timer = SealOfCommand_Timer + 29000;
         }else JudgementOfCommand_Timer -= diff;
 
         if(HammerOfJustice_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMMEROFJUSTICE);
+            DoCast(m_creature->GetVictim(),SPELL_HAMMEROFJUSTICE);
             HammerOfJustice_Timer = 12000;
         }else HammerOfJustice_Timer -= diff;
     }
@@ -545,7 +545,7 @@ struct boss_lady_catriona_von_indiAI : public boss_moroes_guestAI
 
         if(HolyFire_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HOLYFIRE);
+            DoCast(m_creature->GetVictim(),SPELL_HOLYFIRE);
             HolyFire_Timer = 22000;
         }else HolyFire_Timer -= diff;
 
@@ -664,13 +664,13 @@ struct boss_lord_robin_darisAI : public boss_moroes_guestAI
 
         if(Hamstring_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMSTRING);
+            DoCast(m_creature->GetVictim(),SPELL_HAMSTRING);
             Hamstring_Timer = 12000;
         }else Hamstring_Timer -= diff;
 
         if(MortalStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_MORTALSTRIKE);
+            DoCast(m_creature->GetVictim(), SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 18000;
         }else MortalStrike_Timer -= diff;
 
@@ -716,19 +716,19 @@ struct boss_lord_crispin_ferenceAI : public boss_moroes_guestAI
 
         if(Disarm_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DISARM);
+            DoCast(m_creature->GetVictim(),SPELL_DISARM);
             Disarm_Timer = 12000;
         }else Disarm_Timer -= diff;
 
         if(HeroicStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HEROICSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_HEROICSTRIKE);
             HeroicStrike_Timer = 10000;
         }else HeroicStrike_Timer -= diff;
 
         if(ShieldBash_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHIELDBASH);
+            DoCast(m_creature->GetVictim(),SPELL_SHIELDBASH);
             ShieldBash_Timer = 13000;
         }else ShieldBash_Timer -= diff;
 

@@ -109,7 +109,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
             if (!InCombat)
             {
                 InCombat = true;
-                Aggro(who);
+                EnterCombat(who);
             }
 
             //TODO: Make it so he moves when target out of range
@@ -117,7 +117,7 @@ struct npc_millhouse_manastormAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -227,13 +227,13 @@ struct npc_millhouse_manastormAI : public ScriptedAI
 
              DoScriptText(SAY_PYRO, m_creature);
 
-            DoCast(m_creature->getVictim(),SPELL_PYROBLAST);
+            DoCast(m_creature->GetVictim(),SPELL_PYROBLAST);
             Pyroblast_Timer = 40000;
         }else Pyroblast_Timer -=diff;
 
         if( Fireball_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALL);
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALL);
             Fireball_Timer = 4000;
         }else Fireball_Timer -=diff;
 
@@ -321,7 +321,7 @@ struct npc_warden_mellicharAI : public ScriptedAI
         if( IsRunning )
             return;
 
-        if( !m_creature->getVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
+        if( !m_creature->GetVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
         {
             if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -331,13 +331,13 @@ struct npc_warden_mellicharAI : public ScriptedAI
             float attackRadius = m_creature->GetAttackDistance(who)/5;
             if( m_creature->IsWithinDistInMap(who, attackRadius) && m_creature->IsWithinLOSInMap(who) )
             {
-                Aggro(who);
+                EnterCombat(who);
                 aggroTarget = who->GetGUID();
             }
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(YELL_INTRO1, m_creature);
         DoCast(m_creature,SPELL_BUBBLE_VISUAL);
@@ -542,7 +542,7 @@ struct mob_zerekethvoidzoneAI : public ScriptedAI
         DoCast(m_creature,SPELL_VOID_ZONE_DAMAGE);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 };
 CreatureAI* GetAI_mob_zerekethvoidzoneAI(Creature *_Creature)
 {

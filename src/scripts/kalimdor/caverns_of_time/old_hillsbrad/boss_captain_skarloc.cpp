@@ -76,7 +76,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
             me->SetDisplayId(22803);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         //This is not correct. Should taunt Thrall before engage in combat
         DoScriptText(SAY_TAUNT1, m_creature);
@@ -123,7 +123,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
         //Hammer of Justice
         if (HammerOfJustice_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_HAMMER_OF_JUSTICE);
+            DoCast(m_creature->GetVictim(), SPELL_HAMMER_OF_JUSTICE);
             HammerOfJustice_Timer = 60000;
         }else HammerOfJustice_Timer -= diff;
 
@@ -144,7 +144,7 @@ struct boss_captain_skarlocAI : public ScriptedAI
         //Consecration
         if (Consecration_Timer < diff)
         {
-            //DoCast(m_creature->getVictim(), SPELL_CONSECRATION);
+            //DoCast(m_creature->GetVictim(), SPELL_CONSECRATION);
             Consecration_Timer = 8000;
         }else Consecration_Timer -= diff;
 

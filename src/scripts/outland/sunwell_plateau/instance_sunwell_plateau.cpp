@@ -179,7 +179,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 Player* plr = itr->getSource();
-                if (plr && plr->isAlive() && !plr->isGameMaster())
+                if (plr && plr->IsAlive() && !plr->isGameMaster())
                     return plr;
             }
         }
@@ -504,7 +504,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
         }*/
 
         Unit* Commander = instance->GetCreatureInMap(CommanderGUID);
-        if (!Commander || Commander->isInCombat() || Commander->isDead() || !GetAlivePlayerInMap())
+        if (!Commander || Commander->IsInCombat() || Commander->isDead() || !GetAlivePlayerInMap())
             GauntletStatus = NOT_STARTED;
 
         if (GauntletStatus != IN_PROGRESS || GetData(DATA_EREDAR_TWINS_EVENT) == DONE) {

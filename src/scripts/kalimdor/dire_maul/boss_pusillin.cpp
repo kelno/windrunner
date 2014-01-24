@@ -97,7 +97,7 @@ struct boss_pusillinAI : public ScriptedAI
         step = currStep;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         DoCast(m_creature, SPELL_SPIRIT_OF_RUNN, false);
     }
@@ -108,21 +108,21 @@ struct boss_pusillinAI : public ScriptedAI
             return;
             
         if (fireballTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FIREBALL, false);
+            DoCast(m_creature->GetVictim(), SPELL_FIREBALL, false);
             fireballTimer = 6000;
         }
         else
             fireballTimer -= diff;
             
         if (fireblastTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FIREBLAST, false);
+            DoCast(m_creature->GetVictim(), SPELL_FIREBLAST, false);
             fireblastTimer = 8000;
         }
         else
             fireblastTimer -= diff;
             
         if (blastwaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_BLAST_WAVE, false);
+            DoCast(m_creature->GetVictim(), SPELL_BLAST_WAVE, false);
             blastwaveTimer = 15000;
         }
         else

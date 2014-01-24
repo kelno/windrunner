@@ -47,7 +47,7 @@ struct npc_calvin_montagueAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_OOC_NOT_ATTACKABLE);
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void JustDied(Unit* Killer)
     {

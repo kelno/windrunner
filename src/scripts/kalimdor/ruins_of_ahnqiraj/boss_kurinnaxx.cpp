@@ -109,7 +109,7 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_MORTAL_WOUND:
-                    doCast(me->getVictim(), SPELL_MORTAL_WOUND);
+                    doCast(me->GetVictim(), SPELL_MORTAL_WOUND);
                     scheduleEvent(EV_MORTAL_WOUND, 2000, 7000);
                     break;
                 case EV_SANDTRAP:
@@ -117,7 +117,7 @@ public:
                     scheduleEvent(EV_SANDTRAP, 20000);
                     break;
                 case EV_WIDE_SLASH:
-                    doCast(me->getVictim(), SPELL_WIDE_SLASH);
+                    doCast(me->GetVictim(), SPELL_WIDE_SLASH);
                     scheduleEvent(EV_WIDE_SLASH, 10000, 15000);
                     break;
                 case EV_TRASH:

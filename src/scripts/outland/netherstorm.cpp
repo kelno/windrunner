@@ -87,7 +87,7 @@ struct npc_manaforge_control_consoleAI : public ScriptedAI
         Creature* add = NULL;
     }
 
-    void Aggro(Unit *who) { return; }
+    void EnterCombat(Unit *who) { return; }
 
     /*void SpellHit(Unit *caster, const SpellEntry *spell)
     {
@@ -395,7 +395,7 @@ struct npc_commander_dawnforgeAI : public ScriptedAI
         isEvent = false;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     //Select any creature in a grid
     Creature* SelectCreatureInGrid(uint32 entry, float range)
@@ -656,7 +656,7 @@ bool AreaTrigger_at_commander_dawnforge(Player *player, AreaTriggerEntry const *
     if (!player->HasAura(SPELL_SUNFURY_DISGUISE,0))
         return false;
 
-    if (player->isAlive() && player->GetQuestStatus(QUEST_INFO_GATHERING) == QUEST_STATUS_INCOMPLETE)
+    if (player->IsAlive() && player->GetQuestStatus(QUEST_INFO_GATHERING) == QUEST_STATUS_INCOMPLETE)
     {
         Creature* Dawnforge = SearchDawnforge(player, CreatureEntry[1][0], 30.0f);
 
@@ -815,7 +815,7 @@ struct mob_phase_hunterAI : public ScriptedAI
         ManaBurnTimer = 5000 + (rand()%3 * 1000); // 5-8 sec cd
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(Player *player = who->GetCharmerOrOwnerPlayerOrPlayerItself())
             PlayerGUID = player->GetGUID();
@@ -834,7 +834,7 @@ struct mob_phase_hunterAI : public ScriptedAI
             Materialize = true;
         }
 
-        if(m_creature->HasAuraType(SPELL_AURA_MOD_DECREASE_SPEED) || m_creature->hasUnitState(UNIT_STAT_ROOT)) // if the mob is rooted/slowed by spells eg.: Entangling Roots, Frost Nova, Hamstring, Crippling Poison, etc. => remove it
+        if(m_creature->HasAuraType(SPELL_AURA_MOD_DECREASE_SPEED) || m_creature->HasUnitState(UNIT_STAT_ROOT)) // if the mob is rooted/slowed by spells eg.: Entangling Roots, Frost Nova, Hamstring, Crippling Poison, etc. => remove it
             DoCast(m_creature, SPELL_PHASE_SLIP);
 
         if (!UpdateVictim())
@@ -842,9 +842,9 @@ struct mob_phase_hunterAI : public ScriptedAI
 
         if(ManaBurnTimer < diff) // cast Mana Burn
         {
-            if(m_creature->getVictim()->GetCreateMana() > 0)
+            if(m_creature->GetVictim()->GetCreateMana() > 0)
             {
-                DoCast(m_creature->getVictim(), SPELL_MANA_BURN);
+                DoCast(m_creature->GetVictim(), SPELL_MANA_BURN);
                 ManaBurnTimer = 8000 + (rand()%10 * 1000); // 8-18 sec cd
             }
         }else ManaBurnTimer -= diff;
@@ -963,7 +963,7 @@ struct npc_bessyAI : public npc_escortAI
         AttackStart(summoned);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void Reset()
     {
@@ -1017,7 +1017,7 @@ struct npc_maxx_a_million_escortAI : public npc_escortAI
         uiTakeTimer=3000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void WaypointReached(uint32 i)
     {
@@ -1131,7 +1131,7 @@ struct npc_dr_boomAI : public Scripted_NoMovementAI
         InitTimer = 1000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -1167,15 +1167,15 @@ struct npc_dr_boomAI : public Scripted_NoMovementAI
         if (!UpdateVictim())
             return;
 
-        if (!me->IsWithinDistInMap(me->getVictim(), 30.0f))
+        if (!me->IsWithinDistInMap(me->GetVictim(), 30.0f))
         {
             EnterEvadeMode();
             return;
         }
 
-        if (me->isAttackReady() && me->IsWithinDistInMap(me->getVictim(), 8.0f))
+        if (me->isAttackReady() && me->IsWithinDistInMap(me->GetVictim(), 8.0f))
         {
-            DoCast(me->getVictim(), THROW_DYNAMITE, true);
+            DoCast(me->GetVictim(), THROW_DYNAMITE, true);
             me->resetAttackTimer();
         }
     }
@@ -1206,7 +1206,7 @@ struct npc_boom_botAI : public ScriptedAI
         me->SetUnitMovementFlags(MOVEMENTFLAG_WALK_MODE);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackedBy(Unit* pWho) {}
 
@@ -1312,7 +1312,7 @@ struct npc_drijyaAI : public npc_escortAI
 
     void AttackStart(Unit* pWho) {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void SpawnImp()
     {

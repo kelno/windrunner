@@ -51,7 +51,7 @@ struct boss_angerrelAI : public ScriptedAI
         Strike_Timer = 12000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -69,7 +69,7 @@ struct boss_angerrelAI : public ScriptedAI
         //SunderArmor_Timer
         if (SunderArmor_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SUNDERARMOR);
+            DoCast(m_creature->GetVictim(),SPELL_SUNDERARMOR);
             SunderArmor_Timer = 28000;
         }else SunderArmor_Timer -= diff;
 
@@ -83,7 +83,7 @@ struct boss_angerrelAI : public ScriptedAI
         //Strike_Timer
         if (Strike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_STRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_STRIKE);
             Strike_Timer = 10000;
         }else Strike_Timer -= diff;
 
@@ -120,7 +120,7 @@ struct boss_doperelAI : public ScriptedAI
         Gouge_Timer = 6000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -138,21 +138,21 @@ struct boss_doperelAI : public ScriptedAI
         //SinisterStrike_Timer
         if (SinisterStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SINISTERSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_SINISTERSTRIKE);
             SinisterStrike_Timer = 7000;
         }else SinisterStrike_Timer -= diff;
 
         //BackStab_Timer
         if (BackStab_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BACKSTAB);
+            DoCast(m_creature->GetVictim(),SPELL_BACKSTAB);
             BackStab_Timer = 6000;
         }else BackStab_Timer -= diff;
 
         //Gouge_Timer
         if (Gouge_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_GOUGE);
+            DoCast(m_creature->GetVictim(),SPELL_GOUGE);
             Gouge_Timer = 8000;
         }else Gouge_Timer -= diff;
 
@@ -191,7 +191,7 @@ struct boss_haterelAI : public ScriptedAI
         Strike_Timer = 12000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
     
@@ -234,7 +234,7 @@ struct boss_haterelAI : public ScriptedAI
         //Strike_Timer
         if (Strike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_STRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_STRIKE);
             Strike_Timer = 10000;
         }else Strike_Timer -= diff;
 
@@ -274,7 +274,7 @@ struct boss_vilerelAI : public ScriptedAI
         Shield_Timer = 3000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
     
@@ -292,7 +292,7 @@ struct boss_vilerelAI : public ScriptedAI
         //MindBlast_Timer
         if (MindBlast_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MINDBLAST);
+            DoCast(m_creature->GetVictim(),SPELL_MINDBLAST);
             MindBlast_Timer = 7000;
         }else MindBlast_Timer -= diff;
 
@@ -358,7 +358,7 @@ struct boss_seethrelAI : public ScriptedAI
         m_creature->CastSpell(m_creature,SPELL_FROSTARMOR,true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
     
@@ -383,7 +383,7 @@ struct boss_seethrelAI : public ScriptedAI
         //Frostbolt_Timer
         if (Frostbolt_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTBOLT);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTBOLT);
             Frostbolt_Timer = 15000;
         }else Frostbolt_Timer -= diff;
 
@@ -399,7 +399,7 @@ struct boss_seethrelAI : public ScriptedAI
         //FrostNova_Timer
         if (FrostNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTNOVA);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTNOVA);
             FrostNova_Timer = 14000;
         }else FrostNova_Timer -= diff;
 
@@ -445,7 +445,7 @@ struct boss_gloomrelAI : public ScriptedAI
         m_creature->setFaction(FACTION_NEUTRAL);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
     
@@ -463,21 +463,21 @@ struct boss_gloomrelAI : public ScriptedAI
         //Hamstring_Timer
         if (Hamstring_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMSTRING);
+            DoCast(m_creature->GetVictim(),SPELL_HAMSTRING);
             Hamstring_Timer = 14000;
         }else Hamstring_Timer -= diff;
 
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 8000;
         }else Cleave_Timer -= diff;
 
         //MortalStrike_Timer
         if (MortalStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 12000;
         }else MortalStrike_Timer -= diff;
 
@@ -582,7 +582,7 @@ struct boss_doomrelAI : public ScriptedAI
                 m_creature->SetUInt32Value(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -592,7 +592,7 @@ struct boss_doomrelAI : public ScriptedAI
         m_creature->DeleteThreatList();
         m_creature->CombatStop(true);
         m_creature->LoadCreaturesAddon();
-        if (m_creature->isAlive())
+        if (m_creature->IsAlive())
             m_creature->GetMotionMaster()->MoveTargetedHome();
         m_creature->SetLootRecipient(NULL);
         if (pInstance)
@@ -634,7 +634,7 @@ struct boss_doomrelAI : public ScriptedAI
         //ShadowVolley_Timer
         if (ShadowVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWBOLTVOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLTVOLLEY);
             ShadowVolley_Timer = 12000;
         }else ShadowVolley_Timer -= diff;
 
@@ -650,7 +650,7 @@ struct boss_doomrelAI : public ScriptedAI
         //CurseOfWeakness_Timer
         if (CurseOfWeakness_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CURSEOFWEAKNESS);
+            DoCast(m_creature->GetVictim(),SPELL_CURSEOFWEAKNESS);
             CurseOfWeakness_Timer = 45000;
         }else CurseOfWeakness_Timer -= diff;
 
@@ -664,9 +664,9 @@ struct boss_doomrelAI : public ScriptedAI
         //Summon Voidwalkers
         if (!Voidwalkers && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 51 )
         {
-            SummonVoidwalkers(m_creature->getVictim());
-            SummonVoidwalkers(m_creature->getVictim());
-            SummonVoidwalkers(m_creature->getVictim());
+            SummonVoidwalkers(m_creature->GetVictim());
+            SummonVoidwalkers(m_creature->GetVictim());
+            SummonVoidwalkers(m_creature->GetVictim());
             Voidwalkers = true;
         }
 

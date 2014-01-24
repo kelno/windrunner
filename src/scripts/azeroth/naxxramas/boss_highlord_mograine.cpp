@@ -115,7 +115,7 @@ struct boss_highlord_mograineAI : public ScriptedAI
         DoPlaySoundToSet(m_creature, SOUND_DEATH);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         InitialYell();
     }
@@ -128,7 +128,7 @@ struct boss_highlord_mograineAI : public ScriptedAI
         // Mark of Mograine
         if(Mark_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MARK_OF_MOGRAINE);
+            DoCast(m_creature->GetVictim(),SPELL_MARK_OF_MOGRAINE);
             Mark_Timer = 12000;
         }else Mark_Timer -= diff;
 
@@ -155,7 +155,7 @@ struct boss_highlord_mograineAI : public ScriptedAI
         {
             if(rand()%4 == 1)                               // 1/4
             {
-                DoCast(m_creature->getVictim(),SPELL_RIGHTEOUS_FIRE);
+                DoCast(m_creature->GetVictim(),SPELL_RIGHTEOUS_FIRE);
             }
             RighteousFire_Timer = 2000;
         }else RighteousFire_Timer -= diff;

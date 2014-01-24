@@ -87,7 +87,7 @@ struct boss_archaedasAI : public ScriptedAI
     {
         Unit *minion = Unit::GetUnit(*m_creature, guid);
 
-        if (minion && minion->isAlive())
+        if (minion && minion->IsAlive())
         {
             DoCast (minion, SPELL_AWAKEN_VAULT_WALKER, flag);
             minion->CastSpell(minion, SPELL_ARCHAEDAS_AWAKEN,true);
@@ -95,7 +95,7 @@ struct boss_archaedasAI : public ScriptedAI
     }
 
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->setFaction (14);
         m_creature->RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -173,7 +173,7 @@ struct boss_archaedasAI : public ScriptedAI
         if (Tremor_Timer < diff)
         {
             //Cast
-            DoCast(m_creature->getVictim(),SPELL_GROUND_TREMOR);
+            DoCast(m_creature->GetVictim(),SPELL_GROUND_TREMOR);
 
             //45 seconds until we should cast this agian
             Tremor_Timer  = 45000;
@@ -237,7 +237,7 @@ struct mob_archaedas_minionsAI : public ScriptedAI
         m_creature->RemoveAllAuras();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->setFaction (14);
         m_creature->RemoveAllAuras();
@@ -374,7 +374,7 @@ struct mob_stonekeepersAI : public ScriptedAI
         m_creature->RemoveAllAuras();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->setFaction (14);
         m_creature->RemoveFlag (UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);

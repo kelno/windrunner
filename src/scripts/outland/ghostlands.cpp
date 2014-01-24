@@ -215,7 +215,7 @@ struct npc_ranger_lilathaAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void Reset()
     {

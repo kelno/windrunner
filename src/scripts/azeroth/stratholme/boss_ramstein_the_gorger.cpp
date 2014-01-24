@@ -49,7 +49,7 @@ struct boss_ramstein_the_gorgerAI : public ScriptedAI
         Knockout_Timer = 12000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_DUHAST, m_creature);
     }
@@ -81,7 +81,7 @@ struct boss_ramstein_the_gorgerAI : public ScriptedAI
         //Knockout
         if (Knockout_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KNOCKOUT);
+            DoCast(m_creature->GetVictim(),SPELL_KNOCKOUT);
             Knockout_Timer = 10000;
         }else Knockout_Timer -= diff;
 

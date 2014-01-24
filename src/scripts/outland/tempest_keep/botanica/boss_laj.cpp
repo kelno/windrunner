@@ -151,13 +151,13 @@ struct boss_lajAI : public ScriptedAI
         CanSummon = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
     void JustSummoned(Creature *summon)
     {
-        if(summon && m_creature->getVictim())
+        if(summon && m_creature->GetVictim())
             summon->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
     }
 
@@ -178,7 +178,7 @@ struct boss_lajAI : public ScriptedAI
 
         if( Allergic_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_ALLERGIC_REACTION);
+            DoCast(m_creature->GetVictim(),SPELL_ALLERGIC_REACTION);
             Allergic_Timer = 25000+rand()%15000;
         }else Allergic_Timer -= diff;
 

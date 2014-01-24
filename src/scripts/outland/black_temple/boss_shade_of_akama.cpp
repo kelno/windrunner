@@ -281,7 +281,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID);
         if(akama)
         {
-            if(akama->isInCombat())
+            if(akama->IsInCombat())
                 akama->AI()->EnterEvadeMode();
             else if(akama->isDead())
                 akama->Respawn();
@@ -480,7 +480,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             } else summonPackTimer -= diff;
 
             Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID);
-            if(akama && akama->isAlive())
+            if(akama && akama->IsAlive())
             {
                 if(me->GetDistance2d(akama) < NOMINAL_MELEE_RANGE)
                 {
@@ -550,7 +550,7 @@ struct npc_akamaAI : public ScriptedAI
             Creature* shade = me->GetMap()->GetCreatureInMap(shadeGUID);
             if(shade)
             {
-                if(shade->isInCombat())
+                if(shade->IsInCombat())
                     shade->AI()->EnterEvadeMode();
                 else if(shade->isDead())
                     shade->Respawn();
@@ -594,7 +594,7 @@ struct npc_akamaAI : public ScriptedAI
             return;
 
         Creature* shade = me->GetMap()->GetCreatureInMap(shadeGUID);
-        if(shade && shade->isAlive())
+        if(shade && shade->IsAlive())
         {
             shade->AI()->message(ShadeMessages::MESSAGE_AKAMA_GUID,me->GetGUID());
             pInstance->SetData(DATA_SHADEOFAKAMAEVENT, IN_PROGRESS);
@@ -607,7 +607,7 @@ struct npc_akamaAI : public ScriptedAI
     {
         DoScriptText(SAY_DEATH, me);
         Creature* shade = me->GetMap()->GetCreatureInMap(shadeGUID);
-        if(shade && shade->isAlive())
+        if(shade && shade->IsAlive())
             shade->AI()->message(ShadeMessages::MESSAGE_HAS_KILLED_AKAMA,0);
         summons.DespawnAll();
     }
@@ -651,18 +651,18 @@ struct npc_akamaAI : public ScriptedAI
 
         HandleOutro(diff);
 
-        if(!startedMeleeCombat || !me->getVictim())
+        if(!startedMeleeCombat || !me->GetVictim())
             return;
 
         if(destructivePoisonTimer <= diff)
         {
-            DoCast(me->getVictim(), SPELL_DESTRUCTIVE_POISON);
+            DoCast(me->GetVictim(), SPELL_DESTRUCTIVE_POISON);
             destructivePoisonTimer = TIMER_SPELL_DESTRUCTIVE_POISON;
         } else destructivePoisonTimer -= diff;
 
         if(lightningBoltTimer < diff)
         {
-            DoCast(me->getVictim(), SPELL_LIGHTNING_BOLT);
+            DoCast(me->GetVictim(), SPELL_LIGHTNING_BOLT);
             lightningBoltTimer = TIMER_SPELL_LIGHTNING_BOLT;
         } else lightningBoltTimer -= diff;
 

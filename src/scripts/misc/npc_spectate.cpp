@@ -192,7 +192,7 @@ void spectate(Player* player, uint64 targetGuid, Creature *mobArena)
 	    if (target == player || targetGuid == player->GetGUID())
 	        return;
 
-	    if (player->isInCombat())
+	    if (player->IsInCombat())
 	    {
 	    	mobArena->Whisper("Vous êtes en combat!", player->GetGUID());
 	    	return;

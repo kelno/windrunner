@@ -100,11 +100,11 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         SummonChannelers();
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         me->SetReactState(REACT_PASSIVE);
-        if (pInstance && me->isAlive())
+        if (pInstance && me->IsAlive())
             pInstance->SetData(DATA_KELIDANEVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_WAKE, m_creature);
         if (m_creature->IsNonMeleeSpellCasted(false))
@@ -143,7 +143,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         for(int i=0; i<5; ++i)
         {
             Creature *channeler = Unit::GetCreature(*m_creature, Channelers[i]);
-            if(who && channeler && !channeler->isInCombat())
+            if(who && channeler && !channeler->IsInCombat())
                 channeler->AI()->AttackStart(who);
         }
     }
@@ -153,7 +153,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         for(int i=0; i<5; ++i)
         {
             Creature *channeler = Unit::GetCreature(*m_creature, Channelers[i]);
-            if(channeler && channeler->isAlive())
+            if(channeler && channeler->IsAlive())
                 return;
         }
 
@@ -326,7 +326,7 @@ struct mob_shadowmoon_channelerAI : public ScriptedAI
             me->Kill(me);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if(Creature *Kelidan = FindCreature(ENTRY_KELIDAN, 100, m_creature)->ToCreature())
             ((boss_kelidan_the_breakerAI*)Kelidan->AI())->ChannelerEngaged(who);
@@ -372,7 +372,7 @@ struct mob_shadowmoon_channelerAI : public ScriptedAI
 
         if (ShadowBolt_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT);
+            DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT);
             ShadowBolt_Timer = 5000+rand()%1000;
         }else ShadowBolt_Timer -=diff;
 

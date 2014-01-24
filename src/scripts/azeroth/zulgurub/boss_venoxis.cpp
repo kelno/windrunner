@@ -73,7 +73,7 @@ struct boss_venoxisAI : public ScriptedAI
         InBerserk= false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -105,7 +105,7 @@ struct boss_venoxisAI : public ScriptedAI
 
                 if (HolyWrath_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_HOLY_WRATH);
+                    DoCast(m_creature->GetVictim(), SPELL_HOLY_WRATH);
                     HolyWrath_Timer = 15000 + rand()%10000;
                 }else HolyWrath_Timer -= diff;
 
@@ -121,7 +121,7 @@ struct boss_venoxisAI : public ScriptedAI
 
                     if(TargetInRange > 1)
                     {
-                        DoCast(m_creature->getVictim(),SPELL_HOLY_NOVA);
+                        DoCast(m_creature->GetVictim(),SPELL_HOLY_NOVA);
                         HolyNova_Timer = 1000;
                     }
                     else
@@ -157,7 +157,7 @@ struct boss_venoxisAI : public ScriptedAI
 
                 if(PhaseTwo && PoisonCloud_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_POISON_CLOUD);
+                    DoCast(m_creature->GetVictim(), SPELL_POISON_CLOUD);
                     PoisonCloud_Timer = 15000;
                 }PoisonCloud_Timer -=diff;
 

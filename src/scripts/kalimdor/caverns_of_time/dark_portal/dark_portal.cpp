@@ -137,7 +137,7 @@ struct npc_medivh_bmAI : public ScriptedAI
         //ScriptedAI::AttackStart(who);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -305,7 +305,7 @@ struct npc_time_riftAI : public ScriptedAI
         else mWaveId = 1;
 
     }
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void DoSummonAtRift(uint32 creature_entry)
     {
@@ -454,7 +454,7 @@ struct npc_time_keeperAI : public ScriptedAI
         sandBreathTimer = 10000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff) {
         if (lifeTimer <= diff)
@@ -466,7 +466,7 @@ struct npc_time_keeperAI : public ScriptedAI
             return;
             
         if (sandBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_SAND_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_SAND_BREATH);
             sandBreathTimer = 25000+rand()%10000;
         } else sandBreathTimer -= diff;
         

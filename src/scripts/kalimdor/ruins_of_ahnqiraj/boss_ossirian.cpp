@@ -52,7 +52,7 @@ struct boss_ossirianAI : public ScriptedAI
             pInstance->SetData(DATA_OSSIRIAN_EVENT, NOT_STARTED);
     }
     
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_OSSIRIAN_EVENT, IN_PROGRESS);

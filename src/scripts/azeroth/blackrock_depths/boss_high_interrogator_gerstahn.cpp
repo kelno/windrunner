@@ -48,7 +48,7 @@ struct boss_high_interrogator_gerstahnAI : public ScriptedAI
         ShadowShield_Timer = 8000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -79,7 +79,7 @@ struct boss_high_interrogator_gerstahnAI : public ScriptedAI
         //PsychicScream_Timer
         if (PsychicScream_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_PSYCHICSCREAM);
+            DoCast(m_creature->GetVictim(),SPELL_PSYCHICSCREAM);
             PsychicScream_Timer = 30000;
         }else PsychicScream_Timer -= diff;
 

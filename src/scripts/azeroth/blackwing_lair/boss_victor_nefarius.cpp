@@ -203,7 +203,7 @@ struct boss_victor_nefariusAI : public ScriptedAI
         AttackStart(target);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -334,7 +334,7 @@ struct boss_victor_nefariusAI : public ScriptedAI
 
                 //If nef is dead then we die to so the players get out of combat
                 //and cannot repeat the event
-                if (!Nefarian || !Nefarian->isAlive())
+                if (!Nefarian || !Nefarian->IsAlive())
                 {
                     NefarianGUID = 0;
                     m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);

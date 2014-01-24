@@ -92,7 +92,7 @@ struct mob_ancient_wispAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DamageTaken(Unit* done_by, uint32 &damage) { damage = 0; }
 
@@ -111,7 +111,7 @@ struct mob_ancient_wispAI : public ScriptedAI
                 Unit* Archimonde = Unit::GetUnit((*m_creature), ArchimondeGUID);
                 if(Archimonde)
                 {
-                    if((((Archimonde->GetHealth()*100) / Archimonde->GetMaxHealth()) < 2) || !Archimonde->isAlive())
+                    if((((Archimonde->GetHealth()*100) / Archimonde->GetMaxHealth()) < 2) || !Archimonde->IsAlive())
                         DoCast(m_creature, SPELL_DENOUEMENT_WISP);
                     else
                         DoCast(Archimonde, SPELL_ANCIENT_SPARK);
@@ -154,7 +154,7 @@ struct mob_doomfireAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &damage) { damage = 0; }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void MoveInLineOfSight(Unit* who)
     {
@@ -178,7 +178,7 @@ struct mob_doomfireAI : public ScriptedAI
         if(ArchimondeGUID)
         {
             Creature* Archimonde = (Unit::GetCreature((*m_creature), ArchimondeGUID));
-            if(Archimonde && Archimonde->isAlive())
+            if(Archimonde && Archimonde->IsAlive())
             {
                 suicide = false;
                 Archimonde->AI()->KilledUnit(victim);
@@ -200,7 +200,7 @@ struct mob_doomfireAI : public ScriptedAI
         if(TargetSelected && TargetGUID)
         {
             Unit* target = Unit::GetUnit((*m_creature), TargetGUID);
-            if(target && target->isAlive())
+            if(target && target->IsAlive())
             {
                 target->CastSpell(target, SPELL_DOOMFIRE_DAMAGE, true);
                 TargetGUID = 0;
@@ -213,7 +213,7 @@ struct mob_doomfireAI : public ScriptedAI
             if(ArchimondeGUID)
             {
                 Unit* Archimonde = Unit::GetUnit((*m_creature), ArchimondeGUID);
-                if(!Archimonde || !Archimonde->isAlive())
+                if(!Archimonde || !Archimonde->IsAlive())
                     m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 CheckTimer = 5000;
             }
@@ -246,7 +246,7 @@ struct mob_doomfire_targettingAI : public ScriptedAI
         ArchimondeGUID = 0;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MoveInLineOfSight(Unit* who)
     {
@@ -291,7 +291,7 @@ struct mob_doomfire_targettingAI : public ScriptedAI
             if(ArchimondeGUID)
             {
                 Unit* Archimonde = Unit::GetUnit((*m_creature), ArchimondeGUID);
-                if(Archimonde && Archimonde->isAlive())
+                if(Archimonde && Archimonde->IsAlive())
                 {
                     Creature* Doomfire = DoSpawnCreature(CREATURE_DOOMFIRE, 0, 0, 2, 0, TEMPSUMMON_TIMED_DESPAWN, 30000);
                     if(Doomfire)
@@ -310,7 +310,7 @@ struct mob_doomfire_targettingAI : public ScriptedAI
         }else SummonTimer -= diff;
         
         // If target becomes inaccessible (Air burst, maybe ?), reset ChangeTargetTimer to force new target
-        if (Unit* currentVictim = m_creature->getVictim())
+        if (Unit* currentVictim = m_creature->GetVictim())
         {
             if (!currentVictim->isInAccessiblePlaceFor(m_creature))
                 ChangeTargetTimer = 50;     // Will probably be < diff
@@ -323,9 +323,9 @@ struct mob_doomfire_targettingAI : public ScriptedAI
             {
                 case 0:                                     // stalk player
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-                    if(target && target->isAlive())
+                    if(target && target->IsAlive())
                     {
-                        m_creature->AddThreat(target, DoGetThreat(m_creature->getVictim()));
+                        m_creature->AddThreat(target, DoGetThreat(m_creature->GetVictim()));
                         m_creature->GetMotionMaster()->MoveChase(target);
                     }
                     break;
@@ -422,7 +422,7 @@ struct boss_archimondeAI : public hyjal_trashAI
         me->RemoveAurasDueToSpell(SPELL_SOUL_CHARGE_GREEN);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->InterruptSpell(CURRENT_CHANNELED_SPELL);
         DoScriptText(SAY_AGGRO, m_creature);
@@ -482,11 +482,11 @@ struct boss_archimondeAI : public hyjal_trashAI
     bool CanUseFingerOfDeath()
     {
         // First we check if our current victim is in melee range or not.
-        Unit* victim = m_creature->getVictim();
+        Unit* victim = m_creature->GetVictim();
         if(victim && m_creature->IsWithinDistInMap(victim, m_creature->GetAttackDistance(victim)))
             return false;
             
-        if(victim && victim->isAlive()){
+        if(victim && victim->IsAlive()){
             float x,y,z,zHeightMap;
             m_creature->GetPosition(x,y,z);
             zHeightMap = m_creature->GetMap()->GetHeight(x, y, z);
@@ -505,7 +505,7 @@ struct boss_archimondeAI : public hyjal_trashAI
         for( ; itr != m_threatlist.end(); ++itr)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), (*itr)->getUnitGuid());
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
                 targets.push_back(pUnit);
         }
 
@@ -519,7 +519,7 @@ struct boss_archimondeAI : public hyjal_trashAI
             if(!m_creature->IsWithinDistInMap(target, m_creature->GetAttackDistance(target)))
                 return true;                                // Cast Finger of Death
             else                                            // This target is closest, he is our new tank
-                m_creature->AddThreat(target, DoGetThreat(m_creature->getVictim()));
+                m_creature->AddThreat(target, DoGetThreat(m_creature->GetVictim()));
         }
 
         return false;
@@ -574,7 +574,7 @@ struct boss_archimondeAI : public hyjal_trashAI
         if(m_creature->HasAura(chargeSpell)) //should always be correct
         {
             m_creature->RemoveSingleAuraFromStack(chargeSpell, 0);
-            //DoCast(m_creature->getVictim(), unleashSpell); //has to be casted on ALL the raid members
+            //DoCast(m_creature->GetVictim(), unleashSpell); //has to be casted on ALL the raid members
             /*Unit *target = NULL;
             std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
@@ -684,7 +684,7 @@ struct boss_archimondeAI : public hyjal_trashAI
                 m_creature->GetMotionMaster()->MoveIdle();
                 m_creature->InterruptNonMeleeSpells(true, 0, true);
                 //all members of raid must get this buff
-                DoCast(m_creature->getVictim(), SPELL_PROTECTION_OF_ELUNE);
+                DoCast(m_creature->GetVictim(), SPELL_PROTECTION_OF_ELUNE);
                 HasProtected = true;
                 Enraged = true;
             }
@@ -709,7 +709,7 @@ struct boss_archimondeAI : public hyjal_trashAI
         {
             if(HandOfDeathTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_HAND_OF_DEATH);
+                DoCast(m_creature->GetVictim(), SPELL_HAND_OF_DEATH);
                 HandOfDeathTimer = 2000;
             }else HandOfDeathTimer -= diff;
             return;                                         // Don't do anything after this point.
@@ -742,7 +742,7 @@ struct boss_archimondeAI : public hyjal_trashAI
 
         if(FearTimer < diff/* && (m_creature->GetHealth() > ((m_creature->GetMaxHealth()/100)*15))*/)
         {
-            DoCast(m_creature->getVictim(), SPELL_FEAR);
+            DoCast(m_creature->GetVictim(), SPELL_FEAR);
             FearTimer = 42000;
         }else FearTimer -= diff;
 

@@ -122,7 +122,7 @@ struct boss_alarAI : public ScriptedAI
         m_creature->setActive(false);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_ALAREVENT, IN_PROGRESS);
@@ -201,7 +201,7 @@ struct boss_alarAI : public ScriptedAI
     {
         me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
-        if(!m_creature->isInCombat()) // sometimes isincombat but !incombat, faction bug?
+        if(!m_creature->IsInCombat()) // sometimes IsInCombat but !incombat, faction bug?
             return;
 
         if(Berserk_Timer < diff)
@@ -362,7 +362,7 @@ struct boss_alarAI : public ScriptedAI
 
             if(MeltArmor_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_MELT_ARMOR);
+                DoCast(m_creature->GetVictim(), SPELL_MELT_ARMOR);
                 MeltArmor_Timer = 60000;
             }else MeltArmor_Timer -= diff;
 
@@ -404,9 +404,9 @@ struct boss_alarAI : public ScriptedAI
     {
         if(m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
         {
-            if(m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            if(m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             {
-                m_creature->AttackerStateUpdate(m_creature->getVictim());
+                m_creature->AttackerStateUpdate(m_creature->GetVictim());
                 m_creature->resetAttackTimer();
             }
             else
@@ -443,7 +443,7 @@ struct mob_ember_of_alarAI : public ScriptedAI
     bool toDie;
 
     void Reset() {toDie = false;}
-    void Aggro(Unit *who) {DoZoneInCombat();}
+    void EnterCombat(Unit *who) {DoZoneInCombat();}
     void EnterEvadeMode() {m_creature->setDeathState(JUST_DIED);}
 
     void DamageTaken(Unit* pKiller, uint32 &damage)
@@ -495,7 +495,7 @@ struct mob_flame_patch_alarAI : public ScriptedAI
 {
     mob_flame_patch_alarAI(Creature *c) : ScriptedAI(c) {}
     void Reset() {}
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff) {}

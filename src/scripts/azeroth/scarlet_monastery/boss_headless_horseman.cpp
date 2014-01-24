@@ -153,7 +153,7 @@ struct mob_wisp_invisAI : public ScriptedAI
     
     void Reset() {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void SetType(uint32 _type)
     {
@@ -238,7 +238,7 @@ struct mob_headAI : public ScriptedAI
         laugh = 15000 + rand()%16 * 1000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void SaySound(int32 textEntry, Unit* target = NULL)
     {
@@ -322,7 +322,7 @@ struct mob_headAI : public ScriptedAI
             DoCast(me, SPELL_HEAD, false);
             SaySound(SAY_LOST_HEAD);
             me->GetMotionMaster()->Clear(false);
-            me->GetMotionMaster()->MoveChase(caster->getVictim());
+            me->GetMotionMaster()->MoveChase(caster->GetVictim());
         }
     }
     
@@ -333,10 +333,10 @@ struct mob_headAI : public ScriptedAI
         if (!withbody) {
             if (wait <= diff) {
                 wait = 1000;
-                if (!me->getVictim())
+                if (!me->GetVictim())
                     return;
                 me->GetMotionMaster()->Clear(false);
-                me->GetMotionMaster()->MoveFleeing(me->getVictim());
+                me->GetMotionMaster()->MoveFleeing(me->GetVictim());
             }
             else
                 wait -= diff;
@@ -506,7 +506,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
         ++id;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if(pInstance)
             pInstance->SetData(DATA_HORSEMAN_EVENT, IN_PROGRESS);
@@ -555,8 +555,8 @@ struct boss_headless_horsemanAI : public ScriptedAI
         std::list<Player*>::iterator j;
 
         for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
-            if ((me->IsWithinLOSInMap(i->getSource()) || !checkLoS) && me->getVictim() != i->getSource() &&
-                me->IsWithinDistInMap(i->getSource(), range) && i->getSource()->isAlive())
+            if ((me->IsWithinLOSInMap(i->getSource()) || !checkLoS) && me->GetVictim() != i->getSource() &&
+                me->IsWithinDistInMap(i->getSource(), range) && i->getSource()->IsAlive())
                 temp.push_back(i->getSource());
 
         if (temp.size()) {
@@ -594,7 +594,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             pInstance->SetData(DATA_HORSEMAN_EVENT, DONE);
             
         Unit* Head = Unit::GetUnit((*me), headGUID);
-        if (Head && Head->isAlive())
+        if (Head && Head->IsAlive())
             Head->ToCreature()->DisappearAndDie();
             
         Map *map = me->GetMap();
@@ -637,7 +637,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             std::list<HostilReference*>::iterator itr;
             for (itr = caster->getThreatManager().getThreatList().begin(); itr != caster->getThreatManager().getThreatList().end(); ++itr) {
                 Unit* pUnit = Unit::GetUnit((*me), (*itr)->getUnitGuid());
-                if (pUnit && pUnit->isAlive() && pUnit != caster)
+                if (pUnit && pUnit->IsAlive() && pUnit != caster)
                     me->AddThreat(pUnit, caster->getThreatManager().getThreat(pUnit));
             }
         }
@@ -657,7 +657,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
                 headGUID = DoSpawnCreature(HEAD, rand()%6, rand()%6, 0, 0, TEMPSUMMON_DEAD_DESPAWN, 0)->GetGUID();
 
             Unit* Head = Unit::GetUnit((*me), headGUID);
-            if (Head && Head->isAlive()) {
+            if (Head && Head->IsAlive()) {
                 Head->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 //Head->CastSpell(Head,SPELL_HEAD_INVIS,false);
                 me->InterruptNonMeleeSpells(false);
@@ -762,7 +762,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
             if (UpdateVictim()) {
                 DoMeleeAttackIfReady();
                 if (cleave <= diff) {
-                    DoCast(me->getVictim(),SPELL_CLEAVE);
+                    DoCast(me->GetVictim(),SPELL_CLEAVE);
                     cleave = 2000 * (1 + rand()%3);       //1 cleave per 2.0-6.0sec
                 }
                 else
@@ -781,7 +781,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
                         Phase = 1;
 
                     Creature* Head = Unit::GetCreature((*me), headGUID);
-                    if (Head && Head->isAlive())
+                    if (Head && Head->IsAlive())
                     {
                         ((mob_headAI*)Head->AI())->Phase = Phase;
                         ((mob_headAI*)Head->AI())->Disappear();
@@ -818,7 +818,7 @@ void mob_headAI::Disappear()
 
     if (bodyGUID) {
         Creature *body = Unit::GetCreature((*me), bodyGUID);
-        if (body && body->isAlive()) {
+        if (body && body->IsAlive()) {
             withbody = true;
             me->RemoveAllAuras();
             body->RemoveAurasDueToSpell(SPELL_IMMUNE);//hack, SpellHit doesn't calls if body has immune aura
@@ -861,7 +861,7 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -871,7 +871,7 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_DISABLE_ROTATE);
             DoCast(me, SPELL_SPROUT_BODY, true);
             me->UpdateEntry(PUMPKIN_FIEND);
-            AttackStart(me->getVictim());
+            AttackStart(me->GetVictim());
         }
     }
 
@@ -895,7 +895,7 @@ struct mob_pulsing_pumpkinAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!who || !me->canAttack(who) || !me->IsHostileTo(who) || me->getVictim())
+        if (!who || !me->canAttack(who) || !me->IsHostileTo(who) || me->GetVictim())
             return;
 
         me->AddThreat(who, 0.0f);

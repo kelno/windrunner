@@ -67,7 +67,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_RAGEWINTERCHILLEVENT, IN_PROGRESS);
@@ -86,7 +86,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
         if (i == 7 && pInstance)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
                 m_creature->AddThreat(target,0.0);
         }
     }
@@ -146,7 +146,7 @@ struct boss_rage_winterchillAI : public hyjal_trashAI
 
         if(NovaTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(), SPELL_FROST_NOVA) == SPELL_CAST_OK)
+            if(DoCast(m_creature->GetVictim(), SPELL_FROST_NOVA) == SPELL_CAST_OK)
             {
                 NovaTimer = TIMER_FROST_NOVA;
                 DoScriptText(SAY_NOVA1 - rand()%2,me);

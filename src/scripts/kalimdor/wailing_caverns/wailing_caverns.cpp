@@ -131,7 +131,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
 
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_ATTACKED, m_creature, who);
     }
@@ -153,7 +153,7 @@ struct npc_disciple_of_naralexAI : public npc_escortAI
     }
     
     void EnterEvadeMode() {
-        if (currentEvent == TYPE_NARALEX_PART3 || (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2) || me->hasUnitState(UNIT_STAT_CASTING))
+        if (currentEvent == TYPE_NARALEX_PART3 || (currentEvent == TYPE_NARALEX_PART2 && eventProgress == 2) || me->HasUnitState(UNIT_STAT_CASTING))
             return;
         else
             npc_escortAI::EnterEvadeMode();

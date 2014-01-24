@@ -51,7 +51,7 @@ struct boss_anubshiahAI : public ScriptedAI
         EnvelopingWeb_Timer = 16000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -64,7 +64,7 @@ struct boss_anubshiahAI : public ScriptedAI
         //ShadowBolt_Timer
         if (ShadowBolt_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWBOLT);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLT);
             ShadowBolt_Timer = 7000;
         }else ShadowBolt_Timer -= diff;
 
@@ -80,7 +80,7 @@ struct boss_anubshiahAI : public ScriptedAI
         //CurseOfWeakness_Timer
         if (CurseOfWeakness_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CURSEOFWEAKNESS);
+            DoCast(m_creature->GetVictim(),SPELL_CURSEOFWEAKNESS);
             CurseOfWeakness_Timer = 45000;
         }else CurseOfWeakness_Timer -= diff;
 

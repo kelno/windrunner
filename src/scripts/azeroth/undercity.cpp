@@ -104,7 +104,7 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustSummoned(Creature *summoned)
     {
@@ -247,7 +247,7 @@ struct npc_highborne_lamenterAI : public ScriptedAI
         EventCast = true;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {

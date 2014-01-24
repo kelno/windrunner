@@ -155,7 +155,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     
     ScriptedInstance* pInstance;
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void Reset()
     {
@@ -792,13 +792,13 @@ struct npc_echo_of_medivhAI : public ScriptedAI
         {
             if (pInstance->GetData(CHESS_EVENT_TEAM) == ALLIANCE) {
                 if (Creature* king = me->FindCreatureInGrid(NPC_KING_H, 80.0f, true)) {
-                    if (king->isAlive())
+                    if (king->IsAlive())
                         king->SetHealth(king->GetMaxHealth());
                 }
             }
             else if (pInstance->GetData(CHESS_EVENT_TEAM) == HORDE) {
                 if (Creature* king = me->FindCreatureInGrid(NPC_KING_A, 80.0f, true)) {
-                    if (king->isAlive())
+                    if (king->IsAlive())
                         king->SetHealth(king->GetMaxHealth());
                 }
             }
@@ -925,7 +925,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
         Reset();
     }
     
-    void Aggro(Unit* pWho) // TODO
+    void EnterCombat(Unit* pWho) // TODO
     {
         Unit* npc_medivh = Unit::GetUnit(*me, pInstance->GetData64(DATA_IMAGE_OF_MEDIVH));
         
@@ -1123,7 +1123,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             }
         }
         
-        if (me->isInCombat())
+        if (me->IsInCombat())
             DoMeleeAttackIfReady();
     }
     
@@ -1328,7 +1328,7 @@ struct chess_move_triggerAI : public Scripted_NoMovementAI
 {
     chess_move_triggerAI(Creature* c) : Scripted_NoMovementAI(c) {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void AttackStart(Unit* who)
     {

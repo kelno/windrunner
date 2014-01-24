@@ -80,7 +80,7 @@ struct boss_fankrissAI : public ScriptedAI
             ((CreatureAI*)Spawn->AI())->AttackStart(victim);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -93,7 +93,7 @@ struct boss_fankrissAI : public ScriptedAI
         //MortalWound_Timer
         if (MortalWound_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTAL_WOUND);
+            DoCast(m_creature->GetVictim(),SPELL_MORTAL_WOUND);
             MortalWound_Timer = 10000 + rand()%10000;
         }else MortalWound_Timer -= diff;
 

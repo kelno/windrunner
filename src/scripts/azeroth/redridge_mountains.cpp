@@ -56,7 +56,7 @@ struct npc_corporal_keeshanAI : public npc_escortAI
         uiShieldBashTimer  = 8000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void WaypointReached(uint32 uiI)
     {
@@ -141,13 +141,13 @@ struct npc_corporal_keeshanAI : public npc_escortAI
 
         if (uiMockingBlowTimer <= uiDiff)
         {
-            DoCast(me->getVictim(),SPELL_MOCKING_BLOW);
+            DoCast(me->GetVictim(),SPELL_MOCKING_BLOW);
             uiMockingBlowTimer = 5000;
         } else uiMockingBlowTimer -= uiDiff;
 
         if (uiShieldBashTimer <= uiDiff)
         {
-            DoCast(me->getVictim(),SPELL_SHIELD_BASH);
+            DoCast(me->GetVictim(),SPELL_SHIELD_BASH);
             uiShieldBashTimer = 8000;
         } else uiShieldBashTimer -= uiDiff;
 

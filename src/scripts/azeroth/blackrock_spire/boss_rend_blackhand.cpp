@@ -54,7 +54,7 @@ struct boss_rend_blackhandAI : public ScriptedAI
             me->SetDisplayId(15736);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -67,21 +67,21 @@ struct boss_rend_blackhandAI : public ScriptedAI
         //WhirlWind_Timer
         if (WhirlWind_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WHIRLWIND);
+            DoCast(m_creature->GetVictim(),SPELL_WHIRLWIND);
             WhirlWind_Timer = 18000;
         }else WhirlWind_Timer -= diff;
 
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 10000;
         }else Cleave_Timer -= diff;
 
         //Thunderclap_Timer
         if (Thunderclap_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
+            DoCast(m_creature->GetVictim(),SPELL_THUNDERCLAP);
             Thunderclap_Timer = 16000;
         }else Thunderclap_Timer -= diff;
 

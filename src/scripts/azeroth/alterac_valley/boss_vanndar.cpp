@@ -72,7 +72,7 @@ struct TRINITY_DLL_DECL boss_vanndarAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
     }
 
-    void Aggro(Unit *who) {
+    void EnterCombat(Unit *who) {
         DoScriptText(YELL_AGGRO, m_creature);
     }
 
@@ -95,18 +95,18 @@ struct TRINITY_DLL_DECL boss_vanndarAI : public ScriptedAI
             return;
             
         if (AvatarTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_AVATAR);
+            DoCast(m_creature->GetVictim(), SPELL_AVATAR);
             AvatarTimer =  (15+rand()%5)*1000;
         } else AvatarTimer -= diff;
 
         if (ThunderclapTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_THUNDERCLAP);
+            DoCast(m_creature->GetVictim(), SPELL_THUNDERCLAP);
             ThunderclapTimer = (5+rand()%10)*1000;
         } else ThunderclapTimer -= diff;
 
         if (StormboltTimer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_STORMBOLT);
+            DoCast(m_creature->GetVictim(), SPELL_STORMBOLT);
             StormboltTimer = (10+rand()%15)*1000;
         } else StormboltTimer -= diff;
 

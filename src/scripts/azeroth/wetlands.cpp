@@ -71,7 +71,7 @@ struct npc_tapoke_slim_jahnAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         Player* pPlayer = GetPlayerForEscort();
 
@@ -93,7 +93,7 @@ struct npc_tapoke_slim_jahnAI : public npc_escortAI
 
     void AttackedBy(Unit* pAttacker)
     {
-        if (me->getVictim())
+        if (me->GetVictim())
             return;
 
         if (me->IsFriendlyTo(pAttacker))

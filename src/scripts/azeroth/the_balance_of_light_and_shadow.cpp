@@ -139,7 +139,7 @@ struct TRINITY_DLL_DECL npc_eris_havenfireAI : public Scripted_NoMovementAI
         EndPeasant = NULL;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -333,7 +333,7 @@ struct TRINITY_DLL_DECL npc_escaping_peasantAI : public Scripted_NoMovementAI
             ((npc_eris_havenfireAI*) Eris->AI())->DiedCount++;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -363,13 +363,13 @@ struct TRINITY_DLL_DECL npc_scourge_archerAI : public Scripted_NoMovementAI
         targetGUID = NULL;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(const uint32 diff)
     {
         if (Arrow_Timer < diff) {
             Creature* target = me->GetCreature(*me, targetGUID);
-            if (target && target->isAlive() && me->GetDistance(target) < 60 && target->GetEntry() != CREATURE_ENRIS) {
+            if (target && target->IsAlive() && me->GetDistance(target) < 60 && target->GetEntry() != CREATURE_ENRIS) {
                 AttackStart(target);
                 me->AttackStop(); //visual debug purpose
                 Arrow_Timer = 2700;

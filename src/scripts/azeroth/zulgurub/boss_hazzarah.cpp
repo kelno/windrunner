@@ -43,7 +43,7 @@ struct boss_hazzarahAI : public ScriptedAI
         Illusions_Timer = 10000 + rand()%8000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -55,14 +55,14 @@ struct boss_hazzarahAI : public ScriptedAI
         //ManaBurn_Timer
         if (ManaBurn_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MANABURN);
+            DoCast(m_creature->GetVictim(),SPELL_MANABURN);
             ManaBurn_Timer = 8000 + rand()%8000;
         }else ManaBurn_Timer -= diff;
 
         //Sleep_Timer
         if (Sleep_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SLEEP);
+            DoCast(m_creature->GetVictim(),SPELL_SLEEP);
             Sleep_Timer = 12000 + rand()%8000;
         }else Sleep_Timer -= diff;
 

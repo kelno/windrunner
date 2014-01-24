@@ -94,7 +94,7 @@ struct npc_professor_phizzlethorpeAI : public npc_escortAI
         m_creature->setFaction(35);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature, NULL);
     }
@@ -159,7 +159,7 @@ struct npc_myzraelAI : public ScriptedAI
         seismeTimer = 20000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -195,14 +195,14 @@ struct npc_myzraelAI : public ScriptedAI
             return;
         
         if (summon1Timer <= diff) {
-            DoCast(me->getVictim(), 4937, true);
+            DoCast(me->GetVictim(), 4937, true);
             summon1Timer = 20000;
         }
         else
             summon1Timer -= diff;
         
         if (summon2Timer <= diff) {
-            DoCast(me->getVictim(), 10388, true);
+            DoCast(me->GetVictim(), 10388, true);
             summon2Timer = 20000;
         }
         else

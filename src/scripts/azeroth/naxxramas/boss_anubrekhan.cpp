@@ -71,7 +71,7 @@ struct boss_anubrekhanAI : public ScriptedAI
          DoScriptText(SAY_SLAY, m_creature);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {

@@ -102,7 +102,7 @@ struct npc_the_scourge_cauldronAI : public ScriptedAI
 
     void Reset() {}
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DoDie()
     {
@@ -177,7 +177,7 @@ struct npc_andorhal_towerAI : public Scripted_NoMovementAI
 {
     npc_andorhal_towerAI(Creature *c) : Scripted_NoMovementAI(c) {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {

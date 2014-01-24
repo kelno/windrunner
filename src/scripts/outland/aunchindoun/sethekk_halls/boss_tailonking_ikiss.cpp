@@ -85,7 +85,7 @@ struct boss_talon_king_ikissAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if( !m_creature->getVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
+        if( !m_creature->GetVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
         {
             if(!Intro && m_creature->IsWithinDistInMap(who, 100))
             {
@@ -105,7 +105,7 @@ struct boss_talon_king_ikissAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(RAND(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
     }

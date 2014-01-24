@@ -54,11 +54,11 @@ struct boss_broggokAI : public ScriptedAI
         AcidSpray_Timer = 5000;
         PoisonSpawn_Timer = 10000;
         PoisonBolt_Timer = 8000;
-        if (pInstance && me->isAlive())
+        if (pInstance && me->IsAlive())
             pInstance->SetData(DATA_BROGGOKEVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, me);
 
@@ -80,7 +80,7 @@ struct boss_broggokAI : public ScriptedAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         Reset();
 
-        if (!me->isAlive())
+        if (!me->IsAlive())
             return;    
 
         if (pInstance) {
@@ -110,14 +110,14 @@ struct boss_broggokAI : public ScriptedAI
             return;
 
         if (AcidSpray_Timer <= diff) {
-            DoCast(me->getVictim(), HeroicMode ? SPELL_SLIME_SPRAY_H : SPELL_SLIME_SPRAY);
+            DoCast(me->GetVictim(), HeroicMode ? SPELL_SLIME_SPRAY_H : SPELL_SLIME_SPRAY);
             AcidSpray_Timer = 10000;
         }
         else
             AcidSpray_Timer -= diff;
 
         if (PoisonBolt_Timer <= diff) {
-            DoCast(me->getVictim(), HeroicMode ? SPELL_POISON_BOLT_H : SPELL_POISON_BOLT);
+            DoCast(me->GetVictim(), HeroicMode ? SPELL_POISON_BOLT_H : SPELL_POISON_BOLT);
             PoisonBolt_Timer = 8000;
         }
         else
@@ -169,7 +169,7 @@ struct mob_nascent_orcAI : public ScriptedAI
         Stomp_Timer = 5000 + rand()%4000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MovementInform(uint32 uiMotionType, uint32 uiPointId)
     {
@@ -200,13 +200,13 @@ struct mob_nascent_orcAI : public ScriptedAI
 
         if (Blow_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_BLOW);
+            DoCast(me->GetVictim(),SPELL_BLOW);
             Blow_Timer = 10000+rand()%4000;
         } else Blow_Timer -=diff;
 
         if (Stomp_Timer <= diff)
         {
-            DoCast(me->getVictim(),SPELL_STOMP);
+            DoCast(me->GetVictim(),SPELL_STOMP);
             Stomp_Timer = 15000+rand()%4000;
         } else Stomp_Timer -=diff;
 
@@ -248,7 +248,7 @@ struct mob_fel_orc_neophyteAI : public ScriptedAI
         ChargeTimer = 8000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MovementInform(uint32 uiMotionType, uint32 uiPointId)
     {
@@ -322,7 +322,7 @@ struct mob_broggok_poisoncloudAI : public ScriptedAI
         DoCast(me, HeroicMode ? SPELL_POISON_H : SPELL_POISON);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void AttackedBy(Unit* who) {}
     void AttackStart(Unit *who) {}
 };

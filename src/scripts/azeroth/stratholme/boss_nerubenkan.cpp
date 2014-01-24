@@ -55,7 +55,7 @@ struct boss_nerubenkanAI : public ScriptedAI
         RaiseUndeadScarab_Timer = 3000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -94,7 +94,7 @@ struct boss_nerubenkanAI : public ScriptedAI
         //EncasingWebs
         if (EncasingWebs_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ENCASINGWEBS);
+            DoCast(m_creature->GetVictim(),SPELL_ENCASINGWEBS);
             EncasingWebs_Timer = 30000;
         }else EncasingWebs_Timer -= diff;
 
@@ -102,21 +102,21 @@ struct boss_nerubenkanAI : public ScriptedAI
         if (PierceArmor_Timer < diff)
         {
             if (rand()%100 < 75)
-                DoCast(m_creature->getVictim(),SPELL_PIERCEARMOR);
+                DoCast(m_creature->GetVictim(),SPELL_PIERCEARMOR);
             PierceArmor_Timer = 35000;
         }else PierceArmor_Timer -= diff;
 
         //CryptScarabs_Timer
         if (CryptScarabs_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CRYPT_SCARABS);
+            DoCast(m_creature->GetVictim(),SPELL_CRYPT_SCARABS);
             CryptScarabs_Timer = 20000;
         }else CryptScarabs_Timer -= diff;
 
         //RaiseUndeadScarab
         if (RaiseUndeadScarab_Timer < diff)
         {
-            RaiseUndeadScarab(m_creature->getVictim());
+            RaiseUndeadScarab(m_creature->GetVictim());
             RaiseUndeadScarab_Timer = 16000;
         }else RaiseUndeadScarab_Timer -= diff;
 

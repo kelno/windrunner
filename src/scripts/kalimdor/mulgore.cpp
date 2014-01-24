@@ -75,7 +75,7 @@ struct npc_kyle_frenziedAI : public ScriptedAI
         m_creature->SetDefaultMovementType(WAYPOINT_MOTION_TYPE);
         m_creature->GetMotionMaster()->Initialize();
     }
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void SpellHit(Unit* pCaster, const SpellEntry* spell)
     {   // we can feed him without any quest
@@ -237,7 +237,7 @@ struct npc_plains_visionAI  : public ScriptedAI
         amountWP  = 49;
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void MovementInform(uint32 type, uint32 id)
     {

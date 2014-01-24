@@ -26,7 +26,7 @@ struct alterac_bowmanAI : public ScriptedAI
         if(UpdateVictim())
         {
             //give priority to the aggro system target if any
-            target = me->getVictim();
+            target = me->GetVictim();
 
             //reset combat if not close combat (should avoid to stuck players in combat in most cases)
             if(me->GetDistance(target) > 30.0f)
@@ -64,7 +64,7 @@ struct alterac_bowmanAI : public ScriptedAI
 	void MoveInLineOfSight(Unit *who)
 	{    
         if (!target
-            && !me->isInCombat() 
+            && !me->IsInCombat() 
             && isValidTarget(who))
                 target = who;
 	}

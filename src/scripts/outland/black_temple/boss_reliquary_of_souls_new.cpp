@@ -211,7 +211,7 @@ public:
         
         void onMoveInLoS(Unit* who)
         {
-            if (!me->isInCombat() && who->ToPlayer() && who->GetDistance(me) <= 75.0f)
+            if (!me->IsInCombat() && who->ToPlayer() && who->GetDistance(me) <= 75.0f)
                 attackStart(who);
         }
         
@@ -265,7 +265,7 @@ public:
                     if(phase == PHASE_ANGER)
                         return;
 
-                    if (!essence->isAlive()) //debugging purpose for now
+                    if (!essence->IsAlive()) //debugging purpose for now
                     {
                         sLog.outError("RoS : Essence is dead (phase = %u), skipping animation",phase);
                         step = 5; //goto despawn essence
@@ -585,11 +585,11 @@ public:
                     scheduleEvent(EV_RUNE_SHIELD, 15000);
                     break;
                 case EV_SOUL_SHOCK:
-                    doCast(me->getVictim(), SPELL_SOUL_SHOCK);
+                    doCast(me->GetVictim(), SPELL_SOUL_SHOCK);
                     scheduleEvent(EV_SOUL_SHOCK, 6000);
                     break;
                 case EV_DEADEN:
-                    doCast(me->getVictim(), SPELL_DEADEN);
+                    doCast(me->GetVictim(), SPELL_DEADEN);
                     scheduleEvent(EV_DEADEN, 30000, 30000);
                     if ((rand() % 2) == 0)
                         talk(TALK_DESI_SAY_SPEC);
@@ -689,15 +689,15 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_CHECK_TANK:
-                    if (me->getVictim() && me->getVictim()->GetGUID() != tankGUID) {
+                    if (me->GetVictim() && me->GetVictim()->GetGUID() != tankGUID) {
                         talk(TALK_ANGER_SAY_BEFORE);
                         doCast(me, SPELL_SELF_SEETHE, true);
-                        tankGUID = me->getVictim()->GetGUID();
+                        tankGUID = me->GetVictim()->GetGUID();
                     }
                     scheduleEvent(EV_CHECK_TANK, 2000);
                     break;
                 case EV_SOUL_SCREAM:
-                    doCast(me->getVictim(), SPELL_SOUL_SCREAM);
+                    doCast(me->GetVictim(), SPELL_SOUL_SCREAM);
                     if ((rand() % 3) == 0)
                         talk(TALK_ANGER_SAY_SPEC);
                     scheduleEvent(EV_SOUL_SCREAM, 9000, 11000);

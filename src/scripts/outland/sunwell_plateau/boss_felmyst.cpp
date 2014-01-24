@@ -300,9 +300,9 @@ public:
             	if (!aiInCombat())
             	    me->GetMotionMaster()->Initialize();
 
-                if (me->isPet())
+                if (me->IsPet())
                 {
-                    if (pTarget->getVictim() && pTarget->getVictim()->GetGUID() != me->GetGUID())
+                    if (pTarget->GetVictim() && pTarget->GetVictim()->GetGUID() != me->GetGUID())
                         me->GetMotionMaster()->MoveChase(pTarget, CONTACT_DISTANCE, M_PI);
                     else
                         me->GetMotionMaster()->MoveChase(pTarget);
@@ -409,7 +409,7 @@ public:
 
         void onMoveInLoS(Unit* who)
         {
-            if (!me->isInCombat())
+            if (!me->IsInCombat())
                 return;
 
             if(getPhase() != PHASE_FLIGHT && getPhase() != PHASE_INTRO)
@@ -549,7 +549,7 @@ public:
             switch (getPhase())
             {
                 case PHASE_PULL:
-                    if (me->IsWithinMeleeRange(me->getVictim()))
+                    if (me->IsWithinMeleeRange(me->GetVictim()))
                     {
                         if (inChaseOnFlight)
                         {
@@ -598,11 +598,11 @@ public:
                 switch (m_currEvent)
                 {
                     case EVENT_CLEAVE:
-                        doCast(me->getVictim(), SPELL_CLEAVE, false);
+                        doCast(me->GetVictim(), SPELL_CLEAVE, false);
                         scheduleEvent(EVENT_CLEAVE, 5000, 10000);
                         break;
                     case EVENT_CORROSION:
-                        doCast(me->getVictim(), SPELL_CORROSION, false);
+                        doCast(me->GetVictim(), SPELL_CORROSION, false);
                         scheduleEvent(EVENT_CORROSION, 20000, 30000);
                         break;
                     case EVENT_GAS_NOVA:
@@ -725,7 +725,7 @@ public:
         {
             if (startFollow)
             {
-                if(!me->getVictim())
+                if(!me->GetVictim())
                     attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
             }
         }
@@ -870,7 +870,7 @@ struct trigger_felmyst_fogAI : public ScriptedAI
         sLog.outString("Hit by spell %u", spell->Id);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {

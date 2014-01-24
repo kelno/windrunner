@@ -84,7 +84,7 @@ struct npc_aeranasAI : public ScriptedAI
         DoScriptText(SAY_SUMMON, m_creature);
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -113,13 +113,13 @@ struct npc_aeranasAI : public ScriptedAI
 
         if (Shock_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHOCK);
+            DoCast(m_creature->GetVictim(),SPELL_SHOCK);
             Shock_Timer = 10000;
         } else Shock_Timer -= diff;
 
         if (EnvelopingWinds_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ENVELOPING_WINDS);
+            DoCast(m_creature->GetVictim(),SPELL_ENVELOPING_WINDS);
             EnvelopingWinds_Timer = 25000;
         } else EnvelopingWinds_Timer -= diff;
 
@@ -369,7 +369,7 @@ struct npc_wounded_blood_elfAI : public npc_escortAI
             m_creature->setFaction(1604);
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (IsBeingEscorted)
             DoScriptText(SAY_ELF_AGGRO, m_creature);
@@ -442,7 +442,7 @@ struct npc_fel_guard_houndAI : public ScriptedAI
         checkTimer = 5000; //check for creature every 5 sec
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void UpdateAI(const uint32 diff)
     {
@@ -491,7 +491,7 @@ struct npc_anchorite_relicAI : public ScriptedAI
         berserker = NULL;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     Creature* SelectCreatureInGrid(uint32 entry, float range)
     {
@@ -526,7 +526,7 @@ struct npc_anchorite_relicAI : public ScriptedAI
         }else checkTimer -= diff;
         
         //at each update, check if the orc is dead; if he is, summon a fel spirit (npc 22454) at his position
-        if (berserker && !berserker->isAlive())
+        if (berserker && !berserker->IsAlive())
         {
             m_creature->SummonCreature(MOB_FEL_SPIRIT, berserker->GetPositionX(), berserker->GetPositionY(), berserker->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000)->AI()->AttackStart(m_creature->GetOwner());
             hasTarget = false;
@@ -571,7 +571,7 @@ struct npc_living_flareAI : public ScriptedAI
 
     void AttackedBy(Unit* pWho) {}
     void AttackStart(Unit* pWho) {}
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -643,7 +643,7 @@ struct npc_ancestral_wolfAI : public npc_escortAI
         DoCast(me, SPELL_ANCESTRAL_WOLF_BUFF, true);
     }
 
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -664,7 +664,7 @@ struct npc_ancestral_wolfAI : public npc_escortAI
                 DoScriptText(EMOTE_WOLF_HOWL, me);
                 break;
             case 50:
-                if (pRyga && pRyga->isAlive() && !pRyga->isInCombat())
+                if (pRyga && pRyga->IsAlive() && !pRyga->IsInCombat())
                     DoScriptText(SAY_WOLF_WELCOME, pRyga);
                 break;
         }
@@ -715,7 +715,7 @@ struct npc_pathaleon_imageAI : public ScriptedAI
         SummonTrigger = false;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DoSpawnGoliathon()
     {
@@ -875,7 +875,7 @@ struct npc_demoniac_scryerAI : public ScriptedAI
 
     void AttackStart(Unit* pEnemy) {}
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DoSpawnButtress()
     {
@@ -955,7 +955,7 @@ struct npc_demoniac_scryerAI : public ScriptedAI
         }
         else uiEndTimer -= uiDiff;
 
-        if (IfIsComplete || !me->isAlive())
+        if (IfIsComplete || !me->IsAlive())
             return;
 
         if (uiSpawnButtressTimer <= uiDiff)
@@ -1048,7 +1048,7 @@ struct npc_magic_sucker_device_spawnerAI : public ScriptedAI
         uiCheckTimer = 5000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 uiDiff)
     {
@@ -1101,7 +1101,7 @@ struct npc_sedai_quest_credit_markerAI : public ScriptedAI
         DoSpawn();
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DoSpawn()
     {
@@ -1158,7 +1158,7 @@ struct npc_vindicator_sedaiAI : public ScriptedAI
         uiSteps = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DoSpawnEscort()
     {
@@ -1393,7 +1393,7 @@ struct npc_anchorite_baradaAI : public ScriptedAI
         uiPlayerGUID = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackedBy(Unit* pWho) {}
 
@@ -1602,7 +1602,7 @@ struct npc_darkness_releasedAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackedBy(Unit* pWho) {}
 
@@ -1672,7 +1672,7 @@ struct npc_foul_purgeAI : public ScriptedAI
         uiChTimer = 4000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void JustDied(Unit* pWho)
     {

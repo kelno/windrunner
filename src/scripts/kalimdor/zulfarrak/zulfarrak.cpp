@@ -74,7 +74,7 @@ struct npc_sergeant_blyAI : public ScriptedAI
     uint32 Text_Timer;
 
     uint32 ShieldBash_Timer;
-    uint32 Revenge_Timer;                                   //this is wrong, spell should never be used unless m_creature->getVictim() dodge, parry or block attack. Trinity support required.
+    uint32 Revenge_Timer;                                   //this is wrong, spell should never be used unless m_creature->GetVictim() dodge, parry or block attack. Trinity support required.
 
     uint64 gossipPlayerGUID;
 
@@ -86,7 +86,7 @@ struct npc_sergeant_blyAI : public ScriptedAI
         m_creature->setFaction(FACTION_FRIENDLY);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustDied(Unit *victim) {}
 
@@ -125,13 +125,13 @@ struct npc_sergeant_blyAI : public ScriptedAI
 
         if( ShieldBash_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_SHIELD_BASH);
+            DoCast(m_creature->GetVictim(),SPELL_SHIELD_BASH);
             ShieldBash_Timer = 15000;
         }else ShieldBash_Timer -= diff;
 
         if( Revenge_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_REVENGE);
+            DoCast(m_creature->GetVictim(),SPELL_REVENGE);
             Revenge_Timer = 10000;
         }else Revenge_Timer -= diff;
 
@@ -145,7 +145,7 @@ struct npc_sergeant_blyAI : public ScriptedAI
     
     void switchFactionIfAlive(ScriptedInstance* pInstance,uint32 entry) {
        if (Creature* crew = pInstance->instance->GetCreature(pInstance->GetData64(entry))) {
-           if (crew->isAlive()) {
+           if (crew->IsAlive()) {
                 crew->setFaction(FACTION_HOSTILE);
                 crew->SetHealth(crew->GetMaxHealth());
                 if (Player* target = Player::GetPlayer(gossipPlayerGUID)) {
@@ -269,7 +269,7 @@ struct npc_weegli_blastfuseAI : public ScriptedAI
             pInstance->SetData(0, NOT_STARTED);*/
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustDied(Unit *victim) {}
     
@@ -299,7 +299,7 @@ struct npc_weegli_blastfuseAI : public ScriptedAI
     
     void DestroyDoor(int32 param) 
     {
-        if (m_creature->isAlive()) {
+        if (m_creature->IsAlive()) {
             m_creature->setFaction(FACTION_FRIENDLY);
             m_creature->GetMotionMaster()->MovePoint(0, 1858.57,1146.35,14.745);
             m_creature->SetHomePosition(1858.57,1146.35,14.745,3.85); // in case he gets interrupted
@@ -318,12 +318,12 @@ struct npc_weegli_blastfuseAI : public ScriptedAI
             return;
             
         if (Bomb_Timer < diff ) {
-            DoCast(m_creature->getVictim(),SPELL_BOMB);
+            DoCast(m_creature->GetVictim(),SPELL_BOMB);
             Bomb_Timer = 10000;
         } else Bomb_Timer -= diff;
 
-        if (m_creature->isAttackReady() && !m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
-            DoCast(m_creature->getVictim(),SPELL_SHOOT);
+        if (m_creature->isAttackReady() && !m_creature->IsWithinMeleeRange(m_creature->GetVictim())) {
+            DoCast(m_creature->GetVictim(),SPELL_SHOOT);
             m_creature->SetSheath(SHEATH_STATE_RANGED);
         } else {
             m_creature->SetSheath(SHEATH_STATE_MELEE);

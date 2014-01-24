@@ -67,7 +67,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         Jackhammer_CastTime = 0;
         Jackhammer_Progression = 0;
     }
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO_1, m_creature);
     }
@@ -112,7 +112,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
             case 0: 
                 if(Jackhammer_CastTime == 0)
                 {
-                    DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
+                    DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_JACKHAMMER : SPELL_JACKHAMMER);
                     DoScriptText(EMOTE_HAMMER, m_creature);
                     Jackhammer_Progression++;
                 }
@@ -147,7 +147,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         //Stream of Machine Fluid
         if(Stream_of_Machine_Fluid_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
+            DoCast(m_creature->GetVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
             Stream_of_Machine_Fluid_Timer = 35000 + rand()%15000;
         }else Stream_of_Machine_Fluid_Timer -= diff;
 

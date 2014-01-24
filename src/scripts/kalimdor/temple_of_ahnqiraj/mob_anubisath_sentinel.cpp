@@ -154,7 +154,7 @@ struct aqsentinelAI : public ScriptedAI
             Creature *c = nearby[i];
             if (c)
             {
-                if (!c->isInCombat())
+                if (!c->IsInCombat())
                 {
                     c->SetNoCallAssistance(true);
                     if(c->AI())
@@ -258,7 +258,7 @@ struct aqsentinelAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (gatherOthersWhenAggro)
             GetOtherSentinels(who);
@@ -319,7 +319,7 @@ Unit* SentinelAbilityAura::GetTriggerTarget() const
         case SPELL_THUNDER_BUFF:
         case SPELL_MSTRIKE_BUFF:
         case SPELL_STORM_BUFF:
-            return aOwner->m_creature->getVictim();
+            return aOwner->m_creature->GetVictim();
 
         case SPELL_MANAB_BUFF:
             return aOwner->GetHatedManaUser();

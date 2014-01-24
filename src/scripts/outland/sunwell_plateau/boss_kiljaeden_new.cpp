@@ -996,7 +996,7 @@ public:
                     if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
                     {
                     	hand->getAI()->setZoneInCombat(true);
-                        if (!hand->isInCombat())
+                        if (!hand->IsInCombat())
                             hand->getAI()->attackStart(victim);
                     }
                 }
@@ -1030,7 +1030,7 @@ public:
                         {
                             if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
                         	{
-                            	if (!me->isInCombat())
+                            	if (!me->IsInCombat())
                             		attackStart(plr);
                         	}
                         }
@@ -1329,7 +1329,7 @@ public:
                     }
                 }
 
-                if (me->hasUnitState(UNIT_STAT_CASTING) || me->hasUnitState(UNIT_STAT_STUNNED))
+                if (me->HasUnitState(UNIT_STAT_CASTING) || me->HasUnitState(UNIT_STAT_STUNNED))
                     return;
 
                 //Phase 3
@@ -1359,7 +1359,7 @@ public:
                             }
                             break;
                         case EVENT_SOUL_FLAY:
-                            doCast(me->getVictim(), SPELL_SOUL_FLAY);
+                            doCast(me->GetVictim(), SPELL_SOUL_FLAY);
                             scheduleEvent(EVENT_SOUL_FLAY, 4000, 5000);
                             break;
                         case EVENT_LEGION_LIGHTNING:
@@ -1513,7 +1513,7 @@ public:
 
             void update(uint32 const diff)
             {
-                if (!me->isInCombat())
+                if (!me->IsInCombat())
                     doCast(me, SPELL_SHADOW_CHANNELING);
 
                 if (!updateVictim())
@@ -1714,7 +1714,7 @@ public:
                             scheduleEvent(EVENT_STUN, 500);
                             break;
                         case EVENT_EXPLODE:
-                            if (me->IsWithinMeleeRange(me->getVictim()))
+                            if (me->IsWithinMeleeRange(me->GetVictim()))
                             {
                                 // Explode if it's close enough to it's target
                                 doCast(me, SPELL_FELFIRE_FISSION);
@@ -2045,7 +2045,7 @@ public:
 
                 if (Class == 0)
                 {
-                    Class = me->getVictim()->getClass();
+                    Class = me->GetVictim()->getClass();
                     switch(Class)
                     {
                         case CLASS_DRUID:
@@ -2090,11 +2090,11 @@ public:
                             Timer[1] = urand(4000, 6000);
                         }
 
-                        if (me->IsWithinMeleeRange(me->getVictim(), 6))
+                        if (me->IsWithinMeleeRange(me->GetVictim(), 6))
                         {
                             if (Timer[2] <= diff)
                             {
-                                doCast(me->getVictim(), SPELL_SR_WING_CLIP, false);
+                                doCast(me->GetVictim(), SPELL_SR_WING_CLIP, false);
                                 Timer[2] = urand(6000, 8000);
                             }
                 
@@ -2104,7 +2104,7 @@ public:
                     case CLASS_MAGE:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_FIREBALL, false);
+                            doCast(me->GetVictim(), SPELL_SR_FIREBALL, false);
                             Timer[0] = (2000, 4000);
                         }
 
@@ -2113,7 +2113,7 @@ public:
                     case CLASS_WARLOCK:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_SHADOW_BOLT, false);
+                            doCast(me->GetVictim(), SPELL_SR_SHADOW_BOLT, false);
                             Timer[0] = urand(3000, 5000);
                         }
 
@@ -2129,7 +2129,7 @@ public:
                     case CLASS_WARRIOR:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_WHIRLWIND, false);
+                            doCast(me->GetVictim(), SPELL_SR_WHIRLWIND, false);
                             Timer[0] = urand(9000, 11000);
                         }
 
@@ -2138,13 +2138,13 @@ public:
                     case CLASS_PALADIN:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_HAMMER_OF_JUSTICE, false);
+                            doCast(me->GetVictim(), SPELL_SR_HAMMER_OF_JUSTICE, false);
                             Timer[0] = urand(6000, 8000);
                         }
 
                         if (Timer[1] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_HOLY_SHOCK, false);
+                            doCast(me->GetVictim(), SPELL_SR_HOLY_SHOCK, false);
                             Timer[1] = urand(2000, 4000);
                         }
 
@@ -2153,7 +2153,7 @@ public:
                     case CLASS_PRIEST:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_HOLY_SMITE, false);
+                            doCast(me->GetVictim(), SPELL_SR_HOLY_SMITE, false);
                             Timer[0] = urand(4000, 6000);
                         }
 
@@ -2168,7 +2168,7 @@ public:
                     case CLASS_SHAMAN:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_EARTH_SHOCK, false);
+                            doCast(me->GetVictim(), SPELL_SR_EARTH_SHOCK, false);
                             Timer[0] = urand(4000, 6000);
                         }
 
@@ -2177,7 +2177,7 @@ public:
                     case CLASS_ROGUE:
                         if (Timer[0] <= diff)
                         {
-                            doCast(me->getVictim(), SPELL_SR_HEMORRHAGE, false);
+                            doCast(me->GetVictim(), SPELL_SR_HEMORRHAGE, false);
                             Timer[0] = urand(4000, 6000);
                         }
 

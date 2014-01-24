@@ -87,7 +87,7 @@ struct boss_nazanAI : public ScriptedAI
         UnsummonCheck = 5000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void JustSummoned(Creature *summoned)
     {
@@ -110,7 +110,7 @@ struct boss_nazanAI : public ScriptedAI
     {
         if (!UpdateVictim())
         {
-            if (UnsummonCheck < diff && m_creature->isAlive())
+            if (UnsummonCheck < diff && m_creature->IsAlive())
             {
                 m_creature->SetLootRecipient(NULL);
                 m_creature->SetVisibility(VISIBILITY_OFF);
@@ -132,7 +132,7 @@ struct boss_nazanAI : public ScriptedAI
         if (flight) // phase 1 - the flight
         {
             Creature *Vazruden = Unit::GetCreature(*m_creature,VazrudenGUID);
-            if (Fly_Timer < diff || !(Vazruden && Vazruden->isAlive() && (Vazruden->GetHealth()*5 > Vazruden->GetMaxHealth()))) {
+            if (Fly_Timer < diff || !(Vazruden && Vazruden->IsAlive() && (Vazruden->GetHealth()*5 > Vazruden->GetMaxHealth()))) {
                 flight = false;
                 BellowingRoar_Timer = 6000;
                 ConeOfFire_Timer = 12000;
@@ -141,7 +141,7 @@ struct boss_nazanAI : public ScriptedAI
                 m_creature->GetMotionMaster()->Clear();
                 if(Unit *victim = SelectUnit(SELECT_TARGET_NEAREST,0))
                     m_creature->AI()->AttackStart(victim);
-                DoStartMovement(m_creature->getVictim());
+                DoStartMovement(m_creature->GetVictim());
                 DoScriptText(EMOTE, m_creature);
                 return;
             } else Fly_Timer -= diff;
@@ -189,7 +189,7 @@ struct boss_vazrudenAI : public ScriptedAI
         WipeSaid = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(RAND(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
     }
@@ -210,7 +210,7 @@ struct boss_vazrudenAI : public ScriptedAI
     {
         if (!UpdateVictim())
         {
-            if (UnsummonCheck < diff && m_creature->isAlive())
+            if (UnsummonCheck < diff && m_creature->IsAlive())
             {
                 if (!WipeSaid)
                 {
@@ -228,7 +228,7 @@ struct boss_vazrudenAI : public ScriptedAI
 
         if (Revenge_Timer < diff)
         {
-            if (Unit *victim = m_creature->getVictim())
+            if (Unit *victim = m_creature->GetVictim())
                 DoCast(victim, SPELL_REVENGE);
                 
             Revenge_Timer = 5000;
@@ -311,7 +311,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (phase == 0) {
             phase = 1;
@@ -324,7 +324,7 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
     {
         if (!summoned) return;
         
-        Unit *victim = m_creature->getVictim();
+        Unit *victim = m_creature->GetVictim();
         if(summoned->GetEntry() == ENTRY_NAZAN) {
             ((boss_nazanAI *)summoned->AI())->VazrudenGUID = VazrudenGUID;
             summoned->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
@@ -372,8 +372,8 @@ struct boss_vazruden_the_heraldAI : public ScriptedAI
             if (check < diff) {
                 Creature *Nazan = Unit::GetCreature(*m_creature, NazanGUID);
                 Creature *Vazruden = Unit::GetCreature(*m_creature, VazrudenGUID);
-                if (Nazan && Nazan->isAlive() || Vazruden && Vazruden->isAlive()) {
-                    if(Nazan && Nazan->getVictim() || Vazruden && Vazruden->getVictim())
+                if (Nazan && Nazan->IsAlive() || Vazruden && Vazruden->IsAlive()) {
+                    if(Nazan && Nazan->GetVictim() || Vazruden && Vazruden->GetVictim())
                         return;
                     else
                     {
@@ -406,7 +406,7 @@ struct mob_hellfire_sentryAI : public ScriptedAI
         KidneyShot_Timer = 3000+rand()%4000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void JustDied(Unit* who)
     {
@@ -420,7 +420,7 @@ struct mob_hellfire_sentryAI : public ScriptedAI
             return;
 
         if (KidneyShot_Timer < diff) {
-            if (Unit *victim = m_creature->getVictim())
+            if (Unit *victim = m_creature->GetVictim())
                 DoCast(victim, SPELL_KIDNEY_SHOT);
             KidneyShot_Timer = 20000;
         } else KidneyShot_Timer -= diff;

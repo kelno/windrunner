@@ -134,7 +134,7 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
             me->SetDisplayId(22800);
     }
 
-    void DoYellForPeonAggro()
+    void DoYellForPeonEnterCombat()
     {
         if (PeonEngagedCount >= 4)
             return;
@@ -188,7 +188,7 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
             if (!InCombat)
             {
                 InCombat = true;
-                Aggro(who);
+                EnterCombat(who);
             }
 
             if (Phase) DoStartNoMovement(who);
@@ -205,7 +205,7 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!m_creature->getVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
+        if (!m_creature->GetVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
         {
             if (!IntroOnce && m_creature->IsWithinDistInMap(who, 75))
             {
@@ -232,7 +232,7 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(RAND(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
         if (pInstance)
@@ -288,13 +288,13 @@ struct boss_grand_warlock_nethekurseAI : public ScriptedAI
         {
             if (!SpinOnce)
             {
-                DoCast(m_creature->getVictim(),SPELL_DARK_SPIN);
+                DoCast(m_creature->GetVictim(),SPELL_DARK_SPIN);
                 SpinOnce = true;
             }
 
             if (Cleave_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), (HeroicMode ? H_SPELL_SHADOW_SLAM : SPELL_SHADOW_CLEAVE));
+                DoCast(m_creature->GetVictim(), (HeroicMode ? H_SPELL_SHADOW_SLAM : SPELL_SHADOW_CLEAVE));
                 Cleave_Timer = 6000+rand()%2500;
             }else Cleave_Timer -= diff;
         }
@@ -343,7 +343,7 @@ struct mob_fel_orc_convertAI : public ScriptedAI
         return;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if (pInstance)
         {
@@ -351,7 +351,7 @@ struct mob_fel_orc_convertAI : public ScriptedAI
             {
                 Creature *pKurse = Unit::GetCreature(*m_creature,pInstance->GetData64(DATA_NETHEKURSE_GUID));
                 if (pKurse)
-                    ((boss_grand_warlock_nethekurseAI*)pKurse->AI())->DoYellForPeonAggro();
+                    ((boss_grand_warlock_nethekurseAI*)pKurse->AI())->DoYellForPeonEnterCombat();
             }
 
             if (pInstance->GetData(DATA_NETHEKURSE_EVENT) == IN_PROGRESS)
@@ -380,7 +380,7 @@ struct mob_fel_orc_convertAI : public ScriptedAI
 
         if (Hemorrhage_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HEMORRHAGE);
+            DoCast(m_creature->GetVictim(),SPELL_HEMORRHAGE);
             Hemorrhage_Timer = 15000;
         }else Hemorrhage_Timer -= diff;
 
@@ -402,7 +402,7 @@ struct mob_lesser_shadow_fissureAI : public ScriptedAI
         Stop_Timer = 30000;
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void MoveInLineOfSight(Unit *who) { return; }
 
