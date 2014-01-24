@@ -44,7 +44,7 @@ struct npc_astor_hadrenAI : public ScriptedAI
         m_creature->setFaction(68);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
     }
 
@@ -148,7 +148,7 @@ struct npc_deathstalker_erlandAI : public npc_escortAI
 
     void Reset() {}
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         switch(rand()%2)
         {
@@ -234,7 +234,7 @@ struct pyrewood_ambushAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void JustSummoned(Creature *pSummoned)
     {

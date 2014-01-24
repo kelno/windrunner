@@ -25,7 +25,7 @@ struct SimpleAI : public ScriptedAI
 
     void Reset();
 
-    void Aggro(Unit *who);
+    void EnterCombat(Unit *who);
 
     void KilledUnit(Unit *victim);
 

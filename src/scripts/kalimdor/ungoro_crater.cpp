@@ -92,7 +92,7 @@ struct npc_ameAI : public npc_escortAI
       DEMORALIZINGSHOUT_Timer = 5000;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {}
 
     void JustSummoned(Creature* summoned)
@@ -117,7 +117,7 @@ struct npc_ameAI : public npc_escortAI
 
         if (DEMORALIZINGSHOUT_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DEMORALIZINGSHOUT);
+            DoCast(m_creature->GetVictim(),SPELL_DEMORALIZINGSHOUT);
             DEMORALIZINGSHOUT_Timer = 70000;
         }else DEMORALIZINGSHOUT_Timer -= diff;
 
@@ -194,13 +194,13 @@ struct npc_ringoAI : public FollowerAI
         SpraggleGUID = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit *pWho)
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_SPRAGGLE)
+        if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_SPRAGGLE)
         {
             if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
             {
@@ -256,7 +256,7 @@ struct npc_ringoAI : public FollowerAI
                 if (m_uiEndEventTimer <= uiDiff)
                 {
                     Unit *pSpraggle = Unit::GetUnit(*me, SpraggleGUID);
-                    if (!pSpraggle || !pSpraggle->isAlive())
+                    if (!pSpraggle || !pSpraggle->IsAlive())
                     {
                         SetFollowComplete();
                         return;

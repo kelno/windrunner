@@ -45,7 +45,7 @@ struct boss_ironayaAI : public ScriptedAI
         hasCastedWstomp = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
         DoPlaySoundToSet(m_creature,SOUND_AGGRO);
@@ -60,12 +60,12 @@ struct boss_ironayaAI : public ScriptedAI
         //If we are <50% hp do knockaway ONCE
         if (!hasCastedKnockaway && m_creature->GetHealth()*2 < m_creature->GetMaxHealth())
         {
-            m_creature->CastSpell(m_creature->getVictim(),SPELL_KNOCKAWAY, true);
+            m_creature->CastSpell(m_creature->GetVictim(),SPELL_KNOCKAWAY, true);
 
             // current aggro target is knocked away pick new target
             Unit* Target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0);
 
-            if (!Target || Target == m_creature->getVictim())
+            if (!Target || Target == m_creature->GetVictim())
                 Target = SelectUnit(SELECT_TARGET_TOPAGGRO, 1);
 
             if (Target)

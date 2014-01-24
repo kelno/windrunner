@@ -101,7 +101,7 @@ struct boss_nefarianAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch (rand()%3)
         {
@@ -133,28 +133,28 @@ struct boss_nefarianAI : public ScriptedAI
         //ShadowFlame_Timer
         if (ShadowFlame_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWFLAME);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWFLAME);
             ShadowFlame_Timer = 12000;
         }else ShadowFlame_Timer -= diff;
 
         //BellowingRoar_Timer
         if (BellowingRoar_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BELLOWINGROAR);
+            DoCast(m_creature->GetVictim(),SPELL_BELLOWINGROAR);
             BellowingRoar_Timer = 30000;
         }else BellowingRoar_Timer -= diff;
 
         //VeilOfShadow_Timer
         if (VeilOfShadow_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_VEILOFSHADOW);
+            DoCast(m_creature->GetVictim(),SPELL_VEILOFSHADOW);
             VeilOfShadow_Timer = 15000;
         }else VeilOfShadow_Timer -= diff;
 
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 7000;
         }else Cleave_Timer -= diff;
 
@@ -162,7 +162,7 @@ struct boss_nefarianAI : public ScriptedAI
         if (TailLash_Timer < diff)
         {
             //Cast NYI since we need a better check for behind target
-            //DoCast(m_creature->getVictim(),SPELL_TAILLASH);
+            //DoCast(m_creature->GetVictim(),SPELL_TAILLASH);
 
             TailLash_Timer = 10000;
         }else TailLash_Timer -= diff;

@@ -81,7 +81,7 @@ struct mob_kilrekAI : public ScriptedAI
         AmplifyTimer = 0;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(!pInstance)
         {
@@ -90,7 +90,7 @@ struct mob_kilrekAI : public ScriptedAI
         }
 
         Creature* Terestian = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_TERESTIAN)));
-        if(Terestian && !Terestian->getVictim())
+        if(Terestian && !Terestian->GetVictim())
             Terestian->AddThreat(who, 1.0f);
     }
 
@@ -102,7 +102,7 @@ struct mob_kilrekAI : public ScriptedAI
             if(TerestianGUID)
             {
                 Unit* Terestian = Unit::GetUnit((*m_creature), TerestianGUID);
-                if(Terestian && Terestian->isAlive())
+                if(Terestian && Terestian->IsAlive())
                     DoCast(Terestian, SPELL_BROKEN_PACT, true);
             }
         }else ERROR_INST_DATA(m_creature);
@@ -117,14 +117,14 @@ struct mob_kilrekAI : public ScriptedAI
         if (AmplifyTimer < diff)
         {
             m_creature->InterruptNonMeleeSpells(false);
-            DoCast(m_creature->getVictim(),SPELL_AMPLIFY_FLAMES);
+            DoCast(m_creature->GetVictim(),SPELL_AMPLIFY_FLAMES);
 
             AmplifyTimer = 20000;
         }else AmplifyTimer -= diff;
 
         //Chain cast
-        if (!m_creature->IsNonMeleeSpellCasted(false) && m_creature->IsWithinDistInMap(m_creature->getVictim(), 30))
-            DoCast(m_creature->getVictim(),SPELL_FIREBOLT);
+        if (!m_creature->IsNonMeleeSpellCasted(false) && m_creature->IsWithinDistInMap(m_creature->GetVictim(), 30))
+            DoCast(m_creature->GetVictim(),SPELL_FIREBOLT);
         else DoMeleeAttackIfReady();
     }
 };
@@ -140,7 +140,7 @@ struct mob_demon_chainAI : public ScriptedAI
         SacrificeGUID = 0;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
 
@@ -204,7 +204,7 @@ struct boss_terestianAI : public ScriptedAI
             pInstance->SetData(DATA_TERESTIAN_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
 
@@ -212,7 +212,7 @@ struct boss_terestianAI : public ScriptedAI
         {
             // Put Kil'rek in combat against our target so players don't skip him
             Creature* Kilrek = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_KILREK)));
-            if(Kilrek && !Kilrek->getVictim())
+            if(Kilrek && !Kilrek->GetVictim())
                 Kilrek->AddThreat(who, 1.0f);
 
             pInstance->SetData(DATA_TERESTIAN_EVENT, IN_PROGRESS);
@@ -266,12 +266,12 @@ struct boss_terestianAI : public ScriptedAI
             {
                 Kilrek->Respawn();
                 if(Kilrek->AI())
-                    Kilrek->AI()->AttackStart(m_creature->getVictim());
+                    Kilrek->AI()->AttackStart(m_creature->GetVictim());
 
                 SummonKilrek = false;
             }
 
-            if(!Kilrek || !Kilrek->isAlive())
+            if(!Kilrek || !Kilrek->IsAlive())
             {
                 SummonKilrek = true;
                 CheckKilrekTimer = 45000;
@@ -281,7 +281,7 @@ struct boss_terestianAI : public ScriptedAI
         if(SacrificeTimer < diff)
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if(target && target->isAlive() && target->GetTypeId() == TYPEID_PLAYER)
+            if(target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER)
             {
                 DoCast(target, SPELL_SACRIFICE, true);
                 Creature* Chains = m_creature->SummonCreature(CREATURE_DEMONCHAINS, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);
@@ -328,7 +328,7 @@ struct boss_terestianAI : public ScriptedAI
             Creature* Imp = m_creature->SummonCreature(CREATURE_FIENDISHIMP, PortalLocations[random][0], PortalLocations[random][1], PORTAL_Z, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 15000);
             if(Imp)
             {
-                Imp->AddThreat(m_creature->getVictim(), 1.0f);
+                Imp->AddThreat(m_creature->GetVictim(), 1.0f);
                 Imp->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
             }
             SummonTimer = 5000;
@@ -360,7 +360,7 @@ struct mob_fiendish_impAI : public ScriptedAI
         FireboltTimer = 3000;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -370,7 +370,7 @@ struct mob_fiendish_impAI : public ScriptedAI
 
         if(FireboltTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FIREBOLT);
+            DoCast(m_creature->GetVictim(), SPELL_FIREBOLT);
             FireboltTimer = 1500;
         }else FireboltTimer -= diff;
 

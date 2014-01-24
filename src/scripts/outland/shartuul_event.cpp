@@ -59,7 +59,7 @@ struct npc_lr_triggerAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 40381, true);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 };
 
 CreatureAI *GetAI_npc_lr_trigger(Creature* pCreature)

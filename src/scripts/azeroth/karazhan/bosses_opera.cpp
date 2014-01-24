@@ -94,8 +94,8 @@ void SummonCroneIfReady(ScriptedInstance* pInstance, Creature *_Creature)
         Creature* Crone = _Creature->SummonCreature(CREATURE_CRONE,  -10891.96, -1755.95, _Creature->GetPositionZ(), 4.64, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
         if(Crone)
         {
-            if(_Creature->getVictim())
-                Crone->AI()->AttackStart(_Creature->getVictim());
+            if(_Creature->GetVictim())
+                Crone->AI()->AttackStart(_Creature->GetVictim());
         }
     }
 };
@@ -132,7 +132,7 @@ struct boss_dorotheeAI : public ScriptedAI
         InCombat = false;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_DOROTHEE_AGGRO, m_creature);
     }
@@ -185,7 +185,7 @@ struct boss_dorotheeAI : public ScriptedAI
 
         if(FearTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SCREAM);
+            DoCast(m_creature->GetVictim(), SPELL_SCREAM);
             FearTimer = 30000;
         }else FearTimer -= diff;
 
@@ -215,14 +215,14 @@ struct mob_titoAI : public ScriptedAI
         YipTimer = 10000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void JustDied(Unit* killer)
     {
         if(DorotheeGUID)
         {
             Creature* Dorothee = (Unit::GetCreature((*m_creature), DorotheeGUID));
-            if(Dorothee && Dorothee->isAlive())
+            if(Dorothee && Dorothee->IsAlive())
             {
                 ((boss_dorotheeAI*)Dorothee->AI())->TitoDied = true;
                 DoScriptText(SAY_DOROTHEE_TITO_DEATH, Dorothee);
@@ -237,7 +237,7 @@ struct mob_titoAI : public ScriptedAI
 
         if(YipTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_YIPPING);
+            DoCast(m_creature->GetVictim(), SPELL_YIPPING);
             YipTimer = 10000;
         }else YipTimer -= diff;
 
@@ -252,7 +252,7 @@ void boss_dorotheeAI::SummonTito()
     {
         DoScriptText(SAY_DOROTHEE_SUMMON, m_creature);
         ((mob_titoAI*)Tito->AI())->DorotheeGUID = m_creature->GetGUID();
-        Tito->AI()->AttackStart(m_creature->getVictim());
+        Tito->AI()->AttackStart(m_creature->GetVictim());
         SummonedTito = true;
         TitoDied = false;
     }
@@ -294,7 +294,7 @@ struct boss_strawmanAI : public ScriptedAI
         ScriptedAI::MoveInLineOfSight(who);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_STRAWMAN_AGGRO, m_creature);
     }
@@ -334,7 +334,7 @@ struct boss_strawmanAI : public ScriptedAI
 
         if(BrainBashTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_BRAIN_BASH);
+            DoCast(m_creature->GetVictim(), SPELL_BRAIN_BASH);
             BrainBashTimer = 15000;
         }else BrainBashTimer -= diff;
 
@@ -372,7 +372,7 @@ struct boss_tinheadAI : public ScriptedAI
         RustCount   = 0;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_TINHEAD_AGGRO, m_creature);
     }
@@ -422,7 +422,7 @@ struct boss_tinheadAI : public ScriptedAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             CleaveTimer = 5000;
         }else CleaveTimer -= diff;
 
@@ -479,7 +479,7 @@ struct boss_roarAI : public ScriptedAI
         ScriptedAI::AttackStart(who);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_ROAR_AGGRO, m_creature);
     }
@@ -513,19 +513,19 @@ struct boss_roarAI : public ScriptedAI
 
         if(MangleTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_MANGLE);
+            DoCast(m_creature->GetVictim(), SPELL_MANGLE);
             MangleTimer = 5000 + rand()%3000;
         }else MangleTimer -= diff;
 
         if(ShredTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SHRED);
+            DoCast(m_creature->GetVictim(), SPELL_SHRED);
             ShredTimer = 10000 + rand()%5000;
         }else ShredTimer -= diff;
 
         if(ScreamTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FRIGHTENED_SCREAM);
+            DoCast(m_creature->GetVictim(), SPELL_FRIGHTENED_SCREAM);
             ScreamTimer = 20000 + rand()%10000;
         }else ScreamTimer -= diff;
 
@@ -551,7 +551,7 @@ struct boss_croneAI : public ScriptedAI
         ChainLightningTimer = 10000;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         switch(rand()%2)
         {
@@ -590,7 +590,7 @@ struct boss_croneAI : public ScriptedAI
 
         if(ChainLightningTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_CHAIN_LIGHTNING);
+            DoCast(m_creature->GetVictim(), SPELL_CHAIN_LIGHTNING);
             ChainLightningTimer = 15000;
         }else ChainLightningTimer -= diff;
 
@@ -609,7 +609,7 @@ struct mob_cycloneAI : public ScriptedAI
         MoveTimer = 1000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MoveInLineOfSight(Unit* who)
     {
@@ -747,7 +747,7 @@ struct boss_bigbadwolfAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_WOLF_AGGRO, m_creature);
     }
@@ -812,13 +812,13 @@ struct boss_bigbadwolfAI : public ScriptedAI
 
         if(FearTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_TERRIFYING_HOWL);
+            DoCast(m_creature->GetVictim(), SPELL_TERRIFYING_HOWL);
             FearTimer = 25000 + rand()%10000;
         }else FearTimer -= diff;
 
         if(SwipeTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WIDE_SWIPE);
+            DoCast(m_creature->GetVictim(), SPELL_WIDE_SWIPE);
             SwipeTimer = 25000 + rand()%5000;
         }else SwipeTimer -= diff;
 
@@ -899,11 +899,11 @@ void Resurrect(Creature* target)
     target->SetHealth(target->GetMaxHealth());
     target->SetUInt32Value(UNIT_FIELD_BYTES_1, 0);
     target->CastSpell(target, SPELL_RES_VISUAL, true);
-    if(target->getVictim())
+    if(target->GetVictim())
     {
-        target->SetUInt64Value(UNIT_FIELD_TARGET, target->getVictim()->GetGUID());
-        target->GetMotionMaster()->MoveChase(target->getVictim());
-        target->AI()->AttackStart(target->getVictim());
+        target->SetUInt64Value(UNIT_FIELD_TARGET, target->GetVictim()->GetGUID());
+        target->GetMotionMaster()->MoveChase(target->GetVictim());
+        target->AI()->AttackStart(target->GetVictim());
     }
 };
 
@@ -963,7 +963,7 @@ struct boss_julianneAI : public ScriptedAI
         RomuloDead = false;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackStart(Unit* who)
     {
@@ -1044,16 +1044,16 @@ struct boss_romuloAI : public ScriptedAI
 
     void DamageTaken(Unit* done_by, uint32 &damage);
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_ROMULO_AGGRO, m_creature);
         if(JulianneGUID)
         {
             Creature* Julianne = (Unit::GetCreature((*m_creature), JulianneGUID));
-            if(Julianne && Julianne->getVictim())
+            if(Julianne && Julianne->GetVictim())
             {
-                m_creature->AddThreat(Julianne->getVictim(), 1.0f);
-                AttackStart(Julianne->getVictim());
+                m_creature->AddThreat(Julianne->GetVictim(), 1.0f);
+                AttackStart(Julianne->GetVictim());
             }
         }
     }
@@ -1111,7 +1111,7 @@ void boss_julianneAI::DamageTaken(Unit* done_by, uint32 &damage)
     if(!IsFakingDeath)
     {
         Creature* Romulo = (Unit::GetCreature((*m_creature), RomuloGUID));
-        if(Romulo && Romulo->isAlive() && !((boss_romuloAI*)Romulo->AI())->IsFakingDeath)
+        if(Romulo && Romulo->IsAlive() && !((boss_romuloAI*)Romulo->AI())->IsFakingDeath)
         {
             ((boss_romuloAI*)Romulo->AI())->ResurrectTimer = 10000;
             ((boss_romuloAI*)Romulo->AI())->JulianneDead = true;
@@ -1144,7 +1144,7 @@ void boss_romuloAI::DamageTaken(Unit* done_by, uint32 &damage)
         if(Phase == PHASE_BOTH)
         {
             Creature* Julianne = (Unit::GetCreature((*m_creature), JulianneGUID));
-            if(Julianne && Julianne->isAlive() && !((boss_julianneAI*)Julianne->AI())->IsFakingDeath)
+            if(Julianne && Julianne->IsAlive() && !((boss_julianneAI*)Julianne->AI())->IsFakingDeath)
             {
                 ((boss_julianneAI*)Julianne->AI())->ResurrectTimer = 10000;
                 ((boss_julianneAI*)Julianne->AI())->RomuloDead = true;
@@ -1208,10 +1208,10 @@ void boss_julianneAI::UpdateAI(const uint32 diff)
                 RomuloGUID = Romulo->GetGUID();
                 ((boss_romuloAI*)Romulo->AI())->JulianneGUID = m_creature->GetGUID();
                 ((boss_romuloAI*)Romulo->AI())->Phase = PHASE_ROMULO;
-                if(m_creature->getVictim())
+                if(m_creature->GetVictim())
                 {
-                    Romulo->AI()->AttackStart(m_creature->getVictim());
-                    Romulo->AddThreat(m_creature->getVictim(), 50.0f);
+                    Romulo->AI()->AttackStart(m_creature->GetVictim());
+                    Romulo->AddThreat(m_creature->GetVictim(), 50.0f);
                 }
                 DoZoneInCombat(Romulo);
             }
@@ -1261,7 +1261,7 @@ void boss_julianneAI::UpdateAI(const uint32 diff)
         if(rand()%2 == 1 && SummonedRomulo)
         {
             Creature* Romulo = (Unit::GetCreature((*m_creature), RomuloGUID));
-            if(Romulo && Romulo->isAlive() && !((boss_romuloAI*)Romulo->AI())->IsFakingDeath)
+            if(Romulo && Romulo->IsAlive() && !((boss_romuloAI*)Romulo->AI())->IsFakingDeath)
                 DoCast(Romulo, SPELL_ETERNAL_AFFECTION);
             else
                 return;
@@ -1318,7 +1318,7 @@ void boss_romuloAI::UpdateAI(const uint32 diff)
 
     if(PoisonThrustTimer < diff)
     {
-        DoCast(m_creature->getVictim(), SPELL_POISON_THRUST);
+        DoCast(m_creature->GetVictim(), SPELL_POISON_THRUST);
         PoisonThrustTimer = 10000 + rand()%10000;
     }else PoisonThrustTimer -= diff;
 

@@ -89,7 +89,7 @@ struct custom_exampleAI : public ScriptedAI
 
     //*** HANDLED FUNCTION ***
     //Attack Start is called whenever someone hits us.
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         //Say some stuff
         DoSay(SAY_AGGRO,LANG_UNIVERSAL,NULL);
@@ -101,7 +101,7 @@ struct custom_exampleAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //Out of combat timers
-        if (!m_creature->getVictim())
+        if (!m_creature->GetVictim())
         {
             //Random Say timer
             if (Say_Timer < diff)
@@ -155,9 +155,9 @@ struct custom_exampleAI : public ScriptedAI
         {
             //Cast spell one on our current target.
             if (rand()%50 > 10)
-                DoCast(m_creature->getVictim(),SPELL_ONE_ALT);
-            else if (m_creature->GetDistance(m_creature->getVictim()) < 25)
-                DoCast(m_creature->getVictim(),SPELL_ONE);
+                DoCast(m_creature->GetVictim(),SPELL_ONE_ALT);
+            else if (m_creature->GetDistance(m_creature->GetVictim()) < 25)
+                DoCast(m_creature->GetVictim(),SPELL_ONE);
 
             Spell_1_Timer = 5000;
         }else Spell_1_Timer -= diff;
@@ -166,7 +166,7 @@ struct custom_exampleAI : public ScriptedAI
         if (Spell_2_Timer < diff)
         {
             //Cast spell one on our current target.
-            DoCast(m_creature->getVictim(),SPELL_TWO);
+            DoCast(m_creature->GetVictim(),SPELL_TWO);
 
             Spell_2_Timer = 37000;
         }else Spell_2_Timer -= diff;
@@ -176,7 +176,7 @@ struct custom_exampleAI : public ScriptedAI
             if (Spell_3_Timer < diff)
         {
             //Cast spell one on our current target.
-            DoCast(m_creature->getVictim(),SPELL_THREE);
+            DoCast(m_creature->GetVictim(),SPELL_THREE);
 
             Spell_3_Timer = 19000;
         }else Spell_3_Timer -= diff;
@@ -187,8 +187,8 @@ struct custom_exampleAI : public ScriptedAI
         {
             //Say our line then cast uber death spell
             DoPlaySoundToSet(m_creature,8588);
-            DoYell(SAY_BESERK,LANG_UNIVERSAL,m_creature->getVictim());
-            DoCast(m_creature->getVictim(),SPELL_BESERK);
+            DoYell(SAY_BESERK,LANG_UNIVERSAL,m_creature->GetVictim());
+            DoCast(m_creature->GetVictim(),SPELL_BESERK);
 
             //Cast our beserk spell agian in 12 seconds if we didn't kill everyone
             Beserk_Timer = 12000;

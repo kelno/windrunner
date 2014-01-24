@@ -125,7 +125,7 @@ struct boss_supremusAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance && me->isAlive())
+        if(pInstance && me->IsAlive())
             pInstance->SetData(DATA_SUPREMUSEVENT, NOT_STARTED);
 
         PhaseSwitchTimer = TIMER_PHASE_LENGHT;
@@ -141,7 +141,7 @@ struct boss_supremusAI : public ScriptedAI
         summons.DespawnAll();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
 
@@ -209,8 +209,8 @@ struct boss_supremusAI : public ScriptedAI
     {
         if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true))
         {
-            if(m_creature->GetDistance2d(m_creature->getVictim()) > 40)
-                m_creature->CastSpell(m_creature->getVictim(),SPELL_CHARGE,false);
+            if(m_creature->GetDistance2d(m_creature->GetVictim()) > 40)
+                m_creature->CastSpell(m_creature->GetVictim(),SPELL_CHARGE,false);
                         
             DoResetThreat();
             m_creature->AddThreat(target, 5000000.0f);
@@ -228,7 +228,7 @@ struct boss_supremusAI : public ScriptedAI
             m_creature->SetSpeed(MOVE_RUN, 1.2f);
             m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, false);
             m_creature->ApplySpellImmune(0, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, false);
-            if(me->isInCombat())
+            if(me->IsInCombat())
             {
                 // StopEruptions(); //seems to be non blizz
                 DoResetThreat();

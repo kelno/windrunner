@@ -55,7 +55,7 @@ struct boss_razorgoreAI : public ScriptedAI
         m_creature->ApplySpellImmune(1, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -73,38 +73,38 @@ struct boss_razorgoreAI : public ScriptedAI
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 7000 + rand()%3000;
         }else Cleave_Timer -= diff;
 
         //WarStomp_Timer
         if (WarStomp_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WARSTOMP);
+            DoCast(m_creature->GetVictim(),SPELL_WARSTOMP);
             WarStomp_Timer = 15000 + rand()%10000;
         }else WarStomp_Timer -= diff;
 
         //FireballVolley_Timer
         if (FireballVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALLVOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALLVOLLEY);
             FireballVolley_Timer = 12000 + rand()%3000;
         }else FireballVolley_Timer -= diff;
 
         //Conflagration_Timer
         if (Conflagration_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CONFLAGRATION);
+            DoCast(m_creature->GetVictim(),SPELL_CONFLAGRATION);
             //We will remove this threat reduction and add an aura check.
 
-            //if(DoGetThreat(m_creature->getVictim()))
-            //DoModifyThreatPercent(m_creature->getVictim(),-50);
+            //if(DoGetThreat(m_creature->GetVictim()))
+            //DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
             Conflagration_Timer = 12000;
         }else Conflagration_Timer -= diff;
 
         // Aura Check. If the gamer is affected by confliguration we attack a random gamer.
-        if (m_creature->getVictim()->HasAura(SPELL_CONFLAGRATION,0))
+        if (m_creature->GetVictim()->HasAura(SPELL_CONFLAGRATION,0))
         {
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,1);

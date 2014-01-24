@@ -88,7 +88,7 @@ struct boss_gruulAI : public ScriptedAI
             pInstance->SetData(DATA_GRUULEVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         DoZoneInCombat();
@@ -216,7 +216,7 @@ struct boss_gruulAI : public ScriptedAI
 
                         m_creature->GetMotionMaster()->Clear();
 
-                        Unit *victim = m_creature->getVictim();
+                        Unit *victim = m_creature->GetVictim();
                         if(victim)
                         {
                             m_creature->GetMotionMaster()->MoveChase(victim);
@@ -247,10 +247,10 @@ struct boss_gruulAI : public ScriptedAI
                 Unit* target = NULL;
                 target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
 
-                if (target && m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+                if (target && m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
                     DoCast(target,SPELL_HURTFUL_STRIKE);
                 else
-                    DoCast(m_creature->getVictim(),SPELL_HURTFUL_STRIKE);
+                    DoCast(m_creature->GetVictim(),SPELL_HURTFUL_STRIKE);
 
                 HurtfulStrike_Timer= 8000;
             }else HurtfulStrike_Timer -= diff;
@@ -258,7 +258,7 @@ struct boss_gruulAI : public ScriptedAI
             // Reverberation
             if (Reverberation_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_REVERBERATION, true);
+                DoCast(m_creature->GetVictim(), SPELL_REVERBERATION, true);
                 Reverberation_Timer = 30000;
             }else Reverberation_Timer -= diff;
 
@@ -281,7 +281,7 @@ struct boss_gruulAI : public ScriptedAI
                 PerformingGroundSlam= true;
                 GroundSlamTimer = 0;
                 GroundSlamStage = 0;
-                DoCast(m_creature->getVictim(), SPELL_GROUND_SLAM);
+                DoCast(m_creature->GetVictim(), SPELL_GROUND_SLAM);
             } else GroundSlamTimer -=diff;
 
             DoMeleeAttackIfReady();

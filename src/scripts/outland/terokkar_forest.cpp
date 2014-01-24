@@ -71,7 +71,7 @@ struct mob_unkor_the_ruthlessAI : public ScriptedAI
         m_creature->setFaction(FACTION_HOSTILE);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void DoNice()
     {
@@ -159,7 +159,7 @@ struct mob_infested_root_walkerAI : public ScriptedAI
     mob_infested_root_walkerAI(Creature *c) : ScriptedAI(c) {}
 
     void Reset() { }
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
@@ -184,7 +184,7 @@ struct mob_rotting_forest_ragerAI : public ScriptedAI
     mob_rotting_forest_ragerAI(Creature *c) : ScriptedAI(c) {}
 
     void Reset() { }
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
@@ -216,7 +216,7 @@ struct mob_netherweb_victimAI : public ScriptedAI
     mob_netherweb_victimAI(Creature *c) : ScriptedAI(c) {}
 
     void Reset() { }
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
     void MoveInLineOfSight(Unit *who) { }
 
     void JustDied(Unit* Killer)
@@ -276,7 +276,7 @@ struct npc_floonAI : public ScriptedAI
         m_creature->setFaction(FACTION_FRIENDLY_FL);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -285,7 +285,7 @@ struct npc_floonAI : public ScriptedAI
 
         if( Silence_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_SILENCE);
+            DoCast(m_creature->GetVictim(),SPELL_SILENCE);
             Silence_Timer = 30000;
         }else Silence_Timer -= diff;
 
@@ -297,7 +297,7 @@ struct npc_floonAI : public ScriptedAI
 
         if( Frostbolt_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTBOLT);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTBOLT);
             Frostbolt_Timer = 5000;
         }else Frostbolt_Timer -= diff;
 
@@ -429,7 +429,7 @@ struct npc_isla_starmaneAI : public npc_escortAI
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void JustDied(Unit* killer)
     {
@@ -562,7 +562,7 @@ struct npc_hungry_nether_rayAI : public ScriptedAI
         checkTimer = 5000; //check for creature every 5 sec
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     Creature* SelectCreatureInGrid(uint32 entry, float range)
     {
@@ -634,7 +634,7 @@ struct npc_kaliri_egg_triggerAI : public ScriptedAI
             eggGO->SetGoState(GO_STATE_READY);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff) {}
@@ -702,7 +702,7 @@ struct npc_trigger_quest10950AI : public ScriptedAI
 {
     npc_trigger_quest10950AI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -787,7 +787,7 @@ struct npc_cenarion_sparrowhawkAI : public ScriptedAI
             despawnTimer = 10000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void MovementInform(uint32 type, uint32 id)
     {
@@ -863,7 +863,7 @@ struct npc_chief_letollAI : public npc_escortAI
     
     void Reset() {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void SummonedCreatureDespawn(Creature* summon)
     {
@@ -1171,7 +1171,7 @@ struct npc_skyguard_prisonerAI : npc_escortAI
     
     void Reset() {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void KilledUnit(Unit* victim)
     {

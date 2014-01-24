@@ -36,7 +36,7 @@ struct npc_fire_effigy_fire : public Scripted_NoMovementAI
         addAuraTimer = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void DamageTaken(Unit* doneBy, uint32& damage)
     {
@@ -264,7 +264,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
             ScriptedAI::MoveInLineOfSight(who);
     }
     
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
         me->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING2);
@@ -368,7 +368,7 @@ struct boss_shade_of_horsemanAI : public ScriptedAI
                 return;
 
             if (cleaveTimer <= diff) {
-                DoCast(me->getVictim(), SPELL_CLEAVE);
+                DoCast(me->GetVictim(), SPELL_CLEAVE);
                 cleaveTimer = 4000 + rand() % 3000;
             }
             else
@@ -415,7 +415,7 @@ struct npc_shade_of_horseman_bunnyAI : public Scripted_NoMovementAI
         me->SetReactState(REACT_PASSIVE);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     bool sOnDummyEffect(Unit* caster, uint32 spellId, uint32 effIndex)
     {

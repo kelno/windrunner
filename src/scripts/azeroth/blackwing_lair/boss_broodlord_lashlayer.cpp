@@ -53,7 +53,7 @@ struct boss_broodlordAI : public ScriptedAI
         m_creature->ApplySpellImmune(1, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         DoZoneInCombat();
@@ -82,30 +82,30 @@ struct boss_broodlordAI : public ScriptedAI
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 7000;
         }else Cleave_Timer -= diff;
 
         // BlastWave
         if (BlastWave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BLASTWAVE);
+            DoCast(m_creature->GetVictim(),SPELL_BLASTWAVE);
             BlastWave_Timer = 8000 + rand()%8000;
         }else BlastWave_Timer -= diff;
 
         //MortalStrike_Timer
         if (MortalStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 25000 + rand()%10000;
         }else MortalStrike_Timer -= diff;
 
         if (KnockBack_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KNOCKBACK);
+            DoCast(m_creature->GetVictim(),SPELL_KNOCKBACK);
             //Drop 50% aggro
-            if (DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-50);
+            if (DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
             KnockBack_Timer = 15000 + rand()%15000;
         }else KnockBack_Timer -= diff;

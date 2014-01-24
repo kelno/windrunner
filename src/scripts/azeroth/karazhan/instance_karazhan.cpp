@@ -265,7 +265,7 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_CHESS_CHECK_PIECES_ALIVE:
                 for (uint8 i = 0; i < ChessPieces.size(); i++) {
                     if (Creature* piece = instance->GetCreature(ChessPieces.at(i))) {
-                        if (!piece->isAlive()) {
+                        if (!piece->IsAlive()) {
                             piece->setDeathState(JUST_ALIVED);
                             piece->SetHealth(piece->GetMaxHealth());
                         }

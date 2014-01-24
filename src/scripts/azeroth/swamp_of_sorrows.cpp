@@ -54,7 +54,7 @@ struct npc_galen_goodwardAI : public npc_escortAI
         m_uiPeriodicSay = 6000;
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (HasEscortState(STATE_ESCORT_ESCORTING))
             DoScriptText(RAND(SAY_ATTACKED_1, SAY_ATTACKED_2), me, pWho);

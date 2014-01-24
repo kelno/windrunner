@@ -41,7 +41,7 @@ struct mobs_mana_tappedAI : public ScriptedAI
 
     void Reset() { }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void SpellHit(Unit* pCaster, const SpellEntry* spell)
     {
@@ -93,7 +93,7 @@ struct npc_prospector_anvilwardAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void Reset()
     {
@@ -258,7 +258,7 @@ struct npc_secondTrialAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -350,7 +350,7 @@ struct master_kelerun_bloodmournAI : public ScriptedAI
       uint64 paladinGuid[] = {0,0,0,0};
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -576,7 +576,7 @@ struct npc_apprentice_mirvedaAI : public ScriptedAI
         me->GetMotionMaster()->MoveTargetedHome();
     }
 
-    void Aggro(Unit* pWho){}
+    void EnterCombat(Unit* pWho){}
 
     void JustSummoned(Creature* pSummoned)
     {
@@ -693,7 +693,7 @@ struct npc_infused_crystalAI : public Scripted_NoMovementAI
         WaveTimer = 0;
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {

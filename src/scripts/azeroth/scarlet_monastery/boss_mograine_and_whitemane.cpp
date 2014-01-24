@@ -96,7 +96,7 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
 
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_MO_AGGRO, m_creature);
         DoCast(m_creature,SPELL_RETRIBUTIONAURA3);
@@ -235,21 +235,21 @@ struct boss_scarlet_commander_mograineAI : public ScriptedAI
         //CrusaderStrike5_Timer
         if (CrusaderStrike5_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CRUSADERSTRIKE5);
+            DoCast(m_creature->GetVictim(),SPELL_CRUSADERSTRIKE5);
             CrusaderStrike5_Timer = 20000;
         }else CrusaderStrike5_Timer -= diff;
 
         //HammerOfJustice3_Timer
         if (HammerOfJustice3_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMMEROFJUSTICE3);
+            DoCast(m_creature->GetVictim(),SPELL_HAMMEROFJUSTICE3);
             HammerOfJustice3_Timer = 30000;
         }else HammerOfJustice3_Timer -= diff;
 
         //Consecration3_Timer
         if (Consecration3_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CONSECRATION3);
+            DoCast(m_creature->GetVictim(),SPELL_CONSECRATION3);
             Consecration3_Timer = 20000;
         }else Consecration3_Timer -= diff;
 
@@ -315,7 +315,7 @@ struct boss_high_inquisitor_whitemaneAI : public ScriptedAI
         MindBlast6_Timer = 6000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_WH_INTRO, m_creature);
     }
@@ -338,7 +338,7 @@ struct boss_high_inquisitor_whitemaneAI : public ScriptedAI
 
         DoScriptText(SAY_WH_RESSURECT, m_creature);
 
-        DoCast(m_creature->getVictim(),SPELL_DEEPSLEEP);
+        DoCast(m_creature->GetVictim(),SPELL_DEEPSLEEP);
         DoCast(m-creature->GetGUID(51117),SPELL_SCARLETRESURRECTION)
         }
         */
@@ -375,35 +375,35 @@ struct boss_high_inquisitor_whitemaneAI : public ScriptedAI
         //CrusaderStrike_Timer
         if (CrusaderStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CRUSADERSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_CRUSADERSTRIKE);
             CrusaderStrike_Timer = 15000;
         }else CrusaderStrike_Timer -= diff;
 
         //HammerOfJustice_Timer
         if (HammerOfJustice_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMMEROFJUSTICE);
+            DoCast(m_creature->GetVictim(),SPELL_HAMMEROFJUSTICE);
             HammerOfJustice_Timer = 12000;
         }else HammerOfJustice_Timer -= diff;
 
         //HolySmite6_Timer
         if (HolySmite6_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HOLYSMITE6);
+            DoCast(m_creature->GetVictim(),SPELL_HOLYSMITE6);
             HolySmite6_Timer = 10000;
         }else HolySmite6_Timer -= diff;
 
         //HolyFire5_Timer
         if (HolyFire5_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HOLYFIRE5);
+            DoCast(m_creature->GetVictim(),SPELL_HOLYFIRE5);
             HolyFire5_Timer = 15000;
         }else HolyFire5_Timer -= diff;
 
         //MindBlast6_Timer
         if (MindBlast6_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MINDBLAST6);
+            DoCast(m_creature->GetVictim(),SPELL_MINDBLAST6);
             MindBlast6_Timer = 8000;
         }else MindBlast6_Timer -= diff;
 

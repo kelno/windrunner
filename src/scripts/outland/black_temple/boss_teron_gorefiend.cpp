@@ -109,7 +109,7 @@ struct mob_doom_blossomAI : public ScriptedAI
         m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX(), m_creature->GetPositionY(), m_creature->GetPositionZ() + 7);
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
     void AttackStart(Unit* who) { }
     void MoveInLineOfSight(Unit* who) { }
 
@@ -241,7 +241,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if(!who || (!who->isAlive())) return;
+        if(!who || (!who->IsAlive())) return;
 
         if(me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
         {
@@ -352,7 +352,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         for(i = m_threatlist.begin(); i != m_threatlist.end(); i++)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
             {
                 float threat = DoGetThreat(pUnit);
                 unit->AddThreat(pUnit, threat + 5000000.0f);
@@ -418,13 +418,13 @@ struct boss_teron_gorefiendAI : public ScriptedAI
             return;
         }
 
-        if (m_creature->getVictim())
-            m_creature->SetInFront(m_creature->getVictim());
+        if (m_creature->GetVictim())
+            m_creature->SetInFront(m_creature->GetVictim());
 
         if(ShadowOfDeathTimer < diff)
         {
             if (Unit* pShadowVictim = SelectUnit(1, 0.0f, 100.0f, true, true, true, SPELL_SHADOW_OF_DEATH, 1)) {
-                if (pShadowVictim->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow()) //not tank?
+                if (pShadowVictim->GetGUIDLow() == m_creature->GetVictim()->GetGUIDLow()) //not tank?
                     ShadowOfDeathTimer = 100;       // Delay to next world tick
                 else {
                     if(DoCast(pShadowVictim, SPELL_SHADOW_OF_DEATH))
@@ -450,7 +450,7 @@ struct boss_teron_gorefiendAI : public ScriptedAI
         {
             Unit* target = SelectUnit(1, 0.0f, 100.0f, true, false, true, 0, 0);
             if(!target)
-                target = m_creature->getVictim();
+                target = m_creature->GetVictim();
 
             if(target)
             {
@@ -568,7 +568,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
         ResetCheckTimer = 1500;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void DamageTaken(Unit* done_by, uint32 &damage)
     {
@@ -596,7 +596,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
     {        
         if (ResetCheckTimer <= diff) {
             if (Creature *pTeron = pInstance->instance->GetCreatureInMap(TeronGUID)) {
-                if (!pTeron->isInCombat())
+                if (!pTeron->IsInCombat())
                     m_creature->DisappearAndDie();
             }
             ResetCheckTimer = 1500;
@@ -638,11 +638,11 @@ struct mob_shadowy_constructAI : public ScriptedAI
     {
         if(m_creature->isAttackReady())
         {
-            if(m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            if(m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             {
-                if (m_creature->canMelee() && (!m_creature->getVictim()->isPossessed() && !m_creature->getVictim()->isPossessing()))
+                if (m_creature->canMelee() && (!m_creature->GetVictim()->isPossessed() && !m_creature->GetVictim()->isPossessing()))
                 {
-                    m_creature->AttackerStateUpdate(m_creature->getVictim());
+                    m_creature->AttackerStateUpdate(m_creature->GetVictim());
                     m_creature->resetAttackTimer();
                 } else{
                     m_creature->resetAttackTimer();
@@ -660,7 +660,7 @@ struct mob_shadowy_constructAI : public ScriptedAI
         for(i = m_threatlist.begin(); i != m_threatlist.end(); i++)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
             {
                 if ( pUnit->GetDisplayId() != 21300 && !pUnit->HasAura(40282,0)){
                     float threat = unit->getThreatManager().getThreat(pUnit);

@@ -58,7 +58,7 @@ struct npc_raliq_the_drunkAI : public ScriptedAI
         m_creature->setFaction(FACTION_FRIENDLY_RD);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -67,7 +67,7 @@ struct npc_raliq_the_drunkAI : public ScriptedAI
 
         if( Uppercut_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_UPPERCUT);
+            DoCast(m_creature->GetVictim(),SPELL_UPPERCUT);
             Uppercut_Timer = 15000;
         }else Uppercut_Timer -= diff;
 
@@ -121,7 +121,7 @@ struct npc_salsalabimAI : public ScriptedAI
         m_creature->setFaction(FACTION_FRIENDLY_SA);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
@@ -141,7 +141,7 @@ struct npc_salsalabimAI : public ScriptedAI
 
         if( MagneticPull_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_MAGNETIC_PULL);
+            DoCast(m_creature->GetVictim(),SPELL_MAGNETIC_PULL);
             MagneticPull_Timer = 15000;
         }else MagneticPull_Timer -= diff;
 
@@ -322,7 +322,7 @@ public:
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MoveInLineOfSight(Unit *who)
     {
@@ -436,7 +436,7 @@ struct npc_dirty_larryAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
     
     void DamageTaken(Unit *pSource, uint32 &damage)
     {

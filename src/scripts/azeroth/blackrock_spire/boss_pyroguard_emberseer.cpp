@@ -42,7 +42,7 @@ struct boss_pyroguard_emberseerAI : public ScriptedAI
         PyroBlast_Timer = 14000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -55,14 +55,14 @@ struct boss_pyroguard_emberseerAI : public ScriptedAI
         //FireNova_Timer
         if (FireNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIRENOVA);
+            DoCast(m_creature->GetVictim(),SPELL_FIRENOVA);
             FireNova_Timer = 6000;
         }else FireNova_Timer -= diff;
 
         //FlameBuffet_Timer
         if (FlameBuffet_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FLAMEBUFFET);
+            DoCast(m_creature->GetVictim(),SPELL_FLAMEBUFFET);
             FlameBuffet_Timer = 14000;
         }else FlameBuffet_Timer -= diff;
 

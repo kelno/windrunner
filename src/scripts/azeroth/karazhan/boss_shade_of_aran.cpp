@@ -140,7 +140,7 @@ struct boss_aranAI : public ScriptedAI
         if(pInstance)
         {
             // Not in progress
-            if (m_creature->isAlive())
+            if (m_creature->IsAlive())
                 pInstance->SetData(DATA_SHADEOFARAN_EVENT, NOT_STARTED);
 
             if(GameObject* Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GAMEOBJECT_LIBRARY_DOOR)))
@@ -173,7 +173,7 @@ struct boss_aranAI : public ScriptedAI
             sLog.outError("Aran has been killed by NON-PLAYER unit with entry %u", victim->GetEntry());
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {
@@ -203,7 +203,7 @@ struct boss_aranAI : public ScriptedAI
         {
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
             //only on alive players
-            if(target && target->isAlive() && target->GetTypeId() == TYPEID_PLAYER )
+            if(target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER )
                 targets.push_back( target);
         }
 
@@ -456,7 +456,7 @@ struct boss_aranAI : public ScriptedAI
                 Creature* pUnit = DoSpawnCreature(CREATURE_WATER_ELEMENTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 90000);
                 if (pUnit)
                 {
-                    pUnit->Attack(m_creature->getVictim(), true);
+                    pUnit->Attack(m_creature->GetVictim(), true);
                     pUnit->setFaction(m_creature->getFaction());
                 }
             }
@@ -471,7 +471,7 @@ struct boss_aranAI : public ScriptedAI
                 Creature* pUnit = DoSpawnCreature(CREATURE_SHADOW_OF_ARAN, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 5000);
                 if (pUnit)
                 {
-                    pUnit->Attack(m_creature->getVictim(), true);
+                    pUnit->Attack(m_creature->GetVictim(), true);
                     pUnit->setFaction(m_creature->getFaction());
                 }
             }
@@ -554,7 +554,7 @@ struct water_elementalAI : public ScriptedAI
         CastTimer = 2000 + (rand()%3000);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -563,7 +563,7 @@ struct water_elementalAI : public ScriptedAI
 
         if(CastTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WATERBOLT);
+            DoCast(m_creature->GetVictim(), SPELL_WATERBOLT);
             CastTimer = 2000 + (rand()%3000);
         }else CastTimer -= diff;
     }

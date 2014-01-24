@@ -54,11 +54,11 @@ struct boss_the_makerAI : public ScriptedAI
     {
         ExplodingBreaker_Timer = 9000;
         Domination_Timer = 20000 + rand()%20000;
-        if (pInstance && me->isAlive())
+        if (pInstance && me->IsAlive())
             pInstance->SetData(DATA_MAKEREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {

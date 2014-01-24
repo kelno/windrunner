@@ -52,7 +52,7 @@ struct boss_renatakiAI : public ScriptedAI
         Ambushed = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -116,8 +116,8 @@ struct boss_renatakiAI : public ScriptedAI
             Unit* target = NULL;
             target = SelectUnit(SELECT_TARGET_RANDOM,1);
 
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-50);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-50);
 
             if (target)
                 AttackStart(target);
@@ -128,7 +128,7 @@ struct boss_renatakiAI : public ScriptedAI
         if (!Invisible)
             if(ThousandBlades_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_THOUSANDBLADES);
+            DoCast(m_creature->GetVictim(), SPELL_THOUSANDBLADES);
             ThousandBlades_Timer = 7000 + rand()%5000;
         }else ThousandBlades_Timer -= diff;
 

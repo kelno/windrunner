@@ -76,7 +76,7 @@ struct npc_chicken_cluckAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_QUESTGIVER);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -188,7 +188,7 @@ struct npc_dancing_flamesAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 };
 
 CreatureAI* GetAI_npc_dancing_flames(Creature *_Creature)
@@ -343,7 +343,7 @@ struct npc_doctorAI : public ScriptedAI
     void PatientSaved(Creature* soldier, Player* player, Location* Point);
     void UpdateAI(const uint32 diff);
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 };
 
 /*#####
@@ -389,11 +389,11 @@ struct npc_injured_patientAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
-        if (caster->GetTypeId() == TYPEID_PLAYER && m_creature->isAlive() && spell->Id == 20804)
+        if (caster->GetTypeId() == TYPEID_PLAYER && m_creature->IsAlive() && spell->Id == 20804)
         {
             if( ((caster->ToPlayer())->GetQuestStatus(6624) == QUEST_STATUS_INCOMPLETE) || ((caster->ToPlayer())->GetQuestStatus(6622) == QUEST_STATUS_INCOMPLETE))
             {
@@ -433,12 +433,12 @@ struct npc_injured_patientAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (m_creature->isAlive() && m_creature->GetHealth() > 6)
+        if (m_creature->IsAlive() && m_creature->GetHealth() > 6)
         {                                                   //lower HP on every world tick makes it a useful counter, not officlone though
             m_creature->SetHealth(uint32(m_creature->GetHealth()-5) );
         }
 
-        if (m_creature->isAlive() && m_creature->GetHealth() <= 6)
+        if (m_creature->IsAlive() && m_creature->GetHealth() <= 6)
         {
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_IN_COMBAT);
             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -630,7 +630,7 @@ struct npc_guardianAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
     }
@@ -642,7 +642,7 @@ struct npc_guardianAI : public ScriptedAI
 
         if (m_creature->isAttackReady())
         {
-            m_creature->CastSpell(m_creature->getVictim(),SPELL_DEATHTOUCH, true);
+            m_creature->CastSpell(m_creature->GetVictim(),SPELL_DEATHTOUCH, true);
             m_creature->resetAttackTimer();
         }
     }
@@ -924,7 +924,7 @@ struct npc_steam_tonkAI : public ScriptedAI
     npc_steam_tonkAI(Creature *c) : ScriptedAI(c) {}
 
     void Reset() {}
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void OnPossess(bool apply)
     {
@@ -963,7 +963,7 @@ struct npc_tonk_mineAI : public ScriptedAI
         ExplosionTimer = 3000;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void AttackStart(Unit *who) {}
     void MoveInLineOfSight(Unit *who) {}
 
@@ -1041,13 +1041,13 @@ struct npc_snake_trap_serpentsAI : public ScriptedAI
     Unit *Owner;
     bool IsViper;
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void Reset()
     {
         Owner = m_creature->GetOwner();
 
-        if (!m_creature->isPet() || !Owner)
+        if (!m_creature->IsPet() || !Owner)
             return;
 
         CreatureInfo const *Info = m_creature->GetCreatureInfo();
@@ -1067,10 +1067,10 @@ struct npc_snake_trap_serpentsAI : public ScriptedAI
     //Redefined for random target selection:
     void MoveInLineOfSight(Unit *who)
     {
-        if (!m_creature->isPet() || !Owner)
+        if (!m_creature->IsPet() || !Owner)
             return;
 
-        if( !m_creature->getVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) && Owner->IsHostileTo(who))//don't attack not-pvp-flaged
+        if( !m_creature->GetVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) && Owner->IsHostileTo(who))//don't attack not-pvp-flaged
         {
             if (m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -1091,18 +1091,18 @@ struct npc_snake_trap_serpentsAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!m_creature->isPet() || !Owner)
+        if (!m_creature->IsPet() || !Owner)
             return;
 
         //Follow if not in combat
-        if (!m_creature->hasUnitState(UNIT_STAT_FOLLOW)&& !InCombat)
+        if (!m_creature->HasUnitState(UNIT_STAT_FOLLOW)&& !InCombat)
         {
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MoveFollow(Owner,PET_FOLLOW_DIST,PET_FOLLOW_ANGLE);
         }
 
         //No victim -> get new from owner (need this because MoveInLineOfSight won't work while following -> corebug)
-        if (!m_creature->getVictim())
+        if (!m_creature->GetVictim())
         {
             if (InCombat)
                 DoStopAttack();
@@ -1127,7 +1127,7 @@ struct npc_snake_trap_serpentsAI : public ScriptedAI
                     else
                         spell = SPELL_CRIPPLING_POISON;
 
-                    DoCast(m_creature->getVictim(),spell);
+                    DoCast(m_creature->GetVictim(),spell);
                 }
 
                 SpellTimer = VIPER_TIMER;
@@ -1135,7 +1135,7 @@ struct npc_snake_trap_serpentsAI : public ScriptedAI
             else //Venomous Snake
             {
                 if (rand() % 10 < 8) //80% chance to cast
-                    DoCast(m_creature->getVictim(),SPELL_DEADLY_POISON);
+                    DoCast(m_creature->GetVictim(),SPELL_DEADLY_POISON);
                 SpellTimer = VENOMOUS_SNAKE_TIMER + (rand() %5)*100;
             }
         }else SpellTimer-=diff;
@@ -1169,7 +1169,7 @@ struct npc_goblin_land_mineAI : public ScriptedAI
         m_creature->SetSpeed(MOVE_RUN, 0.0f);
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void JustDied(Unit* pKiller)
     {
@@ -1226,7 +1226,7 @@ struct npc_mojoAI : public PetAI
     uint32 MorphTimer;      /* new hooks OwnerGainedAura and OwnerLostAura? Useless in this case, as morphed player may not be owner, but keep the idea. */
     uint64 PlayerGUID;
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     void Reset()
     {
         me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
@@ -1264,7 +1264,7 @@ bool ReceiveEmote_npc_mojo(Player *pPlayer, Creature *pCreature, uint32 emote)
         ((npc_mojoAI*)pCreature->AI())->MorphTimer = 15000;
         ((npc_mojoAI*)pCreature->AI())->PlayerGUID = pPlayer->GetGUID();
         pCreature->AddAura(SPELL_HEARTS, pCreature);
-        if (!pPlayer->isInCombat())
+        if (!pPlayer->IsInCombat())
             pPlayer->CastSpell(pPlayer, SPELL_FEELING_FROGGY, true);
         pCreature->Whisper(urand(INDECENT_WHISPER7,INDECENT_WHISPER1), pPlayer->GetGUID(), false);
         pCreature->SetInFront(pPlayer);
@@ -1294,16 +1294,16 @@ struct npc_explosive_sheepAI : public ScriptedAI
         m_creature->GetMotionMaster()->MoveFollow(m_creature->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         m_creature->GetMotionMaster()->MoveChase(pWho);
     }
     
     void UpdateAI(uint32 const diff)
     {            
-        if (m_creature->getVictim()) {
-            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 3.0f)) {
-                DoCast(m_creature->getVictim(), SPELL_EXPLODE);
+        if (m_creature->GetVictim()) {
+            if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 3.0f)) {
+                DoCast(m_creature->GetVictim(), SPELL_EXPLODE);
                 //m_creature->DisappearAndDie();
                 if (m_creature->GetOwner() && m_creature->GetOwner()->ToPlayer()) {
                     m_creature->GetOwner()->ToPlayer()->RemoveGuardians();
@@ -1334,7 +1334,7 @@ struct npc_pet_bombAI : public PetAI
         me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         me->GetMotionMaster()->MoveChase(pWho);
     }
@@ -1342,9 +1342,9 @@ struct npc_pet_bombAI : public PetAI
     void UpdateAI(uint32 const diff)
     {        
         PetAI::Minipet_DistanceCheck(diff);
-        if (me->getVictim()) {
-            if (me->IsWithinDistInMap(me->getVictim(), 3.0f)) {
-                me->CastSpell(me->getVictim(), SPELL_MALFUNCTION_EXPLOSION, false);
+        if (me->GetVictim()) {
+            if (me->IsWithinDistInMap(me->GetVictim(), 3.0f)) {
+                me->CastSpell(me->GetVictim(), SPELL_MALFUNCTION_EXPLOSION, false);
                 me->DisappearAndDie();
             }
         }
@@ -1422,11 +1422,11 @@ struct npc_clockwork_rocket_botAI : public PetAI
             me->GetMotionMaster()->MoveFollow(owner, PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void MoveInLineOfSight(Unit* who)
     {
-        if (me->hasUnitState(UNIT_STAT_CASTING))
+        if (me->HasUnitState(UNIT_STAT_CASTING))
             return;
             
         if (who->ToCreature() && who->GetEntry() == me->GetEntry() && who->IsWithinDistInMap(me, 15.0f))
@@ -1473,7 +1473,7 @@ struct npc_halaa_bomb_targetAI : public Scripted_NoMovementAI
         }
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -1561,7 +1561,7 @@ struct trigger_omenAI : public Scripted_NoMovementAI
         ++step;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 };
 
 CreatureAI* GetAI_trigger_omen(Creature* creature)
@@ -1577,7 +1577,7 @@ struct lunar_large_spotlightAI: public Scripted_NoMovementAI
 {
     lunar_large_spotlightAI(Creature* c) : Scripted_NoMovementAI(c) {}
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -1648,7 +1648,7 @@ struct npc_rocket_chickenAI : public PetAI
         me->GetMotionMaster()->MoveFollow(me->GetOwner(), PET_FOLLOW_DIST, PET_FOLLOW_ANGLE);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
     {
@@ -1693,7 +1693,7 @@ struct npc_midsummer_bonfireAI : public ScriptedAI
         unauraTimer = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void SpellHit(Unit* caster, SpellEntry const* spell)
     {

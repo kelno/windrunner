@@ -201,7 +201,7 @@ class Boss_Majordomo : public CreatureScript
 
 		                for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
 			            if (Player* i_pl = i->getSource())
-				        if (i_pl->isAlive())
+				        if (i_pl->IsAlive())
                             i_pl->CombatStop(true);
 
                         break;
@@ -309,7 +309,7 @@ class Boss_Majordomo : public CreatureScript
                             for (std::list<uint64>::iterator i = Summons.begin(); i!= Summons.end();++i)
                             {
                                 NagaFriend = me->GetCreature((*me), (*i));
-                                if (NagaFriend && NagaFriend->isAlive())       
+                                if (NagaFriend && NagaFriend->IsAlive())       
                                     me->AddAura(spellID, NagaFriend); 
                             }
                             me->AddAura(spellID, me);
@@ -322,7 +322,7 @@ class Boss_Majordomo : public CreatureScript
                             scheduleEvent(EV_TELEPORT, 30000);
                             break;
                         case EV_BLASTWAVE:
-                            doCast(me->getVictim(), SPELL_BLASTWAVE);
+                            doCast(me->GetVictim(), SPELL_BLASTWAVE);
                             scheduleEvent(EV_BLASTWAVE, 3000, 10000);
                             break;
                         case EV_DOWN:
@@ -518,7 +518,7 @@ class Mob_FlameWalker_Elite : public CreatureScript
                         enableEvent(EV_SEPARATION_ANX);
 
                     if (Creature* domo = _instance->instance->GetCreature(_instance->GetData64(DATA_MAJORDOMO)))
-                        domo->AddThreat(me->getVictim(), 0);
+                        domo->AddThreat(me->GetVictim(), 0);
                 }
             
                 updateEvents(diff);
@@ -528,11 +528,11 @@ class Mob_FlameWalker_Elite : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_BLASTWAVE:
-                            doCast(me->getVictim(), SPELL_BLASTWAVE);
+                            doCast(me->GetVictim(), SPELL_BLASTWAVE);
                             scheduleEvent(EV_BLASTWAVE, urand(3000, 10000));
                             break;
                         case EV_FIREBLAST:
-                            doCast(me->getVictim(), SPELL_FIREBLAST);
+                            doCast(me->GetVictim(), SPELL_FIREBLAST);
                             scheduleEvent(EV_FIREBLAST, 10000);
                             break;
                         case EV_SEPARATION_ANX:
@@ -601,7 +601,7 @@ class Mob_Hot_Coal : public CreatureScript
 
 		            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
 			        if (Player* i_pl = i->getSource())
-				    if (i_pl->isAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
+				    if (i_pl->IsAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
                                     {
 					doCast(i_pl, SPELL_HOTCOAL, true);
                                         i_pl->CombatStop(true);

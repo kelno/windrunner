@@ -67,7 +67,7 @@ struct mob_naga_distillerAI : public Scripted_NoMovementAI
         }
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void StartRageGen(Unit *caster)
     {
@@ -90,7 +90,7 @@ struct mob_naga_distillerAI : public Scripted_NoMovementAI
                 if (Creature* boss = pInstance->instance->GetCreature(pInstance->GetData64(DATA_KALITRESH)))
                 {
                     boss->GetMotionMaster()->Clear();
-                    boss->GetMotionMaster()->MoveChase(boss->getVictim(), 0.0f, 0.0f);
+                    boss->GetMotionMaster()->MoveChase(boss->GetVictim(), 0.0f, 0.0f);
                     checkDistance = false;
 
                     m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -134,7 +134,7 @@ struct boss_warlord_kalithreshAI : public ScriptedAI
             pInstance->SetData(TYPE_WARLORD_KALITHRESH, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {

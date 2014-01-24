@@ -49,7 +49,7 @@ struct mobs_spitelashesAI : public ScriptedAI
         spellhit = false;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void SpellHit(Unit *Hitter, const SpellEntry *Spellkind)
     {
@@ -386,7 +386,7 @@ struct mob_rizzle_sprysprocketAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void MovementInform(uint32 type, uint32 id)
     {
@@ -479,7 +479,7 @@ struct mob_depth_chargeAI : public ScriptedAI
         return;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         return;
     }

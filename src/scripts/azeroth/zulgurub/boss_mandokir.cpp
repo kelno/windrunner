@@ -112,7 +112,7 @@ struct boss_mandokirAI : public ScriptedAI
                     {
                         if (Unit* jTemp = Unit::GetUnit(*m_creature,JindoGUID))
                         {
-                            if (jTemp->isAlive())
+                            if (jTemp->IsAlive())
                                 DoScriptText(SAY_GRATS_JINDO, jTemp);
                         }
                     }
@@ -123,7 +123,7 @@ struct boss_mandokirAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
      DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -133,7 +133,7 @@ struct boss_mandokirAI : public ScriptedAI
         if(!UpdateVictim())
             return;
 
-        if( m_creature->getVictim() && m_creature->isAlive())
+        if( m_creature->GetVictim() && m_creature->IsAlive())
         {
             if(!CombatStart)
             {
@@ -141,7 +141,7 @@ struct boss_mandokirAI : public ScriptedAI
                 m_creature->Unmount();
 
                 //And summon his raptor
-                m_creature->SummonCreature(14988, m_creature->getVictim()->GetPositionX(), m_creature->getVictim()->GetPositionY(), m_creature->getVictim()->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 35000);
+                m_creature->SummonCreature(14988, m_creature->GetVictim()->GetPositionX(), m_creature->GetVictim()->GetPositionY(), m_creature->GetVictim()->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 35000);
                 CombatStart = true;
             }
 
@@ -155,7 +155,7 @@ struct boss_mandokirAI : public ScriptedAI
                         targetX != pUnit->GetPositionX() ||
                         targetY != pUnit->GetPositionY() ||
                         targetZ != pUnit->GetPositionZ() ||
-                        pUnit->isInCombat()))
+                        pUnit->IsInCombat()))
                     {
                         if(m_creature->IsWithinMeleeRange(pUnit))
                         {
@@ -202,7 +202,7 @@ struct boss_mandokirAI : public ScriptedAI
                 //Cleave
                 if (Cleave_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+                    DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
                     Cleave_Timer = 7000;
                 }else Cleave_Timer -= diff;
 
@@ -227,17 +227,17 @@ struct boss_mandokirAI : public ScriptedAI
                     }
 
                     if(TargetInRange > 3)
-                        DoCast(m_creature->getVictim(),SPELL_FEAR);
+                        DoCast(m_creature->GetVictim(),SPELL_FEAR);
 
                     Fear_Timer = 4000;
                 }else Fear_Timer -=diff;
 
                 //Mortal Strike if target below 50% hp
-                if (m_creature->getVictim() && m_creature->getVictim()->GetHealth() < m_creature->getVictim()->GetMaxHealth()*0.5)
+                if (m_creature->GetVictim() && m_creature->GetVictim()->GetHealth() < m_creature->GetVictim()->GetMaxHealth()*0.5)
                 {
                     if (MortalStrike_Timer < diff)
                     {
-                        DoCast(m_creature->getVictim(),SPELL_MORTAL_STRIKE);
+                        DoCast(m_creature->GetVictim(),SPELL_MORTAL_STRIKE);
                         MortalStrike_Timer = 15000;
                     }else MortalStrike_Timer -= diff;
                 }
@@ -281,7 +281,7 @@ struct mob_ohganAI : public ScriptedAI
         SunderArmor_Timer = 5000;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustDied(Unit* Killer)
     {
@@ -298,7 +298,7 @@ struct mob_ohganAI : public ScriptedAI
         //SunderArmor_Timer
         if(SunderArmor_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SUNDERARMOR);
+            DoCast(m_creature->GetVictim(), SPELL_SUNDERARMOR);
             SunderArmor_Timer = 10000 + rand()%5000;
         }else SunderArmor_Timer -= diff;
 

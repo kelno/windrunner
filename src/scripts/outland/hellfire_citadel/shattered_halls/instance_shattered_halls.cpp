@@ -297,7 +297,7 @@ struct instance_shattered_halls : public ScriptedInstance
             
         // If Executioner is dead and some prisoners are still alive, reward players for quest
         /*if (Executioner && Executioner->isDead() && GetData(DATA_EXECUTIONER_EVENT) != DONE) {
-            if ( (FirstPrisoner && FirstPrisoner->isAlive()) || (SecondPrisoner && SecondPrisoner->isAlive()) || (ThirdPrisoner && ThirdPrisoner->isAlive()) ) {
+            if ( (FirstPrisoner && FirstPrisoner->IsAlive()) || (SecondPrisoner && SecondPrisoner->IsAlive()) || (ThirdPrisoner && ThirdPrisoner->IsAlive()) ) {
                 RewardAllPlayersInMapForQuest();
                 SetData(DATA_EXECUTIONER_EVENT, DONE);
             }

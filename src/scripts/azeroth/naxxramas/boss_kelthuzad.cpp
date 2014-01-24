@@ -191,7 +191,7 @@ struct boss_kelthuzadAI : public ScriptedAI
         {
             //delete creature
             Unit* pUnit = Unit::GetUnit((*m_creature), GuardiansOfIcecrown[i]);
-            if (pUnit && pUnit->isAlive())
+            if (pUnit && pUnit->IsAlive())
                 pUnit->DealDamage(pUnit, pUnit->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             GuardiansOfIcecrown[i] = 0;
         }
@@ -217,7 +217,7 @@ struct boss_kelthuzadAI : public ScriptedAI
             if(GuardiansOfIcecrown[i])
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), GuardiansOfIcecrown[i]);
-            if (!pUnit || !pUnit->isAlive())
+            if (!pUnit || !pUnit->IsAlive())
                 continue;
 
             pUnit->CombatStop();
@@ -261,7 +261,7 @@ struct boss_kelthuzadAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         switch(rand()%3)
         {
@@ -276,12 +276,12 @@ struct boss_kelthuzadAI : public ScriptedAI
          if (!UpdateVictim())
             return;
 
-        if(m_creature->getVictim() && m_creature->isAlive())
+        if(m_creature->GetVictim() && m_creature->IsAlive())
         {
             //Check for Frost Bolt
             if(FrostBolt_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_FROST_BOLT);
+                DoCast(m_creature->GetVictim(),SPELL_FROST_BOLT);
                 //Cast again on time
                 FrostBolt_Timer = (rand()%60)*1000;
             }else FrostBolt_Timer -= diff;
@@ -289,14 +289,14 @@ struct boss_kelthuzadAI : public ScriptedAI
             //Check for Frost Bolt Nova
             if(FrostBoltNova_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_FROST_BOLT_NOVA);
+                DoCast(m_creature->GetVictim(),SPELL_FROST_BOLT_NOVA);
                 FrostBoltNova_Timer = 15000;
             }else FrostBoltNova_Timer -= diff;
 
             //Check for Chains Of Kelthuzad
             if(ChainsOfKelthuzad_Timer < diff)
             {
-                //DoCast(m_creature->getVictim(),SPELL_CHAINS_OF_KELTHUZAD);
+                //DoCast(m_creature->GetVictim(),SPELL_CHAINS_OF_KELTHUZAD);
 
                 //if(rand()%2 == 0)
                    //DoScriptText(SAY_CHAIN1, m_creature);
@@ -309,7 +309,7 @@ struct boss_kelthuzadAI : public ScriptedAI
             if(ManaDetonation_Timer < diff)
             {
                 //time to cast
-                DoCast(m_creature->getVictim(),SPELL_MANA_DETONATION);
+                DoCast(m_creature->GetVictim(),SPELL_MANA_DETONATION);
 
                  if (rand()%2)
                      DoScriptText(SAY_SPECIAL1_MANA_DET, m_creature);
@@ -319,7 +319,7 @@ struct boss_kelthuzadAI : public ScriptedAI
             //Check for Shadow Fissure
             if(ShadowFisure_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_SHADOW_FISURE);
+                DoCast(m_creature->GetVictim(),SPELL_SHADOW_FISURE);
 
                if (rand()%2)
                    DoScriptText(SAY_SPECIAL3_MANA_DET, m_creature);
@@ -330,7 +330,7 @@ struct boss_kelthuzadAI : public ScriptedAI
             if(FrostBlast_Timer < diff)
             {
                 //time to cast
-                DoCast(m_creature->getVictim(),SPELL_FROST_BLAST);
+                DoCast(m_creature->GetVictim(),SPELL_FROST_BLAST);
 
                 if(rand()%2 == 0)
                     DoScriptText(SAY_FROST_BLAST, m_creature);
@@ -406,7 +406,7 @@ struct boss_kelthuzadAI : public ScriptedAI
                 if (pUnit)
                 {
                     //if we find no one to figth walk to the center
-                    if(!pUnit->isInCombat())
+                    if(!pUnit->IsInCombat())
                         pUnit->SendMonsterMoveWithSpeed(Walk_Pos_X,Walk_Pos_Y,Walk_Pos_Z,MOVEMENTFLAG_WALK_MODE);
 
                     //Safe storing of creatures

@@ -53,7 +53,7 @@ struct boss_kelrisAI : public ScriptedAI
             pInstance->SetData(TYPE_KELRIS, NOT_STARTED);
     }
     
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         if (pInstance)
@@ -74,8 +74,8 @@ struct boss_kelrisAI : public ScriptedAI
         
         if (uiMindBlastTimer < diff)
         {
-            if (m_creature->getVictim())
-                DoCast(m_creature->getVictim(), SPELL_MIND_BLAST);
+            if (m_creature->GetVictim())
+                DoCast(m_creature->GetVictim(), SPELL_MIND_BLAST);
             uiMindBlastTimer = urand(7000,9000);
         } else uiMindBlastTimer -= diff;
 

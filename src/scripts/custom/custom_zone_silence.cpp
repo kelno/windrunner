@@ -40,7 +40,7 @@ struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
     {
         if (who->GetTypeId() == TYPEID_PLAYER) {
             if (who->GetDistance(me) < 30 ) {
-                if(!who->HasAura(SPELL_SILENCE, 0) && who->isAlive())
+                if(!who->HasAura(SPELL_SILENCE, 0) && who->IsAlive())
                     who->AddAura(SPELL_SILENCE, who); //pas un cast sinon rendement décroissant qui s'applique
             }
             else if(who->HasAura(SPELL_SILENCE, 0)) {
@@ -49,7 +49,7 @@ struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
         }
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 };
  
 CreatureAI* GetAI_npc_zonedesilence(Creature *_Creature)

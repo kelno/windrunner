@@ -45,7 +45,7 @@ struct boss_scornAI : public ScriptedAI
         FrostNova_Timer = 30000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -57,28 +57,28 @@ struct boss_scornAI : public ScriptedAI
         //LichSlap_Timer
         if (LichSlap_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_LICHSLAP);
+            DoCast(m_creature->GetVictim(),SPELL_LICHSLAP);
             LichSlap_Timer = 45000;
         }else LichSlap_Timer -= diff;
 
         //FrostboltVolley_Timer
         if (FrostboltVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTBOLTVOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTBOLTVOLLEY);
             FrostboltVolley_Timer = 20000;
         }else FrostboltVolley_Timer -= diff;
 
         //MindFlay_Timer
         if (MindFlay_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MINDFLAY);
+            DoCast(m_creature->GetVictim(),SPELL_MINDFLAY);
             MindFlay_Timer = 20000;
         }else MindFlay_Timer -= diff;
 
         //FrostNova_Timer
         if (FrostNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTNOVA);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTNOVA);
             FrostNova_Timer = 15000;
         }else FrostNova_Timer -= diff;
 

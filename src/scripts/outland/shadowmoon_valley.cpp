@@ -86,7 +86,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
         CastTimer = 5000;
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void MoveInLineOfSight(Unit* who)
     {
@@ -158,7 +158,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
 
         if(CastTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_NETHER_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_NETHER_BREATH);
             CastTimer = 5000;
         }else CastTimer -= diff;
 
@@ -206,7 +206,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
         m_creature->SetVisibility(VISIBILITY_ON);
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -335,7 +335,7 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
         SunderArmorTimer = 500;
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -391,15 +391,15 @@ struct mob_dragonmaw_peonAI : public ScriptedAI
             return;
         
         if (KickTimer <= diff) {
-            if (m_creature->getVictim()) {
-                DoCast(m_creature->getVictim(), SPELL_KICK, false);
+            if (m_creature->GetVictim()) {
+                DoCast(m_creature->GetVictim(), SPELL_KICK, false);
                 KickTimer = 15000;
             }
         }else KickTimer -= diff;
         
         if (SunderArmorTimer <= diff) {
-            if (m_creature->getVictim()) {
-                DoCast(m_creature->getVictim(), SPELL_SUNDER_ARMOR, false);
+            if (m_creature->GetVictim()) {
+                DoCast(m_creature->GetVictim(), SPELL_SUNDER_ARMOR, false);
                 SunderArmorTimer = 8000;
             }
         }else SunderArmorTimer -= diff;
@@ -730,7 +730,7 @@ struct npc_overlord_morghorAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_NPC_FLAGS, 2);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void StartEvent()
     {
@@ -976,7 +976,7 @@ struct npc_earthmender_wildaAI : public npc_escortAI
 
     bool Completed;
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         Player* player = GetPlayerForEscort();
 
@@ -1224,7 +1224,7 @@ struct mob_illidari_spawnAI : public ScriptedAI
         Timers = false;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void JustDied(Unit* slayer);
 
     void UpdateAI(const uint32 diff)
@@ -1256,7 +1256,7 @@ struct mob_illidari_spawnAI : public ScriptedAI
         {
             if(SpellTimer1 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[0].SpellId);//Spellbreaker
+                DoCast(m_creature->GetVictim(), SpawnCast[0].SpellId);//Spellbreaker
                 SpellTimer1 = SpawnCast[0].Timer2 + (rand()%5 * 1000);
             }else SpellTimer1 -= diff;
         }
@@ -1277,13 +1277,13 @@ struct mob_illidari_spawnAI : public ScriptedAI
 
             if(SpellTimer2 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[2].SpellId);//Psychic Scream
+                DoCast(m_creature->GetVictim(), SpawnCast[2].SpellId);//Psychic Scream
                 SpellTimer2 = SpawnCast[2].Timer2 + (rand()%13 * 1000);
             }else SpellTimer2 -= diff;
 
             if(SpellTimer3 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[3].SpellId);//Mind Blast
+                DoCast(m_creature->GetVictim(), SpawnCast[3].SpellId);//Mind Blast
                 SpellTimer3 = SpawnCast[3].Timer2 + (rand()%8 * 1000);
             }else SpellTimer3 -= diff;
         }
@@ -1292,13 +1292,13 @@ struct mob_illidari_spawnAI : public ScriptedAI
         {
             if(SpellTimer1 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[4].SpellId);//Curse Of Flames
+                DoCast(m_creature->GetVictim(), SpawnCast[4].SpellId);//Curse Of Flames
                 SpellTimer1 = SpawnCast[4].Timer2 + (rand()%10 * 1000);
             }else SpellTimer1 -= diff;
 
             if(SpellTimer2 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[5].SpellId);//Flamestrike
+                DoCast(m_creature->GetVictim(), SpawnCast[5].SpellId);//Flamestrike
                 SpellTimer2 = SpawnCast[5].Timer2 + (rand()%7 * 13000);
             }else SpellTimer2 -= diff;
         }
@@ -1337,7 +1337,7 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
         m_creature->SetUInt64Value(UNIT_FIELD_TARGET, 0);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void HandleAnimation()
     {
@@ -1413,13 +1413,13 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
         {
             if(SpellTimer1 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[6].SpellId);//Cleave
+                DoCast(m_creature->GetVictim(), SpawnCast[6].SpellId);//Cleave
                 SpellTimer1 = SpawnCast[6].Timer2 + (rand()%10 * 1000);
             }else SpellTimer1 -= diff;
 
             if(SpellTimer2 < diff)
             {
-                DoCast(m_creature->getVictim(), SpawnCast[7].SpellId);//Shadowfury
+                DoCast(m_creature->GetVictim(), SpawnCast[7].SpellId);//Shadowfury
                 SpellTimer2 = SpawnCast[7].Timer2 + (rand()%5 * 1000);
             }else SpellTimer2 -= diff;
 
@@ -1439,7 +1439,7 @@ struct mob_torloth_the_magnificentAI : public ScriptedAI
             switch(slayer->GetTypeId())
         {
             case TYPEID_UNIT:
-                if((slayer->ToCreature())->isPet() && ((Pet*)slayer)->GetOwner()->GetTypeId() == TYPEID_PLAYER)
+                if((slayer->ToCreature())->IsPet() && ((Pet*)slayer)->GetOwner()->GetTypeId() == TYPEID_PLAYER)
                     ((Pet*)slayer)->GetOwner()->ToPlayer()->GroupEventHappens(QUEST_BATTLE_OF_THE_CRIMSON_WATCH, m_creature);
                 break;
 
@@ -1492,7 +1492,7 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
         m_creature->SetVisibility(VISIBILITY_OFF);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void AttackStart(Unit* who) {}
 
@@ -1759,7 +1759,7 @@ struct npc_enraged_spiritAI : public ScriptedAI
 
     void Reset()   { }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void JustDied(Unit* killer)
     {
@@ -1838,7 +1838,7 @@ struct npc_spirits_totemAI : public ScriptedAI
         checkTimer = 1000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -1903,7 +1903,7 @@ struct npc_deathbringer_jovaanAI : public ScriptedAI
         razuun = m_creature->SummonCreature(21502, -3300.373291, 2927.192139, 173.890091, 2.625873, TEMPSUMMON_CORPSE_DESPAWN, 80000);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(const uint32 diff)
     {
@@ -2003,7 +2003,7 @@ struct npc_skartaxAI : public ScriptedAI
 		ShadowBoltTimer = 2000;
 		IncinerateTimer = 500;
 	}
-	void Aggro(Unit *pWho)
+	void EnterCombat(Unit *pWho)
 	{
 		m_creature->InterruptNonMeleeSpells(true);
 		m_creature->RemoveAurasDueToSpell(SPELL_AUTO_AURA);
@@ -2019,14 +2019,14 @@ struct npc_skartaxAI : public ScriptedAI
 			SummonTimer -= diff;
 			
 		if (ShadowBoltTimer <= diff) {
-			DoCast(m_creature->getVictim(), SPELL_SHADOWBOLT);
+			DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT);
 			ShadowBoltTimer = 5000;
 		}
 		else
 			ShadowBoltTimer -= diff;
 			
 		if (IncinerateTimer <= diff) {
-			DoCast(m_creature->getVictim(), SPELL_INCINERATE);
+			DoCast(m_creature->GetVictim(), SPELL_INCINERATE);
 			IncinerateTimer = 10000;
 		}
 		else
@@ -2049,7 +2049,7 @@ struct npc_invis_deathforge_casterAI : public ScriptedAI
 {
 	npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
 	
-	void Aggro(Unit *pWho) {}
+	void EnterCombat(Unit *pWho) {}
 	
 	void UpdateAI(uint32 const diff)
 	{
@@ -2183,7 +2183,7 @@ struct npc_akama_preludeAI : public ScriptedAI
     
     void Reset() {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void StartEvent()
     {
@@ -2487,7 +2487,7 @@ struct npc_commander_arcusAI : public ScriptedAI
         summonTimer = 0;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void JustSummoned(Creature* summon)
     {
@@ -2603,13 +2603,13 @@ struct npc_commander_arcusAI : public ScriptedAI
             multiShotTimer -= diff;
             
         if (shootTimer <= diff) {
-            DoCast(me->getVictim(), SPELL_SHOOT);
+            DoCast(me->GetVictim(), SPELL_SHOOT);
             shootTimer = 5000 + rand() % 3000;
         }
         else
             shootTimer -= diff;
         
-        if (me->getVictim()->IsWithinMeleeRange(me))
+        if (me->GetVictim()->IsWithinMeleeRange(me))
             DoMeleeAttackIfReady();
     }
 };
@@ -2663,7 +2663,7 @@ struct npc_commander_hobbAI : public ScriptedAI
         summonTimer = 0;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void JustSummoned(Creature* summon)
     {
@@ -2779,13 +2779,13 @@ struct npc_commander_hobbAI : public ScriptedAI
             multiShotTimer -= diff;
             
         if (shootTimer <= diff) {
-            DoCast(me->getVictim(), SPELL_SHOOT);
+            DoCast(me->GetVictim(), SPELL_SHOOT);
             shootTimer = 5000 + rand() % 3000;
         }
         else
             shootTimer -= diff;
         
-        if (me->getVictim()->IsWithinMeleeRange(me))
+        if (me->GetVictim()->IsWithinMeleeRange(me))
             DoMeleeAttackIfReady();
     }
 };
@@ -2829,7 +2829,7 @@ struct npc_dragonmaw_skybreakerAI : public ScriptedAI
         randomTauntTimer = 1000 + rand() % 5000;
     }
     
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if (rand()%10 < 6)
             return;
@@ -2908,7 +2908,7 @@ struct npc_xiriAI : public Scripted_NoMovementAI
         summonTimer = 15000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void StartEvent()
     {

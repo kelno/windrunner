@@ -42,7 +42,7 @@ struct boss_gelihastAI : public ScriptedAI
             pInstance->SetData(TYPE_GELIHAST, NOT_STARTED);
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (pInstance)
             pInstance->SetData(TYPE_GELIHAST, IN_PROGRESS);
@@ -61,8 +61,8 @@ struct boss_gelihastAI : public ScriptedAI
 
         if (uiNetTimer < diff)
         {
-            if (m_creature->getVictim())
-                DoCast(m_creature->getVictim(), SPELL_NET);
+            if (m_creature->GetVictim())
+                DoCast(m_creature->GetVictim(), SPELL_NET);
             uiNetTimer = urand(4000,7000);
         } else uiNetTimer -= diff;
         

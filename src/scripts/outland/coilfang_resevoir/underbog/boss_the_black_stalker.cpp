@@ -63,7 +63,7 @@ struct boss_the_black_stalkerAI : public ScriptedAI
         Striders.clear();
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustSummoned(Creature *summon)
     {
@@ -73,8 +73,8 @@ struct boss_the_black_stalkerAI : public ScriptedAI
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1))
                 summon->AI()->AttackStart(target);
             else
-                if(m_creature->getVictim())
-                    summon->AI()->AttackStart(m_creature->getVictim());
+                if(m_creature->GetVictim())
+                    summon->AI()->AttackStart(m_creature->GetVictim());
         }
     }
 
@@ -158,7 +158,7 @@ struct boss_the_black_stalkerAI : public ScriptedAI
         if(ChainLightning_Timer < diff)
         {
             if (Unit *target = SelectUnit(SELECT_TARGET_RANDOM,0)) {
-                if (target->isAlive()) {
+                if (target->IsAlive()) {
                     DoCast(target, SPELL_CHAIN_LIGHTNING);
                     ChainLightning_Timer = 7000;
                 }

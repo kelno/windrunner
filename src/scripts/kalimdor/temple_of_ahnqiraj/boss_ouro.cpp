@@ -117,11 +117,11 @@ struct boss_ouroAI : public Scripted_NoMovementAI
         Morphed_Timer = ANIM_TIMER;
     }
  
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         me->SetDisplayId(DISPLAYID_OURO);
         me->RemoveAurasDueToSpell(SPELL_SUBMERGE);
-        DoCast(me->getVictim(), SPELL_EMERGE);
+        DoCast(me->GetVictim(), SPELL_EMERGE);
         DoZoneInCombat();
     }
  
@@ -375,7 +375,7 @@ struct boss_ouroAI : public Scripted_NoMovementAI
  
     bool GetMeleeVictim()
     {
-        if (me->IsWithinMeleeRange(me->getVictim()))
+        if (me->IsWithinMeleeRange(me->GetVictim()))
             return true;
         else
         {
@@ -417,7 +417,7 @@ struct boss_ouro_moundAI : public Scripted_NoMovementAI
         Quake_Timer = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
  
     void UpdateAI(const uint32 diff)    
     {

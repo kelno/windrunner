@@ -123,7 +123,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
             me->RemoveFlag(UNIT_DYNAMIC_FLAGS, UNIT_DYNFLAG_LOOTABLE);
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         DoScriptText(YELL_AGGRO, m_creature);
     }
@@ -134,7 +134,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
             return;
             
         if (felLightningTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FEL_LIGHTNING);
+            DoCast(m_creature->GetVictim(), SPELL_FEL_LIGHTNING);
             felLightningTimer = 7000+rand()%5000;
         }
         else
@@ -180,7 +180,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         hasActivated = false;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         pullerGUID = pWho->GetGUID();
         if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
@@ -257,7 +257,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         
         if (sinisterStrikeTimer) {
             if (sinisterStrikeTimer <= diff) {
-                DoCast(m_creature->getVictim(), SPELL_SINISTER_STRIKE);
+                DoCast(m_creature->GetVictim(), SPELL_SINISTER_STRIKE);
                 sinisterStrikeTimer = 2000+rand()%2000;
             }
             else
@@ -298,7 +298,7 @@ struct npc_sunblade_slayerAI : public ScriptedAI
         slayingTimer = 8000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void UpdateAI(uint32 const diff)
     {
@@ -358,7 +358,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
         summons.DespawnAll();
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         DoCast(m_creature, SPELL_SUMMON_IMP);
     }
@@ -389,7 +389,7 @@ struct npc_sunblade_cabalist : public ScriptedAI
             igniteManaTimer -= diff;
             
         // Continuously cast Shadow bolt when nothing else to do
-        DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+        DoCast(m_creature->GetVictim(), SPELL_SHADOW_BOLT);
     }
 };
 
@@ -415,14 +415,14 @@ struct npc_fire_fiend : public ScriptedAI
         fireNovaTimer = urand(5000, 10000);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim())
             return;
 
-        if (me->hasUnitState(UNIT_STAT_CASTING))
+        if (me->HasUnitState(UNIT_STAT_CASTING))
             return;
 
         if (fireNovaTimer <= diff)
@@ -463,7 +463,7 @@ struct npc_sunblade_dawnpriest : public ScriptedAI
         renewTimer = 1500+rand()%1500;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         DoCast(m_creature, SPELL_HOLYFORM);
     }
@@ -525,7 +525,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
         swPainTimer = 1000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void UpdateAI(uint32 const diff)
     {
@@ -550,7 +550,7 @@ struct npc_sunblade_duskpriest : public ScriptedAI
         
         //if (m_creature->IsNonMeleeSpellCasted(false))
         if (mindFlayTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_MINDFLAY);
+            DoCast(m_creature->GetVictim(), SPELL_MINDFLAY);
             mindFlayTimer = 6000+rand()%7000;
         }
         else
@@ -590,18 +590,18 @@ struct npc_sunblade_archmage : public ScriptedAI
         changeTargetTimer = 8000+rand()%2000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void UpdateAI(uint32 const diff)
     {
         if (!UpdateVictim() || m_creature->IsPolymorphed())
             return;
             
-        //if (!m_creature->IsWithinLOSInMap(m_creature->getVictim()))
-            //DoStartMovement(m_creature->getVictim(), 8, 0);
+        //if (!m_creature->IsWithinLOSInMap(m_creature->GetVictim()))
+            //DoStartMovement(m_creature->GetVictim(), 8, 0);
             
         if (arcaneExploTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLO);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLO);
             arcaneExploTimer = 4000+rand()%2000;
             return;
         }
@@ -609,7 +609,7 @@ struct npc_sunblade_archmage : public ScriptedAI
             arcaneExploTimer -= diff;
             
         if (frostNovaTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FROST_NOVA);
+            DoCast(m_creature->GetVictim(), SPELL_FROST_NOVA);
             frostNovaTimer = 6000+rand()%2000;
             return;
         }
@@ -684,7 +684,7 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
         meltArmorTimer = 2000;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
             pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
@@ -696,15 +696,15 @@ struct npc_shadowsword_vanquisherAI : public ScriptedAI
             return;
             
         if (cleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             cleaveTimer = 5000+rand()%3000;
         }
         else
             cleaveTimer -= diff;
             
         if (meltArmorTimer <= diff) {
-            if (!m_creature->getVictim()->HasAura(SPELL_MELT_ARMOR)) {
-                DoCast(m_creature->getVictim(), SPELL_MELT_ARMOR);
+            if (!m_creature->GetVictim()->HasAura(SPELL_MELT_ARMOR)) {
+                DoCast(m_creature->GetVictim(), SPELL_MELT_ARMOR);
             }
             meltArmorTimer = 10000+rand()%5000;
         }
@@ -745,7 +745,7 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
         drainManaTimer = 15000+rand()%5000;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
             pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
@@ -757,7 +757,7 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
             return;
             
         if (arcaneExploTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION_MANAFIEND);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION_MANAFIEND);
             arcaneExploTimer = 8000+rand()%2000;
         }
         else
@@ -806,7 +806,7 @@ struct npc_shadowsword_lifeshaperAI : public ScriptedAI
         healthFunnelTimer = 18000+rand()%5000;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         if (pInstance && pInstance->GetData(DATA_GAUNTLET_EVENT) == NOT_STARTED)
             pInstance->SetData(DATA_GAUNTLET_EVENT, IN_PROGRESS);
@@ -870,7 +870,7 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
         despawnTimer = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void MovementInform(uint32 type, uint32 i)
     {
@@ -901,7 +901,7 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
             curseExhaustionTimer -= diff;
             
         if (flashDarknessTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FLASH_DARKNESS);
+            DoCast(m_creature->GetVictim(), SPELL_FLASH_DARKNESS);
             flashDarknessTimer = 8000+rand()%2000;
         }
         else
@@ -950,7 +950,7 @@ struct npc_shadowsword_deathbringerAI : public ScriptedAI
         despawnTimer = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void MovementInform(uint32 type, uint32 i)
     {
@@ -1029,7 +1029,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 14311, true);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
@@ -1067,7 +1067,7 @@ struct npc_volatile_fiendAI : public ScriptedAI
         if (!UpdateVictim())
             return;
             
-        if (m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+        if (m_creature->IsWithinMeleeRange(m_creature->GetVictim())) {
             if (damageTimer <= diff) {      // Should happen only one time, as creature explodes 2 sec after reaching melee
                 DoCast(m_creature, SPELL_FELFIRE_FISSION);
                 DoCast(m_creature, SPELL_BURNING_DESTRUCTION_TRIGGERED, true);
@@ -1151,7 +1151,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
         me->SetSpeed(MOVE_FLIGHT, 5.0f, true);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void MovementInform(uint32 type, uint32 id)
     {
@@ -1259,7 +1259,7 @@ struct npc_doomfire_destroyerAI : public ScriptedAI
         Summons.DespawnAll();
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void JustSummoned(Creature* summoned)
     {

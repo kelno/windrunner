@@ -83,7 +83,7 @@ struct mob_aquementasAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(AGGRO_YELL_AQUE, m_creature, who);
     }
@@ -106,15 +106,15 @@ struct mob_aquementasAI : public ScriptedAI
         {
             if( SendItem_Timer < diff )
             {
-                if( m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER )
-                    SendItem(m_creature->getVictim());
+                if( m_creature->GetVictim()->GetTypeId() == TYPEID_PLAYER )
+                    SendItem(m_creature->GetVictim());
                 SendItem_Timer = 5000;
             }else SendItem_Timer -= diff;
         }
 
         if( FrostShock_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_FROST_SHOCK);
+            DoCast(m_creature->GetVictim(),SPELL_FROST_SHOCK);
             FrostShock_Timer = 15000;
         }else FrostShock_Timer -= diff;
 
@@ -207,7 +207,7 @@ struct npc_custodian_of_timeAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
     void Reset() { }
 
     void UpdateAI(const uint32 diff)
@@ -399,7 +399,7 @@ struct npc_OOX17AI : public npc_escortAI
 
     void Reset() {}
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(RAND(SAY_CHICKEN_AGGRO_1, SAY_CHICKEN_AGGRO_2), m_creature);
     }
@@ -568,13 +568,13 @@ struct npc_toogaAI : public FollowerAI
         TortaGUID = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit *pWho)
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_TORTA)
+        if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_TORTA)
         {
             if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
             {
@@ -613,7 +613,7 @@ struct npc_toogaAI : public FollowerAI
                     m_uiPostEventTimer = 5000;
 
                     Unit *pTorta = Unit::GetUnit(*me, TortaGUID);
-                    if (!pTorta || !pTorta->isAlive())
+                    if (!pTorta || !pTorta->IsAlive())
                     {
                         //something happened, so just complete
                         SetFollowComplete();
@@ -695,7 +695,7 @@ struct npc_trigger_quest10963AI : public ScriptedAI
 {
     npc_trigger_quest10963AI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {

@@ -156,7 +156,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
             pInstance->SetData(DATA_MOROGRIMTIDEWALKEREVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         PlayerList = &((InstanceMap*)m_creature->GetMap())->GetPlayers();
         Playercount = PlayerList->getSize();
@@ -185,7 +185,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
         {
             if (!Earthquake)
             {
-                DoCast(m_creature->getVictim(), SPELL_EARTHQUAKE);
+                DoCast(m_creature->GetVictim(), SPELL_EARTHQUAKE);
                 Earthquake = true;
                 Earthquake_Timer = 10000;
             }
@@ -209,7 +209,7 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
         //TidalWave_Timer
         if (TidalWave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_TIDAL_WAVE);
+            DoCast(m_creature->GetVictim(), SPELL_TIDAL_WAVE);
             TidalWave_Timer = 20000;
         }else TidalWave_Timer -= diff;
 
@@ -296,11 +296,11 @@ struct mob_water_globuleAI : public ScriptedAI
         m_creature->setFaction(14);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || m_creature->getVictim())
+        if (!who || m_creature->GetVictim())
             return;
 
         if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
@@ -323,9 +323,9 @@ struct mob_water_globuleAI : public ScriptedAI
         } else DespawnTimer -= diff;
 
         if (Check_Timer <= diff) {
-            if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5))
+            if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 5))
             {
-                DoCast(m_creature->getVictim(), SPELL_GLOBULE_EXPLOSION);
+                DoCast(m_creature->GetVictim(), SPELL_GLOBULE_EXPLOSION);
 
                 //despawn
                 m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);

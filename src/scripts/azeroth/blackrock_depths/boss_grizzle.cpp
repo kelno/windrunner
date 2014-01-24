@@ -42,7 +42,7 @@ struct boss_grizzleAI : public ScriptedAI
         Frenzy_Timer = 0;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -55,7 +55,7 @@ struct boss_grizzleAI : public ScriptedAI
         //GroundTremor_Timer
         if (GroundTremor_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_GROUNDTREMOR);
+            DoCast(m_creature->GetVictim(),SPELL_GROUNDTREMOR);
             GroundTremor_Timer = 8000;
         }else GroundTremor_Timer -= diff;
 

@@ -86,7 +86,7 @@ struct boss_gluthAI : public ScriptedAI
         Summon_Timer = 10000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -98,21 +98,21 @@ struct boss_gluthAI : public ScriptedAI
         //MortalWound_Timer
         if (MortalWound_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALWOUND);
+            DoCast(m_creature->GetVictim(),SPELL_MORTALWOUND);
             MortalWound_Timer = 10000;
         }else MortalWound_Timer -= diff;
 
         //Decimate_Timer
         if (Decimate_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DECIMATE);
+            DoCast(m_creature->GetVictim(),SPELL_DECIMATE);
             Decimate_Timer = 100000;
         }else Decimate_Timer -= diff;
 
         //TerrifyingRoar_Timer
         if (TerrifyingRoar_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_TERRIFYINGROAR);
+            DoCast(m_creature->GetVictim(),SPELL_TERRIFYINGROAR);
             TerrifyingRoar_Timer = 20000;
         }else TerrifyingRoar_Timer -= diff;
 

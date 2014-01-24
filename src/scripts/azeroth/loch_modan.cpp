@@ -112,7 +112,7 @@ struct npc_miranAI : public npc_escortAI
 
     void Reset() {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void WaypointReached(uint32 uiPointId)
     {

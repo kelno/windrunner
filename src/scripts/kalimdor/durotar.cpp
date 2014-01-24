@@ -61,7 +61,7 @@ struct npc_lazy_peonAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {

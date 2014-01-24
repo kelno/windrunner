@@ -187,7 +187,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
                     for(Map::PlayerList::const_iterator i = players.begin(); i!=players.end(); ++i)
                     {
                         Player* p = i->getSource();
-                        if(p && p->isAlive() // alive
+                        if(p && p->IsAlive() // alive
                             && (!target || target->GetDistance2d(portal)>p->GetDistance2d(portal)) // closer than current best
                             && !p->HasAura(PlayerDebuff[j],0) // not exhausted
                             && !p->HasAura(PlayerBuff[(j+1)%3],0) // not on another beam
@@ -231,8 +231,8 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
                     }
                 }
                 // aggro target if Red Beam
-                if(j==RED_PORTAL && m_creature->getVictim() != target && target->GetTypeId() == TYPEID_PLAYER)
-                    m_creature->getThreatManager().addThreat(target, 100000.0f+DoGetThreat(m_creature->getVictim()));
+                if(j==RED_PORTAL && m_creature->GetVictim() != target && target->GetTypeId() == TYPEID_PLAYER)
+                    m_creature->getThreatManager().addThreat(target, 100000.0f+DoGetThreat(m_creature->GetVictim()));
             }
     }
 
@@ -269,7 +269,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
             Door->SetUInt32Value(GAMEOBJECT_STATE, open ? 0 : 1);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->AddAura(SPELL_NETHERBURN_AURA, m_creature);
         

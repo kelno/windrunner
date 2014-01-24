@@ -20,7 +20,7 @@ struct TRINITY_DLL_DECL catapultmasterAI : public ScriptedAI
 		vertical_speed(-10)
 	{}
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {}
 };
 

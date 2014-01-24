@@ -44,7 +44,7 @@ struct boss_tuten_kashAI : public ScriptedAI
                 pInstance->SetData(DATA_TUTEN_KASH_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_TUTEN_KASH_EVENT, IN_PROGRESS);

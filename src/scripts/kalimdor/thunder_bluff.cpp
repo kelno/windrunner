@@ -54,7 +54,7 @@ struct npc_cairne_bloodhoofAI : public ScriptedAI
         Uppercut_Timer = 10000;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -71,25 +71,25 @@ struct npc_cairne_bloodhoofAI : public ScriptedAI
 
         if( Uppercut_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_UPPERCUT);
+            DoCast(m_creature->GetVictim(),SPELL_UPPERCUT);
             Uppercut_Timer = 20000;
         }else Uppercut_Timer -= diff;
 
         if( Thunderclap_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
+            DoCast(m_creature->GetVictim(),SPELL_THUNDERCLAP);
             Thunderclap_Timer = 15000;
         }else Thunderclap_Timer -= diff;
 
         if( MortalStrike_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTAL_STRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_MORTAL_STRIKE);
             MortalStrike_Timer = 15000;
         }else MortalStrike_Timer -= diff;
 
         if( Cleave_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 7000;
         }else Cleave_Timer -= diff;
 

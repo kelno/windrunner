@@ -66,7 +66,7 @@ struct boss_azgalorAI : public hyjal_trashAI
             pInstance->SetData(DATA_AZGALOREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_AZGALOREVENT, IN_PROGRESS);
@@ -85,7 +85,7 @@ struct boss_azgalorAI : public hyjal_trashAI
         if (i == 7 && pInstance)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
                 m_creature->AddThreat(target,0.0);
         }
     }
@@ -108,7 +108,7 @@ struct boss_azgalorAI : public hyjal_trashAI
 
         Unit* firstVictim = *(target.begin());
         Unit* secondVictim = *(target.begin()++);
-        if( firstVictim != me->getVictim() )
+        if( firstVictim != me->GetVictim() )
             return firstVictim;
         else
             return secondVictim;
@@ -188,7 +188,7 @@ struct boss_azgalorAI : public hyjal_trashAI
         if(CleaveTimer < diff)
         {
             if(HasTwoPlayersInFront())
-                if(DoCast(m_creature->getVictim(), SPELL_CLEAVE) == SPELL_CAST_OK)
+                if(DoCast(m_creature->GetVictim(), SPELL_CLEAVE) == SPELL_CAST_OK)
                     CleaveTimer = TIMER_CLEAVE;
         }else CleaveTimer -= diff;
 
@@ -237,7 +237,7 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
         CheckTimer = 5000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 

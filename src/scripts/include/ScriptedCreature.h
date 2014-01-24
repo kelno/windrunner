@@ -119,7 +119,7 @@ struct ScriptedAI : public CreatureAI
     void Reset() {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     //*************
     //AI Helper Functions
@@ -224,7 +224,7 @@ struct NullCreatureAI : public ScriptedAI
     ~NullCreatureAI() {}
 
     void Reset() {}
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
     void MoveInLineOfSight(Unit *) {}
     void AttackStart(Unit *) {}
     void EnterEvadeMode() {}

@@ -62,7 +62,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
         Mda_Timer = 40000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%2)
         {
@@ -100,7 +100,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
             if (m_creature->IsNonMeleeSpellCasted(false))
                 m_creature->InterruptNonMeleeSpells(false);
 
-            DoCast(m_creature->getVictim(),SPELL_SAND_BREATH);
+            DoCast(m_creature->GetVictim(),SPELL_SAND_BREATH);
 
             switch(rand()%2)
             {
@@ -113,7 +113,7 @@ struct boss_epoch_hunterAI : public ScriptedAI
 
         if (ImpendingDeath_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_IMPENDING_DEATH);
+            DoCast(m_creature->GetVictim(),SPELL_IMPENDING_DEATH);
             ImpendingDeath_Timer = 30000+rand()%5000;
         }else ImpendingDeath_Timer -= diff;
 

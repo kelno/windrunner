@@ -77,7 +77,7 @@ struct boss_jeklikAI : public ScriptedAI
         PhaseTwo = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         DoCast(m_creature,SPELL_BAT_FORM);
@@ -96,7 +96,7 @@ struct boss_jeklikAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if( m_creature->getVictim() && m_creature->isAlive())
+        if( m_creature->GetVictim() && m_creature->IsAlive())
         {
             if ((m_creature->GetHealth()*100 / m_creature->GetMaxHealth() > 50))
             {
@@ -113,13 +113,13 @@ struct boss_jeklikAI : public ScriptedAI
 
                 if (SonicBurst_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_SONICBURST);
+                    DoCast(m_creature->GetVictim(),SPELL_SONICBURST);
                     SonicBurst_Timer = 8000 + rand()%5000;
                 }else SonicBurst_Timer -= diff;
 
                 if (Screech_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_SCREECH);
+                    DoCast(m_creature->GetVictim(),SPELL_SCREECH);
                     Screech_Timer = 18000 + rand()%8000;
                 }else Screech_Timer -= diff;
 
@@ -163,14 +163,14 @@ struct boss_jeklikAI : public ScriptedAI
 
                     if(MindFlay_Timer < diff)
                     {
-                        DoCast(m_creature->getVictim(), SPELL_MIND_FLAY);
+                        DoCast(m_creature->GetVictim(), SPELL_MIND_FLAY);
                         MindFlay_Timer = 16000;
                     }MindFlay_Timer -=diff;
 
                     if(ChainMindFlay_Timer < diff)
                     {
                         m_creature->InterruptNonMeleeSpells(false);
-                        DoCast(m_creature->getVictim(), SPELL_CHAIN_MIND_FLAY);
+                        DoCast(m_creature->GetVictim(), SPELL_CHAIN_MIND_FLAY);
                         ChainMindFlay_Timer = 15000 + rand()%15000;
                     }ChainMindFlay_Timer -=diff;
 
@@ -228,7 +228,7 @@ struct mob_batriderAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI (const uint32 diff)
     {

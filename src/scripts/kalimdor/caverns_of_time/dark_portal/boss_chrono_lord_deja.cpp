@@ -65,7 +65,7 @@ struct boss_chrono_lord_dejaAI : public ScriptedAI
         Attraction_Timer = 25000+rand()%10000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -109,7 +109,7 @@ struct boss_chrono_lord_dejaAI : public ScriptedAI
         //Arcane Blast
         if (ArcaneBlast_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), HEROIC(SPELL_ARCANE_BLAST, H_SPELL_ARCANE_BLAST));
+            DoCast(m_creature->GetVictim(), HEROIC(SPELL_ARCANE_BLAST, H_SPELL_ARCANE_BLAST));
             ArcaneBlast_Timer = 15000+rand()%10000;
         }else ArcaneBlast_Timer -= diff;
 

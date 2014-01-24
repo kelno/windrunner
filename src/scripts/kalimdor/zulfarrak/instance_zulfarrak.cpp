@@ -256,7 +256,7 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
 
     void MoveNPCIfAlive(uint32 entry,float x,float y,float z,float o) {
        if (Creature* npc = instance->GetCreatureInMap(GetData64(entry))) {
-           if (npc->isAlive()) {
+           if (npc->IsAlive()) {
                 npc->clearUnitState(UNIT_STAT_IGNORE_PATHFINDING);
                 npc->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
                 npc->GetMotionMaster()->MovePoint(1,x,y,z);
@@ -283,13 +283,13 @@ struct TRINITY_DLL_DECL instance_zulfarrak : public ScriptedInstance
     {
         for(std::list<uint64>::iterator itr = addsAtBase.begin(); itr != addsAtBase.end(); ++itr) {
             if (Creature* add = instance->GetCreature((*itr))) {
-                if (add->isAlive())
+                if (add->IsAlive())
                     return false;
             }
         }
         for(std::list<uint64>::iterator itr = movedadds.begin(); itr != movedadds.end(); ++itr) {
             if (Creature* add = instance->GetCreature(((*itr)))) {
-                if (add->isAlive())
+                if (add->IsAlive())
                     return false;
             }
         }

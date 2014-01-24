@@ -133,7 +133,7 @@ struct npc_torekAI : public npc_escortAI
         Completed = false;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
     }
 
@@ -160,7 +160,7 @@ struct npc_torekAI : public npc_escortAI
 
         if (Rend_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_REND);
+            DoCast(m_creature->GetVictim(),SPELL_REND);
             Rend_Timer = 20000;
         }else Rend_Timer -= diff;
 
@@ -240,7 +240,7 @@ struct npc_ruul_snowhoofAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void Reset()
     {
@@ -405,7 +405,7 @@ struct npc_muglashAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (HasEscortState(STATE_ESCORT_PAUSED))
         {
@@ -471,7 +471,7 @@ struct npc_muglashAI : public npc_escortAI
     {
         npc_escortAI::UpdateAI(uiDiff);
 
-        if (!me->getVictim())
+        if (!me->GetVictim())
         {
             if (m_bIsBrazierExtinguished)
             {
@@ -580,7 +580,7 @@ struct npc_feero_ironhandAI : public npc_escortAI
         summons.DespawnAll();
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void SummonedCreatureDespawn(Creature* summon)
     {

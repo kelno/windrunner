@@ -76,7 +76,7 @@ struct boss_moamAI : public ScriptedAI
             pInstance->SetData(DATA_MOAM_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(EMOTE_AGGRO, m_creature);
 
@@ -112,7 +112,7 @@ struct boss_moamAI : public ScriptedAI
             //If we are 100%MANA cast Arcane Erruption
             if (m_creature->GetPower(POWER_MANA) == m_creature->GetMaxPower(POWER_MANA))
             {
-                DoCast(m_creature->getVictim(),SPELL_ARCANEERUPTION);
+                DoCast(m_creature->GetVictim(),SPELL_ARCANEERUPTION);
                 DoScriptText(EMOTE_MANA_FULL, m_creature);
                 m_creature->SetPower(POWER_MANA,0);
             }
@@ -120,7 +120,7 @@ struct boss_moamAI : public ScriptedAI
             //Trample Spell
             if (uiTrampleTimer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_TRAMPLE);
+                DoCast(m_creature->GetVictim(),SPELL_TRAMPLE);
                 uiTrampleTimer = urand(3000,7000);
             } else uiTrampleTimer -= diff;
             

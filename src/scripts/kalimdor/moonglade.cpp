@@ -317,7 +317,7 @@ public:
     void EnterEvadeMode()
     {
         Player* player = CAST_PLR(Unit::GetUnit((*m_creature), PlayerGUID));
-        if(player && player->isInCombat() && player->getAttackerForHelper())
+        if(player && player->IsInCombat() && player->getAttackerForHelper())
         {
             AttackStart(player->getAttackerForHelper());
             return;
@@ -326,7 +326,7 @@ public:
         npc_escortAI::EnterEvadeMode();
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         uint32 rnd = rand()%2;
         switch(rnd)
@@ -366,7 +366,7 @@ public:
         if(!InCombat && !Event_onWait && checkPlayer_Timer < diff)
         {
             Player* player = CAST_PLR(Unit::GetUnit((*m_creature), PlayerGUID));
-            if(player && player->isInCombat() && player->getAttackerForHelper())
+            if(player && player->IsInCombat() && player->getAttackerForHelper())
                 AttackStart(player->getAttackerForHelper());
             checkPlayer_Timer = 1000;
         } else if(!InCombat && !Event_onWait) checkPlayer_Timer -= diff;
@@ -778,7 +778,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
         me->SetReactState(REACT_DEFENSIVE);
     }
 
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     void DespawnAll()
     {
@@ -807,7 +807,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
         me->DestroyForNearbyPlayers();
         me->GetMap()->CreatureRelocation(me, x, y, z, o);
 
-        if (me->isAlive())
+        if (me->IsAlive())
             me->SetHealth(me->GetMaxHealth());
         else
             me->Respawn();
@@ -934,7 +934,7 @@ struct npc_keeper_remulosAI : public ScriptedAI
             c->SetUInt32Value(UNIT_FIELD_MOUNTDISPLAYID, 0);
             c->SetInFront(era);
             c->SendMovementFlagUpdate();
-            c->AI()->Aggro(era);
+            c->AI()->EnterCombat(era);
         }
         canBeRedeemed = true;
         Talk(21);
@@ -1366,7 +1366,7 @@ struct npc_nightmare_phantasmAI : public ScriptedAI
         Fear_Timer = 15000 + urand(0, 3)*1000;
     }
 
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     void MoveInLineOfSight(Unit*) {}
 
@@ -1384,7 +1384,7 @@ struct npc_nightmare_phantasmAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if (!me->isInCombat()) {
+        if (!me->IsInCombat()) {
             Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
             if (c)
                 AttackStart(c);
@@ -1394,7 +1394,7 @@ struct npc_nightmare_phantasmAI : public ScriptedAI
         }
 
         Unit* target = SelectUnit(SELECT_TARGET_TOPAGGRO, 0, 500, false);
-        if (!me->getVictim())
+        if (!me->GetVictim())
         {
             AttackStart(target);
             return;
@@ -1405,14 +1405,14 @@ struct npc_nightmare_phantasmAI : public ScriptedAI
 
         if (Bolt_Timer <= diff)
         {
-            DoCast(me->getVictim(), NIGHT_SHADOW_BOLT_VOLLEY);
+            DoCast(me->GetVictim(), NIGHT_SHADOW_BOLT_VOLLEY);
             Bolt_Timer = 5000 + urand(0, 3)*1000;
         } else
             Bolt_Timer -= diff;
 
         if (Fear_Timer <= diff)
         {
-            DoCast(me->getVictim(), AURA_OF_FEAR);
+            DoCast(me->GetVictim(), AURA_OF_FEAR);
             Fear_Timer = 15000 + urand(0, 3)*1000;
         } else
             Fear_Timer -= diff;
@@ -1455,7 +1455,7 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
         Bolt_Timer = 25000;
     }
 
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     void JustDied(Unit*)
     {
@@ -1517,7 +1517,7 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
         if (!combatPhase)
             return;
 
-        if (!me->isInCombat())
+        if (!me->IsInCombat())
         {
             Creature* c = FindCreature(REMULOS, 500, me)->ToCreature();
             if (c)
@@ -1532,21 +1532,21 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
 
         if (Bolt_Timer <= diff)
         {
-            DoCast(me->getVictim(), ERA_SHADOW_BOLT_VOLLEY);
+            DoCast(me->GetVictim(), ERA_SHADOW_BOLT_VOLLEY);
             Bolt_Timer = 25000;
         } else
             Bolt_Timer -= diff;
 
         if (Acid_Timer <= diff)
         {
-            DoCast(me->getVictim(), ACID_BREATH);
+            DoCast(me->GetVictim(), ACID_BREATH);
             Acid_Timer = 15000;
         } else
             Acid_Timer -= diff;
 
         if (Noxious_Timer <= diff)
         {
-            DoCast(me->getVictim(), NOXIOUS_BREATH);
+            DoCast(me->GetVictim(), NOXIOUS_BREATH);
             Noxious_Timer = 10000;
         } else
             Noxious_Timer -= diff;
@@ -1579,7 +1579,7 @@ struct npc_tyrandeAI : public ScriptedAI
         Heal_Timer = 3000;
     }
 
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     void JustDied(Unit*)
     {
@@ -1682,7 +1682,7 @@ struct npc_priestess_of_the_moonAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit*) {}
 
-    void Aggro(Unit* unit)
+    void EnterCombat(Unit* unit)
     {
         if (unit->GetGUIDMid() == ERANIKUS)
         {
@@ -1699,7 +1699,7 @@ struct npc_priestess_of_the_moonAI : public ScriptedAI
         if (Shoot_Timer <= diff)
         {
             int bp0 = 1100;
-            me->CastCustomSpell(me->getVictim(), 37770, &bp0, NULL, NULL, false);
+            me->CastCustomSpell(me->GetVictim(), 37770, &bp0, NULL, NULL, false);
             Shoot_Timer = 3000;
         } else
             Shoot_Timer -= diff;

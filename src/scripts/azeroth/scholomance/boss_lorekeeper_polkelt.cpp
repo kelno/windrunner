@@ -58,7 +58,7 @@ struct boss_lorekeeperpolkeltAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -70,28 +70,28 @@ struct boss_lorekeeperpolkeltAI : public ScriptedAI
         //VolatileInfection_Timer
         if (VolatileInfection_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_VOLATILEINFECTION);
+            DoCast(m_creature->GetVictim(),SPELL_VOLATILEINFECTION);
             VolatileInfection_Timer = 32000;
         }else VolatileInfection_Timer -= diff;
 
         //Darkplague_Timer
         if (Darkplague_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DARKPLAGUE);
+            DoCast(m_creature->GetVictim(),SPELL_DARKPLAGUE);
             Darkplague_Timer = 8000;
         }else Darkplague_Timer -= diff;
 
         //CorrosiveAcid_Timer
         if (CorrosiveAcid_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CORROSIVEACID);
+            DoCast(m_creature->GetVictim(),SPELL_CORROSIVEACID);
             CorrosiveAcid_Timer = 25000;
         }else CorrosiveAcid_Timer -= diff;
 
         //NoxiousCatalyst_Timer
         if (NoxiousCatalyst_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_NOXIOUSCATALYST);
+            DoCast(m_creature->GetVictim(),SPELL_NOXIOUSCATALYST);
             NoxiousCatalyst_Timer = 38000;
         }else NoxiousCatalyst_Timer -= diff;
 

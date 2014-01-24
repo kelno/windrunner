@@ -88,7 +88,7 @@ struct boss_shahrazAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance && m_creature->isAlive())
+        if(pInstance && m_creature->IsAlive())
             pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, NOT_STARTED);
 
         memset(AttractionTargetGUID, 0, sizeof(uint64) * 3);
@@ -109,7 +109,7 @@ struct boss_shahrazAI : public ScriptedAI
         Enraged = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_MOTHERSHAHRAZEVENT, IN_PROGRESS);
@@ -300,13 +300,13 @@ struct boss_shahrazAI : public ScriptedAI
         
         if(ShriekTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(), SPELL_SILENCING_SHRIEK))
+            if(DoCast(m_creature->GetVictim(), SPELL_SILENCING_SHRIEK))
                 ShriekTimer = TIMER_SILENCING_SHRIEK;
         } else ShriekTimer -= diff;
 
         if(SaberTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SABER_LASH);
+            DoCast(m_creature->GetVictim(), SPELL_SABER_LASH);
             SaberTimer = TIMER_SABER_LASH;
         } else SaberTimer -= diff;
 

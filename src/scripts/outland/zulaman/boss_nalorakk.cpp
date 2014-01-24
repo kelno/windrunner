@@ -261,7 +261,7 @@ struct boss_nalorakkAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_NALORAKKEVENT, IN_PROGRESS);
@@ -398,16 +398,16 @@ struct boss_nalorakkAI : public ScriptedAI
         {
             if(BrutalSwipe_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_BRUTALSWIPE);
+                DoCast(m_creature->GetVictim(), SPELL_BRUTALSWIPE);
                 BrutalSwipe_Timer = 7000 + rand()%5000;
             }else BrutalSwipe_Timer -= diff;
 
             if(Mangle_Timer < diff)
             {
-                if(m_creature->getVictim() && !m_creature->getVictim()->HasAura(SPELL_MANGLEEFFECT, 0))
+                if(m_creature->GetVictim() && !m_creature->GetVictim()->HasAura(SPELL_MANGLEEFFECT, 0))
                 {
-                    //DoCast(m_creature->getVictim(), SPELL_MANGLE);
-                    m_creature->getVictim()->CastSpell(m_creature->getVictim(), SPELL_MANGLE, true);
+                    //DoCast(m_creature->GetVictim(), SPELL_MANGLE);
+                    m_creature->GetVictim()->CastSpell(m_creature->GetVictim(), SPELL_MANGLE, true);
                     Mangle_Timer = 1000;
                 }
                 else Mangle_Timer = 10000 + rand()%5000;
@@ -427,19 +427,19 @@ struct boss_nalorakkAI : public ScriptedAI
         {
             if(LaceratingSlash_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_LACERATINGSLASH);
+                DoCast(m_creature->GetVictim(), SPELL_LACERATINGSLASH);
                 LaceratingSlash_Timer = 18000 + rand()%5000;
             }else LaceratingSlash_Timer -= diff;
 
             if(RendFlesh_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_RENDFLESH);
+                DoCast(m_creature->GetVictim(), SPELL_RENDFLESH);
                 RendFlesh_Timer = 5000 + rand()%5000;
             }else RendFlesh_Timer -= diff;
 
             if(DeafeningRoar_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_DEAFENINGROAR);
+                DoCast(m_creature->GetVictim(), SPELL_DEAFENINGROAR);
                 DeafeningRoar_Timer = 15000 + rand()%5000;
             }else DeafeningRoar_Timer -= diff;
         }

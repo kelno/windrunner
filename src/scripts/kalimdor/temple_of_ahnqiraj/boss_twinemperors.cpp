@@ -140,7 +140,7 @@ struct boss_twinemperorsAI : public ScriptedAI
         DoPlaySoundToSet(m_creature, IAmVeklor() ? SOUND_VL_KILL : SOUND_VN_KILL);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
         InCombat = true;
@@ -264,7 +264,7 @@ struct boss_twinemperorsAI : public ScriptedAI
             {
                 AfterTeleport = false;
                 m_creature->clearUnitState(UNIT_STAT_STUNNED);
-                Unit *nearu = m_creature->SelectNearestTarget(100);
+                Unit *nearu = m_creature->SelectNearestTarget(100.0f);
                 //DoYell(nearu->GetName(), LANG_UNIVERSAL, 0);
                 if(nearu)
                 {
@@ -296,7 +296,7 @@ struct boss_twinemperorsAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || m_creature->getVictim())
+        if (!who || m_creature->GetVictim())
             return;
 
         if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
@@ -464,7 +464,7 @@ struct boss_veknilashAI : public boss_twinemperorsAI
         //UnbalancingStrike_Timer
         if (UnbalancingStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_UNBALANCING_STRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_UNBALANCING_STRIKE);
             UnbalancingStrike_Timer = 8000+rand()%12000;
         }else UnbalancingStrike_Timer -= diff;
 
@@ -552,10 +552,10 @@ struct boss_veklorAI : public boss_twinemperorsAI
         //ShadowBolt_Timer
         if (ShadowBolt_Timer < diff)
         {
-            if (m_creature->GetDistance(m_creature->getVictim()) > 45)
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), VEKLOR_DIST, 0);
+            if (m_creature->GetDistance(m_creature->GetVictim()) > 45)
+                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), VEKLOR_DIST, 0);
             else
-                DoCast(m_creature->getVictim(),SPELL_SHADOWBOLT);
+                DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLT);
             ShadowBolt_Timer = 2000;
         }else ShadowBolt_Timer -= diff;
 
@@ -613,7 +613,7 @@ struct boss_veklorAI : public boss_twinemperorsAI
             if (!InCombat)
             {
                 InCombat = true;
-                Aggro(who);
+                EnterCombat(who);
             }
         }
     }

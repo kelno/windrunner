@@ -76,7 +76,7 @@ struct boss_marliAI : public ScriptedAI
         m_creature->ApplySpellImmune(1, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -93,17 +93,17 @@ struct boss_marliAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if( m_creature->getVictim() && m_creature->isAlive())
+        if( m_creature->GetVictim() && m_creature->IsAlive())
         {
             if (PoisonVolley_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_POISONVOLLEY);
+                DoCast(m_creature->GetVictim(),SPELL_POISONVOLLEY);
                 PoisonVolley_Timer = 10000 + rand()%10000;
             }else PoisonVolley_Timer -= diff;
 
             if (!PhaseTwo && Aspect_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_ASPECT_OF_MARLI);
+                DoCast(m_creature->GetVictim(),SPELL_ASPECT_OF_MARLI);
                 Aspect_Timer = 13000 + rand()%5000;
             }else Aspect_Timer -= diff;
 
@@ -151,10 +151,10 @@ struct boss_marliAI : public ScriptedAI
                 m_creature->SetBaseWeaponDamage(BASE_ATTACK, MINDAMAGE, (cinfo->mindmg +((cinfo->mindmg/100) * 35)));
                 m_creature->SetBaseWeaponDamage(BASE_ATTACK, MAXDAMAGE, (cinfo->maxdmg +((cinfo->maxdmg/100) * 35)));
                 m_creature->UpdateDamagePhysical(BASE_ATTACK);
-                DoCast(m_creature->getVictim(),SPELL_ENVOLWINGWEB);
+                DoCast(m_creature->GetVictim(),SPELL_ENVOLWINGWEB);
 
-                if(DoGetThreat(m_creature->getVictim()))
-                    DoModifyThreatPercent(m_creature->getVictim(),-100);
+                if(DoGetThreat(m_creature->GetVictim()))
+                    DoModifyThreatPercent(m_creature->GetVictim(),-100);
 
                 PhaseTwo = true;
                 Transform_Timer = 35000 + rand()%25000;
@@ -216,7 +216,7 @@ struct mob_spawn_of_marliAI : public ScriptedAI
         LevelUp_Timer = 3000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 

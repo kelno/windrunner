@@ -61,7 +61,7 @@ struct boss_amnennar_the_coldbringerAI : public ScriptedAI
             pInstance->SetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_AMNENNAR_THE_COLDBRINGER_EVENT, IN_PROGRESS);
@@ -90,7 +90,7 @@ struct boss_amnennar_the_coldbringerAI : public ScriptedAI
         //AmnenarsWrath_Timer
         if (AmnenarsWrath_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_AMNENNARSWRATH);
+            DoCast(m_creature->GetVictim(),SPELL_AMNENNARSWRATH);
             AmnenarsWrath_Timer = 12000;
         } else AmnenarsWrath_Timer -= diff;
 
