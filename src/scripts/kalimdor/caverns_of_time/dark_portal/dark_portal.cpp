@@ -305,7 +305,6 @@ struct npc_time_riftAI : public ScriptedAI
         else mWaveId = 1;
 
     }
-    void EnterCombat(Unit *who) {}
 
     void DoSummonAtRift(uint32 creature_entry)
     {
