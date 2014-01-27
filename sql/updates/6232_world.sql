@@ -11,7 +11,7 @@ REPLACE INTO npc_text (ID,text0_0) VALUES (450,"I'm ready, Akama.");
 REPLACE INTO locales_npc_text (entry,Text0_0_loc2) VALUES (450,"Je suis prêt, Akama.");
 REPLACE INTO npc_text (ID,text0_0) VALUES (451,"The time has come to face Illidan, $N. Are you ready ?");
 REPLACE INTO locales_npc_text (entry,Text0_0_loc2) VALUES (451,"Il est temps d'affronter Illidan, $N. Êtes-vous prêt$g:e; ?");
-REPLACE INTO npc_text (ID,text0_0) VALUES (452,"We are ready to face Illidan");
+REPLACE INTO npc_text (ID,text0_0) VALUES (452,"We are ready to face Illidan.");
 REPLACE INTO locales_npc_text (entry,Text0_0_loc2) VALUES (452,"Nous sommes prêts à affronter Illidan.");
 REPLACE INTO npc_text (ID,text0_0) VALUES (453,"Be wary, friends. The Betrayer meditates in the court just beyond.");
 REPLACE INTO locales_npc_text (entry,Text0_0_loc2) VALUES (453,"Prenez garde, mes amis. Le Traître ressasse ses pensées dans la cour devant nous.");
