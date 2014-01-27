@@ -1178,11 +1178,11 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         if(GETCRE(Illidan, IllidanGUID))
         {
-            Illidan->AddThreat(m_creature,99999.0f); //be sure we won't face another target for now
+            //Illidan->AddThreat(m_creature,99999.0f); //be sure we won't face another target for now
             m_creature->SetInFront(Illidan);
-            Illidan->SetInFront(m_creature);
+            //Illidan->SetInFront(m_creature);
             m_creature->SendMovementFlagUpdate();
-            Illidan->SendMovementFlagUpdate();
+            //Illidan->SendMovementFlagUpdate();
             ((boss_illidan_stormrageAI*)Illidan->AI())->AkamaGUID = m_creature->GetGUID();
             ((boss_illidan_stormrageAI*)Illidan->AI())->EnterPhase(PHASE_TALK_SEQUENCE);
         }
@@ -1227,6 +1227,7 @@ struct npc_akama_illidanAI : public ScriptedAI
 
     void EnterPhase(PhaseAkama NextPhase)
     {
+        me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE); //why does this seem to be reset sometimes ?
         if(!pInstance)  return;
         switch(NextPhase)
         {
@@ -1255,7 +1256,6 @@ struct npc_akama_illidanAI : public ScriptedAI
             OpenUpperDoors();
             break;
         case PHASE_WALK:
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
             m_creature->RemoveFlag(UNIT_NPC_FLAGS,UNIT_NPC_FLAG_GOSSIP);
             if(Phase == PHASE_READY) 
                 WalkCount = 7;
@@ -1501,6 +1501,13 @@ struct npc_akama_illidanAI : public ScriptedAI
             else Timer -= diff;
         }
 
+        GETUNIT(Illidan, IllidanGUID);
+        if(Illidan && HPPCT(Illidan) < 90)
+        {
+            EnterPhase(PHASE_TALK);
+            return;
+        }
+
         if(Event)
         {
             switch(Phase)
@@ -1519,16 +1526,9 @@ struct npc_akama_illidanAI : public ScriptedAI
                 HandleWalkSequence();
                 break;
             case PHASE_FIGHT_ILLIDAN:
-                {
-                    GETUNIT(Illidan, IllidanGUID);
-                    if(Illidan && HPPCT(Illidan) < 90)
-                        EnterPhase(PHASE_TALK);
-                    else
-                    {
-                        DoCast(m_creature->GetVictim(), SPELL_CHAIN_LIGHTNING);
-                        Timer = 30000;
-                    }
-                }break;
+                DoCast(m_creature->GetVictim(), SPELL_CHAIN_LIGHTNING);
+                Timer = 30000;
+                break;
             case PHASE_FIGHT_MINIONS:
                 {
                     float x, y, z;
@@ -1759,7 +1759,7 @@ struct boss_maievAI : public ScriptedAI
                 if(GETCRE(Illidan, IllidanGUID))
                     ((boss_illidan_stormrageAI*)Illidan->AI())->DeleteFromThreatList(m_creature->GetGUID());
                 m_creature->AttackStop();
-                Timer[EVENT_MAIEV_STEALTH] = 30000; //reappear after 30s
+                Timer[EVENT_MAIEV_STEALTH] = 5000; //reappear after 5s
                 MaxTimer = 1;
             }
 
@@ -2289,12 +2289,12 @@ void boss_illidan_stormrageAI::SummonMaiev()
 
 void boss_illidan_stormrageAI::EnterPhase(PhaseIllidan NextPhase)
 {
-    DoZoneInCombat();
     switch(NextPhase)
     {
     case PHASE_NORMAL:
     case PHASE_NORMAL_2:
     case PHASE_NORMAL_MAIEV:
+        DoZoneInCombat();
         AttackStart(m_creature->GetVictim());
         Timer[EVENT_TAUNT] = 32000;
         Timer[EVENT_SHEAR] = 10000 + rand()%15 * 1000;
