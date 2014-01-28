@@ -104,7 +104,11 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
     
     void JustSummoned(Creature* summoned)
     {
-        summoned->AI()->AttackStart(me->GetVictim());
+        if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+        {
+            summoned->AI()->AttackStart(target);
+            summoned->AddThreat(target,999999.0f);
+        }
     }
 
     void JustDied(Unit* Killer)
