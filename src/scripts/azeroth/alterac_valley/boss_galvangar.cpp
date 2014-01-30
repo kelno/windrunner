@@ -95,7 +95,7 @@ struct TRINITY_DLL_DECL boss_galvangarAI : public ScriptedAI
 
         if (FrighteningShoutTimer < diff)
         {
-            sLog.outString("Alterac Valley: Galvangar: Casting SPELL_FRIGHTENING_SHOUT");
+            sLog.outDebug("Alterac Valley: Galvangar: Casting SPELL_FRIGHTENING_SHOUT");
             DoCast(m_creature, SPELL_FRIGHTENING_SHOUT);
             FrighteningShoutTimer = (10+rand()%5)*1000;
         }else FrighteningShoutTimer -= diff;
