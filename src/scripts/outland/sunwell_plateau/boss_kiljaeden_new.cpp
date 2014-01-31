@@ -95,6 +95,7 @@ enum SpellIds
     SPELL_POSSESS_DRAKE_IMMUNE                          = 45838, // immunity while the player possesses the dragon
     SPELL_RING_OF_BLUE_FLAMES                           = 45825, //Cast this spell when the go is activated
     SPELL_DESTROY_DRAKES                                = 46707,
+    SPELL_VISUAL_MOONFIRE                               = 45821, //uppon orb activation
 
     // outro
     SPELL_TELEPORT_VISUAL                               = 41232,
@@ -417,6 +418,7 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
         	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+            go->CastSpell(NULL,SPELL_VISUAL_MOONFIRE);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -1158,7 +1160,7 @@ public:
                     	// Phase 3
                     	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
                     	scheduleEvent(EVENT_FLAME_DART, 3000);
-                    	scheduleEvent(EVENT_DARKNESS, 45000);
+                    	scheduleEvent(EVENT_DARKNESS, 75000);
                     	scheduleEvent(EVENT_ORBS_EMPOWER, 35000);
                     	scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
 
@@ -1172,7 +1174,7 @@ public:
                     	// Phase 2
                     	scheduleEvent(EVENT_SOUL_FLAY, 1000);
                     	scheduleEvent(EVENT_LEGION_LIGHTNING, 10000, 20000);
-                    	scheduleEvent(EVENT_FIRE_BLOOM, 40000, 40000);
+                        disableEvent(EVENT_FIRE_BLOOM);
                     	scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                         // Phase 3
                     	scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
@@ -1370,7 +1372,7 @@ public:
                             break;
                         case EVENT_FIRE_BLOOM:
                             doCast(NULL, SPELL_FIRE_BLOOM);
-                            scheduleEvent(EVENT_FIRE_BLOOM, (getPhase() == PHASE_SACRIFICE) ? 40000 : 22000);
+                            scheduleEvent(EVENT_FIRE_BLOOM, 22000);
                             break;
                         case EVENT_SUMMON_SHILEDORB:
                             for (uint8 i = 1; i < getPhase(); ++i)
