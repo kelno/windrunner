@@ -96,6 +96,7 @@ enum SpellIds
     SPELL_RING_OF_BLUE_FLAMES                           = 45825, //Cast this spell when the go is activated
     SPELL_DESTROY_DRAKES                                = 46707,
     SPELL_VISUAL_MOONFIRE                               = 45821, //uppon orb activation
+    SPELL_KNOCK_BACK                                    = 45800, //custom spell, no damage
 
     // outro
     SPELL_TELEPORT_VISUAL                               = 41232,
@@ -114,6 +115,7 @@ enum SpellIds
 /*** Others ***/
 #define FLOOR_Z 28.050388
 #define SHIELD_ORB_Z 45.000
+#define CREATURE_INVISIBLE_DUMMY 9
 
 enum Phase
 {
@@ -418,7 +420,8 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
         	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
-            go->CastSpell(NULL,SPELL_VISUAL_MOONFIRE);
+            if(Unit* dummy = go->SummonCreature(CREATURE_INVISIBLE_DUMMY,0,0,0,0,TEMPSUMMON_TIMED_DESPAWN,8000))
+                dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -1246,6 +1249,17 @@ public:
             		talk(SAY_KJ_DARKNESS);
             }
 
+            void bumpClosePlayers()
+            {
+                auto threatList = me->getThreatManager().getThreatList();
+                Unit* target = nullptr;
+                for(auto itr : threatList) {
+                    target = Unit::GetUnit(*me, (*itr).getUnitGuid());
+                    if (target && target->GetTypeId() == TYPEID_PLAYER && target->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f)
+                        me->CastSpell(target, SPELL_KNOCK_BACK,true);
+                }
+            }
+
             void JustDidDialogueStep(int32 iEntry)
             {
                 if (!pInstance)
@@ -1301,6 +1315,8 @@ public:
                     return;
 
                 updateEvents(diff);
+
+                bumpClosePlayers();
 
                 if (!firstDialogueStep)
                 {
