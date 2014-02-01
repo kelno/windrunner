@@ -37,6 +37,16 @@ private:
     Creature *m_creature;
 };
 
+class BumpHelper : std::map<uint64,uint32>
+{
+public:
+    BumpHelper(uint32 cooldown) : m_cooldown(cooldown) {}
+    void Update(const uint32 diff);
+    bool AddCooldown(Unit* p);
+private:
+    const uint32 m_cooldown;
+};
+
 //Get a single creature of given entry
 Unit* FindCreature(uint32 entry, float range, Unit* Finder);
 

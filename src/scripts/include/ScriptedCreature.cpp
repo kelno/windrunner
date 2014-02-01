@@ -60,6 +60,7 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
 		    if (withoutWorldBoss && summon->isWorldBoss())
 			    continue;
 
+            summon->RemoveFromWorld();
             summon->setDeathState(JUST_DIED);
             summon->RemoveCorpse();
         }
@@ -70,6 +71,28 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
 bool SummonList::IsEmpty()
 {
     return empty();
+}
+
+void BumpHelper::Update(const uint32 diff)
+{
+    for(std::map<uint64,uint32>::iterator itr = begin(); itr != end(); itr++)
+    {
+        if(itr->second < diff) //okay to erase
+            itr = erase(itr);
+        else //just decrease time left
+            itr->second -= diff;
+    }
+}
+
+//return true if not yet present in list
+bool BumpHelper::AddCooldown(Unit* p)
+{
+    auto found = find(p->GetGUID());
+    if(found != end())
+        return false;
+
+    insert(std::make_pair(p->GetGUID(),m_cooldown)); //3s before being knockable again
+    return true;
 }
 
 void ScriptedAI::AttackStart(Unit* who, bool melee)
