@@ -420,8 +420,6 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
         if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
         {
         	plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
-            if(Unit* dummy = go->SummonCreature(CREATURE_INVISIBLE_DUMMY,0,0,0,0,TEMPSUMMON_TIMED_DESPAWN,8000))
-                dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
 
             go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
 
@@ -459,14 +457,18 @@ public:
 	    boss_kalecgos_kjAI(Creature* creature) : CreatureAINew(creature)
 	    {
 	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+            if(!pInstance)
+                me->DealDamage(me,me->GetMaxHealth());
 	    }
 
             void onReset(bool /*onSpawn*/)
             {
                 for (uint8 i = 0; i < 4; ++i)
+                {
                     Orb[i] = 0;
+                    OrbDummies[i] = 0;
+                }
 
-                FindOrbs();
                 OrbsEmpowered = 0;
                 EmpowerCount = 0;
                 me->SetDisableGravity(true);
@@ -474,7 +476,7 @@ public:
                 me->setActive(true);
                 Searched = false;
                 me->SetVisibility(VISIBILITY_OFF);
-                FindOrbs();     // FIXME: Is this really useful?
+                FindOrbs();
             }
 
             void FindOrbs()
@@ -494,7 +496,11 @@ public:
 
                 uint8 i = 0;
                 for (std::list<GameObject*>::iterator itr = orbList.begin(); itr != orbList.end(); ++itr, ++i)
+                {
                     Orb[i] = (*itr)->GetGUID();
+                    if (Unit* dummy = (*itr)->SummonCreature(CREATURE_INVISIBLE_DUMMY,(*itr)->GetPositionX(),(*itr)->GetPositionY(),(*itr)->GetPositionZ(),0,TEMPSUMMON_MANUAL_DESPAWN,0))
+                        OrbDummies[i] = dummy->GetGUID();
+                }
             }
 
             void ResetOrbs()
@@ -510,10 +516,7 @@ public:
 
             void EmpowerOrb(bool all)
             {
-                GameObject *orb = pInstance->instance->GetGameObjectInMap(Orb[OrbsEmpowered]);
-                if (!orb)
-                    return;
-
+                GameObject *orb;
                 uint8 random = rand()%3;
                 if (all)
                 {
@@ -523,6 +526,8 @@ public:
                     {
                         if (orb = pInstance->instance->GetGameObjectInMap(Orb[i]))
                         {
+                            if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[i]))
+                                dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
                             orb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
                             orb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
                             orb->setActive(true);
@@ -552,6 +557,8 @@ public:
                         }
                     }
 
+                    if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[random]))
+                        dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
                     orb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
                     orb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
                     orb->setActive(true);
@@ -590,10 +597,12 @@ public:
                 if(OrbsEmpowered == 4)
                     OrbsEmpowered = 0;
             }
-        private:
-            uint64 Orb[4];
-    
+            
             ScriptedInstance* pInstance;
+        private:
+            uint64 Orb[4]; //orb gobjects
+            uint64 OrbDummies[4]; //Used for some visual effects only
+   
     
             uint8 OrbsEmpowered;
             uint8 EmpowerCount;
@@ -645,7 +654,10 @@ public:
             	    	return;
 
             		pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
-            	}
+            	} else {
+                    me->DealDamage(me,me->GetMaxHealth());
+                    return;
+                }
 
                 if (onSpawn)
                 {
@@ -691,6 +703,9 @@ public:
                         me->AddAura(Aur);
                     }
                 }
+
+                doCast(me,SPELL_DESTROY_DRAKES,true);
+
                 m_currentAngleFirst = 0;
                 m_currentAngleSecond = 0;
             }
@@ -1079,14 +1094,16 @@ public:
             ScriptedInstance* pInstance;
 
             SummonList Summons;
+            BumpHelper bumpHelper;
 
             uint32 annimSpawnTimer;
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
+            std::map<uint64,uint32> bumpedPlayers; //player guid - no bump time left
 
         public:
-	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
+	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue), bumpHelper(3000)
 	    {
 	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	        InitializeDialogueHelper(pInstance);
@@ -1249,14 +1266,16 @@ public:
             		talk(SAY_KJ_DARKNESS);
             }
 
-            void bumpClosePlayers()
+            void bumpClosePlayers(const uint32 diff)
             {
+                bumpHelper.Update(diff);
+                Unit* unit = nullptr;
                 auto threatList = me->getThreatManager().getThreatList();
-                Unit* target = nullptr;
                 for(auto itr : threatList) {
-                    target = Unit::GetUnit(*me, (*itr).getUnitGuid());
-                    if (target && target->GetTypeId() == TYPEID_PLAYER && target->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f)
-                        me->CastSpell(target, SPELL_KNOCK_BACK,true);
+                    unit = Unit::GetUnit(*me,  (*itr).getUnitGuid());
+                    if (unit && unit->GetTypeId() == TYPEID_PLAYER && unit->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f)
+                        if (bumpHelper.AddCooldown(unit)) //return true if we can knock back
+                            me->CastSpell(unit, SPELL_KNOCK_BACK,true);
                 }
             }
 
@@ -1316,7 +1335,7 @@ public:
 
                 updateEvents(diff);
 
-                bumpClosePlayers();
+                bumpClosePlayers(diff);
 
                 if (!firstDialogueStep)
                 {
