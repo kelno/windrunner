@@ -1070,7 +1070,7 @@ public:
                 {
                     me->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN);
                     setPhase(PHASE_NORMAL);
-                    if (Creature *kiljaeden = me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.699289, TEMPSUMMON_MANUAL_DESPAWN, 0))
+                    if (Creature *kiljaeden = me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.7, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     	kiljaeden->SetSummoner(me);
                 }
             }
@@ -1096,11 +1096,10 @@ public:
             SummonList Summons;
             BumpHelper bumpHelper;
 
-            uint32 annimSpawnTimer;
+            uint32 animSpawnTimer;
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
-            std::map<uint64,uint32> bumpedPlayers; //player guid - no bump time left
 
         public:
 	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue), bumpHelper(3000)
@@ -1151,7 +1150,7 @@ public:
                 firstDialogueStep = false;
                 secondDialogueStep = false;
                 thirdDialogueStep = false;
-                annimSpawnTimer = 11000;
+                animSpawnTimer = 11000;
                 me->SetFullTauntImmunity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -1306,10 +1305,10 @@ public:
 
             void update(const uint32 diff)
             {
-                if (annimSpawnTimer)
+                if (animSpawnTimer)
                 {
                     me->SetTarget(0);
-                    if (annimSpawnTimer <= diff)
+                    if (animSpawnTimer <= diff)
                     {
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -1318,13 +1317,13 @@ public:
                         if (Unit *unit = selectUnit(SELECT_TARGET_NEAREST, 0, 100.0f, true))
                         {
                             attackStart(unit);
-                            annimSpawnTimer = 0;
+                            animSpawnTimer = 0;
                         }
                         else
-                            annimSpawnTimer = 500;
+                            animSpawnTimer = 500;
                     }
                     else
-                        annimSpawnTimer -= diff;
+                        animSpawnTimer -= diff;
                     return;
                 }
 
