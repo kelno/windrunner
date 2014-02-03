@@ -197,7 +197,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         m_creature->RemoveAllAuras();
         m_creature->DeleteThreatList();
         m_creature->CombatStop();
-        m_creature->LoadCreaturesAddon();
+        m_creature->InitCreatureAddon();
 
         if( m_creature->IsAlive() )
             m_creature->GetMotionMaster()->MoveTargetedHome();

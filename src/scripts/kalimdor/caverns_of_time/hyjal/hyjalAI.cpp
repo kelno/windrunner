@@ -422,7 +422,7 @@ void hyjalAI::EnterEvadeMode()
         m_creature->RemoveAllAuras();
     m_creature->DeleteThreatList();
     m_creature->CombatStop();
-    m_creature->LoadCreaturesAddon();
+    m_creature->InitCreatureAddon(true);
 
     if(m_creature->IsAlive())
         m_creature->GetMotionMaster()->MoveTargetedHome();
