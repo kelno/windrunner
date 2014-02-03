@@ -42,7 +42,7 @@ class BumpHelper : std::map<uint64,uint32>
 public:
     BumpHelper(uint32 cooldown) : m_cooldown(cooldown) {}
     void Update(const uint32 diff);
-    bool AddCooldown(Unit* p);
+    bool AddCooldown(Unit* p, uint32 customValue = 0);
 private:
     const uint32 m_cooldown;
 };
