@@ -375,7 +375,7 @@ struct instance_blackrock_depths : public ScriptedInstance
                         boss->RemoveAllAuras();
                         boss->DeleteThreatList();
                         boss->CombatStop(true);
-                        boss->LoadCreaturesAddon();
+                        boss->InitCreatureAddon();
                         boss->GetMotionMaster()->MoveTargetedHome();
                         boss->SetLootRecipient(NULL);
                     }

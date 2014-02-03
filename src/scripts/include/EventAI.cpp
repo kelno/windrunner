@@ -1084,7 +1084,7 @@ struct Mob_EventAI : public ScriptedAI
     //when creature reach home after EnterEvadeMode
     void JustReachedHome()
     {
-        m_creature->LoadCreaturesAddon();
+        m_creature->InitCreatureAddon(true);
 
         for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)
         {

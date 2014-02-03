@@ -164,7 +164,7 @@ void ScriptedAI::EnterEvadeMode()
     m_creature->RemoveAllAuras();
     m_creature->DeleteThreatList();
     m_creature->CombatStop();
-    m_creature->LoadCreaturesAddon();
+    m_creature->InitCreatureAddon();
     m_creature->SetLootRecipient(NULL);
 
     if(m_creature->IsAlive())

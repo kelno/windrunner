@@ -1516,7 +1516,7 @@ struct npc_lord_illidan_stormrageAI : public ScriptedAI
 
             if(Spawn)
             {
-                Spawn->LoadCreaturesAddon();
+                Spawn->InitCreatureAddon(true);
 
                 if(WaveCount == 0)//1 Wave
                 {
