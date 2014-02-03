@@ -16,7 +16,6 @@
 
 #include "precompiled.h"
 #include "def_sunwell_plateau.h"
-#include <math.h>
 
 /*** Spells used during the encounter ***/
 enum SpellIds
@@ -105,7 +104,8 @@ enum SpellIds
     SPELL_ENTROPIUS_BODY                                = 46819, // Visual for Entropius at the Epilogue
     SPELL_BLAZE_TO_LIGHT                                = 46821,
     SPELL_SUNWELL_IGNITION                              = 46822,
-    SPELL_OPEN_PORTAL                                   = 46801
+    SPELL_OPEN_PORTAL                                   = 46801,
+    SPELL_PORTAL_VISUAL                                 = 42047,
 
 };
 
@@ -275,21 +275,22 @@ enum Outro
 
 enum
 {
-	POINT_KILJAEDEN_DIE         = 1,
-	POINT_TELEPORT_KALECGOS     = 2,
-	POINT_SUMMON_SHATTERED      = 3,
-	POINT_SUMMON_PORTAL         = 4,
-	POINT_SUMMON_SOLDIERS_RIGHT = 5,
-	POINT_SUMMON_SOLDIERS_LEFT  = 6,
-	POINT_SUMMON_PROPHET        = 7,
-	POINT_SUMMON_LIADRIN        = 8,
-	POINT_CALL_ENTROPIUS        = 9,
-	POINT_MOVE_LIADRIN          = 10,
-	POINT_BLAZE                 = 11,
-	POINT_IGNITE                = 12,
-	POINT_EVENT_SOLDIER_EXIT    = 13,
-	POINT_EVENT_VELEN_EXIT      = 14,
-	POINT_END_STUN              = 15,
+	POINT_KILJAEDEN_DIE = 1,
+	POINT_TELEPORT_KALECGOS,
+	POINT_SUMMON_SHATTERED,
+	POINT_SUMMON_PORTAL,
+    POINT_SUMMON_PORTAL_ENDOPENANIM,
+	POINT_SUMMON_SOLDIERS_RIGHT,
+	POINT_SUMMON_SOLDIERS_LEFT,
+	POINT_SUMMON_PROPHET,
+	POINT_SUMMON_LIADRIN,
+	POINT_CALL_ENTROPIUS,
+	POINT_MOVE_LIADRIN,
+	POINT_BLAZE,
+	POINT_IGNITE,
+	POINT_EVENT_SOLDIER_EXIT,
+	POINT_EVENT_VELEN_EXIT,
+	POINT_END_STUN,
 };
 
 static const DialogueEntry firstDialogue[] =
@@ -325,7 +326,8 @@ static const DialogueEntry aOutroDialogue[] =
     {POINT_TELEPORT_KALECGOS,     0,                  2000},
     {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  15000},
     {POINT_SUMMON_SHATTERED,      0,                  10000},
-    {POINT_SUMMON_PORTAL,         0,                  5000},
+    {POINT_SUMMON_PORTAL,         0,                  2000},
+    {POINT_SUMMON_PORTAL_ENDOPENANIM, 0,              2000},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
     {POINT_SUMMON_SOLDIERS_LEFT,  0,                  10000},
     {POINT_SUMMON_PROPHET,        0,                  2000},
@@ -336,9 +338,9 @@ static const DialogueEntry aOutroDialogue[] =
     {POINT_CALL_ENTROPIUS,        0,                  10000},
     {SAY_OUTRO_4,                 CREATURE_PROPHET,   22000},
     {POINT_MOVE_LIADRIN,          0,                  6000},
-    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   9000},
+    {SAY_OUTRO_5,                 CREATURE_LIADRIN,   10000},
     {SAY_OUTRO_6,                 CREATURE_PROPHET,   15000},
-    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   2000},
+    {SAY_OUTRO_7,                 CREATURE_LIADRIN,   2500},
     {SAY_OUTRO_8,                 CREATURE_PROPHET,   4000},
     {POINT_BLAZE,                 0,                  10000},
     {POINT_IGNITE,                0,                  500},
@@ -628,6 +630,7 @@ public:
             ScriptedInstance* pInstance;
 
             SummonList Summons;
+            BumpHelper bumpHelper;
 
             bool KiljaedenDeath;
             uint64 handDeceiver[3];
@@ -638,7 +641,7 @@ public:
             uint32 m_currentAngleFirst;
             uint32 m_currentAngleSecond;
         public:
-	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue)
+	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue), bumpHelper(2000)
 	        {
 	            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	            InitializeDialogueHelper(pInstance);
@@ -648,6 +651,9 @@ public:
 
             void onReset(bool onSpawn)
             {
+                if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
+                    doCast(me,SPELL_ANVEENA_ENERGY_DRAIN,true);
+
             	if (pInstance)
             	{
             	    if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == DONE)
@@ -667,7 +673,8 @@ public:
                 {
                     resetEvent(EVENT_SAY, 45000, 75000);
                 }
-
+                
+                me->SetReactState(REACT_PASSIVE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
@@ -692,17 +699,6 @@ public:
 
                 if (Creature *anveena = me->SummonCreature(CREATURE_ANVEENA,  me->GetPositionX(), me->GetPositionY(), 60, 0, TEMPSUMMON_DEAD_DESPAWN, 0))
                 	anveena->SetSummoner(me);
-
-                if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
-                {
-                    SpellEntry const *spellInfo = spellmgr.LookupSpell(SPELL_ANVEENA_ENERGY_DRAIN);
-                    if (spellInfo)
-                    {
-                        uint8 eff = 0;
-                        Aura* Aur = CreateAura(spellInfo, eff, NULL, me);
-                        me->AddAura(Aur);
-                    }
-                }
 
                 doCast(me,SPELL_DESTROY_DRAKES,true);
 
@@ -806,7 +802,14 @@ public:
                     	break;
                     case POINT_SUMMON_PORTAL:
                     	if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
-                    	    portal->SetDisplayId(22742);
+                        {                     
+                            portal->SetDisplayId(22742);
+                            portal->CastSpell(portal,SPELL_PORTAL_VISUAL,true);
+                        }
+                        break;
+                    case POINT_SUMMON_PORTAL_ENDOPENANIM:
+                        if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                            portal->SetDisplayId(portal->GetNativeDisplayId());
                         break;
                     case POINT_SUMMON_SOLDIERS_RIGHT:
                     	for (uint8 i = 0; i < 2; i++)
@@ -825,6 +828,19 @@ public:
                     			soldier->SetSummoner(me);
                     			soldiersGuid[i] = soldier->GetGUID();
                     			soldier->GetMotionMaster()->MovePoint(0, SoldierMiddle[0].m_fX, SoldierMiddle[0].m_fY, SoldierMiddle[0].m_fZ, false);
+                                
+                                if(i==0)
+                                {
+                                    soldier->GetMotionMaster()->MovePoint(0, SoldierMiddle[0].m_fX, SoldierMiddle[0].m_fY, SoldierMiddle[0].m_fZ, false);
+                                } else {
+                                    float sx, sy;
+                                    float angle = m_currentAngleFirst * (2*M_PI) / 360;
+                                    float rayon = 5.0f;
+                                    sx = SoldierMiddle[0].m_fX + cos(angle) * rayon;
+                                    sy = SoldierMiddle[0].m_fY + sin(angle) * rayon;
+                                    soldier->GetMotionMaster()->MovePoint(0, sx, sy, SoldierMiddle[0].m_fZ, false);
+                                    m_currentAngleFirst = m_currentAngleFirst + 36;
+                                }
                     		}
                     	}
                         break;
@@ -835,7 +851,19 @@ public:
                     		{
                     	        soldier->SetSummoner(me);
                     	        soldiersGuid[i] = soldier->GetGUID();
-                    	        soldier->GetMotionMaster()->MovePoint(1, SoldierMiddle[1].m_fX, SoldierMiddle[1].m_fY, SoldierMiddle[1].m_fZ, false);
+
+                                if(i == 10)
+                                {
+                    	            soldier->GetMotionMaster()->MovePoint(0, SoldierMiddle[1].m_fX, SoldierMiddle[1].m_fY, SoldierMiddle[1].m_fZ, false);
+                                } else {
+                                    float sx, sy;
+                                    float angle = m_currentAngleFirst * (2*M_PI) / 360;
+                                    float rayon = 5.0f;
+                                    sx = SoldierMiddle[1].m_fX + cos(angle) * rayon;
+                                    sy = SoldierMiddle[1].m_fY + sin(angle) * rayon;
+                                    soldier->GetMotionMaster()->MovePoint(0, sx, sy, SoldierMiddle[1].m_fZ, false);
+                                    m_currentAngleFirst = m_currentAngleFirst + 36;
+                                }
                     	    }
                     	}
                         break;
@@ -908,32 +936,20 @@ public:
 
                 if (uiPointId == 0)
                 {
+                    Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL);
                     if (pSummoned->GetEntry() == NPC_RIFTWALKER)
                     {
-                        if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
+                        if (portal)
                             pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
                     }
                     else if (pSummoned->GetEntry() == NPC_SOLDIER)
                     {
-                        if (pSummoned->GetGUID() == soldiersGuid[0])
-                        {
+                        if (pSummoned->GetGUID() == soldiersGuid[0] || pSummoned->GetGUID() == soldiersGuid[10])
                             pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                            pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                            pSummoned->SendMovementFlagUpdate();
-                        }
-                        else
-                        {
-                            pSummoned->SetWalk(true);
-                            pSummoned->SetSpeed(MOVE_WALK, 1.0f);
 
-                            float sx, sy;
-                            float angle = m_currentAngleFirst * (2*M_PI) / 360;
-                            float rayon = 5.0f;
-                            sx = SoldierMiddle[0].m_fX + cos(angle) * rayon;
-                            sy = SoldierMiddle[0].m_fY + sin(angle) * rayon;
-                            pSummoned->GetMotionMaster()->MovePoint(10, sx, sy, SoldierMiddle[0].m_fZ, false);
-                            m_currentAngleFirst = m_currentAngleFirst + 36;
-                        }
+                        if(portal)
+                            pSummoned->SetOrientation(-(portal->GetAngle(pSummoned)));
+                        pSummoned->SendMovementFlagUpdate();
                     }
                 }
                 else if (uiPointId == 1)
@@ -962,28 +978,6 @@ public:
 
                         me->ForcedDespawn(300000);
                     }
-                	else if (pSummoned->GetEntry() == NPC_SOLDIER)
-                	{
-                		if (pSummoned->GetGUID() == soldiersGuid[10])
-                		{
-                		    pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
-                                    pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
-                                    pSummoned->SendMovementFlagUpdate();
-                		}
-                		else
-                		{
-                			pSummoned->SetWalk(true);
-                			pSummoned->SetSpeed(MOVE_WALK, 1.0f);
-
-                		    float sx, sy;
-                		    float angle = m_currentAngleSecond * (2*M_PI) / 360;
-                		    float rayon = 5.0f;
-                		    sx = SoldierMiddle[1].m_fX + cos(angle) * rayon;
-                		    sy = SoldierMiddle[1].m_fY + sin(angle) * rayon;
-                		    pSummoned->GetMotionMaster()->MovePoint(11, sx, sy, SoldierMiddle[1].m_fZ, false);
-                		    m_currentAngleSecond = m_currentAngleSecond + 36;
-                		}
-                	}
                 }
                 else if (uiPointId == 2)
                 {
@@ -1010,7 +1004,7 @@ public:
 
             void onCombatStart(Unit* victim)
             {
-            	setZoneInCombat(true);
+                setZoneInCombat(true);
                 for (uint8 i = 0; i < 3; i++)
                 {
                     if (Creature *hand = pInstance->instance->GetCreatureInMap(handDeceiver[i]))
@@ -1018,12 +1012,31 @@ public:
                     	hand->getAI()->setZoneInCombat(true);
                         if (!hand->IsInCombat())
                             hand->getAI()->attackStart(victim);
+
+                        hand->SetReactState(REACT_AGGRESSIVE);
+                        hand->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                        hand->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     }
+                }
+            }
+
+            void bumpClosePlayers(const uint32 diff)
+            {
+                bumpHelper.Update(diff);
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* pl = itr->getSource();
+                    if (pl->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f) //~when a player set foot in the well
+                        if (bumpHelper.AddCooldown(pl)) //return true if player wasn't knocked back < 2s ago
+                            me->CastSpell(pl, SPELL_KNOCK_BACK,true);
                 }
             }
 
             void update(uint32 const diff)
             {
+                bumpClosePlayers(diff);
+
             	DialogueUpdate(diff);
 
                 updateEvents(diff);
@@ -1034,31 +1047,29 @@ public:
                     {
                         case EVENT_SAY:
                             if (pInstance->GetData(DATA_MURU_EVENT) != DONE && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
-                                talk(SAY_KJ_OFFCOMBAT);
+                                talk(SAY_KJ_OFFCOMBAT); //TODO : MISSING TEXT
 
                             scheduleEvent(EVENT_SAY, 45000, 75000);
                             break;
                     }
                 }
 
-                Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                if (!players.isEmpty())
-                {
-                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    {
-                        if (Player* plr = itr->getSource())
-                        {
-                            if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
-                        	{
-                            	if (!me->IsInCombat())
-                            		attackStart(plr);
-                        	}
-                        }
-                    }
-                }
-
-                if (!updateVictim())
+                if(pInstance && pInstance->GetData(DATA_MURU_EVENT) != DONE || pInstance->GetData(DATA_KILJAEDEN_EVENT) == DONE)
                     return;
+
+                if (!me->IsInCombat())
+                {
+                    Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                    //for(auto itr : players) //why does using auto call ~GroupReference() for every ref ?
+                        if (Player* plr = itr->getSource())
+                            if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
+                            {
+                                me->SetInCombatWith(plr);
+                                onCombatStart(plr);
+                                break;
+                            }
+                }
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
                 {
@@ -1070,7 +1081,7 @@ public:
                 {
                     me->RemoveAurasDueToSpell(SPELL_ANVEENA_ENERGY_DRAIN);
                     setPhase(PHASE_NORMAL);
-                    if (Creature *kiljaeden = me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 3.7, TEMPSUMMON_MANUAL_DESPAWN, 0))
+                    if (Creature *kiljaeden = me->SummonCreature(CREATURE_KILJAEDEN, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ()+2.2f, 3.7, TEMPSUMMON_MANUAL_DESPAWN, 0))
                     	kiljaeden->SetSummoner(me);
                 }
             }
@@ -1094,7 +1105,6 @@ public:
             ScriptedInstance* pInstance;
 
             SummonList Summons;
-            BumpHelper bumpHelper;
 
             uint32 animSpawnTimer;
             bool firstDialogueStep;
@@ -1102,7 +1112,7 @@ public:
             bool thirdDialogueStep;
 
         public:
-	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue), bumpHelper(3000)
+	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
 	    {
 	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	        InitializeDialogueHelper(pInstance);
@@ -1234,6 +1244,7 @@ public:
             void onDeath(Unit* /*killer*/)
             {
                 talk(SAY_KJ_DEATH);
+                Summons.DespawnAll();
 
                 if (pInstance)
                     pInstance->SetData(DATA_KILJAEDEN_EVENT, DONE);
@@ -1263,19 +1274,6 @@ public:
             {
             	if (spell->Id == 45657)
             		talk(SAY_KJ_DARKNESS);
-            }
-
-            void bumpClosePlayers(const uint32 diff)
-            {
-                bumpHelper.Update(diff);
-                Unit* unit = nullptr;
-                auto threatList = me->getThreatManager().getThreatList();
-                for(auto itr : threatList) {
-                    unit = Unit::GetUnit(*me,  (*itr).getUnitGuid());
-                    if (unit && unit->GetTypeId() == TYPEID_PLAYER && unit->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f)
-                        if (bumpHelper.AddCooldown(unit)) //return true if we can knock back
-                            me->CastSpell(unit, SPELL_KNOCK_BACK,true);
-                }
             }
 
             void JustDidDialogueStep(int32 iEntry)
@@ -1333,8 +1331,6 @@ public:
                     return;
 
                 updateEvents(diff);
-
-                bumpClosePlayers(diff);
 
                 if (!firstDialogueStep)
                 {
@@ -1520,6 +1516,10 @@ public:
                     resetEvent(EVENT_SHADOWBOLT, 2000, 3000);
                     resetEvent(EVENT_FELFIRE, 5000, 10000);
                 }
+
+                me->SetReactState(REACT_PASSIVE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+                me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
 
                 Summons.DespawnAll();
             }
@@ -1880,6 +1880,10 @@ public:
                 pInstance = ((ScriptedInstance*)creature->GetInstanceData());
             }
 
+            void onDeath(Unit* /*killer*/)
+            {
+                PointReached = true;
+            }
             void onReset(bool onSpawn)
             {
                 PointReached = true;
