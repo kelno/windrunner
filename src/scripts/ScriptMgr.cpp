@@ -1474,7 +1474,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_test();
     AddSC_onevents();
     AddSC_npc_lottery();
-	AddSC_theinform();
+    AddSC_theinform();
     AddSC_mylittlebombling();
     AddSC_firework_controller();
     AddSC_npc_interpreter();

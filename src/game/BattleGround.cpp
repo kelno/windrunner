@@ -786,16 +786,16 @@ void BattleGround::RewardMark(Player *plr,uint32 count)
             return;
     }
 
-    if ( objmgr.GetItemPrototype( mark ) )
+    if ( ItemPrototype const *pProto = objmgr.GetItemPrototype( mark ) )
     {
         ItemPosCountVec dest;
         uint32 no_space_count = 0;
-        uint8 msg = plr->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, mark, count, &no_space_count );
+        uint8 msg = plr->CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, mark, count, &no_space_count, pProto );
         if( msg != EQUIP_ERR_OK )                       // convert to possible store amount
             count -= no_space_count;
 
         if(!dest.empty())                // can add some
-            if(Item* item = plr->StoreNewItem( dest, mark, true, 0))
+            if(Item* item = plr->StoreNewItem( dest, mark, true, 0, pProto))
                 plr->SendNewItem(item,count,false,true);
 
         if(no_space_count > 0)
@@ -813,7 +813,7 @@ void BattleGround::SendRewardMarkByMail(Player *plr,uint32 mark, uint32 count)
     if(!markProto)
         return;
 
-    if(Item* markItem = Item::CreateItem(mark,count,plr))
+    if(Item* markItem = Item::CreateItem(mark,count,plr,markProto))
     {
         SQLTransaction trans = CharacterDatabase.BeginTransaction();
         // save new item before send
@@ -881,18 +881,18 @@ void BattleGround::RemovePlayerAtLeave(uint64 guid, bool Transport, bool SendPac
     {
         if (Player* player = ObjectAccessor::FindPlayer(guid))
         {
-        	player->CancelSpectate();
+            player->CancelSpectate();
 
-        	uint32 map = player->GetBattleGroundEntryPointMap();
-        	float positionX = player->GetBattleGroundEntryPointX();
-        	float positionY = player->GetBattleGroundEntryPointY();
-        	float positionZ = player->GetBattleGroundEntryPointZ();
-        	float positionO = player->GetBattleGroundEntryPointO();
-        	if (player->TeleportTo(map, positionX, positionY, positionZ, positionO))
-        	{
-        	    player->SetSpectate(false);
-        	    RemoveSpectator(player->GetGUID());
-        	}
+            uint32 map = player->GetBattleGroundEntryPointMap();
+            float positionX = player->GetBattleGroundEntryPointX();
+            float positionY = player->GetBattleGroundEntryPointY();
+            float positionZ = player->GetBattleGroundEntryPointZ();
+            float positionO = player->GetBattleGroundEntryPointO();
+            if (player->TeleportTo(map, positionX, positionY, positionZ, positionO))
+            {
+                player->SetSpectate(false);
+                RemoveSpectator(player->GetGUID());
+            }
         }
         return;
     }
@@ -1103,13 +1103,13 @@ void BattleGround::onAddSpectator(Player *spectator)
 
 void BattleGround::AddPlayer(Player *plr)
 {
-	if (isSpectator(plr->GetGUID()))
-		return;
+    if (isSpectator(plr->GetGUID()))
+        return;
 
-	// remove afk from player
-	if (plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_AFK))
-		plr->ToggleAFK();
-		
+    // remove afk from player
+    if (plr->HasFlag(PLAYER_FLAGS, PLAYER_FLAGS_AFK))
+        plr->ToggleAFK();
+        
     // score struct must be created in inherited class
 
     uint64 guid = plr->GetGUID();
@@ -1798,30 +1798,30 @@ void BattleGround::EventPlayerLoggedOut(Player* player)
 {
     if( GetStatus() == STATUS_IN_PROGRESS )
     {
-    	if (!isSpectator(player->GetGUID()))
-    	{
+        if (!isSpectator(player->GetGUID()))
+        {
             if( isBattleGround() )
                 EventPlayerDroppedFlag(player);
             else if( isArena() )
                 player->LeaveBattleground();
-    	}
+        }
     }
 
     if (isSpectator(player->GetGUID()))
     {
-    	player->CancelSpectate();
+        player->CancelSpectate();
 
-    	uint32 map = player->GetBattleGroundEntryPointMap();
-    	float positionX = player->GetBattleGroundEntryPointX();
-    	float positionY = player->GetBattleGroundEntryPointY();
-    	float positionZ = player->GetBattleGroundEntryPointZ();
-    	float positionO = player->GetBattleGroundEntryPointO();
+        uint32 map = player->GetBattleGroundEntryPointMap();
+        float positionX = player->GetBattleGroundEntryPointX();
+        float positionY = player->GetBattleGroundEntryPointY();
+        float positionZ = player->GetBattleGroundEntryPointZ();
+        float positionO = player->GetBattleGroundEntryPointO();
 
-    	if (player->TeleportTo(map, positionX, positionY, positionZ, positionO))
-    	{
+        if (player->TeleportTo(map, positionX, positionY, positionZ, positionO))
+        {
             player->SetSpectate(false);
             RemoveSpectator(player->GetGUID());
-    	}
+        }
     }
 }
 
@@ -1854,7 +1854,7 @@ bool BattleGround::isSpectator(uint64 guid)
     for(std::set<uint64>::iterator itr = m_Spectators.begin(); itr != m_Spectators.end(); ++itr)
     {
         if (guid == *itr)
-        	return true;
+            return true;
     }
 
     return false;
@@ -1862,11 +1862,11 @@ bool BattleGround::isSpectator(uint64 guid)
 
 bool BattleGround::canEnterSpectator(Player *spectator)
 {
-	if (isSpectator(spectator->GetGUID()))
-		return false;
+    if (isSpectator(spectator->GetGUID()))
+        return false;
 
-	if (m_Spectators.size() < sWorld.getConfig(CONFIG_ARENA_SPECTATOR_MAX))
-		return true;
+    if (m_Spectators.size() < sWorld.getConfig(CONFIG_ARENA_SPECTATOR_MAX))
+        return true;
 
-	return false;
+    return false;
 }

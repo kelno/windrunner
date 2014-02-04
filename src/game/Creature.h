@@ -151,11 +151,11 @@ enum CreatureFlagsExtra
     CREATURE_FLAG_EXTRA_NO_XP_AT_KILL   = 0x00000040,       // creature kill not provide XP
     CREATURE_FLAG_EXTRA_TRIGGER         = 0x00000080,       // trigger creature
     CREATURE_FLAG_EXTRA_WORLDEVENT      = 0x00004000,       // custom flag for world event creatures (left room for merging)
-    //CREATURE_FLAG_EXTRA_CHARM_AI        = 0x00008000,     // use ai when charmed
+    CREATURE_FLAG_EXTRA_NO_SPELL_SLOW   = 0x00008000,       // use ai when charmed
     CREATURE_FLAG_EXTRA_NO_TAUNT        = 0x00010000,       // cannot be taunted
     CREATURE_FLAG_EXTRA_NO_CRIT         = 0x00020000,       // creature can't do critical strikes
     CREATURE_FLAG_EXTRA_HOMELESS        = 0x00040000,       // consider current position instead of home position for threat area
-    CREATURE_FLAG_EXTRA_ALIVE_INVISIBLE= 0x00080000,        // not visible for alive players
+    CREATURE_FLAG_EXTRA_ALIVE_INVISIBLE = 0x00080000,        // not visible for alive players
     CREATURE_FLAG_EXTRA_PERIODIC_RELOC  = 0x00100000,       //periodic relocation when ooc
     CREATURE_FLAG_EXTRA_DUEL_WIELD      = 0x00200000,       // can dual wield
 };
@@ -367,10 +367,10 @@ enum ChatType
 // Vendors
 struct VendorItem
 {
-    VendorItem(uint32 _item, uint32 _maxcount, uint32 _incrtime, uint32 _ExtendedCost)
-        : item(_item), maxcount(_maxcount), incrtime(_incrtime), ExtendedCost(_ExtendedCost) {}
+    VendorItem(ItemPrototype const* proto, uint32 _maxcount, uint32 _incrtime, uint32 _ExtendedCost)
+        : proto(proto), maxcount(_maxcount), incrtime(_incrtime), ExtendedCost(_ExtendedCost) {}
 
-    uint32 item;
+    ItemPrototype const* proto;
     uint32 maxcount;                                        // 0 for infinity item amount
     uint32 incrtime;                                        // time for restore items amount if maxcount != 0
     uint32 ExtendedCost;
@@ -388,9 +388,9 @@ struct VendorItemData
     }
     bool Empty() const { return m_items.empty(); }
     uint8 GetItemCount() const { return m_items.size(); }
-    void AddItem( uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost)
+    void AddItem( ItemPrototype const *proto, uint32 maxcount, uint32 ptime, uint32 ExtendedCost)
     {
-        m_items.push_back(new VendorItem(item, maxcount, ptime, ExtendedCost));
+        m_items.push_back(new VendorItem(proto, maxcount, ptime, ExtendedCost));
     }
     bool RemoveItem( uint32 item_id );
     VendorItem const* FindItem(uint32 item_id) const;
@@ -460,7 +460,10 @@ class Creature : public Unit
         void DisappearAndDie();
 
         bool Create (uint32 guidlow, Map *map, uint32 Entry, uint32 team, const CreatureData *data = NULL);
-        bool LoadCreaturesAddon(bool reload = false);
+        //get data from SQL storage
+        void LoadCreatureAddon();
+        //reapply creature addon data to creature
+        bool InitCreatureAddon(bool reload = false);
         void SelectLevel(const CreatureInfo *cinfo);
         void LoadEquipment(uint32 equip_entry, bool force=false);
 
@@ -559,7 +562,7 @@ class Creature : public Unit
         TrainerSpellData const* GetTrainerSpells() const;
 
         CreatureInfo const *GetCreatureInfo() const { return m_creatureInfo; }
-        CreatureDataAddon const* GetCreatureAddon() const;
+        CreatureDataAddon const* GetCreatureAddon() const { return m_creatureInfoAddon; }
 
         std::string GetScriptName();
         uint32 GetScriptId();
@@ -817,6 +820,7 @@ class Creature : public Unit
 
         GridReference<Creature> m_gridRef;
         CreatureInfo const* m_creatureInfo;                 // in heroic mode can different from ObjMgr::GetCreatureTemplate(GetEntry())
+        CreatureDataAddon const* m_creatureInfoAddon;
 };
 
 class AssistDelayEvent : public BasicEvent

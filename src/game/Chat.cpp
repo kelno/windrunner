@@ -241,7 +241,8 @@ ChatCommand * ChatHandler::getCommandTable()
         { "zoneattack",     SEC_GAMEMASTER3,  false, false, &ChatHandler::HandleDebugSendZoneUnderAttack,   "", NULL },
         { "los",            SEC_GAMEMASTER1,  false, false, &ChatHandler::HandleDebugLoSCommand,            "", NULL },
         { "playerflags",    SEC_GAMEMASTER3,  false, false, &ChatHandler::HandleDebugPlayerFlags,           "", NULL },
-        { "profile",        SEC_GAMEMASTER3,  false, false, &ChatHandler::HandleDebugProfile,               "", NULL },
+        { "profile",        SEC_GAMEMASTER3,  false, false, &ChatHandler::HandleDebugDumpProfilingCommand,  "", NULL },
+        { "clearprofile",   SEC_GAMEMASTER3,  false, false, &ChatHandler::HandleDebugClearProfilingCommand, "", NULL },
         { NULL,             0,                false, false, NULL,                                           "", NULL }
     };
 
@@ -610,10 +611,10 @@ ChatCommand * ChatHandler::getCommandTable()
     static ChatCommand spectateCommandTable[] =
     {
         { "version",       SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateVersion,                 "", NULL },
-    	{ "watch",         SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateFromCommand,             "", NULL },
-    	{ "leave",         SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateCancelCommand,           "", NULL },
-    	{ "init",          SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateInitCommand,             "", NULL },
-    	{ NULL,            0,               false, false, NULL,                                                "", NULL }
+        { "watch",         SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateFromCommand,             "", NULL },
+        { "leave",         SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateCancelCommand,           "", NULL },
+        { "init",          SEC_PLAYER,      false, false, &ChatHandler::HandleSpectateInitCommand,             "", NULL },
+        { NULL,            0,               false, false, NULL,                                                "", NULL }
     };
 
 
@@ -749,6 +750,7 @@ ChatCommand * ChatHandler::getCommandTable()
         { "copystuff",      SEC_GAMEMASTER2,  false, false, &ChatHandler::HandleCopyStuffCommand,           "", NULL },
         { "blink",          SEC_GAMEMASTER1,  false, false, &ChatHandler::HandleBlinkCommand,               "", NULL },
         { "reportlag",      SEC_PLAYER,       false, false, &ChatHandler::HandleReportLagCommand,           "", NULL },
+        { "bg",             SEC_PLAYER,       false, false, &ChatHandler::HandleBattleGroundCommand,        "", NULL },
         { NULL,             0,                false, false, NULL,                                           "", NULL }
     };
 

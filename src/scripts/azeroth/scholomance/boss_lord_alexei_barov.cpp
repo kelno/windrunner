@@ -39,7 +39,7 @@ struct boss_lordalexeibarovAI : public ScriptedAI
         Immolate_Timer = 7000;
         VeilofShadow_Timer = 15000;
 
-        m_creature->LoadCreaturesAddon();
+        m_creature->InitCreatureAddon(true);
     }
 
     void JustDied(Unit *killer)
