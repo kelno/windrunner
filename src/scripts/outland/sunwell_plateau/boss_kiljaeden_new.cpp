@@ -630,7 +630,6 @@ public:
             ScriptedInstance* pInstance;
 
             SummonList Summons;
-            BumpHelper bumpHelper;
 
             bool KiljaedenDeath;
             uint64 handDeceiver[3];
@@ -641,7 +640,7 @@ public:
             uint32 m_currentAngleFirst;
             uint32 m_currentAngleSecond;
         public:
-	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue), bumpHelper(2000)
+	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue)
 	        {
 	            pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	            InitializeDialogueHelper(pInstance);
@@ -1020,23 +1019,8 @@ public:
                 }
             }
 
-            void bumpClosePlayers(const uint32 diff)
-            {
-                bumpHelper.Update(diff);
-                Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                {
-                    Player* pl = itr->getSource();
-                    if (pl->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f) //~when a player set foot in the well
-                        if (bumpHelper.AddCooldown(pl)) //return true if player wasn't knocked back < 2s ago
-                            me->CastSpell(pl, SPELL_KNOCK_BACK,true);
-                }
-            }
-
             void update(uint32 const diff)
             {
-                bumpClosePlayers(diff);
-
             	DialogueUpdate(diff);
 
                 updateEvents(diff);
@@ -1105,6 +1089,7 @@ public:
             ScriptedInstance* pInstance;
 
             SummonList Summons;
+            BumpHelper bumpHelper;
 
             uint32 animSpawnTimer;
             bool firstDialogueStep;
@@ -1112,7 +1097,7 @@ public:
             bool thirdDialogueStep;
 
         public:
-	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue)
+	    boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue), bumpHelper(2000)
 	    {
 	        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
 	        InitializeDialogueHelper(pInstance);
@@ -1301,6 +1286,19 @@ public:
                 }
             }
 
+            void bumpClosePlayers(const uint32 diff)
+            {
+                bumpHelper.Update(diff);
+                Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                {
+                    Player* pl = itr->getSource();
+                    if (pl->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f) //~when a player set foot in the well
+                        if (bumpHelper.AddCooldown(pl)) //return true if player wasn't knocked back < 2s ago
+                            me->CastSpell(pl, SPELL_KNOCK_BACK,true);
+                }
+            }
+
             void update(const uint32 diff)
             {
                 if (animSpawnTimer)
@@ -1330,6 +1328,7 @@ public:
                 if (!updateVictim())
                     return;
 
+                bumpClosePlayers(diff);
                 updateEvents(diff);
 
                 if (!firstDialogueStep)
