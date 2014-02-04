@@ -347,7 +347,7 @@ bool ChatHandler::HandleServerMotdCommand(const char* /*args*/)
 
     if (valid != 1)
     {
-    	PSendSysMessage(LANG_RECUP_NOT_VALID);
+        PSendSysMessage(LANG_RECUP_NOT_VALID);
         SetSentErrorMessage(true);
 
         return false;
@@ -404,11 +404,11 @@ bool ChatHandler::HandleServerMotdCommand(const char* /*args*/)
 
         return false;
     }
-	else if (player_level != player->getLevel())
-	{
-    	player->GiveLevel(player_level);
-    	player->SetUInt32Value(PLAYER_XP, 0);
-	}
+    else if (player_level != player->getLevel())
+    {
+        player->GiveLevel(player_level);
+        player->SetUInt32Value(PLAYER_XP, 0);
+    }
 
     // On lui donne de l'argent
     uint32 money = sConfig.GetIntDefault("Recovery.Money", 2000) * 10000;
@@ -421,7 +421,7 @@ bool ChatHandler::HandleServerMotdCommand(const char* /*args*/)
 
     if (query)
     {
-	    uint32 spell_id;
+        uint32 spell_id;
 
         do
         {
@@ -2223,11 +2223,11 @@ bool ChatHandler::HandleSpectateFromCommand(const char *args)
     if (player->getSpectateFrom())
     {
         if (target == player->getSpectateFrom())
-    	    player->getSpectateFrom()->RemovePlayerFromVision(player);
+            player->getSpectateFrom()->RemovePlayerFromVision(player);
         else
         {
-        	player->getSpectateFrom()->RemovePlayerFromVision(player);
-        	target->AddPlayerToVision(player);
+            player->getSpectateFrom()->RemovePlayerFromVision(player);
+            target->AddPlayerToVision(player);
         }
         return true;
     }
@@ -2243,7 +2243,7 @@ bool ChatHandler::HandleSpectateInitCommand(const char *args)
         return true;
 
     if (Player* player = GetSession()->GetPlayer())
-    	player->SendDataForSpectator();
+        player->SendDataForSpectator();
 
     return true;
 }
@@ -2266,6 +2266,69 @@ bool ChatHandler::HandleReportLagCommand(const char* args)
                 player->GetName(), player->GetGUIDLow(), GetSession()->GetRemoteAddress().c_str(), sWorld.GetUpdateTime());
         player->lastLagReport = now;
     }
+
+    return true;
+}
+
+bool ChatHandler::HandleBattleGroundCommand(const char* args)
+{
+    Player* p = m_session->GetPlayer();
+    if(!p) return true;
+
+    if(!*args)
+        return false;
+    
+    uint32 bgTypeId = 0;
+    if(strcmp(args,"goulet") == 0)
+        bgTypeId = 2;
+    else if (strcmp(args,"cyclone") == 0)
+        bgTypeId = 7;
+    else if (strcmp(args,"arathi") == 0)
+        bgTypeId = 3;
+    else if (strcmp(args,"alterac") == 0)
+        bgTypeId = 1;
+
+    if(bgTypeId == 0) //no valid bg type provded
+        return false;
+
+    if(p->InBattleGround())
+        return true;
+
+    // check for Deserter debuff
+    if(!p->CanJoinToBattleground())
+    {
+        WorldPacket data(SMSG_GROUP_JOINED_BATTLEGROUND, 4);
+        data << (uint32) 0xFFFFFFFE;
+        p->GetSession()->SendPacket(&data);
+        return true;
+    }
+
+    BattleGround *bg = sBattleGroundMgr.GetBattleGroundTemplate(bgTypeId);
+    uint32 bgQueueTypeId = sBattleGroundMgr.BGQueueTypeId(bgTypeId, 0);
+
+    // check if already in queue
+    if (p->GetBattleGroundQueueIndex(bgQueueTypeId) < PLAYER_MAX_BATTLEGROUND_QUEUES)
+        return true; //player is already in this queue
+
+    // check if has free queue slots
+    if(!p->HasFreeBattleGroundQueueId())
+        return true;
+
+    // already checked if queueSlot is valid, now just get it
+    uint32 queueSlot = p->AddBattleGroundQueueId(bgQueueTypeId);
+    // store entry point coords
+    p->SetBattleGroundEntryPoint(p->GetMapId(),p->GetPositionX(),p->GetPositionY(),p->GetPositionZ(),p->GetOrientation());
+        
+    GroupQueueInfo * ginfo = sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddGroup(p, bgTypeId, 0, false, 0);
+
+    WorldPacket data;
+    
+    // send status packet (in queue)
+    sBattleGroundMgr.BuildBattleGroundStatusPacket(&data, bg, p->GetTeam(), queueSlot, STATUS_WAIT_QUEUE, sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].GetAvgTime(), 0);
+    m_session->SendPacket(&data);
+
+    sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].AddPlayer(p, ginfo);
+    sBattleGroundMgr.m_BattleGroundQueues[bgQueueTypeId].Update(bgTypeId, p->GetBattleGroundQueueIdFromLevel());
 
     return true;
 }

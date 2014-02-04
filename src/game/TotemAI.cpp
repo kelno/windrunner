@@ -44,6 +44,10 @@ TotemAI::TotemAI(Creature *c) : CreatureAI(c), i_totem(static_cast<Totem&>(*c)),
 {
 }
 
+TotemAI::~TotemAI()
+{
+}
+
 void
 TotemAI::MoveInLineOfSight(Unit *)
 {

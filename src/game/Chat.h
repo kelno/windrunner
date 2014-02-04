@@ -338,7 +338,8 @@ class ChatHandler
         bool HandleDebugSendZoneUnderAttack(const char* args);
         bool HandleDebugLoSCommand(const char* args);
         bool HandleDebugPlayerFlags(const char* args);
-        bool HandleDebugProfile(const char* args);
+        bool HandleDebugDumpProfilingCommand(const char* args);
+        bool HandleDebugClearProfilingCommand(const char* args);
 
         bool HandleGUIDCommand(const char* args);
         bool HandleNameCommand(const char* args);
@@ -591,6 +592,7 @@ class ChatHandler
         bool HandleHerodayCommand(const char* args);
         bool HandleSpellInfoCommand(const char* args);
         bool HandleReportLagCommand(const char* args);
+        bool HandleBattleGroundCommand(const char* args);
 
         Player*   getSelectedPlayer();
         Creature* getSelectedCreature();

@@ -266,6 +266,11 @@ Unit::~Unit()
                 if (m_sharedVision.empty())
                     break;
                 --itr;
+            } else {
+                RemovePlayerFromVision((*itr));
+                if (m_sharedVision.empty())
+                    break;
+                --itr;
             }
     }
 
@@ -1756,13 +1761,13 @@ void Unit::DealMeleeDamage(CalcDamageInfo *damageInfo, bool durabilityLoss)
         if(area && area->flags & 0x800)                     //sanctuary
             return;
     }
-
+    /*
     // Hmmmm dont like this emotes cloent must by self do all animations
     if (damageInfo->HitInfo&HITINFO_CRITICALHIT)
         pVictim->HandleEmoteCommand(EMOTE_ONESHOT_WOUNDCRITICAL);
     if(damageInfo->blocked_amount && damageInfo->TargetState!=VICTIMSTATE_BLOCKS)
         pVictim->HandleEmoteCommand(EMOTE_ONESHOT_PARRYSHIELD);
-
+ 
     if(damageInfo->TargetState == VICTIMSTATE_PARRY) // Parry rush
     {
         // Get attack timers
@@ -1798,7 +1803,7 @@ void Unit::DealMeleeDamage(CalcDamageInfo *damageInfo, bool durabilityLoss)
             }
         }
     }
-
+    */
     // Call default DealDamage
     CleanDamage cleanDamage(damageInfo->cleanDamage,damageInfo->attackType,damageInfo->hitOutCome);
     DealDamage(pVictim, damageInfo->damage, &cleanDamage, DIRECT_DAMAGE, SpellSchoolMask(damageInfo->damageSchoolMask), NULL, durabilityLoss);

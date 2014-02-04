@@ -109,10 +109,10 @@ public:
             else if(GetMSTimeDiff(w_lastchange,curtime) > _delaytime)
             {
                 sLog.outError("World Thread hangs, kicking out server!");
+                sLog.outString(sProfilerMgr.dump().c_str());
                 *((uint32 volatile*)NULL) = 0;                       // bang crash
             }
         }
-        sLog.outString("Anti-freeze thread exiting without problems.");
     }
 };
 

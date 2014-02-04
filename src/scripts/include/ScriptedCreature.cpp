@@ -75,7 +75,7 @@ bool SummonList::IsEmpty()
 
 void BumpHelper::Update(const uint32 diff)
 {
-    for(std::map<uint64,uint32>::iterator itr = begin(); itr != end(); itr++)
+    for(auto itr = begin(); itr != end(); itr++)
     {
         if(itr->second < diff) //okay to erase
             itr = erase(itr);
@@ -85,13 +85,13 @@ void BumpHelper::Update(const uint32 diff)
 }
 
 //return true if not yet present in list
-bool BumpHelper::AddCooldown(Unit* p)
+bool BumpHelper::AddCooldown(Unit* p, uint32 customValue)
 {
     auto found = find(p->GetGUID());
     if(found != end())
         return false;
 
-    insert(std::make_pair(p->GetGUID(),m_cooldown)); //3s before being knockable again
+    insert(std::make_pair(p->GetGUID(),customValue?customValue:m_cooldown)); //3s before being knockable again
     return true;
 }
 
@@ -164,7 +164,7 @@ void ScriptedAI::EnterEvadeMode()
     m_creature->RemoveAllAuras();
     m_creature->DeleteThreatList();
     m_creature->CombatStop();
-    m_creature->LoadCreaturesAddon();
+    m_creature->InitCreatureAddon();
     m_creature->SetLootRecipient(NULL);
 
     if(m_creature->IsAlive())
