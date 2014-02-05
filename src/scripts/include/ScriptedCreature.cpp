@@ -76,12 +76,15 @@ bool SummonList::IsEmpty()
 
 void BumpHelper::Update(const uint32 diff)
 {
-    for(auto itr = begin(); itr != end(); itr++)
+    for(auto itr = begin(); itr != end();)
     {
         if(itr->second < diff) //okay to erase
             itr = erase(itr);
         else //just decrease time left
+        {
             itr->second -= diff;
+            itr++;
+        }
     }
 }
 
