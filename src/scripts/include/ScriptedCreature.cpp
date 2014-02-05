@@ -37,6 +37,7 @@ void SummonList::DespawnEntry(uint32 entry)
         {
             if(summon->GetEntry() == entry)
             {
+                summon->RemoveFromWorld();
                 summon->setDeathState(JUST_DIED);
                 summon->RemoveCorpse();
                 i = erase(i);
