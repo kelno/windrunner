@@ -88,7 +88,7 @@ void BumpHelper::Update(const uint32 diff)
 //return true if not yet present in list
 bool BumpHelper::AddCooldown(Unit* p, uint32 customValue)
 {
-    auto found = find(p->GetGUID());
+    std::map<uint64,uint32>::iterator found = find(p->GetGUID());
     if(found != end())
         return false;
 
