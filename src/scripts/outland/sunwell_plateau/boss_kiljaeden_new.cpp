@@ -118,6 +118,7 @@ enum SpellIds
 #define SHIELD_ORB_Z 45.000
 #define CREATURE_INVISIBLE_DUMMY 9
 #define GOSSIP_KALEC_END 25319
+#define DISPLAYID_PORTAL_OPENING 22742
 
 enum Phase
 {
@@ -335,7 +336,7 @@ static const DialogueEntry aOutroDialogue[] =
 	{POINT_KILJAEDEN_DIE,         0,                  15000},
     {POINT_TELEPORT_KALECGOS,     0,                  2000},
     {SAY_KALECGOS_GOODBYE,        CREATURE_KALECGOS,  15000},
-    {POINT_SUMMON_SHATTERED,      0,                  10000},
+    {POINT_SUMMON_SHATTERED,      0,                  15000},
     {POINT_SUMMON_PORTAL,         0,                  500},
     {POINT_SUMMON_PORTAL_ENDOPENANIM, 0,              3500},
     {POINT_SUMMON_SOLDIERS_RIGHT, 0,                  8000},
@@ -378,7 +379,9 @@ static const EventLocations aOutroLocations[] =
     {1709.719f, 639.359f, 27.28f},              // velen move forward
     {1711.537f, 637.600f, 27.34f},              // liadrin move forward
     {1716.962f, 661.839f, 28.05f},              // first shattered move
-    {1736.478f, 640.552f, 28.23f}               // second shattered move
+    {1735.141f, 643.680f, 28.23f},              // second shattered move
+    {1723.220f, 663.026f, 30.00f},              // first shattered spell target
+    {1734.877f, 649.574f, 30.00f},              // second shattered spell target
 };
 
 static const EventLocations SoldierLocations[] =
@@ -645,11 +648,14 @@ public:
             bool KiljaedenDeath;
             uint64 handDeceiver[3];
             uint64 riftGuid[2];
+            uint64 riftTargets[2];
             uint64 soldiersGuid[20];
             uint64 m_EntropiusGuid;
             uint64 m_PortalGuid;
             uint32 m_currentAngleFirst;
             uint32 m_currentAngleSecond;
+            
+            uint32 combatCheckTimer;
         public:
 	        mob_kiljaeden_controllerAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(aOutroDialogue)
 	        {
@@ -718,6 +724,8 @@ public:
 
                 m_currentAngleFirst = 0;
                 m_currentAngleSecond = 0;
+
+                combatCheckTimer = 0;
             }
 
             void onSummon(Creature* summoned)
@@ -810,21 +818,35 @@ public:
 
                     	for (uint8 i = 1; i < 3; i++)
                     	{
-                            if (Creature * rift = me->SummonCreature(NPC_RIFTWALKER, aOutroLocations[i].m_fX, aOutroLocations[i].m_fY, aOutroLocations[i].m_fZ, aOutroLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                            if (Creature * riftWalker = me->SummonCreature(NPC_RIFTWALKER, aOutroLocations[i].m_fX, aOutroLocations[i].m_fY, aOutroLocations[i].m_fZ, aOutroLocations[i].m_fO, TEMPSUMMON_CORPSE_DESPAWN, 0))
                             {
-                            	riftGuid[i - 1] = rift->GetGUID();
-                            	rift->SetSummoner(me);
+                            	riftGuid[i - 1] = riftWalker->GetGUID();
+                            	riftWalker->SetSummoner(me);
                             	if (i == 1)
-                            		rift->GetMotionMaster()->MovePoint(0, aOutroLocations[7].m_fX, aOutroLocations[7].m_fY, aOutroLocations[7].m_fZ);
+                            		riftWalker->GetMotionMaster()->MovePoint(0, aOutroLocations[7].m_fX, aOutroLocations[7].m_fY, aOutroLocations[7].m_fZ);
                             	else
-                            		rift->GetMotionMaster()->MovePoint(0, aOutroLocations[8].m_fX, aOutroLocations[8].m_fY, aOutroLocations[8].m_fZ);
+                            		riftWalker->GetMotionMaster()->MovePoint(1, aOutroLocations[8].m_fX, aOutroLocations[8].m_fY, aOutroLocations[8].m_fZ);
+
+                                if (Creature * riftTarget = me->SummonCreature(CREATURE_INVISIBLE_DUMMY, aOutroLocations[8+i].m_fX, aOutroLocations[8+i].m_fY, aOutroLocations[8+i].m_fZ, 0.0f, TEMPSUMMON_CORPSE_DESPAWN, 0))
+                                {
+                                    riftTargets[i - 1] = riftTarget->GetGUID();
+                                    riftTarget->SetSummoner(me);
+                                    riftTarget->SetSpeed(MOVE_RUN, 0.5f);
+                                    riftTarget->SetDisableGravity(true);
+                                    riftTarget->ToCreature();
+                                }
                             }
                     	}
                     	break;
                     case POINT_SUMMON_PORTAL:
                     	if (Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
                         {                     
-                            portal->SetDisplayId(22742);
+                            portal->SetDisplayId(DISPLAYID_PORTAL_OPENING);
+                            for (uint8 i = 0; i < 2; i++)
+                            {
+                                if (Creature* riftTarget = pInstance->instance->GetCreatureInMap(riftTargets[i]))
+                            	    riftTarget->ForcedDespawn(1000);
+                            }
                         }
                         break;
                     case POINT_SUMMON_PORTAL_ENDOPENANIM:
@@ -960,35 +982,45 @@ public:
                 if (uiType != POINT_MOTION_TYPE)
                     return;
 
-                if (uiPointId == 0)
+                switch(uiPointId)
                 {
-                    Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL);
-                    if (pSummoned->GetEntry() == NPC_RIFTWALKER)
+                case 0:
+                    switch(pSummoned->GetEntry())
                     {
-                        if (portal)
-                            pSummoned->CastSpell(portal, SPELL_OPEN_PORTAL, false);
-                    }
-                    else if (pSummoned->GetEntry() == NPC_SOLDIER)
-                    {
+                    case NPC_RIFTWALKER:
+                        if(Creature* riftTarget = pSummoned->GetMap()->GetCreature(riftTargets[0]))
+                        {
+                            pSummoned->CastSpell(riftTarget, SPELL_OPEN_PORTAL, false);
+                            riftTarget->GetMotionMaster()->MovePoint(0, aOutroLocations[9].m_fX, aOutroLocations[9].m_fY, aOutroLocations[9].m_fZ+13.0f);
+                        }
+                        break;
+                    case NPC_SOLDIER:
                         if (pSummoned->GetGUID() == soldiersGuid[0] || pSummoned->GetGUID() == soldiersGuid[10])
                             pSummoned->SetStandState(UNIT_STAND_STATE_KNEEL);
 
-                        if(portal)
+                        if(Creature* portal = pInstance->GetSingleCreatureFromStorage(NPC_BOSS_PORTAL))
                         {
                             pSummoned->SetOrientation(pSummoned->GetAngle(aOutroLocations[5].m_fX, aOutroLocations[5].m_fY)); //velen talk position
                             pSummoned->SendMovementFlagUpdate();
                         }
+                        break;
                     }
-                }
-                else if (uiPointId == 1)
-                {
-                	if (pSummoned->GetEntry() == NPC_CORE_ENTROPIUS)
-                	{
-                		if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
+                    break;
+                case 1:
+                    switch(pSummoned->GetEntry())
+                    {
+                    case NPC_RIFTWALKER:
+                        if(Creature* riftTarget = pSummoned->GetMap()->GetCreature(riftTargets[1]))
+                        {
+                            pSummoned->CastSpell(riftTarget, SPELL_OPEN_PORTAL, false);
+                            riftTarget->GetMotionMaster()->MovePoint(0, aOutroLocations[10].m_fX, aOutroLocations[10].m_fY, aOutroLocations[13].m_fZ+10.0f);
+                        }
+                        break;
+                    case NPC_CORE_ENTROPIUS:
+                        if (Creature* pVelen = pInstance->GetSingleCreatureFromStorage(CREATURE_PROPHET))
                 			pVelen->InterruptNonMeleeSpells(false);
-                	}
-                	else if (pSummoned->GetEntry() == CREATURE_PROPHET)
-                	{
+                        break;
+                    case CREATURE_PROPHET:
                         pSummoned->ForcedDespawn(1000);
 
                         // Note: portal should despawn only after all the soldiers have reached this point and "teleported" outside
@@ -1002,28 +1034,27 @@ public:
                         }
 
                         me->ForcedDespawn(300000);
+                        break;
                     }
-                }
-                else if (uiPointId == 2)
-                {
+                    break;
+                case 2:
                     if (pSummoned->GetEntry() == NPC_SOLDIER)
                         pSummoned->ForcedDespawn(1000);
-                }
-                else if (uiPointId == 10)
-                {
+                    break;
+                case 10:
                     if (pSummoned->GetEntry() == NPC_SOLDIER)
                     {
                         pSummoned->SetOrientation(SoldierMiddle[0].m_fO);
                         pSummoned->SendMovementFlagUpdate();
                     }
-                }
-                else if (uiPointId == 11)
-                {
+                    break;
+                case 11:
                     if (pSummoned->GetEntry() == NPC_SOLDIER)
                     {
                         pSummoned->SetOrientation(SoldierMiddle[1].m_fO);
                         pSummoned->SendMovementFlagUpdate();
                     }
+                    break;
                 }
             }
 
@@ -1069,15 +1100,19 @@ public:
 
                 if (!me->IsInCombat())
                 {
-                    Map::PlayerList const& players = pInstance->instance->GetPlayers();
-                    for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
-                    //for(auto itr : players) //why does using auto call ~GroupReference() for every ref ?
-                        if (Player* plr = itr->getSource())
-                            if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
-                            {
-                                onCombatStart(plr);
-                                break;
-                            }
+                    if(combatCheckTimer < diff)
+                    {
+                        Map::PlayerList const& players = pInstance->instance->GetPlayers();
+                        for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
+                        //for(auto itr : players) //why does using auto call ~GroupReference() for every ref ?
+                            if (Player* plr = itr->getSource())
+                                if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
+                                {
+                                    onCombatStart(plr);
+                                    break;
+                                }
+                        combatCheckTimer = 2500;
+                    } else combatCheckTimer -= diff;
                 }
 
                 if (pInstance->GetData(DATA_MURU_EVENT) != DONE)
@@ -1983,9 +2018,7 @@ public:
 
                     me->GetMotionMaster()->MovePoint(1, x, y, SHIELD_ORB_Z);
             
-                    c += 3.1415926535/32;
-                    if (c > 2*3.1415926535)
-                        c = 0;
+                    c += M_PI/32;
                 }
                 else
                 {
