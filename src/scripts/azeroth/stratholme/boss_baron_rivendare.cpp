@@ -100,7 +100,7 @@ struct boss_baron_rivendareAI : public ScriptedAI
         SummonSkeletons_Timer = 34000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(TYPE_BARON,IN_PROGRESS);
@@ -127,7 +127,7 @@ struct boss_baron_rivendareAI : public ScriptedAI
         if (ShadowBolt_Timer < diff)
         {
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
-                DoCast(m_creature->getVictim(),SPELL_SHADOWBOLT);
+                DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLT);
 
             ShadowBolt_Timer = 10000;
         }else ShadowBolt_Timer -= diff;
@@ -135,7 +135,7 @@ struct boss_baron_rivendareAI : public ScriptedAI
         //Cleave
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             //13 seconds until we should cast this again
             Cleave_Timer = 7000 + (rand()%10000);
         }else Cleave_Timer -= diff;
@@ -143,7 +143,7 @@ struct boss_baron_rivendareAI : public ScriptedAI
         //MortalStrike
         if (MortalStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MORTALSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_MORTALSTRIKE);
             MortalStrike_Timer = 10000 + (rand()%15000);
         }else MortalStrike_Timer -= diff;
 

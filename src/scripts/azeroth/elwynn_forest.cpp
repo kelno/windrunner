@@ -48,7 +48,7 @@ struct npc_henze_faulkAI : public ScriptedAI
         spellHit = false;
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
     }
 

@@ -68,7 +68,7 @@ struct npc_testAI : public npc_escortAI
             }
         }
 
-        void Aggro(Unit*)
+        void EnterCombat(Unit*)
         {
             if (IsBeingEscorted)
                 m_creature->Say("Help $N! I'm under attack!", LANG_UNIVERSAL, PlayerGUID);
@@ -103,12 +103,12 @@ struct npc_testAI : public npc_escortAI
             npc_escortAI::UpdateAI(diff);
 
             //Combat check
-            if (InCombat && m_creature->getVictim())
+            if (InCombat && m_creature->GetVictim())
             {
                 if (DeathCoilTimer < diff)
                 {
                     m_creature->Say("Taste death!", LANG_UNIVERSAL, 0);
-                    m_creature->CastSpell(m_creature->getVictim(), 33130, false);
+                    m_creature->CastSpell(m_creature->GetVictim(), 33130, false);
 
                     DeathCoilTimer = 4000;
                 }else DeathCoilTimer -= diff;

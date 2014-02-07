@@ -77,7 +77,7 @@ npc_swiftmountainAI(Creature *c) : npc_escortAI(c) {}
         m_creature->setFaction(104);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void JustSummoned(Creature* summoned)
     {
@@ -144,7 +144,7 @@ struct npc_pluckyAI : public ScriptedAI
        ChickenTimer = 0;
        }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void TransformHuman(uint32 emoteid)
     {
@@ -262,7 +262,7 @@ struct npc_enraged_pantherAI : public ScriptedAI
         m_creature->SetReactState(REACT_PASSIVE);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -298,7 +298,7 @@ struct npc_kanatiAI : public npc_escortAI
 
     void Reset() {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void WaypointReached(uint32 uiPointId)
     {
@@ -379,7 +379,7 @@ struct npc_lakota_windsongAI : public npc_escortAI
 
     void Reset() {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void WaypointReached(uint32 uiPointId)
     {

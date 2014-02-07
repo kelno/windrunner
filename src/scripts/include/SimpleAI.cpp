@@ -70,7 +70,7 @@ void SimpleAI::Reset()
 {
 }
 
-void SimpleAI::Aggro(Unit *who)
+void SimpleAI::EnterCombat(Unit *who)
 {
             //Reset cast timers
             if (Spell[0].First_Cast >= 0)
@@ -142,7 +142,7 @@ void SimpleAI::KilledUnit(Unit *victim)
         target = m_creature;
         break;
     case CAST_HOSTILE_TARGET:
-        target = m_creature->getVictim();
+        target = m_creature->GetVictim();
         break;
     case CAST_HOSTILE_SECOND_AGGRO:
         target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -192,7 +192,7 @@ void SimpleAI::DamageTaken(Unit *killer, uint32 &damage)
         target = m_creature;
         break;
     case CAST_HOSTILE_TARGET:
-        target = m_creature->getVictim();
+        target = m_creature->GetVictim();
         break;
     case CAST_HOSTILE_SECOND_AGGRO:
         target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -243,7 +243,7 @@ void SimpleAI::UpdateAI(const uint32 diff)
                     target = m_creature;
                     break;
                 case CAST_HOSTILE_TARGET:
-                    target = m_creature->getVictim();
+                    target = m_creature->GetVictim();
                     break;
                 case CAST_HOSTILE_SECOND_AGGRO:
                     target = SelectUnit(SELECT_TARGET_TOPAGGRO,1);

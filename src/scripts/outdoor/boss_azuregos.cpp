@@ -105,13 +105,13 @@ public:
                 }
                 case EV_CHILL:
                 {
-                    doCast(me->getVictim(), SPELL_CHILL);
+                    doCast(me->GetVictim(), SPELL_CHILL);
                     scheduleEvent(EV_CHILL, 13000, 25000);
                     break;
                 }
                 case EV_BREATH:
                 {
-                    doCast(me->getVictim(), SPELL_FROSTBREATH);
+                    doCast(me->GetVictim(), SPELL_FROSTBREATH);
                     scheduleEvent(EV_BREATH, 1000, 15000);
                     break;
                 }
@@ -141,7 +141,7 @@ public:
                 }
                 case EV_CLEAVE:
                 {
-                    doCast(me->getVictim(), SPELL_CLEAVE);
+                    doCast(me->GetVictim(), SPELL_CLEAVE);
                     scheduleEvent(EV_CLEAVE, 7000);
                     break;
                 }

@@ -186,7 +186,7 @@ struct boss_chromaggusAI : public ScriptedAI
         Enraged = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -223,14 +223,14 @@ struct boss_chromaggusAI : public ScriptedAI
         //Breath1_Timer
         if (Breath1_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),Breath1_Spell);
+            DoCast(m_creature->GetVictim(),Breath1_Spell);
             Breath1_Timer = 60000;
         }else Breath1_Timer -= diff;
 
         //Breath2_Timer
         if (Breath2_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),Breath2_Spell);
+            DoCast(m_creature->GetVictim(),Breath2_Spell);
             Breath2_Timer = 60000;
         }else Breath2_Timer -= diff;
 

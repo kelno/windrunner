@@ -99,7 +99,7 @@ struct instance_scarlet_monastery : public ScriptedInstance
                 for(std::set<uint64>::iterator itr = HorsemanAdds.begin(); itr != HorsemanAdds.end(); ++itr)
                 {
                     Creature* add = instance->GetCreatureInMap(*itr);
-                    if(add && add->isAlive())
+                    if(add && add->IsAlive())
                         add->DealDamage(add, add->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                 }
                 HorsemanAdds.clear();

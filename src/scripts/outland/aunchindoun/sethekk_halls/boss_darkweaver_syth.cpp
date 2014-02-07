@@ -87,7 +87,7 @@ struct boss_darkweaver_sythAI : public ScriptedAI
         summons.DespawnAll();
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(RAND(SAY_AGGRO_1, SAY_AGGRO_2, SAY_AGGRO_3), m_creature);
     }
@@ -220,7 +220,7 @@ struct mob_syth_fireAI : public ScriptedAI
         flamebuffet_timer = 5000;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -271,7 +271,7 @@ struct mob_syth_arcaneAI : public ScriptedAI
         arcanebuffet_timer = 5000;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -322,7 +322,7 @@ struct mob_syth_frostAI : public ScriptedAI
         frostbuffet_timer = 5000;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -373,7 +373,7 @@ struct mob_syth_shadowAI : public ScriptedAI
         shadowbuffet_timer = 5000;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {

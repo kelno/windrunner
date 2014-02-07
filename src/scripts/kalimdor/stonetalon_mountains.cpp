@@ -122,7 +122,7 @@ struct npc_kaya_flathoofAI : public npc_escortAI
 
     void Reset(){}
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void JustDied(Unit* killer)
     {
@@ -173,7 +173,7 @@ struct npc_piznikAI : public ScriptedAI
     uint8 count;
     uint64 pGUID;
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void Start(uint64 guid)
     {

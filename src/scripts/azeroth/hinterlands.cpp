@@ -82,7 +82,7 @@ struct npc_00x09hlAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (pWho->GetEntry() == NPC_MARAUDING_OWL || pWho->GetEntry() == NPC_VILE_AMBUSHER)
             return;
@@ -181,7 +181,7 @@ struct npc_rinjiAI : public npc_escortAI
         npc_escortAI::JustRespawned();
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (HasEscortState(STATE_ESCORT_ESCORTING))
         {

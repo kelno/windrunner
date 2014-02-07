@@ -37,6 +37,16 @@ private:
     Creature *m_creature;
 };
 
+class BumpHelper : std::map<uint64,uint32>
+{
+public:
+    BumpHelper(uint32 cooldown) : m_cooldown(cooldown) {}
+    void Update(const uint32 diff);
+    bool AddCooldown(Unit* p, uint32 customValue = 0);
+private:
+    const uint32 m_cooldown;
+};
+
 //Get a single creature of given entry
 Unit* FindCreature(uint32 entry, float range, Unit* Finder);
 
@@ -119,7 +129,7 @@ struct ScriptedAI : public CreatureAI
     void Reset() {}
 
     //Called at creature aggro either by MoveInLOS or Attack Start
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
 
     //*************
     //AI Helper Functions
@@ -224,7 +234,7 @@ struct NullCreatureAI : public ScriptedAI
     ~NullCreatureAI() {}
 
     void Reset() {}
-    void Aggro(Unit*) {}
+    void EnterCombat(Unit*) {}
     void MoveInLineOfSight(Unit *) {}
     void AttackStart(Unit *) {}
     void EnterEvadeMode() {}

@@ -64,7 +64,7 @@ struct boss_nothAI : public ScriptedAI
         Summon_Timer = 12000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch (rand()%3)
         {
@@ -102,7 +102,7 @@ struct boss_nothAI : public ScriptedAI
         //Blink_Timer
         if (Blink_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CRIPPLE);
+            DoCast(m_creature->GetVictim(),SPELL_CRIPPLE);
             DoCast(m_creature,SPELL_BLINK);
 
             Blink_Timer = 25000;
@@ -111,7 +111,7 @@ struct boss_nothAI : public ScriptedAI
         //Curse_Timer
         if (Curse_Timer < diff)
         {
-             DoCast(m_creature->getVictim(),SPELL_CURSE_PLAGUEBRINGER);
+             DoCast(m_creature->GetVictim(),SPELL_CURSE_PLAGUEBRINGER);
             Curse_Timer = 28000;
         }else Curse_Timer -= diff;
 

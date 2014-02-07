@@ -87,7 +87,7 @@ struct npc_draenei_survivorAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1, 3);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void MoveInLineOfSight(Unit *who)                       //MoveInLineOfSight is called if creature could see you, updated all 100 ms
     {
@@ -230,7 +230,7 @@ struct npc_engineer_spark_overgrindAI : public ScriptedAI
         m_creature->setFaction(875);
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {
@@ -249,7 +249,7 @@ struct npc_engineer_spark_overgrindAI : public ScriptedAI
 
         if (Dynamite_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_DYNAMITE);
+            DoCast(m_creature->GetVictim(), SPELL_DYNAMITE);
             Dynamite_Timer = 8000;
         } else Dynamite_Timer -= diff;
 
@@ -302,7 +302,7 @@ struct npc_injured_draeneiAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void MoveInLineOfSight(Unit *who)
     {
@@ -367,7 +367,7 @@ struct npc_magwinAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature, who);
     }
@@ -487,7 +487,7 @@ struct npc_geezleAI : public ScriptedAI
         StartEvent();
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void StartEvent()
     {
@@ -613,7 +613,7 @@ struct mob_nestlewood_owlkinAI : public ScriptedAI
         Hitted = false;
     }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void SpellHit(Unit* caster, const SpellEntry* spell)
     {
@@ -695,7 +695,7 @@ struct npc_death_ravagerAI : public ScriptedAI
         m_creature->SetReactState(REACT_PASSIVE);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(const uint32 diff)
     {
@@ -704,14 +704,14 @@ struct npc_death_ravagerAI : public ScriptedAI
 
         if(RendTimer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_REND);
+            DoCast(m_creature->GetVictim(), SPELL_REND);
             RendTimer = 30000;
         }
         else RendTimer -= diff;
 
         if(EnragingBiteTimer <= diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ENRAGING_BITE);
+            DoCast(m_creature->GetVictim(), SPELL_ENRAGING_BITE);
             EnragingBiteTimer = 15000;
         }
         else EnragingBiteTimer -= diff;
@@ -756,7 +756,7 @@ struct npc_stillpine_capitiveAI : public ScriptedAI
             cage->ResetDoorOrButton();*/
     }
 
-	void Aggro(Unit *pWho) {}
+	void EnterCombat(Unit *pWho) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -799,7 +799,7 @@ struct npc_trigger_quest10956AI : public ScriptedAI
 {
     npc_trigger_quest10956AI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {

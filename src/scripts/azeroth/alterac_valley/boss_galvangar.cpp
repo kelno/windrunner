@@ -67,7 +67,7 @@ struct TRINITY_DLL_DECL boss_galvangarAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(YELL_AGGRO, m_creature);
     }
@@ -89,32 +89,32 @@ struct TRINITY_DLL_DECL boss_galvangarAI : public ScriptedAI
 
         if (CleaveTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             CleaveTimer =  (10+rand()%6)*1000;
         }else CleaveTimer -= diff;
 
         if (FrighteningShoutTimer < diff)
         {
-            sLog.outString("Alterac Valley: Galvangar: Casting SPELL_FRIGHTENING_SHOUT");
+            sLog.outDebug("Alterac Valley: Galvangar: Casting SPELL_FRIGHTENING_SHOUT");
             DoCast(m_creature, SPELL_FRIGHTENING_SHOUT);
             FrighteningShoutTimer = (10+rand()%5)*1000;
         }else FrighteningShoutTimer -= diff;
 
         if (Whirlwind1Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND1);
+            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1);
             Whirlwind1Timer = (6+rand()%14)*1000;
         }else Whirlwind1Timer -= diff;
 
         if (Whirlwind2Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WHIRLWIND2);
+            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = (10+rand()%15)*1000;
         }else Whirlwind2Timer -= diff;
 
         if (MortalStrikeTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
+            DoCast(m_creature->GetVictim(), SPELL_MORTAL_STRIKE);
             MortalStrikeTimer = (10+rand()%20)*1000;
         }else MortalStrikeTimer -= diff;
 

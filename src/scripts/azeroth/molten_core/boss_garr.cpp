@@ -169,14 +169,14 @@ class Mob_FiresWorn : public CreatureScript
             void onCombatStart(Unit* victim)
             {
                 if (Creature* garr = _instance->instance->GetCreature(_instance->GetData64(DATA_GARR)))
-                    if (!garr->getVictim())
+                    if (!garr->GetVictim())
                         garr->getAI()->attackStart(victim);
             }
 
             void onDeath(Unit* /*killer*/)
             {
                 if (Creature* garr = _instance->instance->GetCreature(_instance->GetData64(DATA_GARR)))
-                    if (garr->isAlive())
+                    if (garr->IsAlive())
                         garr->CastSpell(garr, SPELL_FRENZY, false);
             }
         
@@ -192,7 +192,7 @@ class Mob_FiresWorn : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_ERUPTION:
-                            doCast(me->getVictim(), SPELL_ERUPTION);
+                            doCast(me->GetVictim(), SPELL_ERUPTION);
                             disableEvent(EV_ERUPTION);
                             me->DisappearAndDie();
                             break;

@@ -97,7 +97,7 @@ bool CheckAllBossDied(ScriptedInstance* pInstance, Creature* m_creature)
     if(!Maulgar || !Kiggler || !Blindeye || !Olm || !Krosh)
         return false;
 
-    if(!Maulgar->isAlive() && !Kiggler->isAlive() && !Blindeye->isAlive() && !Olm->isAlive() && !Krosh->isAlive())
+    if(!Maulgar->IsAlive() && !Kiggler->IsAlive() && !Blindeye->IsAlive() && !Olm->IsAlive() && !Krosh->IsAlive())
         return true;
 
     return false;
@@ -143,7 +143,7 @@ struct boss_high_king_maulgarAI : public ScriptedAI
             if(Council[i])
             {
                 pCreature = (Creature*)(Unit::GetUnit((*m_creature), Council[i]));
-                if(pCreature && !pCreature->isAlive())
+                if(pCreature && !pCreature->IsAlive())
                 {
                     pCreature->Respawn();
                     pCreature->AI()->EnterEvadeMode();
@@ -186,7 +186,7 @@ struct boss_high_king_maulgarAI : public ScriptedAI
        }
 
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         StartEvent(who);
     }
@@ -243,21 +243,21 @@ struct boss_high_king_maulgarAI : public ScriptedAI
         //ArcingSmash_Timer
         if (ArcingSmash_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ARCING_SMASH);
+            DoCast(m_creature->GetVictim(), SPELL_ARCING_SMASH);
             ArcingSmash_Timer = 10000;
         }else ArcingSmash_Timer -= diff;
 
         //Whirlwind_Timer
                if (Whirlwind_Timer < diff)
                {
-                    DoCast(m_creature->getVictim(), SPELL_WHIRLWIND);
+                    DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND);
                     Whirlwind_Timer = 55000;
                }else Whirlwind_Timer -= diff;
 
         //MightyBlow_Timer
         if (MightyBlow_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_MIGHTY_BLOW);
+            DoCast(m_creature->GetVictim(), SPELL_MIGHTY_BLOW);
             MightyBlow_Timer = 30000+rand()%10000;
         }else MightyBlow_Timer -= diff;
 
@@ -324,7 +324,7 @@ struct boss_olm_the_summonerAI : public ScriptedAI
             pInstance->SetData(DATA_MAULGAREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
         {
@@ -375,7 +375,7 @@ struct boss_olm_the_summonerAI : public ScriptedAI
         //DarkDecay_Timer
         if(DarkDecay_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_DARK_DECAY);
+            DoCast(m_creature->GetVictim(), SPELL_DARK_DECAY);
             DarkDecay_Timer = 20000;
         }else DarkDecay_Timer -= diff;
 
@@ -428,7 +428,7 @@ struct boss_kiggler_the_crazedAI : public ScriptedAI
             pInstance->SetData(DATA_MAULGAREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
         {
@@ -489,21 +489,21 @@ struct boss_kiggler_the_crazedAI : public ScriptedAI
         //LightningBolt_Timer
         if(LightningBolt_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_LIGHTNING_BOLT);
+            DoCast(m_creature->GetVictim(), SPELL_LIGHTNING_BOLT);
             LightningBolt_Timer = 15000;
         }else LightningBolt_Timer -= diff;
 
         //ArcaneShock_Timer
         if(ArcaneShock_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_SHOCK);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_SHOCK);
             ArcaneShock_Timer = 20000;
         }else ArcaneShock_Timer -= diff;
 
         //ArcaneExplosion_Timer
         if(ArcaneExplosion_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION);
             ArcaneExplosion_Timer = 30000;
         }else ArcaneExplosion_Timer -= diff;
 
@@ -534,7 +534,7 @@ struct boss_blindeye_the_seerAI : public ScriptedAI
             pInstance->SetData(DATA_MAULGAREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
         {
@@ -625,7 +625,7 @@ struct boss_krosh_firehandAI : public ScriptedAI
             pInstance->SetData(DATA_MAULGAREVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
         {
@@ -674,9 +674,9 @@ struct boss_krosh_firehandAI : public ScriptedAI
         }
 
         //GreaterFireball_Timer
-        if(GreaterFireball_Timer < diff || m_creature->GetDistance(m_creature->getVictim()) < 30)
+        if(GreaterFireball_Timer < diff || m_creature->GetDistance(m_creature->GetVictim()) < 30)
         {
-            DoCast(m_creature->getVictim(), SPELL_GREATER_FIREBALL);
+            DoCast(m_creature->GetVictim(), SPELL_GREATER_FIREBALL);
             GreaterFireball_Timer = 2000;
         }else GreaterFireball_Timer -= diff;
 
@@ -684,7 +684,7 @@ struct boss_krosh_firehandAI : public ScriptedAI
         if(SpellShield_Timer < diff)
         {
             m_creature->InterruptNonMeleeSpells(false);
-            DoCast(m_creature->getVictim(), SPELL_SPELLSHIELD);
+            DoCast(m_creature->GetVictim(), SPELL_SPELLSHIELD);
             SpellShield_Timer = 30000;
         }else SpellShield_Timer -= diff;
 

@@ -299,10 +299,10 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case EVENT_T_TARGET_HP:
             {
-                if (!InCombat || !m_creature->getVictim() || !m_creature->getVictim()->GetMaxHealth())
+                if (!InCombat || !m_creature->GetVictim() || !m_creature->GetVictim()->GetMaxHealth())
                     return false;
 
-                uint32 perc = (m_creature->getVictim()->GetHealth()*100) / m_creature->getVictim()->GetMaxHealth();
+                uint32 perc = (m_creature->GetVictim()->GetHealth()*100) / m_creature->GetVictim()->GetMaxHealth();
 
                 if (perc > param1 || perc < param2)
                     return false;
@@ -324,7 +324,7 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case EVENT_T_TARGET_CASTING:
             {
-                if (!InCombat || !m_creature->getVictim() || !m_creature->getVictim()->IsNonMeleeSpellCasted(false, false, true))
+                if (!InCombat || !m_creature->GetVictim() || !m_creature->GetVictim()->IsNonMeleeSpellCasted(false, false, true))
                     return false;
 
                 //Repeat Timers
@@ -495,7 +495,7 @@ struct Mob_EventAI : public ScriptedAI
             return m_creature;
             break;
         case TARGET_T_HOSTILE:
-            return m_creature->getVictim();
+            return m_creature->GetVictim();
             break;
         case TARGET_T_HOSTILE_SECOND_AGGRO:
             return SelectUnit(SELECT_TARGET_TOPAGGRO,1);
@@ -560,7 +560,7 @@ struct Mob_EventAI : public ScriptedAI
                                 target = owner;
                         }
                     }
-                    else if (target = m_creature->getVictim())
+                    else if (target = m_creature->GetVictim())
                     {
                         if (target->GetTypeId() != TYPEID_PLAYER)
                         {
@@ -678,7 +678,7 @@ struct Mob_EventAI : public ScriptedAI
                                 SetCombatDistance(0.0f);
                                 AttackAngle = 0;
 
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), GetCombatDistance(), AttackAngle);
                             }
 
                         }else
@@ -792,7 +792,7 @@ struct Mob_EventAI : public ScriptedAI
                 //Allow movement (create new targeted movement gen if none exist already)
                 if (IsCombatMovementAllowed())
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), GetCombatDistance(), AttackAngle);
                 }
                 else
                 {
@@ -866,7 +866,7 @@ struct Mob_EventAI : public ScriptedAI
                 AttackAngle = ((float)param2/180)*M_PI;
                 if (IsCombatMovementAllowed())
                 {
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), GetCombatDistance(), AttackAngle);
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), GetCombatDistance(), AttackAngle);
                 }
             }
             break;
@@ -985,7 +985,7 @@ struct Mob_EventAI : public ScriptedAI
             break;
         case ACTION_T_ZONE_COMBAT_PULSE:
             {
-                if (!m_creature->isInCombat() || !m_creature->GetMap()->IsDungeon())
+                if (!m_creature->IsInCombat() || !m_creature->GetMap()->IsDungeon())
                 {
                     if (EAI_ErrorLevel > 0)
                         error_db_log("TSCR: Event %d ACTION_T_ZONE_COMBAT_PULSE on creature out of combat or in non-dungeon map. Creature %d", EventId, m_creature->GetEntry());
@@ -1073,7 +1073,7 @@ struct Mob_EventAI : public ScriptedAI
                     ProcessEvent(*i);
                     break;
                 //default:
-                    //TODO: enable below code line / verify this is correct to enable events previously disabled (ex. aggro yell), instead of enable this in void Aggro()
+                    //TODO: enable below code line / verify this is correct to enable events previously disabled (ex. aggro yell), instead of enable this in void EnterCombat()
                     //(*i).Enabled = true;
                     //(*i).Time = 0;
                     //break;
@@ -1084,7 +1084,7 @@ struct Mob_EventAI : public ScriptedAI
     //when creature reach home after EnterEvadeMode
     void JustReachedHome()
     {
-        m_creature->LoadCreaturesAddon();
+        m_creature->InitCreatureAddon(true);
 
         for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)
         {
@@ -1156,7 +1156,7 @@ struct Mob_EventAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         //Check for on combat start events
         for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)
@@ -1204,7 +1204,7 @@ struct Mob_EventAI : public ScriptedAI
             if (!InCombat)
             {
                 InCombat = true;
-                Aggro(who);
+                EnterCombat(who);
             }
 
             if (IsCombatMovementAllowed())
@@ -1276,7 +1276,7 @@ struct Mob_EventAI : public ScriptedAI
         bool Combat = UpdateVictim();
 
         //Must return if creature isn't alive. Normally select hostil target and get victim prevent this
-        if (!m_creature->isAlive())
+        if (!m_creature->IsAlive())
             return;
 
         if (IsFleeing)
@@ -1286,8 +1286,8 @@ struct Mob_EventAI : public ScriptedAI
                 m_creature->SetControlled(false, UNIT_STAT_FLEEING);
                 m_creature->SetNoCallAssistance(false);
                 m_creature->CallAssistance();
-                if(m_creature->getVictim())
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                if(m_creature->GetVictim())
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                 IsFleeing = false;
             }
             else
@@ -1302,7 +1302,7 @@ struct Mob_EventAI : public ScriptedAI
             EventDiff += diff;
 
             //Check for range based events
-            //if (m_creature->GetDistance(m_creature->getVictim()) >
+            //if (m_creature->GetDistance(m_creature->GetVictim()) >
             if (Combat)
             {
                 for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)
@@ -1311,9 +1311,9 @@ struct Mob_EventAI : public ScriptedAI
                     {
                         case EVENT_T_RANGE:
                             // in some cases this is called twice and victim may not exist in the second time
-                            if(m_creature->getVictim())
+                            if(m_creature->GetVictim())
                             {
-                                float dist = m_creature->GetDistance(m_creature->getVictim());
+                                float dist = m_creature->GetDistance(m_creature->GetVictim());
                                 if (dist > (*i).Event.event_param1 && dist < (*i).Event.event_param2)
                                     ProcessEvent(*i);
                             }
@@ -1358,9 +1358,9 @@ struct Mob_EventAI : public ScriptedAI
                     case EVENT_T_RANGE:
                         if (Combat)
                         {
-                            if (m_creature->IsWithinDistInMap(m_creature->getVictim(),(float)(*i).Event.event_param2))
+                            if (m_creature->IsWithinDistInMap(m_creature->GetVictim(),(float)(*i).Event.event_param2))
                             {
-                                if (m_creature->GetDistance(m_creature->getVictim()) >= (float)(*i).Event.event_param1)
+                                if (m_creature->GetDistance(m_creature->GetVictim()) >= (float)(*i).Event.event_param1)
                                     ProcessEvent(*i);
                             }
                         }

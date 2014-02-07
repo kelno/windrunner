@@ -77,7 +77,7 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
             me->SetDisplayId(15732);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -89,7 +89,7 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
         //ArcaneMissiles_Timer
         if (ArcaneMissiles_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANEMISSILES);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANEMISSILES);
             ArcaneMissiles_Timer = 8000;
         }else ArcaneMissiles_Timer -= diff;
 
@@ -103,7 +103,7 @@ struct boss_darkmaster_gandlingAI : public ScriptedAI
         //Curse_Timer
         if (Curse_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CURSE);
+            DoCast(m_creature->GetVictim(),SPELL_CURSE);
             Curse_Timer = 15000 + rand()%12000;
         }else Curse_Timer -= diff;
 

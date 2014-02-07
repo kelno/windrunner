@@ -100,7 +100,7 @@ struct boss_vaelAI : public ScriptedAI
         DoScriptText(SAY_KILLTARGET, m_creature, victim);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoCast(m_creature,SPELL_ESSENCEOFTHERED);
         DoZoneInCombat();
@@ -156,14 +156,14 @@ struct boss_vaelAI : public ScriptedAI
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 15000;
         }else Cleave_Timer -= diff;
 
         //FlameBreath_Timer
         if (FlameBreath_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FLAMEBREATH);
+            DoCast(m_creature->GetVictim(),SPELL_FLAMEBREATH);
             FlameBreath_Timer = 4000 + rand()%4000;
         }else FlameBreath_Timer -= diff;
 
@@ -192,7 +192,7 @@ struct boss_vaelAI : public ScriptedAI
         {
             // have the victim cast the spell on himself otherwise the third effect aura will be applied
             // to Vael instead of the player
-            m_creature->getVictim()->CastSpell(m_creature->getVictim(),SPELL_BURNINGADRENALINE,1);
+            m_creature->GetVictim()->CastSpell(m_creature->GetVictim(),SPELL_BURNINGADRENALINE,1);
 
             BurningAdrenalineTank_Timer = 45000;
         }else BurningAdrenalineTank_Timer -= diff;
@@ -200,7 +200,7 @@ struct boss_vaelAI : public ScriptedAI
         //FireNova_Timer
         if (FireNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIRENOVA);
+            DoCast(m_creature->GetVictim(),SPELL_FIRENOVA);
             FireNova_Timer = 5000;
         }else FireNova_Timer -= diff;
 
@@ -208,9 +208,9 @@ struct boss_vaelAI : public ScriptedAI
         if (TailSwipe_Timer < diff)
         {
             //Only cast if we are behind
-            /*if (!m_creature->HasInArc( M_PI, m_creature->getVictim()))
+            /*if (!m_creature->HasInArc( M_PI, m_creature->GetVictim()))
             {
-            DoCast(m_creature->getVictim(),SPELL_TAILSWIPE);
+            DoCast(m_creature->GetVictim(),SPELL_TAILSWIPE);
             }*/
 
             TailSwipe_Timer = 20000;

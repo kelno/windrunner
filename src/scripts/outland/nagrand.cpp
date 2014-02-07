@@ -53,7 +53,7 @@ struct mob_shattered_rumblerAI : public ScriptedAI
         Spawn = false;
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void SpellHit(Unit* pHitter, const SpellEntry* Spellkind)
     {
@@ -140,7 +140,7 @@ struct mob_lumpAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (m_creature->HasAura(SPELL_VISUAL_SLEEP))
             m_creature->RemoveAura(SPELL_VISUAL_SLEEP,0);
@@ -177,7 +177,7 @@ struct mob_lumpAI : public ScriptedAI
         //Spear_Throw_Timer
         if (Spear_Throw_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SPEAR_THROW);
+            DoCast(m_creature->GetVictim(), SPELL_SPEAR_THROW);
             Spear_Throw_Timer = 20000;
         } else Spear_Throw_Timer -= diff;
 
@@ -238,7 +238,7 @@ struct mob_sunspring_villagerAI : public ScriptedAI
         m_creature->SetUInt32Value(UNIT_FIELD_BYTES_1,7);   // lay down
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void SpellHit(Unit* pCaster, const SpellEntry* spell)
     {
@@ -539,7 +539,7 @@ struct npc_creditmarker_visit_with_ancestorsAI : public ScriptedAI
 
     void Reset() {}
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -601,7 +601,7 @@ struct mob_sparrowhawkAI : public ScriptedAI
         ScriptedAI::AttackStart(pWho);
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -720,7 +720,7 @@ struct npc_maghar_captiveAI : public npc_escortAI
         m_uiFrostShockTimer = 6000;
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         DoCast(m_creature, SPELL_EARTHBIND_TOTEM, false);
     }
@@ -778,12 +778,12 @@ struct npc_maghar_captiveAI : public npc_escortAI
 
     void UpdateEscortAI(const uint32 uiDiff)
     {
-        if (/*!m_creature->SelectHostilTarget() ||*/ !m_creature->getVictim())
+        if (/*!m_creature->SelectHostilTarget() ||*/ !m_creature->GetVictim())
             return;
 
         if (m_uiChainLightningTimer <= uiDiff)
         {
-            DoCast(m_creature->getVictim(), SPELL_CHAIN_LIGHTNING);
+            DoCast(m_creature->GetVictim(), SPELL_CHAIN_LIGHTNING);
             m_uiChainLightningTimer = urand(7000, 14000);
         }
         else
@@ -802,7 +802,7 @@ struct npc_maghar_captiveAI : public npc_escortAI
 
         if (m_uiFrostShockTimer <= uiDiff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FROST_SHOCK);
+            DoCast(m_creature->GetVictim(), SPELL_FROST_SHOCK);
             m_uiFrostShockTimer = urand(7500, 15000);
         }
         else
@@ -871,7 +871,7 @@ struct npc_sharvakAI : public ScriptedAI
 {
     npc_sharvakAI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -897,7 +897,7 @@ struct npc_jheelAI : public ScriptedAI
 {
     npc_jheelAI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -930,7 +930,7 @@ struct npc_rethhedronAI : public ScriptedAI
         quest = false;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void SpellHit(Unit* pHitter, const SpellEntry* spell)
     {
@@ -1011,7 +1011,7 @@ struct npc_kurenai_captiveAI : public npc_escortAI
         FrostShockTimer = 6000;
     }
 
-    void Aggro(Unit* /*who*/)
+    void EnterCombat(Unit* /*who*/)
     {
         DoCast(me, SPELL_KUR_EARTHBIND_TOTEM, false);
     }
@@ -1099,12 +1099,12 @@ struct npc_kurenai_captiveAI : public npc_escortAI
         if (!UpdateVictim())
             return;
 
-        if (me->hasUnitState(UNIT_STAT_CASTING))
+        if (me->HasUnitState(UNIT_STAT_CASTING))
             return;
 
         if (ChainLightningTimer <= diff)
         {
-            DoCast(me->getVictim(), SPELL_KUR_CHAIN_LIGHTNING);
+            DoCast(me->GetVictim(), SPELL_KUR_CHAIN_LIGHTNING);
             ChainLightningTimer = urand(7000,14000);
         } else ChainLightningTimer -= diff;
 
@@ -1119,7 +1119,7 @@ struct npc_kurenai_captiveAI : public npc_escortAI
 
         if (FrostShockTimer <= diff)
         {
-            DoCast(me->getVictim(), SPELL_KUR_FROST_SHOCK);
+            DoCast(me->GetVictim(), SPELL_KUR_FROST_SHOCK);
             FrostShockTimer = urand(7500,15000);
         } else FrostShockTimer -= diff;
 

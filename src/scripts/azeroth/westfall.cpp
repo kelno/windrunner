@@ -77,7 +77,7 @@ struct npc_defias_traitorAI : public npc_escortAI
                 break;
         }
     }
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         switch(rand()%2)
         {
@@ -170,7 +170,7 @@ struct npc_daphne_stilwellAI : public npc_escortAI
         uiShootTimer = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void WaypointReached(uint32 uiPoint)
     {
@@ -256,9 +256,9 @@ struct npc_daphne_stilwellAI : public npc_escortAI
         {
             uiShootTimer = 1500;
 
-            //if (!m_creature->IsWithinDist(m_creature->getVictim(), ATTACK_DISTANCE))
-            if (m_creature->GetDistance2d(m_creature->getVictim()) > ATTACK_DISTANCE)
-                DoCast(m_creature->getVictim(), SPELL_SHOOT);
+            //if (!m_creature->IsWithinDist(m_creature->GetVictim(), ATTACK_DISTANCE))
+            if (m_creature->GetDistance2d(m_creature->GetVictim()) > ATTACK_DISTANCE)
+                DoCast(m_creature->GetVictim(), SPELL_SHOOT);
             else
                 DoMeleeAttackIfReady();
         } else uiShootTimer -= diff;

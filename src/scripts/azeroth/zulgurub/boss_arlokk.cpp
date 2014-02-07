@@ -78,7 +78,7 @@ struct boss_arlokkAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -98,11 +98,11 @@ struct boss_arlokkAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if( m_creature->getVictim() && m_creature->isAlive())
+        if( m_creature->GetVictim() && m_creature->IsAlive())
         {
             if (!PhaseTwo && ShadowWordPain_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_SHADOWWORDPAIN);
+                DoCast(m_creature->GetVictim(),SPELL_SHADOWWORDPAIN);
                 ShadowWordPain_Timer = 15000;
             }else ShadowWordPain_Timer -= diff;
 
@@ -176,16 +176,16 @@ struct boss_arlokkAI : public ScriptedAI
             //Cleave_Timer
             if(PhaseTwo && Cleave_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+                DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
                 Cleave_Timer = 16000;
             }Cleave_Timer -=diff;
 
             //Gouge_Timer
             if(PhaseTwo && Gouge_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_GOUGE);
-                if(DoGetThreat(m_creature->getVictim()))
-                    DoModifyThreatPercent(m_creature->getVictim(),-80);
+                DoCast(m_creature->GetVictim(), SPELL_GOUGE);
+                if(DoGetThreat(m_creature->GetVictim()))
+                    DoModifyThreatPercent(m_creature->GetVictim(),-80);
 
                 Gouge_Timer = 17000+rand()%10000;
             }else Gouge_Timer -= diff;

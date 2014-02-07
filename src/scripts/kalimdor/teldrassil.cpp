@@ -64,13 +64,13 @@ struct npc_mistAI : public FollowerAI
         AryniaGUID = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit *pWho)
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!me->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_ARYNIA)
+        if (!me->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE | STATE_FOLLOW_POSTEVENT) && pWho->GetEntry() == NPC_ARYNIA)
         {
             if (me->IsWithinDistInMap(pWho, INTERACTION_DISTANCE))
             {
@@ -108,7 +108,7 @@ struct npc_mistAI : public FollowerAI
                     m_uiPostEventTimer = 3000;
 
                     Unit *pArynia = Unit::GetUnit(*me, AryniaGUID);
-                    if (!pArynia || !pArynia->isAlive())
+                    if (!pArynia || !pArynia->IsAlive())
                     {
                         SetFollowComplete();
                         return;

@@ -159,7 +159,7 @@ hyjal_trashAI::hyjal_trashAI(Creature *c) : npc_escortAI(c), cannibalism(false)
 
 void hyjal_trashAI::DamageTaken(Unit *done_by, uint32 &damage)
 {
-    if(done_by->GetTypeId() == TYPEID_PLAYER || (done_by->GetTypeId() == TYPEID_UNIT && (done_by->ToCreature())->isPet()))
+    if(done_by->GetTypeId() == TYPEID_PLAYER || (done_by->GetTypeId() == TYPEID_UNIT && (done_by->ToCreature())->IsPet()))
     {
         damageTaken += damage;
         if(pInstance)
@@ -167,7 +167,7 @@ void hyjal_trashAI::DamageTaken(Unit *done_by, uint32 &damage)
     }
 }
 
-void hyjal_trashAI::Aggro(Unit *who){}
+void hyjal_trashAI::EnterCombat(Unit *who){}
 
 void hyjal_trashAI::UpdateAI(const uint32 diff)
 {
@@ -440,7 +440,7 @@ struct mob_giant_infernalAI : public hyjal_trashAI
         imol = false;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void WaypointReached(uint32 i)
     {
@@ -450,7 +450,7 @@ struct mob_giant_infernalAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
@@ -491,7 +491,7 @@ struct mob_giant_infernalAI : public hyjal_trashAI
                     if (pInstance->GetData(DATA_ALLIANCE_RETREAT) && !pInstance->GetData(DATA_HORDE_RETREAT))
                     {
                         Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                        if (target && target->isAlive())
+                        if (target && target->IsAlive())
                             m_creature->AddThreat(target,0.0);
                     }else if (pInstance->GetData(DATA_ALLIANCE_RETREAT) && pInstance->GetData(DATA_HORDE_RETREAT)){
                         //do overrun
@@ -526,7 +526,7 @@ struct mob_giant_infernalAI : public hyjal_trashAI
         }
         if(FlameBuffetTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FLAME_BUFFET,true);
+            DoCast(m_creature->GetVictim(),SPELL_FLAME_BUFFET,true);
             FlameBuffetTimer = 7000;
         }else FlameBuffetTimer -= diff;
         DoMeleeAttackIfReady();
@@ -568,11 +568,11 @@ struct mob_abominationAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
@@ -586,7 +586,7 @@ struct mob_abominationAI : public hyjal_trashAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -622,7 +622,7 @@ struct mob_abominationAI : public hyjal_trashAI
             return;
         if(KnockDownTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KNOCKDOWN);
+            DoCast(m_creature->GetVictim(),SPELL_KNOCKDOWN);
             KnockDownTimer = 15000+rand()%10000;
         }else KnockDownTimer -= diff;
         DoMeleeAttackIfReady();
@@ -667,11 +667,11 @@ struct mob_ghoulAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
@@ -687,7 +687,7 @@ struct mob_ghoulAI : public hyjal_trashAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -775,11 +775,11 @@ struct mob_necromancerAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
@@ -806,7 +806,7 @@ struct mob_necromancerAI : public hyjal_trashAI
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -840,7 +840,7 @@ struct mob_necromancerAI : public hyjal_trashAI
             return;
         if(ShadowBoltTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOW_BOLT);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOW_BOLT);
             ShadowBoltTimer = 20000+rand()%10000;
         }else ShadowBoltTimer -= diff;
 
@@ -888,17 +888,17 @@ struct mob_bansheeAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -932,12 +932,12 @@ struct mob_bansheeAI : public hyjal_trashAI
             return;
         if(CourseTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BANSHEE_CURSE);
+            DoCast(m_creature->GetVictim(),SPELL_BANSHEE_CURSE);
             CourseTimer = 20000+rand()%5000;
         }else CourseTimer -= diff;
         if(WailTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BANSHEE_WAIL);
+            DoCast(m_creature->GetVictim(),SPELL_BANSHEE_WAIL);
             WailTimer = 15000+rand()%5000;
         }else WailTimer -= diff;
         /*if(ShellTimer<diff)
@@ -983,17 +983,17 @@ struct mob_crypt_fiendAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -1028,7 +1028,7 @@ struct mob_crypt_fiendAI : public hyjal_trashAI
             return;
         if(WebTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_WEB);
+            DoCast(m_creature->GetVictim(),SPELL_WEB);
             WebTimer = 20000+rand()%5000;
         }else WebTimer -= diff;
         DoMeleeAttackIfReady();
@@ -1069,17 +1069,17 @@ struct mob_fel_stalkerAI : public hyjal_trashAI
             if (pInstance->GetData(DATA_ALLIANCE_RETREAT))//2.alliance boss down, attack thrall
             {
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }else{
                 Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-                if (target && target->isAlive())
+                if (target && target->IsAlive())
                     m_creature->AddThreat(target,0.0);
             }
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -1114,7 +1114,7 @@ struct mob_fel_stalkerAI : public hyjal_trashAI
             return;
         if(ManaBurnTimer<diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MANA_BURN);
+            DoCast(m_creature->GetVictim(),SPELL_MANA_BURN);
             ManaBurnTimer = 9000+rand()%5000;
         }else ManaBurnTimer -= diff;
         DoMeleeAttackIfReady();
@@ -1157,7 +1157,7 @@ struct mob_frost_wyrmAI : public hyjal_trashAI
         if (i == 2 && pInstance && !IsOverrun)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
             {
                 m_creature->AddThreat(target,0.0);
                 DoCast(target,SPELL_FROST_BREATH,true);
@@ -1177,7 +1177,7 @@ struct mob_frost_wyrmAI : public hyjal_trashAI
         m_creature->Relocate(x,y,z,0);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -1211,19 +1211,19 @@ struct mob_frost_wyrmAI : public hyjal_trashAI
         }
         if (!UpdateVictim())
             return;
-        if(m_creature->GetDistance(m_creature->getVictim()) >= 25){
+        if(m_creature->GetDistance(m_creature->GetVictim()) >= 25){
             if(MoveTimer<diff)
             {
-                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                 MoveTimer = 2000;
             }else MoveTimer-=diff;
         }
 
         if(FrostBreathTimer<diff)
         {
-            if(m_creature->GetDistance(m_creature->getVictim()) < 25)
+            if(m_creature->GetDistance(m_creature->GetVictim()) < 25)
             {
-                DoCast(m_creature->getVictim(),SPELL_FROST_BREATH);
+                DoCast(m_creature->GetVictim(),SPELL_FROST_BREATH);
                 m_creature->StopMoving();
                 m_creature->GetMotionMaster()->Clear();
                 FrostBreathTimer = 4000;
@@ -1273,7 +1273,7 @@ struct mob_gargoyleAI : public hyjal_trashAI
         if (i == 2 && pInstance && !IsOverrun)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
             {
                 m_creature->AddThreat(target,0.0);
                 DoCast(target,SPELL_GARGOYLE_STRIKE,true);
@@ -1336,7 +1336,7 @@ struct mob_gargoyleAI : public hyjal_trashAI
         }
         if (!UpdateVictim())
             return;
-        if(m_creature->GetDistance(m_creature->getVictim()) >= 20 || forcemove)
+        if(m_creature->GetDistance(m_creature->GetVictim()) >= 20 || forcemove)
         {
             forcemove = false;
             if(forcemove)
@@ -1348,7 +1348,7 @@ struct mob_gargoyleAI : public hyjal_trashAI
             if(MoveTimer<diff)
             {
                 float x,y,z;
-                m_creature->getVictim()->GetPosition(x,y,z);
+                m_creature->GetVictim()->GetPosition(x,y,z);
                 m_creature->GetMotionMaster()->MovePoint(0,x,y,z+Zpos);
                 Zpos-=1.0;
                 if(Zpos<=0)Zpos=0;
@@ -1357,9 +1357,9 @@ struct mob_gargoyleAI : public hyjal_trashAI
         }
         if(StrikeTimer<diff)
         {
-            if(m_creature->GetDistance(m_creature->getVictim()) < 20)
+            if(m_creature->GetDistance(m_creature->GetVictim()) < 20)
             {
-                DoCast(m_creature->getVictim(),SPELL_GARGOYLE_STRIKE);
+                DoCast(m_creature->GetVictim(),SPELL_GARGOYLE_STRIKE);
                 m_creature->StopMoving();
                 m_creature->GetMotionMaster()->Clear();
                 StrikeTimer = 2000+rand()%1000;

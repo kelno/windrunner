@@ -64,7 +64,7 @@ struct npc_ragged_johnAI : public ScriptedAI
         ScriptedAI::MoveInLineOfSight(pWho);
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 };
 
 CreatureAI* GetAI_npc_ragged_john(Creature* pCreature)

@@ -116,7 +116,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
 
     void Reset()
     {
-        if(pInstance && m_creature->isAlive())
+        if(pInstance && m_creature->IsAlive())
             pInstance->SetData(DATA_GURTOGGBLOODBOILEVENT, NOT_STARTED);
 
         TargetGUID = 0;
@@ -146,7 +146,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
         DoScriptText(SAY_AGGRO, m_creature);
@@ -179,7 +179,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             {
                 if (Player* i_pl = i->getSource())
                 {
-                     if(i_pl && i_pl->isAlive())
+                     if(i_pl && i_pl->IsAlive())
                         targets.push_back(i_pl);
                 }
             }
@@ -194,7 +194,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         //Aura each player in the targets list with Bloodboil.
         for(auto player : targets)
         {
-            if(player && player->isAlive())
+            if(player && player->IsAlive())
                 m_creature->AddAura(SPELL_BLOODBOIL, player);
         }
         targets.clear();
@@ -233,20 +233,20 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
 
         if(FelBreathTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(),Phase1 ? SPELL_FELBREATH_1 : SPELL_FELBREATH_2) == SPELL_CAST_OK)
+            if(DoCast(m_creature->GetVictim(),Phase1 ? SPELL_FELBREATH_1 : SPELL_FELBREATH_2) == SPELL_CAST_OK)
                 FelBreathTimer = 25000;
         }else FelBreathTimer -= diff;
         
         if(EjectTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(),Phase1 ? SPELL_EJECT_1 : SPELL_EJECT_2) == SPELL_CAST_OK)
+            if(DoCast(m_creature->GetVictim(),Phase1 ? SPELL_EJECT_1 : SPELL_EJECT_2) == SPELL_CAST_OK)
                 EjectTimer = 15000;
         }else EjectTimer -= diff;
 
         if(Charge_Timer < diff)
         {
-            if(m_creature->getVictim() && m_creature->GetDistance2d(m_creature->getVictim()) > 15)
-                DoCast(m_creature->getVictim(),SPELL_CHARGE);
+            if(m_creature->GetVictim() && m_creature->GetDistance2d(m_creature->GetVictim()) > 15)
+                DoCast(m_creature->GetVictim(),SPELL_CHARGE);
             Charge_Timer = 10000;
         }else Charge_Timer -= diff;
 
@@ -254,7 +254,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         {
             if(BewilderingStrikeTimer < diff)
             {
-                if(DoCast(m_creature->getVictim(), SPELL_BEWILDERING_STRIKE) == SPELL_CAST_OK)
+                if(DoCast(m_creature->GetVictim(), SPELL_BEWILDERING_STRIKE) == SPELL_CAST_OK)
                     BewilderingStrikeTimer = 20000;
             }else BewilderingStrikeTimer -= diff;
 
@@ -270,7 +270,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             
             if(ArcingSmashTimer < diff)
             {
-                if(DoCast(m_creature->getVictim(), SPELL_ARCING_SMASH_1) == SPELL_CAST_OK)
+                if(DoCast(m_creature->GetVictim(), SPELL_ARCING_SMASH_1) == SPELL_CAST_OK)
                     ArcingSmashTimer = 10000;
             }else ArcingSmashTimer -= diff;
         }
@@ -279,12 +279,12 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
         {
             if(FelGeyserTimer < diff)
             {
-                if(DoCast(m_creature->getVictim(), SPELL_FEL_GEYSER) == SPELL_CAST_OK)
+                if(DoCast(m_creature->GetVictim(), SPELL_FEL_GEYSER) == SPELL_CAST_OK)
                     FelGeyserTimer = 30000;
             }else FelGeyserTimer -= diff;
 
-            if(m_creature->getVictim() && m_creature->getVictim()->IsImmunedToDamage(SPELL_SCHOOL_MASK_ALL,true))
-                m_creature->getThreatManager().modifyThreatPercent(m_creature->getVictim(),-100);
+            if(m_creature->GetVictim() && m_creature->GetVictim()->IsImmunedToDamage(SPELL_SCHOOL_MASK_ALL,true))
+                m_creature->getThreatManager().modifyThreatPercent(m_creature->GetVictim(),-100);
         }
 
         if(PhaseChangeTimer < diff)
@@ -292,7 +292,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             if(Phase1)
             {
                 Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50000, true);
-                if(target && target->isAlive())
+                if(target && target->IsAlive())
                 {
                     Phase1 = false;
 

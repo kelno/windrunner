@@ -16,7 +16,7 @@ struct theinformAI : public ScriptedAI
         me->SetDisplayId(urand(4,25958));
     }
 
-    void Aggro(Unit* /* who */) {}
+    void EnterCombat(Unit* /* who */) {}
 };
 
 CreatureAI* GetAI_theinform(Creature *_Creature)

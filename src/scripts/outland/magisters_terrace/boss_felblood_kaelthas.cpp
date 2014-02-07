@@ -165,7 +165,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
             RemoveGravityLapse();                           // Remove Gravity Lapse so that players fall to ground if they kill him when in air.
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         if(pInstance)
@@ -182,7 +182,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         for(i = m_threatlist.begin(); i != m_threatlist.end(); i++)
         {
             Unit* pUnit = Unit::GetUnit((*m_creature), (*i)->getUnitGuid());
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
             {
                 float threat = DoGetThreat(pUnit);
                 SummonedUnit->AddThreat(pUnit, 0.1f);
@@ -197,9 +197,9 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         m_creature->RemoveAllAuras();
         m_creature->DeleteThreatList();
         m_creature->CombatStop();
-        m_creature->LoadCreaturesAddon();
+        m_creature->InitCreatureAddon();
 
-        if( m_creature->isAlive() )
+        if( m_creature->IsAlive() )
             m_creature->GetMotionMaster()->MoveTargetedHome();
 
         m_creature->SetLootRecipient(NULL);
@@ -218,7 +218,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         for (i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
-                if(i_pl->isAlive())
+                if(i_pl->IsAlive())
                 {
                     i_pl->CastSpell(i_pl, SPELL_TELEPORT_CENTER, true);
                     m_creature->GetNearPoint(m_creature,x,y,z,5,5,0);
@@ -236,7 +236,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         for (i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
-                if(i_pl->isAlive())
+                if(i_pl->IsAlive())
                 // Knockback into the air
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_DOT, true, 0, 0, m_creature->GetGUID());
         }
@@ -251,7 +251,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         {
             if (Player* i_pl = i->getSource())
             {
-                if(i_pl->isAlive())
+                if(i_pl->IsAlive())
                 {
                     // Also needs an exception in spell system.
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_FLY, true, 0, 0, m_creature->GetGUID());
@@ -304,14 +304,14 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                     if(PyroblastTimer < diff)
                     {
                         DoCast(m_creature, SPELL_SHOCK_BARRIER, true);
-                        DoCast(m_creature->getVictim(), SPELL_PYROBLAST);
+                        DoCast(m_creature->GetVictim(), SPELL_PYROBLAST);
                         PyroblastTimer = 60000;
                     }else PyroblastTimer -= diff;
                 }
 
                 if(FireballTimer < diff)
                 {
-                    DoCast(m_creature->getVictim(), Heroic ? SPELL_FIREBALL_HEROIC : SPELL_FIREBALL_NORMAL);
+                    DoCast(m_creature->GetVictim(), Heroic ? SPELL_FIREBALL_HEROIC : SPELL_FIREBALL_NORMAL);
                     FireballTimer = 2000 + rand()%4000;
                 }else FireballTimer -= diff;
 
@@ -334,9 +334,9 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                         }
                         else
                         {
-                            Phoenix->AddThreat(m_creature->getVictim(),1000);
-                            Phoenix->Attack(m_creature->getVictim(),true);
-                            Phoenix->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                            Phoenix->AddThreat(m_creature->GetVictim(),1000);
+                            Phoenix->Attack(m_creature->GetVictim(),true);
+                            Phoenix->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                         }
                     }
 
@@ -387,9 +387,9 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
                                 if(pInstance)
                                 {
                                     GameObject* KaelLeft = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_KAEL_STATUE_LEFT));
-                                    if(KaelLeft) KaelLeft->SetGoState(0);
+                                    if(KaelLeft) KaelLeft->SetGoState(GO_STATE_ACTIVE);
                                     GameObject* KaelRight = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_KAEL_STATUE_RIGHT));
-                                    if(KaelRight) KaelRight->SetGoState(0);
+                                    if(KaelRight) KaelRight->SetGoState(GO_STATE_ACTIVE);
                                 }
                             }else
                             {
@@ -481,7 +481,7 @@ struct mob_felkael_flamestrikeAI : public ScriptedAI
         DoCast(m_creature, SPELL_FLAMESTRIKE2, true);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void MoveInLineOfSight(Unit *who) {}
     void UpdateAI(const uint32 diff)
     {
@@ -516,7 +516,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
         end = false;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void JustDied(Unit* slayer)
     {
@@ -535,7 +535,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
                 if (boss)
                 {
                     phase = ((boss_felblood_kaelthasAI*)boss->AI())->Phase;
-                    if(boss->isDead() || !boss->isInCombat())
+                    if(boss->isDead() || !boss->IsInCombat())
                     {
                         end = true;
                         m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FIRE, NULL, false);//temphack, hellfire is not damaging self
@@ -558,7 +558,7 @@ struct mob_felkael_phoenixAI : public ScriptedAI
             else
             {
                 m_creature->StopMoving();
-                DoCast(m_creature->getVictim(), SPELL_PHOENIX_FIREBALL);
+                DoCast(m_creature->GetVictim(), SPELL_PHOENIX_FIREBALL);
             }
             BurnTimer = 2000;
         }else BurnTimer -= diff;
@@ -578,7 +578,7 @@ struct mob_felkael_phoenix_eggAI : public Scripted_NoMovementAI
     ScriptedInstance* pInstance;
     void Reset() {   HatchTimer = 15000;   }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff)
     {
@@ -589,11 +589,11 @@ struct mob_felkael_phoenix_eggAI : public Scripted_NoMovementAI
             if (bird)
             {
                 Unit *boss = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_KAEL));
-                if (boss && boss->getVictim())
+                if (boss && boss->GetVictim())
                 {
-                    bird->AddThreat(boss->getVictim(),100);
-                    bird->Attack(boss->getVictim(),true);
-                    bird->GetMotionMaster()->MoveChase(boss->getVictim());
+                    bird->AddThreat(boss->GetVictim(),100);
+                    bird->Attack(boss->GetVictim(),true);
+                    bird->GetMotionMaster()->MoveChase(boss->GetVictim());
                 }
             }
             m_creature->DealDamage(m_creature, m_creature->GetMaxHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
@@ -627,7 +627,7 @@ struct mob_arcane_sphereAI : public ScriptedAI
         DoCast(m_creature, SPELL_ARCANE_SPHERE_PASSIVE, true);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void StalkTarget(Unit* target)
     {

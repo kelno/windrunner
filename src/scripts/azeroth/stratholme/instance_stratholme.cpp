@@ -276,7 +276,7 @@ struct instance_stratholme : public ScriptedInstance
                 {
                     if (Unit* abom = Unit::GetUnit(*player, *i))
                     {
-                        if (!abom->isAlive())
+                        if (!abom->IsAlive())
                             --count;
                         else
                             abominationTimer = 5000;
@@ -475,7 +475,7 @@ struct instance_stratholme : public ScriptedInstance
                     {
                         if (Unit* abom = Unit::GetUnit(*player, *i))
                         {
-                            if (abom->isAlive()) {
+                            if (abom->IsAlive()) {
                                 reinterpret_cast<Creature*>(abom)->AI()->AttackStart(player);
                                 abominationTimer = 0;
                                 break;

@@ -42,7 +42,7 @@ struct boss_vectusAI : public ScriptedAI
         Frenzy_Timer = 0;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -61,7 +61,7 @@ struct boss_vectusAI : public ScriptedAI
         //BlastWave_Timer
         if (BlastWave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BLASTWAVE);
+            DoCast(m_creature->GetVictim(),SPELL_BLASTWAVE);
             BlastWave_Timer = 12000;
         }else BlastWave_Timer -= diff;
 

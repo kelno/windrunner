@@ -42,7 +42,7 @@ struct mobs_ghoul_flayerAI : public ScriptedAI
 
     void Reset() { }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void JustDied(Unit* pKiller)
     {
@@ -96,7 +96,7 @@ struct npc_darrowshire_spiritAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
 };
 CreatureAI* GetAI_npc_darrowshire_spirit(Creature* pCreature)
@@ -190,7 +190,7 @@ struct npc_anchorite_truuenAI : public npc_escortAI
         uiPhase = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void WaypointReached(uint32 uiPointId)
     {

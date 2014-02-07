@@ -91,7 +91,7 @@ struct boss_najentusAI : public ScriptedAI
 
         SpineTargetGUID = 0;
 
-        if(pInstance && m_creature->isAlive())
+        if(pInstance && m_creature->IsAlive())
             pInstance->SetData(DATA_HIGHWARLORDNAJENTUSEVENT, NOT_STARTED);
     }
 
@@ -131,7 +131,7 @@ struct boss_najentusAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_HIGHWARLORDNAJENTUSEVENT, IN_PROGRESS);
@@ -198,7 +198,7 @@ struct boss_najentusAI : public ScriptedAI
         if(ImpalingSpineTimer < diff)
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);
-            if(!target) target = m_creature->getVictim();
+            if(!target) target = m_creature->GetVictim();
             if(target)
             {
                 m_creature->CastSpell(target, SPELL_IMPALING_SPINE, true);

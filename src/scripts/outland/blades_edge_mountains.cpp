@@ -81,7 +81,7 @@ struct mobs_bladespire_ogreAI : public ScriptedAI
     {
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
     }
 
@@ -148,7 +148,7 @@ struct mobs_nether_drakeAI : public ScriptedAI
         IntangiblePresence_Timer = 15000;
     }
 
-    void Aggro(Unit* pWho) { }
+    void EnterCombat(Unit* pWho) { }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
@@ -239,13 +239,13 @@ struct mobs_nether_drakeAI : public ScriptedAI
 
         if (IntangiblePresence_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_INTANGIBLE_PRESENCE);
+            DoCast(m_creature->GetVictim(),SPELL_INTANGIBLE_PRESENCE);
             IntangiblePresence_Timer = 15000+rand()%15000;
         }else IntangiblePresence_Timer -= diff;
 
         if (ManaBurn_Timer <= diff)
         {
-            Unit* target = m_creature->getVictim();
+            Unit* target = m_creature->GetVictim();
             if (target && target->getPowerType() == POWER_MANA)
                 DoCast(target,SPELL_MANA_BURN);
             ManaBurn_Timer = 8000+rand()%8000;
@@ -253,7 +253,7 @@ struct mobs_nether_drakeAI : public ScriptedAI
 
         if (ArcaneBlast_Timer <= diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANE_BLAST);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANE_BLAST);
             ArcaneBlast_Timer = 2500+rand()%5000;
         }else ArcaneBlast_Timer -= diff;
 
@@ -280,7 +280,7 @@ struct npc_daranelleAI : public ScriptedAI
     {
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
     }
 
@@ -464,7 +464,7 @@ struct npc_prophecy_questcreditAI : public ScriptedAI
 {
     npc_prophecy_questcreditAI(Creature *c) : ScriptedAI(c) {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void Reset()
     {
@@ -499,7 +499,7 @@ struct npc_grishna_falconwingAI : public ScriptedAI
 {
     npc_grishna_falconwingAI(Creature *c) : ScriptedAI(c) {}
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustDied(Unit *pKiller)
     {
@@ -563,7 +563,7 @@ struct trigger_vimgol_circle_bunnyAI : public Scripted_NoMovementAI
         hasResetVisual = false;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustDied(Unit *pKiller)
     {
@@ -676,7 +676,7 @@ struct npc_vimgolAI : public ScriptedAI
         DoCast(m_creature, SPELL_SPAWN);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustDied(Unit *pKiller)
     {
@@ -745,7 +745,7 @@ struct npc_skullocAI : public ScriptedAI
         step5Timer = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustDied(Unit *pKiller)
     {
@@ -870,7 +870,7 @@ struct npc_soulgrinderAI : public Scripted_NoMovementAI
         }
     }
     
-    void Aggro(Unit *pWho) {}       // FIXME: Put summoner and his group in combat and stop it when entering phase 5 -> Maybe not needed if ogres have enough hp
+    void EnterCombat(Unit *pWho) {}       // FIXME: Put summoner and his group in combat and stop it when entering phase 5 -> Maybe not needed if ogres have enough hp
     
     void IncrementOgresCounter()
     {
@@ -956,7 +956,7 @@ struct npc_sundered_ghostAI : public ScriptedAI
         shadowBoltTimer = 3000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustDied(Unit *pKiller)
     {
@@ -970,7 +970,7 @@ struct npc_sundered_ghostAI : public ScriptedAI
             return;
             
         if (crippleTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CRIPPLE);
+            DoCast(m_creature->GetVictim(), SPELL_CRIPPLE);
             
             crippleTimer = 20000+rand()%4000;
         }
@@ -978,7 +978,7 @@ struct npc_sundered_ghostAI : public ScriptedAI
             crippleTimer -= diff;
             
         if (shadowBoltTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+            DoCast(m_creature->GetVictim(), SPELL_SHADOW_BOLT);
             
             shadowBoltTimer = 5000+rand()%3000;
         }
@@ -1134,7 +1134,7 @@ struct npc_simon_bunnyAI : public ScriptedAI
         stepTimer = 1;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     uint32 SelectRandomBeam()
     {
@@ -1507,7 +1507,7 @@ struct npc_simon_bunny_largeAI : public ScriptedAI
         stepTimer = 1;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     uint32 SelectRandomBeam()
     {
@@ -1786,7 +1786,7 @@ struct npc_braxxusAI : public ScriptedAI
         panicTimer = 15000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -1794,7 +1794,7 @@ struct npc_braxxusAI : public ScriptedAI
             return;
             
         if (doubleBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_DOUBLE_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_DOUBLE_BREATH);
             doubleBreathTimer = 10000+rand()%3000;
         }
         else
@@ -1808,7 +1808,7 @@ struct npc_braxxusAI : public ScriptedAI
             mangleTimer -= diff;
             
         if (panicTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_PANIC);
+            DoCast(m_creature->GetVictim(), SPELL_PANIC);
             panicTimer = 15000+rand()%3000;
         }
         else
@@ -1845,7 +1845,7 @@ struct npc_moarg_incineratorAI : public ScriptedAI
         sunderingCleaveTimer = 5000;
     }
     
-    void Aggro(Unit *pWho)
+    void EnterCombat(Unit *pWho)
     {
         DoCast(pWho, SPELL_MIGHTY_CHARGE);
         mightyChargeTimer = 10000;
@@ -1857,14 +1857,14 @@ struct npc_moarg_incineratorAI : public ScriptedAI
             return;
             
         if (acidGeyserTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_ACID_GEYSER);
+            DoCast(m_creature->GetVictim(), SPELL_ACID_GEYSER);
             acidGeyserTimer = 10000+rand()%3000;
         }
         else
             acidGeyserTimer -= diff;
             
         if (sunderingCleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_SUNDERING_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_SUNDERING_CLEAVE);
             sunderingCleaveTimer = 5000+rand()%2000;
         }
         else
@@ -1909,7 +1909,7 @@ struct npc_galvanothAI : public ScriptedAI
         warStompTimer = 8000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -1917,21 +1917,21 @@ struct npc_galvanothAI : public ScriptedAI
             return;
             
         if (felFlamestrikeTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FEL_FLAMESTRIKE);
+            DoCast(m_creature->GetVictim(), SPELL_FEL_FLAMESTRIKE);
             felFlamestrikeTimer = 10000+rand()%3000;
         }
         else
             felFlamestrikeTimer -= diff;
             
         if (mortalStrikeTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_MORTAL_STRIKE);
+            DoCast(m_creature->GetVictim(), SPELL_MORTAL_STRIKE);
             mortalStrikeTimer = 6000+rand()%2000;
         }
         else
             mortalStrikeTimer -= diff;
             
         if (warStompTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_WAR_STOMP);
+            DoCast(m_creature->GetVictim(), SPELL_WAR_STOMP);
             warStompTimer = 10000+rand()%3000;
         }
         else
@@ -1964,7 +1964,7 @@ struct npc_zarcsinAI : public ScriptedAI
         felFlamesTimer = 2000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -1972,7 +1972,7 @@ struct npc_zarcsinAI : public ScriptedAI
             return;
             
         if (felFlamesTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FEL_FLAMES);
+            DoCast(m_creature->GetVictim(), SPELL_FEL_FLAMES);
             felFlamesTimer = 10000+rand()%3000;
         }
         else
@@ -2012,7 +2012,7 @@ struct npc_aether_rayAI : public ScriptedAI
         hasEmoted = false;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void SpellHit(Unit *pCaster, SpellEntry const *pSpell)
     {
@@ -2033,7 +2033,7 @@ struct npc_aether_rayAI : public ScriptedAI
         }
             
         if (tailSwipeTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_TAIL_SWIPE);
+            DoCast(m_creature->GetVictim(), SPELL_TAIL_SWIPE);
             tailSwipeTimer = 10000+rand()%5000;
         }
         else
@@ -2064,7 +2064,7 @@ struct npc_wrangled_aether_rayAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void MoveInLineOfSight(Unit *pWho)
     {
@@ -2153,13 +2153,13 @@ struct npc_rivendarkAI : public ScriptedAI
         flameBreathTimer = 12000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
-        if (!m_creature->isInCombat())
+        if (!m_creature->IsInCombat())
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        else if (m_creature->isInCombat())
+        else if (m_creature->IsInCombat())
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             
         if (!UpdateVictim())
@@ -2182,14 +2182,14 @@ struct npc_rivendarkAI : public ScriptedAI
             tailSweepTimer -= diff;
             
         if (bellowingRoarTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            DoCast(m_creature->GetVictim(), SPELL_BELLOWING_ROAR);
             bellowingRoarTimer = 15000+rand()%3000;
         }
         else
             bellowingRoarTimer -= diff;
             
         if (cleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             cleaveTimer = 5000+rand()%3000;
         }
         else
@@ -2203,7 +2203,7 @@ struct npc_rivendarkAI : public ScriptedAI
             fieryBreathTimer -= diff;
             
         if (flameBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_FLAME_BREATH);
             flameBreathTimer = 12000+rand()%3000;
         }
         else
@@ -2243,27 +2243,27 @@ struct npc_obsidiaAI : public ScriptedAI
         hellfireTimer = 15000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
-        if (!m_creature->isInCombat())
+        if (!m_creature->IsInCombat())
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        else if (m_creature->isInCombat())
+        else if (m_creature->IsInCombat())
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             
         if (!UpdateVictim())
             return;
             
         if (bellowingRoarTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            DoCast(m_creature->GetVictim(), SPELL_BELLOWING_ROAR);
             bellowingRoarTimer = 15000+rand()%3000;
         }
         else
             bellowingRoarTimer -= diff;
             
         if (cleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             cleaveTimer = 5000+rand()%3000;
         }
         else
@@ -2277,14 +2277,14 @@ struct npc_obsidiaAI : public ScriptedAI
             fieryBreathTimer -= diff;
             
         if (flameBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_FLAME_BREATH);
             flameBreathTimer = 12000+rand()%3000;
         }
         else
             flameBreathTimer -= diff;
             
         if (hellfireTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_HELLFIRE);
+            DoCast(m_creature->GetVictim(), SPELL_HELLFIRE);
             hellfireTimer = 20000+rand()%8000;
         }
         else
@@ -2326,27 +2326,27 @@ struct npc_insidionAI : public ScriptedAI
         m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
-        if (!m_creature->isInCombat())
+        if (!m_creature->IsInCombat())
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        else /*if (m_creature->isInCombat())*/
+        else /*if (m_creature->IsInCombat())*/
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             
         if (!UpdateVictim())
             return;
             
         if (bellowingRoarTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            DoCast(m_creature->GetVictim(), SPELL_BELLOWING_ROAR);
             bellowingRoarTimer = 15000+rand()%3000;
         }
         else
             bellowingRoarTimer -= diff;
             
         if (cleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             cleaveTimer = 5000+rand()%3000;
         }
         else
@@ -2360,7 +2360,7 @@ struct npc_insidionAI : public ScriptedAI
             fieryBreathTimer -= diff;
             
         if (flameBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_FLAME_BREATH);
             flameBreathTimer = 12000+rand()%3000;
         }
         else
@@ -2409,13 +2409,13 @@ struct npc_furywingAI : public ScriptedAI
         wingBuffetTimer = 2000;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff)
     {
-        if (!m_creature->isInCombat())
+        if (!m_creature->IsInCombat())
             m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
-        else if (m_creature->isInCombat())
+        else if (m_creature->IsInCombat())
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             
         if (!UpdateVictim())
@@ -2431,14 +2431,14 @@ struct npc_furywingAI : public ScriptedAI
             tailSweepTimer -= diff;
             
         if (bellowingRoarTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_BELLOWING_ROAR);
+            DoCast(m_creature->GetVictim(), SPELL_BELLOWING_ROAR);
             bellowingRoarTimer = 15000+rand()%3000;
         }
         else
             bellowingRoarTimer -= diff;
             
         if (cleaveTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             cleaveTimer = 5000+rand()%3000;
         }
         else
@@ -2452,14 +2452,14 @@ struct npc_furywingAI : public ScriptedAI
             fieryBreathTimer -= diff;
             
         if (flameBreathTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FLAME_BREATH);
+            DoCast(m_creature->GetVictim(), SPELL_FLAME_BREATH);
             flameBreathTimer = 12000+rand()%3000;
         }
         else
             flameBreathTimer -= diff;
             
         if (wingBuffetTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_WING_BUFFET);
+            DoCast(m_creature->GetVictim(), SPELL_WING_BUFFET);
             wingBuffetTimer = 15000+rand()%3000;
         }
         else
@@ -2488,7 +2488,7 @@ struct trigger_banishing_crystal_bunny01AI : public Scripted_NoMovementAI
         m_creature->AddAura(40857, m_creature);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 };
 
 CreatureAI *GetAI_trigger_banishing_crystal_bunny01(Creature *pCreature)
@@ -2533,7 +2533,7 @@ struct npc_rally_zapnabberAI : public ScriptedAI
         blueRayTimer = 0;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void StartEvent()
     {
@@ -2679,7 +2679,7 @@ struct npc_grullocAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(uint32 const diff)
     {
@@ -2699,7 +2699,7 @@ struct npc_grullocAI : public ScriptedAI
         if (!UpdateVictim())
             return;
         
-        if (me->getVictim()->GetEntry() == 22114)
+        if (me->GetVictim()->GetEntry() == 22114)
             return;
             
         if (burningRageTimer <= diff) {
@@ -2710,14 +2710,14 @@ struct npc_grullocAI : public ScriptedAI
             burningRageTimer -= diff;
             
         if (crushArmorTimer <= diff) {
-            DoCast(me->getVictim(),SPELL_CRUSH_ARMOR);
+            DoCast(me->GetVictim(),SPELL_CRUSH_ARMOR);
             crushArmorTimer = 12000 + rand() % 4000;
         }
         else
             crushArmorTimer -= diff;
             
         if (grievousWoundTimer <= diff) {
-            DoCast(me->getVictim(),SPELL_GRIEVOUS_WOUND);
+            DoCast(me->GetVictim(),SPELL_GRIEVOUS_WOUND);
             grievousWoundTimer = 45000;
         }
         else
@@ -2751,7 +2751,7 @@ struct npc_hufferAI : public ScriptedAI
             me->GetMotionMaster()->MovePath(22114, true);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void UpdateAI(uint32 const diff) {}
 };
@@ -2769,7 +2769,7 @@ struct npc_grishnaAI : public ScriptedAI
 {
     npc_grishnaAI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void JustDied(Unit* killer)
     {

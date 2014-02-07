@@ -57,7 +57,7 @@ struct boss_huhuranAI : public ScriptedAI
         Berserk = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -87,14 +87,14 @@ struct boss_huhuranAI : public ScriptedAI
         //Spit Timer
         if (Spit_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ACIDSPIT);
+            DoCast(m_creature->GetVictim(),SPELL_ACIDSPIT);
             Spit_Timer = 5000 + rand()%5000;
         }else Spit_Timer -= diff;
 
         //NoxiousPoison_Timer
         if (NoxiousPoison_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_NOXIOUSPOISON);
+            DoCast(m_creature->GetVictim(),SPELL_NOXIOUSPOISON);
             NoxiousPoison_Timer = 12000 + rand()%12000;
         }else NoxiousPoison_Timer -= diff;
 
@@ -103,7 +103,7 @@ struct boss_huhuranAI : public ScriptedAI
         {
             if (PoisonBolt_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_POISONBOLT);
+                DoCast(m_creature->GetVictim(),SPELL_POISONBOLT);
                 PoisonBolt_Timer = 3000;
             }else PoisonBolt_Timer -= diff;
         }

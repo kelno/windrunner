@@ -98,7 +98,7 @@ struct npc_converted_sentryAI : public ScriptedAI
         return;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -111,7 +111,7 @@ struct npc_converted_sentryAI : public ScriptedAI
                 else DoScriptText(SAY_CONVERTED_2, m_creature);
 
                 DoCast(m_creature, SPELL_CONVERT_CREDIT);
-                if(m_creature->isPet())
+                if(m_creature->IsPet())
                     ((Pet*)m_creature)->SetDuration(7500);
                 Credit = true;
             }else Timer -= diff;
@@ -167,7 +167,7 @@ struct npc_greengill_slaveAI : public ScriptedAI
 
     uint64 PlayerGUID;
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void Reset()
     {

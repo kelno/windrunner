@@ -104,7 +104,7 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustSummoned(Creature *summoned)
     {
@@ -128,7 +128,7 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
             return;
             
         if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f))
-            wickerman->SetGoState(1);
+            wickerman->SetGoState(GO_STATE_READY);
     }
 
     void UpdateAI(const uint32 diff)
@@ -184,7 +184,7 @@ struct npc_lady_sylvanas_windrunnerAI : public ScriptedAI
                         break;
                     case 6:
                         if (GameObject* wickerman = me->FindGOInGrid(180433, 30.0f))
-                            wickerman->SetGoState(0);
+                            wickerman->SetGoState(GO_STATE_ACTIVE);
                         talkId = 0;
                         TalkTimer = 0;
                     default:
@@ -247,7 +247,7 @@ struct npc_highborne_lamenterAI : public ScriptedAI
         EventCast = true;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {

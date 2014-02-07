@@ -68,7 +68,7 @@ struct boss_sarturaAI : public ScriptedAI
 
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -188,7 +188,7 @@ struct mob_sartura_royal_guardAI : public ScriptedAI
         AggroReset = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 

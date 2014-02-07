@@ -134,7 +134,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
             if(RAdvisors[i])
             {
                 pAdvisor = (Unit::GetCreature((*m_creature), RAdvisors[i]));
-                if(pAdvisor && !pAdvisor->isAlive())
+                if(pAdvisor && !pAdvisor->IsAlive())
                 {
                     pAdvisor->Respawn();
                     pAdvisor->AI()->EnterEvadeMode();
@@ -210,7 +210,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
         m_creature->SummonCreature(SEER_OLUM, OLUM_X, OLUM_Y, OLUM_Z, OLUM_O, TEMPSUMMON_TIMED_DESPAWN, 3600000);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         StartEvent(who);
     }
@@ -248,7 +248,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
 
             //if there aren't other units, cast on the tank
             if (!target)
-                target = m_creature->getVictim();
+                target = m_creature->GetVictim();
 
             if(target)
                 DoCast(target, SPELL_CATACLYSMIC_BOLT);
@@ -258,7 +258,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
         //SearNova_Timer
         if(SearNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SEAR_NOVA);
+            DoCast(m_creature->GetVictim(), SPELL_SEAR_NOVA);
             SearNova_Timer = 20000+rand()%40000;
         }else SearNova_Timer -= diff;
 
@@ -281,7 +281,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
                     Advisor = (Unit::GetCreature(*m_creature, Advisors[i]));
                     if(Advisor)
                     {
-                        if(Advisor->isAlive())
+                        if(Advisor->IsAlive())
                         {
                             continueTriggering = true;
                             break;
@@ -330,7 +330,7 @@ struct boss_fathomguard_sharkkisAI : public ScriptedAI
         pet = false;
 
         Creature *Pet = (Creature*)Unit::GetUnit(*m_creature, SummonedPet);
-        if( Pet && Pet->isAlive() )
+        if( Pet && Pet->IsAlive() )
         {
             Pet->DealDamage( Pet, Pet->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false );
         }
@@ -354,7 +354,7 @@ struct boss_fathomguard_sharkkisAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
         {
@@ -390,14 +390,14 @@ struct boss_fathomguard_sharkkisAI : public ScriptedAI
         //LeechingThrow_Timer
         if(LeechingThrow_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_LEECHING_THROW);
+            DoCast(m_creature->GetVictim(), SPELL_LEECHING_THROW);
             LeechingThrow_Timer = 20000;
         }else LeechingThrow_Timer -= diff;
 
         //Multishot_Timer
         if(Multishot_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_MULTISHOT);
+            DoCast(m_creature->GetVictim(), SPELL_MULTISHOT);
             Multishot_Timer = 20000;
         }else Multishot_Timer -= diff;
 
@@ -406,7 +406,7 @@ struct boss_fathomguard_sharkkisAI : public ScriptedAI
         {
             DoCast(m_creature, SPELL_THE_BEAST_WITHIN);
             Creature *Pet = (Creature*)Unit::GetUnit(*m_creature, SummonedPet);
-            if( Pet && Pet->isAlive() )
+            if( Pet && Pet->IsAlive() )
             {
                 Pet->CastSpell( Pet, SPELL_PET_ENRAGE, true );
             }
@@ -478,12 +478,12 @@ struct boss_fathomguard_tidalvessAI : public ScriptedAI
             Karathress = (Creature*)(Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_KARATHRESS)));
 
             if (Karathress)
-                if(!m_creature->isAlive() && Karathress)
+                if(!m_creature->IsAlive() && Karathress)
                     ((boss_fathomlord_karathressAI*)Karathress->AI())->EventTidalvessDeath();
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
         {
@@ -525,7 +525,7 @@ struct boss_fathomguard_tidalvessAI : public ScriptedAI
         //FrostShock_Timer
         if (FrostShock_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FROST_SHOCK);
+            DoCast(m_creature->GetVictim(), SPELL_FROST_SHOCK);
             FrostShock_Timer = 25000+rand()%5000;
         }else FrostShock_Timer -= diff;
 
@@ -536,7 +536,7 @@ struct boss_fathomguard_tidalvessAI : public ScriptedAI
             Unit *SpitfireTotem = Unit::GetUnit( *m_creature, CREATURE_SPITFIRE_TOTEM );
             if( SpitfireTotem )
             {
-                (SpitfireTotem->ToCreature())->AI()->AttackStart( m_creature->getVictim() );
+                (SpitfireTotem->ToCreature())->AI()->AttackStart( m_creature->GetVictim() );
             }
             Spitfire_Timer = 60000;
         }else Spitfire_Timer -= diff;
@@ -593,12 +593,12 @@ struct boss_fathomguard_caribdisAI : public ScriptedAI
             Karathress = (Creature*)(Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_KARATHRESS)));
 
             if (Karathress)
-                if(!m_creature->isAlive() && Karathress)
+                if(!m_creature->IsAlive() && Karathress)
                     ((boss_fathomlord_karathressAI*)Karathress->AI())->EventCaribdisDeath();
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
         {
@@ -634,17 +634,17 @@ struct boss_fathomguard_caribdisAI : public ScriptedAI
         //WaterBoltVolley_Timer
         if (WaterBoltVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WATER_BOLT_VOLLEY);
+            DoCast(m_creature->GetVictim(), SPELL_WATER_BOLT_VOLLEY);
             WaterBoltVolley_Timer = 30000;
         }else WaterBoltVolley_Timer -= diff;
 
         //TidalSurge_Timer
         if (TidalSurge_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_TIDAL_SURGE);
+            DoCast(m_creature->GetVictim(), SPELL_TIDAL_SURGE);
             // Hacky way to do it - won't trigger elseways
-            if (m_creature->getVictim() && m_creature->getVictim()->isAlive())
-                m_creature->getVictim()->CastSpell( m_creature->getVictim(), SPELL_TIDAL_SURGE_FREEZE, true );
+            if (m_creature->GetVictim() && m_creature->GetVictim()->IsAlive())
+                m_creature->GetVictim()->CastSpell( m_creature->GetVictim(), SPELL_TIDAL_SURGE_FREEZE, true );
             TidalSurge_Timer = 15000+rand()%5000;
         }else TidalSurge_Timer -= diff;
 
@@ -674,12 +674,12 @@ struct boss_fathomguard_caribdisAI : public ScriptedAI
             // It can be cast on any of the mobs
             Unit *pUnit = NULL;
 
-            while( pUnit == NULL || !pUnit->isAlive() )
+            while( pUnit == NULL || !pUnit->IsAlive() )
             {
                 pUnit = selectAdvisorUnit();
             }
 
-            if(pUnit && pUnit->isAlive())
+            if(pUnit && pUnit->IsAlive())
                 DoCast(pUnit, SPELL_HEAL);
             Heal_Timer = 60000;
         }else Heal_Timer -= diff;

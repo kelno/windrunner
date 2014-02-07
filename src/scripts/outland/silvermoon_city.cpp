@@ -53,7 +53,7 @@ struct npc_blood_knight_stillbladeAI : public ScriptedAI
         spellHit = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -102,7 +102,7 @@ struct npc_schweitzerAI : public ScriptedAI
 {
     npc_schweitzerAI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {

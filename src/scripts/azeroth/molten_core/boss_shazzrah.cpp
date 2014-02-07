@@ -102,7 +102,7 @@ class Boss_Shazzrah : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_ARCANEEXPLOSION:
-                            doCast(me->getVictim(), SPELL_ARCANEEXPLOSION);
+                            doCast(me->GetVictim(), SPELL_ARCANEEXPLOSION);
                             scheduleEvent(EV_ARCANEEXPLOSION, urand(5000, 6000));
                             break;
                         case EV_SHAZZRAHCURSE:
@@ -114,7 +114,7 @@ class Boss_Shazzrah : public CreatureScript
                             scheduleEvent(EV_DEADENMAGIC, 35000);
                             break;
                         case EV_COUNTERSPELL:
-                            doCast(me->getVictim(), SPELL_COUNTERSPELL);
+                            doCast(me->GetVictim(), SPELL_COUNTERSPELL);
                             scheduleEvent(EV_COUNTERSPELL, urand(16000, 20000));
                             break;
                         case EV_GATE_SHAZZRAH:

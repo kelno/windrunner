@@ -114,7 +114,7 @@ struct boss_akilzonAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(SAY_ONAGGRO, LANG_UNIVERSAL, NULL);
         DoPlaySoundToSet(m_creature, SOUND_ONAGGRO);
@@ -152,7 +152,7 @@ struct boss_akilzonAI : public ScriptedAI
         for (uint8 i = 0; i < 8; i++)
         {
             Unit* bird = Unit::GetUnit(*m_creature,BirdGUIDs[i]);
-            if(bird && bird->isAlive())
+            if(bird && bird->IsAlive())
             {
                 bird->SetVisibility(VISIBILITY_OFF);
                 bird->setDeathState(JUST_DIED);
@@ -258,7 +258,7 @@ struct boss_akilzonAI : public ScriptedAI
         if(StormCount)
         {
             Unit* target = Unit::GetUnit(*m_creature, CloudGUID);
-            if(!target || !target->isAlive())
+            if(!target || !target->IsAlive())
             {
                 EnterEvadeMode();
                 return;
@@ -281,17 +281,17 @@ struct boss_akilzonAI : public ScriptedAI
 
         if (StaticDisruption_Timer < diff) {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if(!target) target = m_creature->getVictim();
+            if(!target) target = m_creature->GetVictim();
             TargetGUID = target->GetGUID();
             m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);
             /*Unit *target = NULL;
             std::list<HostilReference *> t_list = m_creature->getThreatManager().getThreatList();
             for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr) {
                 target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-                if (target && (target->GetTypeId() == TYPEID_PLAYER || ((Creature*)target)->isPet()) && !((Creature*)target)->isTotem() && target->GetDistance2d(m_creature) <= 12 && target != m_creature->getVictim())
+                if (target && (target->GetTypeId() == TYPEID_PLAYER || ((Creature*)target)->IsPet()) && !((Creature*)target)->isTotem() && target->GetDistance2d(m_creature) <= 12 && target != m_creature->GetVictim())
                     DoCast(target, SPELL_STATIC_DISRUPTION);
             }*/
-            m_creature->SetInFront(m_creature->getVictim());
+            m_creature->SetInFront(m_creature->GetVictim());
             StaticDisruption_Timer = (10+rand()%8)*1000; // < 20s
 
             /*float dist = m_creature->GetDistance(target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
@@ -301,13 +301,13 @@ struct boss_akilzonAI : public ScriptedAI
 
         if (GustOfWind_Timer < diff) {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if(!target) target = m_creature->getVictim();
+            if(!target) target = m_creature->GetVictim();
             DoCast(target, SPELL_GUST_OF_WIND);
             GustOfWind_Timer = (20+rand()%10)*1000; //20 to 30 seconds(bosskillers)
         } else GustOfWind_Timer -= diff;
 
         if (CallLighting_Timer < diff) {
-            DoCast(m_creature->getVictim(), SPELL_CALL_LIGHTNING);
+            DoCast(m_creature->GetVictim(), SPELL_CALL_LIGHTNING);
             CallLighting_Timer = (12 + rand()%5)*1000; //totaly random timer. can't find any info on this
         } else CallLighting_Timer -= diff;
 
@@ -375,8 +375,8 @@ struct boss_akilzonAI : public ScriptedAI
                     if (pCreature)
                     {
                         pCreature->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
-                        pCreature->AddThreat(m_creature->getVictim(), 1.0f);
-                        pCreature->AI()->AttackStart(m_creature->getVictim());
+                        pCreature->AddThreat(m_creature->GetVictim(), 1.0f);
+                        pCreature->AI()->AttackStart(m_creature->GetVictim());
                         BirdGUIDs[i] = pCreature->GetGUID();
                     }
                 }
@@ -404,13 +404,13 @@ struct mob_soaring_eagleAI : public ScriptedAI
         m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
     }
 
-    void Aggro(Unit *who) {DoZoneInCombat();}
+    void EnterCombat(Unit *who) {DoZoneInCombat();}
 
     void AttackStart(Unit *who)
     {
         if (!InCombat)
         {
-            Aggro(who);
+            EnterCombat(who);
             InCombat = true;
         }
     }

@@ -59,7 +59,7 @@ struct boss_draganthaurissanAI : public ScriptedAI
             me->SetDisplayId(15735);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
         //m_creature->CallForHelp(VISIBLE_RANGE); //Not present in TC1 atm
@@ -98,7 +98,7 @@ struct boss_draganthaurissanAI : public ScriptedAI
         //AvatarOfFlame_Timer
         if (AvatarOfFlame_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_AVATAROFFLAME);
+            DoCast(m_creature->GetVictim(),SPELL_AVATAROFFLAME);
             AvatarOfFlame_Timer = 18000;
         }else AvatarOfFlame_Timer -= diff;
 

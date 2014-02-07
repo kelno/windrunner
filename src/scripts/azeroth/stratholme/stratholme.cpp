@@ -95,7 +95,7 @@ struct mob_freed_soulAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 };
 
 CreatureAI* GetAI_mob_freed_soul(Creature *_Creature)
@@ -128,7 +128,7 @@ struct mob_restless_soulAI : public ScriptedAI
         Tagged = false;
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
@@ -193,7 +193,7 @@ struct mobs_spectral_ghostly_citizenAI : public ScriptedAI
         Tagged = false;
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {

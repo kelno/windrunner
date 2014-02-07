@@ -248,7 +248,7 @@ struct boss_lady_vashjAI : public ScriptedAI
             pInstance->SetData(DATA_LADYVASHJEVENT, IN_PROGRESS);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
         {
@@ -279,7 +279,7 @@ struct boss_lady_vashjAI : public ScriptedAI
         }
         if (!CanAttack)
             return;
-        if (!who || m_creature->getVictim())
+        if (!who || m_creature->GetVictim())
             return;
 
         if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who))
@@ -306,12 +306,12 @@ struct boss_lady_vashjAI : public ScriptedAI
             case 0:
                 //Shoot
                 //Used in Phases 1 and 3 after Entangle or while having nobody in melee range. A shot that hits her target for 4097-5543 Physical damage.
-                DoCast(m_creature->getVictim(), SPELL_SHOOT);
+                DoCast(m_creature->GetVictim(), SPELL_SHOOT);
                 break;
             case 1:
                 //Multishot
                 //Used in Phases 1 and 3 after Entangle or while having nobody in melee range. A shot that hits 1 person and 4 people around him for 6475-7525 physical damage.
-                DoCast(m_creature->getVictim(), SPELL_MULTI_SHOT);
+                DoCast(m_creature->GetVictim(), SPELL_MULTI_SHOT);
                 break;
         }
         if(rand()%3)
@@ -340,7 +340,7 @@ struct boss_lady_vashjAI : public ScriptedAI
             }
         }
         //to prevent abuses during phase 2
-        if(Phase == 2 && !m_creature->getVictim() && InCombat)
+        if(Phase == 2 && !m_creature->GetVictim() && InCombat)
         {
             EnterEvadeMode();
             return;
@@ -356,8 +356,8 @@ struct boss_lady_vashjAI : public ScriptedAI
             {
                 //Shock Burst
                 //Randomly used in Phases 1 and 3 on Vashj's target, it's a Shock spell doing 8325-9675 nature damage and stunning the target for 5 seconds, during which she will not attack her target but switch to the next person on the aggro list.
-                DoCast(m_creature->getVictim(), SPELL_SHOCK_BLAST);
-                m_creature->TauntApply(m_creature->getVictim());
+                DoCast(m_creature->GetVictim(), SPELL_SHOCK_BLAST);
+                m_creature->TauntApply(m_creature->GetVictim());
 
                 ShockBlast_Timer = 1000+rand()%14000;       //random cooldown
             }else ShockBlast_Timer -= diff;
@@ -384,7 +384,7 @@ struct boss_lady_vashjAI : public ScriptedAI
                 {
                     //Entangle
                     //Used in Phases 1 and 3, it casts Entangling Roots on everybody in a 15 yard radius of Vashj, immobilzing them for 10 seconds and dealing 500 damage every 2 seconds. It's not a magic effect so it cannot be dispelled, but is removed by various buffs such as Cloak of Shadows or Blessing of Freedom.
-                    DoCast(m_creature->getVictim(), SPELL_ENTANGLE);
+                    DoCast(m_creature->GetVictim(), SPELL_ENTANGLE);
                     Entangle = true;
                     Entangle_Timer = 10000;
                 }
@@ -486,7 +486,7 @@ struct boss_lady_vashjAI : public ScriptedAI
                 target = SelectUnit(SELECT_TARGET_RANDOM, 0);
 
                 if(!target)
-                    target = m_creature->getVictim();
+                    target = m_creature->GetVictim();
 
                 DoCast(target, SPELL_FORKED_LIGHTNING);
 
@@ -529,8 +529,8 @@ struct boss_lady_vashjAI : public ScriptedAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
                     if(target)
                         CoilfangElite->AI()->AttackStart(target);
-                    else if(m_creature->getVictim())
-                        CoilfangElite->AI()->AttackStart(m_creature->getVictim());
+                    else if(m_creature->GetVictim())
+                        CoilfangElite->AI()->AttackStart(m_creature->GetVictim());
                 }
                 CoilfangElite_Timer = 45000+rand()%5000;
             }else CoilfangElite_Timer -= diff;
@@ -547,8 +547,8 @@ struct boss_lady_vashjAI : public ScriptedAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0);
                     if(target)
                         CoilfangStrider->AI()->AttackStart(target);
-                    else if(m_creature->getVictim())
-                        CoilfangStrider->AI()->AttackStart(m_creature->getVictim());
+                    else if(m_creature->GetVictim())
+                        CoilfangStrider->AI()->AttackStart(m_creature->GetVictim());
                 }
                 CoilfangStrider_Timer = 60000+rand()%10000;
             }else CoilfangStrider_Timer -= diff;
@@ -569,7 +569,7 @@ struct boss_lady_vashjAI : public ScriptedAI
                     Phase = 3;
 
                     //return to the tank
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                 }
                 Check_Timer = 1000;
             }else Check_Timer -= diff;
@@ -627,7 +627,7 @@ struct mob_enchanted_elementalAI : public ScriptedAI
             Vashj = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_LADYVASHJ));
     }
 
-    void Aggro(Unit *who) { return; }
+    void EnterCombat(Unit *who) { return; }
 
     void MoveInLineOfSight(Unit *who){return;}
 
@@ -718,7 +718,7 @@ struct mob_tainted_elementalAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         m_creature->AddThreat(who, 0.1f);
     }
@@ -776,7 +776,7 @@ struct mob_toxic_sporebatAI : public ScriptedAI
         Check_Timer = 1000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
 
     }
@@ -798,7 +798,7 @@ struct mob_toxic_sporebatAI : public ScriptedAI
     void UpdateAI (const uint32 diff)
     {
 
-        /*if(!m_creature->isInCombat())
+        /*if(!m_creature->IsInCombat())
             m_creature->SetInCombatState(false);*/
 
         //Random movement
@@ -835,7 +835,7 @@ struct mob_toxic_sporebatAI : public ScriptedAI
                 //check if vashj is death
                 Unit *Vashj = NULL;
                 Vashj = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_LADYVASHJ));
-                if(!Vashj || (Vashj && !Vashj->isAlive()) || (Vashj && ((boss_lady_vashjAI*)(Vashj->ToCreature())->AI())->Phase != 3))
+                if(!Vashj || (Vashj && !Vashj->IsAlive()) || (Vashj && ((boss_lady_vashjAI*)(Vashj->ToCreature())->AI())->Phase != 3))
                 {
                     //remove
                     m_creature->setDeathState(DEAD);
@@ -886,7 +886,7 @@ struct mob_coilfang_striderAI : public ScriptedAI
         Blast_Timer = 8000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoCast(m_creature,SPELL_PANIC,true);
     }
@@ -931,7 +931,7 @@ struct mob_shield_generator_channelAI : public ScriptedAI
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit *who) { return; }
+    void EnterCombat(Unit *who) { return; }
 
     void MoveInLineOfSight(Unit *who) { return; }
 
@@ -945,7 +945,7 @@ struct mob_shield_generator_channelAI : public ScriptedAI
             Unit *Vashj = NULL;
             Vashj = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_LADYVASHJ));
 
-            if(Vashj && Vashj->isAlive())
+            if(Vashj && Vashj->IsAlive())
             {
                 //start visual channel
                 if (!Casted || !Vashj->HasAura(SPELL_MAGIC_BARRIER,0))

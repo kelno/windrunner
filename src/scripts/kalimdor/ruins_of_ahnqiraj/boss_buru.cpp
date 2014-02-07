@@ -105,8 +105,8 @@ public:
             {
                 if (dismemberTimer <= diff)
                 {
-                    if (me->getVictim())
-                        doCast(me->getVictim(), SPELL_DISMEMBER, false);
+                    if (me->GetVictim())
+                        doCast(me->GetVictim(), SPELL_DISMEMBER, false);
                     dismemberTimer = urand(4000, 10000);
                 }
                 else
@@ -183,7 +183,7 @@ public:
         void onCombatStart(Unit* who)
         {
             if (Creature* buru = pInstance->instance->GetCreature(pInstance->GetData64(DATA_BURU)))
-                if (!buru->isInCombat())
+                if (!buru->IsInCombat())
                     buru->getAI()->attackStart(who);
         }
 

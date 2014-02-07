@@ -68,7 +68,7 @@ struct boss_ragglesnoutAI : public ScriptedAI
             pInstance->SetData(DATA_RAGGLESNOUT_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_RAGGLESNOUT_EVENT, IN_PROGRESS);
@@ -125,32 +125,32 @@ struct boss_ragglesnoutAI : public ScriptedAI
                 case 1:
                     if (shadowboltTimer <= diff)
                     {
-                        if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 40.0f))
+                        if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 40.0f))
                         {
-                            if (m_creature->GetDistance(m_creature->getVictim()) >= 0.0f)
-                                DoCast(m_creature->getVictim(), SPELL_SHADOW_BOLT);
+                            if (m_creature->GetDistance(m_creature->GetVictim()) >= 0.0f)
+                                DoCast(m_creature->GetVictim(), SPELL_SHADOW_BOLT);
                         }
                         shadowboltTimer = urand(2400, 3800);
                     }
                     else
                         shadowboltTimer -= diff;
                         
-                    if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 80.0f))
+                    if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 80.0f))
                     {
-                        if (m_creature->GetDistance(m_creature->getVictim()) >= 35.0f)
+                        if (m_creature->GetDistance(m_creature->GetVictim()) >= 35.0f)
                         {
                             if (!action2Reapeat)
                             {
                                 m_creature->GetMotionMaster()->Clear();
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 0.0f, 0.0f);
+                                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), 0.0f, 0.0f);
                                 action2Reapeat = true;
                             }
                         }
                     }
                     
-                    if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 15.0f))
+                    if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 15.0f))
                     {
-                        if (m_creature->GetDistance(m_creature->getVictim()) >= 5.0f)
+                        if (m_creature->GetDistance(m_creature->GetVictim()) >= 5.0f)
                         {
                             if (!action3Reapeat)
                             {
@@ -161,14 +161,14 @@ struct boss_ragglesnoutAI : public ScriptedAI
                         }
                     }
                     
-                    if (m_creature->IsWithinDistInMap(m_creature->getVictim(), 5.0f))
+                    if (m_creature->IsWithinDistInMap(m_creature->GetVictim(), 5.0f))
                     {
-                        if (m_creature->GetDistance(m_creature->getVictim()) >= 0.0f)
+                        if (m_creature->GetDistance(m_creature->GetVictim()) >= 0.0f)
                         {
                             if (!action4Reapeat)
                             {
                                 m_creature->GetMotionMaster()->Clear();
-                                m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 0.0f, 0.0f);
+                                m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), 0.0f, 0.0f);
                                 action4Reapeat = true;
                             }
                         }
@@ -182,7 +182,7 @@ struct boss_ragglesnoutAI : public ScriptedAI
                             action1Reapeat = true;
                             phase = 2;
                             me->GetMotionMaster()->Clear();
-                            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim(), 0.0f, 0.0f);
+                            m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim(), 0.0f, 0.0f);
                         }
                     }
 

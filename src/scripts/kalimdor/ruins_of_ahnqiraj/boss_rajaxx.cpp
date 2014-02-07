@@ -152,8 +152,8 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_THUNDER_CLAP:
-                    doCast(me->getVictim(), SPELL_THUNDER_CLAP);
-                    talk(TALK_CHANGE_TARGET, me->getVictim()->GetGUID());
+                    doCast(me->GetVictim(), SPELL_THUNDER_CLAP);
+                    talk(TALK_CHANGE_TARGET, me->GetVictim()->GetGUID());
                     doResetThreat();
                     scheduleEvent(EV_THUNDER_CLAP, 25000, 35000);
                     break;

@@ -55,7 +55,7 @@ struct boss_faerlinaAI : public ScriptedAI
         HasTaunted = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch (rand()%4)
         {
@@ -99,7 +99,7 @@ struct boss_faerlinaAI : public ScriptedAI
         //PoisonBoltVolley_Timer
         if (PoisonBoltVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_POSIONBOLT_VOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_POSIONBOLT_VOLLEY);
             PoisonBoltVolley_Timer = 11000;
         }else PoisonBoltVolley_Timer -= diff;
 

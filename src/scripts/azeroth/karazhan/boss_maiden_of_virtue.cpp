@@ -90,7 +90,7 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
             pInstance->SetData(DATA_MAIDENOFVIRTUE_EVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
          DoScriptText(SAY_AGGRO, m_creature);
 
@@ -117,13 +117,9 @@ struct boss_maiden_of_virtueAI : public ScriptedAI
 
         if (Repentance_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_REPENTANCE);
+            DoCast(m_creature->GetVictim(),SPELL_REPENTANCE);
 
-            switch(rand()%2)
-            {
-            case 0: DoScriptText(SAY_REPENTANCE1, m_creature);break;
-            case 1: DoScriptText(SAY_REPENTANCE2, m_creature);break;
-            }
+            DoScriptText(rand()%2 ? SAY_REPENTANCE1 : SAY_REPENTANCE2, m_creature);
             Repentance_Timer = 30000 + rand()%15000;        //A little randomness on that spell
         }else Repentance_Timer -= diff;
 

@@ -64,7 +64,7 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
         YelledForHeal = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {
@@ -76,7 +76,7 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
 
     void MoveInLineOfSight(Unit* who)
     {
-        if (!m_creature->getVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
+        if (!m_creature->GetVictim() && me->canAttack(who) && ( m_creature->IsHostileTo( who )) && who->isInAccessiblePlaceFor(m_creature) )
         {
             if (!m_creature->canFly() && m_creature->GetDistanceZ(who) > CREATURE_Z_ATTACK_RANGE)
                 return;
@@ -116,7 +116,7 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
 
         if (MortalWound_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
+            DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
             MortalWound_Timer = 5000+rand()%8000;
         }else MortalWound_Timer -= diff;
 

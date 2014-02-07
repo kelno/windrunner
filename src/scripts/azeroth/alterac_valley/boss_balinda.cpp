@@ -46,7 +46,7 @@ struct TRINITY_DLL_DECL mob_water_elementalAI : public ScriptedAI
         ResetTimer      = 5000;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void JustDied(Unit* killer);
     void SummonedCreatureDespawn(Creature*);
     
@@ -55,7 +55,7 @@ struct TRINITY_DLL_DECL mob_water_elementalAI : public ScriptedAI
             return;
 
         if (WaterBoltTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_WATERBOLT);
+            DoCast(m_creature->GetVictim(), SPELL_WATERBOLT);
             WaterBoltTimer = 5000;
         } else WaterBoltTimer -= diff;
 
@@ -113,7 +113,7 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
     }
 
-    void Aggro(Unit *who) {
+    void EnterCombat(Unit *who) {
         DoScriptText(YELL_AGGRO, m_creature);
     }
 
@@ -154,22 +154,22 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
         } else WaterElementalTimer -= diff;
 
         if (ArcaneExplosionTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION);
             ArcaneExplosionTimer = (10+rand()%5)*1000;
         } else ArcaneExplosionTimer -= diff;
 
         if (ConeofcoldTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_CONE_OF_COLD);
+            DoCast(m_creature->GetVictim(), SPELL_CONE_OF_COLD);
             ConeofcoldTimer = (10+rand()%10)*1000;
         } else ConeofcoldTimer -= diff;
 
         if (FireboltTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FIREBALL);
+            DoCast(m_creature->GetVictim(), SPELL_FIREBALL);
             FireboltTimer = (5+rand()%4)*1000;
         } else FireboltTimer -= diff;
 
         if (FrostboltTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_FROSTBOLT);
+            DoCast(m_creature->GetVictim(), SPELL_FROSTBOLT);
             FrostboltTimer = (4+rand()%8)*1000;
         } else FrostboltTimer -= diff;
 

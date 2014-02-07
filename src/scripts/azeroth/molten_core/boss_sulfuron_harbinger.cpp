@@ -122,7 +122,7 @@ class Boss_Sulfuron : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_DEMORALIZINGSHOUT:
-                            doCast(me->getVictim(), SPELL_DEMORALIZINGSHOUT);
+                            doCast(me->GetVictim(), SPELL_DEMORALIZINGSHOUT);
                             scheduleEvent(EV_DEMORALIZINGSHOUT, urand(25000, 26000));
                             break;
                         case EV_INSPIRE:
@@ -144,7 +144,7 @@ class Boss_Sulfuron : public CreatureScript
                             break;
                         }
                         case EV_KNOCKDOWN:
-                            doCast(me->getVictim(), SPELL_KNOCKDOWN);
+                            doCast(me->GetVictim(), SPELL_KNOCKDOWN);
                             scheduleEvent(EV_KNOCKDOWN, 12000, 15000);
                             break;
                         case EV_FLAMESPEAR:

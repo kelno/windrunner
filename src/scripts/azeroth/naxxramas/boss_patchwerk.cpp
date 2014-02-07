@@ -67,7 +67,7 @@ struct boss_patchwerkAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (rand()%2)
         {
@@ -98,7 +98,7 @@ struct boss_patchwerkAI : public ScriptedAI
             {
                 pTemp = Unit::GetUnit((*m_creature),(*i)->getUnitGuid());
                 ++i;
-                if (pTemp && pTemp->isAlive() && pTemp->GetHealth() > MostHP && m_creature->GetDistance2d(pTemp) < 5)
+                if (pTemp && pTemp->IsAlive() && pTemp->GetHealth() > MostHP && m_creature->GetDistance2d(pTemp) < 5)
                 {
                     MostHP = pTemp->GetHealth();
                     pMostHPTarget = pTemp;
@@ -123,7 +123,7 @@ struct boss_patchwerkAI : public ScriptedAI
         //Slimebolt_Timer
         if (Slimebolt_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SLIMEBOLT);
+            DoCast(m_creature->GetVictim(),SPELL_SLIMEBOLT);
             Slimebolt_Timer = 5000;
         }else Slimebolt_Timer -= diff;
 

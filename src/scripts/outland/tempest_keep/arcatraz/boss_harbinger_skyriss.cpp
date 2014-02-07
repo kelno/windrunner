@@ -101,7 +101,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
         ScriptedAI::MoveInLineOfSight(who);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void JustDied(Unit* Killer)
     {
@@ -118,7 +118,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             summon->SetHealth((summon->GetMaxHealth()*33)/100);
         else
             summon->SetHealth((summon->GetMaxHealth()*66)/100);
-        if(m_creature->getVictim())
+        if(m_creature->GetVictim())
             if(Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 summon->AI()->AttackStart(target);
      }
@@ -163,7 +163,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
                     case 1:
                          DoScriptText(SAY_INTRO, m_creature);
                         if (GameObject* Sphere = GameObject::GetGameObject(*m_creature,pInstance->GetData64(DATA_SPHERE_SHIELD)))
-                            Sphere->SetGoState(0);
+                            Sphere->SetGoState(GO_STATE_ACTIVE);
                         ++Intro_Phase;
                         Intro_Timer = 25000;
                         break;
@@ -206,7 +206,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1) )
                 DoCast(target,HeroicMode ? H_SPELL_MIND_REND : SPELL_MIND_REND);
             else
-                DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_MIND_REND : SPELL_MIND_REND);
+                DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_MIND_REND : SPELL_MIND_REND);
 
             MindRend_Timer = 8000;
         }else MindRend_Timer -=diff;
@@ -225,7 +225,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1) )
                 DoCast(target,SPELL_FEAR);
             else
-                DoCast(m_creature->getVictim(),SPELL_FEAR);
+                DoCast(m_creature->GetVictim(),SPELL_FEAR);
 
             Fear_Timer = 25000;
         }else Fear_Timer -=diff;
@@ -244,7 +244,7 @@ struct boss_harbinger_skyrissAI : public ScriptedAI
             if( Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1) )
                 DoCast(target,HeroicMode ? H_SPELL_DOMINATION : SPELL_DOMINATION);
             else
-                DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_DOMINATION : SPELL_DOMINATION);
+                DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_DOMINATION : SPELL_DOMINATION);
 
             Domination_Timer = 16000+rand()%16000;
         }else Domination_Timer -=diff;
@@ -288,7 +288,7 @@ struct boss_harbinger_skyriss_illusionAI : public ScriptedAI
 
     void Reset() { }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 };
 
 CreatureAI* GetAI_boss_harbinger_skyriss_illusion(Creature *_Creature)

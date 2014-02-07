@@ -59,7 +59,7 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
         focusedTarget = NULL;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     { }
 
     void JustSummoned(Creature *summoned)
@@ -86,7 +86,7 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
             Map::PlayerList const &PlayerList = map->GetPlayers();
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 if (Player* i_pl = i->getSource())
-                    if (i_pl->isAlive() && (dist = i_pl->GetDistance(m_creature)) < 45)
+                    if (i_pl->IsAlive() && (dist = i_pl->GetDistance(m_creature)) < 45)
                     {
                         i_pl->RemoveAurasDueToSpell(SPELL_INHIBITMAGIC);
                         m_creature->AddAura(SPELL_INHIBITMAGIC, i_pl);
@@ -124,7 +124,7 @@ struct boss_shirrak_the_dead_watcherAI : public ScriptedAI
         {
             // Summon Focus Fire & Emote
             Unit *target = SelectUnit(SELECT_TARGET_RANDOM,1);
-            if (target && target->GetTypeId() == TYPEID_PLAYER && target->isAlive())
+            if (target && target->GetTypeId() == TYPEID_PLAYER && target->IsAlive())
             {
                 focusedTarget = target;
                 m_creature->SummonCreature(ENTRY_FOCUS_FIRE,target->GetPositionX(),target->GetPositionY(),target->GetPositionZ(),0,TEMPSUMMON_TIMED_DESPAWN,5500);
@@ -165,7 +165,7 @@ struct mob_focus_fireAI : public ScriptedAI
         fiery1 = fiery2 = true;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     { }
 
     void UpdateAI(const uint32 diff)

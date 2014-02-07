@@ -102,7 +102,7 @@ struct boss_onyxiaAI : public ScriptedAI
         m_creature->ApplySpellImmune(1, IMMUNITY_EFFECT,SPELL_EFFECT_ATTACK_ME, true);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         DoZoneInCombat();
@@ -140,7 +140,7 @@ struct boss_onyxiaAI : public ScriptedAI
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             m_creature->SetHover(false);
             m_creature->GetMotionMaster()->MovePoint(0, -10.6155, -219.357, -87.7344);
-            DoStartMovement(m_creature->getVictim());
+            DoStartMovement(m_creature->GetVictim());
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
             DoScriptText(SAY_PHASE_3_TRANS, m_creature);
         }
@@ -149,7 +149,7 @@ struct boss_onyxiaAI : public ScriptedAI
         {
             if(FlameBreathTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_FLAMEBREATH);                
+                DoCast(m_creature->GetVictim(), SPELL_FLAMEBREATH);                
                 FlameBreathTimer = 15000;
             }else FlameBreathTimer -= diff;
 
@@ -164,13 +164,13 @@ struct boss_onyxiaAI : public ScriptedAI
 
             if(CleaveTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_CLEAVE);
+                DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
                 CleaveTimer = 10000;
             }else CleaveTimer -= diff;
 
             if(WingBuffetTimer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_WINGBUFFET);
+                DoCast(m_creature->GetVictim(), SPELL_WINGBUFFET);
                 WingBuffetTimer = 7000 + ((rand()%8)*1000);
             }else WingBuffetTimer -= diff;
 
@@ -178,7 +178,7 @@ struct boss_onyxiaAI : public ScriptedAI
             {
                 if(rand() <= 30)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_KNOCK_AWAY);
+                    DoCast(m_creature->GetVictim(), SPELL_KNOCK_AWAY);
                 }
                 KnockAwayTimer = 15000;
             }else KnockAwayTimer -= diff;
@@ -187,7 +187,7 @@ struct boss_onyxiaAI : public ScriptedAI
             {
                 if(BellowingRoarTimer < diff)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_BELLOWINGROAR);
+                    DoCast(m_creature->GetVictim(), SPELL_BELLOWINGROAR);
 
                     BellowingRoarTimer = 30000;
                 }else BellowingRoarTimer -= diff;
@@ -240,7 +240,7 @@ struct boss_onyxiaAI : public ScriptedAI
                 if(rand()%100 < 30)
                 {
                     DoScriptText(EMOTE_BREATH, m_creature);
-                    DoCast(m_creature->getVictim(), SPELL_DEEPBREATH);
+                    DoCast(m_creature->GetVictim(), SPELL_DEEPBREATH);
                 }
                 else ChangePosition();
 

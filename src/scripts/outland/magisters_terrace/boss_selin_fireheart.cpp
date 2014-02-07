@@ -95,7 +95,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
                 Unit* pUnit = Unit::GetUnit(*m_creature, *itr);
                 if(pUnit)
                 {
-                    if(!pUnit->isAlive())
+                    if(!pUnit->IsAlive())
                         (pUnit->ToCreature())->Respawn();      // Let MaNGOS handle setting death state, etc.
 
                     // Only need to set unselectable flag. You can't attack unselectable units so non_attackable flag is not necessary here.
@@ -104,7 +104,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
             }
             GameObject* Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
             if( Door )
-                Door->SetGoState(0);                        // Open the big encounter door. Close it in Aggro and open it only in JustDied(and here)
+                Door->SetGoState(GO_STATE_ACTIVE);                        // Open the big encounter door. Close it in Aggro and open it only in JustDied(and here)
                                                             // Small door opened after event are expected to be closed by default
             // Set Inst data for encounter
             if (m_creature->isDead())
@@ -139,7 +139,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
             pCrystal = NULL;
             //pCrystal = Unit::GetUnit(*m_creature, FelCrystals[i]);
             pCrystal = Unit::GetUnit(*m_creature, *itr);
-            if(pCrystal && pCrystal->isAlive())
+            if(pCrystal && pCrystal->IsAlive())
             {
                 if(!ShortestDistance || (ShortestDistance > m_creature->GetDistance2d(pCrystal)))
                 {
@@ -175,12 +175,12 @@ struct boss_selin_fireheartAI : public ScriptedAI
         {
             //Creature* pCrystal = (Unit::GetCreature(*m_creature, FelCrystals[i]));
             Creature* pCrystal = (Unit::GetCreature(*m_creature, *itr));
-            if( pCrystal && pCrystal->isAlive())
+            if( pCrystal && pCrystal->IsAlive())
                 pCrystal->DealDamage(pCrystal, pCrystal->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         m_creature->SetPower(POWER_MANA, 0);
         DoScriptText(SAY_AGGRO, m_creature);
@@ -189,7 +189,7 @@ struct boss_selin_fireheartAI : public ScriptedAI
         {
             GameObject* EncounterDoor = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
             if( EncounterDoor )
-                EncounterDoor->SetGoState(1);               //Close the encounter door, open it in JustDied/Reset
+                EncounterDoor->SetGoState(GO_STATE_READY);               //Close the encounter door, open it in JustDied/Reset
         }
     }
 
@@ -207,11 +207,11 @@ struct boss_selin_fireheartAI : public ScriptedAI
         if(type == POINT_MOTION_TYPE && id == 1)
         {
             Unit* CrystalChosen = Unit::GetUnit(*m_creature, CrystalGUID);
-            if(CrystalChosen && CrystalChosen->isAlive())
+            if(CrystalChosen && CrystalChosen->IsAlive())
             {
                 // Make the crystal attackable
                 // We also remove NON_ATTACKABLE in case the database has it set.
-                CrystalChosen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
+                CrystalChosen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
                 CrystalChosen->CastSpell(m_creature, SPELL_MANA_RAGE, true);
                 IsDraining = true;
             }
@@ -235,11 +235,11 @@ struct boss_selin_fireheartAI : public ScriptedAI
 
         GameObject* EncounterDoor = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_SELIN_ENCOUNTER_DOOR));
         if( EncounterDoor )
-            EncounterDoor->SetGoState(0);                   // Open the encounter door
+            EncounterDoor->SetGoState(GO_STATE_ACTIVE);                   // Open the encounter door
 
         GameObject* ContinueDoor = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_SELIN_DOOR));
         if( ContinueDoor )
-            ContinueDoor->SetGoState(0);                    // Open the door leading further in
+            ContinueDoor->SetGoState(GO_STATE_ACTIVE);                    // Open the door leading further in
 
     }
 
@@ -310,13 +310,13 @@ struct boss_selin_fireheartAI : public ScriptedAI
                             DoScriptText(SAY_EMPOWERED, m_creature);
 
                             Unit* CrystalChosen = Unit::GetUnit(*m_creature, CrystalGUID);
-                            if( CrystalChosen && CrystalChosen->isAlive() )
+                            if( CrystalChosen && CrystalChosen->IsAlive() )
                                 // Use Deal Damage to kill it, not setDeathState.
                                 CrystalChosen->DealDamage(CrystalChosen, CrystalChosen->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                             CrystalGUID = 0;
 
                             m_creature->GetMotionMaster()->Clear();
-                            m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                            m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                         }
                     }
                     CheckTimer = 1000;
@@ -337,7 +337,7 @@ struct mob_fel_crystalAI : public ScriptedAI
     mob_fel_crystalAI(Creature *c) : ScriptedAI(c) {}
 
     void Reset() {}
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff) {}
@@ -348,7 +348,7 @@ struct mob_fel_crystalAI : public ScriptedAI
         if(ScriptedInstance* pInstance = ((ScriptedInstance*)m_creature->GetInstanceData()))
         {
             Creature* Selin = (Unit::GetCreature(*m_creature, pInstance->GetData64(DATA_SELIN)));
-            if(Selin && Selin->isAlive())
+            if(Selin && Selin->IsAlive())
             {
                 if(((boss_selin_fireheartAI*)Selin->AI())->CrystalGUID == m_creature->GetGUID())
                 {
@@ -356,10 +356,10 @@ struct mob_fel_crystalAI : public ScriptedAI
                     ((boss_selin_fireheartAI*)Selin->AI())->DrainingCrystal = false;
                     ((boss_selin_fireheartAI*)Selin->AI())->IsDraining = false;
                     Selin->RemoveAurasDueToSpell(SPELL_MANA_RAGE);
-                    if(Selin->getVictim())
+                    if(Selin->GetVictim())
                     {
-                        Selin->AI()->AttackStart(Selin->getVictim());
-                        Selin->GetMotionMaster()->MoveChase(Selin->getVictim());
+                        Selin->AI()->AttackStart(Selin->GetVictim());
+                        Selin->GetMotionMaster()->MoveChase(Selin->GetVictim());
                         Selin->SetFullTauntImmunity(false);
                     }
                 }

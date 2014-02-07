@@ -80,7 +80,7 @@ struct boss_ahuneAI : public Scripted_NoMovementAI
         }
     }
 
-    void Aggro(Unit* pWho) 
+    void EnterCombat(Unit* pWho) 
     {
         me->SummonCreature(NPC_AHUNITE_HAILSTONE, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), me->GetOrientation(), TEMPSUMMON_DEAD_DESPAWN, 0);
         
@@ -234,7 +234,7 @@ struct boss_frozen_coreAI : public Scripted_NoMovementAI
         me->SetReactState(REACT_PASSIVE);
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void JustDied(Unit* pKiller)
     {
@@ -277,7 +277,7 @@ struct mob_ahunite_hailstoneAI : public ScriptedAI
         pulverizeTimer = 3000;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void JustDied(Unit* pKiller)
     {
@@ -291,7 +291,7 @@ struct mob_ahunite_hailstoneAI : public ScriptedAI
             return;
 
         if (pulverizeTimer <= diff) {
-            DoCast(me->getVictim(), SPELL_PULVERIZE);
+            DoCast(me->GetVictim(), SPELL_PULVERIZE);
             
             pulverizeTimer = 6000;
         }
@@ -334,7 +334,7 @@ struct npc_ice_spear_bunnyAI : public Scripted_NoMovementAI
         deathTimer = 99999;
     }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void HandleIceSpear()
     {

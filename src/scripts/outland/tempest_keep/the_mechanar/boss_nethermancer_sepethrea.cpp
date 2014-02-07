@@ -83,7 +83,7 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
             me->SetDisplayId(22804);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_NETHERMANCER, IN_PROGRESS);
@@ -104,7 +104,11 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
     
     void JustSummoned(Creature* summoned)
     {
-        summoned->AI()->AttackStart(me->getVictim());
+        if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+        {
+            summoned->AI()->AttackStart(target);
+            summoned->AddThreat(target,999999.0f);
+        }
     }
 
     void JustDied(Unit* Killer)
@@ -124,21 +128,21 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
         //Frost Attack
         if(frost_attack_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROST_ATTACK);
+            DoCast(m_creature->GetVictim(),SPELL_FROST_ATTACK);
             frost_attack_Timer = 7000 + rand()%30000;
         }else frost_attack_Timer -= diff;
 
         //Arcane Blast
         if(arcane_blast_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_BLAST);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_BLAST);
             arcane_blast_Timer = 15000;
         }else arcane_blast_Timer -= diff;
 
         //Dragons Breath
         if(dragons_breath_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DRAGONS_BREATH);
+            DoCast(m_creature->GetVictim(),SPELL_DRAGONS_BREATH);
             {
                 if (rand()%2)
                     return;
@@ -155,14 +159,14 @@ struct boss_nethermancer_sepethreaAI : public ScriptedAI
         //Knockback
         if(knockback_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KNOCKBACK);
+            DoCast(m_creature->GetVictim(),SPELL_KNOCKBACK);
             knockback_Timer = 15000 + rand()%10000;
         }else knockback_Timer -= diff;
 
         //Solarburn
         if(solarburn_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SOLARBURN);
+            DoCast(m_creature->GetVictim(),SPELL_SOLARBURN);
             solarburn_Timer = 30000;
         }else solarburn_Timer -= diff;
 
@@ -207,7 +211,7 @@ struct mob_ragin_flamesAI : public ScriptedAI
         m_creature->SetSpeed(MOVE_RUN, HeroicMode ? 0.7f : 0.5f);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
     }
 
@@ -240,8 +244,8 @@ struct mob_ragin_flamesAI : public ScriptedAI
 
         if(inferno_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),HeroicMode ? H_SPELL_INFERNO : SPELL_INFERNO);
-            m_creature->TauntApply(m_creature->getVictim());
+            DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_INFERNO : SPELL_INFERNO);
+            m_creature->TauntApply(m_creature->GetVictim());
             inferno_Timer = 10000;
         }else inferno_Timer -= diff;
 
