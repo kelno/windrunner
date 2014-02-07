@@ -304,7 +304,7 @@ struct npc_ranshallaAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         
     }

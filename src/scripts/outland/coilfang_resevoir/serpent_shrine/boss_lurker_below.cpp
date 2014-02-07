@@ -283,7 +283,7 @@ class Boss_Lurker_Below : public CreatureScript
                             if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 1))
                                 doCast(target, SPELL_GEYSER);
                             else
-                                doCast(me->getVictim(), SPELL_GEYSER);
+                                doCast(me->GetVictim(), SPELL_GEYSER);
 
                             geyserTimer = rand()%5000 + 15000;
                         }
@@ -313,10 +313,10 @@ class Boss_Lurker_Below : public CreatureScript
                             rotateStateTimer = 0;
                             m_phase = EMERGED;
 
-                            if(me->getVictim())
+                            if(me->GetVictim())
                             {
-                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->getVictim()->GetGUID());
-                                me->SetInFront(me->getVictim());
+                                me->SetUInt64Value(UNIT_FIELD_TARGET, me->GetVictim()->GetGUID());
+                                me->SetInFront(me->GetVictim());
                                 me->StopMoving();
                             }
                             return;
@@ -357,7 +357,7 @@ class Boss_Lurker_Below : public CreatureScript
                             Map::PlayerList const &PlayerList = pMap->GetPlayers();
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                             {
-                                if (i->getSource() && i->getSource()->isAlive() && !i->getSource()->isPet())
+                                if (i->getSource() && i->getSource()->IsAlive() && !i->getSource()->IsPet())
                                 {
                                     if (me->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()))
                                     {
@@ -482,11 +482,11 @@ class Mob_Coilfang_Guardian : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_ARCINGSMASH:
-                            doCast(me->getVictim(), SPELL_ARCINGSMASH);
+                            doCast(me->GetVictim(), SPELL_ARCINGSMASH);
                             scheduleEvent(EV_ARCINGSMASH, urand(10000, 15000));
                             break;
                         case EV_HAMSTRING:
-                            doCast(me->getVictim(), SPELL_HAMSTRING);
+                            doCast(me->GetVictim(), SPELL_HAMSTRING);
                             scheduleEvent(EV_HAMSTRING, urand(10000, 15000));
                             break;
                     }
@@ -550,13 +550,13 @@ class Mob_Coilfang_Ambusher : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_MULTISHOT:
-                            doCast(me->getVictim(), SPELL_SPREAD_SHOT);
+                            doCast(me->GetVictim(), SPELL_SPREAD_SHOT);
 
                             scheduleEvent(EV_MULTISHOT, urand(5000, 15000));
                             break;
                         case EV_SHOOTBOW:
-                            if (!me->hasUnitState(UNIT_STAT_CASTING))
-                                doCast(me->getVictim(), SPELL_SHOOT);
+                            if (!me->HasUnitState(UNIT_STAT_CASTING))
+                                doCast(me->GetVictim(), SPELL_SHOOT);
 
                             scheduleEvent(EV_SHOOTBOW, urand(2000, 5000));
                             break;

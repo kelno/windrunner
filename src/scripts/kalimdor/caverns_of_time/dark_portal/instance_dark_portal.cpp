@@ -80,9 +80,12 @@ struct instance_dark_portal : public ScriptedInstance
 
     void Initialize()
     {
+        bIsInstanceBossInProgress = false;
         MedivhGUID          = 0;
         Clear();
         SetData(DATA_INSTANCE_BOSS, NOT_STARTED);
+        for(uint8 i = 0; i < ENCOUNTERS; i++)
+            Encounter[i] = NOT_STARTED;
     }
 
     void Clear()
@@ -191,7 +194,7 @@ struct instance_dark_portal : public ScriptedInstance
                 {
                     if (Unit *medivh = Unit::GetUnit(*player,MedivhGUID))
                     {
-                        if (medivh->isAlive())
+                        if (medivh->IsAlive())
                         {
                             medivh->DealDamage(medivh, medivh->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
                             // Despawn current boss
@@ -420,9 +423,9 @@ struct instance_dark_portal : public ScriptedInstance
         OUT_LOAD_INST_DATA(in);
         std::istringstream stream(in);
         stream >> Encounter[0] >> Encounter[1] >> Encounter[2] >> Encounter[3] >> Encounter[4];
-        //for(uint8 i = 0; i < ENCOUNTERS; ++i)
-            //if(Encounters[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
-            //    Encounters[i] = NOT_STARTED;
+        for(uint8 i = 0; i < ENCOUNTERS; ++i)
+            if(Encounter[i] == IN_PROGRESS)                // Do not load an encounter as "In Progress" - reset it instead.
+                Encounter[i] = NOT_STARTED;
         OUT_LOAD_INST_DATA_COMPLETE;
     }
 

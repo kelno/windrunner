@@ -27,7 +27,7 @@ EndScriptData */
 
 bool GossipHello_npc_rez(Player* pPlayer, Creature* pCreature)
 {
-    if (!pPlayer->isAlive())
+    if (!pPlayer->IsAlive())
         pPlayer->ADD_GOSSIP_ITEM(0, "Ramenez-moi à la vie", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
     
     pPlayer->PlayerTalkClass->SendGossipMenu(907, pCreature->GetGUID());

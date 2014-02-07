@@ -92,7 +92,7 @@ struct boss_thekalAI : public ScriptedAI
             pInstance->SetData(DATA_THEKAL_ALIVE, 0);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -146,13 +146,13 @@ struct boss_thekalAI : public ScriptedAI
 
             if (!PhaseTwo && MortalCleave_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_MORTALCLEAVE);
+                DoCast(m_creature->GetVictim(),SPELL_MORTALCLEAVE);
                 MortalCleave_Timer = 15000 + rand()%5000;
             }else MortalCleave_Timer -= diff;
 
             if (!PhaseTwo && Silence_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_SILENCE);
+                DoCast(m_creature->GetVictim(),SPELL_SILENCE);
                 Silence_Timer = 20000 + rand()%5000;
             }else Silence_Timer -= diff;
 
@@ -214,13 +214,13 @@ struct boss_thekalAI : public ScriptedAI
 
                 if (ForcePunch_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_SILENCE);
+                    DoCast(m_creature->GetVictim(),SPELL_SILENCE);
                     ForcePunch_Timer = 16000 + rand()%5000;
                 }else ForcePunch_Timer -= diff;
 
                 if (SummonTigers_Timer < diff)
                 {
-                    DoCast(m_creature->getVictim(),SPELL_SUMMONTIGERS);
+                    DoCast(m_creature->GetVictim(),SPELL_SUMMONTIGERS);
                     SummonTigers_Timer = 10000 + rand()%4000;
                 }else SummonTigers_Timer -= diff;
 
@@ -271,7 +271,7 @@ struct mob_zealot_lorkhanAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -324,7 +324,7 @@ struct mob_zealot_lorkhanAI : public ScriptedAI
         //Disarm_Timer
         if(Disarm_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_DISARM);
+            DoCast(m_creature->GetVictim(),SPELL_DISARM);
             Disarm_Timer = 15000+rand()%10000;
         }else Disarm_Timer -= diff;
 
@@ -417,7 +417,7 @@ struct mob_zealot_zathAI : public ScriptedAI
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -429,24 +429,24 @@ struct mob_zealot_zathAI : public ScriptedAI
         //SweepingStrikes_Timer
         if(SweepingStrikes_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SWEEPINGSTRIKES);
+            DoCast(m_creature->GetVictim(),SPELL_SWEEPINGSTRIKES);
             SweepingStrikes_Timer = 22000+rand()%4000;
         }else SweepingStrikes_Timer -= diff;
 
         //SinisterStrike_Timer
         if(SinisterStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SINISTERSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_SINISTERSTRIKE);
             SinisterStrike_Timer = 8000+rand()%8000;
         }else SinisterStrike_Timer -= diff;
 
         //Gouge_Timer
         if(Gouge_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_GOUGE);
+            DoCast(m_creature->GetVictim(),SPELL_GOUGE);
 
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-100);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-100);
 
             Gouge_Timer = 17000+rand()%10000;
         }else Gouge_Timer -= diff;
@@ -454,14 +454,14 @@ struct mob_zealot_zathAI : public ScriptedAI
         //Kick_Timer
         if(Kick_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_KICK);
+            DoCast(m_creature->GetVictim(),SPELL_KICK);
             Kick_Timer = 15000+rand()%10000;
         }else Kick_Timer -= diff;
 
         //Blind_Timer
         if(Blind_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BLIND);
+            DoCast(m_creature->GetVictim(),SPELL_BLIND);
             Blind_Timer = 10000+rand()%10000;
         }else Blind_Timer -= diff;
 

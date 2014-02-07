@@ -57,7 +57,7 @@ struct boss_anzuAI : public ScriptedAI
     
     void Reset()
     {
-        if (pInstance && m_creature->isAlive())
+        if (pInstance && m_creature->IsAlive())
             pInstance->SetData(ANZU_EVENT, NOT_STARTED);
             
         chargeTimer = 9000;
@@ -80,7 +80,7 @@ struct boss_anzuAI : public ScriptedAI
             pInstance->SetData(ANZU_EVENT, DONE);
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void JustSummoned(Creature* pSummon)
     {
@@ -108,7 +108,7 @@ struct boss_anzuAI : public ScriptedAI
         } else chargeTimer -= diff;
         
         if (paralysingTimer <= diff) {
-            DoCast(m_creature->getVictim(), SPELL_PARALYSING);
+            DoCast(m_creature->GetVictim(), SPELL_PARALYSING);
             paralysingTimer = 26000;
         } else paralysingTimer -= diff;
         

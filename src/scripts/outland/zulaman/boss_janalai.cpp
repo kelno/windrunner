@@ -171,7 +171,7 @@ struct boss_janalaiAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_JANALAIEVENT, IN_PROGRESS);
@@ -380,7 +380,7 @@ struct boss_janalaiAI : public ScriptedAI
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* i_pl = i->getSource())
-                    if(i_pl->isAlive() && (m_creature->GetDistance(i_pl) < 100.0f))       // May prevent ghost players to be teleported (strange bug o_O)
+                    if(i_pl->IsAlive() && (m_creature->GetDistance(i_pl) < 100.0f))       // May prevent ghost players to be teleported (strange bug o_O)
                         DoTeleportPlayer(i_pl, JanalainPos[0][0]-5+rand()%10, JanalainPos[0][1]-5+rand()%10, JanalainPos[0][2], 0);
             }
             //m_creature->CastSpell(Temp, SPELL_SUMMON_PLAYERS, true); // core bug, spell does not work if too far
@@ -461,7 +461,7 @@ struct mob_janalai_firebombAI : public ScriptedAI
             m_creature->CastSpell(m_creature, SPELL_FIRE_BOMB_DUMMY, true);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackStart(Unit* who) {}
 
@@ -539,7 +539,7 @@ struct mob_amanishi_hatcherAI : public ScriptedAI
             return true;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void AttackStart(Unit*) {}
     void MoveInLineOfSight(Unit*) {}
     void MovementInform(uint32, uint32)
@@ -626,7 +626,7 @@ struct mob_hatchlingAI : public ScriptedAI
         m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING);
     }
 
-    void Aggro(Unit *who) {/*DoZoneInCombat();*/}
+    void EnterCombat(Unit *who) {/*DoZoneInCombat();*/}
 
     void UpdateAI(const uint32 diff)
     {
@@ -642,7 +642,7 @@ struct mob_hatchlingAI : public ScriptedAI
 
         if(BuffetTimer < diff)
         {
-            m_creature->CastSpell(m_creature->getVictim(), SPELL_FLAMEBUFFET, false);
+            m_creature->CastSpell(m_creature->GetVictim(), SPELL_FLAMEBUFFET, false);
             BuffetTimer = 10000;
         }else BuffetTimer -= diff;
 
@@ -659,7 +659,7 @@ struct mob_eggAI : public ScriptedAI
 {
     mob_eggAI(Creature *c) : ScriptedAI(c){}
     void Reset() {}
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
     void UpdateAI(const uint32 diff) {}

@@ -68,7 +68,7 @@ struct boss_arcanist_doanAI : public ScriptedAI
         ManaShield4_Timer = 70000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoYell(SAY_AGGRO,LANG_UNIVERSAL,NULL);
         DoPlaySoundToSet(m_creature,SOUND_AGGRO);
@@ -106,7 +106,7 @@ struct boss_arcanist_doanAI : public ScriptedAI
 
             if (FullAOE_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_FIREAOE);
+                DoCast(m_creature->GetVictim(),SPELL_FIREAOE);
                 FullAOE_Timer = 40000;
             }else FullAOE_Timer -= diff;
         }
@@ -114,21 +114,21 @@ struct boss_arcanist_doanAI : public ScriptedAI
         //AoESilence_Timer
         if (AoESilence_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_AOESILENCE);
+            DoCast(m_creature->GetVictim(),SPELL_AOESILENCE);
             AoESilence_Timer = 30000;
         }else AoESilence_Timer -= diff;
 
         //ArcaneExplosion3_Timer
         if (ArcaneExplosion3_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANEEXPLOSION3);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANEEXPLOSION3);
             ArcaneExplosion3_Timer = 8000;
         }else ArcaneExplosion3_Timer -= diff;
 
         //ArcaneExplosion4_Timer
         if (ArcaneExplosion4_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANEEXPLOSION4);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANEEXPLOSION4);
             ArcaneExplosion4_Timer = 10000;
         }else ArcaneExplosion4_Timer -= diff;
 
@@ -142,7 +142,7 @@ struct boss_arcanist_doanAI : public ScriptedAI
         //Fireball_Timer
         if (Fireball_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FIREBALL);
+            DoCast(m_creature->GetVictim(),SPELL_FIREBALL);
             Fireball_Timer = 12000;
         }else Fireball_Timer -= diff;
 

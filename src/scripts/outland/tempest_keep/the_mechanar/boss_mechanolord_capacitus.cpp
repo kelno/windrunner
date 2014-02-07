@@ -112,7 +112,7 @@ struct boss_mechanolord_capacitusAI : public ScriptedAI
         }
     }
     
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         pInstance->SetData(DATA_MECHLORD_CAPACITUS, IN_PROGRESS);
@@ -149,7 +149,7 @@ struct boss_mechanolord_capacitusAI : public ScriptedAI
         for(std::list<HostilReference *>::iterator itr = t_list.begin(); itr!= t_list.end(); ++itr)
         {
             target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
-            if (target && target->GetTypeId() == TYPEID_PLAYER && target->isAlive())
+            if (target && target->GetTypeId() == TYPEID_PLAYER && target->IsAlive())
             {
                 // Remove charges related auras first
                 if (target->HasAura(SPELL_POSITIVE_CHARGE))
@@ -253,8 +253,8 @@ struct boss_mechanolord_capacitusAI : public ScriptedAI
             return;
             
         if (HeadCrackTimer <= diff) {
-            if (m_creature->getVictim())
-                DoCast(m_creature->getVictim(), SPELL_HEADCRACK);
+            if (m_creature->GetVictim())
+                DoCast(m_creature->GetVictim(), SPELL_HEADCRACK);
                 
             HeadCrackTimer = 13000;
         } else HeadCrackTimer -= diff;
@@ -284,16 +284,16 @@ struct boss_mechanolord_capacitusAI : public ScriptedAI
             } else CheckChargesTimer -= diff;
         } else {            // Normal: shields, but no polarity shift
             if (FirstShieldTimer <= diff) {
-                if (m_creature->getVictim())
-                    DoCast(m_creature->getVictim(), SPELL_FIRST_SHIELD);
+                if (m_creature->GetVictim())
+                    DoCast(m_creature->GetVictim(), SPELL_FIRST_SHIELD);
                 
                 DoScriptText(SAY_FIRST_SHIELD, m_creature);
                 FirstShieldTimer = 40000;
             } else FirstShieldTimer -= diff;
             
             if (SecondShieldTimer <= diff) {
-                if (m_creature->getVictim())
-                    DoCast(m_creature->getVictim(), SPELL_SECOND_SHIELD);
+                if (m_creature->GetVictim())
+                    DoCast(m_creature->GetVictim(), SPELL_SECOND_SHIELD);
                     
                 DoScriptText(SAY_SECOND_SHIELD, m_creature);
                 SecondShieldTimer = 40000;
@@ -333,7 +333,7 @@ struct npc_netherchargeAI : public Scripted_NoMovementAI
         }
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void UpdateAI(uint32 const diff) {
         if (pulseTimer <= diff) {

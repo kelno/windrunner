@@ -65,7 +65,7 @@ struct npc_aged_dying_ancient_kodoAI : public ScriptedAI
         m_uiDespawnTimer = 0;
     }
     
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
@@ -88,7 +88,7 @@ struct npc_aged_dying_ancient_kodoAI : public ScriptedAI
         //timer should always be == 0 unless we already updated entry of creature. Then not expect this updated to ever be in combat.
         if (m_uiDespawnTimer && m_uiDespawnTimer <= diff)
         {
-            if (!me->getVictim() && me->isAlive())
+            if (!me->GetVictim() && me->IsAlive())
             {
                 Reset();
                 me->setDeathState(JUST_DIED);
@@ -188,7 +188,7 @@ struct npc_dalindaAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* /*pWho*/) { }
+    void EnterCombat(Unit* /*pWho*/) { }
 
     void Reset() {}
 
@@ -258,7 +258,7 @@ struct npc_melizzaAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* /*pWho*/) { }
+    void EnterCombat(Unit* /*pWho*/) { }
 
     void Reset() {}
 

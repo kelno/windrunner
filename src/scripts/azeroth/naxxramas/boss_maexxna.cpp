@@ -81,7 +81,7 @@ struct mob_webwrapAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -115,7 +115,7 @@ struct boss_maexxnaAI : public ScriptedAI
         Enraged = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -135,7 +135,7 @@ struct boss_maexxnaAI : public ScriptedAI
         {
             Unit *target = Unit::GetUnit(*m_creature, (*itr)->getUnitGuid());
                                                             //only on alive players
-            if(target && target->isAlive() && target->GetTypeId() == TYPEID_PLAYER )
+            if(target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER )
                 targets.push_back( target);
         }
 
@@ -190,21 +190,21 @@ struct boss_maexxnaAI : public ScriptedAI
         //WebSpray_Timer
         if (WebSpray_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_WEBSPRAY);
+            DoCast(m_creature->GetVictim(), SPELL_WEBSPRAY);
             WebSpray_Timer = 40000;
         }else WebSpray_Timer -= diff;
 
         //PoisonShock_Timer
         if (PoisonShock_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_POISONSHOCK);
+            DoCast(m_creature->GetVictim(), SPELL_POISONSHOCK);
             PoisonShock_Timer = 20000;
         }else PoisonShock_Timer -= diff;
 
         //NecroticPoison_Timer
         if (NecroticPoison_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_NECROTICPOISON);
+            DoCast(m_creature->GetVictim(), SPELL_NECROTICPOISON);
             NecroticPoison_Timer = 30000;
         }else NecroticPoison_Timer -= diff;
 

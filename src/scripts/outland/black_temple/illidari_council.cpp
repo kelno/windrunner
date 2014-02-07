@@ -134,7 +134,7 @@ struct mob_blood_elf_council_voice_triggerAI : public ScriptedAI
         }else error_log(ERROR_INST_DATA);
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
@@ -210,7 +210,7 @@ struct mob_illidari_councilAI : public ScriptedAI
         {
             if(pMember = (Unit::GetCreature((*m_creature), Council[i])))
             {
-                if(!pMember->isAlive())
+                if(!pMember->IsAlive())
                 {
                     pMember->RemoveCorpse();
                     pMember->Respawn();
@@ -233,7 +233,7 @@ struct mob_illidari_councilAI : public ScriptedAI
         m_creature->SetDisplayId(11686);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
     void AttackStart(Unit* who) {}
     void MoveInLineOfSight(Unit* who) {}
 
@@ -241,7 +241,7 @@ struct mob_illidari_councilAI : public ScriptedAI
     {
         if(!pInstance) return;
 
-        if(target && target->isAlive())
+        if(target && target->IsAlive())
         {
             // /!\ Not same order as in mob_blood_elf_council_voice_triggerAI
             Council[0] = pInstance->GetData64(DATA_GATHIOSTHESHATTERER);
@@ -262,7 +262,7 @@ struct mob_illidari_councilAI : public ScriptedAI
                 if(Council[i])
                 {
                     Member = Unit::GetUnit((*m_creature), Council[i]);
-                    if(Member && Member->isAlive())
+                    if(Member && Member->IsAlive())
                         (Member->ToCreature())->AI()->AttackStart(target);
                 }
             }
@@ -303,7 +303,7 @@ struct mob_illidari_councilAI : public ScriptedAI
                 }
 
                 Creature* pMember = (Unit::GetCreature(*m_creature, Council[DeathCount]));
-                if(pMember && pMember->isAlive())
+                if(pMember && pMember->IsAlive())
                     pMember->DealDamage(pMember, pMember->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
 
                 ++DeathCount;
@@ -323,9 +323,9 @@ struct mob_illidari_councilAI : public ScriptedAI
                         if(Creature* Member = (Unit::GetCreature((*m_creature), Council[i])))
                         {
                             // This is the evade/death check.
-                            if(Member->isAlive() && !Member->getVictim())
+                            if(Member->IsAlive() && !Member->GetVictim())
                                 ++EvadeCheck;                   //If all members evade, we reset so that players can properly reset the event
-                            else if(!Member->isAlive())         // If even one member dies, kill the rest, set instance data, and kill self.
+                            else if(!Member->IsAlive())         // If even one member dies, kill the rest, set instance data, and kill self.
                             {
                                 EndEventTimer = 500;
                                 CheckTimer = 0;
@@ -361,7 +361,7 @@ struct boss_illidari_councilAI : public ScriptedAI
 
     bool LoadedGUIDs;
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if(pInstance)
         {
@@ -402,9 +402,9 @@ struct boss_illidari_councilAI : public ScriptedAI
         for(uint8 i = 0; i < 4; ++i)
         {
             if(Unit* pUnit = Unit::GetUnit(*m_creature, Council[i]))
-                if(pUnit != m_creature && pUnit->getVictim())
+                if(pUnit != m_creature && pUnit->GetVictim())
                 {
-                    AttackStart(pUnit->getVictim());
+                    AttackStart(pUnit->GetVictim());
                     return;
                 }
         }
@@ -420,7 +420,7 @@ struct boss_illidari_councilAI : public ScriptedAI
         for(uint8 i = 0; i < 4; ++i)
         {
             if(Creature* pUnit = Unit::GetCreature(*m_creature, Council[i]))
-                if(pUnit != m_creature && pUnit->isAlive())
+                if(pUnit != m_creature && pUnit->IsAlive())
                 {
                     if(damage <= pUnit->GetHealth())
                     {
@@ -443,7 +443,7 @@ struct boss_illidari_councilAI : public ScriptedAI
         {
             if (Creature* pUnit = Unit::GetCreature(*m_creature, Council[i]))
             {
-                if (pUnit->isAlive())
+                if (pUnit->IsAlive())
                     count++;
             }
         }
@@ -585,7 +585,7 @@ struct boss_gathios_the_shattererAI : public boss_illidari_councilAI
 
         if(JudgeTimer < diff)
         {
-            if(DoCast(me->getVictim(),SPELL_JUDGEMENT) == SPELL_CAST_OK)
+            if(DoCast(me->GetVictim(),SPELL_JUDGEMENT) == SPELL_CAST_OK)
             {
                 JudgeTimer = -1;
                 SealTimer = 2200; //just after finishing casting judgement (2s cast)
@@ -675,17 +675,20 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
             return;
 
         //prefer staying at 15m
-        if(me->isMoving() && me->GetDistance2d(me->getVictim()) < 15 && me->IsWithinLOSInMap(me->getVictim()))
+        if(me->isMoving() && me->GetDistance2d(me->GetVictim()) < 15 && me->IsWithinLOSInMap(me->GetVictim()))
             me->StopMoving();
+
+        if(!me->IsWithinLOSInMap(me->GetVictim()))
+            me->GetMotionMaster()->MoveChase(me->GetVictim());
 
         if(DampenMagicTimer < diff)
         {
-                m_creature->InterruptNonMeleeSpells(false);
-                if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true) == SPELL_CAST_OK)
-                {
-                    DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
-                    ArcaneBoltTimer += 2000;
-                }
+            m_creature->InterruptNonMeleeSpells(false);
+            if(DoCast(m_creature, SPELL_DAMPEN_MAGIC, true) == SPELL_CAST_OK)
+            {
+                DampenMagicTimer = TIMER_DAMPEN_MAGIC;          // 1.12 minute
+                ArcaneBoltTimer += 2000;
+            }
         }else DampenMagicTimer -= diff;
 
         if(AoETimer < diff)
@@ -705,7 +708,7 @@ struct boss_high_nethermancer_zerevorAI : public boss_illidari_councilAI
 
         if(ArcaneBoltTimer < diff)
         {
-            if(DoCast(m_creature->getVictim(), SPELL_ARCANE_BOLT) == SPELL_CAST_OK)
+            if(DoCast(m_creature->GetVictim(), SPELL_ARCANE_BOLT) == SPELL_CAST_OK)
                 ArcaneBoltTimer = 3000;
         } else ArcaneBoltTimer -= diff;       
     }
@@ -751,7 +754,7 @@ struct boss_lady_malandeAI : public boss_illidari_councilAI
 
         if(EmpoweredSmiteTimer < diff)
         {
-            if(DoCast(me->getVictim(), SPELL_EMPOWERED_SMITE) == SPELL_CAST_OK)
+            if(DoCast(me->GetVictim(), SPELL_EMPOWERED_SMITE) == SPELL_CAST_OK)
                 EmpoweredSmiteTimer = TIMER_SMITE;
 
         }else EmpoweredSmiteTimer -= diff;
@@ -875,7 +878,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         }
         else
         {
-            if(!me->getVictim())
+            if(!me->GetVictim())
             {
                 EnterEvadeMode();
                 return;
@@ -887,9 +890,9 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
                 HasVanished = false;
                 m_creature->SetVisibility(VISIBILITY_ON);
                 m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-                Unit* currentTarget = me->getVictim();
+                Unit* currentTarget = me->GetVictim();
                 DoResetThreat();
-                me->AddThreat(currentTarget, 2500.0f);
+                me->AddThreat(currentTarget, 1200.0f);
                 DoCast(me,SPELL_VANISH_STUN);
                 return;
             }else VanishTimeLeft -= diff;

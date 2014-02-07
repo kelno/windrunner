@@ -6,7 +6,7 @@ struct npc_interpreterAI : public ScriptedAI
     npc_interpreterAI(Creature *c) : ScriptedAI(c) 
     {}
 
-    void Aggro(Unit* /* who */) {}
+    void EnterCombat(Unit* /* who */) {}
 };
 
 bool GossipHello_npc_interpreter(Player *player, Creature *_Creature)

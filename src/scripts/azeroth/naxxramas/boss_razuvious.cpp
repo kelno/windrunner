@@ -89,7 +89,7 @@ struct boss_razuviousAI : public ScriptedAI
         DoPlaySoundToSet(m_creature, SOUND_DEATH);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch (rand()%3)
         {
@@ -113,14 +113,14 @@ struct boss_razuviousAI : public ScriptedAI
         //UnbalancingStrike_Timer
         if (UnbalancingStrike_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_UNBALANCINGSTRIKE);
+            DoCast(m_creature->GetVictim(),SPELL_UNBALANCINGSTRIKE);
             UnbalancingStrike_Timer = 30000;
         }else UnbalancingStrike_Timer -= diff;
 
         //DisruptingShout_Timer
         if (DisruptingShout_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_DISRUPTINGSHOUT);
+            DoCast(m_creature->GetVictim(), SPELL_DISRUPTINGSHOUT);
             DisruptingShout_Timer = 25000;
         }else DisruptingShout_Timer -= diff;
 

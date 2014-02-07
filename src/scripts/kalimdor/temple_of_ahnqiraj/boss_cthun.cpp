@@ -123,7 +123,7 @@ struct flesh_tentacleAI : public Scripted_NoMovementAI
         CheckTimer = 1000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -182,7 +182,7 @@ struct eye_of_cthunAI : public Scripted_NoMovementAI
             pInst->SetData(DATA_CTHUN_PHASE, 0);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -498,7 +498,7 @@ struct cthunAI : public Scripted_NoMovementAI
             pInst->SetData(DATA_CTHUN_PHASE, 0);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -939,7 +939,7 @@ struct eye_tentacleAI : public Scripted_NoMovementAI
         KillSelfTimer = 35000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -1001,7 +1001,7 @@ struct claw_tentacleAI : public Scripted_NoMovementAI
         EvadeTimer = 5000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -1013,7 +1013,7 @@ struct claw_tentacleAI : public Scripted_NoMovementAI
             return;
 
         //EvadeTimer
-        if (!m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if (!m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             if (EvadeTimer < diff)
         {
             Unit* p = Unit::GetUnit(*m_creature, Portal);
@@ -1051,14 +1051,14 @@ struct claw_tentacleAI : public Scripted_NoMovementAI
         //GroundRuptureTimer
         if (GroundRuptureTimer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_GROUND_RUPTURE);
+            DoCast(m_creature->GetVictim(),SPELL_GROUND_RUPTURE);
             GroundRuptureTimer = 30000;
         }else GroundRuptureTimer -= diff;
 
         //HamstringTimer
         if (HamstringTimer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMSTRING);
+            DoCast(m_creature->GetVictim(),SPELL_HAMSTRING);
             HamstringTimer = 5000;
         }else HamstringTimer -= diff;
 
@@ -1097,7 +1097,7 @@ struct giant_claw_tentacleAI : public Scripted_NoMovementAI
         EvadeTimer = 5000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -1109,7 +1109,7 @@ struct giant_claw_tentacleAI : public Scripted_NoMovementAI
             return;
 
         //EvadeTimer
-        if (!m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if (!m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             if (EvadeTimer < diff)
         {
             Unit* p = Unit::GetUnit(*m_creature, Portal);
@@ -1148,21 +1148,21 @@ struct giant_claw_tentacleAI : public Scripted_NoMovementAI
         //GroundRuptureTimer
         if (GroundRuptureTimer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_GROUND_RUPTURE);
+            DoCast(m_creature->GetVictim(),SPELL_GROUND_RUPTURE);
             GroundRuptureTimer = 30000;
         }else GroundRuptureTimer -= diff;
 
         //ThrashTimer
         if (ThrashTimer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_THRASH);
+            DoCast(m_creature->GetVictim(),SPELL_THRASH);
             ThrashTimer = 10000;
         }else ThrashTimer -= diff;
 
         //HamstringTimer
         if (HamstringTimer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_HAMSTRING);
+            DoCast(m_creature->GetVictim(),SPELL_HAMSTRING);
             HamstringTimer = 10000;
         }else HamstringTimer -= diff;
 
@@ -1195,7 +1195,7 @@ struct giant_eye_tentacleAI : public Scripted_NoMovementAI
         BeamTimer = 500;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
     }
@@ -1232,7 +1232,7 @@ void flesh_tentacleAI::UpdateAI(const uint32 diff)
     {
         Unit* pUnit = Unit::GetUnit(*m_creature, Parent);
 
-        if (!pUnit || !pUnit->isAlive() || !pUnit->isInCombat())
+        if (!pUnit || !pUnit->IsAlive() || !pUnit->IsInCombat())
         {
             Parent = 0;
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NONE, NULL, false);

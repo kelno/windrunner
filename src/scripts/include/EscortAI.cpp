@@ -44,7 +44,7 @@ void npc_escortAI::AttackStart(Unit *who)
                 m_creature->GetPosition(LastPos.x, LastPos.y, LastPos.z);
             }
 
-            Aggro(who);
+            EnterCombat(who);
         }
 
         m_creature->GetMotionMaster()->MovementExpired();
@@ -60,7 +60,7 @@ void npc_escortAI::MoveInLineOfSight(Unit *who)
     if (IsBeingEscorted && !Attack)
         return;
 
-    if(m_creature->getVictim() || !m_creature->canStartAttack(who))
+    if(m_creature->GetVictim() || !m_creature->canStartAttack(who))
         return;
 
     AttackStart(who);
@@ -201,7 +201,7 @@ void npc_escortAI::UpdateAI(const uint32 diff)
     if(CanMelee)
     {
         //Check if we have a current target
-        if( m_creature->isAlive() && UpdateVictim())
+        if( m_creature->IsAlive() && UpdateVictim())
             DoMeleeAttackIfReady();
     }
 }
@@ -359,7 +359,7 @@ void npc_escortAI::SetEscortPaused(bool bPaused)
 
 bool npc_escortAI::AssistPlayerInCombat(Unit* who)
 {
-    if (!who || !who->getVictim())
+    if (!who || !who->GetVictim())
         return false;
 
     //experimental (unknown) flag not present
@@ -367,7 +367,7 @@ bool npc_escortAI::AssistPlayerInCombat(Unit* who)
         return false;
 
     //not a player
-    if (!who->getVictim()->GetCharmerOrOwnerPlayerOrPlayerItself())
+    if (!who->GetVictim()->GetCharmerOrOwnerPlayerOrPlayerItself())
         return false;
 
     //never attack friendly
@@ -378,9 +378,9 @@ bool npc_escortAI::AssistPlayerInCombat(Unit* who)
     if (me->IsWithinDistInMap(who, 25.0f) && me->IsWithinLOSInMap(who))
     {
         //already fighting someone?
-        if (!me->getVictim())
+        if (!me->GetVictim())
         {
-            Aggro(who);
+            EnterCombat(who);
             AttackStart(who);
             return true;
         }

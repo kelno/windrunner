@@ -53,7 +53,7 @@ struct boss_kormokAI : public ScriptedAI
         Mages = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -107,14 +107,14 @@ struct boss_kormokAI : public ScriptedAI
         //ShadowVolley_Timer
         if (ShadowVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SHADOWBOLTVOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_SHADOWBOLTVOLLEY);
             ShadowVolley_Timer = 15000;
         }else ShadowVolley_Timer -= diff;
 
         //BoneShield_Timer
         if (BoneShield_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_BONESHIELD);
+            DoCast(m_creature->GetVictim(),SPELL_BONESHIELD);
             BoneShield_Timer = 45000;
         }else BoneShield_Timer -= diff;
 
@@ -122,10 +122,10 @@ struct boss_kormokAI : public ScriptedAI
         if (Minion_Timer < diff)
         {
             //Cast
-            SummonMinion(m_creature->getVictim());
-            SummonMinion(m_creature->getVictim());
-            SummonMinion(m_creature->getVictim());
-            SummonMinion(m_creature->getVictim());
+            SummonMinion(m_creature->GetVictim());
+            SummonMinion(m_creature->GetVictim());
+            SummonMinion(m_creature->GetVictim());
+            SummonMinion(m_creature->GetVictim());
 
             Minion_Timer = 12000;
         }else Minion_Timer -= diff;
@@ -134,8 +134,8 @@ struct boss_kormokAI : public ScriptedAI
         if ( !Mages && m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 26 )
         {
             //Cast
-            SummonMages(m_creature->getVictim());
-            SummonMages(m_creature->getVictim());
+            SummonMages(m_creature->GetVictim());
+            SummonMages(m_creature->GetVictim());
             Mages = true;
         }
 

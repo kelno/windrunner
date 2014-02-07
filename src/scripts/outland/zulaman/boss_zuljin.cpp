@@ -267,12 +267,12 @@ public:
                     }
                 }
                 else
-                    me->AI()->AttackStart(me->getVictim());
+                    me->AI()->AttackStart(me->GetVictim());
 
                 if (newPhase == PHASE_LYNX) {
                     me->RemoveAurasDueToSpell(SPELL_ENERGY_STORM);
                     summons.DespawnEntry(CREATURE_FEATHER_VORTEX);
-                    me->GetMotionMaster()->MoveChase(me->getVictim());
+                    me->GetMotionMaster()->MoveChase(me->GetVictim());
                 }
                 break;
             default:
@@ -297,19 +297,19 @@ public:
         void doMeleeAttackIfReady()
         {
             if (!me->IsNonMeleeSpellCasted(false)) {
-                if (me->isAttackReady() && me->IsWithinMeleeRange(me->getVictim())) { // It seems that there is no triggering aura we could use with the proper procflags :(
+                if (me->isAttackReady() && me->IsWithinMeleeRange(me->GetVictim())) { // It seems that there is no triggering aura we could use with the proper procflags :(
                     if (getPhase() == PHASE_BEAR && overpowerReady) {
-                        uint32 health = me->getVictim()->GetHealth();
-                        me->AttackerStateUpdate(me->getVictim());
-                        if (me->getVictim() && health == me->getVictim()->GetHealth()) { // Dodged
-                            me->CastSpell(me->getVictim(), SPELL_OVERPOWER, false);
+                        uint32 health = me->GetVictim()->GetHealth();
+                        me->AttackerStateUpdate(me->GetVictim());
+                        if (me->GetVictim() && health == me->GetVictim()->GetHealth()) { // Dodged
+                            me->CastSpell(me->GetVictim(), SPELL_OVERPOWER, false);
                             overpowerReady = false;
                             scheduleEvent(EV_OVERPOWER_READY, 5000);
                             enableEvent(EV_OVERPOWER_READY);
                         }
                     }
                     else
-                        me->AttackerStateUpdate(me->getVictim());
+                        me->AttackerStateUpdate(me->GetVictim());
 
                     me->resetAttackTimer();
                 }

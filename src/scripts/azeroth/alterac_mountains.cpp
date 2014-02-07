@@ -44,7 +44,7 @@ struct npc_ravenholdtAI : public ScriptedAI
                 CAST_PLR(who)->KilledMonster(m_creature->GetEntry(),m_creature->GetGUID() );
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 };
 
 CreatureAI* GetAI_npc_ravenholdt(Creature *pCreature)

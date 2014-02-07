@@ -75,7 +75,7 @@ struct boss_omor_the_unscarredAI : public Scripted_NoMovementAI
         CanPullBack = false;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {
@@ -145,8 +145,8 @@ struct boss_omor_the_unscarredAI : public Scripted_NoMovementAI
         else if (OrbitalStrike_Timer < diff)
         {
             Unit* temp = NULL;
-            if (m_creature->IsWithinMeleeRange(m_creature->getVictim()))
-                temp = m_creature->getVictim();
+            if (m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
+                temp = m_creature->GetVictim();
             else temp = SelectUnit(SELECT_TARGET_RANDOM,0);
 
             if (temp && temp->GetTypeId() == TYPEID_PLAYER)
@@ -185,7 +185,7 @@ struct boss_omor_the_unscarredAI : public Scripted_NoMovementAI
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
             {
                 if (target)
-                    target = m_creature->getVictim();
+                    target = m_creature->GetVictim();
 
                 DoCast(target,HeroicMode ? H_SPELL_SHADOW_BOLT : SPELL_SHADOW_BOLT);
                 Shadowbolt_Timer = 4000+rand()%2500;

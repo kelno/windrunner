@@ -52,7 +52,7 @@ struct boss_gluttonAI : public ScriptedAI
             pInstance->SetData(DATA_GLUTTON_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_GLUTTON_EVENT, IN_PROGRESS);

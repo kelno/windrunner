@@ -172,7 +172,7 @@ struct npc_grimstoneAI : public npc_escortAI
         CanWalk = false;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void DoGate(uint32 id, uint32 state)
     {
@@ -249,7 +249,7 @@ struct npc_grimstoneAI : public npc_escortAI
                 if (RingBossGUID)
                 {
                     Creature *boss = Unit::GetCreature(*m_creature,RingBossGUID);
-                    if (boss && !boss->isAlive() && boss->isDead())
+                    if (boss && !boss->IsAlive() && boss->isDead())
                     {
                         RingBossGUID = 0;
                         Event_Timer = 5000;
@@ -262,7 +262,7 @@ struct npc_grimstoneAI : public npc_escortAI
                 for(uint8 i = 0; i < MAX_MOB_AMOUNT; i++)
                 {
                     Creature *mob = Unit::GetCreature(*m_creature,RingMobGUID[i]);
-                    if (mob && !mob->isAlive() && mob->isDead())
+                    if (mob && !mob->IsAlive() && mob->isDead())
                     {
                         RingMobGUID[i] = 0;
                         --MobCount;
@@ -388,7 +388,7 @@ struct mob_phalanxAI : public ScriptedAI
         MightyBlow_Timer = 15000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -401,7 +401,7 @@ struct mob_phalanxAI : public ScriptedAI
         //ThunderClap_Timer
         if( ThunderClap_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_THUNDERCLAP);
+            DoCast(m_creature->GetVictim(),SPELL_THUNDERCLAP);
             ThunderClap_Timer = 10000;
         }else ThunderClap_Timer -= diff;
 
@@ -410,7 +410,7 @@ struct mob_phalanxAI : public ScriptedAI
         {
             if (FireballVolley_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_FIREBALLVOLLEY);
+                DoCast(m_creature->GetVictim(),SPELL_FIREBALLVOLLEY);
                 FireballVolley_Timer = 15000;
             }else FireballVolley_Timer -= diff;
         }
@@ -418,7 +418,7 @@ struct mob_phalanxAI : public ScriptedAI
         //MightyBlow_Timer
         if( MightyBlow_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_MIGHTYBLOW);
+            DoCast(m_creature->GetVictim(),SPELL_MIGHTYBLOW);
             MightyBlow_Timer = 10000;
         }else MightyBlow_Timer -= diff;
 
@@ -611,7 +611,7 @@ struct npc_dughal_stormwingAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
     void Reset() {}
 
     void JustDied(Unit* killer)
@@ -744,7 +744,7 @@ struct npc_marshal_windsorAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
         {
         switch(rand()%3)
             {
@@ -940,7 +940,7 @@ struct npc_marshal_reginald_windsorAI : public npc_escortAI
         }
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
         {
         switch(rand()%3)
             {
@@ -1056,7 +1056,7 @@ struct npc_tobias_seecherAI : public npc_escortAI
 {
     npc_tobias_seecherAI(Creature *c) :npc_escortAI(c) {}
 
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
     void Reset() {}
 
     void JustDied(Unit* killer)
@@ -1205,7 +1205,7 @@ struct npc_rocknotAI : public npc_escortAI
         BreakDoor_Timer = 0;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void DoGo(uint32 id, uint32 state)
     {
@@ -1365,7 +1365,7 @@ struct npc_windsor_brdAI : public npc_escortAI
     
     void Reset() {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void KilledUnit(Unit* who)
     {

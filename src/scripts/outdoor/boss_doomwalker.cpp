@@ -76,7 +76,7 @@ struct boss_doomwalkerAI : public ScriptedAI
         DoScriptText(SAY_DEATH, m_creature);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -108,9 +108,9 @@ struct boss_doomwalkerAI : public ScriptedAI
         {
             DoScriptText(RAND(SAY_OVERRUN_1, SAY_OVERRUN_2), m_creature);
 
-            DoCast(m_creature->getVictim(),SPELL_OVERRUN);
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-100);    // Reset MT threat
+            DoCast(m_creature->GetVictim(),SPELL_OVERRUN);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-100);    // Reset MT threat
             Overrun_Timer = 25000 + rand()%15000;
         }else Overrun_Timer -= diff;
 
@@ -138,7 +138,7 @@ struct boss_doomwalkerAI : public ScriptedAI
 
             // According to WoWHead, shouldn't hit the main tank
             /*if (!target)
-                target = m_creature->getVictim();*/
+                target = m_creature->GetVictim();*/
 
             if (target)
                 DoCast(target,SPELL_CHAIN_LIGHTNING);
@@ -149,7 +149,7 @@ struct boss_doomwalkerAI : public ScriptedAI
         //Spell Sunder Armor
         if (Armor_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SUNDER_ARMOR);
+            DoCast(m_creature->GetVictim(),SPELL_SUNDER_ARMOR);
             Armor_Timer = 10000 + rand()%15000;
         }else Armor_Timer -= diff;
 

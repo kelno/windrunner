@@ -44,7 +44,7 @@ struct mob_treantAI  : public ScriptedAI
         check_Timer = 0;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void MoveInLineOfSight(Unit*) {}
 
@@ -70,7 +70,7 @@ struct mob_treantAI  : public ScriptedAI
             return;
         }
 
-        if (m_creature->getVictim()->GetGUID() !=  WarpGuid)
+        if (m_creature->GetVictim()->GetGUID() !=  WarpGuid)
             DoMeleeAttackIfReady();
     }
 };
@@ -141,7 +141,7 @@ struct boss_warp_splinterAI : public ScriptedAI
     
     void SummonedCreatureDespawn(Creature* pSummon) { summons.Despawn(pSummon); }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -193,14 +193,14 @@ struct boss_warp_splinterAI : public ScriptedAI
         //Check for War Stomp
         if(War_Stomp_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),WAR_STOMP);
+            DoCast(m_creature->GetVictim(),WAR_STOMP);
             War_Stomp_Timer = 25000 + rand()%15000;
         }else War_Stomp_Timer -= diff;
 
         //Check for Arcane Volley
         if(Arcane_Volley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),ARCANE_VOLLEY);
+            DoCast(m_creature->GetVictim(),ARCANE_VOLLEY);
             Arcane_Volley_Timer = 20000 + rand()%15000;
         }else Arcane_Volley_Timer -= diff;
 

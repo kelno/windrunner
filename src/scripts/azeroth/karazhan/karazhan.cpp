@@ -152,17 +152,17 @@ struct npc_barnesAI : public npc_escortAI
              if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
              {
                 if (RaidWiped)
-                    Door->SetGoState(0);
+                    Door->SetGoState(GO_STATE_ACTIVE);
                 else
-                    Door->SetGoState(1);
+                    Door->SetGoState(GO_STATE_READY);
              }
 
              if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                Curtain->SetGoState(1);
+                Curtain->SetGoState(GO_STATE_READY);
         }
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void WaypointReached(uint32 i)
     {
@@ -187,7 +187,7 @@ struct npc_barnesAI : public npc_escortAI
                 if(pInstance)
                 {
                     if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-                        Door->SetGoState(1);
+                        Door->SetGoState(GO_STATE_READY);
                 }
                 IsBeingEscorted = false;
                 PerformanceReady = true;
@@ -267,7 +267,7 @@ struct npc_barnesAI : public npc_escortAI
                         return;
 
                     if (GameObject* Curtain = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_CURTAINS)))
-                        Curtain->SetGoState(0);
+                        Curtain->SetGoState(GO_STATE_ACTIVE);
 
                     CurtainTimer = 0;
                 }else CurtainTimer -= diff;
@@ -287,7 +287,7 @@ struct npc_barnesAI : public npc_escortAI
                     RaidWiped = true;
                     for(Map::PlayerList::const_iterator i = PlayerList.begin();i != PlayerList.end(); ++i)
                     {
-                        if (i->getSource()->isAlive() && !i->getSource()->isGameMaster())
+                        if (i->getSource()->IsAlive() && !i->getSource()->isGameMaster())
                         {
                             RaidWiped = false;
                             break;
@@ -321,7 +321,7 @@ struct npc_barnesAI : public npc_escortAI
         pInstance->SetData(DATA_OPERA_EVENT, IN_PROGRESS);
 
         if (GameObject* Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_GAMEOBJECT_STAGEDOORLEFT)))
-            Door->SetGoState(0);
+            Door->SetGoState(GO_STATE_ACTIVE);
 
         m_creature->CastSpell(m_creature, SPELL_TUXEDO, true);
         m_creature->RemoveFlag(UNIT_NPC_FLAGS, UNIT_NPC_FLAG_GOSSIP);
@@ -553,7 +553,7 @@ struct npc_image_of_medivhAI : public ScriptedAI
             m_creature->RemoveCorpse();
         }
     }
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void MovementInform(uint32 type, uint32 id)
     {
@@ -647,7 +647,7 @@ struct npc_image_of_medivhAI : public ScriptedAI
                 InstanceMap::PlayerList const &PlayerList = ((InstanceMap*)map)->GetPlayers();
                 for (InstanceMap::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 {
-                    if(i->getSource()->isAlive())
+                    if(i->getSource()->IsAlive())
                     {
                         if(i->getSource()->GetQuestStatus(9645) == QUEST_STATUS_INCOMPLETE)
                             i->getSource()->CompleteQuest(9645);
@@ -801,7 +801,7 @@ struct woefulhealerAI : public ScriptedAI
         flagsset = false;
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
   
     void UpdateAI(const uint32 diff)
     {                
@@ -813,7 +813,7 @@ struct woefulhealerAI : public ScriptedAI
             flagsset = true;
         } //Fonctionnent pas dans le reset, une autre maniere de faire plus propre?
             
-        if ( !m_creature->isAlive() || m_creature->IsNonMeleeSpellCasted(false))
+        if ( !m_creature->IsAlive() || m_creature->IsNonMeleeSpellCasted(false))
             return;
     
         if (waittimer > diff)
@@ -834,7 +834,7 @@ struct woefulhealerAI : public ScriptedAI
         {
             if (Player* i_pl = i->getSource())
             {
-                if (i_pl->isAlive() && i_pl->GetDistance(m_creature) < 40 
+                if (i_pl->IsAlive() && i_pl->GetDistance(m_creature) < 40 
                 && i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING)
                 {
                     if (mostlowhp > i_pl->GetHealth())

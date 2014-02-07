@@ -74,7 +74,7 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
         Summon50 = false;
         Summon25 = false;
 
-        if (pInstance && m_creature->isAlive())
+        if (pInstance && m_creature->IsAlive())
             pInstance->SetData(TYPE_MEKGINEER_STEAMRIGGER, NOT_STARTED);
     }
 
@@ -96,7 +96,7 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {
@@ -131,7 +131,7 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
 
         if (Shrink_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_SUPER_SHRINK_RAY);
+            DoCast(m_creature->GetVictim(),SPELL_SUPER_SHRINK_RAY);
             Shrink_Timer = 20000;
         }else Shrink_Timer -= diff;
 
@@ -140,14 +140,14 @@ struct boss_mekgineer_steamriggerAI : public ScriptedAI
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
                 DoCast(target,SPELL_SAW_BLADE);
             else
-                DoCast(m_creature->getVictim(),SPELL_SAW_BLADE);
+                DoCast(m_creature->GetVictim(),SPELL_SAW_BLADE);
 
             Saw_Blade_Timer = 15000;
         } else Saw_Blade_Timer -= diff;
 
         if (Electrified_Net_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ELECTRIFIED_NET);
+            DoCast(m_creature->GetVictim(),SPELL_ELECTRIFIED_NET);
             Electrified_Net_Timer = 10000;
         }
         else Electrified_Net_Timer -= diff;
@@ -219,7 +219,7 @@ struct mob_steamrigger_mechanicAI : public ScriptedAI
         return;
     }
 
-    void Aggro(Unit *who) { }
+    void EnterCombat(Unit *who) { }
 
     void UpdateAI(const uint32 diff)
     {

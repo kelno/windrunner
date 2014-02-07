@@ -59,7 +59,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
             pInstance->SetData(DATA_KAZROGALEVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_KAZROGALEVENT, IN_PROGRESS);
@@ -78,7 +78,7 @@ struct boss_kazrogalAI : public hyjal_trashAI
         if (i == 7 && pInstance)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_THRALL));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
                 m_creature->AddThreat(target,0.0);
         }
     }

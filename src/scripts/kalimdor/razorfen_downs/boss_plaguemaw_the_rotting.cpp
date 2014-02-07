@@ -45,7 +45,7 @@ struct boss_plaguemaw_the_rottingAI : public ScriptedAI
             pInstance->SetData(DATA_PLAGUEMAW_THE_ROTTING_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (pInstance)
             pInstance->SetData(DATA_PLAGUEMAW_THE_ROTTING_EVENT, IN_PROGRESS);

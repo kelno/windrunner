@@ -67,7 +67,7 @@ struct boss_jindoAI : public ScriptedAI
         Teleport_Timer = 5000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -95,10 +95,10 @@ struct boss_jindoAI : public ScriptedAI
         //Hex_Timer
         if (Hex_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_HEX);
+            DoCast(m_creature->GetVictim(), SPELL_HEX);
 
-            if(DoGetThreat(m_creature->getVictim()))
-                DoModifyThreatPercent(m_creature->getVictim(),-80);
+            if(DoGetThreat(m_creature->GetVictim()))
+                DoModifyThreatPercent(m_creature->GetVictim(),-80);
 
             Hex_Timer = 12000 + rand()%8000;
         }else Hex_Timer -= diff;
@@ -127,7 +127,7 @@ struct boss_jindoAI : public ScriptedAI
             {
                 DoTeleportPlayer(target, -11583.7783,-1249.4278,77.5471,4.745);
 
-                if(DoGetThreat(m_creature->getVictim()))
+                if(DoGetThreat(m_creature->GetVictim()))
                     DoModifyThreatPercent(target,-100);
 
                 Skeletons = m_creature->SummonCreature(14826, target->GetPositionX()+2, target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15000);
@@ -183,7 +183,7 @@ struct mob_healing_wardAI : public ScriptedAI
         Heal_Timer = 2000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -223,7 +223,7 @@ struct mob_shade_of_jindoAI : public ScriptedAI
         m_creature->CastSpell(m_creature, SPELL_INVISIBLE,true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -233,7 +233,7 @@ struct mob_shade_of_jindoAI : public ScriptedAI
         //ShadowShock_Timer
         if(ShadowShock_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SHADOWSHOCK);
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWSHOCK);
             ShadowShock_Timer = 2000;
         }else ShadowShock_Timer -= diff;
 

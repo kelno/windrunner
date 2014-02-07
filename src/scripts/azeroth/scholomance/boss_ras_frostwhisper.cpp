@@ -53,7 +53,7 @@ struct boss_rasfrostAI : public ScriptedAI
         m_creature->CastSpell(m_creature,SPELL_ICEARMOR,true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -82,28 +82,28 @@ struct boss_rasfrostAI : public ScriptedAI
         //Freeze_Timer
         if (Freeze_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FREEZE);
+            DoCast(m_creature->GetVictim(),SPELL_FREEZE);
             Freeze_Timer = 24000;
         }else Freeze_Timer -= diff;
 
         //Fear_Timer
         if (Fear_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FEAR);
+            DoCast(m_creature->GetVictim(),SPELL_FEAR);
             Fear_Timer = 30000;
         }else Fear_Timer -= diff;
 
         //ChillNova_Timer
         if (ChillNova_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CHILLNOVA);
+            DoCast(m_creature->GetVictim(),SPELL_CHILLNOVA);
             ChillNova_Timer = 14000;
         }else ChillNova_Timer -= diff;
 
         //FrostVolley_Timer
         if (FrostVolley_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_FROSTVOLLEY);
+            DoCast(m_creature->GetVictim(),SPELL_FROSTVOLLEY);
             FrostVolley_Timer = 15000;
         }else FrostVolley_Timer -= diff;
 

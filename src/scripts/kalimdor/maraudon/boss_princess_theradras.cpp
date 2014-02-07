@@ -45,7 +45,7 @@ struct boss_ptheradrasAI : public ScriptedAI
         RepulsiveGaze_Timer = 23000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -79,7 +79,7 @@ struct boss_ptheradrasAI : public ScriptedAI
         //RepulsiveGaze_Timer
         if (RepulsiveGaze_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_REPULSIVEGAZE);
+            DoCast(m_creature->GetVictim(),SPELL_REPULSIVEGAZE);
             RepulsiveGaze_Timer = 20000;
         }else RepulsiveGaze_Timer -= diff;
 

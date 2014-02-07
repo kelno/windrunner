@@ -28,7 +28,7 @@ struct mylittlebomblingAI : public ScriptedAI
         waitTimer = WAITTIME;
 	}
 	
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {}
 
 	void UpdateAI(uint32 const diff)
@@ -38,9 +38,9 @@ struct mylittlebomblingAI : public ScriptedAI
         case IDLE:
             break;
         case TRACKING:
-		    if(me->getVictim())
+		    if(me->GetVictim())
 		    {
-			    if (me->GetDistance(me->getVictim()) < 5)
+			    if (me->GetDistance(me->GetVictim()) < 5)
 			    {
 				    phase = HOHI;
                     me->Say(TEXT_HOHI,LANG_UNIVERSAL,NULL);
@@ -145,7 +145,7 @@ struct TRINITY_DLL_DECL mylittlebombling_visualAI : public ScriptedAI
 		me->CastSpell(me, SPELL_VISUAL_BADABOUM, true);
 	}
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {}
 };
 

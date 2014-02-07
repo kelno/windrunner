@@ -78,7 +78,7 @@ struct boss_warchief_kargath_bladefistAI : public ScriptedAI
             pInstance->SetData(DATA_BLADEFIST_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch (rand()%3)
         {
@@ -172,7 +172,7 @@ struct boss_warchief_kargath_bladefistAI : public ScriptedAI
         for(std::vector<uint64>::iterator itr = adds.begin(); itr!= adds.end(); ++itr)
         {
             Unit* temp = Unit::GetUnit((*m_creature),*itr);
-            if(temp && temp->isAlive())
+            if(temp && temp->IsAlive())
             {
                 (temp->ToCreature())->SetDisableReputationGain(true); //no reputation gain
                 (*temp).GetMotionMaster()->Clear(true);
@@ -185,7 +185,7 @@ struct boss_warchief_kargath_bladefistAI : public ScriptedAI
         for(std::vector<uint64>::iterator itr = assassins.begin(); itr!= assassins.end(); ++itr)
         {
             Unit* temp = Unit::GetUnit((*m_creature),*itr);
-            if(temp && temp->isAlive())
+            if(temp && temp->IsAlive())
             {
                 (temp->ToCreature())->SetDisableReputationGain(true); //no reputation gain
                 (*temp).GetMotionMaster()->Clear(true);
@@ -225,7 +225,7 @@ struct boss_warchief_kargath_bladefistAI : public ScriptedAI
                         // stop bladedance
                         InBlade = false;
                         m_creature->SetSpeed(MOVE_RUN,2);
-                        (*m_creature).GetMotionMaster()->MoveChase(m_creature->getVictim());
+                        (*m_creature).GetMotionMaster()->MoveChase(m_creature->GetVictim());
                         Blade_Dance_Timer = 30000;
                         Wait_Timer = 0;
                         if(HeroicMode)

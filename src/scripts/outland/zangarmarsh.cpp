@@ -138,7 +138,7 @@ struct npc_cooshcooshAI : public ScriptedAI
         m_creature->setFaction(FACTION_FRIENDLY_CO);
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -147,7 +147,7 @@ struct npc_cooshcooshAI : public ScriptedAI
 
         if( LightningBolt_Timer < diff )
         {
-            DoCast(m_creature->getVictim(),SPELL_LIGHTNING_BOLT);
+            DoCast(m_creature->GetVictim(),SPELL_LIGHTNING_BOLT);
             LightningBolt_Timer = 5000;
         }else LightningBolt_Timer -= diff;
 
@@ -278,7 +278,7 @@ struct npc_kayra_longmaneAI : public npc_escortAI
         m_creature->setFaction(1660);
     }
 
-    void Aggro(Unit* who){}
+    void EnterCombat(Unit* who){}
 
     void JustSummoned(Creature *summoned)
     {
@@ -353,7 +353,7 @@ struct npc_hchuuAI : public Scripted_NoMovementAI
 {
     npc_hchuuAI(Creature* c) : Scripted_NoMovementAI(c) {}
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
     
     void MoveInLineOfSight(Unit* pWho)
     {

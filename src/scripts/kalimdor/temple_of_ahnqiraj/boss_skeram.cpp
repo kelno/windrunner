@@ -113,7 +113,7 @@ struct boss_skeramAI : public ScriptedAI
             DoScriptText(SAY_DEATH, m_creature);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if (IsImage || Images75)
             return;
@@ -134,17 +134,17 @@ struct boss_skeramAI : public ScriptedAI
         //ArcaneExplosion_Timer
         if (ArcaneExplosion_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ARCANE_EXPLOSION);
+            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION);
             ArcaneExplosion_Timer = 8000 + rand()%10000;
         }else ArcaneExplosion_Timer -= diff;
 
         //If we are within range melee the target
-        if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+        if( m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
         {
             //Make sure our attack is ready and we arn't currently casting
             if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
             {
-                m_creature->AttackerStateUpdate(m_creature->getVictim());
+                m_creature->AttackerStateUpdate(m_creature->GetVictim());
                 m_creature->resetAttackTimer();
             }
         }else
@@ -152,7 +152,7 @@ struct boss_skeramAI : public ScriptedAI
             //EarthShock_Timer
             if (EarthShock_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),SPELL_EARTH_SHOCK);
+                DoCast(m_creature->GetVictim(),SPELL_EARTH_SHOCK);
                 EarthShock_Timer = 1000;
             }else EarthShock_Timer -= diff;
         }

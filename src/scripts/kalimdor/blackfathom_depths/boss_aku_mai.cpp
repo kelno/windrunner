@@ -45,7 +45,7 @@ struct boss_aku_maiAI : public ScriptedAI
             pInstance->SetData(TYPE_AKU_MAI, NOT_STARTED);
     }
     
-    void Aggro(Unit* pWho)
+    void EnterCombat(Unit* pWho)
     {
         if (pInstance)
             pInstance->SetData(TYPE_AKU_MAI, IN_PROGRESS);
@@ -64,8 +64,8 @@ struct boss_aku_maiAI : public ScriptedAI
         
         if (uiPoisonCloudTimer < diff)
         {
-            if (m_creature->getVictim())
-                DoCast(m_creature->getVictim(), SPELL_POISON_CLOUD);
+            if (m_creature->GetVictim())
+                DoCast(m_creature->GetVictim(), SPELL_POISON_CLOUD);
             uiPoisonCloudTimer = urand(25000,50000);
         } else uiPoisonCloudTimer -= diff;
 

@@ -39,7 +39,7 @@ struct boss_death_knight_darkreaverAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 };

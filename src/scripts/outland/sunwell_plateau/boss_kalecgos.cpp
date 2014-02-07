@@ -149,15 +149,15 @@ struct boss_kalecgosAI : public ScriptedAI
 
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
         if (Door)
-            Door->SetGoState(0);
+            Door->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if (Wall1 && m_creature->isAlive())
-            Wall1->SetGoState(1);
+        if (Wall1 && m_creature->IsAlive())
+            Wall1->SetGoState(GO_STATE_READY);
         else if (Wall1 && m_creature->isDead())
-            Wall1->SetGoState(0);
+            Wall1->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
         if (Wall2)
-            Wall2->SetGoState(0);
+            Wall2->SetGoState(GO_STATE_ACTIVE);
 
         m_creature->setFaction(14);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
@@ -187,11 +187,11 @@ struct boss_kalecgosAI : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
             
             GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
-            if(Door) Door->SetGoState(0);
+            if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
-            if(Wall1) Wall1->SetGoState(0);
+            if(Wall1) Wall1->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
-            if(Wall2) Wall2->SetGoState(0);
+            if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
         }
         
         // Raid wipe
@@ -208,7 +208,7 @@ struct boss_kalecgosAI : public ScriptedAI
             isFriendly = false;
         }*/
         
-        if (m_creature->isInCombat() && m_creature->GetVisibility() == VISIBILITY_ON) {
+        if (m_creature->IsInCombat() && m_creature->GetVisibility() == VISIBILITY_ON) {
             TalkSequence = 0;
             TalkTimer = 1;
             isFriendly = false;
@@ -226,16 +226,16 @@ struct boss_kalecgosAI : public ScriptedAI
             damage = 0;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         m_creature->SetStandState(PLAYER_STATE_NONE);
         DoScriptText(SAY_EVIL_AGGRO, m_creature);
         GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-        if(Door) Door->SetGoState(1);
+        if(Door) Door->SetGoState(GO_STATE_READY);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-        if(Wall1) Wall1->SetGoState(1);
+        if(Wall1) Wall1->SetGoState(GO_STATE_READY);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-        if(Wall2) Wall2->SetGoState(1);
+        if(Wall2) Wall2->SetGoState(GO_STATE_READY);
         DoZoneInCombat();
         CloseDoorsTimer = 5000;
         
@@ -256,7 +256,7 @@ struct boss_kalecgosAI : public ScriptedAI
     }
     
     void MoveInLineOfSight(Unit *pWho) {
-		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->isInCombat() && me->getFaction() != 35)
+		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->IsInCombat() && me->getFaction() != 35)
 			AttackStart(pWho);
 	}
 
@@ -390,7 +390,7 @@ struct boss_sathrovarrAI : public ScriptedAI
             pInstance->SetData(DATA_KALECGOS_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         Creature *Kalec = m_creature->SummonCreature(MOB_KALEC, m_creature->GetPositionX() + 10, m_creature->GetPositionY() + 5, m_creature->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 0);
         if(Kalec)
@@ -443,11 +443,11 @@ struct boss_sathrovarrAI : public ScriptedAI
             pInstance->SetData(DATA_KALECGOS_EVENT, DONE);
             
         GameObject *Door = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_FORCEFIELD));
-        if(Door) Door->SetGoState(0);
+        if(Door) Door->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall1 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_1));
-        if(Wall1) Wall1->SetGoState(0);
+        if(Wall1) Wall1->SetGoState(GO_STATE_ACTIVE);
         GameObject *Wall2 = GameObject::GetGameObject(*m_creature, pInstance->GetData64(DATA_GO_KALEC_WALL_2));
-        if(Wall2) Wall2->SetGoState(0);
+        if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             
         // Remove invisibility auras
         m_creature->RemoveAurasDueToSpell(44800);
@@ -483,7 +483,7 @@ struct boss_sathrovarrAI : public ScriptedAI
     void DoMeleeAttackIfReady(bool withCorruptionStrike)
     {
         if (withCorruptionStrike)
-            DoCast(m_creature->getVictim(), SPELL_CORRUPTION_STRIKE, true);
+            DoCast(m_creature->GetVictim(), SPELL_CORRUPTION_STRIKE, true);
             
         UnitAI::DoMeleeAttackIfReady();
     }
@@ -494,8 +494,8 @@ struct boss_sathrovarrAI : public ScriptedAI
             return;
             
         // Check LoS EVERY update, maybe the current target was teleported back
-        if (m_creature->getVictim()->GetPositionZ() >= -65.0f || !m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
-            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
+        if (m_creature->GetVictim()->GetPositionZ() >= -65.0f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) {
+            DeleteFromThreatList(m_creature->GetVictim()->GetGUID());
             if(KalecGUID) {
                 if(Unit* Kalec = Unit::GetUnit(*m_creature, KalecGUID))
                     m_creature->AI()->AttackStart(Kalec);
@@ -503,7 +503,7 @@ struct boss_sathrovarrAI : public ScriptedAI
         }
             
         // If tank has not the aura anymore, maybe he was teleported back -> start attack on Kalecgos human form
-        if (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER && !m_creature->getVictim()->HasAura(AURA_SPECTRAL_REALM)) {
+        if (m_creature->GetVictim()->GetTypeId() == TYPEID_PLAYER && !m_creature->GetVictim()->HasAura(AURA_SPECTRAL_REALM)) {
             if(KalecGUID) {
                 if(Unit* Kalec = Unit::GetUnit(*m_creature, KalecGUID))
                     m_creature->AI()->AttackStart(Kalec);
@@ -553,11 +553,11 @@ struct boss_sathrovarrAI : public ScriptedAI
 
         if(ResetThreat < diff)
         {
-            if (( m_creature->getVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION)) && (m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER))
+            if (( m_creature->GetVictim()->HasAura(AURA_SPECTRAL_EXHAUSTION)) && (m_creature->GetVictim()->GetTypeId() == TYPEID_PLAYER))
             {
                 for(std::list<HostilReference*>::iterator itr = m_creature->getThreatManager().getThreatList().begin(); itr != m_creature->getThreatManager().getThreatList().end(); ++itr)
                 {
-                    if(((*itr)->getUnitGuid()) ==  (m_creature->getVictim()->GetGUID()))
+                    if(((*itr)->getUnitGuid()) ==  (m_creature->GetVictim()->GetGUID()))
                     {
                         (*itr)->removeReference();
                         break;
@@ -577,7 +577,7 @@ struct boss_sathrovarrAI : public ScriptedAI
         if(AgonyCurseTimer < diff)
         {
             Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
-            if(!target) target = m_creature->getVictim();
+            if(!target) target = m_creature->GetVictim();
             DoCast(target, SPELL_AGONY_CURSE);
             AgonyCurseTimer = 20000;
         }else AgonyCurseTimer -= diff;
@@ -624,7 +624,7 @@ struct boss_kalecAI : public ScriptedAI
         isEnraged = false;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void HealReceived(Unit* done_by, uint32& addhealth)
     {
@@ -706,7 +706,7 @@ struct boss_kalecAI : public ScriptedAI
 
         if(HeroicStrikeTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_HEROIC_STRIKE);
+            DoCast(m_creature->GetVictim(), SPELL_HEROIC_STRIKE);
             HeroicStrikeTimer = 2000;
         }else HeroicStrikeTimer -= diff;
 
@@ -729,11 +729,11 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             m_creature->DeleteThreatList();
             m_creature->CombatStop();
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
-            if(Door) Door->SetGoState(0);
+            if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
 			if(Wall1) Wall1->SetGoState(!isFriendly);
 			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Wall2) Wall2->SetGoState(0);
+			if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
@@ -756,8 +756,8 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         }
             
         // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
-        if (m_creature->getVictim()->GetPositionZ() <= 52.5f || !m_creature->getVictim()->IsWithinLOSInMap(m_creature)) {
-            DeleteFromThreatList(m_creature->getVictim()->GetGUID());
+        if (m_creature->GetVictim()->GetPositionZ() <= 52.5f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) {
+            DeleteFromThreatList(m_creature->GetVictim()->GetGUID());
             AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
         }
 
@@ -830,7 +830,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         {
             Unit *target = SelectUnit(1, 0.0f, 50.0f, true, true, false, AURA_SPECTRAL_EXHAUSTION, 0);
             
-            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->getVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f || target->HasAura(AURA_SPECTRAL_EXHAUSTION))))        // Delay selection to next loop if no valid target found
+            if (!target || (target && (target->isDead() || target->GetGUIDLow() == m_creature->GetVictim()->GetGUIDLow() || target->GetPositionZ() <= 52.5f || target->HasAura(AURA_SPECTRAL_EXHAUSTION))))        // Delay selection to next loop if no valid target found
                 SpectralBlastTimer = 300;
             else if (target) {
                 m_creature->InterruptNonMeleeSpells(true);

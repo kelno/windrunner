@@ -95,7 +95,7 @@ struct boss_blackheart_the_inciterAI : public ScriptedAI
             pInstance->SetData(DATA_BLACKHEARTTHEINCITEREVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         switch(rand()%3)
         {

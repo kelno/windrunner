@@ -612,7 +612,7 @@ public:
                 
             me->SetUInt64Value(UNIT_FIELD_TARGET, 0);
 
-            if (me->hasUnitState(UNIT_STAT_CASTING))
+            if (me->HasUnitState(UNIT_STAT_CASTING))
                 return;
 
             if (PhaseTimer <= diff)
@@ -1072,7 +1072,7 @@ public:
                         if (!updateVictim())
                             return;
 
-                        if (me->GetDistance(me->getVictim()) < 5)
+                        if (me->GetDistance(me->GetVictim()) < 5)
                         {
                             if (Creature* trigger = me->SummonCreature(WORLD_TRIGGER, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN, 12000))
                             {
@@ -1170,7 +1170,7 @@ class npc_void_sentinel : public CreatureScript
 
             if (VoidBlastTimer <= diff)
             {
-                doCast(me->getVictim(), SPELL_VOID_BLAST, false);
+                doCast(me->GetVictim(), SPELL_VOID_BLAST, false);
                 VoidBlastTimer = 20000;
             }
             else
@@ -1425,7 +1425,7 @@ class npc_mage : public CreatureScript
 
             if (FelFireballTimer <= diff)
             {
-                doCast(me->getVictim(), SPELL_FEL_FIREBALL, false);
+                doCast(me->GetVictim(), SPELL_FEL_FIREBALL, false);
 
                 FelFireballTimer = urand(2000, 3000);
             }

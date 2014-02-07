@@ -76,7 +76,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
             me->SetDisplayId(22805);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -150,7 +150,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
                     {
                         if( Unit *temp = Unit::GetUnit(*m_creature,*itr) )
                         {
-                            if( !temp->isAlive() )
+                            if( !temp->IsAlive() )
                             {
                                 Adds_List.erase(itr);
                                 ++DeadAddsCount;
@@ -170,7 +170,7 @@ struct boss_high_botanist_freywinnAI : public ScriptedAI
 
                     m_creature->InterruptNonMeleeSpells(true);
                     m_creature->RemoveAllAuras();
-                    m_creature->GetMotionMaster()->MoveChase(m_creature->getVictim());
+                    m_creature->GetMotionMaster()->MoveChase(m_creature->GetVictim());
                     MoveFree = true;
                 }
                 MoveCheck_Timer = 500;

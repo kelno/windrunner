@@ -96,11 +96,11 @@ struct boss_vexallusAI : public ScriptedAI
             GameObject* Door = NULL;
             Door = GameObject::GetGameObject((*m_creature), pInstance->GetData64(DATA_VEXALLUS_DOOR));
             if(Door)
-                Door->SetGoState(0);
+                Door->SetGoState(GO_STATE_ACTIVE);
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
         if (pInstance)
@@ -195,7 +195,7 @@ struct mob_pure_energyAI : public ScriptedAI
         slayer->CastSpell(slayer, SPELL_ENERGY_FEEDBACK, true, 0, 0, m_creature->GetGUID());
     }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void UpdateAI(const uint32 diff)
     {
@@ -204,12 +204,12 @@ struct mob_pure_energyAI : public ScriptedAI
 
         if(EnergyBoltTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_ENERGY_BOLT);
+            DoCast(m_creature->GetVictim(), SPELL_ENERGY_BOLT);
             EnergyBoltTimer = 1700;
         }else   EnergyBoltTimer -= diff;
         if(VisualTimer < diff)
         {
-            DoCast(m_creature->getVictim(), ASTRAL_FLARE_VISUAL, true);
+            DoCast(m_creature->GetVictim(), ASTRAL_FLARE_VISUAL, true);
             VisualTimer = 1000;
         }else   VisualTimer -= diff;
     }

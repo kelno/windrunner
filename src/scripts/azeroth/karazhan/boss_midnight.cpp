@@ -71,7 +71,7 @@ struct boss_midnightAI : public ScriptedAI
             pInstance->SetData(DATA_ATTUMEN_EVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit* who) 
+    void EnterCombat(Unit* who) 
     {
         if(pInstance)
             pInstance->SetData(DATA_ATTUMEN_EVENT, IN_PROGRESS);
@@ -98,7 +98,7 @@ struct boss_midnightAI : public ScriptedAI
             if(pAttumen)
             {
                 Attumen = pAttumen->GetGUID();
-                pAttumen->AI()->AttackStart(m_creature->getVictim());
+                pAttumen->AI()->AttackStart(m_creature->GetVictim());
                 SetMidnight(pAttumen, m_creature->GetGUID());
                 switch(rand()%3)
                 {
@@ -126,10 +126,10 @@ struct boss_midnightAI : public ScriptedAI
                     {
                         pAttumen->SetUInt32Value(UNIT_FIELD_DISPLAYID, MOUNTED_DISPLAYID);
                         pAttumen->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                        if(pAttumen->getVictim())
+                        if(pAttumen->GetVictim())
                         {
-                            pAttumen->GetMotionMaster()->MoveChase(pAttumen->getVictim());
-                            pAttumen->SetUInt64Value(UNIT_FIELD_TARGET, pAttumen->getVictim()->GetGUID());
+                            pAttumen->GetMotionMaster()->MoveChase(pAttumen->GetVictim());
+                            pAttumen->SetUInt64Value(UNIT_FIELD_TARGET, pAttumen->GetVictim()->GetGUID());
                         }
                         pAttumen->SetFloatValue(OBJECT_FIELD_SCALE_X,1);
                     }
@@ -204,7 +204,7 @@ struct boss_attumenAI : public ScriptedAI
         ResetTimer = 2000;
     }
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void KilledUnit(Unit *victim)
     {
@@ -253,13 +253,13 @@ struct boss_attumenAI : public ScriptedAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_SHADOWCLEAVE);
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWCLEAVE);
             CleaveTimer = 10000 + (rand()%6)*1000;
         } else CleaveTimer -= diff;
 
         if(CurseTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_INTANGIBLE_PRESENCE);
+            DoCast(m_creature->GetVictim(), SPELL_INTANGIBLE_PRESENCE);
             CurseTimer = 30000;
         } else CurseTimer -= diff;
 

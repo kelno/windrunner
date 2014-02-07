@@ -128,7 +128,7 @@ struct mob_abyssalAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit*) {DoZoneInCombat();}
+    void EnterCombat(Unit*) {DoZoneInCombat();}
     void AttackStart(Unit *who) {if(!trigger) ScriptedAI::AttackStart(who);}
     void MoveInLineOfSight(Unit *who) {if(!trigger) ScriptedAI::MoveInLineOfSight(who);}
 
@@ -158,7 +158,7 @@ struct mob_abyssalAI : public ScriptedAI
 
         if(FireBlast_Timer < diff)
         {
-            DoCast(m_creature->getVictim(), SPELL_FIRE_BLAST);
+            DoCast(m_creature->GetVictim(), SPELL_FIRE_BLAST);
             FireBlast_Timer = 5000+rand()%10000;
         }else FireBlast_Timer -= diff;
 
@@ -241,7 +241,7 @@ struct boss_magtheridonAI : public ScriptedAI
     //function to interrupt channeling and debuff clicker with mind exh(used if second person clicks with same cube or after dispeling/ending shadow grasp DoT)
     void DebuffClicker(Unit *clicker)
     {
-        if(!clicker || !clicker->isAlive())
+        if(!clicker || !clicker->IsAlive())
             return;
 
         clicker->RemoveAurasDueToSpell(SPELL_SHADOW_GRASP); // cannot interrupt triggered spells
@@ -293,11 +293,11 @@ struct boss_magtheridonAI : public ScriptedAI
 
     void AttackStart(Unit *who)
     {
-        if(!m_creature->hasUnitState(UNIT_STAT_STUNNED))
+        if(!m_creature->HasUnitState(UNIT_STAT_STUNNED))
             ScriptedAI::AttackStart(who);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_MAGTHERIDON_EVENT, IN_PROGRESS);
@@ -334,14 +334,14 @@ struct boss_magtheridonAI : public ScriptedAI
 
         if(Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 10000;
         }else Cleave_Timer -= diff;
 
         if(BlastNova_Timer < diff)
         {
             // to avoid earthquake interruption
-            if(!m_creature->hasUnitState(UNIT_STAT_STUNNED))
+            if(!m_creature->HasUnitState(UNIT_STAT_STUNNED))
             {
                 DoScriptText(EMOTE_BLASTNOVA, m_creature);
                 DoCast(m_creature, SPELL_BLASTNOVA);
@@ -378,7 +378,7 @@ struct boss_magtheridonAI : public ScriptedAI
 
         if(!Phase3 && m_creature->GetHealth()*10 < m_creature->GetMaxHealth()*3
             && !m_creature->IsNonMeleeSpellCasted(false) // blast nova
-            && !m_creature->hasUnitState(UNIT_STAT_STUNNED)) // shadow cage and earthquake
+            && !m_creature->HasUnitState(UNIT_STAT_STUNNED)) // shadow cage and earthquake
         {
             Phase3 = true;
             DoScriptText(SAY_CHAMBER_DESTROY, m_creature);
@@ -440,7 +440,7 @@ struct mob_hellfire_channelerAI : public ScriptedAI
         m_creature->CastSpell(m_creature, SPELL_SHADOW_GRASP_C, false);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance)
             pInstance->SetData(DATA_CHANNELER_EVENT, IN_PROGRESS);
@@ -449,7 +449,7 @@ struct mob_hellfire_channelerAI : public ScriptedAI
         DoZoneInCombat();
     }
 
-    void JustSummoned(Creature *summon) {summon->AI()->AttackStart(m_creature->getVictim());}
+    void JustSummoned(Creature *summon) {summon->AI()->AttackStart(m_creature->GetVictim());}
 
     void MoveInLineOfSight(Unit*) {}
 
@@ -508,7 +508,7 @@ bool GOHello_go_Manticron_Cube(Player *player, GameObject* _GO)
     if(!pInstance) return true;
     if(pInstance->GetData(DATA_MAGTHERIDON_EVENT) != IN_PROGRESS) return true;
     Creature *Magtheridon =Unit::GetCreature(*_GO, pInstance->GetData64(DATA_MAGTHERIDON));
-    if(!Magtheridon || !Magtheridon->isAlive()) return true;
+    if(!Magtheridon || !Magtheridon->IsAlive()) return true;
 
     // if exhausted or already channeling return
     if(player->HasAura(SPELL_MIND_EXHAUSTION, 0) || player->HasAura(SPELL_SHADOW_GRASP, 1))

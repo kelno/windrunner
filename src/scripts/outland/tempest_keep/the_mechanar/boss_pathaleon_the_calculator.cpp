@@ -83,7 +83,7 @@ struct boss_pathaleon_the_calculatorAI : public ScriptedAI
         Counter = 0;
         summons.DespawnAll();
     }
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoScriptText(SAY_AGGRO, m_creature);
     }
@@ -127,13 +127,13 @@ struct boss_pathaleon_the_calculatorAI : public ScriptedAI
 
         if(ManaTap_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_MANA_TAP);
+            DoCast(m_creature->GetVictim(),SPELL_MANA_TAP);
             ManaTap_Timer = 14000 + rand()%8000;
         }else ManaTap_Timer -= diff;
 
         if(ArcaneTorrent_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_ARCANE_TORRENT);
+            DoCast(m_creature->GetVictim(),SPELL_ARCANE_TORRENT);
             ArcaneTorrent_Timer = 12000 + rand()%6000;
         }else ArcaneTorrent_Timer -= diff;
 
@@ -153,7 +153,7 @@ struct boss_pathaleon_the_calculatorAI : public ScriptedAI
         {
             if(ArcaneExplosion_Timer < diff)
             {
-                DoCast(m_creature->getVictim(),H_SPELL_ARCANE_EXPLOSION);
+                DoCast(m_creature->GetVictim(),H_SPELL_ARCANE_EXPLOSION);
                 ArcaneExplosion_Timer = 10000 + rand()%4000;
             }else ArcaneExplosion_Timer -= diff;
         }
@@ -194,7 +194,7 @@ struct mob_nether_wraithAI : public ScriptedAI
 
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
     }
 
@@ -208,7 +208,7 @@ struct mob_nether_wraithAI : public ScriptedAI
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,1))
                 DoCast(target,SPELL_ARCANE_MISSILES);
             else
-                DoCast(m_creature->getVictim(),SPELL_ARCANE_MISSILES);
+                DoCast(m_creature->GetVictim(),SPELL_ARCANE_MISSILES);
 
             ArcaneMissiles_Timer = 5000 + rand()%5000;
         }else ArcaneMissiles_Timer -=diff;

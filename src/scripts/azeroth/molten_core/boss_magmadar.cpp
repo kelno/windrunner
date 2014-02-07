@@ -91,7 +91,7 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_LAVABREATH:
-                    doCast(me->getVictim(), SPELL_LAVABREATH);
+                    doCast(me->GetVictim(), SPELL_LAVABREATH);
                     scheduleEvent(EV_LAVABREATH, 25000, 30000);
                     break;
                 case EV_PANIC:

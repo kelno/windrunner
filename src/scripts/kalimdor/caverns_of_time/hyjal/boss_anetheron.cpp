@@ -68,7 +68,7 @@ struct boss_anetheronAI : public hyjal_trashAI
             pInstance->SetData(DATA_ANETHERONEVENT, NOT_STARTED);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         if(pInstance && IsEvent)
             pInstance->SetData(DATA_ANETHERONEVENT, IN_PROGRESS);
@@ -87,7 +87,7 @@ struct boss_anetheronAI : public hyjal_trashAI
         if (i == 7 && pInstance)
         {
             Unit* target = Unit::GetUnit((*m_creature), pInstance->GetData64(DATA_JAINAPROUDMOORE));
-            if (target && target->isAlive())
+            if (target && target->IsAlive())
                 m_creature->AddThreat(target,0.0);
         }
     }
@@ -202,7 +202,7 @@ struct mob_towering_infernalAI : public ScriptedAI
         CheckTimer = 5000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
 
     }

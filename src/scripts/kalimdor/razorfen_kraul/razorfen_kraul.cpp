@@ -107,7 +107,7 @@ struct npc_willixAI : public npc_escortAI
         complete = false;
     }
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         DoScriptText(SAY_AGGRO1, m_creature, NULL);
     }
@@ -159,13 +159,13 @@ struct npc_deaths_head_ward_keeperAI : public ScriptedAI
         QuillboarChanneling_Timer = 1500;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
     void UpdateAI(const uint32 diff)
     {
-        if (!m_creature->isAlive())
+        if (!m_creature->IsAlive())
             return;
 
         if (QuillboarChanneling_Timer < diff)

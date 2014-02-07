@@ -55,7 +55,7 @@ struct boss_theolenkrastinovAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -67,14 +67,14 @@ struct boss_theolenkrastinovAI : public ScriptedAI
         //Rend_Timer
         if (Rend_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_REND);
+            DoCast(m_creature->GetVictim(),SPELL_REND);
             Rend_Timer = 10000;
         }else Rend_Timer -= diff;
 
         //Cleave_Timer
         if (Cleave_Timer < diff)
         {
-            DoCast(m_creature->getVictim(),SPELL_CLEAVE);
+            DoCast(m_creature->GetVictim(),SPELL_CLEAVE);
             Cleave_Timer = 10000;
         }else Cleave_Timer -= diff;
 

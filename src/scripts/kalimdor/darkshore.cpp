@@ -81,7 +81,7 @@ struct npc_kerlonianAI : public FollowerAI
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!m_creature->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_LILADRIS)
+        if (!m_creature->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_LILADRIS)
         {
             if (m_creature->IsWithinDistInMap(pWho, INTERACTION_DISTANCE*5))
             {
@@ -126,7 +126,7 @@ struct npc_kerlonianAI : public FollowerAI
         SetFollowPaused(false);
     }
 
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void UpdateFollowerAI(const uint32 uiDiff)
     {
@@ -194,13 +194,13 @@ struct npc_threshwackonatorAI : public FollowerAI
 
     void Reset() { }
     
-    void Aggro(Unit* pWho) {}
+    void EnterCombat(Unit* pWho) {}
 
     void MoveInLineOfSight(Unit* pWho)
     {
         FollowerAI::MoveInLineOfSight(pWho);
 
-        if (!m_creature->getVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_GELKAK)
+        if (!m_creature->GetVictim() && !HasFollowState(STATE_FOLLOW_COMPLETE) && pWho->GetEntry() == NPC_GELKAK)
         {
             if (m_creature->IsWithinDistInMap(pWho, 10.0f))
             {
@@ -337,7 +337,7 @@ struct npc_prospector_remtravelAI : public npc_escortAI
 
     void Reset() {}
 
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         if (rand()%2)
             DoScriptText(SAY_REM_AGGRO, me, who);
@@ -372,7 +372,7 @@ struct npc_rabid_thistle_bearAI : public ScriptedAI
 
     void Reset() {}
 
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     bool sOnDummyEffect(Unit* caster, uint32 spellId, uint32 effIndex)
     {
@@ -393,8 +393,8 @@ struct npc_rabid_thistle_bearAI : public ScriptedAI
         if (!UpdateVictim())
             return;
             
-        if (me->getVictim()->ToPlayer())
-            guid = me->getVictim()->GetGUID();
+        if (me->GetVictim()->ToPlayer())
+            guid = me->GetVictim()->GetGUID();
         
         DoMeleeAttackIfReady();
     }
@@ -413,7 +413,7 @@ struct npc_tharnariun_treetenderAI : public ScriptedAI
 {
     npc_tharnariun_treetenderAI(Creature* c) : ScriptedAI(c) {}
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void MoveInLineOfSight(Unit* who)
     {
@@ -472,7 +472,7 @@ struct npc_sentinel_aynashaAI : public ScriptedAI
         me->RemoveAurasDueToSpell(18373);
     }
     
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
     
     void MovementInform(uint32 type, uint32 id)
     {
@@ -567,13 +567,13 @@ struct npc_sentinel_aynashaAI : public ScriptedAI
         if (!UpdateVictim())
             return;
             
-        if (me->getVictim()->IsWithinDistInMap(me, 8.0f)) {
-            me->GetMotionMaster()->MoveChase(me->getVictim());
+        if (me->GetVictim()->IsWithinDistInMap(me, 8.0f)) {
+            me->GetMotionMaster()->MoveChase(me->GetVictim());
             DoMeleeAttackIfReady();
         }
         else {
             //me->GetMotionMaster()->MoveIdle();
-            DoCast(me->getVictim(), SPELL_AYNASHAS_BOW);
+            DoCast(me->GetVictim(), SPELL_AYNASHAS_BOW);
         }
     }
 };

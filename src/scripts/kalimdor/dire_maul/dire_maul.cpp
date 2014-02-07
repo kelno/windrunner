@@ -39,7 +39,7 @@ struct npc_ironbark_redeemedAI : public ScriptedAI
     ScriptedInstance *pInstance;
     
     void Reset() {}
-    void Aggro(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
     
     void MovementInform(uint32 type, uint32 id)
     {

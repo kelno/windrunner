@@ -66,7 +66,7 @@ struct mob_yennikuAI : public ScriptedAI
         return;
     }
 
-    void Aggro(Unit *who) {}
+    void EnterCombat(Unit *who) {}
 
     void UpdateAI(const uint32 diff)
     {
@@ -81,11 +81,11 @@ struct mob_yennikuAI : public ScriptedAI
             }
             else Reset_Timer -= diff;
 
-            if(m_creature->isInCombat() && m_creature->getVictim())
+            if(m_creature->IsInCombat() && m_creature->GetVictim())
             {
-                if(m_creature->getVictim()->GetTypeId() == TYPEID_PLAYER)
+                if(m_creature->GetVictim()->GetTypeId() == TYPEID_PLAYER)
                 {
-                    Unit *victim = m_creature->getVictim();
+                    Unit *victim = m_creature->GetVictim();
                     if((victim->ToPlayer())->GetTeam() == HORDE)
                     {
                         m_creature->CombatStop();

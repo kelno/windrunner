@@ -109,7 +109,7 @@ class Boss_Golemagg : public CreatureScript
                 me->GetCreatureListWithEntryInGrid(adds, NPC_CORE_RAGER, 100.0f);
                 for (std::list<Creature*>::iterator it = adds.begin(); it != adds.end(); it++)
                 {
-                    if ((*it)->isAlive())
+                    if ((*it)->IsAlive())
                         (*it)->DisappearAndDie();
                 }
 
@@ -133,7 +133,7 @@ class Boss_Golemagg : public CreatureScript
                             scheduleEvent(EV_PYROBLAST, urand(4000, 5000));
                             break;
                         case EV_EARTHQUAKE:
-                            doCast(me->getVictim(), SPELL_EARTHQUAKE);
+                            doCast(me->GetVictim(), SPELL_EARTHQUAKE);
                             scheduleEvent(EV_EARTHQUAKE, urand(3000, 4000));
                             break;
                         case EV_ENRAGE:
@@ -207,7 +207,7 @@ class Mob_Core_Rager : public CreatureScript
                     switch (m_currEvent)
                     {
                         case EV_MANGLE:
-                            doCast(me->getVictim(), SPELL_MANGLE);
+                            doCast(me->GetVictim(), SPELL_MANGLE);
                             scheduleEvent(EV_MANGLE, urand(10000, 11000));
                             break;
                         case EV_AEGIS:

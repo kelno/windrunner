@@ -102,16 +102,16 @@ struct instance_mount_hyjal : public ScriptedInstance
             case GOBJECT_DOOR_ORC:
                 HordeGate = go->GetGUID();
                 if(allianceRetreat)
-                    go->SetGoState(0);
+                    go->SetGoState(GO_STATE_ACTIVE);
                 else
-                    go->SetGoState(1);
+                    go->SetGoState(GO_STATE_READY);
                 break;
             case GOBJECT_DOOR_ELF:
                 ElfGate = go->GetGUID();
                 if(hordeRetreat)
-                    go->SetGoState(0);
+                    go->SetGoState(GO_STATE_ACTIVE);
                 else
-                    go->SetGoState(1);
+                    go->SetGoState(GO_STATE_READY);
                 break;
         }
     }
@@ -332,16 +332,16 @@ struct instance_mount_hyjal : public ScriptedInstance
     void JainaCallForHelp()
     {
         Creature* Jaina = instance->GetCreatureInMap(JainaProudmoore);
-        if(!Jaina || !Jaina->getVictim()) return;
+        if(!Jaina || !Jaina->GetVictim()) return;
         
         for(auto itr : allianceArmy)
         {
             Creature* soldier =  instance->GetCreatureInMap(itr);
             if(!soldier) continue;
-            if(soldier->isAlive() && !soldier->isInCombat())
+            if(soldier->IsAlive() && !soldier->IsInCombat())
             {
-                soldier->SetInCombatWith(Jaina->getVictim());
-                soldier->AddThreat(Jaina->getVictim(), 0.0f);
+                soldier->SetInCombatWith(Jaina->GetVictim());
+                soldier->AddThreat(Jaina->GetVictim(), 0.0f);
             }
         }
     }

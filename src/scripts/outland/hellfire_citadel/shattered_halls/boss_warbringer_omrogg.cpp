@@ -103,7 +103,7 @@ struct mob_omrogg_headsAI : public ScriptedAI
     uint32 Death_Timer;
 
     void Reset() {}
-    void Aggro(Unit* who) { }
+    void EnterCombat(Unit* who) { }
 
     void DoDeathYell()
     {
@@ -200,7 +200,7 @@ struct boss_warbringer_omroggAI : public ScriptedAI
         }
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoSpawnCreature(ENTRY_LEFT_HEAD, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 1800000);
         DoSpawnCreature(ENTRY_RIGHT_HEAD, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 1800000);

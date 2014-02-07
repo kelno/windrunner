@@ -161,7 +161,7 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
             pInstance->SetData(DATA_HIGHASTROMANCERSOLARIANEVENT, DONE);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         StartEvent();
     }
@@ -237,13 +237,13 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
             {
                 if(BlindingLight)
                 {
-                    DoCast(m_creature->getVictim(), SPELL_BLINDING_LIGHT);
+                    DoCast(m_creature->GetVictim(), SPELL_BLINDING_LIGHT);
                     BlindingLight = false;
                 }else{
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0);
 
                     if(!m_creature->HasInArc(2.5f, target))
-                        target = m_creature->getVictim();
+                        target = m_creature->GetVictim();
 
                     if(target)
                         DoCast(target, SPELL_ARCANE_MISSILES);
@@ -253,7 +253,7 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
 
             if (MarkOfTheSolarian_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), MARK_OF_SOLARIAN);
+                DoCast(m_creature->GetVictim(), MARK_OF_SOLARIAN);
                 MarkOfTheSolarian_Timer = 45000;
             }else MarkOfTheSolarian_Timer -= diff;
 
@@ -262,7 +262,7 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
                 Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true);
                 if(target)
                     DoCast(target, SPELL_MARK_OF_THE_ASTROMANCER);
-                else DoCast(m_creature->getVictim(), SPELL_MARK_OF_THE_ASTROMANCER);
+                else DoCast(m_creature->GetVictim(), SPELL_MARK_OF_THE_ASTROMANCER);
                 MarkOfTheAstromancer_Timer = 15000;
             }else MarkOfTheAstromancer_Timer -= diff;
 
@@ -357,14 +357,14 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
             //Fear_Timer
             if (Fear_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_FEAR);
+                DoCast(m_creature->GetVictim(), SPELL_FEAR);
                 Fear_Timer = 20000;
             }else Fear_Timer -= diff;
 
             //VoidBolt_Timer
             if (VoidBolt_Timer < diff)
             {
-                DoCast(m_creature->getVictim(), SPELL_VOID_BOLT);
+                DoCast(m_creature->GetVictim(), SPELL_VOID_BOLT);
                 VoidBolt_Timer = 10000;
             }else VoidBolt_Timer -= diff;
         }
@@ -408,7 +408,7 @@ struct mob_solarium_priestAI : public ScriptedAI
         aoesilenceTimer = 15000;
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
     }
 
@@ -441,13 +441,13 @@ struct mob_solarium_priestAI : public ScriptedAI
 
         if(holysmiteTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SOLARIUM_SMITE);
+            DoCast(m_creature->GetVictim(), SOLARIUM_SMITE);
             holysmiteTimer = 4000;
         } else holysmiteTimer -= diff;
 
         if (aoesilenceTimer < diff)
         {
-            DoCast(m_creature->getVictim(), SOLARIUM_SILENCE);
+            DoCast(m_creature->GetVictim(), SOLARIUM_SILENCE);
             aoesilenceTimer = 13000;
         } else aoesilenceTimer -= diff;
 

@@ -440,7 +440,7 @@ struct npc_thrall_old_hillsbradAI : public npc_escortAI
         m_creature->Unmount();
         m_creature->SetSpeed(MOVE_RUN,SPEED_RUN);
     }
-    void Aggro(Unit* who)
+    void EnterCombat(Unit* who)
     {
         switch(rand()%4)
         {
@@ -784,7 +784,7 @@ struct npc_tarethaAI : public npc_escortAI
         }
     }
     void Reset() {}
-    void Aggro(Unit* who) {}
+    void EnterCombat(Unit* who) {}
 
     void UpdateAI(const uint32 diff)
     {

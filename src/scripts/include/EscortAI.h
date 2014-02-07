@@ -40,7 +40,7 @@ struct npc_escortAI : public ScriptedAI
         // Pure Virtual Functions
         virtual void WaypointReached(uint32) = 0;
 
-        virtual void Aggro(Unit*) = 0;
+        virtual void EnterCombat(Unit*) = 0;
 
         virtual void Reset() = 0;
 

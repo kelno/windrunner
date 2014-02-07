@@ -120,13 +120,13 @@ struct boss_sacrolashAI : public ScriptedAI
                 if (Temp->isDead())
                     (Temp->ToCreature())->Respawn();
                 else {
-                    if(Temp->getVictim())
-                        m_creature->getThreatManager().addThreat(Temp->getVictim(),0.0f);
+                    if(Temp->GetVictim())
+                        m_creature->getThreatManager().addThreat(Temp->GetVictim(),0.0f);
                 }
             }
         }
 
-        if (!m_creature->isInCombat()) {
+        if (!m_creature->IsInCombat()) {
             ShadowbladesTimer = 10000;
             ShadownovaTimer = 30000;
             ConfoundingblowTimer = 25000;
@@ -200,14 +200,14 @@ struct boss_sacrolashAI : public ScriptedAI
         summons.Despawn(pSummon);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
 
         if(pInstance)
         {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-            if (Temp && Temp->isAlive() && !(Temp->getVictim()))
+            if (Temp && Temp->IsAlive() && !(Temp->GetVictim()))
                 (Temp->ToCreature())->AI()->AttackStart(who);
         }
 
@@ -269,7 +269,7 @@ struct boss_sacrolashAI : public ScriptedAI
 
     void HandleTouchedSpells(Unit* target, uint32 TouchedType)
     {
-        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->IsPet())
             return;
 
         switch(TouchedType)
@@ -351,7 +351,7 @@ struct boss_sacrolashAI : public ScriptedAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                    if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2, 100.0f, true);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
@@ -370,7 +370,7 @@ struct boss_sacrolashAI : public ScriptedAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
-                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                    if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
                     if (target) 
                         DoCast(target, SPELL_SHADOW_NOVA);
@@ -439,10 +439,10 @@ struct boss_sacrolashAI : public ScriptedAI
         if( m_creature->isAttackReady() && !m_creature->IsNonMeleeSpellCasted(false))
         {
             //If we are within range melee the target
-            if( m_creature->IsWithinMeleeRange(m_creature->getVictim()))
+            if( m_creature->IsWithinMeleeRange(m_creature->GetVictim()))
             {
-                //HandleTouchedSpells(m_creature->getVictim(), SPELL_DARK_TOUCHED);
-                m_creature->AttackerStateUpdate(m_creature->getVictim());
+                //HandleTouchedSpells(m_creature->GetVictim(), SPELL_DARK_TOUCHED);
+                m_creature->AttackerStateUpdate(m_creature->GetVictim());
                 m_creature->resetAttackTimer();
             }
         }
@@ -489,12 +489,12 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (Temp->isDead())
                     (Temp->ToCreature())->Respawn();
                 else {
-                    if(Temp->getVictim())
-                        m_creature->getThreatManager().addThreat(Temp->getVictim(),0.0f);
+                    if(Temp->GetVictim())
+                        m_creature->getThreatManager().addThreat(Temp->GetVictim(),0.0f);
                 }
         }
 
-        if (!m_creature->isInCombat()) {
+        if (!m_creature->IsInCombat()) {
             ConflagrationTimer = 40000;
             BlazeTimer = 100;
             PyrogenicsTimer = 15000;
@@ -527,14 +527,14 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         m_creature->SetFullTauntImmunity(true);
     }
 
-    void Aggro(Unit *who)
+    void EnterCombat(Unit *who)
     {
         DoZoneInCombat();
 
         if(pInstance)
         {
             Unit* Temp =  Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
-            if (Temp && Temp->isAlive() && !(Temp->getVictim()))
+            if (Temp && Temp->IsAlive() && !(Temp->GetVictim()))
                 (Temp->ToCreature())->AI()->AttackStart(who);
         }
 
@@ -544,7 +544,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     /*void AttackStart(Unit *who)
     {
-        if (!m_creature->isInCombat())
+        if (!m_creature->IsInCombat())
             Scripted_NoMovementAI::AttackStart(who);
     }*/
     
@@ -581,7 +581,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     void MoveInLineOfSight(Unit *who)
     {
-        if (!who || m_creature->getVictim())
+        if (!who || m_creature->GetVictim())
             return;
 
         if (me->canAttack(who) && who->isInAccessiblePlaceFor(m_creature) && m_creature->IsHostileTo(who)) {
@@ -589,10 +589,10 @@ struct boss_alythessAI : public Scripted_NoMovementAI
             //float attackRadius = m_creature->GetAttackDistance(who);
             if (m_creature->IsWithinDistInMap(who, 45.0f) && m_creature->GetDistanceZ(who) <= CREATURE_Z_ATTACK_RANGE && m_creature->IsWithinLOSInMap(who))
             {
-                if (!m_creature->isInCombat())
+                if (!m_creature->IsInCombat())
                 {
                     DoStartNoMovement(who);
-                    Aggro(who);
+                    EnterCombat(who);
                 }
             }
         }
@@ -640,7 +640,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
 
     void HandleTouchedSpells(Unit* target, uint32 TouchedType)
     {
-        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->IsPet())
             return;
 
         switch(TouchedType)
@@ -743,9 +743,9 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 AttackStart(target);
             else if (pInstance) {
                 Unit* sister =  Unit::GetUnit((*me),pInstance->GetData64(DATA_SACROLASH));
-                if (sister && sister->getVictim()) {
-                    me->getThreatManager().addThreat(sister->getVictim(),0.0f);
-                    AttackStart(sister->getVictim());
+                if (sister && sister->GetVictim()) {
+                    me->getThreatManager().addThreat(sister->GetVictim(),0.0f);
+                    AttackStart(sister->GetVictim());
                 }
                 else
                     return;
@@ -776,7 +776,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
-                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                    if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
                     if(target)
                         DoCast(target, SPELL_SHADOW_NOVA);
@@ -798,7 +798,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                     target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
-                    if (target && Temp && Temp->getVictim() && target->GetGUID() == Temp->getVictim()->GetGUID())
+                    if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
                         target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 2, 100.0f, true);
                     if(target) 
                         DoCast(target, SPELL_CONFLAGRATION);
@@ -839,7 +839,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
         {
             if(!m_creature->IsNonMeleeSpellCasted(false))
             {
-                DoCast(m_creature->getVictim(), SPELL_BLAZE);
+                DoCast(m_creature->GetVictim(), SPELL_BLAZE);
                 BlazeTimer = 3800;
             }
         }else BlazeTimer -= diff;
@@ -885,11 +885,11 @@ struct mob_shadow_imageAI : public ScriptedAI
         //type = (rand() % 2) ? SHADOW_IMAGE_SHADOWFURY : SHADOW_IMAGE_DARKSTRIKE;
     }
 
-    void Aggro(Unit *who){}
+    void EnterCombat(Unit *who){}
 
     void SpellHitTarget(Unit* target,const SpellEntry* spell)
     {        
-        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->isPet())
+        if (target->GetTypeId() == TYPEID_UNIT && target->ToCreature()->IsPet())
             return;
 
         switch(spell->Id)
@@ -926,7 +926,7 @@ struct mob_shadow_imageAI : public ScriptedAI
         //if (type == SHADOW_IMAGE_SHADOWFURY) {
             if(ShadowfuryTimer <= diff)
             {
-                //if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
+                //if( m_creature->IsWithinMeleeRange(m_creature->GetVictim())) {
                     DoCast(m_creature, SPELL_SHADOW_FURY);
                     KillTimer = 500;
                 //}
@@ -958,8 +958,8 @@ struct mob_shadow_imageAI : public ScriptedAI
                 if(!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     //If we are within range melee the target
-                    if( m_creature->IsWithinMeleeRange(m_creature->getVictim())) {
-                        DoCast(m_creature->getVictim(), SPELL_DARK_STRIKE);
+                    if( m_creature->IsWithinMeleeRange(m_creature->GetVictim())) {
+                        DoCast(m_creature->GetVictim(), SPELL_DARK_STRIKE);
                         ChangeTargetTimer = 1000 + rand()%9000; // 1-10 sec
                     }
                 }
