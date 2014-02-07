@@ -2254,10 +2254,10 @@ bool ScriptMgr::GossipHello ( Player * player, Creature *_Creature )
 
     player->PlayerTalkClass->ClearMenus();
     return tmpscript->pGossipHello(player,_Creature);
-    /*
+    
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->getScriptName()];
     if(tmpscript2 && tmpscript2->pGossipHello) 
-        return tmpscript2->pGossipHello(player,_Creature);*/
+        return tmpscript2->pGossipHello(player,_Creature);
 }
 
 
@@ -2269,10 +2269,10 @@ bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender
     
     player->PlayerTalkClass->ClearMenus();
     return tmpscript->pGossipSelect(player,_Creature,sender,action);
-     /*
+     
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->getScriptName()];
     if(tmpscript2 && tmpscript2->pGossipSelect) 
-        return tmpscript2->pGossipSelect(player,_Creature,sender,action); */
+        return tmpscript2->pGossipSelect(player,_Creature,sender,action);
  
     return false;
 }
@@ -2286,10 +2286,10 @@ bool ScriptMgr::GossipSelectWithCode( Player *player, Creature *_Creature, uint3
      
     player->PlayerTalkClass->ClearMenus();
     return tmpscript->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
-     /*
+     
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->GetScriptName()];
     if(tmpscript2 && tmpscript2->pGossipSelectWithCode) 
-        return tmpscript2->pGossipSelectWithCode(player,_Creature,sender,action,sCode);*/
+        return tmpscript2->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
 
     return false;
 }
