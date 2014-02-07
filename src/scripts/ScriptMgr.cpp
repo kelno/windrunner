@@ -2249,25 +2249,26 @@ bool ScriptMgr::GossipHello ( Player * player, Creature *_Creature )
 {
     player->PlayerTalkClass->ClearMenus();
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
+    if(!tmpscript || !tmpscript->pGossipHello)
+        return false;
 
-    if(tmpscript && tmpscript->pGossipHello)
-        return tmpscript->pGossipHello(player,_Creature);
+    player->PlayerTalkClass->ClearMenus();
+    return tmpscript->pGossipHello(player,_Creature);
     /*
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->getScriptName()];
     if(tmpscript2 && tmpscript2->pGossipHello) 
         return tmpscript2->pGossipHello(player,_Creature);*/
-    
-    return false;
 }
 
 
 bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
-    player->PlayerTalkClass->ClearMenus();
-
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
-     if(tmpscript && tmpscript->pGossipSelect)
-        return tmpscript->pGossipSelect(player,_Creature,sender,action);
+    if(!tmpscript || !tmpscript->pGossipSelect)
+        return false;
+    
+    player->PlayerTalkClass->ClearMenus();
+    return tmpscript->pGossipSelect(player,_Creature,sender,action);
      /*
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->getScriptName()];
     if(tmpscript2 && tmpscript2->pGossipSelect) 
@@ -2279,10 +2280,12 @@ bool ScriptMgr::GossipSelect( Player *player, Creature *_Creature, uint32 sender
 
 bool ScriptMgr::GossipSelectWithCode( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* sCode )
 {
-    player->PlayerTalkClass->ClearMenus();
     Script *tmpscript = m_scripts[_Creature->GetScriptId()];
-     if(tmpscript && tmpscript->pGossipSelectWithCode)
-        return tmpscript->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
+     if(!tmpscript || !tmpscript->pGossipSelectWithCode)
+         return false;
+     
+    player->PlayerTalkClass->ClearMenus();
+    return tmpscript->pGossipSelectWithCode(player,_Creature,sender,action,sCode);
      /*
     CreatureScript* tmpscript2 = m_creatureScripts[_Creature->GetScriptName()];
     if(tmpscript2 && tmpscript2->pGossipSelectWithCode) 
