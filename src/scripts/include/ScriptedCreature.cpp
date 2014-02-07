@@ -37,6 +37,7 @@ void SummonList::DespawnEntry(uint32 entry)
         {
             if(summon->GetEntry() == entry)
             {
+                summon->RemoveFromWorld();
                 summon->setDeathState(JUST_DIED);
                 summon->RemoveCorpse();
                 i = erase(i);
@@ -75,19 +76,22 @@ bool SummonList::IsEmpty()
 
 void BumpHelper::Update(const uint32 diff)
 {
-    for(auto itr = begin(); itr != end(); itr++)
+    for(auto itr = begin(); itr != end();)
     {
         if(itr->second < diff) //okay to erase
             itr = erase(itr);
         else //just decrease time left
+        {
             itr->second -= diff;
+            itr++;
+        }
     }
 }
 
 //return true if not yet present in list
 bool BumpHelper::AddCooldown(Unit* p, uint32 customValue)
 {
-    auto found = find(p->GetGUID());
+    std::map<uint64,uint32>::iterator found = find(p->GetGUID());
     if(found != end())
         return false;
 
