@@ -296,6 +296,7 @@ Spell::Spell( Unit* Caster, SpellEntry const *info, bool triggered, uint64 origi
     m_referencedFromCurrentSpell = false;
     m_executedCurrently = false;
     m_delayStart = 0;
+    m_immediateHandled = false;
     m_delayAtDamageCount = 0;
 
     m_applyMultiplierMask = 0;
@@ -1770,7 +1771,8 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
             {
                 pushType = PUSH_CHAIN;
 
-                if(!m_targets.getUnitTarget())
+                if(!m_targets.getUnitTarget()
+                   || cur == TARGET_UNIT_NEARBY_ENTRY) //override target for these
                     m_targets.setUnitTarget((Unit*)target);
             }
             else if(target->GetTypeId() == TYPEID_GAMEOBJECT)
@@ -4746,13 +4748,16 @@ SpellFailedReason Spell::CheckCasterAuras() const
                             if (!(m_spellInfo->AttributesEx5 & SPELL_ATTR_EX5_USABLE_WHILE_FEARED))
                                 return SPELL_FAILED_FLEEING;
                             break;
-                        case SPELL_AURA_MOD_SILENCE:
-                        case SPELL_AURA_MOD_PACIFY:
                         case SPELL_AURA_MOD_PACIFY_SILENCE:
                             if( m_spellInfo->PreventionType==SPELL_PREVENTION_TYPE_PACIFY)
                                 return SPELL_FAILED_PACIFIED;
-                            else if ( m_spellInfo->PreventionType==SPELL_PREVENTION_TYPE_SILENCE)
+                        case SPELL_AURA_MOD_SILENCE:
+                           if ( m_spellInfo->PreventionType==SPELL_PREVENTION_TYPE_SILENCE)
                                 return SPELL_FAILED_SILENCED;
+                           break;
+                        case SPELL_AURA_MOD_PACIFY:
+                            if( m_spellInfo->PreventionType==SPELL_PREVENTION_TYPE_PACIFY)
+                                return SPELL_FAILED_PACIFIED;
                             break;
                     }
                 }

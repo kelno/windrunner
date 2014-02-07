@@ -676,8 +676,6 @@ void Map::AddUnitToNotify(Unit* u)
 
 void Map::Update(const uint32 &t_diff)
 {
-    PROFILE;
-
     i_lock = false;
     
     _dynamicTree.update(t_diff);
@@ -2877,14 +2875,14 @@ bool BattleGroundMap::Add(Player * player)
 
 void BattleGroundMap::Remove(Player *player, bool remove)
 {
-	if (player && player->isSpectator() && !player->isSpectateCanceled())
-	{
-	    if (GetBG())
-	        GetBG()->RemoveSpectator(player->GetGUID());
+    if (player && player->isSpectator() && !player->isSpectateCanceled())
+    {
+        if (GetBG())
+            GetBG()->RemoveSpectator(player->GetGUID());
 
-	    if (player->isSpectator())
-	        player->SetSpectate(false);
-	}
+        if (player->isSpectator())
+            player->SetSpectate(false);
+    }
 
     sLog.outDetail("MAP: Removing player '%s' from bg '%u' of map '%s' before relocating to other map", player->GetName(), GetInstanceId(), GetMapName());
     Map::Remove(player, remove);
