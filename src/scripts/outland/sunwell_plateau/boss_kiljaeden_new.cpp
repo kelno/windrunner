@@ -2305,7 +2305,7 @@ void AddSC_boss_kiljaeden_new()
 
     CreatureScript* kalec_kj_script;
     kalec_kj_script = new boss_kalecgos_kj();
-   // kalec_kj_script->pGossipHello = &GossipHello_kalecgos_kj;
+    kalec_kj_script->pGossipHello = &GossipHello_kalecgos_kj;
     sScriptMgr.addScript(kalec_kj_script);
 
     sScriptMgr.addScript(new boss_kiljaeden());
