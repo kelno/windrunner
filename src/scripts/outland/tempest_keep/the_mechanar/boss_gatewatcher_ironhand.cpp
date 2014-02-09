@@ -61,8 +61,8 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
 
     void Reset()
     {
-        Shadow_Power_Timer = 25000;
-        Jackhammer_Timer = 45000;
+        Shadow_Power_Timer = 40000 + rand()%5000;
+        Jackhammer_Timer = 80000+rand()%10000;
         Stream_of_Machine_Fluid_Timer = 55000;
         Jackhammer_CastTime = 0;
         Jackhammer_Progression = 0;
@@ -101,7 +101,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         if(Shadow_Power_Timer < diff)
         {
             DoCast(m_creature,HeroicMode ? H_SPELL_SHADOW_POWER : SPELL_SHADOW_POWER);
-            Shadow_Power_Timer = 20000 + rand()%8000;
+            Shadow_Power_Timer = 55000 + rand()%5000;
         }else Shadow_Power_Timer -= diff;
 
         //Jack Hammer
@@ -134,7 +134,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
             case 3:
                 if(Jackhammer_CastTime > 8000)
                 {
-                    Jackhammer_Timer = 30000;
+                    Jackhammer_Timer = 30000+rand()%15000;
                     Jackhammer_CastTime = 0;
                     Jackhammer_Progression = 0;
                 }
@@ -148,7 +148,7 @@ struct boss_gatewatcher_iron_handAI : public ScriptedAI
         if(Stream_of_Machine_Fluid_Timer < diff)
         {
             DoCast(m_creature->GetVictim(),SPELL_STREAM_OF_MACHINE_FLUID);
-            Stream_of_Machine_Fluid_Timer = 35000 + rand()%15000;
+            Stream_of_Machine_Fluid_Timer = 55000;
         }else Stream_of_Machine_Fluid_Timer -= diff;
 
         DoMeleeAttackIfReady();
