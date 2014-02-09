@@ -100,7 +100,7 @@ struct boss_void_reaverAI : public ScriptedAI
                     Player *pl = target ? target->ToPlayer() : NULL;
                     if (target && (pl || (cr && cr->IsPet())) && target->GetDistance2d(m_creature) <= 18)
                     {
-                        sLog.outString("Casting Pounding on %s", target->GetName());
+                        sLog.outDebug("Casting Pounding on %s", target->GetName());
                         DoCast(target, SPELL_POUNDING);
                     }
                 }

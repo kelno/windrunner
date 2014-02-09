@@ -40,7 +40,7 @@ bool GOHello_go_barrel_old_hillsbrad(Player *player, GameObject* _GO)
         return false;
         
     if (_GO->GetDistance(player) >= 5.0f) {
-        sLog.outString("OLD HILLSBRAD: BUG EXPLOIT ATTEMPT: Player %s (GUID: %u) attempted to activate barrel at a distance of %f yards.", player->GetName(), player->GetGUIDLow(), _GO->GetDistance(player));
+        sLog.outError("OLD HILLSBRAD: BUG EXPLOIT ATTEMPT: Player %s (GUID: %u) attempted to activate barrel at a distance of %f yards.", player->GetName(), player->GetGUIDLow(), _GO->GetDistance(player));
         return false;
     }
 

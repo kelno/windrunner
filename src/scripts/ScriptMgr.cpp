@@ -1403,7 +1403,7 @@ ScriptMgr::~ScriptMgr()
 void ScriptMgr::ScriptsInit(char const* cfg_file)
 {
     bool CanLoadDB = true;
-
+    
     //Trinity Script startup
     sLog.outString(" _____     _       _ _         ____            _       _");
     sLog.outString("|_   _| __(_)_ __ (_) |_ _   _/ ___|  ___ _ __(_)_ __ | |_ ");
