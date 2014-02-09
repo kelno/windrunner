@@ -1013,7 +1013,7 @@ public:
                         if(Creature* riftTarget = pSummoned->GetMap()->GetCreature(riftTargets[1]))
                         {
                             pSummoned->CastSpell(riftTarget, SPELL_OPEN_PORTAL, false);
-                            riftTarget->GetMotionMaster()->MovePoint(0, aOutroLocations[10].m_fX, aOutroLocations[10].m_fY, aOutroLocations[13].m_fZ+10.0f);
+                            riftTarget->GetMotionMaster()->MovePoint(0, aOutroLocations[10].m_fX, aOutroLocations[10].m_fY, aOutroLocations[10].m_fZ+13.0f);
                         }
                         break;
                     case NPC_CORE_ENTROPIUS:
