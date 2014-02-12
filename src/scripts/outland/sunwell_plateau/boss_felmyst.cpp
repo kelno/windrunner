@@ -867,7 +867,7 @@ struct trigger_felmyst_fogAI : public ScriptedAI
     
     void SpellHit(Unit *caster, const SpellEntry *spell)
     {
-        sLog.outString("Hit by spell %u", spell->Id);
+        sLog.outError("trigger_felmyst_fogAI : Hit by spell %u", spell->Id);
     }
     
     void EnterCombat(Unit *pWho) {}

@@ -72,7 +72,6 @@ struct instance_dire_maul : public ScriptedInstance
         case 14354: pusillinGUID = creature->GetGUID(); break;
         case 11491: ironbarkGUID = creature->GetGUID(); break;
         case 11486:
-            sLog.outString("Pom");
             if (isEventActive())
                 creature->SetDisplayId(15734);
                 

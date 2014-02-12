@@ -328,7 +328,7 @@ public:
                         float NewX = _CurrentX + cos(DegreeToRadian(NewAngle)) * 6;
                         float NewY = _CurrentY + sin(DegreeToRadian(NewAngle)) * 6;
                         float NewZ = me->GetMap()->GetHeight(NewX, NewY, _CurrentZ);
-                        //me->UpdateGroundPositionZ(NewX, NewY, NewZ);
+                        me->UpdateAllowedPositionZ(NewX,NewY,NewZ);
                         //sLog.outString("Doomfire damage: %f %f %f", NewX, NewY, NewZ);
                         if (NewZ < 1500.0f)
                             NewZ = _CurrentZ;
