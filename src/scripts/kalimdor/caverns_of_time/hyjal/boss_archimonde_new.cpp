@@ -677,10 +677,13 @@ public:
                         scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                     break;
                 case EV_DOOMFIRE:
-                    //spawn at random angle at 13m
+                    {
+                    //spawn towards a random target 20m+ away, or random direction if can't find any
+                    Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, -20.0f, true);
                     float x, y, z, tX, tY, tZ, angle;
                     me->GetPosition(x,y,z);
-                    angle = rand()%6;
+                    angle = target ? me->GetAngle(target) : rand()%6;
+                    //spawn at 13m
                     tX = x + cos(angle) * 13;
                     tY = y + sin(angle) * 13;
 
@@ -694,6 +697,7 @@ public:
                     talk(YELL_DOOMFIRE);
                     
                     scheduleEvent(EV_DOOMFIRE, 10000);
+                    }
                     break;
                 case EV_MELEE_CHECK:
                     if (_canUseFingerOfDeath())
