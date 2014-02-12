@@ -354,7 +354,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         {
             for(uint8 j = 0; j < 3; ++j)
             {
-                if(Creature* spawn = me->SummonCreature(spawnPackEntries[j], spawnLocations[i].x, spawnLocations[i].y, spawnLocations[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);)
+                if(Creature* spawn = me->SummonCreature(spawnPackEntries[j], spawnLocations[i].x, spawnLocations[i].y, spawnLocations[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000))
                 {
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,100.0f,true);
                     if(target) 
