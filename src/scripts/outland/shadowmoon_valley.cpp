@@ -1835,6 +1835,7 @@ struct npc_spirits_totemAI : public ScriptedAI
     
     void Reset()
     {
+        me->SetReactState(REACT_PASSIVE);
         checkTimer = 1000;
     }
     

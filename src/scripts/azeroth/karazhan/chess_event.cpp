@@ -585,7 +585,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
             case NPC_KING_H:
             case NPC_KING_A:
                 if (deltaRow > 1 || deltaCol > 1) {
-                    sLog.outString("Target cell too far away for %s (%u) - Starting (%u, %u) - Ending (%u, %u)", piece->GetName(), piece->GetDBTableGUIDLow(), oldRow, oldCol, newRow, newCol);
+                    sLog.outDebug("Target cell too far away for %s (%u) - Starting (%u, %u) - Ending (%u, %u)", piece->GetName(), piece->GetDBTableGUIDLow(), oldRow, oldCol, newRow, newCol);
                     res = false;
                 }
                 break;
