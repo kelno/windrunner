@@ -666,20 +666,23 @@ public:
                     break;
                 case EV_AIR_BURST:
                     talk(YELL_AIR_BURST);
-                    doCast(selectUnit(SELECT_TARGET_RANDOM, 1, 150.0f, true), SPELL_AIR_BURST);
-                    scheduleEvent(EV_AIR_BURST, 25000, 40000);
-                    delayEvent(EV_FEAR, 5000);
+                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true, true), SPELL_AIR_BURST))
+                    {
+                        scheduleEvent(EV_AIR_BURST, 25000, 40000);
+                        delayEvent(EV_FEAR, 5000);
+                    }
                     break;
                 case EV_GRIP_LEGION:
-                    doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION);
-                    scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
+                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION))
+                        scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                     break;
                 case EV_DOOMFIRE:
-                    //spawn at random position at 13m
-                    float x, y, z, tX, tY, tZ;
+                    //spawn at random angle at 13m
+                    float x, y, z, tX, tY, tZ, angle;
                     me->GetPosition(x,y,z);
-                    tX = x + cos(rand()%6) * 13;
-                    tY = y + sin(rand()%6) * 13;
+                    angle = rand()%6;
+                    tX = x + cos(angle) * 13;
+                    tY = y + sin(angle) * 13;
 
                     tZ = z + 1.5f;
                     me->UpdateGroundPositionZ(tX, tY, tZ);
