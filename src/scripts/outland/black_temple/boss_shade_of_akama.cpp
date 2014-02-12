@@ -354,16 +354,21 @@ struct boss_shade_of_akamaAI : public ScriptedAI
         {
             for(uint8 j = 0; j < 3; ++j)
             {
-                Creature* spawn = me->SummonCreature(spawnPackEntries[j], spawnLocations[i].x, spawnLocations[i].y, spawnLocations[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);
-                if(spawn)
+                if(Creature* spawn = me->SummonCreature(spawnPackEntries[j], spawnLocations[i].x, spawnLocations[i].y, spawnLocations[i].z, 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 15000);)
                 {
                     Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0,100.0f,true);
-                    if(target) {
+                    if(target) 
+                    {
                         spawn->AI()->AttackStart(target);
                         spawn->AddThreat(target, 500.0f);
                     }
                     if(Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID))
-                        spawn->AddThreat(akama,1.0f);
+                    {
+                        if(!spawn->GetVictim()) //attack him if we haven't found any player to attack
+                            spawn->AI()->AttackStart(target);
+
+                        spawn->AddThreat(akama,1.0f); //else still put him in threatlist to attack him in case of wipe
+                    }
                 }
             }
         }
@@ -482,6 +487,7 @@ struct boss_shade_of_akamaAI : public ScriptedAI
             Creature* akama = me->GetMap()->GetCreatureInMap(akamaGUID);
             if(akama && akama->IsAlive())
             {
+                sLog.outString("me->GetDistance2d(akama) = %u",me->GetDistance2d(akama));
                 if(me->GetDistance2d(akama) < NOMINAL_MELEE_RANGE)
                 {
                     KillRemainingChannelers();
