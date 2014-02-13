@@ -28,6 +28,7 @@ npc_image_of_medivh
 npc_archmage_leryda
 go_sealed_tome
 woefulhealer
+npc_arcane_anomaly
 EndContentData */
 
 #include "precompiled.h"
@@ -866,6 +867,63 @@ CreatureAI* GetAI_woefulhealer(Creature *_Creature)
     return new woefulhealerAI (_Creature);
 }
 
+#define SPELL_MANA_SHIELD 29880
+#define SPELL_BLINK 29883
+#define SPELL_ARCANE_VOLLEY 29885
+#define SPELL_LOOSE_MANA 29882
+
+struct npc_arcane_anomalyAI : public ScriptedAI
+{
+    npc_arcane_anomalyAI(Creature *c) : ScriptedAI(c) {}
+    
+    bool castedShield;
+    uint32 blinkTimer;
+    uint32 volleyTimer;
+
+    void Reset()
+    {
+        blinkTimer = 5000 + rand()%10000;
+        volleyTimer = 10000 + rand()%5000;
+        castedShield = false;
+    }
+
+    void EnterCombat(Unit* who) 
+    {
+        DoCast(me,SPELL_MANA_SHIELD,true);
+        castedShield = true;
+    }
+
+    //cannot die if we havent casted or mana shield
+    void DamageTaken(Unit* pKiller, uint32 &damage)
+    {
+        if(!castedShield && damage >= me->GetHealth())
+            damage = 0;
+    }
+  
+    void UpdateAI(const uint32 diff)
+    {                
+        if(!UpdateVictim())
+            return;
+
+        if(blinkTimer < diff)
+        {
+            DoCast(me,SPELL_BLINK);
+            blinkTimer = 10000 + rand()%5000;
+        } else blinkTimer -= diff;
+
+        if(volleyTimer < diff)
+        {
+            DoCast(me,SPELL_ARCANE_VOLLEY);
+            volleyTimer = 20000 + rand()%5000;
+        } else volleyTimer -= diff;
+    }
+};
+
+CreatureAI* GetAI_npc_arcane_anomaly(Creature *_Creature)
+{
+    return new npc_arcane_anomalyAI (_Creature);
+}
+
 void AddSC_karazhan()
 {
     Script* newscript;
@@ -904,6 +962,11 @@ void AddSC_karazhan()
     newscript->GetAI = &GetAI_woefulhealer;
     newscript->RegisterSelf();
     
+    newscript = new Script;
+    newscript->Name="npc_arcane_anomaly";
+    newscript->GetAI = &GetAI_npc_arcane_anomaly;
+    newscript->RegisterSelf();
+
     newscript = new Script;
     newscript->Name = "npc_hastings";
     newscript->pGossipHello = &GossipHello_npc_hastings;
