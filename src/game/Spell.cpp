@@ -1623,6 +1623,10 @@ WorldObject* Spell::SearchNearbyTarget(float range, SpellTargets TargetType)
                     case SPELL_TARGET_TYPE_DEAD:
                     default:
                     {
+                        //keep our current target if it's already the right entry
+                        if(m_targets.getUnitTarget() && m_targets.getUnitTarget()->GetEntry() == i_spellST->second.targetEntry)
+                            return m_targets.getUnitTarget();
+
                         Creature *p_Creature = NULL;
 
                         Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*m_caster,i_spellST->second.targetEntry,i_spellST->second.type!=SPELL_TARGET_TYPE_DEAD,range);
@@ -3841,7 +3845,6 @@ SpellFailedReason Spell::CheckCast(bool strict)
         // Not allow casting on flying player
         if (target->isInFlight())
             return SPELL_FAILED_BAD_TARGETS;
-
     } //end "if(target != m_caster)" block
 
     if(sWorld.getConfig(CONFIG_VMAP_INDOOR_CHECK) && m_caster->GetTypeId() == TYPEID_PLAYER && VMAP::VMapFactory::createOrGetVMapManager()->isLineOfSightCalcEnabled())
@@ -5546,7 +5549,7 @@ bool Spell::CheckTarget(Unit* target, uint32 eff)
     }
 
     //Do not check LOS for triggered spells
-    if( (m_IsTriggeredSpell && m_triggeringContainer) //triggered by another spell
+    if( (m_IsTriggeredSpell)
       || (m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_UNK25) //not sure about these
       || (m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_CAN_TARGET_NOT_IN_LOS) )
         return true;
