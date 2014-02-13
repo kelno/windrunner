@@ -81,7 +81,10 @@ struct npc_converted_sentryAI : public ScriptedAI
     npc_converted_sentryAI(Creature *c) : ScriptedAI(c)
     {
         if (Creature* sentry = me->FindCreatureInGrid(24972, 10.0f, false))
-            sentry->DisappearAndDie();
+        {
+            sentry->setDeathState(JUST_DIED);
+            sentry->RemoveCorpse();
+        }
     }
 
     bool Credit;
