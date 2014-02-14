@@ -220,7 +220,7 @@ void ScriptedAI::DoStopAttack()
 uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     //remove this?
-    if (!victim || m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
+    if (m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
         return SPELL_FAILED_SPELL_IN_PROGRESS;
 
     return m_creature->CastSpell(victim, spellId, triggered);

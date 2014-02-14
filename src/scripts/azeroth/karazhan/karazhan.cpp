@@ -893,11 +893,11 @@ struct npc_arcane_anomalyAI : public ScriptedAI
         castedShield = true;
     }
 
-    //cannot die if we havent casted or mana shield
+    //cannot die if we havent casted our mana shield
     void DamageTaken(Unit* pKiller, uint32 &damage)
     {
         if(!castedShield && damage >= me->GetHealth())
-            damage = 0;
+            damage = me->GetHealth()-1; //down to 1 hp
     }
   
     void UpdateAI(const uint32 diff)
@@ -907,15 +907,17 @@ struct npc_arcane_anomalyAI : public ScriptedAI
 
         if(blinkTimer < diff)
         {
-            DoCast(me,SPELL_BLINK);
-            blinkTimer = 10000 + rand()%5000;
+            if(DoCast(me,SPELL_BLINK) == SPELL_CAST_OK)
+                blinkTimer = 10000 + rand()%5000;
         } else blinkTimer -= diff;
 
         if(volleyTimer < diff)
         {
-            DoCast(me,SPELL_ARCANE_VOLLEY);
-            volleyTimer = 20000 + rand()%5000;
+            if(DoCast(me,SPELL_ARCANE_VOLLEY) == SPELL_CAST_OK)
+                volleyTimer = 20000 + rand()%5000;
         } else volleyTimer -= diff;
+
+        DoMeleeAttackIfReady();
     }
 };
 
