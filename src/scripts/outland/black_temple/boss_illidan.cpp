@@ -138,7 +138,7 @@ enum Spells
 #define CENTER_Y            305.297
 #define CENTER_Z            353.192
 
-#define FLAME_ENRAGE_DISTANCE   30
+#define FLAME_ENRAGE_DISTANCE   35
 #define FLAME_CHARGE_DISTANCE   50
 
 /**** Creature Summon and Recognition IDs ****/
