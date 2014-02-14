@@ -99,21 +99,6 @@ struct boss_azgalorAI : public hyjal_trashAI
         DoScriptText(SAY_ONDEATH,me);
     }
 
-    Unit* SelectDoomTarget()
-    {
-        std::list<Unit*> target;
-        SelectUnitList(target, 2, SELECT_TARGET_RANDOM, 150.0f, true); //get two target, just in case the first one is our tank
-        if(target.size() < 2)
-            return NULL;
-
-        Unit* firstVictim = *(target.begin());
-        Unit* secondVictim = *(target.begin()++);
-        if( firstVictim != me->GetVictim() )
-            return firstVictim;
-        else
-            return secondVictim;
-    }
-
     bool HasTwoPlayersInFront()
     {
         uint8 playersInArc = 0;
@@ -172,7 +157,7 @@ struct boss_azgalorAI : public hyjal_trashAI
 
         if(DoomTimer < diff)
         {
-            if(DoCast(SelectDoomTarget(), SPELL_DOOM) == SPELL_CAST_OK)
+            if(DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true), SPELL_DOOM) == SPELL_CAST_OK)
             {
                 DoomTimer = TIMER_DOOM;
                 DoScriptText(SAY_DOOM1 - rand()%2,me);

@@ -325,7 +325,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget target, uint32 position)
     return NULL;
 }
 
-bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
+bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius, bool noTank)
 {
     if (!me)
         return false;
@@ -334,6 +334,9 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
         return false;
 
     if (!target->IsAlive())
+        return false;
+
+    if (noTank && target == me->GetVictim())
         return false;
 
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
@@ -359,7 +362,7 @@ struct TargetDistanceOrder : public std::binary_function<const Unit, const Unit,
     }
 };
 
-Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float radius, bool playersOnly)
+Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float radius, bool playersOnly, bool noTank)
 {
     std::list<HostilReference*>& threatlist = me->getThreatManager().getThreatList();
     if (position >= threatlist.size())
@@ -367,7 +370,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 
     std::list<Unit*> targetList;
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius,noTank))
             targetList.push_back((*itr)->getTarget());
 
     if (position >= targetList.size())
