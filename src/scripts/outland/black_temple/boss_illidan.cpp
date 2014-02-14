@@ -404,7 +404,6 @@ struct boss_illidan_stormrageAI : public ScriptedAI
     uint64 GlaiveGUID[2];
 
     SummonList Summons;
-    bool flammesDead;
 
     void Reset();
 
@@ -420,9 +419,9 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             if(!FlameGUID[0] && !FlameGUID[1] && Phase == PHASE_FLIGHT)
             {
-                flammesDead = true;
                 m_creature->InterruptNonMeleeSpells(true);
-                EnterPhase(PHASE_FLIGHT_SEQUENCE);
+                FlightCount++; //get out of our dummy step
+                EnterPhase(PHASE_FLIGHT_SEQUENCE); //start landing 2 sec after
             }
         }
         Summons.Despawn(summon);
@@ -430,11 +429,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
     void MovementInform(uint32 MovementType, uint32 Data)
     {
-        if(FlightCount == 7) //change hover point
+        if(FlightCount == 7) //we're in or should be entering PHASE_FLIGHT
         {
-            if(flammesDead) //both flammes just died, nothing to do
-                return;
-
             if(m_creature->GetVictim())
             {
                 m_creature->SetInFront(m_creature->GetVictim());
@@ -608,11 +604,16 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             //this phase will is resumed only when both flammes are dead, see SummonedCreatureDespawn(...)
             //Phase will be set to PHASE_FLIGHT when reaching MovePoint
             break;
-        case 7://end this phase, return to center
+        case 7: //Dummy step, should never happen. PHASE_FLIGHT should always have FlightCount = 7
+            sLog.outError("Illidan : Entered HandleFlightSequence 7 (should never happen)");
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
+            break;
+        case 8://end this phase, return to center
+            m_creature->InterruptNonMeleeSpells(true);
             m_creature->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, CENTER_Z);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
             break;
-        case 8://glaive return
+        case 9://glaive return
             for(uint8 i = 0; i < 2; i++)
             {
                 if(GlaiveGUID[i])
@@ -627,7 +628,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             }
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
-        case 9://land
+        case 10://land
             m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
@@ -645,7 +646,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             }
             Timer[EVENT_FLIGHT_SEQUENCE] = 4000;
             break;
-        case 10://attack
+        case 11://attack
             DoResetThreat();
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             m_creature->SetSheath(SHEATH_STATE_MELEE);
@@ -2083,8 +2084,6 @@ void boss_illidan_stormrageAI::Reset()
     m_creature->SetStandState(UNIT_STAND_STATE_KNEEL);
     m_creature->setActive(false);
     Summons.DespawnAll();
-
-    flammesDead = false;
 }
 
 void boss_illidan_stormrageAI::JustSummoned(Creature* summon)
