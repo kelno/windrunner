@@ -105,7 +105,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
         {
             float PlayerX, PlayerY, PlayerZ;
             caster->GetClosePoint(PlayerX, PlayerY, PlayerZ, m_creature->GetObjectSize());
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(true);
             m_creature->GetMotionMaster()->MovePoint(1, PlayerX, PlayerY, PlayerZ);
             PlayerGUID = caster->GetGUID();
         }
@@ -121,7 +121,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
             IsEating = true;
             EatTimer = 5000;
             m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_ATTACKUNARMED);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(false);
         }
     }
 
@@ -202,7 +202,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
             m_creature->setFaction(FACTION_DEFAULT);
 
         FlyTimer = 10000;
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(false);
         m_creature->SetVisibility(VISIBILITY_ON);
     }
 
@@ -251,7 +251,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
                 PlayerGUID = 0;
             }
             m_creature->SetVisibility(VISIBILITY_OFF);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(false);
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             m_creature->RemoveCorpse();
         }
@@ -290,7 +290,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
                             dz += 25;
                         }
 
-                        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                        m_creature->SetDisableGravity(true);
                         m_creature->GetMotionMaster()->MovePoint(1, dx, dy, dz);
                     }
                 }
@@ -845,7 +845,7 @@ struct npc_overlord_morghorAI : public ScriptedAI
             return 5000;
         case 20:
             Illi->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            Illi->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            Illi->SetDisableGravity(true);
             return 500;
         case 21:
             DoScriptText(OVERLORD_SAY_5, m_creature);
@@ -2513,7 +2513,7 @@ struct npc_commander_arcusAI : public ScriptedAI
             summonTimer = 15000 + rand() % 10000;
             for (uint8 i = 0; i < 10; i++) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[i][0], skybreakerPosAldor[i][1], skybreakerPosAldor[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     if (player)
                         skybreaker->AI()->AttackStart(player);
                 }
@@ -2576,7 +2576,7 @@ struct npc_commander_arcusAI : public ScriptedAI
         if (summonTimer) {
             if (summonTimer <= diff) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[rand()%10][0], skybreakerPosAldor[rand()%10][1], skybreakerPosAldor[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     skybreaker->AI()->AttackStart(player);
                 }
                 
@@ -2689,7 +2689,7 @@ struct npc_commander_hobbAI : public ScriptedAI
             summonTimer = 15000 + rand() % 10000;
             for (uint8 i = 0; i < 10; i++) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[i][0], skybreakerPosScyer[i][1], skybreakerPosScyer[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     if (player)
                         skybreaker->AI()->AttackStart(player);
                 }
@@ -2752,7 +2752,7 @@ struct npc_commander_hobbAI : public ScriptedAI
         if (summonTimer) {
             if (summonTimer <= diff) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[rand()%10][0], skybreakerPosScyer[rand()%10][1], skybreakerPosScyer[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     skybreaker->AI()->AttackStart(player);
                 }
                 
