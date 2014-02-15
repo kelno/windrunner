@@ -97,9 +97,10 @@ EndScriptData */
 //Thaladred the Darkener spells
 #define SPELL_PSYCHIC_BLOW                10689
 #define SPELL_SILENCE                     30225
+#define SPELL_RENT                        36965
 
 //Lord Sanguinar spells
-#define SPELL_BELLOWING_ROAR              40636
+#define SPELL_BELLOWING_ROAR              44863
 
 //Grand Astromancer Capernian spells
 #define CAPERNIAN_DISTANCE                20                //she casts away from the target
@@ -1037,14 +1038,19 @@ struct boss_thaladred_the_darkenerAI : public advisorbase_ai
     uint32 Gaze_Timer;
     uint32 Silence_Timer;
     uint32 PsychicBlow_Timer;
+    uint32 Rent_Timer;
 
     void Reset()
     {
         Gaze_Timer = 100;
-        Silence_Timer = 20000;
+        Silence_Timer = urand (5000, 6000);
         PsychicBlow_Timer = 10000;
+        Rent_Timer = urand(7000, 15000);
 
         advisorbase_ai::Reset();
+
+        m_creature->SetSpeed(MOVE_WALK, 1.0f);
+        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
     }
 
     void JustDied(Unit* pKiller)
@@ -1087,7 +1093,7 @@ struct boss_thaladred_the_darkenerAI : public advisorbase_ai
                     m_creature->AddThreat(target, 5000000.0f);
                     DoScriptText(EMOTE_THALADRED_GAZE, m_creature, target);
                 }
-                Gaze_Timer = 8500;
+                Gaze_Timer = urand(8000, 14000);
             }
         }else Gaze_Timer -= diff;
 
@@ -1095,7 +1101,7 @@ struct boss_thaladred_the_darkenerAI : public advisorbase_ai
         if(Silence_Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_SILENCE);
-            Silence_Timer = 20000;
+            Silence_Timer = urand (5000, 6000);
         }else Silence_Timer -= diff;
 
         //PsychicBlow_Timer
@@ -1104,6 +1110,13 @@ struct boss_thaladred_the_darkenerAI : public advisorbase_ai
             DoCast(m_creature->GetVictim(), SPELL_PSYCHIC_BLOW);
             PsychicBlow_Timer = 20000+rand()%5000;
         }else PsychicBlow_Timer -= diff;
+
+        //Rent_Timer
+        if(Rent_Timer < diff)
+        {
+            DoCast(m_creature->GetVictim(), SPELL_RENT);
+            Rent_Timer = urand(7000, 15000);
+        }else Rent_Timer -= diff;
 
         DoMeleeAttackIfReady();
     }
@@ -1118,8 +1131,11 @@ struct boss_lord_sanguinarAI : public advisorbase_ai
 
     void Reset()
     {
-        Fear_Timer = 20000;
+        Fear_Timer = 5000;
         advisorbase_ai::Reset();
+
+        m_creature->SetSpeed(MOVE_RUN, 2.0f);
+        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
     }
 
     void JustDied(Unit* Killer)
@@ -1154,7 +1170,7 @@ struct boss_lord_sanguinarAI : public advisorbase_ai
         if(Fear_Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_BELLOWING_ROAR);
-            Fear_Timer = 25000+rand()%10000;                //approximately every 30 seconds
+            Fear_Timer = 30000;                //approximately every 30 seconds
         }else Fear_Timer -= diff;
 
         DoMeleeAttackIfReady();
@@ -1298,8 +1314,8 @@ struct boss_master_engineer_telonicusAI : public advisorbase_ai
 
     void Reset()
     {
-        Bomb_Timer = 10000;
-        RemoteToy_Timer = 5000;
+        Bomb_Timer = 5000;
+        RemoteToy_Timer = 10000;
 
         advisorbase_ai::Reset();
     }
@@ -1336,7 +1352,7 @@ struct boss_master_engineer_telonicusAI : public advisorbase_ai
         if(Bomb_Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_BOMB);
-            Bomb_Timer = 25000;
+            Bomb_Timer = 5000;
         }else Bomb_Timer -= diff;
 
         //RemoteToy_Timer
@@ -1345,7 +1361,7 @@ struct boss_master_engineer_telonicusAI : public advisorbase_ai
             if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0))
                 DoCast(target, SPELL_REMOTE_TOY);
 
-            RemoteToy_Timer = 10000+rand()%5000;
+            RemoteToy_Timer = urand(15000, 20000);
         }else RemoteToy_Timer -= diff;
 
         DoMeleeAttackIfReady();
