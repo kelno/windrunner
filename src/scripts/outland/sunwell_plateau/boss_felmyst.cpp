@@ -187,6 +187,8 @@ public:
 
             me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
+            me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
             Summons.DespawnAll();
 
             me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
