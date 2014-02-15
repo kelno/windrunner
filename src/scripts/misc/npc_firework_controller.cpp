@@ -23,7 +23,7 @@ enum Firework
     SPELL_FIREWORK_PURPLE = 30161, //spirale/Multixplosion
     SPELL_FIREWORK_LOVE = 44940,
     SPELL_ROCKET_RED = 47004, //boum au sol avant de partir
-    //poulet fusées au milieu hihi
+    //poulet fusï¿½es au milieu hihi
     GOB_ROCKET_RED = 180851,
     GOB_ROCKET_BLUE = 180854,
     GOB_ROCKET_GREEN = 180855,
@@ -74,7 +74,7 @@ struct firework_controllerAI : public ScriptedAI
         me->GetPosition(gridStartX,gridStartY,gridZ);
         me->SetReactState(REACT_PASSIVE);
         me->SetVisibility(VISIBILITY_OFF);
-        me->SetFlying(true);
+        me->SetDisableGravity(true);
 
         eventStarted = false;
         currentTime = 0;
@@ -133,7 +133,7 @@ struct firework_controllerAI : public ScriptedAI
             if(Creature* c = me->SummonCreature(CREATURE_LAUNCHER,x,y,z,event->ori,TEMPSUMMON_TIMED_OR_DEAD_DESPAWN,6000))
             {
                 c->SetDisplayId(11686); //invisible model
-                c->SetFlying(true);
+                c->SetDisableGravity(true);
                 c->SetFloatValue(OBJECT_FIELD_SCALE_X, event->size);
                 c->CastSpell(c,event->spellorGobId,true);
             }
