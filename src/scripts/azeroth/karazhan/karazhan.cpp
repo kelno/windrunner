@@ -481,8 +481,6 @@ bool GossipHello_npc_berthold(Player* player, Creature* _Creature)
 	
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
-
-    return true;
 }
 
 bool GossipSelect_npc_berthold(Player* player, Creature* _Creature, uint32 sender, uint32 action)

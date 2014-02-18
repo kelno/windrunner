@@ -660,20 +660,22 @@ public:
             while (executeEvent(diff, m_currEvent)) {
                 switch (m_currEvent) {
                 case EV_FEAR:
-                    doCast(me->GetVictim(), SPELL_FEAR);
-                    scheduleEvent(EV_FEAR, 42000);
-                    delayEvent(EV_AIR_BURST, 5000);
+                    if(doCast(me->GetVictim(), SPELL_FEAR) == SPELL_CAST_OK)
+                    {
+                        scheduleEvent(EV_FEAR, 42000);
+                        delayEvent(EV_AIR_BURST, 5000);
+                    }
                     break;
                 case EV_AIR_BURST:
                     talk(YELL_AIR_BURST);
-                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true, true), SPELL_AIR_BURST))
+                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true, true), SPELL_AIR_BURST) == SPELL_CAST_OK)
                     {
                         scheduleEvent(EV_AIR_BURST, 25000, 40000);
                         delayEvent(EV_FEAR, 5000);
                     }
                     break;
                 case EV_GRIP_LEGION:
-                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION))
+                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION) == SPELL_CAST_OK)
                         scheduleEvent(EV_GRIP_LEGION, 5000, 25000);
                     break;
                 case EV_DOOMFIRE:

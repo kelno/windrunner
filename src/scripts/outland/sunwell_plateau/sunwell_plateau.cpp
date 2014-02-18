@@ -107,6 +107,12 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     {
         me->AddAura(25171,me); //freeze visual, not the right spell
     }
+    
+    void MovementInform(uint32 type, uint32 i)
+    {
+        if (type == WAYPOINT_MOTION_TYPE)
+            me->RemoveAurasDueToSpell(25171);
+    }
 
     void Reset()
     {
