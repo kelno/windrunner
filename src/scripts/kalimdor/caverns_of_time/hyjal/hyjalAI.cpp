@@ -326,7 +326,6 @@ hyjalAI::hyjalAI(Creature *c) : npc_escortAI(c), Summons(m_creature)
     OverrunCounter2 = 0;
     InfernalPoint = 0;
     RespawnTimer = 10000;
-    DoRespawn = false;
     DoHide = false;
     MassTeleportTimer = 0;
     DoMassTeleport = false;
@@ -474,19 +473,19 @@ void hyjalAI::SummonCreature(uint32 entry, float Base[4][3])
 
                 if(!FirstBossDead && (WaveCount == 1 || WaveCount == 3))
                 {//summon at tower
-                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_NEAR_TOWER][0]+irand(-20,20), SpawnPointSpecial[SPAWN_NEAR_TOWER][1]+irand(-20,20), SpawnPointSpecial[SPAWN_NEAR_TOWER][2]+irand(-10,10), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_NEAR_TOWER][0]+irand(-20,20), SpawnPointSpecial[SPAWN_NEAR_TOWER][1]+irand(-20,20), SpawnPointSpecial[SPAWN_NEAR_TOWER][2]+irand(-10,10), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                     if(pCreature)
                         ((hyjal_trashAI*)pCreature->AI())->useFlyPath = true;
                 }else{//summon at gate
-                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_GARG_GATE][0]+irand(-10,10), SpawnPointSpecial[SPAWN_GARG_GATE][1]+irand(-10,10), SpawnPointSpecial[SPAWN_GARG_GATE][2]+irand(-10,10), 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_GARG_GATE][0]+irand(-10,10), SpawnPointSpecial[SPAWN_GARG_GATE][1]+irand(-10,10), SpawnPointSpecial[SPAWN_GARG_GATE][2]+irand(-10,10), 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                 }
                 break;
             case 17907:    //FROST_WYRM ,
                 if(FirstBossDead && WaveCount == 1)
                 {//summon at gate
-                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_WYRM_GATE][0],SpawnPointSpecial[SPAWN_WYRM_GATE][1],SpawnPointSpecial[SPAWN_WYRM_GATE][2], 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_WYRM_GATE][0],SpawnPointSpecial[SPAWN_WYRM_GATE][1],SpawnPointSpecial[SPAWN_WYRM_GATE][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                 }else{
-                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_NEAR_TOWER][0], SpawnPointSpecial[SPAWN_NEAR_TOWER][1],SpawnPointSpecial[SPAWN_NEAR_TOWER][2], 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                    pCreature = m_creature->SummonCreature(entry, SpawnPointSpecial[SPAWN_NEAR_TOWER][0], SpawnPointSpecial[SPAWN_NEAR_TOWER][1],SpawnPointSpecial[SPAWN_NEAR_TOWER][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                     if(pCreature)
                         ((hyjal_trashAI*)pCreature->AI())->useFlyPath = true;
                 }
@@ -494,10 +493,10 @@ void hyjalAI::SummonCreature(uint32 entry, float Base[4][3])
             case 17908:    //GIANT_INFERNAL
                 InfernalCount++;
                 if(InfernalCount > 7)InfernalCount = 0;
-                pCreature = m_creature->SummonCreature(entry, InfernalPos[InfernalCount][0], InfernalPos[InfernalCount][1], InfernalPos[InfernalCount][2], 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                pCreature = m_creature->SummonCreature(entry, InfernalPos[InfernalCount][0], InfernalPos[InfernalCount][1], InfernalPos[InfernalCount][2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                 break;
             default:
-                pCreature = m_creature->SummonCreature(entry, SpawnLoc[0], SpawnLoc[1], SpawnLoc[2], 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 120000);
+                pCreature = m_creature->SummonCreature(entry, SpawnLoc[0], SpawnLoc[1], SpawnLoc[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
                 break;
 
     }
@@ -813,11 +812,12 @@ void hyjalAI::UpdateAI(const uint32 diff)
                 break;
         }
     }
-    if(DoRespawn)
+    if(RespawnTimer)
     {
-        if(RespawnTimer < diff)
+        if(RespawnTimer <= diff)
         {
-            DoRespawn = false;
+            RespawnTimer = 0;
+            //respawn creatures nearby
             RespawnNearPos(m_creature->GetPositionX(), m_creature->GetPositionY());
             if(Faction == 0)
             {
@@ -950,8 +950,7 @@ void hyjalAI::JustDied(Unit* killer)
     if(IsDummy)return;
     m_creature->Respawn();
     m_creature->SetVisibility(VISIBILITY_OFF);
-    DoRespawn = true;
-    RespawnTimer = 120000;
+    RespawnTimer = 30000; // 120000;
     Talk(DEATH);
     Summons.DespawnAll();//despawn all wave's summons
     if(pInstance)
