@@ -24,7 +24,7 @@ EndScriptData */
 #include "precompiled.h"
 #include "def_sethekk_halls.h"
 
-#define IKISS_DOOR          177203
+#define IKISS_DOOR          183398
 
 struct instance_sethekk_halls : public ScriptedInstance
 {
