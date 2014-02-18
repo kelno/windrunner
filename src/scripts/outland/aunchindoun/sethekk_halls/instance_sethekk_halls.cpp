@@ -25,6 +25,7 @@ EndScriptData */
 #include "def_sethekk_halls.h"
 
 #define IKISS_DOOR          183398
+#define GOBJECT_CAGE        183051
 
 struct instance_sethekk_halls : public ScriptedInstance
 {
