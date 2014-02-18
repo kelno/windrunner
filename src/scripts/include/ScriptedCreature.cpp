@@ -61,9 +61,8 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
 		    if (withoutWorldBoss && summon->isWorldBoss())
 			    continue;
 
-            summon->RemoveFromWorld();
-            summon->setDeathState(JUST_DIED);
-            summon->RemoveCorpse();
+            summon->CleanupsBeforeDelete();
+            summon->AddObjectToRemoveList();
         }
     }
     clear();

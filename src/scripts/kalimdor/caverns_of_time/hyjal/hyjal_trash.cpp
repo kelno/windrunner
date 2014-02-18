@@ -648,13 +648,11 @@ struct mob_ghoulAI : public hyjal_trashAI
     }
 
     bool go;
-    uint32 FrenzyTimer;
     uint32 pos;
     uint32 MoveTimer;
     bool RandomMove;
     void Reset()
     {
-        FrenzyTimer = 5000+rand()%5000;
         MoveTimer = 2000;
         RandomMove = false;
     }
@@ -717,11 +715,7 @@ struct mob_ghoulAI : public hyjal_trashAI
                 }
             }
         }
-        if(FrenzyTimer<diff)
-        {
-            DoCast(m_creature,SPELL_FRENZY);
-            FrenzyTimer = 15000+rand()%15000;
-        }else FrenzyTimer -= diff;
+
         if (!UpdateVictim())
             return;
 
