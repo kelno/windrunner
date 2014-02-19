@@ -499,7 +499,7 @@ void hyjalAI::SummonCreature(uint32 entry, float Base[4][3])
             case ANETHERON:
             case KAZROGAL:
             case AZGALOR:
-                pCreature = m_creature->SummonCreature(entry, SpawnLoc[0], SpawnLoc[1], SpawnLoc[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 15*MINUTE*IN_MILLISECONDS);
+                pCreature = m_creature->SummonCreature(entry, SpawnLoc[0], SpawnLoc[1], SpawnLoc[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 20*MINUTE*IN_MILLISECONDS);
                 break;
             default:
                 pCreature = m_creature->SummonCreature(entry, SpawnLoc[0], SpawnLoc[1], SpawnLoc[2], 0, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 2*MINUTE*IN_MILLISECONDS);
@@ -956,7 +956,7 @@ void hyjalAI::JustDied(Unit* killer)
     if(IsDummy)return;
     m_creature->Respawn();
     m_creature->SetVisibility(VISIBILITY_OFF);
-    RespawnTimer = 30000; // 120000;
+    RespawnTimer = 120000;
     Talk(DEATH);
     Summons.DespawnAll();//despawn all wave's summons
     if(pInstance)
