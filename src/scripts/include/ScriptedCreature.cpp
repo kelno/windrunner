@@ -31,24 +31,20 @@ void SummonList::Despawn(Creature *summon)
 
 void SummonList::DespawnEntry(uint32 entry)
 {
-    for(iterator i = begin(); i != end(); ++i)
+    for(auto itr = begin(); itr != end();)
     {
-        if(Creature *summon = Unit::GetCreature(*m_creature, *i))
+        if(Creature *summon = Unit::GetCreature(*m_creature, *itr))
         {
             if(summon->GetEntry() == entry)
             {
                 summon->RemoveFromWorld();
                 summon->setDeathState(JUST_DIED);
                 summon->RemoveCorpse();
-                i = erase(i);
-                --i;
+                itr = erase(itr);
+                continue;
             }
         }
-        else
-        {
-            i = erase(i);
-            --i;
-        }
+        itr++;
     }
 }
 
