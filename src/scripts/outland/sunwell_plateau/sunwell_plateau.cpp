@@ -502,7 +502,7 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
             
         if (drainManaTimer <= diff) {
             if (m_creature->GetPower(POWER_MANA) <= ((m_creature->GetMaxPower(POWER_MANA) / 100.0f) * 10.0f)) {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_DRAIN_MANA);
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0, true, true), SPELL_DRAIN_MANA);
                 drainManaTimer = 15000+rand()%5000;
             }
         }
@@ -645,7 +645,7 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
             flashDarknessTimer -= diff;
             
         if (dominationTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1, 40.0f, true), SPELL_DOMINATION);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0, true, true), SPELL_DOMINATION);
             dominationTimer = 15000;
         }
         else

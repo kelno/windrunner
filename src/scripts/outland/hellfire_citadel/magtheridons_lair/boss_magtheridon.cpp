@@ -485,7 +485,7 @@ struct mob_hellfire_channelerAI : public ScriptedAI
 
         if(Fear_Timer < diff)
         {
-            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1))
+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true))
                 DoCast(target, SPELL_FEAR);
             Fear_Timer = 25000 + rand()%15000;
         }else Fear_Timer -= diff;

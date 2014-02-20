@@ -280,8 +280,7 @@ struct boss_terestianAI : public ScriptedAI
 
         if(SacrificeTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if(target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER)
+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true))
             {
                 DoCast(target, SPELL_SACRIFICE, true);
                 Creature* Chains = m_creature->SummonCreature(CREATURE_DEMONCHAINS, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);

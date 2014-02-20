@@ -567,7 +567,7 @@ struct boss_malchezaarAI : public ScriptedAI
                 if(phase == 1)
                     target = m_creature->GetVictim();       // the tank
                 else                                        //anyone but the tank
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
 
                 if (target)
                     DoCast(target, SPELL_SW_PAIN);

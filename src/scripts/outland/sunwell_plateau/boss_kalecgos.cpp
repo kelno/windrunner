@@ -756,9 +756,10 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         }
             
         // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
-        if (m_creature->GetVictim()->GetPositionZ() <= 52.5f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) {
+        if (m_creature->GetVictim()->GetPositionZ() <= 52.5f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) 
+        {
             DeleteFromThreatList(m_creature->GetVictim()->GetGUID());
-            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
+            UpdateVictim();
         }
 
         if(CheckTimer < diff)

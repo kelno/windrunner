@@ -668,11 +668,12 @@ public:
                     break;
                 case EV_AIR_BURST:
                     talk(YELL_AIR_BURST);
-                    if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true, true), SPELL_AIR_BURST) == SPELL_CAST_OK)
-                    {
-                        scheduleEvent(EV_AIR_BURST, 25000, 40000);
-                        delayEvent(EV_FEAR, 5000);
-                    }
+                    if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0f, true, true))
+                        if(doCast(target, SPELL_AIR_BURST) == SPELL_CAST_OK)
+                        {
+                            scheduleEvent(EV_AIR_BURST, 25000, 40000);
+                            delayEvent(EV_FEAR, 5000);
+                        }
                     break;
                 case EV_GRIP_LEGION:
                     if(doCast(selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true), SPELL_GRIP_OF_THE_LEGION) == SPELL_CAST_OK)
@@ -838,7 +839,7 @@ public:
     }
 };
 
-void AddSC_boss_archimonde_new()
+void AddSC_boss_archimonde()
 {
     sScriptMgr.addScript(new Mob_Ancient_Whisp());
     sScriptMgr.addScript(new Mob_Doomfire());

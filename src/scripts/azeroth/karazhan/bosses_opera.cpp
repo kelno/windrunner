@@ -1296,7 +1296,7 @@ void boss_romuloAI::UpdateAI(const uint32 diff)
 
     if(BackwardLungeTimer < diff)
     {
-        Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+        Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true);
         if(target && !m_creature->HasInArc(M_PI, target))
         {
             DoCast(target, SPELL_BACKWARD_LUNGE);

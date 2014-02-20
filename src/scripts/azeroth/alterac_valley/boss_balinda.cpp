@@ -146,7 +146,7 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
                     WaterElemental = true;
                     ((mob_water_elementalAI*)Water->AI())->balindaGUID = m_creature->GetGUID();
                     Water->SetLevel(70);
-                    Water->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
+                    Water->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
                     Water->setFaction(m_creature->getFaction());         
                 }
             }

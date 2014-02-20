@@ -805,7 +805,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_PARASITIC_SHADOWFIEND:
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
+                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true))
                         m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true);
                     Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
                 }break;

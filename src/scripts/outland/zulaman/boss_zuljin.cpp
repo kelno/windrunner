@@ -347,7 +347,7 @@ public:
                     break;
                 case EV_CLAW_RAGE:
                 {
-                    Unit* clawRageTarget = selectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);
+                    Unit* clawRageTarget = selectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true);
                     if (clawRageTarget) {
                         clawRageTargetGUID = clawRageTarget->GetGUID();
                         doModifyThreat(clawRageTarget, 1000000); // 1.000.000 threat should be enough
@@ -373,7 +373,8 @@ public:
                     break;
                 case EV_LYNX_RUSH:
                     me->SetSpeed(MOVE_RUN, 1.2f);
-                    doCast(selectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true), SPELL_LYNX_RUSH_DAMAGE);
+                    if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true))
+                        doCast(target, SPELL_LYNX_RUSH_DAMAGE);
                     delayEvent(EV_CLAW_RAGE, 2000);
                     scheduleEvent(EV_REINIT_SPEED, 2000);
                     enableEvent(EV_REINIT_SPEED);
