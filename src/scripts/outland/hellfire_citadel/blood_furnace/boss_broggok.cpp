@@ -278,7 +278,7 @@ struct mob_fel_orc_neophyteAI : public ScriptedAI
             return;
 
         if (ChargeTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_CHARGE);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 50.0, true, true), SPELL_CHARGE);
             ChargeTimer = 25000 + rand()+5000;
         }
         else

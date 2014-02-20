@@ -1871,7 +1871,7 @@ struct npc_moarg_incineratorAI : public ScriptedAI
             sunderingCleaveTimer -= diff;
             
         if (mightyChargeTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_MIGHTY_CHARGE);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true), SPELL_MIGHTY_CHARGE);
             mightyChargeTimer = 10000+rand()%3000;
         }
         else
@@ -2173,7 +2173,7 @@ struct npc_rivendarkAI : public ScriptedAI
             corruptionTimer -= diff;
             
         if (tailSweepTimer <= diff) {
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if (target && !m_creature->HasInArc(M_PI, target))
                 DoCast(target, SPELL_TAIL_SWEEP);
             tailSweepTimer = 4000+rand()%3000;
@@ -2422,7 +2422,7 @@ struct npc_furywingAI : public ScriptedAI
             return;
             
         if (tailSweepTimer <= diff) {
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if (target && !m_creature->HasInArc(M_PI, target))
                 DoCast(target, SPELL_TAIL_SWEEP);
             tailSweepTimer = 4000+rand()%3000;

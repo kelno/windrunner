@@ -280,7 +280,7 @@ class Boss_Lurker_Below : public CreatureScript
 
                         if (geyserTimer < diff)
                         {
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 1))
+                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true))
                                 doCast(target, SPELL_GEYSER);
                             else
                                 doCast(me->GetVictim(), SPELL_GEYSER);

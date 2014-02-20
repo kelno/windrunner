@@ -155,11 +155,12 @@ struct boss_onyxiaAI : public ScriptedAI
 
             if(TailSweepTimer < diff)
             {
-                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 10.0, true, true);
                 if(target && !m_creature->HasInArc(M_PI, target))
+                {
                     DoCast(target, SPELL_TAILSWEEP);
-
-                TailSweepTimer = 10000;
+                    TailSweepTimer = 10000;
+                }
             }else TailSweepTimer -= diff;
 
             if(CleaveTimer < diff)
