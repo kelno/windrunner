@@ -274,6 +274,11 @@ struct mob_ethereal_apprenticeAI : public ScriptedAI
 
     bool isFireboltTurn;
 
+    void EnterEvadeMode()
+    {
+        me->Kill(me);
+    }
+
     void Reset()
     {
         Cast_Timer = 3000;

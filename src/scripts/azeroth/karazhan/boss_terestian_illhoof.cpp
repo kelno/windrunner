@@ -138,7 +138,7 @@ struct mob_demon_chainAI : public ScriptedAI
 
     void Reset()
     {
-        checkTimer = 2000;
+        checkTimer = 1000;
         SacrificeGUID = 0;
     }
 
@@ -161,6 +161,7 @@ struct mob_demon_chainAI : public ScriptedAI
                 if(Unit* Sacrifice = Unit::GetUnit((*me),SacrificeGUID))
                     if(!Sacrifice->IsAlive())
                         me->Kill(me);
+            checkTimer = 1000;
         } else checkTimer -= diff;
     }
 };
