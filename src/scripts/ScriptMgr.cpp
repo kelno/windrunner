@@ -249,7 +249,6 @@ extern void AddSC_burning_steppes();
 //--Battle for Mt. Hyjal
 extern void AddSC_hyjal();
 extern void AddSC_boss_archimonde();
-extern void AddSC_boss_archimonde_new();
 extern void AddSC_instance_mount_hyjal();
 extern void AddSC_hyjal_trash();
 extern void AddSC_boss_rage_winterchill();
@@ -1642,7 +1641,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     //--Battle for Mt. Hyjal
     AddSC_hyjal();
     AddSC_boss_archimonde();
-    AddSC_boss_archimonde_new();
     AddSC_instance_mount_hyjal();
     AddSC_hyjal_trash();
     AddSC_boss_rage_winterchill();

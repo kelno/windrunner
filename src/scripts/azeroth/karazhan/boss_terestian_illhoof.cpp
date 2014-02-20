@@ -134,9 +134,11 @@ struct mob_demon_chainAI : public ScriptedAI
     mob_demon_chainAI(Creature *c) : ScriptedAI(c) {}
 
     uint64 SacrificeGUID;
+    uint32 checkTimer;
 
     void Reset()
     {
+        checkTimer = 2000;
         SacrificeGUID = 0;
     }
 
@@ -147,11 +149,19 @@ struct mob_demon_chainAI : public ScriptedAI
     void JustDied(Unit *killer)
     {
         if(SacrificeGUID)
-        {
-            Unit* Sacrifice = Unit::GetUnit((*m_creature),SacrificeGUID);
-            if(Sacrifice)
+            if(Unit* Sacrifice = Unit::GetUnit((*me),SacrificeGUID))
                 Sacrifice->RemoveAurasDueToSpell(SPELL_SACRIFICE);
-        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if(checkTimer <= diff)
+        {
+            if(SacrificeGUID)
+                if(Unit* Sacrifice = Unit::GetUnit((*me),SacrificeGUID))
+                    if(!Sacrifice->IsAlive())
+                        me->Kill(me);
+        } else checkTimer -= diff;
     }
 };
 
