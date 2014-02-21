@@ -17,28 +17,28 @@
 /* ScriptData
 SDName: Boss_Ouro
 SD%Complete: 85
-SDComment: No model for submerging. Currently just invisible.
+SDComment: Missing some visuals
 SDCategory: Temple of Ahn'Qiraj
 EndScriptData */
 
 #include "precompiled.h"
 #include "def_temple_of_ahnqiraj.h"
  
-#define CREATURE_OURO_MOUND        15712
+#define CREATURE_OURO_MOUND     15712
 #define CREATURE_OURO_SCARAB    15718
  
-#define DISPLAYID_OURO            15509
-#define DISPLAYID_MOUND            15294
+#define DISPLAYID_OURO          15509
+#define DISPLAYID_MOUND         15294
  
 #define SPELL_SWEEP             26103
 #define SPELL_SANDBLAST         26102 //incorrect angle (must be 180°), core fix needed
 #define SPELL_GROUND_RUPTURE    26100
 #define SPELL_EMERGE            26262
-#define SPELL_SUBMERGE            26063
+#define SPELL_SUBMERGE          26063
 #define SPELL_SUMMON_DIRTMOUNDS 26058 //unused
-#define SPELL_BERSERK            26615 //incomplete effect
-#define SPELL_BOULDER            26616
-#define SPELL_QUAKE                26093 //incorrect damage
+#define SPELL_BERSERK           26615 //incomplete effect
+#define SPELL_BOULDER           26616
+#define SPELL_QUAKE             26093 //incorrect damage
 //missing hole visual
  
 #define SWEEP_TIMER             15000 + rand()%5000
