@@ -47,14 +47,14 @@
 struct molten_flameAI : public ScriptedAI
 {
     ScriptedInstance* pInstance;
-    Unit* currentTarget;
+    uint64 currentTargetGUID;
     
     float x, y, z, groundZ;
 
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        currentTarget = nullptr;
+        currentTargetGUID = 0;
     }
     
     void UndermapCheck()
@@ -88,17 +88,22 @@ struct molten_flameAI : public ScriptedAI
         if(!supremus) 
             return;
         
+        Unit* currentTarget;
         if( !(currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,20.0f,100.0f,true)) )
             currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
 
         if(currentTarget)
+        {
+            currentTargetGUID = currentTarget->GetGUID();
             me->GetMotionMaster()->MoveFollowOnPoint(currentTarget);
+        }
     }
     
     void UpdateAI(uint32 const diff)
     {
         //change target if we reached it
-        if(!currentTarget || me->GetDistance(currentTarget) < 2.0f)
+        Player* p = me->GetMap()->GetPlayerInMap(currentTargetGUID);
+        if(!p || me->GetDistance(p) < 2.0f)
             RandomizeTarget();
     }
 };
