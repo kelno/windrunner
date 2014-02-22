@@ -898,6 +898,20 @@ Unit* FindCreature(uint32 entry, float range, Unit* Finder)
     return target;
 }
 
+void FindCreatures(std::list<Creature*>& list, uint32 entry, float range, Unit* Finder)
+{
+    CellPair pair(Trinity::ComputeCellPair(Finder->GetPositionX(), Finder->GetPositionY()));
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
+
+    Trinity::AllCreaturesOfEntryInRange check(Finder, entry, range);
+    Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(list, check);
+    TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+    cell.Visit(pair, visitor, *Finder->GetMap());
+}
+
 GameObject* FindGameObject(uint32 entry, float range, Unit* Finder)
 {
     if(!Finder)
@@ -977,26 +991,4 @@ void LoadOverridenDBCData()
     spellInfo = const_cast<SpellEntry*>(spellmgr.LookupSpell(41913));
     if(spellInfo)
         spellInfo->EffectApplyAuraName[0] = 4; // proc debuff, and summon infinite fiends
-}
-
-bool AIMessageEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/) 
-{ 
-    Creature* c = ObjectAccessor::GetObjectInWorld(creatureGUID, (Creature*)NULL);
-    if(!c) return true;
-
-    if(c->AI())
-        c->AI()->message(id,data);
-    if(c->getAI())
-        c->getAI()->message(id,data);
-
-    return true; 
-}
-
-void ScriptedAI::AddMessageEvent(uint32 eventId, uint64 timer, uint64 targetGUID)
-{
-    if(!targetGUID) //no guid given, this message is destinated to ourselves
-        targetGUID = m_creature->GetGUID();
-
-    AIMessageEvent* messageEvent = new AIMessageEvent(targetGUID,eventId);
-    me->m_Events.AddEvent(messageEvent, m_creature->m_Events.CalculateTime(timer), false);
 }
