@@ -7,6 +7,7 @@ EndContentData */
 
 #define SPELL_SLAP 6754
 #define WAYPOINT_EVASION 12949440
+#define CREATURE_SLAVE  17963
 #define CREATURE_WORKER 17964
 #define CREATURE_SLAVER 17959
 
@@ -22,7 +23,7 @@ struct npc_wastewalker_workerAI : public ScriptedAI
 {
     npc_wastewalker_workerAI(Creature *c) : ScriptedAI(c)
     {
-        message(MESSAGE_RESUME_WORK, 0);
+        message(MESSAGE_RESUME_WORK,0);
     }
 
     enum Says 
@@ -37,6 +38,8 @@ struct npc_wastewalker_workerAI : public ScriptedAI
         switch(id)
         {
         case MESSAGE_START_EVADE:
+            EnterEvadeMode();
+            me->setFaction(35);
             sCreatureTextMgr.SendChat(me, SAY_GROUP_EVASION, 0);
             me->LoadPath(WAYPOINT_EVASION);
             me->SetDefaultMovementType(WAYPOINT_MOTION_TYPE);
@@ -49,7 +52,7 @@ struct npc_wastewalker_workerAI : public ScriptedAI
         case MESSAGE_KNEEL_UP:
             me->SetStandState(UNIT_STAND_STATE_STAND);
             sCreatureTextMgr.SendChat(me, SAY_GROUP_ON_SLAP, 0);
-            AddMessageEvent(MESSAGE_RESUME_WORK, 2000);
+            me->AddMessageEvent(2000,MESSAGE_RESUME_WORK);
             break;
         case MESSAGE_RESUME_WORK:
             me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_WORK_NOSHEATHE);
@@ -77,13 +80,15 @@ struct npc_wastewalker_workerAI : public ScriptedAI
         {
             if(caster->ToCreature()->GetEntry() == CREATURE_SLAVER)
             {
-                AddMessageEvent(MESSAGE_KNEEL_DOWN, 1000);
-                AddMessageEvent(MESSAGE_KNEEL_UP, 5000);
+                me->AddMessageEvent(1000,MESSAGE_KNEEL_DOWN);
+                me->AddMessageEvent(5000,MESSAGE_KNEEL_UP);
                 return;
             }
         }
         //else, if not hit by slaver
         me->SetReactState(REACT_AGGRESSIVE);
+        if(caster->GetTypeId() == TYPEID_PLAYER)
+            AttackStart(caster); //attack start only players, just to be sure
     }
 
     void DamageTaken(Unit *done_by, uint32 &damage) 
@@ -100,32 +105,106 @@ struct npc_wastewalker_workerAI : public ScriptedAI
     }
 };
 
+#define SPELL_HARMSTRING 9080
+#define SPELL_HEAD_CRACK 16172
+
 struct npc_coilfang_slavehandlerAI : public ScriptedAI
 {
     npc_coilfang_slavehandlerAI(Creature *c) : ScriptedAI(c)
     {}
 
+    enum Says
+    {
+        SAY_WORK_HARDER = 0,
+        SAY_HELP = 1,
+    };
+
+    enum Messages
+    {
+        MESSAGE_SEND_SLAVES,
+    };
+
+    uint32 slapTimer;
+    uint32 harmStringTimer;
+    uint32 headCrackTimer;
+
+    void Reset()
+    {
+        slapTimer = 10000 + rand()%30000;
+        harmStringTimer = 10000 + rand()%5000;
+        headCrackTimer = 15000 + rand()%5000;
+    }
+
+    uint64 message(uint32 id, uint64 data) 
+    { 
+        if(id == MESSAGE_SEND_SLAVES)
+        {
+            Unit* target = ObjectAccessor::Instance().GetObjectInWorld(data,(Unit*)NULL);
+            if(!target)
+                return 0;
+            std::list<Creature*> slavesList;
+            GetSlaves(slavesList,20.0f);
+            for(auto itr : slavesList)
+                itr->AI()->AttackStart(target);
+        }
+        return 0;
+    }
+
+    void EnterCombat(Unit* who)
+    {
+        sCreatureTextMgr.SendChat(me, SAY_HELP, 0);
+        me->AddMessageEvent(1000,MESSAGE_SEND_SLAVES,who->GetGUID());
+    }
+
+    void GetSlaves(std::list<Creature*>& list, float distance)
+    {
+        FindCreatures(list,CREATURE_WORKER,distance,m_creature);
+        FindCreatures(list,CREATURE_SLAVE,distance,m_creature);
+    }
+
     void JustDied(Unit* killer)
     {
-        CellPair pair(Trinity::ComputeCellPair(m_creature->GetPositionX(), m_creature->GetPositionY()));
-        Cell cell(pair);
-        cell.data.Part.reserved = ALL_DISTRICT;
-        cell.SetNoCreate();
-        std::list<Creature*> workersList;
-
-        Trinity::AllCreaturesOfEntryInRange check(m_creature, CREATURE_WORKER, 25.0f);
-        Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(workersList, check);
-        TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
-
-        cell.Visit(pair, visitor, *m_creature->GetMap());
-
-        for(auto itr : workersList)
-            itr->AI()->message(MESSAGE_START_EVADE,0);
+        std::list<Creature*> slavesList;
+        GetSlaves(slavesList,20.0f);
+        for(auto itr : slavesList)
+            itr->AddMessageEvent(1000,MESSAGE_START_EVADE);
     }
 
     void UpdateAI(const uint32 diff)
     {
-        //handled in smartAI
+        if(!me->GetVictim())
+        {
+            if(slapTimer < diff)
+            {
+                std::list<Creature*> slavesList;
+                GetSlaves(slavesList,5.0f);
+                if(slavesList.empty())
+                {
+                    slapTimer = 5000; //recheck in 5 sec
+                    return;
+                }
+                DoCast(*slavesList.begin(),SPELL_SLAP);
+                sCreatureTextMgr.SendChat(me, SAY_WORK_HARDER, 0);
+                slapTimer = 20000 + rand()%40000;
+            } else slapTimer -= diff;
+        }
+
+        if(!UpdateVictim())
+            return; 
+
+        if(harmStringTimer < diff)
+        {
+            if(DoCast(me->GetVictim(),SPELL_HARMSTRING) == SPELL_CAST_OK)
+                harmStringTimer = 20000;
+        } else harmStringTimer -= diff;
+
+        if(headCrackTimer < diff)
+        {
+            if(DoCast(me->GetVictim(),SPELL_HEAD_CRACK) == SPELL_CAST_OK)
+                headCrackTimer = 15000 + rand()%5000;
+        } else headCrackTimer -= diff;
+
+        DoMeleeAttackIfReady();
     }
 };
 
