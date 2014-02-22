@@ -979,3 +979,24 @@ void LoadOverridenDBCData()
         spellInfo->EffectApplyAuraName[0] = 4; // proc debuff, and summon infinite fiends
 }
 
+bool AIMessageEvent::Execute(uint64 /*e_time*/, uint32 /*p_time*/) 
+{ 
+    Creature* c = ObjectAccessor::GetObjectInWorld(creatureGUID, (Creature*)NULL);
+    if(!c) return true;
+
+    if(c->AI())
+        c->AI()->message(id,data);
+    if(c->getAI())
+        c->getAI()->message(id,data);
+
+    return true; 
+}
+
+void ScriptedAI::AddMessageEvent(uint32 eventId, uint64 timer, uint64 targetGUID)
+{
+    if(!targetGUID) //no guid given, this message is destinated to ourselves
+        targetGUID = m_creature->GetGUID();
+
+    AIMessageEvent* messageEvent = new AIMessageEvent(targetGUID,eventId);
+    me->m_Events.AddEvent(messageEvent, m_creature->m_Events.CalculateTime(timer), false);
+}

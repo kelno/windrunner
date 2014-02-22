@@ -375,6 +375,7 @@ SET(scripts_STAT_SRCS
     outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
     outland/coilfang_resevoir/slave_pens/boss_ahune.cpp
     outland/coilfang_resevoir/slave_pens/instance_slave_pens.cpp
+	outland/coilfang_resevoir/slave_pens/slave_pens.cpp
     outland//eversong_woods.cpp
     outland//ghostlands.cpp
     outland/gruuls_lair/boss_gruul.cpp

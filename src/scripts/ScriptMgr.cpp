@@ -283,6 +283,7 @@ extern void AddSC_boss_the_lurker_below();
 //--Slave Pens
 extern void AddSC_boss_ahune();
 extern void AddSC_instance_slave_pens();
+extern void AddSC_slave_pens();
 
 //--Steam Vault
 extern void AddSC_boss_hydromancer_thespia();
@@ -1675,6 +1676,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     //--Slave Pens
     AddSC_boss_ahune();
     AddSC_instance_slave_pens();
+    AddSC_slave_pens();
     
     //--Steam Vault
     AddSC_boss_hydromancer_thespia();

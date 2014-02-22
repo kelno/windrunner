@@ -775,7 +775,7 @@ public:
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
         }
 
-        void message(uint32 id, uint32 data)
+        void message(uint32 id, uint64 data)
         {
             if (id == 1)
                 disableEvent(EVENT_DEAD);
