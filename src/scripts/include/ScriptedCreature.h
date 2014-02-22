@@ -215,6 +215,9 @@ struct ScriptedAI : public CreatureAI
     void SetCombatMovement(bool CombatMove);
     bool IsCombatMovement() { return m_bCombatMovement; }
     
+    //Play message for current creature when given time is elapsed. targetGUID can be used to play it this to another creature instead.
+    void AddMessageEvent(uint32 messageID, uint64 timer, uint64 targetGUID = 0);
+
     private:
         bool m_bCombatMovement;
 };
@@ -241,6 +244,23 @@ struct NullCreatureAI : public ScriptedAI
     bool IsVisible(Unit *) const { return false; }
 
     void UpdateAI(const uint32) {}
+};
+
+class AIMessageEvent : public BasicEvent
+{
+public:
+    AIMessageEvent(uint64 creatureGUID, uint32 id, uint64 data = 0) : 
+        creatureGUID(creatureGUID),
+        id(id),
+        data(data)
+    {}
+
+    bool Execute(uint64 /*e_time*/, uint32 /*p_time*/);
+
+private:
+    uint64 creatureGUID;
+    uint32 id;
+    uint64 data;
 };
 
 #endif

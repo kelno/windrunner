@@ -541,7 +541,7 @@ public:
                 _instance->SetData(DATA_ARCHIMONDEEVENT, NOT_STARTED);
         }
         
-        void message(uint32 type, uint32 data)
+        void message(uint32 type, uint64 data)
         {
             if (type == 0) {
                 talk(YELL_SLAY);
