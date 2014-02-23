@@ -90,6 +90,7 @@ static InfernalPoint InfernalPoints[] =
 
 #define INFERNAL_MODEL_INVISIBLE 11686                      //Infernal Effects
 #define SPELL_INFERNAL_RELAY     30834
+#define CREATURE_INFERNAL_RELAY  17645                      //rain down inferno from this one
 
 #define AXE_EQUIP_MODEL          40066                      //Axes info
 #define AXE_EQUIP_INFO           33448898
