@@ -153,7 +153,7 @@ public:
             BreathCount = 0;
             demonicCount = 0;
 
-            me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
+            //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
 
             setPhase(PHASE_NULL);
             if (onSpawn)
@@ -227,6 +227,7 @@ public:
             {
                 case PHASE_INTRO:
                     me->SetSpeed(MOVE_RUN, 1.3f, true);
+                    me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     me->SetReactState(REACT_PASSIVE);
                     break;
                 case PHASE_RESET:
@@ -239,7 +240,7 @@ public:
                     setPhase(PHASE_PULL);
                     break;
                 case PHASE_PULL:
-                    me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, false);
+                    //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, false);
                     break;
                 case PHASE_GROUND:
                     me->SetSpeed(MOVE_RUN, 1.0f, true);
@@ -251,7 +252,7 @@ public:
                     scheduleEvent(EVENT_ENCAPS_WARN, 29000);
                     break;
                 case PHASE_FLIGHT:
-                    me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
+                    //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
                     me->SetSpeed(MOVE_RUN, 1.3f, true);
                     switch (rand()%2)
                     {
@@ -451,6 +452,7 @@ public:
                         break;
                     case 3:
                         me->GetMotionMaster()->MovePath(25038, true);
+                        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                         setPhase(PHASE_PULL);
                         me->SetReactState(REACT_AGGRESSIVE);
                         break;
