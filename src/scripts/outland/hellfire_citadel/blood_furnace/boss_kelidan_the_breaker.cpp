@@ -100,6 +100,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
         SummonChannelers();
         me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         me->SetReactState(REACT_PASSIVE);
+        SetCombatMovementAllowed(true);
         if (pInstance && me->IsAlive())
             pInstance->SetData(DATA_KELIDANEVENT, NOT_STARTED);
     }
@@ -157,6 +158,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
                 return;
         }
 
+        //release me
         if (killer)
         {
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -229,6 +231,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
             {
                 DoCast(m_creature,HeroicMode ? H_SPELL_FIRE_NOVA : SPELL_FIRE_NOVA,true);
                 Firenova = false;
+                SetCombatMovementAllowed(true);
                 ShadowVolley_Timer = 2000;
             }else Firenova_Timer -=diff;
 
@@ -270,6 +273,7 @@ struct boss_kelidan_the_breakerAI : public ScriptedAI
             BurningNova_Timer = 20000+rand()%8000;
             Firenova_Timer= 5000;
             Firenova = true;
+            SetCombatMovementAllowed(false);
         }else BurningNova_Timer -=diff;
 
         DoMeleeAttackIfReady();
