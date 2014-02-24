@@ -117,7 +117,8 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
 	            EnterEvadeMode();
                 std::vector<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
                 for(auto itr : poolCreatures)
-                    itr->AI()->EnterEvadeMode();
+                    if(itr->AI())
+                        itr->AI()->EnterEvadeMode();
 		    }
             DistanceCheckTimer = 2000;
         }else DistanceCheckTimer -= diff;
