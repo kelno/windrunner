@@ -124,7 +124,6 @@ extern void AddSC_arenabeastmaster();
 extern void AddSC_alterac_mountains();
 
 //Alterac Valley
-extern void AddSC_AV_Marshals();
 extern void AddSC_AV_Warmasters();
 extern void AddSC_boss_balinda();
 extern void AddSC_boss_drekthar();
@@ -1516,7 +1515,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_alterac_mountains();
     
     //Alterac Valley
-    AddSC_AV_Marshals();
     AddSC_AV_Warmasters();
     AddSC_boss_balinda();
     AddSC_boss_drekthar();

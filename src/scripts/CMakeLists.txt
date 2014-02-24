@@ -20,7 +20,6 @@ SET(scripts_STAT_SRCS
     azeroth/arathi_highlands.cpp
     azeroth/alterac_mountains.cpp
     azeroth/alterac_valley/alterac_bowman.cpp
-    azeroth/alterac_valley/AV_Marshals.cpp
     azeroth/alterac_valley/AV_Warmasters.cpp
     azeroth/alterac_valley/boss_balinda.cpp
     azeroth/alterac_valley/boss_drekthar.cpp

@@ -100,17 +100,7 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
 
         summons.DespawnAll();
         
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5760, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5761, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8692, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8693, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8694, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11398, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11399, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11400, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1714, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
 
     void EnterCombat(Unit *who) {
