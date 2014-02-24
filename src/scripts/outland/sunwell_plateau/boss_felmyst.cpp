@@ -100,6 +100,11 @@ static float rights[3][3] = { {1492.819946, 515.668030, 60.083302},
                               {1467.219971, 516.318970, 60.083302},
                               {1441.640015, 520.520020, 60.083302} };
 
+static float prepareLandingLoc[2][3] = {  {1482.709961, 649.406006, 21.081100},
+                                          {1491.119995, 553.672974, 24.921900}  };
+
+static float kalecPos[] = { 1501.253174, 764.737061, 117.972687, 4.626863 };
+
 class boss_felmyst : public CreatureScript
 {
 public:
@@ -333,7 +338,7 @@ public:
             if(pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, DONE);
 
-            if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0))
+            if (Creature* kalecgos = me->SummonCreature(24844, kalecPos[0],kalecPos[1],kalecPos[2],kalecPos[3], TEMPSUMMON_MANUAL_DESPAWN, 0))
                 kalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
@@ -493,7 +498,7 @@ public:
                     case 3:
                         // Wait mouvement inform
                         break;
-                    case 4:
+                    case 4: //start passage
                         if (!direction)
                             me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
                         else
@@ -503,7 +508,7 @@ public:
                         flightPhaseTimer = 2500;
                         flightPhase++;
                         break;
-                    case 5:
+                    case 5: //spawn fogs
                         doCast(me, SPELL_FOG_BREATH, false);
                         if (!direction)
                             me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
@@ -521,21 +526,24 @@ public:
 
                         flightPhase++;
                         break;
-                    case 6:
+                    case 6: //loop until 3 breaths done
                         flightPhase++;
                         if(BreathCount < 3)
                             flightPhase = 4;
                         break;
-                    case 7:
+                    case 7: //prepare to land, landing is handled in onMovementInform
                         me->SetSpeed(MOVE_RUN, 1.3f, true);
                         if (!origin)
-                            me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[0][0],prepareLandingLoc[0][1],prepareLandingLoc[0][2]);
                         else
-                            me->GetMotionMaster()->MovePoint(3, 1491.119995, 553.672974, 24.921900);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[1][0],prepareLandingLoc[1][1],prepareLandingLoc[1][2]);
 
                         flightPhase++;
+                        flightPhaseTimer = 10000;
                         break;
                     default:
+                        //hackfix : we shoudln't reach this phase but the boss apparently sometimes get stuck here, so let's go back to phase 7
+                        flightPhase = 7;
                         break;
                 }
             }
@@ -660,7 +668,7 @@ public:
                         if (pInstance)
                         {
                             switch (BreathCount)
-                            {
+                            { //related trigger cast their fog via instanceScript, see instance_sunwell_plateau. Y position is given to advance fog progressively
                                 case 0:
                                     pInstance->SetData((direction ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY());
                                     break;

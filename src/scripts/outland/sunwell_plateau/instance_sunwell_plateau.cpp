@@ -210,7 +210,7 @@ struct instance_sunwell_plateau : public ScriptedInstance
             case 25358: FlightRight         = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 25837: CommanderGUID       = pCreature->GetGUID(); pCreature->setActive(true); break;
             case 19871: BarrierTriggerGUID  = pCreature->GetGUID(); break;
-            case 23472:
+            case 23472: //fog triggers
                 //sLog.outString("PositionX: %f", pCreature->GetPositionX());
                 if (pCreature->GetPositionX() > 1490.0f)
                     northList.push_back(pCreature->GetGUID());
