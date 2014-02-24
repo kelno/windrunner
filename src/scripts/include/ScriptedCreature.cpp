@@ -218,16 +218,18 @@ uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
     if (m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
         return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    return m_creature->CastSpell(victim, spellId, triggered);
+    uint32 reason = m_creature->CastSpell(victim, spellId, triggered);
+
+    //restore combat movement on out of mana
+    if(reason == SPELL_FAILED_NO_POWER && GetRestoreCombatMovementOnOOM() && !IsCombatMovementAllowed())
+        SetCombatMovementAllowed(true);
+
+    return reason;
 }
 
 uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
-    //remove this?
-    if(!triggered && m_creature->HasUnitState(UNIT_STAT_CASTING))
-        return SPELL_FAILED_SPELL_IN_PROGRESS;
-
-    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return DoCast((Unit*)NULL, spellId, triggered);
 }
 
 uint32 ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
