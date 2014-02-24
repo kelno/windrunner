@@ -677,12 +677,6 @@ void ScriptedAI::SetEquipmentSlots(bool bLoadDefault, int32 uiMainHand, int32 ui
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, uint32(uiRanged));
 }
 
-void ScriptedAI::SetCombatMovement(bool bCombatMove)
-{
-    m_bCombatMovement = bCombatMove;
-}
-
-
 float GetSpellMaxRange(uint32 id)
 {
     SpellEntry const *spellInfo = spellmgr.LookupSpell(id);
