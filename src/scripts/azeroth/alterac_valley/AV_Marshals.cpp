@@ -69,40 +69,41 @@ struct TRINITY_DLL_DECL AV_MarshalsAI : public ScriptedAI
      {
         if (!UpdateVictim())
             return;
+
 		if (ChargeTimer <diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_CHARGE);
-            ChargeTimer = (10+rand()%15)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_CHARGE) == SPELL_CAST_OK)
+                ChargeTimer = (10+rand()%15)*1000;
         }else ChargeTimer -= diff;			
 		
 		if (CleaveTimer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
-            CleaveTimer =  (10+rand()%6)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_CLEAVE) == SPELL_CAST_OK)
+                CleaveTimer =  (10+rand()%6)*1000;
         }else CleaveTimer -= diff;
 
         if (DemoralizingShoutTimer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_DEMORALIZING_SHOUT);
-            DemoralizingShoutTimer = (10+rand()%5)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_DEMORALIZING_SHOUT) == SPELL_CAST_OK)
+                DemoralizingShoutTimer = (10+rand()%5)*1000;
         }else DemoralizingShoutTimer -= diff;
 
         if (Whirlwind1Timer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1);
-            Whirlwind1Timer = (6+rand()%14)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1) == SPELL_CAST_OK)
+                Whirlwind1Timer = (6+rand()%14)*1000;
         }else Whirlwind1Timer -= diff;
 
         if (Whirlwind2Timer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
-            Whirlwind2Timer = (10+rand()%15)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2) == SPELL_CAST_OK)
+                Whirlwind2Timer = (10+rand()%15)*1000;
         }else Whirlwind2Timer -= diff;
 
         if (EnrageTimer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_ENRAGE);
-            EnrageTimer = (10+rand()%20)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_ENRAGE) == SPELL_CAST_OK)
+                EnrageTimer = (10+rand()%20)*1000;
         }else EnrageTimer -= diff;	
 			
 

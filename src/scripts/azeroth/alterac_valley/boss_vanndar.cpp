@@ -41,6 +41,7 @@ EndScriptData */
 #define SPELL_THUNDERCLAP	    15588
 #define SPELL_STORMBOLT         20685 // not sure
 
+#define MAX_HOME_DISTANCE       40.0f
 
 struct TRINITY_DLL_DECL boss_vanndarAI : public ScriptedAI
 {
@@ -49,27 +50,19 @@ struct TRINITY_DLL_DECL boss_vanndarAI : public ScriptedAI
     uint32 AvatarTimer;
     uint32 ThunderclapTimer;
     uint32 StormboltTimer;
-    uint32 ResetTimer;
+    uint32 DistanceCheckTimer;
     uint32 YellTimer;
+    uint32 YellEvadeCooldown;
 
     void Reset() {
         AvatarTimer	        = 3000;
         ThunderclapTimer    = 4000;
 		StormboltTimer      = 6000;
-		ResetTimer          = 5000;
+		DistanceCheckTimer  = 5000;
 		YellTimer           = (20+rand()%10)*1000; //20 to 30 seconds
+        YellEvadeCooldown   = 0;
         
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5760, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5761, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8692, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8693, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8694, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11398, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11399, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11400, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1714, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
 
     void EnterCombat(Unit *who) {
@@ -124,15 +117,26 @@ struct TRINITY_DLL_DECL boss_vanndarAI : public ScriptedAI
         } else YellTimer -= diff;
 
         // check if creature is not outside of building
-        if (ResetTimer <= diff) {
-            float x, y, z;
-            m_creature->GetPosition(x, y, z);
-            if ((x < 679.48 && y < -30) || (x < 678.96 && y < -25) || (x < 677.22 && y < -17.72)) {
-                DoScriptText(YELL_EVADE, m_creature);
-                EnterEvadeMode();
-            }
-            ResetTimer = 2000;
-        } else ResetTimer -= diff;
+        if(DistanceCheckTimer < diff)
+        {
+            if(me->GetDistanceFromHome() > MAX_HOME_DISTANCE)
+            {
+                //evade all creatures from pool
+	            EnterEvadeMode();
+                if(!YellEvadeCooldown)
+                {
+                    DoScriptText(YELL_EVADE, m_creature);
+                    YellEvadeCooldown = 5000;
+                }
+                std::vector<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
+                for(auto itr : poolCreatures)
+                    itr->AI()->EnterEvadeMode();
+		    }
+            DistanceCheckTimer = 2000;
+        }else DistanceCheckTimer -= diff;
+
+        if(YellEvadeCooldown && YellEvadeCooldown >= diff)
+            YellEvadeCooldown -= diff;
 
         DoMeleeAttackIfReady();
     }
