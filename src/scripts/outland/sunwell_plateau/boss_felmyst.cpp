@@ -142,6 +142,7 @@ public:
         bool origin;
         bool direction;
         bool inChaseOnFlight;
+        uint8 chosenLane; //0-2, south - center - north
 
         Unit* encapsTarget;
 
@@ -150,6 +151,7 @@ public:
             origin = false;
             direction = false;
             inChaseOnFlight = false;
+            chosenLane = 0;
             encapsTarget = NULL;
             flightPhaseTimer = 60000;
             flightPhase = 0;
@@ -231,12 +233,12 @@ public:
             switch (newPhase)
             {
                 case PHASE_INTRO:
-                    me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                    me->SetSpeed(MOVE_RUN, 1.3f, true);
                     me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                     me->SetReactState(REACT_PASSIVE);
                     break;
                 case PHASE_RESET:
-                    me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                    me->SetSpeed(MOVE_RUN, 1.3f, true);
                     me->StopMoving();
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                     me->SetDisableGravity(true);
@@ -257,7 +259,7 @@ public:
                     break;
                 case PHASE_FLIGHT:
                     //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
-                    me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                    me->SetSpeed(MOVE_RUN, 1.3f, true);
                     switch (rand()%2)
                     {
                         case 0:
@@ -483,7 +485,7 @@ public:
                         flightPhase++;
                         break;
                     case 2: //fly near breath start position
-                        me->SetSpeed(MOVE_FLIGHT, 4.0f, true);
+                        me->SetSpeed(MOVE_RUN, 4.0f, true);
                         if (!direction)
                             me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
                         else
@@ -497,11 +499,12 @@ public:
                         flightPhase++; // should never be reached, just to be sure to not stay stuck
                         break;
                     case 4: //fly to start position
-                        me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                        me->SetSpeed(MOVE_RUN, 1.3f, true);
+                        chosenLane = rand()%3;
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(1, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]);
+                            me->GetMotionMaster()->MovePoint(1, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2]);
                         else
-                            me->GetMotionMaster()->MovePoint(1, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]);
+                            me->GetMotionMaster()->MovePoint(1, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2]);
 
                         flightPhase++;
                         flightPhaseTimer = 20000; //just to be sure to not stay stuck
@@ -515,17 +518,17 @@ public:
                         flightPhase++;
                         DoScriptText(EMOTE_DEEP_BREATH, me);
                         if (!direction) //face the opposite
-                            me->SetInFront(lefts[BreathCount][0], lefts[BreathCount][1]);
+                            me->SetInFront(lefts[chosenLane][0], lefts[chosenLane][1]);
                         else
-                            me->SetInFront(rights[BreathCount][0], rights[BreathCount][1]);
-                        me->SetSpeed(MOVE_FLIGHT, 4.0f, true);
+                            me->SetInFront(rights[chosenLane][0], rights[chosenLane][1]);
+                        me->SetSpeed(MOVE_RUN, 4.0f, true);
                         me->SendMovementFlagUpdate();
                         break;
                     case 7: //start passage
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]);
+                            me->GetMotionMaster()->MovePoint(2, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2]);
                         else
-                            me->GetMotionMaster()->MovePoint(2, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]);
+                            me->GetMotionMaster()->MovePoint(2, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2]);
 
                         doCast(me, SPELL_FOG_BREATH, false);
                         flightPhaseTimer = 1500;
@@ -546,7 +549,7 @@ public:
                         break;
                     case 10: // wait 2 sec at arrival, then loop from flightPhase 4 until 3 breaths done
                         BreathCount++;
-                        me->SetSpeed(MOVE_FLIGHT, 1.3f, true);
+                        me->SetSpeed(MOVE_RUN, 1.3f, true);
                         flightPhase++;
                         flightPhaseTimer = 2000;
                         if(BreathCount < 3)
@@ -688,7 +691,7 @@ public:
                     {
                         if (pInstance)
                         {
-                            switch (BreathCount)
+                            switch (chosenLane)
                             { //related trigger cast their fog via instanceScript, see instance_sunwell_plateau. Y position is given to advance fog progressively
                                 case 0:
                                     pInstance->SetData((direction ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY());

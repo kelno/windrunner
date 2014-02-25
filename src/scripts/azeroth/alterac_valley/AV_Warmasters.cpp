@@ -71,41 +71,42 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
      {
 		if (!UpdateVictim())
             return;
+
         if (ChargeTimer <diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CHARGE);
             ChargeTimer = (10+rand()%15)*1000;
-        }else ChargeTimer -= diff;			
+        } else ChargeTimer -= diff;			
 		
 		if (CleaveTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             CleaveTimer =  (10+rand()%6)*1000;
-        }else CleaveTimer -= diff;
+        } else CleaveTimer -= diff;
 
         if (DemoralizingShoutTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_DEMORALIZING_SHOUT);
             DemoralizingShoutTimer = (10+rand()%5)*1000;
-        }else DemoralizingShoutTimer -= diff;
+        } else DemoralizingShoutTimer -= diff;
 
         if (Whirlwind1Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1);
             Whirlwind1Timer = (6+rand()%14)*1000;
-        }else Whirlwind1Timer -= diff;
+        } else Whirlwind1Timer -= diff;
 
         if (Whirlwind2Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = (10+rand()%15)*1000;
-        }else Whirlwind2Timer -= diff;
+        } else Whirlwind2Timer -= diff;
 
         if (EnrageTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_ENRAGE);
             EnrageTimer = (10+rand()%20)*1000;
-        }else EnrageTimer -= diff;	
+        } else EnrageTimer -= diff;	
 			
 
         // check if creature is not outside of building
@@ -115,13 +116,12 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
             {
                 //evade all creatures from pool
 	            EnterEvadeMode();
-                std::vector<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
+                std::list<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
                 for(auto itr : poolCreatures)
-                    if(itr->AI())
-                        itr->AI()->EnterEvadeMode();
+                    if(itr->AI()) itr->AI()->EnterEvadeMode();
 		    }
             DistanceCheckTimer = 2000;
-        }else DistanceCheckTimer -= diff;
+        } else DistanceCheckTimer -= diff;
 
         DoMeleeAttackIfReady();
      }
