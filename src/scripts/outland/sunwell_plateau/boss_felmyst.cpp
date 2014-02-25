@@ -548,7 +548,7 @@ public:
                         flightPhase++; // should never be reached, just to be sure to not stay stuck
                         break;
                     case 10: // wait 2 sec at arrival, then loop from flightPhase 4 until 3 breaths done
-                        //BreathCount++;
+                        BreathCount++;
                         me->SetSpeed(MOVE_RUN, 1.3f, true);
                         flightPhase++;
                         flightPhaseTimer = 2000;
