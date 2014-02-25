@@ -107,7 +107,6 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
             DoCast(m_creature->GetVictim(), SPELL_ENRAGE);
             EnrageTimer = (10+rand()%20)*1000;
         } else EnrageTimer -= diff;	
-			
 
         // check if creature is not outside of building
         if(DistanceCheckTimer < diff)

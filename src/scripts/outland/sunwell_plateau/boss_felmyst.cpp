@@ -446,7 +446,7 @@ public:
                         break;
                     case 2:
                         me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
-                        me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344);
+                        me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344,false);
                         introPhaseTimer = 6000;
                         introPhase++;
                         break;
@@ -478,7 +478,7 @@ public:
                         flightPhase++;
                         break;
                     case 1: // Lift off : move higher
-                        me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
+                        me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f,false);
                         flightPhaseTimer = 30000; //wait 30 sec for the demonic vapor part
                         scheduleEvent(EVENT_DEMONIC_VAPOR, 3000);
                         enableEvent(EVENT_DEMONIC_VAPOR);
@@ -487,9 +487,9 @@ public:
                     case 2: //fly near breath start position
                         me->SetSpeed(MOVE_RUN, 4.0f, true);
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
+                            me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(1, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
+                            me->GetMotionMaster()->MovePoint(1, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2],false);
 
                         flightPhase++;
                         flightPhaseTimer = 20000; //just to be sure to not stay stuck
@@ -502,9 +502,9 @@ public:
                         me->SetSpeed(MOVE_RUN, 1.3f, true);
                         chosenLane = rand()%3;
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(1, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2]);
+                            me->GetMotionMaster()->MovePoint(1, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(1, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2]);
+                            me->GetMotionMaster()->MovePoint(1, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2],false);
 
                         flightPhase++;
                         flightPhaseTimer = 20000; //just to be sure to not stay stuck
@@ -526,9 +526,9 @@ public:
                         break;
                     case 7: //start passage
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(2, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2]);
+                            me->GetMotionMaster()->MovePoint(2, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(2, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2]);
+                            me->GetMotionMaster()->MovePoint(2, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2],false);
 
                         doCast(me, SPELL_FOG_BREATH, false);
                         flightPhaseTimer = 1500;
@@ -548,7 +548,7 @@ public:
                         flightPhase++; // should never be reached, just to be sure to not stay stuck
                         break;
                     case 10: // wait 2 sec at arrival, then loop from flightPhase 4 until 3 breaths done
-                        BreathCount++;
+                        //BreathCount++;
                         me->SetSpeed(MOVE_RUN, 1.3f, true);
                         flightPhase++;
                         flightPhaseTimer = 2000;
@@ -558,9 +558,9 @@ public:
                         break;
                     case 11: //prepare to land, landing is handled in onMovementInform
                         if (!origin)
-                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[0][0],prepareLandingLoc[0][1],prepareLandingLoc[0][2]);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[0][0],prepareLandingLoc[0][1],prepareLandingLoc[0][2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[1][0],prepareLandingLoc[1][1],prepareLandingLoc[1][2]);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[1][0],prepareLandingLoc[1][1],prepareLandingLoc[1][2],false);
 
                         flightPhase++;
                         flightPhaseTimer = 15000;
@@ -703,17 +703,6 @@ public:
                                     pInstance->SetData((direction ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY());
                                     break;
                             }
-                        }
-
-                        float x, y, z;
-                        me->GetPosition(x, y, z);
-                        me->UpdateGroundPositionZ(x, y, z);
-                        if(Creature *Fog = me->SummonCreature(MOB_VAPOR_TRAIL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
-                        {
-                            Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
-                            Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
-                            if(Fog->getAI())
-                                Fog->getAI()->message(1, 1);
                         }
 
                         scheduleEvent(EVENT_FOG_CORRUPTION, 50);
