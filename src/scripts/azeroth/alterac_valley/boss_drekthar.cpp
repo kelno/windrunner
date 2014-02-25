@@ -126,9 +126,9 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
                 //evade all creatures from pool
 	            EnterEvadeMode();
                 DoScriptText(YELL_EVADE, m_creature);
-                std::vector<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
+                std::list<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
                 for(auto itr : poolCreatures)
-                    itr->AI()->EnterEvadeMode();
+                    if(itr->AI()) itr->AI()->EnterEvadeMode();
 		    }
             DistanceCheckTimer = 2000;
         }else DistanceCheckTimer -= diff;
