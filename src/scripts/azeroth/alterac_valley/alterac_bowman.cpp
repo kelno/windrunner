@@ -1,72 +1,74 @@
 #include "precompiled.h"
 
-#define MAX_RANGE 80.0f
+#define MAX_RANGE 75.0f
 #define SPELL_SHOOT 22121
-#define SHOOT_COOLDOWN urand(2000,3000)
+#define SPELL_INFINITE_ROOT 53107
+#define TIMER_SHOOT urand(2000,3000)
 
 struct alterac_bowmanAI : public ScriptedAI
 {
     alterac_bowmanAI(Creature *c) : ScriptedAI(c) 
 	{   
-        shoot_timer = SHOOT_COOLDOWN;
-        target = NULL;
+        shoot_timer = 0;
         SetCombatDistance(80.0f); //Disable melee visual
         SetCombatMovementAllowed(false);
         me->SetSheath(SHEATH_STATE_RANGED);
     }
 
-    Unit* target; //we need to keep a target without being in combat with it
     uint16 shoot_timer;
+    uint64 targetGUID;
 
     void Reset()
-    {   }
+    {   
+       me->AddAura(SPELL_INFINITE_ROOT,me); //this creature can't be displaced even via CM
+       targetGUID = 0;
+    }
 
     void UpdateAI(const uint32 diff)
     {    
-        if(UpdateVictim())
+        if(!targetGUID)
         {
-            //give priority to the aggro system target if any
-            target = me->GetVictim();
-
-            //reset combat if not close combat (should avoid to stuck players in combat in most cases)
-            if(me->GetDistance(target) > 30.0f)
-            {
-                 me->SetInFront(target);
-                 me->DeleteThreatList();
-                 //stay in front at reset (purely visual)
-                 float x,y,z,o;
-                 me->GetHomePosition(x,y,z,o);
-                 me->SetHomePosition(x,y,z,me->GetAngle(target));
-            }
+            if(me->GetVictim())
+                EnterEvadeMode();
+            return;
         }
 
-        if(target)
+        Unit* target = me->GetUnit(*me,targetGUID);
+        if(!target)
         {
-            if(me->GetDistance(target) > 5.0f)
-		    {
-                if (shoot_timer < diff)
+            targetGUID = 0;
+            return;
+        }
+
+        if(me->GetDistance(target) > NOMINAL_MELEE_RANGE)
+		{
+            if (shoot_timer < diff)
+            {
+                if(me->GetVictim() != target)
                 {
-                    if(!isValidTarget(target))
-                    {
-                        target = NULL;
-                        return;
-                    }
+                    AttackStart(target);
+                }
+
+                if(!isValidTarget(target))
+                {
+                    EnterEvadeMode();
+                    return;
+                }
                     
-				    DoCast(target,SPELL_SHOOT,false);
-                    shoot_timer = SHOOT_COOLDOWN;
-                } else shoot_timer -= diff;
-            } else {
-                DoMeleeAttackIfReady();
-            }
+               // me->SetInFront(target);
+				DoCast(target,SPELL_SHOOT,false);
+                shoot_timer = TIMER_SHOOT;
+            } else shoot_timer -= diff;
+        } else {
+            DoMeleeAttackIfReady();
         }
 	}
 	
 	void MoveInLineOfSight(Unit *who)
 	{    
-        if (!target
-            && !me->IsInCombat() 
+        if (   !targetGUID
             && isValidTarget(who))
-                target = who;
+                targetGUID = who->GetGUID();
 	}
 
     bool isValidTarget(Unit* target)
@@ -74,7 +76,7 @@ struct alterac_bowmanAI : public ScriptedAI
         float distance = me->GetDistance(target);
         if (me->canAttack(target) 
             && (distance < MAX_RANGE) 
-            && (distance > 10.0f)
+            && (distance > NOMINAL_MELEE_RANGE)
             && me->IsWithinLOSInMap(target))
                 return true;
         
