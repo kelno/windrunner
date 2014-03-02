@@ -18,9 +18,13 @@ struct alterac_bowmanAI : public ScriptedAI
     uint16 shoot_timer;
     uint64 targetGUID;
 
+    void JustReachedHome()
+    {
+       me->AddAura(SPELL_INFINITE_ROOT,me); //this creature can't be displaced even via CM
+    }
+
     void Reset()
     {   
-       me->AddAura(SPELL_INFINITE_ROOT,me); //this creature can't be displaced even via CM
        targetGUID = 0;
     }
 
@@ -40,6 +44,12 @@ struct alterac_bowmanAI : public ScriptedAI
             return;
         }
 
+        if(!isValidTarget(target))
+        {
+            EnterEvadeMode();
+            return;
+        }
+
         if(me->GetDistance(target) > NOMINAL_MELEE_RANGE)
 		{
             if (shoot_timer < diff)
@@ -47,12 +57,6 @@ struct alterac_bowmanAI : public ScriptedAI
                 if(me->GetVictim() != target)
                 {
                     AttackStart(target);
-                }
-
-                if(!isValidTarget(target))
-                {
-                    EnterEvadeMode();
-                    return;
                 }
                     
                // me->SetInFront(target);
