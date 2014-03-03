@@ -583,12 +583,13 @@ public:
                 return;
             }
 
-            if (!updateVictim())
-                return;
+            
+            updateVictim();
 
             switch (getPhase())
             {
                 case PHASE_PULL:
+                    if(!me->GetVictim()) return;
                     if (me->IsWithinMeleeRange(me->GetVictim()))
                     {
                         if (inChaseOnFlight)
@@ -615,6 +616,7 @@ public:
                     handleFlight(diff);
                     break;
                 case PHASE_GROUND:
+                    if(!me->GetVictim()) return;
                     if (flightPhaseTimer)
                     {
                         if (flightPhaseTimer <= diff)
@@ -754,11 +756,12 @@ public:
         {
             if (startFollow)
             {
-                if(!me->isMoving())
+                if(!me->GetVictim())
                     if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 15.0f,true))
+                    {
+                        me->Attack(target,false); //just to set our victim
                         me->GetMotionMaster()->MoveFollow(target, 0.0f, 0, true);
-                    else
-                        updateVictim();
+                    }
             }
         }
     };

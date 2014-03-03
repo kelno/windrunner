@@ -78,7 +78,7 @@ struct alterac_bowmanAI : public ScriptedAI
     bool isValidTarget(Unit* target)
     {
         float distance = me->GetDistance(target);
-        if (me->canAttack(target) 
+        if (me->canAttack(target,false) 
             && (distance < MAX_RANGE) 
             && (distance > NOMINAL_MELEE_RANGE)
             && me->IsWithinLOSInMap(target))
