@@ -28,7 +28,7 @@ EndScriptData */
 #define A_FACTION               1690
 #define H_FACTION               1689
 
-#define GOSSIP_POSSES           "Contrôler la pièce." // Actually each piece has "Control <<piece name>>" as gossip option
+#define GOSSIP_POSSES           20028 // Actually each piece has "Control <<piece name>>" as gossip option
 
 #define NPC_ATTACK_RADIUS       6
 #define AGGRO_RANGE             6
@@ -550,25 +550,36 @@ struct npc_echo_of_medivhAI : public ScriptedAI
     bool HandlePieceMove(Creature* piece, uint64 trigger)
     {
         bool res = false;
+        bool foundOld = false;
+        bool foundNew = false;
         uint8 oldCol = 8, oldRow = 8, newCol, newRow;
         for (uint8 row = 0; row < 8; row++) {
             for (uint8 col = 0; col < 8; col++) {
                 BoardCell* cell = board[row][col];
-                if (cell->triggerGUID == trigger) {
-                    if (cell->pieceGUID) {
-                        res = false;
+                if(!foundNew)
+                {
+                    if (cell->triggerGUID == trigger) {
+                        //is there already a piece on this cell ?
+                        if (cell->pieceGUID) {
+                            return false;
+                        } else {
+                            newCol = col;
+                            newRow = row;
+                            res = true;
+                        }
+                        foundNew = true;
                     }
-                    else {
-                        newCol = col;
-                        newRow = row;
-                        res = true;
+                }
+                if(!foundOld)
+                {
+                    if (cell->pieceGUID == piece->GetGUID()) {
+                        oldCol = col;
+                        oldRow = row;
+                        foundOld = true;
                     }
+                }
+                if(foundNew && foundOld)
                     break;
-                }
-                if (cell->pieceGUID == piece->GetGUID()) {
-                    oldCol = col;
-                    oldRow = row;
-                }
             }
         }
         
@@ -623,7 +634,7 @@ struct npc_echo_of_medivhAI : public ScriptedAI
                 if (board[row][col]->pieceGUID == piece->GetGUID()) {
                     pieceRow = row;
                     pieceCol = col;
-                    found = true;
+                    found = true; break;
                 }
             }
         }
@@ -960,6 +971,9 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
         me->ApplySpellImmune(0, IMMUNITY_ID, 39331, true);
         AttackTimer = me->GetAttackTime(BASE_ATTACK);
+        me->SetSheath(SHEATH_STATE_MELEE);
+
+        me->SetInCombatState(false); //avoid regen hp when ooc
     }
     
     void MovementInform(uint32 MovementType, uint32 Data)
@@ -1035,8 +1049,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void OnSpellFinish(Unit* caster, uint32 spellId, Unit* target, bool ok)
     {
-        me->CombatStop();
-        
         if (spellId != SPELL_MOVE_1 && spellId != SPELL_MOVE_2 && spellId != SPELL_MOVE_3 && spellId != SPELL_MOVE_4 && 
                 spellId != SPELL_MOVE_5 && spellId != SPELL_MOVE_6 && spellId != SPELL_MOVE_7 && spellId != SPELL_CHANGE_FACING) {
             me->SetOrientation(orientations[currentOrientation]);
@@ -1046,7 +1058,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
     
     void KilledUnit(Unit* victim)
     {
-        me->CombatStop();
+
     }
 
     void MoveInLineOfSight(Unit* who) {}
@@ -1076,8 +1088,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
 
             if (piece && !me->IsFriendlyTo(piece))
                 me->Attack(piece, false);
-            else
-                me->CombatStop();
 
             AttackTimer = me->GetAttackTime(BASE_ATTACK);
         }
@@ -1123,7 +1133,7 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
             }
         }
         
-        if (me->IsInCombat())
+        if (me->GetVictim())
             DoMeleeAttackIfReady();
     }
     
@@ -1142,7 +1152,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     destY = target->GetPositionY();
                     me->GetMotionMaster()->MovePoint(0, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
                     target->CastSpell(target, SPELL_MOVE_MARKER, false);
-                    me->CombatStop();
                 }
             }
         }
@@ -1153,7 +1162,6 @@ struct npc_chesspieceAI : public Scripted_NoMovementAI
                     me->SetOrientation(orientations[result]);
                     me->SendMovementFlagUpdate();
                     currentOrientation = ChessOrientationType(result);
-                    me->CombatStop();
                 }
             }
         }
@@ -1179,6 +1187,8 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
         
     bool ok = true;
     
+    uint32 textID = 0;
+
     switch (creature->GetEntry()) {
     case NPC_PAWN_H:
     case NPC_PAWN_A:
@@ -1205,9 +1215,25 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
         break;
     }
 
+    switch (creature->GetEntry()) {
+    case NPC_PAWN_H:   textID = 20021; break;
+    case NPC_PAWN_A:   textID = 20027; break;
+    case NPC_KNIGHT_H: textID = 20019; break;
+    case NPC_KNIGHT_A: textID = 20025; break;
+    case NPC_QUEEN_H:  textID = 20017; break;
+    case NPC_QUEEN_A:  textID = 20023; break;
+    case NPC_BISHOP_H: textID = 20018; break;
+    case NPC_BISHOP_A: textID = 20023; break;
+    case NPC_ROOK_H:   textID = 20020; break;
+    case NPC_ROOK_A:   textID = 20026; break;
+    case NPC_KING_H:   textID = 20016; break;
+    case NPC_KING_A:   textID = 20028; break;
+    default:           textID = 8990;  break;
+    }
+
     if (ok) {
         player->ADD_GOSSIP_ITEM(0, GOSSIP_POSSES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        player->SEND_GOSSIP_MENU(8990, creature->GetGUID());
+        player->SEND_GOSSIP_MENU(textID, creature->GetGUID());
         
         player->RemoveAurasDueToSpell(30019);
     }
@@ -1269,7 +1295,7 @@ bool GossipHello_npc_echo_of_medivh(Player* player, Creature* creature)
     if (chessPhase == PVE_FINISHED)
         player->ADD_GOSSIP_ITEM(0, "Nous souhaitons jouer entre nous.", GOSSIP_SENDER_MAIN, MEDIVH_GOSSIP_START_PVP);
 
-    player->SEND_GOSSIP_MENU(8990, creature->GetGUID());
+    player->SEND_GOSSIP_MENU(20015, creature->GetGUID());
     
     return true;
 }
@@ -1326,9 +1352,11 @@ bool GossipSelect_npc_echo_of_medivh(Player* player, Creature* creature, uint32 
 
 struct chess_move_triggerAI : public Scripted_NoMovementAI
 {
-    chess_move_triggerAI(Creature* c) : Scripted_NoMovementAI(c) {}
-    
-    void EnterCombat(Unit* who) {}
+    chess_move_triggerAI(Creature* c) : Scripted_NoMovementAI(c) 
+    {
+        me->SetReactState(REACT_PASSIVE);
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+    }
     
     void AttackStart(Unit* who)
     {
@@ -1342,7 +1370,7 @@ struct chess_move_triggerAI : public Scripted_NoMovementAI
     
     void UpdateAI(uint32 const diff)
     {
-        me->CombatStop();
+        //me->CombatStop();
     }
 };
 
