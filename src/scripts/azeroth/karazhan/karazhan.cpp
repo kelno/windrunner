@@ -424,33 +424,31 @@ bool GossipSelect_npc_barnes(Player *player, Creature *_Creature, uint32 sender,
 # npc_hastings
 ####*/
 
-#define TEXT_HELLO                       30020
-#define TEXT_MENU1                       30021
-#define TEXT_MENU2                       30022
+#define TEXT_HELLO             554
+#define TEXT_MENU1             555
+#define TEXT_MENU2             556
+#define GOSSIP_ITEM_1          557
+#define GOSSIP_ITEM_2          19999
 
 bool GossipHello_npc_hastings(Player* player, Creature* _Creature)
 {
-	player->ADD_GOSSIP_ITEM(0, "Vous aider avec quoi ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
-
-    return true;
-}
-
-void SendSecondMenu_npc_hastings(Player *player, Creature *_Creature)
-{
-	player->ADD_GOSSIP_ITEM(0, "Les gros ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-
-    player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
 }
 
 bool GossipSelect_npc_hastings(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
 	switch (action)
     {
-        case GOSSIP_ACTION_INFO_DEF+1:     SendSecondMenu_npc_hastings(player, _Creature); break;
-		case GOSSIP_ACTION_INFO_DEF+2:     player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); break;
+        case GOSSIP_ACTION_INFO_DEF+1:     
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+2:     
+            player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); 
+            break;
     }
 
     return true;
@@ -827,14 +825,14 @@ struct woefulhealerAI : public ScriptedAI
         
         //Selection de la/les cibles du heal
         Map *map = m_creature->GetMap();
-        Map::PlayerList const &PlayerList = map->GetPlayers();
+        Map::PlayerList const& PlayerList = map->GetPlayers();
         
         for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
             {
                 if (i_pl->IsAlive() && i_pl->GetDistance(m_creature) < 40 
-                && i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING)
+                && (i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING))
                 {
                     if (mostlowhp > i_pl->GetHealth())
                     {
