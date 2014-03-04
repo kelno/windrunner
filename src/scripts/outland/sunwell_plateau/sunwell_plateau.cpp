@@ -105,20 +105,21 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void JustReachedHome()
     {
-        me->AddAura(25171,me); //freeze visual, not the right spell
+        if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+            me->AddAura(25171,me); //freeze visual, not the right spell
     }
     
     void MovementInform(uint32 type, uint32 i)
     {
-        if (type == WAYPOINT_MOTION_TYPE)
-            me->RemoveAurasDueToSpell(25171);
+
     }
 
     void Reset()
     {
         felLightningTimer = 5000;
         
-        m_creature->SetReactState(REACT_DEFENSIVE);
+        if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+            m_creature->SetReactState(REACT_DEFENSIVE);
 
         if (isActivated)
         {
@@ -832,6 +833,52 @@ CreatureAI* GetAI_npc_volatile_fiend(Creature *pCreature)
 }
 
 /*######
+## npc_selana
+######*/
+
+#define TEXT_HELLO             20006
+#define TEXT_MENU1             20007
+#define TEXT_MENU2             20008
+#define TEXT_MENU3             20009
+#define TEXT_MENU4             20010
+#define GOSSIP_ITEM_1          20011
+#define GOSSIP_ITEM_2          20012
+#define GOSSIP_ITEM_3          20013
+#define GOSSIP_ITEM_4          20014
+
+bool GossipHello_npc_selana(Player* player, Creature* _Creature)
+{
+	player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_selana(Player* player, Creature* _Creature, uint32 sender, uint32 action)
+{
+	switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+2:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+            player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+3:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
+            player->SEND_GOSSIP_MENU(TEXT_MENU3,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+4:
+            player->SEND_GOSSIP_MENU(TEXT_MENU4,_Creature->GetGUID());
+            break;
+    }
+
+    return true;
+}
+
+/*######
 ## npc_moorba
 ######*/
 
@@ -1095,6 +1142,12 @@ void AddSC_sunwell_plateau()
     newscript->Name = "npc_moorba";
     newscript->pGossipHello = &GossipHello_npc_moorba;
     newscript->pGossipSelect = &GossipSelect_npc_moorba;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_selana";
+    newscript->pGossipHello = &GossipHello_npc_selana;
+    newscript->pGossipSelect = &GossipSelect_npc_selana;
     newscript->RegisterSelf();
     
     newscript = new Script;
