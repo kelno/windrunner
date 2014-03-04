@@ -582,7 +582,6 @@ public:
                 handleIntro(diff);
                 return;
             }
-
             
             updateVictim();
 
