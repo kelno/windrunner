@@ -1233,10 +1233,9 @@ bool GossipHello_npc_chesspiece(Player* player, Creature* creature)
 
     if (ok) {
         player->ADD_GOSSIP_ITEM(0, GOSSIP_POSSES, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-        player->SEND_GOSSIP_MENU(textID, creature->GetGUID());
-        
         player->RemoveAurasDueToSpell(30019);
     }
+    player->SEND_GOSSIP_MENU(textID, creature->GetGUID());
 
     return true;
 }
