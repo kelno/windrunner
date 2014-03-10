@@ -244,7 +244,7 @@ struct boss_fathomlord_karathressAI : public ScriptedAI
         if (CataclysmicBolt_Timer < diff)
         {
             //select a random unit other than the main tank
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
 
             //if there aren't other units, cast on the tank
             if (!target)

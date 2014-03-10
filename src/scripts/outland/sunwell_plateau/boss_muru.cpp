@@ -385,7 +385,7 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
         
-        void message(uint32 id, uint32 data)
+        void message(uint32 id, uint64 data)
         {
             if (id == 1)
                 EnrageTimer = data;

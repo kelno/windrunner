@@ -226,12 +226,14 @@ struct boss_morogrim_tidewalkerAI : public ScriptedAI
                 for(uint8 i = 0; i < 4; i++)
                 {
                     counter = 0;
-                    do{target = SelectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);    //target players only
-                    if(counter < Playercount)
-                        break;
-                    if(target) itr = list.find(target->GetGUID());
-                    counter++;
-                    }while(itr != list.end());
+                    do
+                    {
+                        target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true);    //target players only and no tank
+                        if(counter < Playercount)
+                            break;
+                        if(target) itr = list.find(target->GetGUID());
+                        counter++;
+                    } while(itr != list.end());
                     if(target){list.insert(target->GetGUID());
                     ApplyWateryGrave(target, i);
                     }

@@ -222,7 +222,7 @@ struct mobs_nether_drakeAI : public ScriptedAI
                         case 5:
                             m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
                                                             // + MOVEMENTFLAG_LEVITATING
-                            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+                            m_creature->SetDisableGravity(true);
                             //then take off to random location. creature is initially summoned, so don't bother do anything else.
                             m_creature->GetMotionMaster()->MovePoint(0, m_creature->GetPositionX()+100, m_creature->GetPositionY(), m_creature->GetPositionZ()+100);
                             NihilSpeech_Phase = 0;
@@ -1871,7 +1871,7 @@ struct npc_moarg_incineratorAI : public ScriptedAI
             sunderingCleaveTimer -= diff;
             
         if (mightyChargeTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_MIGHTY_CHARGE);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true), SPELL_MIGHTY_CHARGE);
             mightyChargeTimer = 10000+rand()%3000;
         }
         else
@@ -2158,9 +2158,9 @@ struct npc_rivendarkAI : public ScriptedAI
     void UpdateAI(uint32 const diff)
     {
         if (!m_creature->IsInCombat())
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
         else if (m_creature->IsInCombat())
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(false);
             
         if (!UpdateVictim())
             return;
@@ -2173,7 +2173,7 @@ struct npc_rivendarkAI : public ScriptedAI
             corruptionTimer -= diff;
             
         if (tailSweepTimer <= diff) {
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if (target && !m_creature->HasInArc(M_PI, target))
                 DoCast(target, SPELL_TAIL_SWEEP);
             tailSweepTimer = 4000+rand()%3000;
@@ -2248,9 +2248,9 @@ struct npc_obsidiaAI : public ScriptedAI
     void UpdateAI(uint32 const diff)
     {
         if (!m_creature->IsInCombat())
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
         else if (m_creature->IsInCombat())
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(false);
             
         if (!UpdateVictim())
             return;
@@ -2323,7 +2323,7 @@ struct npc_insidionAI : public ScriptedAI
         flameBreathTimer = 12000;
         flameBuffetTimer = 15000;
         
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        m_creature->SetDisableGravity(true);
     }
     
     void EnterCombat(Unit *pWho) {}
@@ -2331,9 +2331,9 @@ struct npc_insidionAI : public ScriptedAI
     void UpdateAI(uint32 const diff)
     {
         if (!m_creature->IsInCombat())
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
         else /*if (m_creature->IsInCombat())*/
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(false);
             
         if (!UpdateVictim())
             return;
@@ -2414,15 +2414,15 @@ struct npc_furywingAI : public ScriptedAI
     void UpdateAI(uint32 const diff)
     {
         if (!m_creature->IsInCombat())
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
         else if (m_creature->IsInCombat())
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(false);
             
         if (!UpdateVictim())
             return;
             
         if (tailSweepTimer <= diff) {
-            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit *target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if (target && !m_creature->HasInArc(M_PI, target))
                 DoCast(target, SPELL_TAIL_SWEEP);
             tailSweepTimer = 4000+rand()%3000;

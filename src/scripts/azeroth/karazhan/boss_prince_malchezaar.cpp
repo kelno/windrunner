@@ -90,6 +90,7 @@ static InfernalPoint InfernalPoints[] =
 
 #define INFERNAL_MODEL_INVISIBLE 11686                      //Infernal Effects
 #define SPELL_INFERNAL_RELAY     30834
+#define CREATURE_INFERNAL_RELAY  17645                      //rain down inferno from this one
 
 #define AXE_EQUIP_MODEL          40066                      //Axes info
 #define AXE_EQUIP_INFO           33448898
@@ -567,7 +568,7 @@ struct boss_malchezaarAI : public ScriptedAI
                 if(phase == 1)
                     target = m_creature->GetVictim();       // the tank
                 else                                        //anyone but the tank
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
 
                 if (target)
                     DoCast(target, SPELL_SW_PAIN);

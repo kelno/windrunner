@@ -102,7 +102,7 @@ struct boss_anzuAI : public ScriptedAI
             
         if (chargeTimer <= diff) {
             if (rand()%10 < 8) {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_CHARGE);
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 50.0, true, true), SPELL_CHARGE);
                 chargeTimer = 9000;
             }
         } else chargeTimer -= diff;
@@ -113,7 +113,7 @@ struct boss_anzuAI : public ScriptedAI
         } else paralysingTimer -= diff;
         
         if (featherCycloneTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_FEATHER_CYCLONE);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 50.0, true, true), SPELL_FEATHER_CYCLONE);
             featherCycloneTimer = 21000;
         } else featherCycloneTimer -= diff;
         

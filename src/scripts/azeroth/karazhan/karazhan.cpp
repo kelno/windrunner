@@ -28,6 +28,7 @@ npc_image_of_medivh
 npc_archmage_leryda
 go_sealed_tome
 woefulhealer
+npc_arcane_anomaly
 EndContentData */
 
 #include "precompiled.h"
@@ -423,33 +424,31 @@ bool GossipSelect_npc_barnes(Player *player, Creature *_Creature, uint32 sender,
 # npc_hastings
 ####*/
 
-#define TEXT_HELLO                       30020
-#define TEXT_MENU1                       30021
-#define TEXT_MENU2                       30022
+#define TEXT_HELLO             554
+#define TEXT_MENU1             555
+#define TEXT_MENU2             556
+#define GOSSIP_ITEM_1          557
+#define GOSSIP_ITEM_2          19999
 
 bool GossipHello_npc_hastings(Player* player, Creature* _Creature)
 {
-	player->ADD_GOSSIP_ITEM(0, "Vous aider avec quoi ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
-
-    return true;
-}
-
-void SendSecondMenu_npc_hastings(Player *player, Creature *_Creature)
-{
-	player->ADD_GOSSIP_ITEM(0, "Les gros ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-
-    player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
 }
 
 bool GossipSelect_npc_hastings(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
 	switch (action)
     {
-        case GOSSIP_ACTION_INFO_DEF+1:     SendSecondMenu_npc_hastings(player, _Creature); break;
-		case GOSSIP_ACTION_INFO_DEF+2:     player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); break;
+        case GOSSIP_ACTION_INFO_DEF+1:     
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+2:     
+            player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID()); 
+            break;
     }
 
     return true;
@@ -479,8 +478,6 @@ bool GossipHello_npc_berthold(Player* player, Creature* _Creature)
 		player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_TELEPORT, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
 	
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
-    return true;
-
     return true;
 }
 
@@ -575,7 +572,7 @@ struct npc_image_of_medivhAI : public ScriptedAI
         if(!Arcanagos)
             return;
         ArcanagosGUID = Arcanagos->GetGUID();
-        Arcanagos->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        Arcanagos->SetDisableGravity(true);
         (*Arcanagos).GetMotionMaster()->MovePoint(0,ArcanagosPos[0],ArcanagosPos[1],ArcanagosPos[2]);
         Arcanagos->SetOrientation(ArcanagosPos[3]);
         m_creature->SetOrientation(MedivPos[3]);
@@ -828,14 +825,14 @@ struct woefulhealerAI : public ScriptedAI
         
         //Selection de la/les cibles du heal
         Map *map = m_creature->GetMap();
-        Map::PlayerList const &PlayerList = map->GetPlayers();
+        Map::PlayerList const& PlayerList = map->GetPlayers();
         
         for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
             {
                 if (i_pl->IsAlive() && i_pl->GetDistance(m_creature) < 40 
-                && i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING)
+                && (i_pl->GetMaxHealth() - i_pl->GetHealth() > VALUE_PRAYEROFHEALING))
                 {
                     if (mostlowhp > i_pl->GetHealth())
                     {
@@ -864,6 +861,65 @@ struct woefulhealerAI : public ScriptedAI
 CreatureAI* GetAI_woefulhealer(Creature *_Creature)
 {
     return new woefulhealerAI (_Creature);
+}
+
+#define SPELL_MANA_SHIELD 29880
+#define SPELL_BLINK 29883
+#define SPELL_ARCANE_VOLLEY 29885
+#define SPELL_LOOSE_MANA 29882
+
+struct npc_arcane_anomalyAI : public ScriptedAI
+{
+    npc_arcane_anomalyAI(Creature *c) : ScriptedAI(c) {}
+    
+    bool castedShield;
+    uint32 blinkTimer;
+    uint32 volleyTimer;
+
+    void Reset()
+    {
+        blinkTimer = 5000 + rand()%10000;
+        volleyTimer = 10000 + rand()%5000;
+        castedShield = false;
+    }
+
+    void EnterCombat(Unit* who) 
+    {
+        DoCast(me,SPELL_MANA_SHIELD,true);
+        castedShield = true;
+    }
+
+    //cannot die if we havent casted our mana shield
+    void DamageTaken(Unit* pKiller, uint32 &damage)
+    {
+        if(!castedShield && damage >= me->GetHealth())
+            damage = me->GetHealth()-1; //down to 1 hp
+    }
+  
+    void UpdateAI(const uint32 diff)
+    {                
+        if(!UpdateVictim())
+            return;
+
+        if(blinkTimer < diff)
+        {
+            if(DoCast(me,SPELL_BLINK) == SPELL_CAST_OK)
+                blinkTimer = 10000 + rand()%5000;
+        } else blinkTimer -= diff;
+
+        if(volleyTimer < diff)
+        {
+            if(DoCast(me,SPELL_ARCANE_VOLLEY) == SPELL_CAST_OK)
+                volleyTimer = 20000 + rand()%5000;
+        } else volleyTimer -= diff;
+
+        DoMeleeAttackIfReady();
+    }
+};
+
+CreatureAI* GetAI_npc_arcane_anomaly(Creature *_Creature)
+{
+    return new npc_arcane_anomalyAI (_Creature);
 }
 
 void AddSC_karazhan()
@@ -904,6 +960,11 @@ void AddSC_karazhan()
     newscript->GetAI = &GetAI_woefulhealer;
     newscript->RegisterSelf();
     
+    newscript = new Script;
+    newscript->Name="npc_arcane_anomaly";
+    newscript->GetAI = &GetAI_npc_arcane_anomaly;
+    newscript->RegisterSelf();
+
     newscript = new Script;
     newscript->Name = "npc_hastings";
     newscript->pGossipHello = &GossipHello_npc_hastings;

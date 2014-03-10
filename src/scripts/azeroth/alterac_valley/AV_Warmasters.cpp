@@ -30,6 +30,8 @@ EndScriptData */
 #define SPELL_WHIRLWIND1           15589
 #define SPELL_WHIRLWIND2           13736
 
+#define MAX_HOME_DISTANCE          40.0f
+
 struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
 {
      AV_WarmastersAI(Creature *c) : ScriptedAI(c) {Reset();}
@@ -40,7 +42,7 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
      uint32 Whirlwind1Timer;
      uint32 Whirlwind2Timer;
      uint32 EnrageTimer;
-     uint32 ResetTimer;
+     uint32 DistanceCheckTimer;
 	 
 	 void Reset()
      {
@@ -50,9 +52,9 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
 		Whirlwind1Timer			= (1+rand()%12)*1000;
 		Whirlwind2Timer			= (5+rand()%15)*1000;
 		EnrageTimer		        = (5+rand()%20)*1000;
-		ResetTimer			    = 5000;
-
+		DistanceCheckTimer      = 5000;
      }
+
 	 void EnterCombat(Unit *who){}
 
 	 void JustRespawned()
@@ -69,54 +71,56 @@ struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
      {
 		if (!UpdateVictim())
             return;
+
         if (ChargeTimer <diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CHARGE);
             ChargeTimer = (10+rand()%15)*1000;
-        }else ChargeTimer -= diff;			
+        } else ChargeTimer -= diff;			
 		
 		if (CleaveTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             CleaveTimer =  (10+rand()%6)*1000;
-        }else CleaveTimer -= diff;
+        } else CleaveTimer -= diff;
 
         if (DemoralizingShoutTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_DEMORALIZING_SHOUT);
             DemoralizingShoutTimer = (10+rand()%5)*1000;
-        }else DemoralizingShoutTimer -= diff;
+        } else DemoralizingShoutTimer -= diff;
 
         if (Whirlwind1Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1);
             Whirlwind1Timer = (6+rand()%14)*1000;
-        }else Whirlwind1Timer -= diff;
+        } else Whirlwind1Timer -= diff;
 
         if (Whirlwind2Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = (10+rand()%15)*1000;
-        }else Whirlwind2Timer -= diff;
+        } else Whirlwind2Timer -= diff;
 
         if (EnrageTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_ENRAGE);
             EnrageTimer = (10+rand()%20)*1000;
-        }else EnrageTimer -= diff;	
-			
+        } else EnrageTimer -= diff;	
 
         // check if creature is not outside of building
-        /*if(ResetTimer < diff)
+        if(DistanceCheckTimer < diff)
         {
-             float x, y, z;
-             m_creature->GetPosition(x, y, z);
-             if(y < -240)
-		    {
+            if(me->GetDistanceFromHome() > MAX_HOME_DISTANCE)
+            {
+                //evade all creatures from pool
 	            EnterEvadeMode();
+                std::list<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
+                for(auto itr : poolCreatures)
+                    if(itr->AI()) itr->AI()->EnterEvadeMode();
 		    }
-            ResetTimer = 2000;
-        }else ResetTimer -= diff;*/
+            DistanceCheckTimer = 2000;
+        } else DistanceCheckTimer -= diff;
 
         DoMeleeAttackIfReady();
      }

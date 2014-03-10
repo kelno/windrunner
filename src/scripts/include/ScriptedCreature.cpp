@@ -31,24 +31,20 @@ void SummonList::Despawn(Creature *summon)
 
 void SummonList::DespawnEntry(uint32 entry)
 {
-    for(iterator i = begin(); i != end(); ++i)
+    for(auto itr = begin(); itr != end();)
     {
-        if(Creature *summon = Unit::GetCreature(*m_creature, *i))
+        if(Creature *summon = Unit::GetCreature(*m_creature, *itr))
         {
             if(summon->GetEntry() == entry)
             {
                 summon->RemoveFromWorld();
                 summon->setDeathState(JUST_DIED);
                 summon->RemoveCorpse();
-                i = erase(i);
-                --i;
+                itr = erase(itr);
+                continue;
             }
         }
-        else
-        {
-            i = erase(i);
-            --i;
-        }
+        itr++;
     }
 }
 
@@ -61,9 +57,8 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
 		    if (withoutWorldBoss && summon->isWorldBoss())
 			    continue;
 
-            summon->RemoveFromWorld();
-            summon->setDeathState(JUST_DIED);
-            summon->RemoveCorpse();
+            summon->CleanupsBeforeDelete();
+            summon->AddObjectToRemoveList();
         }
     }
     clear();
@@ -220,19 +215,21 @@ void ScriptedAI::DoStopAttack()
 uint32 ScriptedAI::DoCast(Unit* victim, uint32 spellId, bool triggered)
 {
     //remove this?
-    if (!victim || m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
+    if (m_creature->HasUnitState(UNIT_STAT_CASTING) && !triggered)
         return SPELL_FAILED_SPELL_IN_PROGRESS;
 
-    return m_creature->CastSpell(victim, spellId, triggered);
+    uint32 reason = m_creature->CastSpell(victim, spellId, triggered);
+
+    //restore combat movement on out of mana
+    if(reason == SPELL_FAILED_NO_POWER && GetRestoreCombatMovementOnOOM() && !IsCombatMovementAllowed())
+        SetCombatMovementAllowed(true);
+
+    return reason;
 }
 
 uint32 ScriptedAI::DoCastAOE(uint32 spellId, bool triggered)
 {
-    //remove this?
-    if(!triggered && m_creature->HasUnitState(UNIT_STAT_CASTING))
-        return SPELL_FAILED_SPELL_IN_PROGRESS;
-
-    return m_creature->CastSpell((Unit*)NULL, spellId, triggered);
+    return DoCast((Unit*)NULL, spellId, triggered);
 }
 
 uint32 ScriptedAI::DoCastSpell(Unit* who,SpellEntry const *spellInfo, bool triggered)
@@ -325,7 +322,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget target, uint32 position)
     return NULL;
 }
 
-bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
+bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius, bool noTank)
 {
     if (!me)
         return false;
@@ -334,6 +331,9 @@ bool ScriptedAI::checkTarget(Unit* target, bool playersOnly, float radius)
         return false;
 
     if (!target->IsAlive())
+        return false;
+
+    if (noTank && target == me->GetVictim())
         return false;
 
     if (playersOnly && (target->GetTypeId() != TYPEID_PLAYER))
@@ -359,7 +359,7 @@ struct TargetDistanceOrder : public std::binary_function<const Unit, const Unit,
     }
 };
 
-Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float radius, bool playersOnly)
+Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, float radius, bool playersOnly, bool noTank)
 {
     std::list<HostilReference*>& threatlist = me->getThreatManager().getThreatList();
     if (position >= threatlist.size())
@@ -367,7 +367,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 
     std::list<Unit*> targetList;
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius,noTank))
             targetList.push_back((*itr)->getTarget());
 
     if (position >= targetList.size())
@@ -679,12 +679,6 @@ void ScriptedAI::SetEquipmentSlots(bool bLoadDefault, int32 uiMainHand, int32 ui
         m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID + 2, uint32(uiRanged));
 }
 
-void ScriptedAI::SetCombatMovement(bool bCombatMove)
-{
-    m_bCombatMovement = bCombatMove;
-}
-
-
 float GetSpellMaxRange(uint32 id)
 {
     SpellEntry const *spellInfo = spellmgr.LookupSpell(id);
@@ -900,6 +894,20 @@ Unit* FindCreature(uint32 entry, float range, Unit* Finder)
     return target;
 }
 
+void FindCreatures(std::list<Creature*>& list, uint32 entry, float range, Unit* Finder)
+{
+    CellPair pair(Trinity::ComputeCellPair(Finder->GetPositionX(), Finder->GetPositionY()));
+    Cell cell(pair);
+    cell.data.Part.reserved = ALL_DISTRICT;
+    cell.SetNoCreate();
+
+    Trinity::AllCreaturesOfEntryInRange check(Finder, entry, range);
+    Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange> searcher(list, check);
+    TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AllCreaturesOfEntryInRange>, GridTypeMapContainer> visitor(searcher);
+
+    cell.Visit(pair, visitor, *Finder->GetMap());
+}
+
 GameObject* FindGameObject(uint32 entry, float range, Unit* Finder)
 {
     if(!Finder)
@@ -980,4 +988,3 @@ void LoadOverridenDBCData()
     if(spellInfo)
         spellInfo->EffectApplyAuraName[0] = 4; // proc debuff, and summon infinite fiends
 }
-

@@ -49,6 +49,8 @@ private:
 
 //Get a single creature of given entry
 Unit* FindCreature(uint32 entry, float range, Unit* Finder);
+//Get every creatures of given entry within given range
+void FindCreatures(std::list<Creature*>& list, uint32 entry, float range, Unit* Finder);
 
 //Get a single gameobject of given entry
 GameObject* FindGameObject(uint32 entry, float range, Unit* Finder);
@@ -196,9 +198,9 @@ struct ScriptedAI : public CreatureAI
     Creature* DoSpawnCreature(uint32 id, float x, float y, float z, float angle, uint32 type, uint32 despawntime);
 
     //Selects a unit from the creature's current aggro list
-    bool checkTarget(Unit* target, bool playersOnly, float radius);
+    bool checkTarget(Unit* target, bool playersOnly, float radius, bool noTank = false);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position);
-    Unit* SelectUnit(SelectAggroTarget target, uint32 position, float dist, bool playerOnly);
+    Unit* SelectUnit(SelectAggroTarget target, uint32 position, float dist, bool playerOnly, bool noTank = false);
     Unit* SelectUnit(SelectAggroTarget target, uint32 position, float distNear, float distFar, bool playerOnly);
     Unit* SelectUnit(uint32 position, float distMin, float distMax, bool playerOnly, bool auraCheck, bool exceptPossesed, uint32 spellId, uint32 effIndex);
     void SelectUnitList(std::list<Unit*> &targetList, uint32 num, SelectAggroTarget target, float dist, bool playerOnly, uint32 notHavingAuraId = 0, uint8 effIndex = 0);
@@ -210,13 +212,6 @@ struct ScriptedAI : public CreatureAI
     bool CanCast(Unit* Target, SpellEntry const *Spell, bool Triggered = false);
     
     void SetEquipmentSlots(bool bLoadDefault, int32 uiMainHand = EQUIP_NO_CHANGE, int32 uiOffHand = EQUIP_NO_CHANGE, int32 uiRanged = EQUIP_NO_CHANGE);
-    
-    //Generally used to control if MoveChase() is to be used or not in AttackStart(). Some creatures does not chase victims
-    void SetCombatMovement(bool CombatMove);
-    bool IsCombatMovement() { return m_bCombatMovement; }
-    
-    private:
-        bool m_bCombatMovement;
 };
 
 /* Can now be replaced with a SetCombatMovementAllowed(false), you should avoid using this */

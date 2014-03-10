@@ -99,21 +99,6 @@ struct boss_azgalorAI : public hyjal_trashAI
         DoScriptText(SAY_ONDEATH,me);
     }
 
-    Unit* SelectDoomTarget()
-    {
-        std::list<Unit*> target;
-        SelectUnitList(target, 2, SELECT_TARGET_RANDOM, 150.0f, true); //get two target, just in case the first one is our tank
-        if(target.size() < 2)
-            return NULL;
-
-        Unit* firstVictim = *(target.begin());
-        Unit* secondVictim = *(target.begin()++);
-        if( firstVictim != me->GetVictim() )
-            return firstVictim;
-        else
-            return secondVictim;
-    }
-
     bool HasTwoPlayersInFront()
     {
         uint8 playersInArc = 0;
@@ -172,7 +157,7 @@ struct boss_azgalorAI : public hyjal_trashAI
 
         if(DoomTimer < diff)
         {
-            if(DoCast(SelectDoomTarget(), SPELL_DOOM) == SPELL_CAST_OK)
+            if(DoCast(me, SPELL_DOOM) == SPELL_CAST_OK) //target is randomized in the spell itself
             {
                 DoomTimer = TIMER_DOOM;
                 DoScriptText(SAY_DOOM1 - rand()%2,me);
@@ -221,6 +206,8 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
         if(pInstance)
             AzgalorGUID = pInstance->GetData64(DATA_AZGALOR);
+        else
+            AzgalorGUID = 0;
     }
 
     uint32 CrippleTimer;
@@ -272,7 +259,7 @@ struct mob_lesser_doomguardAI : public hyjal_trashAI
             if(AzgalorGUID)
             {
                 Creature* boss = Unit::GetCreature((*m_creature),AzgalorGUID);
-                if(!boss || (boss && boss->isDead()))
+                if(!boss || boss->isDead())
                 {
                     m_creature->setDeathState(JUST_DIED);
                     m_creature->RemoveCorpse();

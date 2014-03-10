@@ -39,9 +39,6 @@ bool GossipSelect_catapultmaster(Player *player, Creature *_Creature, uint32 sen
 {
 	switch(action)
 	{
-	case ACTION_SPEED:
-	case ACTION_ANGLE:
-		break;
 	case ACTION_GO:
         _Creature->Say("YOLO !",LANG_UNIVERSAL,NULL);
 
@@ -69,9 +66,6 @@ bool GossipSelectWithCode_catapultmaster( Player *player, Creature *_Creature, u
 		break;
 	case ACTION_ANGLE:
 		((catapultmasterAI*)_Creature->AI())->vertical_speed = -atof(Code);
-		break;
-	case ACTION_GO:
-        //not handled here
 		break;
 	}
 

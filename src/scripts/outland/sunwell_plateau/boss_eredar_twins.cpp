@@ -348,7 +348,7 @@ struct boss_sacrolashAI : public ScriptedAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
@@ -367,11 +367,11 @@ struct boss_sacrolashAI : public ScriptedAI
 
                 if (!m_creature->IsNonMeleeSpellCasted(false)) {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_ALYTHESS));
                     if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                     if (target) 
                         DoCast(target, SPELL_SHADOW_NOVA);
 
@@ -409,7 +409,7 @@ struct boss_sacrolashAI : public ScriptedAI
             {
                 target = SelectUnit(SELECT_TARGET_RANDOM, 1, 10.0f, 50.0f, true);
                 if (!target)
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                 temp = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000);
                 if(temp && target) {
                     temp->AI()->AttackStart(target);
@@ -773,11 +773,11 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 if (!m_creature->IsNonMeleeSpellCasted(false))
                 {
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 00.0, true, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
-                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 1);
+                        target = ((ScriptedAI*)Temp->ToCreature()->AI())->SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
                     if(target)
                         DoCast(target, SPELL_SHADOW_NOVA);
                     ShadownovaTimer= 30000;
@@ -795,7 +795,7 @@ struct boss_alythessAI : public Scripted_NoMovementAI
                 {
                     m_creature->InterruptSpell(CURRENT_GENERIC_SPELL);
                     Unit* target = NULL;
-                    target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100.0f, true);
+                    target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                     Unit* Temp = NULL;
                     Temp = Unit::GetUnit((*m_creature),pInstance->GetData64(DATA_SACROLASH));
                     if (target && Temp && Temp->GetVictim() && target->GetGUID() == Temp->GetVictim()->GetGUID())
