@@ -195,7 +195,7 @@ void DialogueHelper::DoNextDialogueStep()
         // Use Speaker if directly provided
         Creature* pSpeaker = GetSpeakerByEntry(uiSpeakerEntry);
         if (m_pInstance && !pSpeaker)                       // Get Speaker from instance
-        	pSpeaker = m_pInstance->GetSingleCreatureFromStorage(uiSpeakerEntry);
+            pSpeaker = m_pInstance->GetSingleCreatureFromStorage(uiSpeakerEntry);
 
         if (pSpeaker)
             DoScriptText(iTextEntry, pSpeaker);

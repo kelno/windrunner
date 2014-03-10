@@ -704,7 +704,7 @@ bool QuestAccept_npc_feero_ironhand(Player* player, Creature* creature, const Qu
             escortAI->Start(true, true, false, player->GetGUID(), creature->GetEntry());
         }
     }
-	return true;
+    return true;
 }
 
 void AddSC_ashenvale()

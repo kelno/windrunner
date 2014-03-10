@@ -22,7 +22,7 @@ bool GossipSelect_custom_gnominizer(Player *pPlayer, Creature *pCreature, uint32
     switch(action)
     {
     case GOSSIP_ACTION_INFO_DEF:
-		pPlayer->AddAura(SPELL_ILLUSION_GNOME_MALE,pPlayer);
+        pPlayer->AddAura(SPELL_ILLUSION_GNOME_MALE,pPlayer);
         break;
     case GOSSIP_ACTION_INFO_DEF + 1:
         pPlayer->AddAura(SPELL_ILLUSION_GNOME_FEMALE,pPlayer);
