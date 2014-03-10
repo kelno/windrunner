@@ -3239,6 +3239,18 @@ void Spell::SpellDamageHeal(uint32 /*i*/)
             return;
 
         int32 addhealth = damage;
+		
+        // Sceau de lumiere proc
+        if (m_spellInfo->Id == 20167)
+        {
+            float ap = caster->GetTotalAttackPowerValue(BASE_ATTACK);
+            int32 holy = caster->SpellBaseHealingBonus(GetSpellSchoolMask(m_spellInfo));
+            
+			if (holy < 0)
+                holy = 0;
+            
+			addhealth += int32(ap * 0.15) + int32(holy * 15 / 100);
+        }
 
         // Vessel of the Naaru (Vial of the Sunwell trinket)
         if (m_spellInfo->Id == 45064)
@@ -7108,6 +7120,7 @@ void Spell::EffectSkinning(uint32 /*i*/)
 
     (m_caster->ToPlayer())->SendLoot(creature->GetGUID(),LOOT_SKINNING);
     creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
+    creature->RemoveUnitMovementFlag(MOVEFLAG_FLYING | MOVEFLAG_FLYING2);
 
     int32 reqValue = targetLevel < 10 ? 0 : targetLevel < 20 ? (targetLevel-10)*10 : targetLevel*5;
 
