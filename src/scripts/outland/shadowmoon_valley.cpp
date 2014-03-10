@@ -1982,64 +1982,64 @@ bool GossipSelect_npc_grand_commander_ruusk(Player* pPlayer, Creature* pCreature
 ## npc_skartax
 ######*/
 
-#define SPELL_PURPLE_BEAM		36384
-#define SPELL_AUTO_AURA			36382
-#define SPELL_SHADOWBOLT		12471
-#define SPELL_INCINERATE		38401
+#define SPELL_PURPLE_BEAM        36384
+#define SPELL_AUTO_AURA            36382
+#define SPELL_SHADOWBOLT        12471
+#define SPELL_INCINERATE        38401
 
 struct npc_skartaxAI : public ScriptedAI
 {
-	npc_skartaxAI(Creature *c) : ScriptedAI(c) {}
-	
-	uint32 SummonTimer;
-	uint32 ShadowBoltTimer;
-	uint32 IncinerateTimer;
-	
-	void Reset()
-	{
-		m_creature->AddAura(SPELL_AUTO_AURA, m_creature);
-		DoCast(m_creature, SPELL_PURPLE_BEAM);
-		
-		SummonTimer = 2000;
-		ShadowBoltTimer = 2000;
-		IncinerateTimer = 500;
-	}
-	void EnterCombat(Unit *pWho)
-	{
-		m_creature->InterruptNonMeleeSpells(true);
-		m_creature->RemoveAurasDueToSpell(SPELL_AUTO_AURA);
-	}
-	
-	void UpdateAI(uint32 const diff)
-	{
-		if (SummonTimer <= diff) {
-			m_creature->SummonCreature(19757, -3368.94, 2145.35, -8.28, 0.382, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 180000);
-			SummonTimer = 180000;
-		}
-		else
-			SummonTimer -= diff;
-			
-		if (ShadowBoltTimer <= diff) {
-			DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT);
-			ShadowBoltTimer = 5000;
-		}
-		else
-			ShadowBoltTimer -= diff;
-			
-		if (IncinerateTimer <= diff) {
-			DoCast(m_creature->GetVictim(), SPELL_INCINERATE);
-			IncinerateTimer = 10000;
-		}
-		else
-			IncinerateTimer -= diff;
-			
-		DoMeleeAttackIfReady();
-	}
+    npc_skartaxAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 SummonTimer;
+    uint32 ShadowBoltTimer;
+    uint32 IncinerateTimer;
+    
+    void Reset()
+    {
+        m_creature->AddAura(SPELL_AUTO_AURA, m_creature);
+        DoCast(m_creature, SPELL_PURPLE_BEAM);
+        
+        SummonTimer = 2000;
+        ShadowBoltTimer = 2000;
+        IncinerateTimer = 500;
+    }
+    void EnterCombat(Unit *pWho)
+    {
+        m_creature->InterruptNonMeleeSpells(true);
+        m_creature->RemoveAurasDueToSpell(SPELL_AUTO_AURA);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (SummonTimer <= diff) {
+            m_creature->SummonCreature(19757, -3368.94, 2145.35, -8.28, 0.382, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 180000);
+            SummonTimer = 180000;
+        }
+        else
+            SummonTimer -= diff;
+            
+        if (ShadowBoltTimer <= diff) {
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT);
+            ShadowBoltTimer = 5000;
+        }
+        else
+            ShadowBoltTimer -= diff;
+            
+        if (IncinerateTimer <= diff) {
+            DoCast(m_creature->GetVictim(), SPELL_INCINERATE);
+            IncinerateTimer = 10000;
+        }
+        else
+            IncinerateTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
 };
 
 CreatureAI* GetAI_npc_skartax(Creature *pCreature)
 {
-	return new npc_skartaxAI(pCreature);
+    return new npc_skartaxAI(pCreature);
 }
 
 /*######
@@ -2048,22 +2048,22 @@ CreatureAI* GetAI_npc_skartax(Creature *pCreature)
 
 struct npc_invis_deathforge_casterAI : public ScriptedAI
 {
-	npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
-	
-	void EnterCombat(Unit *pWho) {}
-	
-	void UpdateAI(uint32 const diff)
-	{
-		if (Creature *pTarget = m_creature->FindNearestCreature(21207, 30.0f)) {
-			if (!pTarget->HasAura(36384))
-				DoCast(pTarget, 36384);
-		}
-	}
+    npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
+    
+    void EnterCombat(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (Creature *pTarget = m_creature->FindNearestCreature(21207, 30.0f)) {
+            if (!pTarget->HasAura(36384))
+                DoCast(pTarget, 36384);
+        }
+    }
 };
 
 CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
 {
-	return new npc_invis_deathforge_casterAI(pCreature);
+    return new npc_invis_deathforge_casterAI(pCreature);
 }
 
 /*######
@@ -2072,14 +2072,14 @@ CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
 
 bool GOHello_go_arcano_control_unit(Player *pPlayer, GameObject* pGo)
 {
-	if (Creature *pCreature = pPlayer->FindNearestCreature(21909, 25.0f)) {
-		pPlayer->CastSpell(pCreature, 37868, true);
-		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-		
-		return true;
-	}
-	
-	return false;
+    if (Creature *pCreature = pPlayer->FindNearestCreature(21909, 25.0f)) {
+        pPlayer->CastSpell(pCreature, 37868, true);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        
+        return true;
+    }
+    
+    return false;
 }
 
 /*######

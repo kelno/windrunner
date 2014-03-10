@@ -174,7 +174,7 @@ public:
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
         }
 
-        void onDamageTaken(Unit* /*attacker*/, uint32& damage)	{ damage = 0; }
+        void onDamageTaken(Unit* /*attacker*/, uint32& damage)    { damage = 0; }
 
         void update(uint32 const diff)
         {
@@ -365,7 +365,7 @@ public:
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* i_pl = i->getSource())
-                {	
+                {    
                     if  (i_pl->isAttackableByAOE() && i_pl->GetDistance(_CurrentX, _CurrentY, _CurrentZ) <= 100)
                     {
                         float AngleWithTarget = GetAngleWithTarget(i_pl);
@@ -402,7 +402,7 @@ public:
         }
 
         float GetCurrentAngle() // from -90 to 270
-        {	
+        {    
             float angle;
             if (_CurrentX - _LastX > 0)
                 angle = RadianToDegree(atan((_CurrentY - _LastY)/(_CurrentX - _LastX)));

@@ -83,7 +83,7 @@ bool GossipHello_arenabeastmaster(Player *player, Creature *me)
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(RAPTOR), GOSSIP_SENDER_MAIN, RAPTOR);
     player->ADD_GOSSIP_ITEM( 0, getPetTypeName(DRAGONHAWK), GOSSIP_SENDER_MAIN, DRAGONHAWK);
         
-	player->PlayerTalkClass->SendGossipMenu(1,me->GetGUID());
+    player->PlayerTalkClass->SendGossipMenu(1,me->GetGUID());
 
     return true;
 }
@@ -135,7 +135,7 @@ bool GossipSelect_arenabeastmaster( Player* player, Creature* me, uint32 /* send
     player->PetSpellInitialize();
      
     player->PlayerTalkClass->CloseGossip();
-		
+        
     pet->SetLoyaltyLevel(BEST_FRIEND);
     pet->SetPower(POWER_HAPPINESS,1050000); //maxed
     pet->SetTP(player->getLevel()*(pet->GetLoyaltyLevel()-1) - pet->GetDispTP()); //350 when best friend at lvl 70

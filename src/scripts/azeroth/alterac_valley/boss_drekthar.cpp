@@ -24,24 +24,24 @@ EndScriptData */
 
 #define YELL_AGGRO              -2100000
 
-#define YELL_EVADE		        -2100001
-#define YELL_RESPAWN		    -2100002
+#define YELL_EVADE                -2100001
+#define YELL_RESPAWN            -2100002
 
-#define YELL_RANDOM1		    -2100003
-#define YELL_RANDOM2		    -2100004
-#define YELL_RANDOM3		    -2100005
-#define YELL_RANDOM4		    -2100006
-#define YELL_RANDOM5		    -2100007
+#define YELL_RANDOM1            -2100003
+#define YELL_RANDOM2            -2100004
+#define YELL_RANDOM3            -2100005
+#define YELL_RANDOM4            -2100006
+#define YELL_RANDOM5            -2100007
 
 
-#define SPELL_WHIRLWIND	            15589
-#define SPELL_WHIRLWIND2	        13736
-#define SPELL_KNOCKDOWN		        19128
-#define SPELL_FRENZY		        8269
+#define SPELL_WHIRLWIND                15589
+#define SPELL_WHIRLWIND2            13736
+#define SPELL_KNOCKDOWN                19128
+#define SPELL_FRENZY                8269
 #define SPELL_SWEEPING_STRIKES      18765 // not sure
-#define SPELL_CLEAVE	            20677 // not sure
-#define SPELL_WINDFURY		        35886 // not sure
-#define SPELL_STORMPIKE	            51876 // not sure
+#define SPELL_CLEAVE                20677 // not sure
+#define SPELL_WINDFURY                35886 // not sure
+#define SPELL_STORMPIKE                51876 // not sure
 
 #define MAX_HOME_DISTANCE       40.0f
 
@@ -57,12 +57,12 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
     uint32 DistanceCheckTimer;
 
     void Reset() {
-    	WhirlwindTimer		= (rand()%20)*1000;
-    	Whirlwind2Timer		= (rand()%25)*1000;
-    	KnockdownTimer		= 12000;
-	    FrenzyTimer		    = 6000;
-	    DistanceCheckTimer  = 5000;
-	    YellTimer           = (20+rand()%10)*1000; //20 to 30 seconds
+        WhirlwindTimer        = (rand()%20)*1000;
+        Whirlwind2Timer        = (rand()%25)*1000;
+        KnockdownTimer        = 12000;
+        FrenzyTimer            = 6000;
+        DistanceCheckTimer  = 5000;
+        YellTimer           = (20+rand()%10)*1000; //20 to 30 seconds
         
         me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
     }
@@ -79,7 +79,7 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
 
     void KilledUnit(Unit* victim){}
 
-	void JustDied(Unit* Killer){}
+    void JustDied(Unit* Killer){}
 
     void UpdateAI(const uint32 diff)
     {
@@ -124,12 +124,12 @@ struct TRINITY_DLL_DECL boss_drektharAI : public ScriptedAI
             if(me->GetDistanceFromHome() > MAX_HOME_DISTANCE)
             {
                 //evade all creatures from pool
-	            EnterEvadeMode();
+                EnterEvadeMode();
                 DoScriptText(YELL_EVADE, m_creature);
                 std::list<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
                 for(auto itr : poolCreatures)
                     if(itr->AI()) itr->AI()->EnterEvadeMode();
-		    }
+            }
             DistanceCheckTimer = 2000;
         }else DistanceCheckTimer -= diff;
 

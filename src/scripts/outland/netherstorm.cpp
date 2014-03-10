@@ -1090,19 +1090,19 @@ bool QuestAccept_npc_max_a_million_escort(Player* pPlayer, Creature* pCreature, 
 enum
 {
     QUEST_A_NOT_SO_MODEST_PROPOSAL = 10270,
-	NPC_IMAGE_OF_WIND_TRADER_MARID = 20518
+    NPC_IMAGE_OF_WIND_TRADER_MARID = 20518
 };
 
 bool GOHello_go_ethereal_teleport_pad(Player *player, GameObject* go)
 {
-	if (player->GetQuestStatus(QUEST_A_NOT_SO_MODEST_PROPOSAL) == QUEST_STATUS_COMPLETE)
-	{
-		Creature *npc = go->FindNearestCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 1.0f); // prevents double spawn
-		if (npc)
-			npc->DisappearAndDie();
-		go->SummonCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 4007.11f, 1517.15f, -115.535f, 4.97726f, TEMPSUMMON_TIMED_DESPAWN, 60000);
+    if (player->GetQuestStatus(QUEST_A_NOT_SO_MODEST_PROPOSAL) == QUEST_STATUS_COMPLETE)
+    {
+        Creature *npc = go->FindNearestCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 1.0f); // prevents double spawn
+        if (npc)
+            npc->DisappearAndDie();
+        go->SummonCreature(NPC_IMAGE_OF_WIND_TRADER_MARID, 4007.11f, 1517.15f, -115.535f, 4.97726f, TEMPSUMMON_TIMED_DESPAWN, 60000);
 
-	}
+    }
     return true;
 }
 

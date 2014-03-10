@@ -15,37 +15,37 @@ bool GossipHello_npc_teleporter_pvpzone(Player *pPlayer, Creature *pCreature)
 
 bool GossipSelect_npc_teleporter_pvpzone(Player *pPlayer, Creature *pCreature, uint32 sender, uint32 action)
 {
-	bool set = false;
-	float x,y,z,o;
+    bool set = false;
+    float x,y,z,o;
     uint32 map = 0;
-	QueryResult* query = WorldDatabase.PQuery("SELECT position_x, position_y, position_z, orientation, map FROM game_tele WHERE name = 'duelzone'");
-	if (query) {
-		Field* fields = query->Fetch();
-		if(fields)
-		{
-			x = fields[0].GetFloat();
-			y = fields[1].GetFloat();
-			z = fields[2].GetFloat();
-			o = fields[3].GetFloat();
-			map = fields[4].GetUInt32();
-		}
-	}
-	
+    QueryResult* query = WorldDatabase.PQuery("SELECT position_x, position_y, position_z, orientation, map FROM game_tele WHERE name = 'duelzone'");
+    if (query) {
+        Field* fields = query->Fetch();
+        if(fields)
+        {
+            x = fields[0].GetFloat();
+            y = fields[1].GetFloat();
+            z = fields[2].GetFloat();
+            o = fields[3].GetFloat();
+            map = fields[4].GetUInt32();
+        }
+    }
+    
     if (action == GOSSIP_ACTION_INFO_DEF)
     {
-		if(!map) //return to default values
-		{
-			if(pPlayer->GetTeam() == HORDE)
-				pPlayer->TeleportTo(PVPZONE_ARRIVAL_HORDE);
-			else
-				pPlayer->TeleportTo(PVPZONE_ARRIVAL_ALLIANCE);
-		} else {
-			pPlayer->TeleportTo(map,x,y,z,o);
-		}
-		pPlayer->PlayerTalkClass->CloseGossip();
-		return true;
-	}
-	return false;
+        if(!map) //return to default values
+        {
+            if(pPlayer->GetTeam() == HORDE)
+                pPlayer->TeleportTo(PVPZONE_ARRIVAL_HORDE);
+            else
+                pPlayer->TeleportTo(PVPZONE_ARRIVAL_ALLIANCE);
+        } else {
+            pPlayer->TeleportTo(map,x,y,z,o);
+        }
+        pPlayer->PlayerTalkClass->CloseGossip();
+        return true;
+    }
+    return false;
 }
 
 void AddSC_npc_teleporter_pvpzone()

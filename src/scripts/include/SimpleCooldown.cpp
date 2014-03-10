@@ -10,7 +10,7 @@ SimpleCooldown::SimpleCooldown()
         this->setBeginingCooldown(0);
         this->isSetCD=false;
         this->ramdomActivated=false;
-	return;
+    return;
 }
 
 SimpleCooldown::SimpleCooldown(int cd)
@@ -51,33 +51,33 @@ int SimpleCooldown::getBeginingCooldown()
 
 int SimpleCooldown::getActualCD()
 {
-	return this->actual_cooldown;
+    return this->actual_cooldown;
 }
 
 int SimpleCooldown::getMaxCD()
 {
-	return this->max_cooldown;
+    return this->max_cooldown;
 }
 
 void SimpleCooldown::setMaxCD(int cd)
 {
-	this->max_cooldown=cd;
+    this->max_cooldown=cd;
         this->isSetCD=true;
 }
 
 void SimpleCooldown::setActualCD(int cd)
 {
-	this->actual_cooldown=cd;
+    this->actual_cooldown=cd;
 }
 
 bool SimpleCooldown::isReady(int diff)
 {
-	return this->actual_cooldown<diff;
+    return this->actual_cooldown<diff;
 }
 
 void SimpleCooldown::update(int diff)
 {
-	this->actual_cooldown-=diff;
+    this->actual_cooldown-=diff;
 }
 
 void SimpleCooldown::reinitCD()
@@ -105,16 +105,16 @@ bool SimpleCooldown::CheckAndUpdate(int diff)
             return false;
         }
         
-	if(this->isReady(diff))
-	{
-		this->reinitCD();
-		return true;
-	}
-	else
-	{
-		this->update(diff);
-		return false;
-	}
+    if(this->isReady(diff))
+    {
+        this->reinitCD();
+        return true;
+    }
+    else
+    {
+        this->update(diff);
+        return false;
+    }
 }
 
 bool SimpleCooldown::isMaxCDSet()

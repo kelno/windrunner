@@ -54,8 +54,8 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
     {
         if(Creature *summon = Unit::GetCreature(*m_creature, *i))
         {
-		    if (withoutWorldBoss && summon->isWorldBoss())
-			    continue;
+            if (withoutWorldBoss && summon->isWorldBoss())
+                continue;
 
             summon->CleanupsBeforeDelete();
             summon->AddObjectToRemoveList();

@@ -387,7 +387,7 @@ struct boss_hex_lord_malacrassAI : public ScriptedAI
                 }
                         
             }
-			//m_creature->AddAura(44132, m_creature);
+            //m_creature->AddAura(44132, m_creature);
             DoYell(YELL_DRAIN_POWER, LANG_UNIVERSAL, NULL);
             DoPlaySoundToSet(m_creature, SOUND_YELL_DRAIN_POWER);
             DrainPower_Timer = 40000 + rand()%15000;    // must cast in 60 sec, or buff/debuff will disappear

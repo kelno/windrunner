@@ -256,9 +256,9 @@ struct boss_kalecgosAI : public ScriptedAI
     }
     
     void MoveInLineOfSight(Unit *pWho) {
-		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->IsInCombat() && me->getFaction() != 35)
-			AttackStart(pWho);
-	}
+        if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->IsInCombat() && me->getFaction() != 35)
+            AttackStart(pWho);
+    }
 
     void MovementInform(uint32 type,uint32 id)
     {
@@ -731,9 +731,9 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
             if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-			if(Wall1) Wall1->SetGoState(!isFriendly);
-			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
+            if(Wall1) Wall1->SetGoState(!isFriendly);
+            GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
+            if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
@@ -842,7 +842,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
                     target->AddAura(AURA_SPECTRAL_REALM, pet);
                     pet->Relocate(pet->GetPositionX(), pet->GetPositionY(), pet->GetPositionZ(), pet->GetOrientation());
                 }
-                DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
+                DoModifyThreatPercent(target, -100);    // Reset threat so Kalecgos does not follow the player in spectral realm :)
                 target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET); // FIXME: I'm not sure this is blizzlike
                 if (target->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
                     target->RemoveAurasDueToSpell(AURA_SPECTRAL_EXHAUSTION);    // FIXME: If this happens, this is a bug.
