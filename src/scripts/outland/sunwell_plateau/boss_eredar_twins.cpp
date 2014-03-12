@@ -252,7 +252,7 @@ struct EredarTwin : public ScriptedAI
             }
         }
 
-        if(!me->GetVictim) //let sub classes update victim themselves
+        if(!me->GetVictim()) //let sub classes update victim themselves
             return;
 
         //Conflagration is cast by Alythess OR Sacrolash with her sister dead
