@@ -367,7 +367,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 
     std::list<Unit*> targetList;
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius,noTank))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius, noTank))
             targetList.push_back((*itr)->getTarget());
 
     if (position >= targetList.size())

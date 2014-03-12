@@ -77,12 +77,14 @@ enum Data64
 
 enum Creatures
 {
-    /* Misc */
-    BOSS_MURU                                       = 25741,
-    BOSS_ENTROPIUS                                  = 25840,
+    /* Kalecgos */
     MOB_KALECGOS                                    = 24850,
     MOB_KALEC                                       = 24891,
     MOB_SATHROVARR                                  = 24892,
+
+    /* Brutallus */
+    
+    // -
 
     /* Felmyst */
     MOB_DEAD                                        = 25268,
@@ -102,6 +104,18 @@ enum Creatures
     MOB_SHADOW_IMAGE                                = 25214,
     MOB_LADY_SACROLASH                              = 25165,
     MOB_TRIGGER_TINY                                = 21987,
+
+    /* Muru */
+    BOSS_MURU                                       = 25741,
+    BOSS_ENTROPIUS                                  = 25840,
+    CREATURE_DARKNESS                               = 25879,
+    CREATURE_DARK_FIENDS                            = 25744,
+    CREATURE_BERSERKER                              = 25798,
+    CREATURE_FURY_MAGE                              = 25799,
+    CREATURE_VOID_SENTINEL                          = 25772,
+    CREATURE_VOID_SPAWN                             = 25824,
+    CREATURE_BLACK_HOLE                             = 25855,
+    CREATURE_SENTINAL_SUMMONER                      = 25782,
 
     /* Kil'Jaeden */
     CREATURE_ANVEENA                                = 26046, // Embodiment of the Sunwell
@@ -125,16 +139,6 @@ enum Creatures
     NPC_CORE_ENTROPIUS                              = 26262,
     NPC_SOLDIER                                     = 26259, // summoned in 2 waves before Velen. Should move into 2 circle formations
     NPC_RIFTWALKER                                  = 26289,
-
-    /* Muru */
-    CREATURE_DARKNESS                               = 25879,
-    CREATURE_DARK_FIENDS                            = 25744,
-    CREATURE_BERSERKER                              = 25798,
-    CREATURE_FURY_MAGE                              = 25799,
-    CREATURE_VOID_SENTINEL                          = 25772,
-    CREATURE_VOID_SPAWN                             = 25824,
-    CREATURE_BLACK_HOLE                             = 25855,
-    CREATURE_SENTINAL_SUMMONER                      = 25782,
 };
 
 enum GameObjects

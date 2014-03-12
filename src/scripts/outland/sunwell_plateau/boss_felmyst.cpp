@@ -200,8 +200,7 @@ public:
 
             Summons.DespawnAll();
 
-            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-            me->SetFullTauntImmunity(true);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
 
             if(pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
