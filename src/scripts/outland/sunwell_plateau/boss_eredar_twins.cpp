@@ -189,7 +189,7 @@ struct EredarTwin : public ScriptedAI
         Enraged = false;
 
         if (!m_creature->IsInCombat()) {
-            ConflagOrShadowNovaTimer = 30000 + rand()%1000;
+            ConflagOrShadowNovaTimer = 30000; //this should be erased in subclasses
             EnrageTimer = 360000;
             CheckFBTimer = 200;
 
@@ -327,6 +327,7 @@ struct boss_sacrolashAI : public EredarTwin
         ShadowbladesTimer = 10000;
         ConfoundingblowTimer = 25000;
         ShadowimageTimer = 5000 + rand()%5000;
+        ConflagOrShadowNovaTimer = 30000;
 		
         // Alythess spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45230, true);
@@ -418,7 +419,6 @@ struct boss_alythessAI : public EredarTwin
     uint32 ConflagrationTimer;
     uint32 BlazeTimer;
     uint32 PyrogenicsTimer;
-    uint32 ShadownovaTimer;
     uint32 FlamesearTimer;
     uint32 EnrageTimer;
     uint32 RespawnTimer;
@@ -432,8 +432,8 @@ struct boss_alythessAI : public EredarTwin
 
         BlazeTimer = 100;
         PyrogenicsTimer = 15000;
-        ShadownovaTimer = 30000;
         FlamesearTimer = 15000;
+        ConflagOrShadowNovaTimer = 15000;
         IntroYellTimer = 0;
         IntroStepCounter = 0;
 		
