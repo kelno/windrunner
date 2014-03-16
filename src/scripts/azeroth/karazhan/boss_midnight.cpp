@@ -35,10 +35,13 @@ EndScriptData */
 #define SAY_DEATH                   -1532008
 #define SAY_RANDOM1                 -1532009
 #define SAY_RANDOM2                 -1532010
+#define EMOTE_CALL_ATTUMEN          -1999933
+#define EMOTE_MOUNT                 -1999934
 
 #define SPELL_SHADOWCLEAVE          29832
 #define SPELL_INTANGIBLE_PRESENCE   29833
 #define SPELL_BERSERKER_CHARGE      26561                   //Only when mounted
+#define SPELL_KNOCKDOWN             29711
 
 #define MOUNTED_DISPLAYID           16040
 
@@ -55,6 +58,7 @@ struct boss_midnightAI : public ScriptedAI
     uint64 Attumen;
     uint8 Phase;
     uint32 Mount_Timer;
+    uint32 KnockDownTimer;
 
     ScriptedInstance *pInstance;
 
@@ -63,6 +67,7 @@ struct boss_midnightAI : public ScriptedAI
         Phase = 1;
         Attumen = 0;
         Mount_Timer = 0;
+        KnockDownTimer = 20000 + rand()%5000;
 
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         m_creature->SetVisibility(VISIBILITY_ON);
@@ -91,8 +96,16 @@ struct boss_midnightAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
-        if(Phase == 1 && (m_creature->IsBelowHPPercent(95.50f)))
+        if(Phase == 1 || Phase == 2)
+            if(KnockDownTimer < diff)
+            {
+                if(DoCast(me->GetVictim(),SPELL_KNOCKDOWN) == SPELL_CAST_OK)
+                    KnockDownTimer = 10000 + rand()%10000;
+            } else KnockDownTimer -= diff;
+
+        if(Phase == 1 && (m_creature->IsBelowHPPercent(95.0f)))
         {
+            DoScriptText(EMOTE_CALL_ATTUMEN, me);
             Phase = 2;
             Creature *pAttumen = DoSpawnCreature(SUMMON_ATTUMEN, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_DEAD_DESPAWN, 30000);
             if(pAttumen)
@@ -144,6 +157,7 @@ struct boss_midnightAI : public ScriptedAI
     void Mount(Unit *pAttumen)
     {
         DoScriptText(SAY_MOUNT, pAttumen);
+        DoScriptText(EMOTE_MOUNT, me);
         Phase = 3;
         m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         pAttumen->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
@@ -185,6 +199,7 @@ struct boss_attumenAI : public ScriptedAI
         RandomYellTimer = 30000 + (rand()%31)*1000;         //Occasionally yell
         ChargeTimer = 20000;
         ResetTimer = 0;
+        KnockDownTimer = 0;
 
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
@@ -198,10 +213,14 @@ struct boss_attumenAI : public ScriptedAI
     uint32 RandomYellTimer;
     uint32 ChargeTimer;                                     //only when mounted
     uint32 ResetTimer;
+    uint32 KnockDownTimer;
 
     void Reset()
     {
         ResetTimer = 2000;
+        CleaveTimer = 15000 + rand()%5000;
+        CurseTimer = 30000;
+        KnockDownTimer = 10000 + rand()%5000;
     }
 
     void EnterCombat(Unit* who) {}
@@ -253,14 +272,14 @@ struct boss_attumenAI : public ScriptedAI
 
         if(CleaveTimer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_SHADOWCLEAVE);
-            CleaveTimer = 10000 + (rand()%6)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_SHADOWCLEAVE) == SPELL_CAST_OK)
+                CleaveTimer = 15000 + rand()%5000;
         } else CleaveTimer -= diff;
 
         if(CurseTimer < diff)
         {
-            DoCast(m_creature->GetVictim(), SPELL_INTANGIBLE_PRESENCE);
-            CurseTimer = 30000;
+            if (DoCast(m_creature->GetVictim(), SPELL_INTANGIBLE_PRESENCE) == SPELL_CAST_OK)
+                CurseTimer = 30000;
         } else CurseTimer -= diff;
 
         if(RandomYellTimer < diff)
@@ -273,6 +292,7 @@ struct boss_attumenAI : public ScriptedAI
             RandomYellTimer = 30000 + (rand()%31)*1000;
         } else RandomYellTimer -= diff;
 
+        //only when mounted
         if(m_creature->GetUInt32Value(UNIT_FIELD_DISPLAYID) == MOUNTED_DISPLAYID)
         {
             if(ChargeTimer < diff)
@@ -293,6 +313,12 @@ struct boss_attumenAI : public ScriptedAI
                 DoCast(target, SPELL_BERSERKER_CHARGE);
                 ChargeTimer = 20000;
             } else ChargeTimer -= diff;
+
+            if(KnockDownTimer < diff)
+            {
+                if(DoCast(me->GetVictim(),SPELL_KNOCKDOWN) == SPELL_CAST_OK)
+                    KnockDownTimer = 10000 + rand()%10000;
+            } else KnockDownTimer -= diff;
         }
         else
         {
