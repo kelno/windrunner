@@ -376,18 +376,19 @@ struct boss_sacrolashAI : public EredarTwin
         {
             Unit* target = NULL;
             Creature* summon = NULL;
+            uint32 lifeTime = 10000+rand()%2000;
             for(int i = 0; i < 3; i++)
             {
                 target = SelectUnit(SELECT_TARGET_RANDOM, 1, 10.0f, 50.0f, true);
                 if (!target)
                     target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true);
-                summon = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, 10000+rand()%2000);
+                summon = DoSpawnCreature(MOB_SHADOW_IMAGE, 0, 0, 0, 0, TEMPSUMMON_CORPSE_DESPAWN, lifeTime);
                 if(summon && target) {
                     summon->AI()->AttackStart(target);
                     summon->AddThreat(target, 50000.0f);
                 }
             }
-            ShadowimageTimer = 10000;
+            ShadowimageTimer = lifeTime;
         }else ShadowimageTimer -=diff;
 
         if(ShadowbladesTimer < diff)
@@ -631,8 +632,6 @@ struct mob_shadow_imageAI : public ScriptedAI
                 DoCast(m_creature->GetVictim(), SPELL_DARK_STRIKE);
                 DarkstrikeTimer = 800;
             } else DarkstrikeTimer -= diff;
-
-            DoMeleeAttackIfReady();
             break;
         }
     }
