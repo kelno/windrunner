@@ -455,6 +455,35 @@ bool GossipSelect_npc_hastings(Player* player, Creature* _Creature, uint32 sende
 }
 
 /*###
+# npc_calliard
+####*/
+
+#define TEXT_HELLO             454
+#define TEXT_MENU1             455
+#define GOSSIP_ITEM_1          456
+
+bool GossipHello_npc_calliard(Player* player, Creature* _Creature)
+{
+    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+	
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_npc_calliard(Player* player, Creature* _Creature, uint32 sender, uint32 action)
+{
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 1:     player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID()); break;
+    }
+
+	player->CLOSE_GOSSIP_MENU();
+
+    return true;
+}
+
+/*###
 # npc_berthold
 ####*/
 
@@ -969,6 +998,12 @@ void AddSC_karazhan()
     newscript->Name = "npc_hastings";
     newscript->pGossipHello = &GossipHello_npc_hastings;
     newscript->pGossipSelect = &GossipSelect_npc_hastings;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_calliard";
+    newscript->pGossipHello = &GossipHello_npc_calliard;
+    newscript->pGossipSelect = &GossipSelect_npc_calliard;
     newscript->RegisterSelf();
 }
 
