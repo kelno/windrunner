@@ -229,9 +229,8 @@ struct hyjalAI : public npc_escortAI
         uint32 OverrunCounter2;
         uint32 InfernalPoint;
         uint32 RespawnTimer;
-        bool DoRespawn;
         bool DoHide;
-        bool IsDummy;
+        bool IsDummy; //mob is preparing to retreat
         uint32 MassTeleportTimer;
         bool DoMassTeleport;
         uint64 DummyGuid;

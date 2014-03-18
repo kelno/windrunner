@@ -756,7 +756,7 @@ struct npc_stillpine_capitiveAI : public ScriptedAI
             cage->ResetDoorOrButton();*/
     }
 
-	void EnterCombat(Unit *pWho) {}
+    void EnterCombat(Unit *pWho) {}
 
     void UpdateAI(const uint32 diff)
     {

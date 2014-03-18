@@ -280,7 +280,7 @@ struct boss_akilzonAI : public ScriptedAI
         }else Enrage_Timer -= diff;
 
         if (StaticDisruption_Timer < diff) {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if(!target) target = m_creature->GetVictim();
             TargetGUID = target->GetGUID();
             m_creature->CastSpell(target, SPELL_STATIC_DISRUPTION, false);
@@ -300,7 +300,7 @@ struct boss_akilzonAI : public ScriptedAI
         }else StaticDisruption_Timer -= diff;
 
         if (GustOfWind_Timer < diff) {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true);
             if(!target) target = m_creature->GetVictim();
             DoCast(target, SPELL_GUST_OF_WIND);
             GustOfWind_Timer = (20+rand()%10)*1000; //20 to 30 seconds(bosskillers)
@@ -456,9 +456,9 @@ struct mob_soaring_eagleAI : public ScriptedAI
                     m_creature->SetSpeed(MOVE_RUN, 5.0f);
                     TargetGUID = target->GetGUID();
                 }
-                m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+                m_creature->SetDisableGravity(true);
                 m_creature->GetMotionMaster()->MovePoint(0, x, y, z);
-                m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
+                m_creature->SetDisableGravity(false);
                 arrived = false;
             }
         }

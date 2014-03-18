@@ -138,7 +138,7 @@ enum Spells
 #define CENTER_Y            305.297
 #define CENTER_Z            353.192
 
-#define FLAME_ENRAGE_DISTANCE   30
+#define FLAME_ENRAGE_DISTANCE   35
 #define FLAME_CHARGE_DISTANCE   50
 
 /**** Creature Summon and Recognition IDs ****/
@@ -216,7 +216,7 @@ enum EventIllidan
     EVENT_TRANSFORM_DEMON       =   5, //from demon to normal
     //sequence phase
     EVENT_TALK_SEQUENCE         =   2,
-    EVENT_FLIGHT_SEQUENCE       =   2,
+    EVENT_FLIGHT_SEQUENCE       =   2, //transition P2 -> P3, then P3 -> P4
     EVENT_TRANSFORM_SEQUENCE    =   2,
 };
 
@@ -420,7 +420,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             if(!FlameGUID[0] && !FlameGUID[1] && Phase == PHASE_FLIGHT)
             {
                 m_creature->InterruptNonMeleeSpells(true);
-                EnterPhase(PHASE_FLIGHT_SEQUENCE);
+                FlightCount++; //get out of our dummy step
+                EnterPhase(PHASE_FLIGHT_SEQUENCE); //start landing 2 sec after
             }
         }
         Summons.Despawn(summon);
@@ -428,14 +429,14 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
     void MovementInform(uint32 MovementType, uint32 Data)
     {
-        if(FlightCount == 7) //change hover point
+        if(FlightCount == 7) //we're in or should be entering PHASE_FLIGHT
         {
             if(m_creature->GetVictim())
             {
                 m_creature->SetInFront(m_creature->GetVictim());
                 m_creature->StopMoving();
             }
-            EnterPhase(PHASE_FLIGHT);
+            EnterPhase(PHASE_FLIGHT); //just reset timers
         }
         else // handle flight sequence
             Timer[EVENT_FLIGHT_SEQUENCE] = 1000;
@@ -551,7 +552,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         {
         case 1://lift off
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            m_creature->SetUnitMovementFlags(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+            m_creature->SetDisableGravity(true);
             m_creature->StopMoving();
             DoScriptText(SAY_TAKEOFF,me);
             Timer[EVENT_FLIGHT_SEQUENCE] = 3000;
@@ -599,16 +600,20 @@ struct boss_illidan_stormrageAI : public ScriptedAI
         case 6://fly to hover point
             HoverPoint = rand()%4; //randomize first hover point
             m_creature->GetMotionMaster()->MovePoint(0, HoverPosition[HoverPoint].x, HoverPosition[HoverPoint].y, HoverPosition[HoverPoint].z);
-            Timer[EVENT_FLIGHT_SEQUENCE] = 0; //reset to 1000 on MovementInform
+            Timer[EVENT_FLIGHT_SEQUENCE] = 0;
+            //this phase will is resumed only when both flammes are dead, see SummonedCreatureDespawn(...)
+            //Phase will be set to PHASE_FLIGHT when reaching MovePoint
             break;
-        case 7://return to center
+        case 7: //Dummy step, should never happen. PHASE_FLIGHT should always have FlightCount = 7
+            sLog.outError("Illidan : Entered HandleFlightSequence 7 (should never happen)");
+            Timer[EVENT_FLIGHT_SEQUENCE] = 1;
+            break;
+        case 8://end this phase, return to center
+            m_creature->InterruptNonMeleeSpells(true);
             m_creature->GetMotionMaster()->MovePoint(0, CENTER_X, CENTER_Y, CENTER_Z);
             Timer[EVENT_FLIGHT_SEQUENCE] = 0;
-            /* On movement inform, EnterPhase(PHASE_FLIGHT)
-            We will resume this sequence when both flammes are dead, see SummonedCreatureDespawn(...)
-            */
             break;
-        case 8://glaive return
+        case 9://glaive return
             for(uint8 i = 0; i < 2; i++)
             {
                 if(GlaiveGUID[i])
@@ -623,8 +628,8 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             }
             Timer[EVENT_FLIGHT_SEQUENCE] = 2000;
             break;
-        case 9://land
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        case 10://land
+            m_creature->SetDisableGravity(false);
             m_creature->StopMoving();
             m_creature->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
             for(uint8 i = 0; i < 2; i++)
@@ -641,7 +646,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
             }
             Timer[EVENT_FLIGHT_SEQUENCE] = 4000;
             break;
-        case 10://attack
+        case 11://attack
             DoResetThreat();
             m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
             m_creature->SetSheath(SHEATH_STATE_MELEE);
@@ -800,7 +805,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_PARASITIC_SHADOWFIEND:
                 {
-                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 200, true))
+                    if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true))
                         m_creature->CastSpell(target, SPELL_PARASITIC_SHADOWFIEND, true);
                     Timer[EVENT_PARASITIC_SHADOWFIEND] = 35000 + rand()%10000;
                 }break;
@@ -858,8 +863,7 @@ struct boss_illidan_stormrageAI : public ScriptedAI
 
             case EVENT_MOVE_POINT:
                 Phase = PHASE_FLIGHT_SEQUENCE;
-                if(!Timer[EVENT_FLIGHT_SEQUENCE])
-                    Timer[EVENT_FLIGHT_SEQUENCE] = 100000; //do not start Event when changing hover point. HACK : Still set this to 100000 to avoid being stuck in case of problem.
+                Timer[EVENT_FLIGHT_SEQUENCE] = 0;//do not start Event when changing hover point
                 HoverPoint += (rand()%3 + 1); //randomize a different hover point
                 if(HoverPoint > 3)
                     HoverPoint -= 4;
@@ -997,7 +1001,7 @@ struct flame_of_azzinothAI : public ScriptedAI
         {
             DoCast(m_creature->GetVictim(), SPELL_BLAZE_SUMMON, true); //appear at victim
             DoCast(m_creature->GetVictim(), SPELL_FLAME_BLAST);
-            FlameBlastTimer = 15000; //10000 is official-like?
+            FlameBlastTimer = 15000;
             DoZoneInCombat(); //in case someone is revived
         }else FlameBlastTimer -= diff;
 
@@ -1501,13 +1505,6 @@ struct npc_akama_illidanAI : public ScriptedAI
             else Timer -= diff;
         }
 
-        GETUNIT(Illidan, IllidanGUID);
-        if(Illidan && HPPCT(Illidan) < 90)
-        {
-            EnterPhase(PHASE_TALK);
-            return;
-        }
-
         if(Event)
         {
             switch(Phase)
@@ -1555,6 +1552,13 @@ struct npc_akama_illidanAI : public ScriptedAI
 
         if(!UpdateVictim())
             return;
+
+        GETUNIT(Illidan, IllidanGUID);
+        if(Illidan && HPPCT(Illidan) < 90)
+        {
+            EnterPhase(PHASE_TALK);
+            return;
+        }
 
         if(m_creature->GetHealth()*100 / m_creature->GetMaxHealth() < 20)
             DoCast(m_creature, SPELL_HEALING_POTION);
@@ -2076,7 +2080,7 @@ void boss_illidan_stormrageAI::Reset()
     m_creature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY, 0);
     m_creature->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_DISPLAY+1, 0);
-    m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+    m_creature->SetDisableGravity(false);
     m_creature->SetStandState(UNIT_STAND_STATE_KNEEL);
     m_creature->setActive(false);
     Summons.DespawnAll();

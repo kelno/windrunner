@@ -78,8 +78,8 @@ struct instance_razorfen_downs : public ScriptedInstance
                 break;
         }
 
-	if(data == DONE)
-	{
+    if(data == DONE)
+    {
 
             OUT_SAVE_INST_DATA;
 
@@ -90,7 +90,7 @@ struct instance_razorfen_downs : public ScriptedInstance
 
             SaveToDB();
             OUT_SAVE_INST_DATA_COMPLETE;
-	}
+    }
     }
     
     uint32 GetData(uint32 type)

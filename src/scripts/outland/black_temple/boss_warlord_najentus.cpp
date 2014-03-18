@@ -197,7 +197,7 @@ struct boss_najentusAI : public ScriptedAI
 
         if(ImpalingSpineTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 80.0f, true);
+            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true);
             if(!target) target = m_creature->GetVictim();
             if(target)
             {

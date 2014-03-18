@@ -102,9 +102,9 @@ struct boss_ragglesnoutAI : public ScriptedAI
 
             if (dominatemindTimer <= diff)
             {
-                m_creature->InterruptNonMeleeSpells(false);
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_DOMINATE_MIND);
-                dominatemindTimer = urand(15000, 20000);
+                if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 80.0, true, true))
+                    if(DoCast(target,SPELL_DOMINATE_MIND) == SPELL_CAST_OK)
+                        dominatemindTimer = urand(15000, 20000);
             }
             else
                 dominatemindTimer -= diff;

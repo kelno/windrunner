@@ -30,93 +30,97 @@ EndScriptData */
 #define SPELL_WHIRLWIND1           15589
 #define SPELL_WHIRLWIND2           13736
 
+#define MAX_HOME_DISTANCE          40.0f
+
 struct TRINITY_DLL_DECL AV_WarmastersAI : public ScriptedAI
 {
      AV_WarmastersAI(Creature *c) : ScriptedAI(c) {Reset();}
-	 
-	 uint32 ChargeTimer;
-	 uint32 CleaveTimer;
+     
+     uint32 ChargeTimer;
+     uint32 CleaveTimer;
      uint32 DemoralizingShoutTimer;
      uint32 Whirlwind1Timer;
      uint32 Whirlwind2Timer;
      uint32 EnrageTimer;
-     uint32 ResetTimer;
-	 
-	 void Reset()
+     uint32 DistanceCheckTimer;
+     
+     void Reset()
      {
-		ChargeTimer             = (2+rand()%10)*1000;
-    	CleaveTimer			    = (1+rand()%10)*1000;
-    	DemoralizingShoutTimer  = (2+rand()%18)*1000;
-		Whirlwind1Timer			= (1+rand()%12)*1000;
-		Whirlwind2Timer			= (5+rand()%15)*1000;
-		EnrageTimer		        = (5+rand()%20)*1000;
-		ResetTimer			    = 5000;
-
+        ChargeTimer             = (2+rand()%10)*1000;
+        CleaveTimer                = (1+rand()%10)*1000;
+        DemoralizingShoutTimer  = (2+rand()%18)*1000;
+        Whirlwind1Timer            = (1+rand()%12)*1000;
+        Whirlwind2Timer            = (5+rand()%15)*1000;
+        EnrageTimer                = (5+rand()%20)*1000;
+        DistanceCheckTimer      = 5000;
      }
-	 void EnterCombat(Unit *who){}
 
-	 void JustRespawned()
+     void EnterCombat(Unit *who){}
+
+     void JustRespawned()
      {
          InCombat = false;
          Reset();
      }
-	 
-	 void KilledUnit(Unit* victim){}
-	 
-	 void JustDied(Unit* Killer){}
-	 
-	 void UpdateAI(const uint32 diff)
+     
+     void KilledUnit(Unit* victim){}
+     
+     void JustDied(Unit* Killer){}
+     
+     void UpdateAI(const uint32 diff)
      {
-		if (!UpdateVictim())
+        if (!UpdateVictim())
             return;
+
         if (ChargeTimer <diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CHARGE);
             ChargeTimer = (10+rand()%15)*1000;
-        }else ChargeTimer -= diff;			
-		
-		if (CleaveTimer < diff)
+        } else ChargeTimer -= diff;            
+        
+        if (CleaveTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_CLEAVE);
             CleaveTimer =  (10+rand()%6)*1000;
-        }else CleaveTimer -= diff;
+        } else CleaveTimer -= diff;
 
         if (DemoralizingShoutTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_DEMORALIZING_SHOUT);
             DemoralizingShoutTimer = (10+rand()%5)*1000;
-        }else DemoralizingShoutTimer -= diff;
+        } else DemoralizingShoutTimer -= diff;
 
         if (Whirlwind1Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND1);
             Whirlwind1Timer = (6+rand()%14)*1000;
-        }else Whirlwind1Timer -= diff;
+        } else Whirlwind1Timer -= diff;
 
         if (Whirlwind2Timer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_WHIRLWIND2);
             Whirlwind2Timer = (10+rand()%15)*1000;
-        }else Whirlwind2Timer -= diff;
+        } else Whirlwind2Timer -= diff;
 
         if (EnrageTimer < diff)
         {
             DoCast(m_creature->GetVictim(), SPELL_ENRAGE);
             EnrageTimer = (10+rand()%20)*1000;
-        }else EnrageTimer -= diff;	
-			
+        } else EnrageTimer -= diff;    
 
         // check if creature is not outside of building
-        /*if(ResetTimer < diff)
+        if(DistanceCheckTimer < diff)
         {
-             float x, y, z;
-             m_creature->GetPosition(x, y, z);
-             if(y < -240)
-		    {
-	            EnterEvadeMode();
-		    }
-            ResetTimer = 2000;
-        }else ResetTimer -= diff;*/
+            if(me->GetDistanceFromHome() > MAX_HOME_DISTANCE)
+            {
+                //evade all creatures from pool
+                EnterEvadeMode();
+                std::list<Creature*> poolCreatures = me->GetMap()->GetAllCreaturesFromPool(me->GetCreaturePoolId());
+                for(auto itr : poolCreatures)
+                    if(itr->AI()) itr->AI()->EnterEvadeMode();
+            }
+            DistanceCheckTimer = 2000;
+        } else DistanceCheckTimer -= diff;
 
         DoMeleeAttackIfReady();
      }

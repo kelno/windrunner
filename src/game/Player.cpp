@@ -284,7 +284,7 @@ Player::Player (WorldSession *session): Unit()
     m_ExtraFlags = 0;
 
     // players always accept
-    if(GetSession()->GetSecurity() == SEC_PLAYER)
+    if(GetSession()->GetSecurity() == SEC_PLAYER && !(GetSession()->GetGroupId()) )
         SetAcceptWhispers(true);
 
     m_curSelection = 0;
@@ -1874,6 +1874,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         else
             // this will be used instead of the current location in SaveToDB
             m_teleport_dest = WorldLocation(mapid, x, y, z, orientation);
+
         SetFallInformation(0, z);
 
         //BuildHeartBeatMsg(&data);
@@ -7708,7 +7709,7 @@ void Player::CastItemCombatSpell(Unit *target, WeaponAttackType attType, uint32 
 
             if (roll_chance_f(chance))
             {
-                if(IsPositiveSpell(pEnchant->spellid[s]))
+                if(IsPositiveSpell(pEnchant->spellid[s]),IsHostileTo(target))
                     CastSpell(this, pEnchant->spellid[s], true, item);
                 else
                     CastSpell(target, pEnchant->spellid[s], true, item);
@@ -15416,7 +15417,7 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
     }
 
     // GM state
-    if(GetSession()->GetSecurity() > SEC_PLAYER)
+    if(GetSession()->GetSecurity() > SEC_PLAYER || GetSession()->GetGroupId()) // gmlevel > 0 or is in a gm group
     {
         switch(sWorld.getConfig(CONFIG_GM_LOGIN_STATE))
         {
@@ -19142,12 +19143,13 @@ bool Player::canSeeOrDetect(Unit const* u, bool detect, bool inVisibleList, bool
 
     if(u->GetVisibility() == VISIBILITY_OFF)
     {
-        // GMs see all unit. Moderators can see all units except higher gm's.
-        if(isGameMaster())
+        // GMs see all unit. Moderators can see all units except higher gm's. GM's in GMGROUP_VIDEO can't see invisible units.
+        if(isGameMaster() && GetSession()->GetGroupId() != GMGROUP_VIDEO)
         {
             if(u->GetTypeId() == TYPEID_PLAYER
               && GetSession()->GetSecurity() == SEC_GAMEMASTER1
-              && u->ToPlayer()->GetSession()->GetSecurity() > SEC_GAMEMASTER1)
+              && u->ToPlayer()->GetSession()->GetSecurity() > SEC_GAMEMASTER1
+              && !IsInSameGroupWith(u->ToPlayer()) ) //still visible if in same group
                 return false;
             else
                 return true;
@@ -19291,12 +19293,16 @@ bool Player::IsVisibleGloballyFor( Player* u ) const
     if (GetVisibility() == VISIBILITY_ON)
         return true;
 
-    //GMs can always see everyone
-     if (u->GetSession()->GetSecurity() >= SEC_GAMEMASTER2)
-        return true;
+    //Rank2 GMs can always see everyone
+    if (u->GetSession()->GetSecurity() >= SEC_GAMEMASTER2)
+       return true;
 
-     //moderators can see everyone except higher GMs
-     if (GetSession()->GetSecurity() == SEC_GAMEMASTER1 && u->GetSession()->GetSecurity() >= SEC_GAMEMASTER1)
+    //Rank1 GM can see everyone except higher GMs
+    if (u->GetSession()->GetSecurity() == SEC_GAMEMASTER1 && GetSession()->GetSecurity() <= SEC_GAMEMASTER1)
+       return true;
+    
+    //But GM's can still see others GM's if in same group
+    if(u->GetSession()->GetSecurity() >= SEC_GAMEMASTER1 && IsInSameGroupWith(u))
         return true;
 
     // non faction visibility non-breakable for non-GMs
@@ -21334,7 +21340,8 @@ void Player::SetSpectate(bool on)
         SetDisplayId(GetNativeDisplayId());
         UpdateSpeed(MOVE_RUN, true);
 
-        SetVisibility(VISIBILITY_ON);
+        if(!(m_ExtraFlags & PLAYER_EXTRA_GM_INVISIBLE)) //don't reset gm visibility
+            SetVisibility(VISIBILITY_ON);
     }
 
     //ObjectAccessor::UpdateVisibilityForPlayer(this);

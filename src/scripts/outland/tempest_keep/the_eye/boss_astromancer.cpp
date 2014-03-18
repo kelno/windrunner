@@ -259,7 +259,7 @@ struct boss_high_astromancer_solarianAI : public ScriptedAI
 
             if (MarkOfTheAstromancer_Timer < diff) //A debuff that lasts for 5 seconds, cast several times each phase on a random raid member, but not the main tank
             {
-                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1, 100, true);
+                Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true);
                 if(target)
                     DoCast(target, SPELL_MARK_OF_THE_ASTROMANCER);
                 else DoCast(m_creature->GetVictim(), SPELL_MARK_OF_THE_ASTROMANCER);

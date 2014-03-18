@@ -53,9 +53,9 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
         if (pPlayer->HasLevelInRangeForTeleport() || pPlayer->isGameMaster()) {
             uint32 destEntry;
             if(pCreature->GetCreatureInfo()->Entry == NPC_TELEPORTER_ENTRY)
-				destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_1 : NPC_ARRIVAL_ALLY_1; //depends on player's team
-			else
-				destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_2 : NPC_ARRIVAL_ALLY_2;
+                destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_1 : NPC_ARRIVAL_ALLY_1; //depends on player's team
+            else
+                destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_2 : NPC_ARRIVAL_ALLY_2;
             
             //get coordinates of target in DB
             QueryResult* result = WorldDatabase.PQuery("SELECT map, position_x, position_y, position_z, orientation FROM creature WHERE id = %u LIMIT 1", destEntry);

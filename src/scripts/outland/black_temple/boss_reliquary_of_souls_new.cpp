@@ -180,7 +180,7 @@ public:
             }
         }
         
-        void message(uint32 id, uint32 data)
+        void message(uint32 id, uint64 data)
         {
             switch(id)
             {

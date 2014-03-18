@@ -1490,11 +1490,11 @@ struct npc_eranikus_tyrant_of_the_dreamAI : public ScriptedAI
 //            newWP = true;
             break;
         case 2:
-            me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+            me->SetDisableGravity(true);
             break;
         case 3:
         {
-            me->RemoveUnitMovementFlag(MOVEMENTFLAG_LEVITATING | MOVEMENTFLAG_ONTRANSPORT | MOVEMENTFLAG_FLYING2);
+            me->SetDisableGravity(false);
 //            me->SetOrientation(EranikusWP[3].o);
             me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
             combatPhase = true;

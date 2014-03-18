@@ -844,7 +844,7 @@ struct boss_veras_darkshadowAI : public boss_illidari_councilAI
         if(zerevor)
             zerevorAI = static_cast<ScriptedAI*>(zerevor->AI());
         if(zerevorAI)
-            return zerevorAI->SelectUnit(SELECT_TARGET_RANDOM, 1); //except mage tank
+            return zerevorAI->SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true); //except mage tank
 
         //else select it myself
         return SelectUnit(SELECT_TARGET_RANDOM, 0);

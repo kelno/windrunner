@@ -65,15 +65,17 @@ enum ShutdownExitCode
 /// Timers for different object refresh rates
 enum WorldTimers
 {
-    WUPDATE_OBJECTS     = 0,
-    WUPDATE_SESSIONS    = 1,
-    WUPDATE_AUCTIONS    = 2,
-    WUPDATE_WEATHERS    = 3,
-    WUPDATE_UPTIME      = 4,
-    WUPDATE_CORPSES     = 5,
-    WUPDATE_EVENTS      = 6,
-    WUPDATE_ANNOUNCES   = 7,
-    WUPDATE_COUNT       = 8
+    WUPDATE_OBJECTS        = 0,
+    WUPDATE_SESSIONS       = 1,
+    WUPDATE_AUCTIONS       = 2,
+    WUPDATE_WEATHERS       = 3,
+    WUPDATE_UPTIME         = 4,
+    WUPDATE_CORPSES        = 5,
+    WUPDATE_EVENTS         = 6,
+    WUPDATE_ANNOUNCES      = 7,
+    WUPDATE_ARENASEASONLOG = 8,
+
+    WUPDATE_COUNT          = 9
 };
 
 /// Configuration elements
@@ -199,6 +201,8 @@ enum WorldConfigs
     CONFIG_ARENA_AUTO_DISTRIBUTE_POINTS,
     CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS,
     CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER,
+    CONFIG_BATTLEGROUND_TIMELIMIT_WARSONG,
+    CONFIG_BATTLEGROUND_TIMELIMIT_ARENA,
 
     CONFIG_MAX_WHO,
     CONFIG_START_ALL_SPELLS,
@@ -228,11 +232,10 @@ enum WorldConfigs
     
     CONFIG_PLAYER_GENDER_CHANGE_DELAY,
 
+    CONFIG_MONITORING_ENABLED,
     CONFIG_MONITORING_UPDATE,
     
     CONFIG_CHARGEMOVEGEN,
-    
-    CONFIG_ENABLE_EXPERIMENTAL_FEATURES,
     
     CONFIG_MYSQL_BUNDLE_LOGINDB,
     CONFIG_MYSQL_BUNDLE_CHARDB,
@@ -248,6 +251,7 @@ enum WorldConfigs
     CONFIG_WARDEN_CLIENT_CHECK_HOLDOFF,
     CONFIG_WARDEN_CLIENT_RESPONSE_DELAY,
     CONFIG_WARDEN_DB_LOG,
+    CONFIG_WARDEN_BAN_TIME,
     
     CONFIG_GAMEOBJECT_COLLISION,
     
@@ -287,9 +291,6 @@ enum WorldConfigs
     CONFIG_ARENASERVER_ENABLED,
     CONFIG_ARENASERVER_USE_CLOSESCHEDULE,
     CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD,
-
-    CONFIG_SMOOTHED_CHANCE_ENABLED,
-    CONFIG_SMOOTHED_CHANCE_INFLUENCE,
 
     CONFIG_TESTSERVER_ENABLE,
     CONFIG_TESTSERVER_DISABLE_GLANCING,
@@ -462,6 +463,7 @@ enum HonorKillPvPRank
 #define SCRIPT_COMMAND_CALLSCRIPT_TO_UNIT   17              // datalong scriptid, lowguid datalong2, dataint table
 #define SCRIPT_COMMAND_PLAYSOUND            18              // datalong soundid, datalong2 play only self
 #define SCRIPT_COMMAND_KILL                 19              // datalong removecorpse
+#define SCRIPT_COMMAND_STOP_WP              20              // source = Creature, datalong = return home
 
 /// Storage class for commands issued for delayed execution
 struct CliCommandHolder
@@ -651,6 +653,8 @@ class World
         inline bool GetMvAnticheatKill()               {return m_MvAnticheatKill;}
         inline bool GetMvAnticheatWarn()               {return m_MvAnticheatWarn;}
 
+        inline std::string GetWardenBanTime()          {return m_wardenBanTime;}
+
         void ProcessCliCommands();
         void QueueCliCommand( CliCommandHolder::Print* zprintf, char const* input ) { cliCmdQueue.add(new CliCommandHolder(input, zprintf)); }
 
@@ -682,6 +686,7 @@ class World
         void LogPhishing(uint32 src, uint32 dst, std::string msg);
         void ResetDailyQuests();
         void CleanupOldMonitorLogs();
+        void CleanupOldDeleteLogs();
         void LoadAutoAnnounce();
         
         std::vector<ArenaTeam*> getArenaLeaderTeams() { return firstArenaTeams; };
@@ -701,6 +706,9 @@ class World
         void LoadQuestPoolsData();
         void UpdateMonitoring(uint32 diff);
     private:
+
+        void UpdateArenaSeasonLogs();
+
         static volatile bool m_stopEvent;
         static uint8 m_ExitCode;
         uint32 m_ShutdownTimer;
@@ -760,6 +768,8 @@ class World
         unsigned char m_MvAnticheatGmLevel;
         bool m_MvAnticheatKill;
         bool m_MvAnticheatWarn;
+
+        std::string m_wardenBanTime;
 
         // CLI command holder to be thread safe
         ZThread::LockedQueue<CliCommandHolder*, ZThread::FastMutex> cliCmdQueue;

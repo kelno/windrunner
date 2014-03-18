@@ -124,7 +124,6 @@ extern void AddSC_arenabeastmaster();
 extern void AddSC_alterac_mountains();
 
 //Alterac Valley
-extern void AddSC_AV_Marshals();
 extern void AddSC_AV_Warmasters();
 extern void AddSC_boss_balinda();
 extern void AddSC_boss_drekthar();
@@ -249,7 +248,6 @@ extern void AddSC_burning_steppes();
 //--Battle for Mt. Hyjal
 extern void AddSC_hyjal();
 extern void AddSC_boss_archimonde();
-extern void AddSC_boss_archimonde_new();
 extern void AddSC_instance_mount_hyjal();
 extern void AddSC_hyjal_trash();
 extern void AddSC_boss_rage_winterchill();
@@ -284,6 +282,7 @@ extern void AddSC_boss_the_lurker_below();
 //--Slave Pens
 extern void AddSC_boss_ahune();
 extern void AddSC_instance_slave_pens();
+extern void AddSC_slave_pens();
 
 //--Steam Vault
 extern void AddSC_boss_hydromancer_thespia();
@@ -1516,7 +1515,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_alterac_mountains();
     
     //Alterac Valley
-    AddSC_AV_Marshals();
     AddSC_AV_Warmasters();
     AddSC_boss_balinda();
     AddSC_boss_drekthar();
@@ -1642,7 +1640,6 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     //--Battle for Mt. Hyjal
     AddSC_hyjal();
     AddSC_boss_archimonde();
-    AddSC_boss_archimonde_new();
     AddSC_instance_mount_hyjal();
     AddSC_hyjal_trash();
     AddSC_boss_rage_winterchill();
@@ -1677,6 +1674,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     //--Slave Pens
     AddSC_boss_ahune();
     AddSC_instance_slave_pens();
+    AddSC_slave_pens();
     
     //--Steam Vault
     AddSC_boss_hydromancer_thespia();

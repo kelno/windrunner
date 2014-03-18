@@ -574,6 +574,8 @@ void World::LoadConfigSettings(bool reload)
     m_MvAnticheatKill                       = sConfig.GetBoolDefault("Anticheat.Movement.Kill",false);
     m_MvAnticheatWarn                       = sConfig.GetBoolDefault("Anticheat.Movement.Warn",true);
 
+    m_wardenBanTime                         = sConfig.GetStringDefault("Warden.BanTime","180d");
+
     m_configs[CONFIG_COMPRESSION] = sConfig.GetIntDefault("Compression", 1);
     if(m_configs[CONFIG_COMPRESSION] < 1 || m_configs[CONFIG_COMPRESSION] > 9)
     {
@@ -964,6 +966,9 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_ARENA_AUTO_DISTRIBUTE_INTERVAL_DAYS] = sConfig.GetIntDefault("Arena.AutoDistributeInterval", 7);
 
     m_configs[CONFIG_BATTLEGROUND_PREMATURE_FINISH_TIMER] = sConfig.GetIntDefault("BattleGround.PrematureFinishTimer", 0);
+    m_configs[CONFIG_BATTLEGROUND_TIMELIMIT_WARSONG] = sConfig.GetIntDefault("BattleGround.TimeLimit.Warsong", 0);
+    m_configs[CONFIG_BATTLEGROUND_TIMELIMIT_ARENA] = sConfig.GetIntDefault("BattleGround.TimeLimit.Arena", 0);
+
     m_configs[CONFIG_INSTANT_LOGOUT] = sConfig.GetIntDefault("InstantLogout", SEC_GAMEMASTER1);
     
     m_configs[CONFIG_GROUPLEADER_RECONNECT_PERIOD] = sConfig.GetIntDefault("GroupLeaderReconnectPeriod", 180);
@@ -1020,7 +1025,7 @@ void World::LoadConfigSettings(bool reload)
         m_MaxVisibleDistanceInBGArenas = MAX_VISIBILITY_DISTANCE - m_VisibleUnitGreyDistance;
     }
 
-    m_MaxVisibleDistanceForObject    = sConfig.GetFloatDefault("Visibility.Distance.Gameobject",   DEFAULT_VISIBILITY_DISTANCE);
+    m_MaxVisibleDistanceForObject    = sConfig.GetFloatDefault("Visibility.Distance.Object",   DEFAULT_VISIBILITY_DISTANCE);
     if(m_MaxVisibleDistanceForObject < INTERACTION_DISTANCE)
     {
         sLog.outError("Visibility.Distance.Object can't be less max aggro radius %f",float(INTERACTION_DISTANCE));
@@ -1099,7 +1104,8 @@ void World::LoadConfigSettings(bool reload)
     
     m_configs[CONFIG_MAX_AVERAGE_TIMEDIFF] = sConfig.GetIntDefault("World.MaxAverage.TimeDiff", 420);
 
-    m_configs[CONFIG_MONITORING_UPDATE] = sConfig.GetIntDefault("Monitor.update", 0);
+    m_configs[CONFIG_MONITORING_ENABLED] = sConfig.GetBoolDefault("Monitor.enabled", true);
+    m_configs[CONFIG_MONITORING_UPDATE] = sConfig.GetIntDefault("Monitor.update", 10000);
 
     std::string forbiddenmaps = sConfig.GetStringDefault("ForbiddenMaps", "");
     char * forbiddenMaps = new char[forbiddenmaps.length() + 1];
@@ -1117,7 +1123,6 @@ void World::LoadConfigSettings(bool reload)
     
     m_configs[CONFIG_PLAYER_GENDER_CHANGE_DELAY]    = sConfig.GetIntDefault("Player.Change.Gender.Delay", 14);
     m_configs[CONFIG_CHARGEMOVEGEN]                 = sConfig.GetBoolDefault("ChargeMovementGenerator.enabled",true);
-    m_configs[CONFIG_ENABLE_EXPERIMENTAL_FEATURES]  = sConfig.GetBoolDefault("ExperimentalFeatures.enabled", false);
     
     // MySQL thread bundling config for other runnable tasks
     m_configs[CONFIG_MYSQL_BUNDLE_LOGINDB] = sConfig.GetIntDefault("LoginDatabase.ThreadBundleMask", MYSQL_BUNDLE_ALL);
@@ -1134,7 +1139,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_WARDEN_NUM_CHECKS] = sConfig.GetIntDefault("Warden.NumChecks", 3);
     m_configs[CONFIG_WARDEN_CLIENT_CHECK_HOLDOFF] = sConfig.GetIntDefault("Warden.ClientCheckHoldOff", 30);
     m_configs[CONFIG_WARDEN_CLIENT_RESPONSE_DELAY] = sConfig.GetIntDefault("Warden.ClientResponseDelay", 15);
-    m_configs[CONFIG_WARDEN_DB_LOG] = sConfig.GetBoolDefault("Warden.DBLogs", false);
+    m_configs[CONFIG_WARDEN_DB_LOG] = sConfig.GetBoolDefault("Warden.DBLogs", true);
     
     m_configs[CONFIG_GAMEOBJECT_COLLISION] = sConfig.GetBoolDefault("GameObject.Collision", true);
 
@@ -1175,9 +1180,6 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_ARENASERVER_ENABLED] = sConfig.GetBoolDefault("ArenaServer.Enabled", false);
     m_configs[CONFIG_ARENASERVER_USE_CLOSESCHEDULE] = sConfig.GetBoolDefault("ArenaServer.UseCloseSchedule", true);
     m_configs[CONFIG_ARENASERVER_PLAYER_REPARTITION_THRESHOLD] = sConfig.GetIntDefault("ArenaServer.PlayerRepartitionThreshold", 0);
-
-    m_configs[CONFIG_SMOOTHED_CHANCE_ENABLED] = sConfig.GetBoolDefault("SmoothedChance.Enabled", 0);
-    m_configs[CONFIG_SMOOTHED_CHANCE_INFLUENCE] = sConfig.GetIntDefault("SmoothedChance.Influence", 0);
 
     m_configs[CONFIG_TESTSERVER_ENABLE] = sConfig.GetBoolDefault("TestServer.Enabled", 0);
     m_configs[CONFIG_TESTSERVER_DISABLE_GLANCING] = sConfig.GetBoolDefault("TestServer.DisableGlancing", 0);
@@ -1558,6 +1560,8 @@ void World::SetInitialWorldSettings()
     m_timers[WUPDATE_CORPSES].SetInterval(20*MINUTE*1000);  //erase corpses every 20 minutes
     m_timers[WUPDATE_ANNOUNCES].SetInterval(MINUTE*1000); // Check announces every minute
 
+    m_timers[WUPDATE_ARENASEASONLOG].SetInterval(MINUTE*1000);
+
     //to set mailtimer to return mails every day between 4 and 5 am
     //mailtimer is increased when updating auctions
     //one second is 1000 -(tested on win system)
@@ -1611,6 +1615,10 @@ void World::SetInitialWorldSettings()
     
     sLog.outString("Loading automatic announces...");
     LoadAutoAnnounce();
+
+    sLog.outString("Cleaning up old logs...");
+    CleanupOldMonitorLogs(); 
+    CleanupOldDeleteLogs();
 
     uint32 serverStartedTime = GetMSTimeDiffToNow(serverStartingTime);
     sLog.outString("World initialized in %u.%u seconds.", (serverStartedTime / 1000), (serverStartedTime % 1000));
@@ -1745,14 +1753,17 @@ void World::Update(time_t diff)
 {
     m_updateTime = uint32(diff);
 
-    if (m_configs[CONFIG_MONITORING_UPDATE])
+    if(m_configs[CONFIG_MONITORING_ENABLED])
     {
-        if (m_updateTimeMon > m_configs[CONFIG_MONITORING_UPDATE])
+        if (m_configs[CONFIG_MONITORING_UPDATE])
         {
-            UpdateMonitoring(diff);
-            m_updateTimeMon = 0;
+            if (m_updateTimeMon > m_configs[CONFIG_MONITORING_UPDATE])
+            {
+                UpdateMonitoring(diff);
+                m_updateTimeMon = 0;
+            }
+            m_updateTimeMon += diff;
         }
-        m_updateTimeMon += diff;
     }
 
     if(m_configs[CONFIG_INTERVAL_LOG_UPDATE])
@@ -1908,9 +1919,17 @@ void World::Update(time_t diff)
 
         CorpsesErase();
     }
+
+    if (m_timers[WUPDATE_ARENASEASONLOG].Passed())
+    {
+        m_timers[WUPDATE_ARENASEASONLOG].Reset();
+
+        UpdateArenaSeasonLogs();
+    }
     
     ///- Announce if a timer has passed
-    if (m_timers[WUPDATE_ANNOUNCES].Passed()) {
+    if (m_timers[WUPDATE_ANNOUNCES].Passed()) 
+    {
         m_timers[WUPDATE_ANNOUNCES].Reset();
         
         if (getConfig(CONFIG_AUTOANNOUNCE_ENABLED)) {
@@ -2200,7 +2219,7 @@ void World::ScriptsProcess()
                     sLog.outError("SCRIPT_COMMAND_MOVE_TO call for non-creature (TypeId: %u), skipping.",source->GetTypeId());
                     break;
                 }
-                ((Unit *)source)->SendMonsterMoveWithSpeed(step.script->x, step.script->y, step.script->z, ((Unit *)source)->GetUnitMovementFlags(), step.script->datalong2 );
+                ((Unit *)source)->SendMonsterMoveWithSpeed(step.script->x, step.script->y, step.script->z, step.script->datalong2 );
                 ((Unit *)source)->GetMap()->CreatureRelocation((source->ToCreature()), step.script->x, step.script->y, step.script->z, 0);
                 break;
             case SCRIPT_COMMAND_FLAG_SET:
@@ -2632,6 +2651,29 @@ void World::ScriptsProcess()
                 }
 
                 dynamic_cast<Unit*>(source)->GetMotionMaster()->MovePath(step.script->datalong, step.script->datalong2);
+                break;
+            }
+
+            case SCRIPT_COMMAND_STOP_WP:
+            {
+                if(!source)
+                {
+                    sLog.outError("SCRIPT_COMMAND_START_MOVE is tried to apply to NON-existing unit.");
+                    break;
+                }
+
+                if(!source->isType(TYPEMASK_UNIT))
+                {
+                    sLog.outError("SCRIPT_COMMAND_START_MOVE source mover isn't unit (TypeId: %u), skipping.",source->GetTypeId());
+                    break;
+                }
+
+                dynamic_cast<Creature*>(source)->LoadPath(0);
+                dynamic_cast<Creature*>(source)->SetDefaultMovementType(IDLE_MOTION_TYPE);
+                if(step.script->datalong)
+                    dynamic_cast<Creature*>(source)->GetMotionMaster()->MoveTargetedHome();
+                dynamic_cast<Creature*>(source)->GetMotionMaster()->Initialize();
+                dynamic_cast<Creature*>(source)->GetMotionMaster()->MovePath(step.script->datalong, step.script->datalong2);
                 break;
             }
 
@@ -3244,10 +3286,6 @@ void World::updateArenaLeaderTeams(uint8 maxcount, uint8 type, uint32 minimalRat
     }
 
     std::sort(firstArenaTeams.begin(), firstArenaTeams.end(), compareRank);
-
-    /*sLog.outString("getArenaLeaderTeams : sorted result :");
-    for(auto itr : firstArenaTeams)
-        sLog.outString("%u",itr->GetId()); */
 }
 
 void World::updateArenaLeadersTitles()
@@ -3413,7 +3451,7 @@ void World::ResetDailyQuests()
 
 void World::CleanupOldMonitorLogs()
 {
-    sLog.outDetail("Cleaning old logs from monitoring system.");
+    sLog.outDetail("Cleaning old logs from monitoring system. ( >8 days old)");
     
     time_t now = time(NULL);
     time_t limit = now - (8 * 86400); // More than 8 days old
@@ -3424,6 +3462,19 @@ void World::CleanupOldMonitorLogs()
     trans->PAppend("DELETE FROM mon_maps WHERE time < %u", limit);
     trans->PAppend("DELETE FROM mon_races WHERE time < %u", limit);
     trans->PAppend("DELETE FROM mon_classes WHERE time < %u", limit);
+    LogsDatabase.CommitTransaction(trans);
+}
+
+void World::CleanupOldDeleteLogs()
+{
+    sLog.outDetail("Cleaning old logs for deleted chars and items. ( > 1 month old)");
+
+    time_t now = time(NULL);
+    time_t limit = now - (1 * MONTH);
+    
+    SQLTransaction trans = LogsDatabase.BeginTransaction();
+    trans->PAppend("DELETE FROM char_delete WHERE time < %u", limit);
+    trans->PAppend("DELETE FROM item_delete WHERE time < %u", limit);
     LogsDatabase.CommitTransaction(trans);
 }
 
@@ -3798,10 +3849,33 @@ CharTitlesEntry const* World::getArenaLeaderTitle(uint8 rank)
     uint8 id = 0;
     switch(rank)
     {
-    case 1:   id = 42; break;
-    case 2:   id = 43; break;
-    case 3:   id = 45; break;
+    case 1:   id = 45; break; // Compétiteur
+    case 2:   id = 43; break; // Duelliste
+    case 3:   id = 44; break; // Rival
     }
 
     return sCharTitlesStore.LookupEntry(id);
+}
+
+/* 
+Update arena_season_stats. This table keeps count of how much time a team kept a rank.
+This should be called every minute.
+
+Table structure :
+teamid, time1, time2, time3 
+*/
+void World::UpdateArenaSeasonLogs()
+{
+    for(uint8 i = 1; i <= 3; i++)
+    {
+        if(firstArenaTeams.size() < i)
+            break;
+
+        if (QueryResult* result = LogsDatabase.PQuery("SELECT null FROM arena_season_stats WHERE teamid = %u;",firstArenaTeams[i-1]->GetId()))
+        { //entry already exist
+            result = LogsDatabase.PQuery("UPDATE arena_season_stats SET time%u = time%u + 1 WHERE teamid = %u;",i,i,firstArenaTeams[i-1]->GetId());
+        } else { //else create a new one
+            result = LogsDatabase.PQuery("REPLACE INTO arena_season_stats (teamid,time%u) VALUES (%u,1);",i,firstArenaTeams[i-1]->GetId());
+        }
+    }
 }

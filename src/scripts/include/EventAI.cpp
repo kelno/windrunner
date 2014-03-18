@@ -1030,7 +1030,6 @@ struct Mob_EventAI : public ScriptedAI
     {
         InCombat = false;
         IsFleeing = false;
-        Reset();
 
         //Handle Spawned Events
         for (std::list<EventHolder>::iterator i = EventList.begin(); i != EventList.end(); ++i)

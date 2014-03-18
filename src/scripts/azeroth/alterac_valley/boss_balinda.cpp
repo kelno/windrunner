@@ -31,11 +31,13 @@ EndScriptData */
 #define SPELL_FROSTBOLT             46987
 #define WATER_ELEMENTAL             25040
 #define SPELL_WATERBOLT             46983
-#define SPELL_ICEBLOCK              46604       // 15 sec and 35 sec
 
 struct TRINITY_DLL_DECL mob_water_elementalAI : public ScriptedAI
 {
-    mob_water_elementalAI(Creature *c) : ScriptedAI(c) {}
+    mob_water_elementalAI(Creature *c) : ScriptedAI(c) 
+    {
+        SetRestoreCombatMovementOnOOM(true);
+    }
 
     uint32 WaterBoltTimer;
     uint64 balindaGUID;
@@ -44,9 +46,9 @@ struct TRINITY_DLL_DECL mob_water_elementalAI : public ScriptedAI
     void Reset() {
         WaterBoltTimer  = 3000;
         ResetTimer      = 5000;
+        SetCombatMovementAllowed(false);
     }
     
-    void EnterCombat(Unit* who) {}
     void JustDied(Unit* killer);
     void SummonedCreatureDespawn(Creature*);
     
@@ -74,51 +76,38 @@ struct TRINITY_DLL_DECL mob_water_elementalAI : public ScriptedAI
 
 struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
 {
-    boss_balindaAI(Creature *c) : ScriptedAI(c), summons(m_creature) {Reset();}
+    boss_balindaAI(Creature *c) : ScriptedAI(c), summons(m_creature) 
+    {
+        SetRestoreCombatMovementOnOOM(true);
+    }
 
 
     uint32 ArcaneExplosionTimer;
     uint32 ConeofcoldTimer;
     uint32 FireboltTimer;
     uint32 FrostboltTimer;
-    uint32 IceBlockTimer;
     uint32 ResetTimer;
-    bool WaterElemental;
     uint32 WaterElementalTimer;
        
     SummonList summons;
        
-    void Reset() {
+    void Reset() 
+    {
         ArcaneExplosionTimer    = (10+rand()%5)*1000;
         ConeofcoldTimer         = 8000;
         FireboltTimer           = 1000;
         FrostboltTimer          = 4000;
         ResetTimer              = 5000;
-        WaterElemental          = false;
         WaterElementalTimer     = 0;
-        IceBlockTimer           = 15000;
 
         summons.DespawnAll();
         
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5760, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 5761, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8692, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8693, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 8694, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11398, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11399, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11400, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 1714, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 11719, true);
-        m_creature->ApplySpellImmune(0, IMMUNITY_ID, 31589, true);
+        me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
+        SetCombatMovementAllowed(false);
     }
 
     void EnterCombat(Unit *who) {
         DoScriptText(YELL_AGGRO, m_creature);
-    }
-
-    void JustRespawned() {
-        Reset();    // Useless?
     }
 
     void KilledUnit(Unit* victim) {}
@@ -140,44 +129,34 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
             return;
 
         if (WaterElementalTimer <= diff) {
-            if (!WaterElemental) {
-                Creature* Water = DoSpawnCreature(WATER_ELEMENTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000);
-                if (Water) {
-                    WaterElemental = true;
-                    ((mob_water_elementalAI*)Water->AI())->balindaGUID = m_creature->GetGUID();
-                    Water->SetLevel(70);
-                    Water->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
-                    Water->setFaction(m_creature->getFaction());         
-                }
+            if (Creature* elemental = DoSpawnCreature(WATER_ELEMENTAL, 0, 0, 0, 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 45000)) {
+                ((mob_water_elementalAI*)elemental->AI())->balindaGUID = m_creature->GetGUID();
+                elemental->SetLevel(70);
+                elemental->AI()->AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 0));
+                elemental->setFaction(m_creature->getFaction());         
             }
             WaterElementalTimer = 50000;
         } else WaterElementalTimer -= diff;
 
         if (ArcaneExplosionTimer <= diff) {
-            DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION);
-            ArcaneExplosionTimer = (10+rand()%5)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_ARCANE_EXPLOSION) == SPELL_CAST_OK)
+                ArcaneExplosionTimer = (10+rand()%5)*1000;
         } else ArcaneExplosionTimer -= diff;
 
         if (ConeofcoldTimer <= diff) {
-            DoCast(m_creature->GetVictim(), SPELL_CONE_OF_COLD);
-            ConeofcoldTimer = (10+rand()%10)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_CONE_OF_COLD) == SPELL_CAST_OK)
+                ConeofcoldTimer = (10+rand()%10)*1000;
         } else ConeofcoldTimer -= diff;
 
         if (FireboltTimer <= diff) {
-            DoCast(m_creature->GetVictim(), SPELL_FIREBALL);
-            FireboltTimer = (5+rand()%4)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_FIREBALL) == SPELL_CAST_OK)
+                FireboltTimer = (5+rand()%4)*1000;
         } else FireboltTimer -= diff;
 
         if (FrostboltTimer <= diff) {
-            DoCast(m_creature->GetVictim(), SPELL_FROSTBOLT);
-            FrostboltTimer = (4+rand()%8)*1000;
+            if(DoCast(m_creature->GetVictim(), SPELL_FROSTBOLT) == SPELL_CAST_OK)
+                FrostboltTimer = (4+rand()%8)*1000;
         } else FrostboltTimer -= diff;
-
-        if (IceBlockTimer <= diff) {
-            m_creature->InterruptNonMeleeSpells(true);
-            DoCast(m_creature, SPELL_ICEBLOCK);
-            IceBlockTimer = 35000;
-        } else IceBlockTimer -= diff;
 
         // check if creature is not outside of building
         if(ResetTimer <= diff) {
@@ -197,13 +176,13 @@ struct TRINITY_DLL_DECL boss_balindaAI : public ScriptedAI
 void mob_water_elementalAI::JustDied(Unit *killer)
 {
        Creature* balinda = (Unit::GetCreature((*m_creature), balindaGUID));
-       ((boss_balindaAI*)balinda->AI())->WaterElemental = false;
+       ((boss_balindaAI*)balinda->AI())->WaterElementalTimer = 8000;
 }
 
 void mob_water_elementalAI::SummonedCreatureDespawn(Creature*)
 {
        Creature* balinda = (Unit::GetCreature((*m_creature), balindaGUID));
-       ((boss_balindaAI*)balinda->AI())->WaterElemental = false;
+       ((boss_balindaAI*)balinda->AI())->WaterElementalTimer = 8000;
 }
 
 CreatureAI* GetAI_boss_balinda(Creature *_Creature)
