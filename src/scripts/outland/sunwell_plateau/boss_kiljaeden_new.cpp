@@ -52,7 +52,7 @@ enum SpellIds
     SPELL_ARMAGEDDON_VISUAL                             = 45911, // Does the hellfire visual to indicate where the meteor missle lands
     SPELL_ARMAGEDDON_VISUAL2                            = 45914, // Does the light visual to indicate where the meteor missle lands
     SPELL_ARMAGEDDON_VISUAL3                            = 24207, // This shouldn't correct but same as seen on the movie
-    SPELL_ARMAGEDDON_PERIODIC_SUMMON                    = 45921, // Periodically summons the triggers that cast the spells on himself need random target select
+    SPELL_ARMAGEDDON_PERIODIC_SUMMON                    = 45921, // Summon trigger on target that cast the other spells on himself
     SPELL_ARMAGEDDON_SUMMON_TRIGGER                     = 45910, // actually summon trigger 25735
     SPELL_ARMAGEDDON_DAMAGE                             = 45915, // This does the area damage
 
@@ -432,29 +432,14 @@ bool GOHello_go_orb_of_the_blue_flight(Player *plr, GameObject* go)
     {
         ScriptedInstance* pInstance = ((ScriptedInstance*)go->GetInstanceData());
 
-        if (Creature* Kalec = pInstance->instance->GetCreatureInMap(pInstance->GetData64(DATA_KALECGOS_KJ)))
-        {
-            plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+        //remove blue ring, a bit hacky but simple
+        if(Creature* dummy = plr->FindCreatureInGrid(CREATURE_INVISIBLE_DUMMY, 20.0f, true))
+            if (DynamicObject* Dyn = dummy->GetDynObject(SPELL_RING_OF_BLUE_FLAMES))
+                Dyn->RemoveFromWorld();
 
-            go->SetUInt32Value(GAMEOBJECT_FACTION, 0);
-
-            float x,y,z, dx,dy,dz;
-            go->GetPosition(x,y,z);
-            for (uint8 i = 0; i < 4; ++i)
-            {
-                DynamicObject* Dyn = Kalec->GetDynObject(SPELL_RING_OF_BLUE_FLAMES);
-                if (Dyn)
-                {
-                    Dyn->GetPosition(dx,dy,dz);
-                    if (x == dx && dy == y && dz == z)
-                    {
-                        Dyn->RemoveFromWorld();
-                        break;
-                    }
-                }
-            }
-            go->Refresh();
-        }
+        plr->CastSpell(plr, SPELL_POWER_OF_THE_BLUE_FLIGHT, true);
+        go->SetUInt32Value(GAMEOBJECT_FACTION, 0); //not usable anymore
+        go->Refresh();
     }
 
     return true;
@@ -474,17 +459,25 @@ public:
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
             if(!pInstance)
                 me->ForcedDespawn();
-        }
 
-            void onReset(bool /*onSpawn*/)
+            for (uint8 i = 0; i < 4; ++i)
+                OrbDummies[i] = 0;
+        }
+            void onReset(bool onSpawn)
             {
                 for (uint8 i = 0; i < 4; ++i)
                 {
                     Orb[i] = 0;
-                    OrbDummies[i] = 0;
+                    for (uint8 i = 0; i < 4; ++i)
+                        if(OrbDummies[i] != 0)
+                        {
+                            //despawn already spawned dummies
+                            if(Creature* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[i]))
+                                dummy->DisappearAndDie();
+                            OrbDummies[i] = 0;
+                        }
                 }
 
-                OrbsEmpowered = 0;
                 EmpowerCount = 0;
                 me->SetDisableGravity(true);
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
@@ -492,7 +485,6 @@ public:
                 me->setActive(true);
                 Searched = false;
                 me->SetVisibility(VISIBILITY_OFF);
-                FindOrbs();
             }
 
             void FindOrbs()
@@ -521,66 +513,42 @@ public:
 
             void ResetOrbs()
             {
-                me->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
-        
                 for (uint8 i = 0; i < 4; ++i)
                 {
+                    if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[i]))
+                        dummy->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
+
                     if(GameObject *orb = pInstance->instance->GetGameObjectInMap(Orb[i]))
                         orb->SetUInt32Value(GAMEOBJECT_FACTION, 0);
                 }
             }
 
+            void EmpowerOrb(uint8 i)
+            {
+                GameObject *orb = pInstance->instance->GetGameObjectInMap(Orb[i]);
+                if (!orb)
+                    return;
+                if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[i]))
+                {
+                    dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
+                    dummy->CastSpell(dummy, SPELL_RING_OF_BLUE_FLAMES,true);
+                }
+                orb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
+                orb->setActive(true);
+                orb->Refresh();
+            }
+
             void EmpowerOrb(bool all)
             {
-                GameObject *orb;
-                uint8 random = rand()%3;
                 if (all)
                 {
-                    me->RemoveDynObject(SPELL_RING_OF_BLUE_FLAMES);
-            
                     for (uint8 i = 0; i < 4; ++i)
-                    {
-                        if (orb = pInstance->instance->GetGameObjectInMap(Orb[i]))
-                        {
-                            if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[i]))
-                                dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
-                            orb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
-                            orb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
-                            orb->setActive(true);
-                            orb->Refresh();
-                        }
-                    }
+                        EmpowerOrb(i);
                 }
                 else
                 {
-                    float x,y,z, dx,dy,dz;
-                    orb = pInstance->instance->GetGameObjectInMap(Orb[random]);
-                    if (!orb)
-                        return;
-
-                    orb->GetPosition(x,y,z);
-
-                    for (uint8 i = 0; i < 4; ++i)
-                    {
-                        if (DynamicObject* Dyn = me->GetDynObject(SPELL_RING_OF_BLUE_FLAMES))
-                        {
-                            Dyn->GetPosition(dx,dy,dz);
-                            if (x == dx && dy == y && dz == z)
-                            {
-                                Dyn->RemoveFromWorld();
-                                break;
-                            }
-                        }
-                    }
-
-                    if(Unit* dummy = pInstance->instance->GetCreatureInMap(OrbDummies[random]))
-                        dummy->CastSpell(dummy,SPELL_VISUAL_MOONFIRE,true);
-                    orb->CastSpell(me, SPELL_RING_OF_BLUE_FLAMES);
-                    orb->SetUInt32Value(GAMEOBJECT_FACTION, 35);
-                    orb->setActive(true);
-                    orb->Refresh();
-            
-                    ++OrbsEmpowered;
+                    uint8 random = rand()%3;
+                    EmpowerOrb(random);
                 }
         
                 ++EmpowerCount;
@@ -609,9 +577,6 @@ public:
                     FindOrbs();
                     Searched = true;
                 }
-
-                if(OrbsEmpowered == 4)
-                    OrbsEmpowered = 0;
             }
             
             ScriptedInstance* pInstance;
@@ -619,8 +584,6 @@ public:
             uint64 Orb[4]; //orb gobjects
             uint64 OrbDummies[4]; //Used for some visual effects only
    
-    
-            uint8 OrbsEmpowered;
             uint8 EmpowerCount;
 
             bool Searched;
@@ -677,9 +640,9 @@ public:
                     } else {
                         if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
                             doCast(me,SPELL_ANVEENA_ENERGY_DRAIN,true);
+                        
+                        pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
                     }
-
-                    pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
                 } else {
                     me->ForcedDespawn();
                     return;
@@ -725,7 +688,7 @@ public:
                 m_currentAngleFirst = 0;
                 m_currentAngleSecond = 0;
 
-                combatCheckTimer = 0;
+                combatCheckTimer = 10000;
             }
 
             void onSummon(Creature* summoned)
@@ -1060,6 +1023,11 @@ public:
 
             void onCombatStart(Unit* victim)
             {
+                // DEBUG
+                char w[50];
+                snprintf(w, 50, "pull : %s",victim->GetName());
+                me->Say(w,LANG_UNIVERSAL,0);
+                //
                 setZoneInCombat(true);
                 for (uint8 i = 0; i < 3; i++)
                 {
@@ -1098,7 +1066,7 @@ public:
                 if(pInstance && pInstance->GetData(DATA_MURU_EVENT) != DONE || pInstance->GetData(DATA_KILJAEDEN_EVENT) == DONE)
                     return;
 
-                if (!me->IsInCombat())
+                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                 {
                     if(combatCheckTimer < diff)
                     {
@@ -1108,6 +1076,7 @@ public:
                             if (Player* plr = itr->getSource())
                                 if (me->GetDistance(plr) <= 50.0f && me->IsHostileTo(plr))
                                 {
+                                    pInstance->SetData(DATA_KILJAEDEN_EVENT,IN_PROGRESS);
                                     onCombatStart(plr);
                                     break;
                                 }
@@ -1174,6 +1143,8 @@ public:
                     if(me->GetSummoner() && me->GetSummoner()->ToCreature() && me->GetSummoner()->ToCreature()->getAI())
                         me->GetSummoner()->ToCreature()->getAI()->evade();
 
+                    if(pInstance)
+                        pInstance->SetData(DATA_KILJAEDEN_EVENT,NOT_STARTED);
                     me->ForcedDespawn();
                     return;
                 }
@@ -1204,6 +1175,11 @@ public:
                 me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
                 me->addUnitState(UNIT_STAT_STUNNED);
                 animSpawnTimer = 11000;
+            }
+
+            void onRemove()
+            {
+                if(pInstance) pInstance->SetData(DATA_KILJAEDEN_EVENT,NOT_STARTED);
             }
 
             void onEnterPhase(uint32 newPhase)
@@ -1348,7 +1324,7 @@ public:
                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                 {
                     Player* pl = itr->getSource();
-                    if (pl->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f) //~when a player set foot in the well
+                    if (pl->isAttackableByAOE() && pl->GetExactDistance2d(me->GetPositionX(),me->GetPositionY()) <= 13.0f) //~when a player set foot in the well
                         if (bumpHelper.AddCooldown(pl)) //return true if player wasn't knocked back < 2s ago
                             me->CastSpell(pl, SPELL_KNOCK_BACK,true);
                 }
@@ -1513,10 +1489,11 @@ public:
                             disableEvent(EVENT_SINISTER_REFLECTION);
                             break;
                         case EVENT_ARMAGEDDON:
-                        {
-                            doCast((Unit*)NULL, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
+                        { 
+                            if (Unit *unit = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true, false))
+                                doCast(unit, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            scheduleEvent(EVENT_ARMAGEDDON, 2000);
+                            scheduleEvent(EVENT_ARMAGEDDON, 3000);
                             break;
                         }
                     }
@@ -1569,6 +1546,8 @@ public:
                 {
                     resetEvent(EVENT_SHADOWBOLT, 2000, 3000);
                     resetEvent(EVENT_FELFIRE, 5000, 10000);
+
+                    pInstance->SetData(DATA_KILJAEDEN_EVENT,NOT_STARTED);
                 }
 
                 me->SetReactState(REACT_PASSIVE);
@@ -1869,13 +1848,13 @@ public:
 
             void updateEM(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                     me->DisappearAndDie();
             }
 
             void update(uint32 const diff)
             {
-                if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
+                if (pInstance && pInstance->GetData(DATA_KILJAEDEN_EVENT) == NOT_STARTED)
                 {
                     me->DisappearAndDie();
                     return;

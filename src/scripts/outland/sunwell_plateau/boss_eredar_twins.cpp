@@ -411,7 +411,7 @@ struct boss_alythessAI : public EredarTwin
     boss_alythessAI(Creature *c) : EredarTwin(c)
     {
         isSacrolash = false;
-        IntroStepCounter = 10;
+        IntroStepCounter = 0; //intro not active
     }
 
     uint32 IntroStepCounter;
@@ -436,7 +436,6 @@ struct boss_alythessAI : public EredarTwin
         FlamesearTimer = 15000;
         ConflagOrShadowNovaTimer = 15000;
         IntroYellTimer = 0;
-        IntroStepCounter = 0;
 		
         // Sacrolash spells
         m_creature->ApplySpellImmune(0, IMMUNITY_ID, 45347, true);
@@ -464,8 +463,8 @@ struct boss_alythessAI : public EredarTwin
                 }
             }
         }
-        else if (IntroStepCounter == 10 && m_creature->IsWithinLOSInMap(who) && m_creature->IsWithinDistInMap(who, 30))
-            IntroStepCounter = 0;
+        else if (IntroStepCounter == 0 && m_creature->IsWithinLOSInMap(who) && m_creature->IsWithinDistInMap(who, 30))
+            IntroStepCounter = 1; //start intro
     }
 
     void KilledUnit(Unit *victim)
@@ -496,7 +495,7 @@ struct boss_alythessAI : public EredarTwin
 
     void UpdateAI(const uint32 diff)
     {
-        if(IntroStepCounter < 9)
+        if(IntroStepCounter < 9) //10 = intro already done
         {
             if(IntroStepCounter == 0 && IntroYellTimer == 0)
                 if(me->FindNearestPlayer(60.0f))
@@ -505,7 +504,7 @@ struct boss_alythessAI : public EredarTwin
             if(IntroYellTimer)
             {
                 if(IntroYellTimer <= diff)
-                    IntroYellTimer = IntroStep(++IntroStepCounter);
+                    IntroYellTimer = IntroStep(IntroStepCounter++);
                 else IntroYellTimer -= diff;
             }
         }
