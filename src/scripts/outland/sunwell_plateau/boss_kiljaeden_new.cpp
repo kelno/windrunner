@@ -634,12 +634,10 @@ public:
                 {
                     if (pInstance->GetData(DATA_KILJAEDEN_EVENT) == DONE)
                     {
-                        if (!me->HasAura(SPELL_SUNWELL_IGNITION))
-                            doCast(me,SPELL_SUNWELL_IGNITION,true);
+                        doCast(me,SPELL_SUNWELL_IGNITION,true);
                         return;
                     } else {
-                        if (!me->HasAura(SPELL_ANVEENA_ENERGY_DRAIN))
-                            doCast(me,SPELL_ANVEENA_ENERGY_DRAIN,true);
+                        doCast(me,SPELL_ANVEENA_ENERGY_DRAIN,true);
                         
                         pInstance->SetData(DATA_KILJAEDEN_EVENT, NOT_STARTED);
                     }
@@ -1490,10 +1488,16 @@ public:
                             break;
                         case EVENT_ARMAGEDDON:
                         { 
+                            if(me->IsNonMeleeSpellCasted(false)) //Already casting something, recheck 1 sec later
+                            {
+                                scheduleEvent(EVENT_ARMAGEDDON, 1000);
+                                break;
+                            }
+
                             if (Unit *unit = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true, false))
                                 doCast(unit, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            scheduleEvent(EVENT_ARMAGEDDON, 3000);
+                            scheduleEvent(EVENT_ARMAGEDDON, 4000);
                             break;
                         }
                     }
