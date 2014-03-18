@@ -262,10 +262,10 @@ struct EredarTwin : public ScriptedAI
             bool doConflag = !isSacrolash ^ SisterDead; //false = nova
             Unit* target = NULL;
 
-            //pick a target within the top5 top aggro of our sister, tank excepted
+            //pick a target within the top5 top aggro of our sister, OUR tank excepted
             if(!SisterDead)
-                if(Unit* Sister = Unit::GetUnit((*m_creature),pInstance->GetData64(isSacrolash ? DATA_ALYTHESS : DATA_SACROLASH)))
-                    target = ((ScriptedAI*)Sister->ToCreature()->AI())->SelectUnit(SELECT_TARGET_TOPAGGRO, 5, 100.0, true, true);
+                if(Creature* Sister = Unit::GetCreature((*m_creature),pInstance->GetData64(isSacrolash ? DATA_ALYTHESS : DATA_SACROLASH)))
+                    target = SelectConflagOrNovaTarget(Sister, me->GetVictim());
 
             //if no target found pick it ourselves
             if(!target)
@@ -304,6 +304,30 @@ struct EredarTwin : public ScriptedAI
             DoCast(m_creature, SPELL_ENRAGE, true);
             Enraged = true;
         }else EnrageTimer -= diff;
+    }
+
+    // Select a random target from top5 threat in sister threat list, given unit excepted
+    Unit* SelectConflagOrNovaTarget(Creature* sister, Unit* except)
+    {
+        std::list<HostilReference*>& threatlist = sister->getThreatManager().getThreatList();
+
+        std::list<Unit*> targetList;
+        for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
+        {
+            if (checkTarget((*itr)->getTarget(), true, 100.0f)
+                && (*itr)->getTarget() != except)
+            {
+                targetList.push_back((*itr)->getTarget());
+            }
+            if(targetList.size() == 5) //only 5 first at threat
+                break;
+        }
+
+        if(targetList.size() == 0) return NULL;
+
+        std::list<Unit*>::iterator itr = targetList.begin();
+        std::advance(itr, urand(0, targetList.size() - 1));
+        return *itr;
     }
 };
 
