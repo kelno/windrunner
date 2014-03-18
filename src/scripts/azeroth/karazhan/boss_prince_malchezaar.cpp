@@ -93,6 +93,7 @@ static InfernalPoint InfernalPoints[] =
 #define SPELL_INFERNAL_RELAY_SUMMON   30836                 //summon creature (not used here)
 #define SPELL_INFERNAL_RELAY2         30835                 //also visual + script effect on nearby entry (not used here)
 #define SPELL_INFERNAL_RELAY_TRIGGER  53108                 //custom spell, target max 1 CREATURE_INFERNAL_RELAY and do script effect
+#define SPELL_INFERAL_LAND_VISUAL     24207                 // Not right id but same visual
 #define CREATURE_INFERNAL_RELAY  17645                      //rain down inferno from this one
 #define CREATURE_INFERNAL        17646
 
@@ -166,6 +167,7 @@ struct infernal_relayAI : public ScriptedAI
         {
             SummonInfernal();
             m_creature->SetUInt32Value(UNIT_FIELD_DISPLAYID, m_creature->GetUInt32Value(UNIT_FIELD_NATIVEDISPLAYID));
+            m_creature->CastSpell(m_creature,SPELL_INFERAL_LAND_VISUAL,true);
         }
     }
 };
