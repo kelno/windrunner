@@ -11,7 +11,7 @@
 struct mylittlebomblingAI : public ScriptedAI
 {
     short phase;
-	uint32 waitTimer;
+    uint32 waitTimer;
 
     enum PHASES {
         IDLE,
@@ -20,33 +20,33 @@ struct mylittlebomblingAI : public ScriptedAI
     };
 
     mylittlebomblingAI(Creature* creature) : ScriptedAI(creature) 
-	{} 
+    {} 
 
-	void Reset() {
+    void Reset() {
         m_creature->SetReactState(REACT_PASSIVE);
         phase = IDLE;
         waitTimer = WAITTIME;
-	}
-	
+    }
+    
     void EnterCombat(Unit* who)
     {}
 
-	void UpdateAI(uint32 const diff)
-	{
+    void UpdateAI(uint32 const diff)
+    {
         switch(phase)
         {
         case IDLE:
             break;
         case TRACKING:
-		    if(me->GetVictim())
-		    {
-			    if (me->GetDistance(me->GetVictim()) < 5)
-			    {
-				    phase = HOHI;
+            if(me->GetVictim())
+            {
+                if (me->GetDistance(me->GetVictim()) < 5)
+                {
+                    phase = HOHI;
                     me->Say(TEXT_HOHI,LANG_UNIVERSAL,NULL);
                     me->StopMoving();
-			    }
-		    } else {
+                }
+            } else {
                 Reset();
             }
             break;
@@ -54,19 +54,19 @@ struct mylittlebomblingAI : public ScriptedAI
             if (waitTimer < diff)
             {
                 Kaboom();
-			    me->DisappearAndDie();
+                me->DisappearAndDie();
             } else {
                 waitTimer -= diff;
             }
             break;
         }
-	}
+    }
 
-	void Kaboom()
-	{
-		DoSpawnCreature(CREATURE_BADABOUM, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 5000); //just for the effect
+    void Kaboom()
+    {
+        DoSpawnCreature(CREATURE_BADABOUM, 0, 0, 0, 0, TEMPSUMMON_TIMED_DESPAWN, 5000); //just for the effect
 
-		Map *map = m_creature->GetMap();
+        Map *map = m_creature->GetMap();
         Map::PlayerList const &PlayerList = map->GetPlayers();
 
         std::list<Player*> playerlist;
@@ -92,58 +92,58 @@ struct mylittlebomblingAI : public ScriptedAI
                 me->DealDamage((*i), 500000, 0, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FIRE, 0, false);
             }
         }
-	}
+    }
 
-	bool GoHurt(const char* Code)
-	{
+    bool GoHurt(const char* Code)
+    {
         std::string name = Code;
 
         if(!normalizePlayerName(name))
-			return false;
+            return false;
 
         Player *target = objmgr.GetPlayer(name.c_str());
 
-		if(target) {
+        if(target) {
             AttackStart(target);
             phase = TRACKING;
-			return true;
-		} else {
-			return false;
-		}
-	}
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-	void JustDied(Unit* /* who */)
-	{
-		Kaboom();
-	}
+    void JustDied(Unit* /* who */)
+    {
+        Kaboom();
+    }
 };
 
 bool GossipHello_mylittlebombling(Player *player, Creature *_Creature)
 {    
-	if (((mylittlebomblingAI*)_Creature->AI())->phase == mylittlebomblingAI::IDLE)
-		player->ADD_GOSSIP_ITEM_EXTENDED( 0, TEXT_GIMME_TARGET, GOSSIP_SENDER_MAIN, 1, "", 0, true);
+    if (((mylittlebomblingAI*)_Creature->AI())->phase == mylittlebomblingAI::IDLE)
+        player->ADD_GOSSIP_ITEM_EXTENDED( 0, TEXT_GIMME_TARGET, GOSSIP_SENDER_MAIN, 1, "", 0, true);
         
-		player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
+        player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
 
     return true;
 }
 
 bool GossipSelectWithCode_mylittlebombling( Player *player, Creature *_Creature, uint32 sender, uint32 action, const char* Code )
 {
-	if (!((mylittlebomblingAI*)_Creature->AI())->GoHurt(Code))
-		((mylittlebomblingAI*)_Creature->AI())->DoSay("Moi pas trouver !",LANG_UNIVERSAL,NULL);
+    if (!((mylittlebomblingAI*)_Creature->AI())->GoHurt(Code))
+        ((mylittlebomblingAI*)_Creature->AI())->DoSay("Moi pas trouver !",LANG_UNIVERSAL,NULL);
 
-	player->PlayerTalkClass->CloseGossip();
+    player->PlayerTalkClass->CloseGossip();
     return true;
 }
 
 struct TRINITY_DLL_DECL mylittlebombling_visualAI : public ScriptedAI
 {
-	mylittlebombling_visualAI(Creature* creature) : ScriptedAI(creature) 
-	{
-		me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
-		me->CastSpell(me, SPELL_VISUAL_BADABOUM, true);
-	}
+    mylittlebombling_visualAI(Creature* creature) : ScriptedAI(creature) 
+    {
+        me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
+        me->CastSpell(me, SPELL_VISUAL_BADABOUM, true);
+    }
 
     void EnterCombat(Unit* who)
     {}
@@ -168,10 +168,10 @@ void AddSC_mylittlebombling()
     newscript->Name="npc_mylittlebombling";
     newscript->GetAI = &GetAI_mylittlebombling;
     newscript->pGossipHello = &GossipHello_mylittlebombling;
-	newscript->pGossipSelectWithCode = &GossipSelectWithCode_mylittlebombling;
+    newscript->pGossipSelectWithCode = &GossipSelectWithCode_mylittlebombling;
     newscript->RegisterSelf();
 
-	newscript = new Script;
+    newscript = new Script;
     newscript->Name="npc_mylittlebombling_visual";
     newscript->GetAI = &GetAI_mylittlebombling_visual;
     newscript->RegisterSelf();

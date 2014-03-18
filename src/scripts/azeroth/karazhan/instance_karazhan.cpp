@@ -57,6 +57,7 @@ struct instance_karazhan : public ScriptedInstance
     uint64 KilrekGUID;
     uint64 TerestianGUID;
     uint64 MoroesGUID;
+    uint64 MalchezaarGUID;
     uint64 LibraryDoor;                                     // Door at Shade of Aran
     uint64 MassiveDoor;                                     // Door at Netherspite
     uint64 GamesmansDoor;                                   // Door before Chess
@@ -86,6 +87,7 @@ struct instance_karazhan : public ScriptedInstance
         KilrekGUID          = 0;
         TerestianGUID       = 0;
         MoroesGUID          = 0;
+        MalchezaarGUID      = 0;
 
         LibraryDoor         = 0;
         MassiveDoor         = 0;
@@ -145,6 +147,7 @@ struct instance_karazhan : public ScriptedInstance
             case 15688:   TerestianGUID = creature->GetGUID();   break;
             case 15687:   MoroesGUID = creature->GetGUID();      break;
             case 16816:   ImageGUID = creature->GetGUID();       break;
+            case 15690:   MalchezaarGUID = creature->GetGUID();  break;
             case NPC_PAWN_H:
             case NPC_KNIGHT_H:
             case NPC_QUEEN_H:
@@ -191,6 +194,7 @@ struct instance_karazhan : public ScriptedInstance
             case DATA_MASTERS_TERRACE_DOOR_1:      return MastersTerraceDoor[0];
             case DATA_MASTERS_TERRACE_DOOR_2:      return MastersTerraceDoor[1];
             case DATA_IMAGE_OF_MEDIVH:             return ImageGUID;
+            case DATA_MALCHEZAAR:                  return MalchezaarGUID;
         }
 
         return 0;

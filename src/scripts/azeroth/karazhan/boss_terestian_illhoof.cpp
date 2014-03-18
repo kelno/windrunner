@@ -134,9 +134,11 @@ struct mob_demon_chainAI : public ScriptedAI
     mob_demon_chainAI(Creature *c) : ScriptedAI(c) {}
 
     uint64 SacrificeGUID;
+    uint32 checkTimer;
 
     void Reset()
     {
+        checkTimer = 1000;
         SacrificeGUID = 0;
     }
 
@@ -147,11 +149,20 @@ struct mob_demon_chainAI : public ScriptedAI
     void JustDied(Unit *killer)
     {
         if(SacrificeGUID)
-        {
-            Unit* Sacrifice = Unit::GetUnit((*m_creature),SacrificeGUID);
-            if(Sacrifice)
+            if(Unit* Sacrifice = Unit::GetUnit((*me),SacrificeGUID))
                 Sacrifice->RemoveAurasDueToSpell(SPELL_SACRIFICE);
-        }
+    }
+
+    void UpdateAI(const uint32 diff)
+    {
+        if(checkTimer <= diff)
+        {
+            if(SacrificeGUID)
+                if(Unit* Sacrifice = Unit::GetUnit((*me),SacrificeGUID))
+                    if(!Sacrifice->IsAlive())
+                        me->Kill(me);
+            checkTimer = 1000;
+        } else checkTimer -= diff;
     }
 };
 
@@ -280,8 +291,7 @@ struct boss_terestianAI : public ScriptedAI
 
         if(SacrificeTimer < diff)
         {
-            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 1);
-            if(target && target->IsAlive() && target->GetTypeId() == TYPEID_PLAYER)
+            if(Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 100.0, true, true))
             {
                 DoCast(target, SPELL_SACRIFICE, true);
                 Creature* Chains = m_creature->SummonCreature(CREATURE_DEMONCHAINS, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ(), 0, TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN, 21000);

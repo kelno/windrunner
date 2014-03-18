@@ -604,7 +604,7 @@ void Object::_BuildValuesUpdate(uint8 updatetype, ByteBuffer * data, UpdateMask 
                     const CreatureInfo* cinfo = (this->ToCreature())->GetCreatureInfo();
                     if(cinfo->flags_extra & CREATURE_FLAG_EXTRA_TRIGGER)
                     {
-                        if(target->isGameMaster())
+                        if(target->isGameMaster() && target->GetSession()->GetGroupId() != GMGROUP_VIDEO)
                         {
                             if(cinfo->Modelid_A2)
                                 *data << cinfo->Modelid_A1;
@@ -1179,6 +1179,11 @@ float WorldObject::GetDistanceSqr(float x, float y, float z) const
     return (dist > 0 ? dist : 0);
 }
 
+float WorldObject::GetExactDistance2d(const WorldObject* obj) const
+{
+    return GetExactDistance2d(obj->GetPositionX(),obj->GetPositionY());
+}
+
 float WorldObject::GetExactDistance2d(const float x, const float y) const
 {
     float dx = GetPositionX() - x;
@@ -1193,6 +1198,15 @@ float WorldObject::GetDistance(const float x, const float y, const float z) cons
     float dz = GetPositionZ() - z;
     float sizefactor = GetObjectSize();
     float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz)) - sizefactor;
+    return ( dist > 0 ? dist : 0);
+}
+
+float WorldObject::GetExactDistance(const float x, const float y, const float z) const
+{
+    float dx = GetPositionX() - x;
+    float dy = GetPositionY() - y;
+    float dz = GetPositionZ() - z;
+    float dist = sqrt((dx*dx) + (dy*dy) + (dz*dz));
     return ( dist > 0 ? dist : 0);
 }
 
@@ -1327,7 +1341,7 @@ void WorldObject::GetRandomPoint( float x, float y, float z, float distance, flo
 
     Trinity::NormalizeMapCoord(rand_x);
     Trinity::NormalizeMapCoord(rand_y);
-    UpdateGroundPositionZ(rand_x,rand_y,rand_z);            // update to LOS height if available
+    UpdateAllowedPositionZ(rand_x,rand_y,rand_z);            // update to LOS height if available
 }
 
 void WorldObject::UpdateGroundPositionZ(float x, float y, float &z) const

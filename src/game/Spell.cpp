@@ -695,11 +695,50 @@ void Spell::FillTargetMap()
     {
         if(m_spellInfo->speed > 0.0f && m_targets.HasDst())
         {
-            float dist = m_caster->GetDistance(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ);
+            //based on some boss spells with huge hitbox, it seems we need the exact distance (not taking object size into account)
+            float dist = m_caster->GetExactDistance(m_targets.m_destX, m_targets.m_destY, m_targets.m_destZ) - 5.0f;
             if (dist < 5.0f) dist = 5.0f;
             m_delayMoment = (uint64) floor(dist / m_spellInfo->speed * 1000.0f);
         }
     }
+}
+
+void Spell::prepareHitProcData(uint32& procAttacker, uint32& procVictim, bool hostileTarget)
+{
+    // Get data for type of attack and fill base info for trigger
+    switch (m_spellInfo->DmgClass)
+    {
+        case SPELL_DAMAGE_CLASS_MELEE:
+            procAttacker = PROC_FLAG_SUCCESSFUL_MELEE_SPELL_HIT;
+            procVictim   = PROC_FLAG_TAKEN_MELEE_SPELL_HIT;
+            break;
+        case SPELL_DAMAGE_CLASS_RANGED:
+            procAttacker = PROC_FLAG_SUCCESSFUL_RANGED_SPELL_HIT;
+            procVictim   = PROC_FLAG_TAKEN_RANGED_SPELL_HIT;
+            break;
+        default:
+            if (IsPositiveSpell(m_spellInfo->Id,hostileTarget))          // Check for positive spell
+            {
+                procAttacker = PROC_FLAG_SUCCESSFUL_POSITIVE_SPELL;
+                procVictim   = PROC_FLAG_TAKEN_POSITIVE_SPELL;
+            }
+            else if (m_spellInfo->Id == 5019) // Wands
+            {
+                procAttacker = PROC_FLAG_SUCCESSFUL_RANGED_SPELL_HIT;
+                procVictim   = PROC_FLAG_TAKEN_RANGED_SPELL_HIT;
+            }
+            else
+            {
+                procAttacker = PROC_FLAG_SUCCESSFUL_NEGATIVE_SPELL_HIT;
+                procVictim   = PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT;
+            }
+            break;
+    }
+    
+    // Hunter traps spells (for Entrapment trigger)
+    // Gives your Immolation Trap, Frost Trap, Explosive Trap, and Snake Trap ....
+    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellInfo->SpellFamilyFlags & 0x0000200000000014LL)
+        procAttacker |= PROC_FLAG_ON_TRAP_ACTIVATION;
 }
 
 void Spell::prepareDataForTriggerSystem()
@@ -744,40 +783,6 @@ void Spell::prepareDataForTriggerSystem()
 
     if(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_CANT_TRIGGER_PROC)
         m_canTrigger = false;
-
-    // Get data for type of attack and fill base info for trigger
-    switch (m_spellInfo->DmgClass)
-    {
-        case SPELL_DAMAGE_CLASS_MELEE:
-            m_procAttacker = PROC_FLAG_SUCCESSFUL_MELEE_SPELL_HIT;
-            m_procVictim   = PROC_FLAG_TAKEN_MELEE_SPELL_HIT;
-            break;
-        case SPELL_DAMAGE_CLASS_RANGED:
-            m_procAttacker = PROC_FLAG_SUCCESSFUL_RANGED_SPELL_HIT;
-            m_procVictim   = PROC_FLAG_TAKEN_RANGED_SPELL_HIT;
-            break;
-        default:
-            if (IsPositiveSpell(m_spellInfo->Id))          // Check for positive spell
-            {
-                m_procAttacker = PROC_FLAG_SUCCESSFUL_POSITIVE_SPELL;
-                m_procVictim   = PROC_FLAG_TAKEN_POSITIVE_SPELL;
-            }
-            else if (m_spellInfo->Id == 5019) // Wands
-            {
-                m_procAttacker = PROC_FLAG_SUCCESSFUL_RANGED_SPELL_HIT;
-                m_procVictim   = PROC_FLAG_TAKEN_RANGED_SPELL_HIT;
-            }
-            else
-            {
-                m_procAttacker = PROC_FLAG_SUCCESSFUL_NEGATIVE_SPELL_HIT;
-                m_procVictim   = PROC_FLAG_TAKEN_NEGATIVE_SPELL_HIT;
-            }
-            break;
-    }
-    // Hunter traps spells (for Entrapment trigger)
-    // Gives your Immolation Trap, Frost Trap, Explosive Trap, and Snake Trap ....
-    if (m_spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER && m_spellInfo->SpellFamilyFlags & 0x0000200000000014LL)
-        m_procAttacker |= PROC_FLAG_ON_TRAP_ACTIVATION;
 }
 
 void Spell::CleanupTargetList()
@@ -981,15 +986,17 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
     // Need init unitTarget by default unit (can changed in code on reflect)
     // Or on missInfo!=SPELL_MISS_NONE unitTarget undefined (but need in trigger subsystem)
     unitTarget = unit;
+    bool hostileTarget = caster->IsHostileTo(unitTarget);
 
     // Reset damage/healing counter
     m_damage = target->damage;
     m_healing = -target->damage;
 
     // Fill base trigger info
-    uint32 procAttacker = m_procAttacker;
-    uint32 procVictim   = m_procVictim;
-    uint32 procEx       = m_triggeredByAuraSpell? PROC_EX_INTERNAL_TRIGGERED : PROC_EX_NONE;
+    uint32 procAttacker = 0;
+    uint32 procVictim = 0;
+    prepareHitProcData(procAttacker,procVictim,hostileTarget);
+    uint32 procEx = m_triggeredByAuraSpell? PROC_EX_INTERNAL_TRIGGERED : PROC_EX_NONE;
 
                             //Spells with this flag cannot trigger if effect is casted on self
                             // Slice and Dice, relentless strikes, eviscerate
@@ -1138,10 +1145,9 @@ void Spell::DoAllEffectOnTarget(TargetInfo *target)
             (m_caster->ToPlayer())->CastedCreatureOrGO(unit->GetEntry(),unit->GetGUID(),m_spellInfo->Id);
     }
 
-    if( !m_caster->IsFriendlyTo(unit) && !IsPositiveSpell(m_spellInfo->Id))
+    if( !m_caster->IsFriendlyTo(unit) && !IsPositiveSpell(m_spellInfo->Id,hostileTarget))
     {
-        if(  !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO) 
-          && !(m_spellInfo->AttributesEx & SPELL_ATTR_EX_NO_THREAT) )
+        if( !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO) )
         {
             m_caster->CombatStart(unit,!m_IsTriggeredSpell); //A triggered spell should not be considered as a pvp action
         }
@@ -1190,13 +1196,17 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
         {
             if (unit->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE))
             {
-                bool isNearbyEntrySpell = false;
-                for (uint8 i = 0; i < 3 && !isNearbyEntrySpell; i++) {
-                    if (m_spellInfo->EffectImplicitTargetA[i] == TARGET_UNIT_NEARBY_ENTRY || m_spellInfo->EffectImplicitTargetB[i] == TARGET_UNIT_NEARBY_ENTRY || m_spellInfo->EffectImplicitTargetB[i] == TARGET_UNIT_AREA_ENTRY_SRC)
-                        isNearbyEntrySpell = true;
+                bool nearbyEntrySpell = false;
+                for(uint8 i = 0; i < 3; i++)
+                {
+                    if(spellmgr.IsNearbyEntryEffect(m_spellInfo,i))
+                    {
+                        nearbyEntrySpell = true;
+                        break;
+                    }
                 }
 
-                if (!isNearbyEntrySpell)
+                if (!nearbyEntrySpell)
                 {
                     caster->SendSpellMiss(unit, m_spellInfo->Id, SPELL_MISS_EVADE);
                     m_damage = 0;
@@ -1285,7 +1295,8 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
         }
     }
 
-    if(unit->GetTypeId() == TYPEID_UNIT && (unit->ToCreature())->IsAIEnabled) {
+    if(unit->GetTypeId() == TYPEID_UNIT && (unit->ToCreature())->IsAIEnabled) 
+    {
         (unit->ToCreature())->AI()->SpellHit(caster, m_spellInfo);
         if ((unit->ToCreature())->getAI())
             (unit->ToCreature())->getAI()->onHitBySpell(caster, m_spellInfo);
@@ -1320,15 +1331,18 @@ void Spell::DoSpellHitOnUnit(Unit *unit, const uint32 effectMask)
     }
 
     // Sunwell Twins hack
-    if (m_spellInfo->Id == 45246) { //"Burn"
+    if (m_spellInfo->Id == 45246) 
+    { //"Burn"
         unit->RemoveAurasDueToSpell(45347); // "Dark Touched"
         unit->AddAura(45348, unit); // "Flame Touched"
     }
 
     if(m_customAttr & SPELL_ATTR_CU_LINK_HIT)
     {
-        if(const std::vector<int32> *spell_triggered = spellmgr.GetSpellLinked(m_spellInfo->Id + SPELL_LINK_HIT)) {
-            for(std::vector<int32>::const_iterator i = spell_triggered->begin(); i != spell_triggered->end(); ++i) {
+        if(const std::vector<int32> *spell_triggered = spellmgr.GetSpellLinked(m_spellInfo->Id + SPELL_LINK_HIT)) 
+        {
+            for(std::vector<int32>::const_iterator i = spell_triggered->begin(); i != spell_triggered->end(); ++i) 
+            {
                 if(*i < 0)
                     unit->RemoveAurasDueToSpell(-(*i));
                 else
@@ -1576,7 +1590,7 @@ WorldObject* Spell::SearchNearbyTarget(float range, SpellTargets TargetType)
                 if(m_targets.getUnitTarget())
                     return m_targets.getUnitTarget(); //keep current target
                 //else search one nearby
-                if(IsPositiveSpell(m_spellInfo->Id))
+                if(IsPositiveSpell(m_spellInfo->Id,false))
                     return SearchNearbyTarget(range, SPELL_TARGETS_ALLY);
                 else
                     return SearchNearbyTarget(range, SPELL_TARGETS_ENEMY);
@@ -1623,6 +1637,10 @@ WorldObject* Spell::SearchNearbyTarget(float range, SpellTargets TargetType)
                     case SPELL_TARGET_TYPE_DEAD:
                     default:
                     {
+                        //keep our current target if it's already the right entry
+                        if(m_targets.getUnitTarget() && m_targets.getUnitTarget()->GetEntry() == i_spellST->second.targetEntry)
+                            return m_targets.getUnitTarget();
+
                         Creature *p_Creature = NULL;
 
                         Trinity::NearestCreatureEntryWithLiveStateInObjectRangeCheck u_check(*m_caster,i_spellST->second.targetEntry,i_spellST->second.type!=SPELL_TARGET_TYPE_DEAD,range);
@@ -2168,6 +2186,11 @@ void Spell::SetTargetMap(uint32 i, uint32 cur)
                 if(m_spellInfo->Id == 5246)     //Intimidating Shout
                     unitList.remove(m_targets.getUnitTarget());
 
+                if(m_spellValue->MaxAffectedTargets == 1 && m_spellInfo->Attributes & SPELL_ATTR_UNK11) //Prefer not victim ?
+                {
+                    if(unitList.size() > 1)
+                        unitList.remove(m_caster->GetVictim());
+                }
                 Trinity::RandomResizeList(unitList, m_spellValue->MaxAffectedTargets);
             }
             else if (m_spellInfo->Id == 27285)  // Seed of Corruption proc spell
@@ -2444,13 +2467,15 @@ void Spell::cast(bool skipCheck)
     UpdatePointers();
 
     if(Unit *pTarget = m_targets.getUnitTarget())
-        if(pTarget->IsAlive() && (pTarget->HasAuraType(SPELL_AURA_MOD_STEALTH) || pTarget->HasAuraType(SPELL_AURA_MOD_INVISIBILITY)) && !pTarget->IsFriendlyTo(m_caster) && !pTarget->isVisibleForOrDetect(m_caster, true))
+    {
+        if(!m_IsTriggeredSpell && pTarget->IsAlive() && (pTarget->HasAuraType(SPELL_AURA_MOD_STEALTH) || pTarget->HasAuraType(SPELL_AURA_MOD_INVISIBILITY)) && !pTarget->IsFriendlyTo(m_caster) && !pTarget->isVisibleForOrDetect(m_caster, true))
         {
             SendCastResult(SPELL_FAILED_BAD_TARGETS);
             finish(false);
             return;
         }
 
+    }
     SetExecutedCurrently(true);
     SpellFailedReason castResult = SPELL_CAST_OK;
 
@@ -3481,6 +3506,24 @@ void Spell::SendPlaySpellVisual(uint32 SpellID)
     (m_caster->ToPlayer())->GetSession()->SendPacket(&data);
 }
 
+bool IsFreeInDuelArea(uint32 item)
+{
+    switch(item)
+    {
+    case 5140: //poudre éclipsante
+    case 21991: //Bandage épais en tisse-néant
+    case 32453: //Larmes de l'étoile
+    case 17056: //plume légère
+    case 23737: //Adamantite Grenade
+    case 23827: //Super-charge de sapeur
+    case 32413: //Grenade de givre
+    case 24268: //Filet en tisse-néant
+        return true;
+    default:
+        return false;
+    }
+}
+
 void Spell::TakeCastItem()
 {
     if(!m_CastItem || m_caster->GetTypeId() != TYPEID_PLAYER)
@@ -3491,7 +3534,7 @@ void Spell::TakeCastItem()
         return;
 
     //Duel area free first aid
-    if ( m_CastItem->GetEntry() == 21991 && m_caster->ToPlayer()->isInDuelArea() )
+    if ( m_caster->ToPlayer()->isInDuelArea() && IsFreeInDuelArea(m_CastItem->GetEntry()) )
        return;
 
     ItemPrototype const *proto = m_CastItem->GetProto();
@@ -3680,26 +3723,20 @@ void Spell::HandleFlatThreat()
     if(targetListSize == 0)
         return;
 
-    if(!IsPositiveSpell(m_spellInfo->Id))
+    for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
     {
-        for(std::list<TargetInfo>::iterator ihit= m_UniqueTargetInfo.begin(); ihit != m_UniqueTargetInfo.end(); ++ihit)
-        {
-            TargetInfo &target = *ihit;
-             Unit* targetUnit = ObjectAccessor::GetUnit(*m_caster, target.targetGUID);
-            if (!targetUnit)
-                continue;
+        TargetInfo &target = *ihit;
+            Unit* targetUnit = ObjectAccessor::GetUnit(*m_caster, target.targetGUID);
+        if (!targetUnit)
+            continue;
 
-            if(target.missCondition==SPELL_MISS_NONE) //needed here?
-            {
-                float threat = flatMod / targetListSize;;
-                targetUnit->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
-            }
-            //sLog.outString("HandleFlatThreat(): Spell %u, rank %u, added an additional %f flat threat", spellmgr.GetSpellRank(m_spellInfo->Id), threat);
-        }
-        //devastate case done in SpellDamageWeaponDmg
-    } else { //positive spells
-        // not sure about that but it seems the flat threat bonus only apply once and not anew for every hit target
-        m_caster->getHostilRefManager().threatAssist(m_caster, flatMod, m_spellInfo);
+        float threat = flatMod / targetListSize;;
+
+        //apply threat to every negative targets
+        if(!IsPositiveSpell(m_spellInfo->Id,m_caster->IsHostileTo(targetUnit)))
+            targetUnit->AddThreat(m_caster, threat,(SpellSchoolMask)m_spellInfo->SchoolMask,m_spellInfo);
+        else //or assist threat if friendly target
+            m_caster->getHostilRefManager().threatAssist(targetUnit, threat, m_spellInfo);
     }
 }
 
@@ -3803,10 +3840,10 @@ SpellFailedReason Spell::CheckCast(bool strict)
         if(m_caster->GetTypeId()==TYPEID_UNIT && m_caster->GetCharmerOrOwnerGUID())
         {
             // check correctness positive/negative cast target (pet cast real check and cheating check)
-            if(IsPositiveSpell(m_spellInfo->Id))
+            bool hostileTarget = m_caster->IsHostileTo(target);
+            if(IsPositiveSpell(m_spellInfo->Id,hostileTarget))
             {
-                //dispel positivity is dependant on target, don't check it
-                if(m_caster->IsHostileTo(target) && !IsDispel(m_spellInfo))
+                if(hostileTarget)
                     return SPELL_FAILED_BAD_TARGETS;
             }
             else
@@ -3841,7 +3878,6 @@ SpellFailedReason Spell::CheckCast(bool strict)
         // Not allow casting on flying player
         if (target->isInFlight())
             return SPELL_FAILED_BAD_TARGETS;
-
     } //end "if(target != m_caster)" block
 
     if(sWorld.getConfig(CONFIG_VMAP_INDOOR_CHECK) && m_caster->GetTypeId() == TYPEID_PLAYER && VMAP::VMapFactory::createOrGetVMapManager()->isLineOfSightCalcEnabled())
@@ -3892,7 +3928,7 @@ SpellFailedReason Spell::CheckCast(bool strict)
     }
 
     // prevent casting at immune friendly target
-    if(IsPositiveSpell(m_spellInfo->Id) && target->IsImmunedToSpell(m_spellInfo))
+    if(IsPositiveSpell(m_spellInfo->Id, m_caster->IsHostileTo(target)) && target->IsImmunedToSpell(m_spellInfo))
         return SPELL_FAILED_TARGET_AURASTATE;
 
     // target state requirements (not allowed state)
@@ -5511,9 +5547,7 @@ bool Spell::CheckTarget(Unit* target, uint32 eff)
     {
         // any unattackable target skipped
         if (target->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE)
-            && m_spellInfo->EffectImplicitTargetA[eff] != TARGET_UNIT_NEARBY_ENTRY
-            && m_spellInfo->EffectImplicitTargetB[eff] != TARGET_UNIT_NEARBY_ENTRY
-            && m_spellInfo->EffectImplicitTargetB[eff] != TARGET_UNIT_AREA_ENTRY_SRC)
+            && !spellmgr.IsNearbyEntryEffect(m_spellInfo,eff))
             return false;
 
         // unselectable targets skipped in all cases except TARGET_UNIT_NEARBY_ENTRY targeting
@@ -5546,7 +5580,7 @@ bool Spell::CheckTarget(Unit* target, uint32 eff)
     }
 
     //Do not check LOS for triggered spells
-    if( (m_IsTriggeredSpell && m_triggeringContainer) //triggered by another spell
+    if( (m_IsTriggeredSpell)
       || (m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_UNK25) //not sure about these
       || (m_spellInfo->AttributesEx2 & SPELL_ATTR_EX2_CAN_TARGET_NOT_IN_LOS) )
         return true;

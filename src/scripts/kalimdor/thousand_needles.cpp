@@ -37,12 +37,12 @@ EndContentData */
 ## npc_swiftmountain
 ######*/
 
-#define SAY_START 				-1000147
-#define SAY_WYVERN 				-1000148
-#define SAY_COMPLETE 			-1000149
+#define SAY_START                 -1000147
+#define SAY_WYVERN                 -1000148
+#define SAY_COMPLETE             -1000149
 
-#define QUEST_HOMEWARD_BOUND 	4770
-#define ENTRY_WYVERN 			4107
+#define QUEST_HOMEWARD_BOUND     4770
+#define ENTRY_WYVERN             4107
 
 struct npc_swiftmountainAI : public npc_escortAI
 {
@@ -172,14 +172,14 @@ struct npc_pluckyAI : public ScriptedAI
             else Timer-=diff;
         }
 
-		if(Chicken)
-		{
-			if (ChickenTimer < diff)
-			{
-				m_creature->HandleEmoteCommand(EMOTE_ONESHOT_WAVE);
-				Chicken = false;
-			}else ChickenTimer-=diff;
-		}
+        if(Chicken)
+        {
+            if (ChickenTimer < diff)
+            {
+                m_creature->HandleEmoteCommand(EMOTE_ONESHOT_WAVE);
+                Chicken = false;
+            }else ChickenTimer-=diff;
+        }
 
         if(!UpdateVictim())
             return;
@@ -468,7 +468,7 @@ void AddSC_thousand_needles()
     newscript->pQuestAccept = &QuestAccept_npc_kanati;
     newscript->RegisterSelf();
 
-	newscript = new Script;
+    newscript = new Script;
     newscript->Name = "npc_lakota_windsong";
     newscript->GetAI = &GetAI_npc_lakota_windsong;
     newscript->pQuestAccept = &QuestAccept_npc_lakota_windsong;

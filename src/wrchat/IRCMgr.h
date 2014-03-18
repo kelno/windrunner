@@ -1,5 +1,5 @@
 #ifndef IRCMGR_H
-#define	IRCMGR_H
+#define    IRCMGR_H
 
 #include <Common.h>
 #include <libircclient.h>
@@ -108,6 +108,7 @@ public:
     bool needReportToTarget(Player* chr) const;
 
     int ParseCommands(irc_session_t* session, const char* origin, const char* params);
+    const char* StripDoubleLineReturns(const char* str);
 private:
     //last session & channel. Dirty !
     irc_session_t* ircSession;
@@ -139,8 +140,11 @@ public:
 
     void sendToIRCFromGuild(uint32 guildId, std::string msg);
     void sendToIRCFromChannel(const char* channel, ChannelFaction faction, std::string msg);
+    void sendGlobalMsgToIRC(std::string msg);
 
     void EnableServer(IRCServer* server, bool enable);
+
+    void ConvertWoWColorsToIRC(std::string& msg);
     
     void run();
 
@@ -164,5 +168,5 @@ private:
 
 #define sIRCMgr Trinity::Singleton<IRCMgr>::Instance()
 
-#endif	/* IRCMGR_H */
+#endif    /* IRCMGR_H */
 

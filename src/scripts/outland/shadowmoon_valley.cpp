@@ -105,7 +105,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
         {
             float PlayerX, PlayerY, PlayerZ;
             caster->GetClosePoint(PlayerX, PlayerY, PlayerZ, m_creature->GetObjectSize());
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(true);
             m_creature->GetMotionMaster()->MovePoint(1, PlayerX, PlayerY, PlayerZ);
             PlayerGUID = caster->GetGUID();
         }
@@ -121,7 +121,7 @@ struct mob_mature_netherwing_drakeAI : public ScriptedAI
             IsEating = true;
             EatTimer = 5000;
             m_creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_ATTACKUNARMED);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(false);
         }
     }
 
@@ -202,7 +202,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
             m_creature->setFaction(FACTION_DEFAULT);
 
         FlyTimer = 10000;
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(false);
         m_creature->SetVisibility(VISIBILITY_ON);
     }
 
@@ -251,7 +251,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
                 PlayerGUID = 0;
             }
             m_creature->SetVisibility(VISIBILITY_OFF);
-            m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(false);
             m_creature->DealDamage(m_creature, m_creature->GetHealth(), NULL, DIRECT_DAMAGE, SPELL_SCHOOL_MASK_NORMAL, NULL, false);
             m_creature->RemoveCorpse();
         }
@@ -290,7 +290,7 @@ struct mob_enslaved_netherwing_drakeAI : public ScriptedAI
                             dz += 25;
                         }
 
-                        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                        m_creature->SetDisableGravity(true);
                         m_creature->GetMotionMaster()->MovePoint(1, dx, dy, dz);
                     }
                 }
@@ -845,7 +845,7 @@ struct npc_overlord_morghorAI : public ScriptedAI
             return 5000;
         case 20:
             Illi->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
-            Illi->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            Illi->SetDisableGravity(true);
             return 500;
         case 21:
             DoScriptText(OVERLORD_SAY_5, m_creature);
@@ -1982,64 +1982,64 @@ bool GossipSelect_npc_grand_commander_ruusk(Player* pPlayer, Creature* pCreature
 ## npc_skartax
 ######*/
 
-#define SPELL_PURPLE_BEAM		36384
-#define SPELL_AUTO_AURA			36382
-#define SPELL_SHADOWBOLT		12471
-#define SPELL_INCINERATE		38401
+#define SPELL_PURPLE_BEAM        36384
+#define SPELL_AUTO_AURA            36382
+#define SPELL_SHADOWBOLT        12471
+#define SPELL_INCINERATE        38401
 
 struct npc_skartaxAI : public ScriptedAI
 {
-	npc_skartaxAI(Creature *c) : ScriptedAI(c) {}
-	
-	uint32 SummonTimer;
-	uint32 ShadowBoltTimer;
-	uint32 IncinerateTimer;
-	
-	void Reset()
-	{
-		m_creature->AddAura(SPELL_AUTO_AURA, m_creature);
-		DoCast(m_creature, SPELL_PURPLE_BEAM);
-		
-		SummonTimer = 2000;
-		ShadowBoltTimer = 2000;
-		IncinerateTimer = 500;
-	}
-	void EnterCombat(Unit *pWho)
-	{
-		m_creature->InterruptNonMeleeSpells(true);
-		m_creature->RemoveAurasDueToSpell(SPELL_AUTO_AURA);
-	}
-	
-	void UpdateAI(uint32 const diff)
-	{
-		if (SummonTimer <= diff) {
-			m_creature->SummonCreature(19757, -3368.94, 2145.35, -8.28, 0.382, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 180000);
-			SummonTimer = 180000;
-		}
-		else
-			SummonTimer -= diff;
-			
-		if (ShadowBoltTimer <= diff) {
-			DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT);
-			ShadowBoltTimer = 5000;
-		}
-		else
-			ShadowBoltTimer -= diff;
-			
-		if (IncinerateTimer <= diff) {
-			DoCast(m_creature->GetVictim(), SPELL_INCINERATE);
-			IncinerateTimer = 10000;
-		}
-		else
-			IncinerateTimer -= diff;
-			
-		DoMeleeAttackIfReady();
-	}
+    npc_skartaxAI(Creature *c) : ScriptedAI(c) {}
+    
+    uint32 SummonTimer;
+    uint32 ShadowBoltTimer;
+    uint32 IncinerateTimer;
+    
+    void Reset()
+    {
+        m_creature->AddAura(SPELL_AUTO_AURA, m_creature);
+        DoCast(m_creature, SPELL_PURPLE_BEAM);
+        
+        SummonTimer = 2000;
+        ShadowBoltTimer = 2000;
+        IncinerateTimer = 500;
+    }
+    void EnterCombat(Unit *pWho)
+    {
+        m_creature->InterruptNonMeleeSpells(true);
+        m_creature->RemoveAurasDueToSpell(SPELL_AUTO_AURA);
+    }
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (SummonTimer <= diff) {
+            m_creature->SummonCreature(19757, -3368.94, 2145.35, -8.28, 0.382, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 180000);
+            SummonTimer = 180000;
+        }
+        else
+            SummonTimer -= diff;
+            
+        if (ShadowBoltTimer <= diff) {
+            DoCast(m_creature->GetVictim(), SPELL_SHADOWBOLT);
+            ShadowBoltTimer = 5000;
+        }
+        else
+            ShadowBoltTimer -= diff;
+            
+        if (IncinerateTimer <= diff) {
+            DoCast(m_creature->GetVictim(), SPELL_INCINERATE);
+            IncinerateTimer = 10000;
+        }
+        else
+            IncinerateTimer -= diff;
+            
+        DoMeleeAttackIfReady();
+    }
 };
 
 CreatureAI* GetAI_npc_skartax(Creature *pCreature)
 {
-	return new npc_skartaxAI(pCreature);
+    return new npc_skartaxAI(pCreature);
 }
 
 /*######
@@ -2048,22 +2048,22 @@ CreatureAI* GetAI_npc_skartax(Creature *pCreature)
 
 struct npc_invis_deathforge_casterAI : public ScriptedAI
 {
-	npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
-	
-	void EnterCombat(Unit *pWho) {}
-	
-	void UpdateAI(uint32 const diff)
-	{
-		if (Creature *pTarget = m_creature->FindNearestCreature(21207, 30.0f)) {
-			if (!pTarget->HasAura(36384))
-				DoCast(pTarget, 36384);
-		}
-	}
+    npc_invis_deathforge_casterAI(Creature *c) : ScriptedAI(c) {}
+    
+    void EnterCombat(Unit *pWho) {}
+    
+    void UpdateAI(uint32 const diff)
+    {
+        if (Creature *pTarget = m_creature->FindNearestCreature(21207, 30.0f)) {
+            if (!pTarget->HasAura(36384))
+                DoCast(pTarget, 36384);
+        }
+    }
 };
 
 CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
 {
-	return new npc_invis_deathforge_casterAI(pCreature);
+    return new npc_invis_deathforge_casterAI(pCreature);
 }
 
 /*######
@@ -2072,14 +2072,14 @@ CreatureAI* GetAI_npc_invis_deathforge_caster(Creature *pCreature)
 
 bool GOHello_go_arcano_control_unit(Player *pPlayer, GameObject* pGo)
 {
-	if (Creature *pCreature = pPlayer->FindNearestCreature(21909, 25.0f)) {
-		pPlayer->CastSpell(pCreature, 37868, true);
-		pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-		
-		return true;
-	}
-	
-	return false;
+    if (Creature *pCreature = pPlayer->FindNearestCreature(21909, 25.0f)) {
+        pPlayer->CastSpell(pCreature, 37868, true);
+        pCreature->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
+        
+        return true;
+    }
+    
+    return false;
 }
 
 /*######
@@ -2513,7 +2513,7 @@ struct npc_commander_arcusAI : public ScriptedAI
             summonTimer = 15000 + rand() % 10000;
             for (uint8 i = 0; i < 10; i++) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[i][0], skybreakerPosAldor[i][1], skybreakerPosAldor[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     if (player)
                         skybreaker->AI()->AttackStart(player);
                 }
@@ -2576,7 +2576,7 @@ struct npc_commander_arcusAI : public ScriptedAI
         if (summonTimer) {
             if (summonTimer <= diff) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_ALDOR, skybreakerPosAldor[rand()%10][0], skybreakerPosAldor[rand()%10][1], skybreakerPosAldor[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     skybreaker->AI()->AttackStart(player);
                 }
                 
@@ -2689,7 +2689,7 @@ struct npc_commander_hobbAI : public ScriptedAI
             summonTimer = 15000 + rand() % 10000;
             for (uint8 i = 0; i < 10; i++) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[i][0], skybreakerPosScyer[i][1], skybreakerPosScyer[i][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     if (player)
                         skybreaker->AI()->AttackStart(player);
                 }
@@ -2752,7 +2752,7 @@ struct npc_commander_hobbAI : public ScriptedAI
         if (summonTimer) {
             if (summonTimer <= diff) {
                 if (Creature* skybreaker = me->SummonCreature(NPC_DRAGONMAW_SKYBREAKER_SCYER, skybreakerPosScyer[rand()%10][0], skybreakerPosScyer[rand()%10][1], skybreakerPosScyer[rand()%10][2], 0, TEMPSUMMON_CORPSE_TIMED_DESPAWN, 1000)) {
-                    skybreaker->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+                    skybreaker->SetDisableGravity(true);
                     skybreaker->AI()->AttackStart(player);
                 }
                 

@@ -173,7 +173,7 @@ bool GossipSelect_npc_zap_farflinger(Player *pPlayer, Creature *pCreature, uint3
         
         pPlayer->CLOSE_GOSSIP_MENU();
     }
-	return true;
+    return true;
 }
 
 /*######

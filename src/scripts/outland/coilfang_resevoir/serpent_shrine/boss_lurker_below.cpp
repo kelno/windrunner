@@ -195,7 +195,7 @@ class Boss_Lurker_Below : public CreatureScript
                 if (summoned->getAI())
                     summoned->getAI()->setZoneInCombat(true);
             }
-	
+    
             void onSummonDespawn(Creature* unit)
             {
                 summons.Despawn(unit);
@@ -280,7 +280,7 @@ class Boss_Lurker_Below : public CreatureScript
 
                         if (geyserTimer < diff)
                         {
-                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 1))
+                            if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150.0, true, true))
                                 doCast(target, SPELL_GEYSER);
                             else
                                 doCast(me->GetVictim(), SPELL_GEYSER);
@@ -338,7 +338,7 @@ class Boss_Lurker_Below : public CreatureScript
                                     break;
                                 case 2:
                                 case 3:
-                                	break;
+                                    break;
                             }
                         }
                         else
@@ -372,25 +372,25 @@ class Boss_Lurker_Below : public CreatureScript
 
                             if(spoutAnimTimer < diff)
                             {
-                            	if (rotTimer >= 2000)
+                                if (rotTimer >= 2000)
                                     doCast(me, SPELL_SPOUT_ANIM, true);
 
-                            	spoutAnimTimer = 1000;
+                                spoutAnimTimer = 1000;
                             }
                             else
                                 spoutAnimTimer -= diff;
 
                             if (!me->IsUnitRotating())
                             {
-                            	rotateState = 3;
-                            	rotateStateTimer = 1000;
-                            	lastOrientation = me->GetOrientation();
+                                rotateState = 3;
+                                rotateStateTimer = 1000;
+                                lastOrientation = me->GetOrientation();
                             }
                         }
                         else if (rotateState == 3)
                         {
-                        	me->SetOrientation(lastOrientation);
-                        	me->StopMoving();
+                            me->SetOrientation(lastOrientation);
+                            me->StopMoving();
                         }
                         break;
                     case SUBMERGED:

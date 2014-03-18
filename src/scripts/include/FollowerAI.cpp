@@ -40,7 +40,7 @@ void FollowerAI::AttackStart(Unit* pWho)
         if (m_creature->HasUnitState(UNIT_STAT_FOLLOW))
             m_creature->clearUnitState(UNIT_STAT_FOLLOW);
 
-        if (IsCombatMovement())
+        if (IsCombatMovementAllowed())
             m_creature->GetMotionMaster()->MoveChase(pWho);
     }
 }
@@ -146,8 +146,8 @@ void FollowerAI::JustRespawned()
 {
     m_uiFollowState = STATE_FOLLOW_NONE;
 
-    if (!IsCombatMovement())
-        SetCombatMovement(true);
+    if (!IsCombatMovementAllowed())
+        SetCombatMovementAllowed(true);
 
     if (m_creature->getFaction() != m_creature->GetCreatureInfo()->faction_A)
         m_creature->setFaction(m_creature->GetCreatureInfo()->faction_A);

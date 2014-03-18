@@ -159,7 +159,7 @@ class Boss_Majordomo : public CreatureScript
             {
                 Summons.Summon(summoned);
             }
-	
+    
             void onSummonDespawn(Creature* unit)
             {
                 Summons.Despawn(unit);
@@ -199,9 +199,9 @@ class Boss_Majordomo : public CreatureScript
                         Map *map = me->GetMap();
                         Map::PlayerList const &PlayerList = map->GetPlayers();
 
-		                for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			            if (Player* i_pl = i->getSource())
-				        if (i_pl->IsAlive())
+                        for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                        if (Player* i_pl = i->getSource())
+                        if (i_pl->IsAlive())
                             i_pl->CombatStop(true);
 
                         break;
@@ -599,11 +599,11 @@ class Mob_Hot_Coal : public CreatureScript
                             Map *map = me->GetMap();
                             Map::PlayerList const &PlayerList = map->GetPlayers();
 
-		            for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-			        if (Player* i_pl = i->getSource())
-				    if (i_pl->IsAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
+                    for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
+                    if (Player* i_pl = i->getSource())
+                    if (i_pl->IsAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
                                     {
-					doCast(i_pl, SPELL_HOTCOAL, true);
+                    doCast(i_pl, SPELL_HOTCOAL, true);
                                         i_pl->CombatStop(true);
                                     }
 

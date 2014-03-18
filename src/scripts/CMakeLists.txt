@@ -20,7 +20,6 @@ SET(scripts_STAT_SRCS
     azeroth/arathi_highlands.cpp
     azeroth/alterac_mountains.cpp
     azeroth/alterac_valley/alterac_bowman.cpp
-    azeroth/alterac_valley/AV_Marshals.cpp
     azeroth/alterac_valley/AV_Warmasters.cpp
     azeroth/alterac_valley/boss_balinda.cpp
     azeroth/alterac_valley/boss_drekthar.cpp
@@ -222,7 +221,6 @@ SET(scripts_STAT_SRCS
     kalimdor/caverns_of_time/dark_portal/boss_chrono_lord_deja.cpp
     kalimdor/caverns_of_time/dark_portal/boss_temporus.cpp
     kalimdor/caverns_of_time/hyjal/boss_anetheron.cpp
-    kalimdor/caverns_of_time/hyjal/boss_archimonde.cpp
     kalimdor/caverns_of_time/hyjal/boss_archimonde_new.cpp
     kalimdor/caverns_of_time/hyjal/boss_azgalor.cpp
     kalimdor/caverns_of_time/hyjal/boss_kazrogal.cpp
@@ -376,6 +374,7 @@ SET(scripts_STAT_SRCS
     outland/coilfang_resevoir/underbog/boss_the_black_stalker.cpp
     outland/coilfang_resevoir/slave_pens/boss_ahune.cpp
     outland/coilfang_resevoir/slave_pens/instance_slave_pens.cpp
+	outland/coilfang_resevoir/slave_pens/slave_pens.cpp
     outland//eversong_woods.cpp
     outland//ghostlands.cpp
     outland/gruuls_lair/boss_gruul.cpp

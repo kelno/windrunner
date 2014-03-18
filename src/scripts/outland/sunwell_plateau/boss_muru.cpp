@@ -276,8 +276,8 @@ public:
                         {
                             for (GuidMapCD::const_iterator i = guidPlayerCD.begin(); i != guidPlayerCD.end(); ++i)
                             {
-                            	if ((*i).second > 0)
-                            	{
+                                if ((*i).second > 0)
+                                {
                                     if ((*i).second > diff)
                                         guidPlayerCD[(*i).first] = (*i).second - diff;
                                     else
@@ -286,7 +286,7 @@ public:
                                         if (Player *plr = objmgr.GetPlayer((*i).first))
                                             plr->RemoveAurasDueToSpell(SPELL_BLACK_HOLE_EFFECT);
                                     }
-                            	}
+                                }
                             }
                         }
 
@@ -339,7 +339,7 @@ class boss_entropius : public CreatureScript
 {
 public:
     boss_entropius() : CreatureScript("boss_entropius") {}
-	
+    
     class boss_entropiusAI : public CreatureAINew
     {
         public:
@@ -385,7 +385,7 @@ public:
                 pInstance->SetData(DATA_MURU_EVENT, IN_PROGRESS);
         }
         
-        void message(uint32 id, uint32 data)
+        void message(uint32 id, uint64 data)
         {
             if (id == 1)
                 EnrageTimer = data;
@@ -482,14 +482,14 @@ class boss_muru : public CreatureScript
 {
 public:
     boss_muru() : CreatureScript("boss_muru") {}
-	
+    
     class boss_muruAI : public Creature_NoMovementAINew
     {
         public:
-	boss_muruAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
-	{
-	    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-	}
+    boss_muruAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me)
+    {
+        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+    }
 
         ScriptedInstance* pInstance;
         SummonList Summons;
@@ -573,7 +573,7 @@ public:
             */
             Summons.Summon(summoned);
         }
-	
+    
         void onSummonDespawn(Creature* unit)
         {
             Summons.Despawn(unit);
@@ -763,14 +763,14 @@ class npc_muru_portal : public CreatureScript
 {
 public:
     npc_muru_portal() : CreatureScript("npc_muru_portal") {}
-	
+    
     class npc_muru_portalAI : public Creature_NoMovementAINew
     {
         public:
-	npc_muru_portalAI(Creature* creature) : Creature_NoMovementAINew(creature)
-	{
-	    pInstance = ((ScriptedInstance*)creature->GetInstanceData());
-	}
+    npc_muru_portalAI(Creature* creature) : Creature_NoMovementAINew(creature)
+    {
+        pInstance = ((ScriptedInstance*)creature->GetInstanceData());
+    }
 
         ScriptedInstance* pInstance;
 
@@ -1022,7 +1022,7 @@ class npc_dark_fiend : public CreatureScript
 {
 public:
     npc_dark_fiend() : CreatureScript("npc_dark_fiend") {}
-	
+    
     class npc_dark_fiendAI : public CreatureAINew
     {
         public:
@@ -1104,7 +1104,7 @@ class npc_void_sentinel : public CreatureScript
     class npc_void_sentinelAI : public CreatureAINew
     {
         public:
-	npc_void_sentinelAI(Creature* creature) : CreatureAINew(creature)
+    npc_void_sentinelAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -1194,7 +1194,7 @@ class npc_void_spawn : public CreatureScript
     class npc_void_spawnAI : public CreatureAINew
     {
         public:
-	npc_void_spawnAI(Creature* creature) : CreatureAINew(creature)
+    npc_void_spawnAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -1271,7 +1271,7 @@ class npc_berserker : public CreatureScript
     class npc_berserkerAI : public CreatureAINew
     {
         public:
-	npc_berserkerAI(Creature* creature) : CreatureAINew(creature)
+    npc_berserkerAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -1355,7 +1355,7 @@ class npc_mage : public CreatureScript
     class npc_mageAI : public CreatureAINew
     {
         public:
-	npc_mageAI(Creature* creature) : CreatureAINew(creature)
+    npc_mageAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }

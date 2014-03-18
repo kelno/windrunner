@@ -47,14 +47,14 @@
 struct molten_flameAI : public ScriptedAI
 {
     ScriptedInstance* pInstance;
-    Unit* currentTarget;
+    uint64 currentTargetGUID;
     
     float x, y, z, groundZ;
 
     molten_flameAI(Creature *c) : ScriptedAI(c)
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        currentTarget = nullptr;
+        currentTargetGUID = 0;
     }
     
     void UndermapCheck()
@@ -88,17 +88,22 @@ struct molten_flameAI : public ScriptedAI
         if(!supremus) 
             return;
         
+        Unit* currentTarget;
         if( !(currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,20.0f,100.0f,true)) )
             currentTarget = ((ScriptedAI*)supremus->AI())->SelectUnit(SELECT_TARGET_RANDOM,0,0.0f,100.0f,true);
 
         if(currentTarget)
+        {
+            currentTargetGUID = currentTarget->GetGUID();
             me->GetMotionMaster()->MoveFollowOnPoint(currentTarget);
+        }
     }
     
     void UpdateAI(uint32 const diff)
     {
         //change target if we reached it
-        if(!currentTarget || me->GetDistance(currentTarget) < 2.0f)
+        Player* p = me->GetMap()->GetPlayerInMap(currentTargetGUID);
+        if(!p || me->GetDistance(p) < 2.0f)
             RandomizeTarget();
     }
 };
@@ -322,7 +327,6 @@ struct npc_volcanoAI : public ScriptedAI
      
     uint32 UnderMapCheckTimer;
     uint32 startTimer;
-    bool started;
     
     float currentX, currentY, currentZ, groundZ;
 
@@ -335,7 +339,6 @@ struct npc_volcanoAI : public ScriptedAI
 
         me->SetReactState(REACT_PASSIVE);
 
-        started = false;
         startTimer = 1500;
     }
     
@@ -360,12 +363,12 @@ struct npc_volcanoAI : public ScriptedAI
             UnderMapCheckTimer = 750;
         }else UnderMapCheckTimer -= diff;
 
-        if (!started)
+        if (startTimer)
         { 
-            if(startTimer < diff)
+            if(startTimer <= diff)
             {
                 DoCast(m_creature, SPELL_VOLCANIC_ERUPTION, true);
-                started = true;
+                startTimer = 0;
             } else startTimer -= diff;
         } 
     }

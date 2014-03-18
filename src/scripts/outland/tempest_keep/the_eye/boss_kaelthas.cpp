@@ -817,7 +817,7 @@ struct boss_kaelthasAI : public ScriptedAI
                         for (uint32 i = 0; i < 3; i++)
                         {
 
-                            Unit* target =SelectUnit(SELECT_TARGET_RANDOM, 1, 70, true);
+                            Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 70.0, true, true);
                             if(!target) target = m_creature->GetVictim();
                             if(target)
                                 DoCast(target, SPELL_MIND_CONTROL);
@@ -1448,7 +1448,7 @@ struct mob_phoenix_tkAI : public ScriptedAI
 
     void Reset()
     {
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);//birds can fly! :)
+        m_creature->SetDisableGravity(true);//birds can fly! :)
         egg = true;
         Cycle_Timer = 2000;
         m_creature->CastSpell(m_creature,SPELL_BURN,true);

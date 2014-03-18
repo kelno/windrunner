@@ -7,11 +7,11 @@
 // So, be cautious...
 
 class SimpleCooldown
-{	
+{    
 public :
-	// Constructors
-	SimpleCooldown(); // Only create the objectt with cd=0 and with isSetCD=false
-	SimpleCooldown(int cd); // Create and initialize variables correctly
+    // Constructors
+    SimpleCooldown(); // Only create the objectt with cd=0 and with isSetCD=false
+    SimpleCooldown(int cd); // Create and initialize variables correctly
         SimpleCooldown(int maxCD, int beginingCD); //like SimpleCD(int cd) but the FIRST actualCD is different
         
         //scaled=true => rangeRandomValue is a precentage of maxCD (1=100%).
@@ -22,31 +22,31 @@ public :
         ////Public Methods////
         
         //get() Methods
-	int getActualCD();
+    int getActualCD();
         int getMaxCD();
         int getBeginingCooldown();
         
         //set() Methods
-	void setActualCD(int cd);
+    void setActualCD(int cd);
         void setMaxCD(int cd);
         void setBeginingCooldown(int BegCD);
         
         //Bolean methods
-	bool isReady(int diff);
-	bool CheckAndUpdate(int diff); // Check if cd is up. Is not, actual_cd goes down
-	bool CheckAndUpdate(int diff, bool additionnalCondition); // Same thing but don't reset (but update) if additionnalCondition is false
+    bool isReady(int diff);
+    bool CheckAndUpdate(int diff); // Check if cd is up. Is not, actual_cd goes down
+    bool CheckAndUpdate(int diff, bool additionnalCondition); // Same thing but don't reset (but update) if additionnalCondition is false
         bool isMaxCDSet();
         
         //Void methods
-	void update(int diff);// Goes down the actual CD
-	void reinitCD();// set actualCD to maxCD
+    void update(int diff);// Goes down the actual CD
+    void reinitCD();// set actualCD to maxCD
         void resetAtStart();
         
 private :
         
         // Private variables
-	int max_cooldown;
-	int actual_cooldown;
+    int max_cooldown;
+    int actual_cooldown;
         int beginingCooldown;
         bool isSetCD;
         int rangeRandomValue;

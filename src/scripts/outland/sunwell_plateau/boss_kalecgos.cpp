@@ -161,7 +161,7 @@ struct boss_kalecgosAI : public ScriptedAI
 
         m_creature->setFaction(14);
         m_creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE + UNIT_FLAG_NOT_SELECTABLE);
-        m_creature->RemoveUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(false);
         m_creature->SetVisibility(VISIBILITY_ON);
         m_creature->SetStandState(PLAYER_STATE_SLEEP);
         m_creature->SetReactState(REACT_AGGRESSIVE);
@@ -256,9 +256,9 @@ struct boss_kalecgosAI : public ScriptedAI
     }
     
     void MoveInLineOfSight(Unit *pWho) {
-		if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->IsInCombat() && me->getFaction() != 35)
-			AttackStart(pWho);
-	}
+        if (pWho->GetTypeId() == TYPEID_PLAYER && m_creature->GetDistance(pWho) <= 30.0f && !m_creature->IsInCombat() && me->getFaction() != 35)
+            AttackStart(pWho);
+    }
 
     void MovementInform(uint32 type,uint32 id)
     {
@@ -293,7 +293,7 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 10000;
             break;
         case 3:
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(true);
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MovePoint(1,FLY_X,FLY_Y,FLY_Z);
             TalkTimer = 600000;
@@ -313,7 +313,7 @@ struct boss_kalecgosAI : public ScriptedAI
             TalkTimer = 3000;
             break;
         case 2:
-            m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+            m_creature->SetDisableGravity(true);
             m_creature->GetMotionMaster()->Clear();
             m_creature->GetMotionMaster()->MovePoint(1,FLY_X,FLY_Y,FLY_Z);
             m_creature->DeleteThreatList();
@@ -731,9 +731,9 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
             GameObject *Door = GameObject::GetGameObject(*m_creature, ForceFieldGUID);
             if(Door) Door->SetGoState(GO_STATE_ACTIVE);
             GameObject *Wall1 = GameObject::GetGameObject(*m_creature, Wall1GUID);
-			if(Wall1) Wall1->SetGoState(!isFriendly);
-			GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
-			if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
+            if(Wall1) Wall1->SetGoState(!isFriendly);
+            GameObject *Wall2 = GameObject::GetGameObject(*m_creature, Wall2GUID);
+            if(Wall2) Wall2->SetGoState(GO_STATE_ACTIVE);
             TalkSequence++;
         }
         if(TalkTimer <= diff)
@@ -756,9 +756,10 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
         }
             
         // Check LoS EVERY update, maybe the current target was teleported in the spectral realm
-        if (m_creature->GetVictim()->GetPositionZ() <= 52.5f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) {
+        if (m_creature->GetVictim()->GetPositionZ() <= 52.5f || !m_creature->GetVictim()->IsWithinLOSInMap(m_creature)) 
+        {
             DeleteFromThreatList(m_creature->GetVictim()->GetGUID());
-            AttackStart(SelectUnit(SELECT_TARGET_RANDOM, 1));
+            UpdateVictim();
         }
 
         if(CheckTimer < diff)
@@ -841,7 +842,7 @@ void boss_kalecgosAI::UpdateAI(const uint32 diff)
                     target->AddAura(AURA_SPECTRAL_REALM, pet);
                     pet->Relocate(pet->GetPositionX(), pet->GetPositionY(), pet->GetPositionZ(), pet->GetOrientation());
                 }
-                DoModifyThreatPercent(target, -100);	// Reset threat so Kalecgos does not follow the player in spectral realm :)
+                DoModifyThreatPercent(target, -100);    // Reset threat so Kalecgos does not follow the player in spectral realm :)
                 target->RemoveAurasDueToSpell(SPELL_ARCANE_BUFFET); // FIXME: I'm not sure this is blizzlike
                 if (target->HasAura(AURA_SPECTRAL_EXHAUSTION)) {
                     target->RemoveAurasDueToSpell(AURA_SPECTRAL_EXHAUSTION);    // FIXME: If this happens, this is a bug.

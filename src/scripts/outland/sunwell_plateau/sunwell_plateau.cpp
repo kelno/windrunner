@@ -96,17 +96,30 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     npc_sunblade_protectorAI(Creature *c) : ScriptedAI(c)
     {
         isActivated = false;
+        JustReachedHome();
     }
     
     uint32 felLightningTimer;
     
     bool isActivated;
     
+    void JustReachedHome()
+    {
+        if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+            me->AddAura(25171,me); //freeze visual, not the right spell
+    }
+    
+    void MovementInform(uint32 type, uint32 i)
+    {
+
+    }
+
     void Reset()
     {
         felLightningTimer = 5000;
         
-        m_creature->SetReactState(REACT_DEFENSIVE);
+        if(me->GetMotionMaster()->GetCurrentMovementGeneratorType() == IDLE_MOTION_TYPE)
+            m_creature->SetReactState(REACT_DEFENSIVE);
 
         if (isActivated)
         {
@@ -125,6 +138,7 @@ struct npc_sunblade_protectorAI : public ScriptedAI
     
     void EnterCombat(Unit *pWho)
     {
+        me->RemoveAurasDueToSpell(25171);
         DoScriptText(YELL_AGGRO, m_creature);
     }
     
@@ -169,6 +183,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     Creature *protector;
     
     bool hasActivated;
+    bool startedRunning;
     
     void Reset()
     {
@@ -178,24 +193,17 @@ struct npc_sunblade_scoutAI : public ScriptedAI
         pullerGUID = 0;
         protector = NULL;
         hasActivated = false;
+        startedRunning = false;
+        sinisterStrikeTimer = 2000;
+
+        m_creature->SetReactState(REACT_AGGRESSIVE);
+        m_creature->SetSpeed(MOVE_RUN, 2.0f);
     }
     
     void EnterCombat(Unit *pWho)
     {
         pullerGUID = pWho->GetGUID();
-        if (protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true)) {
-            m_creature->SetReactState(REACT_PASSIVE);
-            m_creature->SetSpeed(MOVE_WALK, 4.0f);
-            m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
-            m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
-        }
-        else
-        {
-            m_creature->clearUnitState(UNIT_STAT_ROOT);
-            m_creature->SetReactState(REACT_AGGRESSIVE);
-            AttackStart(me->SelectNearestTarget(50.0f));
-            sinisterStrikeTimer = 2000;
-        }
+        protector = m_creature->FindNearestCreature(NPC_SUNBLADE_PROTEC, 60.0f, true);
 
         DoScriptText(YELL_AGGRO2, m_creature);
     }
@@ -209,6 +217,7 @@ struct npc_sunblade_scoutAI : public ScriptedAI
                 m_creature->SetReactState(REACT_AGGRESSIVE);
                 m_creature->clearUnitState(UNIT_STAT_ROOT);
                 if (target->ToCreature()) {
+                    target->RemoveAurasDueToSpell(25171);
                     target->ToCreature()->SetReactState(REACT_AGGRESSIVE);
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->felLightningTimer = 5000;
                     ((npc_sunblade_protectorAI*)target->ToCreature()->AI())->isActivated = true;
@@ -239,6 +248,15 @@ struct npc_sunblade_scoutAI : public ScriptedAI
     {
         if (!hasActivated) {
             if (protector) {
+                if(!startedRunning)
+                {
+                    startedRunning = true;
+                    m_creature->SetReactState(REACT_PASSIVE);
+                    m_creature->SetUnitMovementFlags(MOVE_RUN);
+                    m_creature->GetMotionMaster()->MovePoint(0, protector->GetPositionX(), protector->GetPositionY(), protector->GetPositionZ());
+                    m_creature->SetUInt64Value(UNIT_FIELD_TARGET, protector->GetGUID());
+                }
+
                 if (m_creature->GetDistance(protector) <= 15.0f) {
                     m_creature->GetMotionMaster()->MovementExpired(false);
                     m_creature->StopMoving();
@@ -485,7 +503,7 @@ struct npc_shadowsword_manafiendAI : public ScriptedAI
             
         if (drainManaTimer <= diff) {
             if (m_creature->GetPower(POWER_MANA) <= ((m_creature->GetMaxPower(POWER_MANA) / 100.0f) * 10.0f)) {
-                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1), SPELL_DRAIN_MANA);
+                DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0, true, true), SPELL_DRAIN_MANA);
                 drainManaTimer = 15000+rand()%5000;
             }
         }
@@ -628,7 +646,7 @@ struct npc_shadowsword_soulbinderAI : public ScriptedAI
             flashDarknessTimer -= diff;
             
         if (dominationTimer <= diff) {
-            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 1, 40.0f, true), SPELL_DOMINATION);
+            DoCast(SelectUnit(SELECT_TARGET_RANDOM, 0, 40.0, true, true), SPELL_DOMINATION);
             dominationTimer = 15000;
         }
         else
@@ -815,6 +833,52 @@ CreatureAI* GetAI_npc_volatile_fiend(Creature *pCreature)
 }
 
 /*######
+## npc_selana
+######*/
+
+#define TEXT_HELLO             20006
+#define TEXT_MENU1             20007
+#define TEXT_MENU2             20008
+#define TEXT_MENU3             20009
+#define TEXT_MENU4             20010
+#define GOSSIP_ITEM_1          20011
+#define GOSSIP_ITEM_2          20012
+#define GOSSIP_ITEM_3          20013
+#define GOSSIP_ITEM_4          20014
+
+bool GossipHello_npc_selana(Player* player, Creature* _Creature)
+{
+    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_selana(Player* player, Creature* _Creature, uint32 sender, uint32 action)
+{
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF+2:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+            player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF+3:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
+            player->SEND_GOSSIP_MENU(TEXT_MENU3,_Creature->GetGUID());
+            break;
+        case GOSSIP_ACTION_INFO_DEF+4:
+            player->SEND_GOSSIP_MENU(TEXT_MENU4,_Creature->GetGUID());
+            break;
+    }
+
+    return true;
+}
+
+/*######
 ## npc_moorba
 ######*/
 
@@ -852,7 +916,7 @@ struct npc_kalec_felmystAI : public ScriptedAI
 {
     npc_kalec_felmystAI(Creature* c) : ScriptedAI(c)
     {
-        me->AddUnitMovementFlag(MOVEMENTFLAG_LEVITATING + MOVEMENTFLAG_ONTRANSPORT);
+        me->SetDisableGravity(true);
         
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
     }
@@ -1078,6 +1142,12 @@ void AddSC_sunwell_plateau()
     newscript->Name = "npc_moorba";
     newscript->pGossipHello = &GossipHello_npc_moorba;
     newscript->pGossipSelect = &GossipSelect_npc_moorba;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name = "npc_selana";
+    newscript->pGossipHello = &GossipHello_npc_selana;
+    newscript->pGossipSelect = &GossipSelect_npc_selana;
     newscript->RegisterSelf();
     
     newscript = new Script;

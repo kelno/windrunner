@@ -474,7 +474,7 @@ struct mob_giant_infernalAI : public hyjal_trashAI
             {
                 trigger->SetVisibility(VISIBILITY_OFF);
                 trigger->setFaction(m_creature->getFaction());
-                trigger->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+                trigger->SetDisableGravity(true);
                 trigger->CastSpell(m_creature,SPELL_METEOR,true);
             }
             m_creature->GetMotionMaster()->Clear();
@@ -648,13 +648,11 @@ struct mob_ghoulAI : public hyjal_trashAI
     }
 
     bool go;
-    uint32 FrenzyTimer;
     uint32 pos;
     uint32 MoveTimer;
     bool RandomMove;
     void Reset()
     {
-        FrenzyTimer = 5000+rand()%5000;
         MoveTimer = 2000;
         RandomMove = false;
     }
@@ -717,11 +715,7 @@ struct mob_ghoulAI : public hyjal_trashAI
                 }
             }
         }
-        if(FrenzyTimer<diff)
-        {
-            DoCast(m_creature,SPELL_FRENZY);
-            FrenzyTimer = 15000+rand()%15000;
-        }else FrenzyTimer -= diff;
+
         if (!UpdateVictim())
             return;
 
@@ -1148,7 +1142,7 @@ struct mob_frost_wyrmAI : public hyjal_trashAI
     {
         FrostBreathTimer = 5000;
         MoveTimer = 0;
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
     }
 
     void WaypointReached(uint32 i)
@@ -1264,7 +1258,7 @@ struct mob_gargoyleAI : public hyjal_trashAI
         Zpos = 10.0;
         StrikeTimer = 2000+rand()%5000;
         MoveTimer = 0;
-        m_creature->AddUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT + MOVEMENTFLAG_LEVITATING);
+        m_creature->SetDisableGravity(true);
     }
 
     void WaypointReached(uint32 i)

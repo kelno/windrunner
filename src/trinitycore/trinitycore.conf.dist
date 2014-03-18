@@ -158,6 +158,15 @@ EAIErrorLevel = 2
 #        Default: 0 (disable, less CPU usage)
 #                 1 (enable, each totem created check LOS)
 #       
+#    mmap.enabled
+#        Default : 1
+#
+#    ChargeMovementGenerator.enabled
+#        Default : 0
+#
+#    GameObject.Collision
+#        Default : 1
+#
 #    DetectPosCollision
 #        Check final move position, summon position, etc for visible collision with other objects or
 #        wall (wall only if vmaps are enabled)
@@ -218,6 +227,9 @@ vmap.ignoreMapIds = "369"
 vmap.ignoreSpellIds = "7720"
 vmap.petLOS = 0
 vmap.totem = 0
+mmap.enabled = 1
+ChargeMovementGenerator.enabled = 0
+GameObject.Collision = 1
 DetectPosCollision = 1
 TargetPosRecalculateRange = 1.5
 UpdateUptimeInterval = 10
@@ -1119,6 +1131,7 @@ GM.AllowFriend      = 0
 #
 #    Visibility.Distance.Object
 #        Visible distance for gameobject, dynobject, bodies, corpses, bones
+#        (players/unit visibility distance is only determined by Visibility.Distance.Continents/Instances/BGArenas)
 #        Min limit is iteraction distance (5)
 #
 #    Visibility.Distance.InFlight
@@ -1143,8 +1156,8 @@ Visibility.GroupMode = 0
 Visibility.Distance.Continents    = 90
 Visibility.Distance.Instances     = 120
 Visibility.Distance.BGArenas      = 180
-Visibility.Distance.Object        = 66
-Visibility.Distance.InFlight      = 66
+Visibility.Distance.Object        = 90
+Visibility.Distance.InFlight      = 90
 Visibility.Distance.Grey.Unit   = 1
 Visibility.Distance.Grey.Object = 10
 
@@ -1362,16 +1375,25 @@ Arena.AutoDistributeInterval = 7
 
 ###################################################################################################################
 #
-# Battleground config
+# BATTLEGROUND CONFIG
 #
-# PrematureFinishTimer: the time to end the bg if there are less than minplayersperteam on one side
+#    PrematureFinishTimer: the time to end the bg if there are less than minplayersperteam on one side
 #                       in milliseconds
 #              Default: 300000
 #                       0 - disable
+#    BattleGround.TimeLimit.Warsong
+#              Maximum time in seconds
+#              Default: 0
+#
+#    BattleGround.TimeLimit.Arena
+#              Maximum time in seconds
+#              Default: 0
 #
 ###################################################################################################################
 
 BattleGround.PrematureFinishTimer = 300000
+BattleGround.TimeLimit.Warsong = 0
+BattleGround.TimeLimit.Arena = 0
 
 ###################################################################################################################
 #
@@ -1928,10 +1950,14 @@ AutoAnnounce.Enable = 0
 #        Default:     15 - (15 Seconds)
 #                     0  - (Send check as soon as possible)
 #
-#    Warden.LogFile
-#        Log file of Warden Fail
-#        Default: "Warden.log"
-#                 "" - Empty name for disable
+#    Warden.DBLogs
+#        Will log fails to DB
+#        Default: true
+#                 false
+#
+#    Warden.BanTime
+#        Warden ban time in secs ("0" for infinite). Has to be a string !
+#        Default = "180d" 
 #
 ###############################################################################
 
@@ -1940,4 +1966,35 @@ Warden.Kick = 0
 Warden.NumChecks = 3
 Warden.ClientResponseDelay = 90
 Warden.ClientCheckHoldOff = 15
-Warden.LogFile = "warden.log"
+Warden.DBLogs = true
+Warden.BanTime = "180d"
+
+###############################################################################
+# MONITORING SETTINGS
+#
+#    Monitor.enabled
+#       Enable monitoring system
+#        Default: 1 (Enabled)
+#                 0 (Disabled)
+#
+#    Monitor.update
+#       Monitoring system update intervall
+#       Default: 10000 (milliseconds)
+#
+#    Monitor.path = "/home/trinitycore/monitor"
+#    Monitor.players = "players"
+#    Monitor.timediff = "timediff"
+#    Monitor.maps = "maps"
+#    Monitor.bgwait = "bgwait"
+#    Monitor.creatureguid = "creatureguid"
+#    Monitor.races = "races"
+#    Monitor.classes = "classes"
+#    Monitor.bgwait = "bgwait"
+#    Monitor.creatureguid = "creatureguid"
+#    Monitor.races = "races"
+#    Monitor.classes = "classes"
+#
+###############################################################################
+
+Monitor.enabled = 1
+Monitor.update = 10000

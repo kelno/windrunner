@@ -370,7 +370,7 @@ struct pyrewood_ambushAI : public ScriptedAI
 
 CreatureAI* GetAI_pyrewood_ambush(Creature *pCreature)
 {
-	return new pyrewood_ambushAI (pCreature);
+    return new pyrewood_ambushAI (pCreature);
 }
 
 bool QuestAccept_pyrewood_ambush(Player *pPlayer, Creature *pCreature, const Quest *pQuest )

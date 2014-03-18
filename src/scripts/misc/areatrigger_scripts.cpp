@@ -264,7 +264,7 @@ bool AreaTrigger_at_shade_of_eranikus(Player* pPlayer, AreaTriggerEntry const *p
         if (!pPlayer->FindCreatureInGrid(15362, 100, true))
             pPlayer->SummonCreature(15362, -672.965149, 6.674169, -90.835663, 1.539716, TEMPSUMMON_TIMED_DESPAWN, 3600000);
     }
-	return true;
+    return true;
 }
 
 /*######

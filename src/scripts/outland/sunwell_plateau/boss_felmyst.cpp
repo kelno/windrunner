@@ -77,10 +77,10 @@ enum Spells
 
 enum PhaseFelmyst
 {
-	PHASE_NULL   = 0,
-    PHASE_INTRO  = 1,
+    PHASE_NULL   = 0,
+    PHASE_INTRO  = 1, //playing intro
     PHASE_RESET  = 2,
-    PHASE_PULL   = 3,
+    PHASE_PULL   = 3, //ready to be pull
     PHASE_GROUND = 4,
     PHASE_ENC    = 5,
     PHASE_FLIGHT = 6
@@ -92,23 +92,28 @@ enum PhaseFelmyst
 static float flightMobLeft[] = {1468.380005, 730.267029, 60.083302};
 static float flightMobRight[] = {1458.170044, 501.295013, 60.083302};
 
-static float lefts[3][3] = { {1494.760010, 705.000000, 60.083302},
-                             {1469.939941, 704.239014, 60.083302},
-                             {1446.540039, 702.570007, 60.083302} };
+static float lefts[3][3] = { {1446.540039, 702.570007, 52.083302},    //south
+                             {1469.939941, 704.239014, 52.083302},    //middle
+                             {1494.760010, 705.000000, 52.083302}, }; //north
 
-static float rights[3][3] = { {1492.819946, 515.668030, 60.083302},
-                              {1467.219971, 516.318970, 60.083302},
-                              {1441.640015, 520.520020, 60.083302} };
+static float rights[3][3] = { {1441.640015, 520.520020, 52.083302},   //south
+                              {1467.219971, 516.318970, 52.083302},   //middle
+                              {1492.819946, 515.668030, 52.083302}, };//north
+
+static float prepareLandingLoc[2][3] = {  {1482.709961, 649.406006, 21.081100},
+                                          {1491.119995, 553.672974, 24.921900}  };
+
+static float kalecPos[] = { 1501.253174, 764.737061, 117.972687, 4.626863 };
 
 class boss_felmyst : public CreatureScript
 {
 public:
-	boss_felmyst() : CreatureScript("boss_felmyst") {}
+    boss_felmyst() : CreatureScript("boss_felmyst") {}
 
     class boss_felmystAI : public CreatureAINew
     {
         public:
-    	boss_felmystAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        boss_felmystAI(Creature* creature) : CreatureAINew(creature), Summons(me)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -137,6 +142,7 @@ public:
         bool origin;
         bool direction;
         bool inChaseOnFlight;
+        uint8 chosenLane; //0-2, south - center - north
 
         Unit* encapsTarget;
 
@@ -145,6 +151,7 @@ public:
             origin = false;
             direction = false;
             inChaseOnFlight = false;
+            chosenLane = 0;
             encapsTarget = NULL;
             flightPhaseTimer = 60000;
             flightPhase = 0;
@@ -152,6 +159,8 @@ public:
             introPhase = 0;
             BreathCount = 0;
             demonicCount = 0;
+
+            //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
 
             setPhase(PHASE_NULL);
             if (onSpawn)
@@ -187,10 +196,11 @@ public:
 
             me->addUnitState(UNIT_STAT_IGNORE_PATHFINDING);
 
+            me->RemoveUnitMovementFlag(MOVEMENTFLAG_WALK_MODE);
+
             Summons.DespawnAll();
 
-            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-            me->SetFullTauntImmunity(true);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
 
             if(pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
@@ -235,8 +245,10 @@ public:
                     me->GetMotionMaster()->MovePath(25038, true);
                     setPhase(PHASE_PULL);
                     break;
+                case PHASE_PULL:
+                    //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, false);
+                    break;
                 case PHASE_GROUND:
-                    me->SetSpeed(MOVE_RUN, 1.0f, true);
                     flightPhaseTimer = 60000;
                     scheduleEvent(EVENT_CLEAVE, 5000, 10000);
                     scheduleEvent(EVENT_CORROSION, 10000, 20000);
@@ -245,6 +257,7 @@ public:
                     scheduleEvent(EVENT_ENCAPS_WARN, 29000);
                     break;
                 case PHASE_FLIGHT:
+                    //me->ApplyModFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE, true);
                     me->SetSpeed(MOVE_RUN, 1.3f, true);
                     switch (rand()%2)
                     {
@@ -259,8 +272,6 @@ public:
                     }
 
                     demonicCount = 0;
-                    scheduleEvent(EVENT_DEMONIC_VAPOR, 5000);
-                    enableEvent(EVENT_DEMONIC_VAPOR);
                     flightPhaseTimer = 300;
                     flightPhase = 0;
                     BreathCount = 0;
@@ -293,12 +304,12 @@ public:
                 return;
 
             if (getPhase() != PHASE_PULL && getPhase() != PHASE_GROUND)
-            	return;
+                return;
 
             if (me->Attack(pTarget, true))
             {
-            	if (!aiInCombat())
-            	    me->GetMotionMaster()->Initialize();
+                if (!aiInCombat())
+                    me->GetMotionMaster()->Initialize();
 
                 if (me->IsPet())
                 {
@@ -325,7 +336,7 @@ public:
             if(pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, DONE);
 
-            if (Creature* kalecgos = me->SummonCreature(24844, 1501.253174, 764.737061, 117.972687, 4.626863, TEMPSUMMON_MANUAL_DESPAWN, 0))
+            if (Creature* kalecgos = me->SummonCreature(24844, kalecPos[0],kalecPos[1],kalecPos[2],kalecPos[3], TEMPSUMMON_MANUAL_DESPAWN, 0))
                 kalecgos->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
         }
 
@@ -339,11 +350,11 @@ public:
             Summons.Summon(summoned);
             if(summoned->GetEntry() == MOB_DEAD)
             {
-            	summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-            	summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
+                summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+                summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
             }
             else if (summoned->GetEntry() == MOB_VAPOR)
-            	me->SetTarget(summoned->GetGUID());
+                me->SetTarget(summoned->GetGUID());
         }
 
         void onSummonDespawn(Creature* unit)
@@ -361,22 +372,18 @@ public:
 
             switch (id)
             {
-                case 1:
+                case 1: //arrived at breath start position
                     flightPhase++;
+                    flightPhaseTimer = 0;
                     break;
-                case 2:
+                case 2: //arrived at breath destination
                     me->RemoveAurasDueToSpell(SPELL_FOG_BREATH);
                     disableEvent(EVENT_FOG_CORRUPTION);
 
-                    if (BreathCount < 3)
-                    {
-                        if (!direction)
-                            me->GetMotionMaster()->MovePoint(0, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10, true);
-                        else
-                            me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10, true);
-                    }
+                    flightPhase++;
+                    flightPhaseTimer = 3000;
                     break;
-                case 3:
+                case 3: //arrived at landing position
                     me->StopMoving();
 
                     me->HandleEmoteCommand(EMOTE_ONESHOT_LAND);
@@ -438,15 +445,15 @@ public:
                         break;
                     case 2:
                         me->SetHomePosition(1464.726440, 606.836243, 72.818344, 0);
-                        me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344);
+                        me->GetMotionMaster()->MovePoint(0, 1464.726440, 606.836243, 72.818344,false);
                         introPhaseTimer = 6000;
                         introPhase++;
                         break;
                     case 3:
-                        me->GetMotionMaster()->MovePath(25038, true);
+                        me->GetMotionMaster()->MovePath(25038, true); //waddle around waiting to be pulled
                         me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
-                        me->SetReactState(REACT_AGGRESSIVE);
                         setPhase(PHASE_PULL);
+                        me->SetReactState(REACT_AGGRESSIVE);
                         break;
                 }
             }
@@ -460,7 +467,7 @@ public:
             {
                 switch(flightPhase)
                 {
-                    case 0:
+                    case 0: // Lift off : emote
                         me->StopMoving();
                         me->HandleEmoteCommand(EMOTE_ONESHOT_LIFTOFF);
                         me->SetDisableGravity(true);
@@ -469,65 +476,97 @@ public:
                         flightPhaseTimer = 2000;
                         flightPhase++;
                         break;
-                    case 1:
-                        me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f);
-                        flightPhaseTimer = 24000;
+                    case 1: // Lift off : move higher
+                        me->GetMotionMaster()->MovePoint(0, me->GetPositionX()+1, me->GetPositionY(), me->GetPositionZ() + 15.0f,false);
+                        flightPhaseTimer = 30000; //wait 30 sec for the demonic vapor part
+                        scheduleEvent(EVENT_DEMONIC_VAPOR, 3000);
+                        enableEvent(EVENT_DEMONIC_VAPOR);
                         flightPhase++;
                         break;
-                    case 2:
+                    case 2: //fly near breath start position
+                        me->SetSpeed(MOVE_RUN, 4.0f, true);
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2]);
+                            me->GetMotionMaster()->MovePoint(1, flightMobRight[0], flightMobRight[1], flightMobRight[2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(1, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2]);
+                            me->GetMotionMaster()->MovePoint(1, flightMobLeft[0], flightMobLeft[1], flightMobLeft[2],false);
 
                         flightPhase++;
+                        flightPhaseTimer = 20000; //just to be sure to not stay stuck
                         break;
                     case 3:
-                        // Wait mouvement inform
+                        // Do nothing, flightPhase will be incremented in mouvement inform
+                        flightPhase++; // should never be reached, just to be sure to not stay stuck
                         break;
-                    case 4:
+                    case 4: //fly to start position
+                        me->SetSpeed(MOVE_RUN, 1.3f, true);
+                        chosenLane = rand()%3;
                         if (!direction)
-                            me->GetMotionMaster()->MovePoint(0, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
+                            me->GetMotionMaster()->MovePoint(1, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(0, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10);
+                            me->GetMotionMaster()->MovePoint(1, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2],false);
 
-                        DoScriptText(EMOTE_DEEP_BREATH, me);
-                        flightPhaseTimer = 2500;
                         flightPhase++;
+                        flightPhaseTimer = 20000; //just to be sure to not stay stuck
                         break;
                     case 5:
-                        doCast(me, SPELL_FOG_BREATH, false);
-                        if (!direction)
-                            me->GetMotionMaster()->MovePoint(2, lefts[BreathCount][0], lefts[BreathCount][1], lefts[BreathCount][2]-10);
+                        // Do nothing, flightPhase will be incremented in mouvement inform
+                        flightPhase++; // should never be reached, just to be sure to not stay stuck
+                        break;
+                    case 6: // Face right direction, do emote and wait a bit
+                        flightPhaseTimer = 4000;
+                        flightPhase++;
+                        DoScriptText(EMOTE_DEEP_BREATH, me);
+                        if (!direction) //face the opposite
+                            me->SetInFront(lefts[chosenLane][0], lefts[chosenLane][1]);
                         else
-                            me->GetMotionMaster()->MovePoint(2, rights[BreathCount][0], rights[BreathCount][1], rights[BreathCount][2]-10);
+                            me->SetInFront(rights[chosenLane][0], rights[chosenLane][1]);
+                        me->SetSpeed(MOVE_RUN, 4.0f, true);
+                        me->SendMovementFlagUpdate();
+                        break;
+                    case 7: //start passage
+                        if (!direction)
+                            me->GetMotionMaster()->MovePoint(2, lefts[chosenLane][0], lefts[chosenLane][1], lefts[chosenLane][2],false);
+                        else
+                            me->GetMotionMaster()->MovePoint(2, rights[chosenLane][0], rights[chosenLane][1], rights[chosenLane][2],false);
 
-                        scheduleEvent(EVENT_FOG_CORRUPTION, 500);
+                        doCast(me, SPELL_FOG_BREATH, false);
+                        flightPhaseTimer = 1500;
+                        flightPhase++;
+                        break;
+                    case 8: //spawn fogs
+
+                        scheduleEvent(EVENT_FOG_CORRUPTION, 50);
                         enableEvent(EVENT_FOG_CORRUPTION);
                         direction = !direction;
-                        BreathCount++;
 
-                        flightPhaseTimer = 16000;
-                        if (BreathCount >= 3)
-                            flightPhaseTimer = 9000;
-
+                        flightPhaseTimer = 20000; //just to be sure to not stay stuck
                         flightPhase++;
                         break;
-                    case 6:
+                    case 9:
+                        // Do nothing, flightPhase will be incremented in mouvement inform
+                        flightPhase++; // should never be reached, just to be sure to not stay stuck
+                        break;
+                    case 10: // wait 2 sec at arrival, then loop from flightPhase 4 until 3 breaths done
+                        BreathCount++;
+                        me->SetSpeed(MOVE_RUN, 1.3f, true);
                         flightPhase++;
+                        flightPhaseTimer = 2000;
                         if(BreathCount < 3)
                             flightPhase = 4;
+                        
                         break;
-                    case 7:
-                        me->SetSpeed(MOVE_RUN, 1.3f, true);
+                    case 11: //prepare to land, landing is handled in onMovementInform
                         if (!origin)
-                            me->GetMotionMaster()->MovePoint(3, 1482.709961, 649.406006, 21.081100);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[0][0],prepareLandingLoc[0][1],prepareLandingLoc[0][2],false);
                         else
-                            me->GetMotionMaster()->MovePoint(3, 1491.119995, 553.672974, 24.921900);
+                            me->GetMotionMaster()->MovePoint(3, prepareLandingLoc[1][0],prepareLandingLoc[1][1],prepareLandingLoc[1][2],false);
 
                         flightPhase++;
+                        flightPhaseTimer = 15000;
                         break;
                     default:
+                        //shouldn't ever go there, but let's go back to 11 if this happens
+                        flightPhase = 11;
                         break;
                 }
             }
@@ -542,13 +581,13 @@ public:
                 handleIntro(diff);
                 return;
             }
-
-            if (!updateVictim())
-                return;
+            
+            updateVictim();
 
             switch (getPhase())
             {
                 case PHASE_PULL:
+                    if(!me->GetVictim()) return;
                     if (me->IsWithinMeleeRange(me->GetVictim()))
                     {
                         if (inChaseOnFlight)
@@ -575,6 +614,7 @@ public:
                     handleFlight(diff);
                     break;
                 case PHASE_GROUND:
+                    if(!me->GetVictim()) return;
                     if (flightPhaseTimer)
                     {
                         if (flightPhaseTimer <= diff)
@@ -651,31 +691,21 @@ public:
                     {
                         if (pInstance)
                         {
-                            switch (BreathCount)
-                            {
+                            switch (chosenLane)
+                            { //related trigger cast their fog via instanceScript, see instance_sunwell_plateau. Y position is given to advance fog progressively
                                 case 0:
-                                    pInstance->SetData((direction ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY());
+                                    pInstance->SetData((direction ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY());
                                     break;
                                 case 1:
                                     pInstance->SetData((direction ? DATA_ACTIVATE_CENTER_TO_LEFT : DATA_ACTIVATE_CENTER_TO_RIGHT), (uint32) me->GetPositionY());
                                     break;
                                 case 2:
-                                    pInstance->SetData((direction ? DATA_ACTIVATE_SOUTH_TO_LEFT : DATA_ACTIVATE_SOUTH_TO_RIGHT), (uint32) me->GetPositionY());
+                                    pInstance->SetData((direction ? DATA_ACTIVATE_NORTH_TO_LEFT : DATA_ACTIVATE_NORTH_TO_RIGHT), (uint32) me->GetPositionY());
                                     break;
                             }
                         }
 
-                        float x, y, z;
-                        me->GetPosition(x, y, z);
-                        me->UpdateGroundPositionZ(x, y, z);
-                        if(Creature *Fog = me->SummonCreature(MOB_VAPOR_TRAIL, x, y, z, 0, TEMPSUMMON_TIMED_DESPAWN, 10000))
-                        {
-                            Fog->RemoveAurasDueToSpell(SPELL_TRAIL_TRIGGER);
-                            Fog->CastSpell(Fog, SPELL_FOG_TRIGGER, true);
-                            Fog->getAI()->message(1, 1);
-                        }
-
-                        scheduleEvent(EVENT_FOG_CORRUPTION, 500);
+                        scheduleEvent(EVENT_FOG_CORRUPTION, 50);
                         break;
                     }
                 }
@@ -692,12 +722,12 @@ public:
 class mob_felmyst_vapor : public CreatureScript
 {
 public:
-	mob_felmyst_vapor() : CreatureScript("mob_felmyst_vapor") {}
+    mob_felmyst_vapor() : CreatureScript("mob_felmyst_vapor") {}
 
     class mob_felmyst_vaporAI : public CreatureAINew
     {
         public:
-    	mob_felmyst_vaporAI(Creature* creature) : CreatureAINew(creature)
+        mob_felmyst_vaporAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -710,7 +740,6 @@ public:
             startFollow = false;
             me->SetFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NOT_SELECTABLE);
             me->SetWalk(false);
-            me->SetSpeed(MOVE_RUN, 1.0f);
         }
 
         void onCombatStart(Unit* /*who*/)
@@ -726,7 +755,11 @@ public:
             if (startFollow)
             {
                 if(!me->GetVictim())
-                    attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+                    if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 15.0f,true))
+                    {
+                        me->Attack(target,false); //just to set our victim
+                        me->GetMotionMaster()->MoveFollow(target, 0.0f, 0, true);
+                    }
             }
         }
     };
@@ -740,12 +773,12 @@ public:
 class mob_felmyst_trail : public CreatureScript
 {
 public:
-	mob_felmyst_trail() : CreatureScript("mob_felmyst_trail") {}
+    mob_felmyst_trail() : CreatureScript("mob_felmyst_trail") {}
 
     class mob_felmyst_trailAI : public Creature_NoMovementAINew
     {
         public:
-    	mob_felmyst_trailAI(Creature* creature) : Creature_NoMovementAINew(creature)
+        mob_felmyst_trailAI(Creature* creature) : Creature_NoMovementAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -769,7 +802,7 @@ public:
             me->SetFloatValue(UNIT_FIELD_BOUNDINGRADIUS, 0.01); // core bug
         }
 
-        void message(uint32 id, uint32 data)
+        void message(uint32 id, uint64 data)
         {
             if (id == 1)
                 disableEvent(EVENT_DEAD);
@@ -804,12 +837,12 @@ public:
 class mob_unyielding_dead : public CreatureScript
 {
 public:
-	mob_unyielding_dead() : CreatureScript("mob_unyielding_dead") {}
+    mob_unyielding_dead() : CreatureScript("mob_unyielding_dead") {}
 
     class mob_unyielding_deadAI : public CreatureAINew
     {
         public:
-    	mob_unyielding_deadAI(Creature* creature) : CreatureAINew(creature)
+        mob_unyielding_deadAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -819,7 +852,11 @@ public:
         void onReset(bool onSpawn)
         {
             setZoneInCombat(true);
-            attackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+            if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
+            {
+                me->AddThreat(target,500.0f);
+                attackStart(target);
+            }
             doCast((Unit*)NULL, SPELL_DEAD_PASSIVE, true);
         }
 

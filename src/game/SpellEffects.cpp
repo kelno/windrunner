@@ -311,13 +311,7 @@ void Spell::EffectEnvironmentalDMG(uint32 i)
 
 void Spell::EffectSchoolDMG(uint32 effect_idx)
 {
-    /*if (m_spellInfo->SpellFamilyName == 3 && m_spellInfo->SpellFamilyFlags == 0x400000) { // Pyro
-        if (m_caster->ToPlayer()) {
-            if (m_caster->HasAura(12043))
-                m_caster->RemoveAurasDueToSpell(12043);
-            m_caster->ToPlayer()->AddGlobalCooldown(m_spellInfo, this);
-        }
-    }*/
+
 }
 
 void Spell::SpellDamageSchoolDmg(uint32 effect_idx)
@@ -1986,27 +1980,26 @@ void Spell::EffectDummy(uint32 i)
                     if(!item)
                         return;
 
-                    // all poison enchantments is temporary
-                    uint32 enchant_id = item->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT);
-                    if(!enchant_id)
-                        return;
-
-                    SpellItemEnchantmentEntry const *pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id);
-                    if(!pEnchant)
-                        return;
-
-                    for (int s=0;s<3;s++)
+                    // apply poison
+                    if (uint32 enchant_id = item->GetEnchantmentId(TEMP_ENCHANTMENT_SLOT))
                     {
-                        if(pEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
-                            continue;
+                        if(SpellItemEnchantmentEntry const *pEnchant = sSpellItemEnchantmentStore.LookupEntry(enchant_id))
+                        {
+                            for (int s=0;s<3;s++)
+                            {
+                                if(pEnchant->type[s]!=ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
+                                    continue;
 
-                        SpellEntry const* combatEntry = spellmgr.LookupSpell(pEnchant->spellid[s]);
-                        if(!combatEntry || combatEntry->Dispel != DISPEL_POISON)
-                            continue;
+                                SpellEntry const* combatEntry = spellmgr.LookupSpell(pEnchant->spellid[s]);
+                                if(!combatEntry || combatEntry->Dispel != DISPEL_POISON)
+                                    continue;
 
-                        m_caster->CastSpell(unitTarget, combatEntry, true, item);
+                                m_caster->CastSpell(unitTarget, combatEntry, true, item);
+                            }
+                        }
                     }
 
+                    //dmg + combo point effect
                     m_caster->CastSpell(unitTarget, 5940, true);
                     return;
                 }
@@ -2851,6 +2844,7 @@ void Spell::EffectApplyAura(uint32 i)
     if (m_spellInfo->Id == 10803 || m_spellInfo->Id == 10804) //Summon Purple Tallstrider || Summon Turquoise Tallstrider
         unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOUNTED);
 
+    // TODO : Send Immune message if every effect was immuned
     SpellImmuneList const& list = unitTarget->m_spellImmune[IMMUNITY_STATE];
     for(SpellImmuneList::const_iterator itr = list.begin(); itr != list.end(); ++itr)
         if(itr->type == m_spellInfo->EffectApplyAuraName[i])
@@ -2891,7 +2885,7 @@ void Spell::EffectApplyAura(uint32 i)
     // Now Reduce spell duration using data received at spell hit
     int32 duration = Aur->GetAuraMaxDuration();
     
-    if(!IsPositiveSpell(m_spellInfo->Id))
+    if(!Aur->IsPositive())
     {
         unitTarget->ApplyDiminishingToDuration(m_diminishGroup,duration,caster,m_diminishLevel);
         Aur->setDiminishGroup(m_diminishGroup);
@@ -2971,7 +2965,7 @@ void Spell::EffectApplyAura(uint32 i)
     //remove stealth on hostile targets (need to find the correct rule)
     if (caster->IsHostileTo(unitTarget) 
         && !(m_spellInfo->AttributesEx3 & SPELL_ATTR_EX3_NO_INITIAL_AGGRO)
-        && m_spellInfo->EffectApplyAuraName[i] != SPELL_AURA_MOD_DECREASE_SPEED) //not ice trap & earthbind
+        && m_caster->GetTypeId() == TYPEID_PLAYER) //not gameobjects spells like ice trap & earthbind and so on
         unitTarget->RemoveSpellsCausingAura(SPELL_AURA_MOD_STEALTH);
 }
 
@@ -3245,17 +3239,17 @@ void Spell::SpellDamageHeal(uint32 /*i*/)
             return;
 
         int32 addhealth = damage;
-		
+        
         // Sceau de lumiere proc
         if (m_spellInfo->Id == 20167)
         {
             float ap = caster->GetTotalAttackPowerValue(BASE_ATTACK);
             int32 holy = caster->SpellBaseHealingBonus(GetSpellSchoolMask(m_spellInfo));
             
-			if (holy < 0)
+            if (holy < 0)
                 holy = 0;
             
-			addhealth += int32(ap * 0.15) + int32(holy * 15 / 100);
+            addhealth += int32(ap * 0.15) + int32(holy * 15 / 100);
         }
 
         // Vessel of the Naaru (Vial of the Sunwell trinket)
@@ -4310,6 +4304,9 @@ void Spell::EffectDistract(uint32 /*i*/)
     }
     else
     {
+        if(unitTarget->IsPet()) //no effect on pet
+            return;
+
         // Set creature Distracted, Stop it, And turn it
         unitTarget->SetOrientation(angle);
         unitTarget->StopMoving();
@@ -4435,58 +4432,39 @@ void Spell::EffectSummonWild(uint32 i)
 
         int32 duration = GetSpellDuration(m_spellInfo);
 
-        TempSummonType summonType = (duration == 0) ? TEMPSUMMON_DEAD_DESPAWN : TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN;
+        TempSummonType summonType = (duration == -1) ? TEMPSUMMON_CORPSE_TIMED_DESPAWN : TEMPSUMMON_TIMED_OR_CORPSE_DESPAWN;
 
-        if(m_originalCaster)
+        Creature* Charmed = (m_originalCaster ? m_originalCaster : m_caster)->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
+        if (Charmed)
         {
-            Creature* Charmed = m_originalCaster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
-            if (Charmed)
+            Charmed->SetSummoner(m_caster);
+            //lolhack section
+            switch (m_spellInfo->Id)
             {
-                switch (m_spellInfo->Id)
-                {
-                    case 45392:
-                        Charmed->SetSummoner(m_originalCaster);
-                        if (Charmed->getAI())
-                            Charmed->getAI()->attackStart(m_caster);
-                        break;
-                    case 45891:
-                        if (Charmed->getAI())
-                            Charmed->getAI()->attackStart(m_caster);
-                        break;
-                    case 45410:
-                        Charmed->SetSummoner(m_originalCaster);
-                        break;
-                    case 45836:
-                        Charmed->SetSummoner(m_caster);
-                        if (m_caster->GetTypeId() == TYPEID_PLAYER)
-                            m_caster->CastSpell((Unit*)NULL, 45839, true);
-                        m_caster->CastSpell((Unit*)NULL, 45838, true);
-                        Charmed->CastSpell((Unit*)NULL, 45838, true);
-                    default:
-                        Charmed->SetSummoner(m_caster);
-                        break;
-                }
-                if (creature_entry == 12922 || creature_entry == 8996) //Summoned Imp/Voidwalker by many NPCs, they're all level 46, even if summoner has a different level
-                {
-                    Charmed->SetLevel(m_originalCaster->getLevel());
-                    Charmed->setFaction(m_originalCaster->getFaction());
-                }
+                case 45392:
+                    Charmed->SetSummoner(m_originalCaster);
+                    if (Charmed->getAI())
+                        Charmed->getAI()->attackStart(m_caster);
+                    break;
+                case 45891:
+                    if (Charmed->getAI())
+                        Charmed->getAI()->attackStart(m_caster);
+                    break;
+                case 45410:
+                    Charmed->SetSummoner(m_originalCaster);
+                    break;
+                case 45836:
+                    Charmed->SetSummoner(m_caster);
+                    if (m_caster->GetTypeId() == TYPEID_PLAYER)
+                        m_caster->CastSpell((Unit*)NULL, 45839, true);
+                    m_caster->CastSpell((Unit*)NULL, 45838, true);
+                    Charmed->CastSpell((Unit*)NULL, 45838, true);
+                    break;
             }
             if (creature_entry == 12922 || creature_entry == 8996) //Summoned Imp/Voidwalker by many NPCs, they're all level 46, even if summoner has a different level
             {
                 Charmed->SetLevel(m_originalCaster->getLevel());
                 Charmed->setFaction(m_originalCaster->getFaction());
-            }
-        }
-        else
-        {
-            Creature* Charmed = m_caster->SummonCreature(creature_entry,px,py,pz,m_caster->GetOrientation(),summonType,duration);
-            if (Charmed)
-                Charmed->SetSummoner(m_caster);
-            if (creature_entry == 12922 || creature_entry == 8996) //Summoneded Imp/Voidwalker by many NPCs, they're all level 46, even if summoner has a different level
-            {
-                Charmed->SetLevel(m_caster->getLevel());
-                Charmed->setFaction(m_caster->getFaction());
                 if (Charmed->IsPet())
                     Charmed->ToPet()->InitStatsForLevel(Charmed->getLevel());
             }
@@ -7145,7 +7123,7 @@ void Spell::EffectSkinning(uint32 /*i*/)
 
     (m_caster->ToPlayer())->SendLoot(creature->GetGUID(),LOOT_SKINNING);
     creature->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SKINNABLE);
-    creature->RemoveUnitMovementFlag(MOVEFLAG_FLYING | MOVEFLAG_FLYING2);
+    creature->RemoveUnitMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_FLYING2);
 
     int32 reqValue = targetLevel < 10 ? 0 : targetLevel < 20 ? (targetLevel-10)*10 : targetLevel*5;
 

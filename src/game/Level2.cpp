@@ -127,7 +127,7 @@ bool ChatHandler::HandleMuteCommand(const char* args)
     LogsDatabase.escape_string(mutereasonstr);
 
     LoginDatabase.PExecute("UPDATE account SET mutetime = " I64FMTD " WHERE id = '%u'",uint64(mutetime), account_id );
-    LogsDatabase.PExecute("INSERT INTO sanctions VALUES (%u, %u, %u, %u, " I64FMTD ", \"%s\")", account_id, m_session->GetPlayer()->GetGUIDLow(), uint32(SANCTION_MUTE), notspeaktime*60, uint64(time(NULL)), mutereasonstr.c_str());
+    LogsDatabase.PExecute("INSERT INTO sanctions VALUES (%u, %u, %u, %u, " I64FMTD ", \"%s\")", account_id, m_session ? m_session->GetPlayer()->GetGUIDLow() : 0, uint32(SANCTION_MUTE), notspeaktime*60, uint64(time(NULL)), mutereasonstr.c_str());
 
     if(chr)
         ChatHandler(chr).PSendSysMessage(LANG_YOUR_CHAT_DISABLED, notspeaktime, mutereasonstr.c_str());
@@ -2288,7 +2288,24 @@ bool ChatHandler::HandleWpLoadPathCommand(const char *args)
         delete result;
     }
     else
-        WorldDatabase.PExecute("INSERT INTO creature_addon(guid,path_id) VALUES ('%u','%u')", guidlow, pathid);
+    {
+        //if there's any creature_template_addon, let's base ourserlves on it
+        result = WorldDatabase.PQuery( "SELECT mount,bytes0,bytes1,bytes2,emote,moveflags,auras FROM creature_template_addon WHERE guid = '%u'",guidlow);
+        if(result)
+        {
+            uint32 mount = (*result)[0].GetUInt32();
+            uint32 bytes0 = (*result)[1].GetUInt32();
+            uint32 bytes1 = (*result)[2].GetUInt32();
+            uint32 bytes2 = (*result)[3].GetUInt32();
+            uint32 emote = (*result)[4].GetUInt32();
+            uint32 moveflags = (*result)[5].GetUInt32();
+            const char* auras = (*result)[6].GetString();
+            WorldDatabase.PExecute("INSERT INTO creature_addon(guid,path_id,mount,bytes0,bytes1,bytes2,emote,moveflags,auras) VALUES \
+                                   ('%u','%u','%u','%u','%u','%u','%u','%u','%s')", guidlow, pathid,mount,bytes0,bytes1,bytes2,emote,moveflags,auras);
+        } else { //else just create a new entry
+            WorldDatabase.PExecute("INSERT INTO creature_addon(guid,path_id) VALUES ('%u','%u')", guidlow, pathid);
+        }
+    }
 
     WorldDatabase.PExecute("UPDATE creature SET MovementType = '%u' WHERE guid = '%u'", WAYPOINT_MOTION_TYPE, guidlow);
 
@@ -2327,6 +2344,12 @@ bool ChatHandler::HandleWpUnLoadPathCommand(const char *args)
     }
 
     uint32 guidlow = target->GetDBTableGUIDLow();
+    if(!guidlow)
+    {
+        PSendSysMessage("%s%s|r", "|cff33ffff", "Creature is not permanent.");
+        return true;
+    }
+
     if(target->GetCreatureAddon())
     {
         if(target->GetCreatureAddon()->path_id != 0)
@@ -2341,10 +2364,10 @@ bool ChatHandler::HandleWpUnLoadPathCommand(const char *args)
             target->Say("Path unloaded.",0,0);
             return true;
         }
-        PSendSysMessage("%s%s|r", "|cffff33ff", "Target have no loaded path.");
+        PSendSysMessage("%s%s|r", "|cffff33ff", "Target have no loaded path. (1)");
         return true;
     }
-    PSendSysMessage("%s%s|r", "|cffff33ff", "Target have no loaded path.");
+    PSendSysMessage("%s%s|r", "|cffff33ff", "Target have no loaded path. (2)");
     return true;
 }
 
@@ -4228,6 +4251,36 @@ bool ChatHandler::HandleNpcAddFormationCommand(const char* args)
     return true;
  }
 
+bool ChatHandler::HandleNpcRemoveFormationCommand(const char* args)
+{
+    if (!*args)
+        return false;
+
+    Creature *pCreature = getSelectedCreature();
+
+    if(!pCreature || !pCreature->GetDBTableGUIDLow())
+    {
+        SendSysMessage(LANG_SELECT_CREATURE);
+        SetSentErrorMessage(true);
+        return true;
+    }
+
+    CreatureGroup* formation = pCreature->GetFormation();
+    if(!formation)
+    {
+        PSendSysMessage("Selected creature (%u) is not in a formation", pCreature->GetGUIDLow());
+        return true;
+    }
+
+    formation->RemoveMember(pCreature);
+    pCreature->SetFormation(NULL);
+    WorldDatabase.PExecute("DELETE ROM `creature_formations` WHERE memberGUID = %u",pCreature->GetGUIDLow());
+
+    PSendSysMessage("Creature removed from formation.");
+
+    return true;
+}
+
 bool ChatHandler::HandleNpcSetLinkCommand(const char* args)
 {
     if (!*args)
@@ -4302,6 +4355,9 @@ bool ChatHandler::HandleChanBan(const char* args)
     
     CharacterDatabase.PExecute("INSERT INTO channel_ban VALUES (%u, %lu, \"%s\", \"%s\")", accountid, time(NULL)+durationSecs, channelNamestr.c_str(), reasonstr.c_str());
     LogsDatabase.PExecute("INSERT INTO sanctions VALUES (%u, %u, %u, %u, " I64FMTD ", \"%s\")", accountid, m_session ? m_session->GetPlayer()->GetGUIDLow() : 0, uint32(SANCTION_CHANBAN), durationSecs, uint64(time(NULL)), reasonstr.c_str());
+
+    PSendSysMessage("Vous avez banni le joueur %s du world avec la raison : %s.", charNamestr.c_str(), reasonstr.c_str());
+
     Player *player = objmgr.GetPlayer(charNamestr.c_str());
     if (!player)
         return true;
@@ -4313,8 +4369,6 @@ bool ChatHandler::HandleChanBan(const char* args)
             ChatHandler(player).PSendSysMessage("Vous avez été banni du canal world pour la raison : %s", reasonstr.c_str());
         }
     }
-    
-    PSendSysMessage("Le joueur %s a été banni du world.", player->GetName());
     
     return true;
 }
@@ -4348,6 +4402,10 @@ bool ChatHandler::HandleChanUnban(const char* args)
         if (Channel *chn = cMgr->GetChannel(channelNamestr.c_str(), m_session->GetPlayer()))
             chn->RemoveGMBan(accountid);
     }
+ 
+    PSendSysMessage("Le joueur %s a été débanni du world.", charNamestr.c_str());
+    if(Player *player = objmgr.GetPlayer(charNamestr.c_str()))
+        ChatHandler(player).PSendSysMessage("Vous avez été débanni du canal world.");   
     
     return true;
 }
