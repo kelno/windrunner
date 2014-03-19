@@ -31,7 +31,7 @@ EndContentData */
 #include "def_mechanar.h"
 
 /*#####
-# npc_bridge_event
+# npc_bridge_event (ID : 91599)
 #####*/
 
 //this npc send waves on the upper bridge. Doesn't spawn the npc's of the wave, this just use already placed ones if they're correctly placed
@@ -51,10 +51,8 @@ static Locations WavePositions[]=
     {136.928543, 104.653252, 26.373301},
 };
 
-#define AGGRO_RANGE 15
+#define AGGRO_RANGE 20
 #define MAX_WAVE 6
-
-#define INVISIBLE_DUMMY 9
 
 enum Phases
 {
@@ -76,19 +74,18 @@ struct npc_bridge_eventAI : public ScriptedAI
     uint8 wave; //from 1 to MAX_WAVE
     Unit* target; //wave target
     uint32 checkTimer; //cd for PHASE_WAITING_FOR_WAVE_DEATH checks
-    uint64 dummies[MAX_WAVE]; //dummies at each wave start position
 
-    void FillGroup(Creature* dummy, float radius)
+    void FillGroup(float radius)
     {
         currentGroup.clear();
         std::list<Creature*> creatureList;
 
-        CellPair pair(Trinity::ComputeCellPair(dummy->GetPositionX(), dummy->GetPositionY()));
+        CellPair pair(Trinity::ComputeCellPair(me->GetPositionX(), me->GetPositionY()));
         Cell cell(pair);
         cell.data.Part.reserved = ALL_DISTRICT;
         cell.SetNoCreate();
 
-        Trinity::AnyFriendlyUnitInObjectRangeCheck check(dummy,me,radius);
+        Trinity::AnyFriendlyUnitInObjectRangeCheck check(me,me,radius);
         Trinity::CreatureListSearcher<Trinity::AnyFriendlyUnitInObjectRangeCheck> searcher(creatureList, check);
         TypeContainerVisitor<Trinity::CreatureListSearcher<Trinity::AnyFriendlyUnitInObjectRangeCheck>, GridTypeMapContainer> visitor(searcher);
 
@@ -96,7 +93,7 @@ struct npc_bridge_eventAI : public ScriptedAI
 
         for(auto itr : creatureList)
         {
-            if(itr == me || itr->GetEntry() == INVISIBLE_DUMMY || itr->GetPositionZ() < 24.0f) continue; //Z check to be sure not taking any creatures under the bridge
+            if(itr == me || itr->GetPositionZ() < 24.0f) continue; //Z check to be sure not taking any creatures under the bridge
             currentGroup.push_back(itr->GetGUID());
         }
     }
@@ -106,10 +103,6 @@ struct npc_bridge_eventAI : public ScriptedAI
         target = nullptr;
         checkTimer = 0;
         wave = 0;
-        Cleanup(false);
-        for(uint8 i = 0; i < MAX_WAVE; i++)
-            if(Creature* c = me->SummonCreature(INVISIBLE_DUMMY,WavePositions[i].x,WavePositions[i].y,WavePositions[i].z,0,TEMPSUMMON_MANUAL_DESPAWN,0))
-                dummies[i] = c->GetGUID();
         phase = PHASE_WAITING_FOR_PULL;
     }
 
@@ -139,39 +132,26 @@ struct npc_bridge_eventAI : public ScriptedAI
 
             if(!IsGroupAlive())
             {
-                // must send next wave
-                if(wave == 1 || wave == 4)
+                
+                if(wave == 3) //must prepare next wave only
                 {
-                    SendNextWave(target);
-                } else { //must prepare next wave only
                     target = nullptr;
                     phase = PHASE_WAITING_FOR_PULL;
+                    me->Relocate(WavePositions[wave].x,WavePositions[wave].y);
+                } else { // must send next wave
+                    SendNextWave(target);
                 }
             }
             checkTimer = 1500;
         }
     }
 
-    void Cleanup(bool killSelf)
-    {
-        for(uint8 i = 0; i < MAX_WAVE; i++)
-        {
-            if(Creature* dummy = me->GetCreature(*me,dummies[i]))
-                dummy->DisappearAndDie();
-            dummies[i] = 0;
-        }
-
-        if(killSelf)
-            me->DisappearAndDie();
-    }
-
     //fill currentGroup with nearby creatures and send those on target
     void SendNextWave(Unit* who)
     {
-        Creature* dummy = me->GetCreature(*me,dummies[wave]);
+        me->Relocate(WavePositions[wave].x,WavePositions[wave].y); //needed for MoveInLineOfSight2 checks
         wave++;
-        if(!dummy) return;
-        FillGroup(dummy,10.0f);
+        FillGroup(10.0f);
         for(auto itr : currentGroup)
         {
             if(Creature* c = me->GetCreature(*me,itr))
@@ -179,9 +159,9 @@ struct npc_bridge_eventAI : public ScriptedAI
                     c->AI()->AttackStart(who);
         }
 
-        //Last wave was sent, destroy npc and dummies
+        //Last wave was sent, destroy npc
         if(wave == MAX_WAVE) 
-            Cleanup(true);
+             me->DisappearAndDie();
     }
 
     void MoveInLineOfSight2(Unit *who)
