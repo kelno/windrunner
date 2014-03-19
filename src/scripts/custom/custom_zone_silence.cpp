@@ -27,7 +27,7 @@ EndScriptData */
  
 #define SPELL_SILENCE 42201 //can only be cast on self
  
-struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
+struct npc_zonedesilenceAI : public Scripted_NoMovementAI
 {
     npc_zonedesilenceAI(Creature *c) : Scripted_NoMovementAI(c)
     {
@@ -36,7 +36,7 @@ struct TRINITY_DLL_DECL npc_zonedesilenceAI : public Scripted_NoMovementAI
         // me->SetReactState(REACT_PASSIVE);
     }
  
-    void MoveInLineOfSight(Unit *who)
+    void MoveInLineOfSight2(Unit *who)
     {
         if (who->GetTypeId() == TYPEID_PLAYER) {
             if (who->GetDistance(me) < 30 ) {
