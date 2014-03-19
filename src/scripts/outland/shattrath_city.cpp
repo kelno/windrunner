@@ -578,24 +578,25 @@ bool GossipSelect_npc_ishanah(Player *player, Creature *_Creature, uint32 sender
 ######*/
 
 // Khadgar : 18166
-#define TEXT_HELLO             20030
-#define TEXT_MENU1             20032
-#define TEXT_MENU2             20034
-#define TEXT_MENU3             20036
-#define TEXT_MENU4             20038
-#define TEXT_MENU5             20040
-#define TEXT_MENU6             20042
-#define GOSSIP_ITEM_1          20031
-#define GOSSIP_ITEM_2          20033
-#define GOSSIP_ITEM_3          20035
-#define GOSSIP_ITEM_4          20037
-#define GOSSIP_ITEM_5          20039
-#define GOSSIP_ITEM_6          20041
-#define GOSSIP_ITEM_7          20043
+#define TEXT_HELLO             20037
+#define TEXT_MENU1             20039
+#define TEXT_MENU2             20041
+#define TEXT_MENU3             20043
+#define TEXT_MENU4             20045
+#define TEXT_MENU5             20047
+#define TEXT_MENU6             20049
+#define GOSSIP_ITEM_1          20038
+#define GOSSIP_ITEM_2          20040
+#define GOSSIP_ITEM_3          20042
+#define GOSSIP_ITEM_4          20044
+#define GOSSIP_ITEM_5          20046
+#define GOSSIP_ITEM_6          20048
+#define GOSSIP_ITEM_7          20050
 
 bool GossipHello_npc_khadgar(Player* player, Creature* _Creature)
 {
-	player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    player->PrepareQuestMenu(_Creature->GetGUID());
+    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
@@ -630,8 +631,7 @@ bool GossipSelect_npc_khadgar(Player* player, Creature* _Creature, uint32 sender
             player->SEND_GOSSIP_MENU(TEXT_MENU6,_Creature->GetGUID());
             break;
 		case GOSSIP_ACTION_INFO_DEF+7:
-            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-            player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
+            GossipHello_npc_khadgar(player,_Creature);
             break;
     }
 
