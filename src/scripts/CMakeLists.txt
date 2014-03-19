@@ -441,6 +441,7 @@ SET(scripts_STAT_SRCS
     outland/tempest_keep/the_mechanar/boss_pathaleon_the_calculator.cpp
     outland/tempest_keep/the_mechanar/def_mechanar.h
     outland/tempest_keep/the_mechanar/instance_mechanar.cpp
+	outland/tempest_keep/the_mechanar/mechanar.cpp
     outland/terokkar_forest.cpp
     outland/zangarmarsh.cpp
     outland/zulaman/boss_akilzon.cpp

@@ -611,6 +611,7 @@ extern void AddSC_boss_gatewatcher_iron_hand();
 extern void AddSC_boss_nethermancer_sepethrea();
 extern void AddSC_boss_pathaleon_the_calculator();
 extern void AddSC_instance_mechanar();
+extern void AddSC_mechanar();
 
 //Temple of ahn'qiraj
 extern void AddSC_boss_cthun();
@@ -2002,6 +2003,7 @@ void ScriptMgr::ScriptsInit(char const* cfg_file)
     AddSC_boss_nethermancer_sepethrea();
     AddSC_boss_pathaleon_the_calculator();
     AddSC_instance_mechanar();
+    AddSC_mechanar();
 
     //Temple of ahn'qiraj
     AddSC_boss_cthun();
