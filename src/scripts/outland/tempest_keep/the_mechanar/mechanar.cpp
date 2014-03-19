@@ -54,6 +54,9 @@ static Locations WavePositions[]=
 #define AGGRO_RANGE 20
 #define MAX_WAVE 6
 
+#define INVISIBLE_AURA 4986
+#define TELEPORT_IN_VISUAL 41232
+
 enum Phases
 {
     PHASE_WAITING_FOR_PULL,
@@ -155,8 +158,12 @@ struct npc_bridge_eventAI : public ScriptedAI
         for(auto itr : currentGroup)
         {
             if(Creature* c = me->GetCreature(*me,itr))
+            {
                 if(c->AI())
                     c->AI()->AttackStart(who);
+                c->RemoveAurasDueToSpell(INVISIBLE_AURA);
+                c->CastSpell(c,TELEPORT_IN_VISUAL,true);
+            }
         }
 
         //Last wave was sent, destroy npc
