@@ -473,12 +473,8 @@ bool GossipHello_npc_calliard(Player* player, Creature* _Creature)
 
 bool GossipSelect_npc_calliard(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
-    switch (action)
-    {
-        case GOSSIP_ACTION_INFO_DEF + 1:     player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID()); break;
-    }
-
-	player->CLOSE_GOSSIP_MENU();
+    if(action == GOSSIP_ACTION_INFO_DEF + 1)
+        player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
 
     return true;
 }
