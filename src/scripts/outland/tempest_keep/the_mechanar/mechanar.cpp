@@ -161,8 +161,9 @@ struct npc_bridge_eventAI : public ScriptedAI
             {
                 if(c->AI())
                     c->AI()->AttackStart(who);
-                c->RemoveAurasDueToSpell(INVISIBLE_AURA);
-                c->CastSpell(c,TELEPORT_IN_VISUAL,true);
+              /*  Much bugs with this
+              c->RemoveAurasDueToSpell(INVISIBLE_AURA);
+                c->CastSpell(c,TELEPORT_IN_VISUAL,true); */
             }
         }
 
