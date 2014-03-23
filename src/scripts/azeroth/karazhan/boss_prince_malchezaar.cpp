@@ -194,6 +194,11 @@ struct netherspite_infernalAI : public ScriptedAI
         return 0;
     }
 
+    void Reset()
+    {
+        me->SetStunned(true);
+    }
+
     void Cleanup()
     {
         if(!pInstance) return;
