@@ -1,23 +1,7 @@
-/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
 /* ScriptData
 SDName: Npc_Professions
-SD%Complete: 80
-SDComment: Provides learn/unlearn/relearn-options for professions. Not supported: Unlearn engineering, re-learn engineering, re-learn leatherworking.
+SD%Complete: 85
+SDComment: Provides learn/unlearn/relearn-options for professions. Not supported: Unlearn engineering, re-learn engineering.
 SDCategory: NPCs
 EndScriptData */
 
@@ -181,9 +165,12 @@ there is no difference here (except that default text is chosen with `gameobject
 
 /* QUESTS */
 
-#define QUEST_DRAGON 5141
-#define QUEST_ELEMENTAL 5144
-#define QUEST_TRIBAL 5143
+#define QUEST_DRAGON_A 5141
+#define QUEST_DRAGON_H 5145
+#define QUEST_ELEMENTAL_A 5144
+#define QUEST_ELEMENTAL_H 5146
+#define QUEST_TRIBAL_A 5143
+#define QUEST_TRIBAL_H 5148
 
 /*###
 # formulas to calculate unlearning cost
@@ -829,6 +816,19 @@ bool HasLeatherSpell(Player *player)
     return false;
 }
 
+bool HasDoneLeatherQuest(Player* player)
+{
+    if(   player->GetQuestRewardStatus(QUEST_DRAGON_A)
+       || player->GetQuestRewardStatus(QUEST_DRAGON_H)
+       || player->GetQuestRewardStatus(QUEST_ELEMENTAL_A)
+       || player->GetQuestRewardStatus(QUEST_ELEMENTAL_H)
+       || player->GetQuestRewardStatus(QUEST_TRIBAL_A)
+       || player->GetQuestRewardStatus(QUEST_TRIBAL_H)   )
+       return true;
+
+    return false;
+}
+
 bool GossipHello_npc_prof_leather(Player *player, Creature *_Creature)
 {
     if (_Creature->isQuestGiver())
@@ -840,7 +840,7 @@ bool GossipHello_npc_prof_leather(Player *player, Creature *_Creature)
 
     uint32 eCreature = _Creature->GetEntry();
 
-    if(player->GetQuestRewardStatus(QUEST_DRAGON) || player->GetQuestRewardStatus(QUEST_ELEMENTAL) || player->GetQuestRewardStatus(QUEST_TRIBAL))
+    if(HasDoneLeatherQuest(player))
     {
         if(player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING)>=250 && player->getLevel() > 49 )
         {
