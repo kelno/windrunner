@@ -92,6 +92,13 @@ struct boss_doomwalkerAI : public ScriptedAI
         if (!UpdateVictim())
             return;
 
+        //hack to avoid BA
+        if(me->GetVictim()->GetPositionZ() > 50.0f)
+        {
+            EnterEvadeMode();
+            return;
+        }
+
         //Spell Enrage, when hp <= 20% gain enrage
         if (((m_creature->GetHealth()*100)/ m_creature->GetMaxHealth()) <= 20)
         {

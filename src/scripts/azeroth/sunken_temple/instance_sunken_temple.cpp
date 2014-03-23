@@ -86,13 +86,13 @@ struct instance_sunken_temple : public ScriptedInstance
         s6 = false;
         
         GOForceField = 0;
-		
-		tbd1 = false;
-		tbd2 = false;
-		tbd3 = false;
-		tbd4 = false;
-		tbd5 = false;
-		tbd6 = false;
+        
+        tbd1 = false;
+        tbd2 = false;
+        tbd3 = false;
+        tbd4 = false;
+        tbd5 = false;
+        tbd6 = false;
     }
 
     void OnObjectCreate(GameObject* pGo)
@@ -106,7 +106,7 @@ struct instance_sunken_temple : public ScriptedInstance
             case GO_ATALAI_STATUE5: GOAtalaiStatue5 = pGo->GetGUID();   break;
             case GO_ATALAI_STATUE6: GOAtalaiStatue6 = pGo->GetGUID();   break;
             case GO_ATALAI_IDOL:    GOAtalaiIdol = pGo->GetGUID();      break;
-			case GO_FORCEFIELD:		GOForceField = pGo->GetGUID();      break;
+            case GO_FORCEFIELD:        GOForceField = pGo->GetGUID();      break;
         }
     }
 
@@ -164,18 +164,18 @@ struct instance_sunken_temple : public ScriptedInstance
             {
                 if (GameObject *pAtalaiStatue6 = instance->GetGameObject(GOAtalaiStatue6))
                     UseStatue(pAtalaiStatue6);
-		    UseLastStatue();
+            UseLastStatue();
                 s6 = true;
                 State = 0;
             }
             break;
          }
-		 if (tbd1 && tbd2 && tbd3 && tbd4 && tbd5 && tbd6)
-			if(GameObject* pGo = instance->GetGameObject(GOForceField))
-			{
-				pGo->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
-				pGo->SetGoState(GO_STATE_ACTIVE);
-			}
+         if (tbd1 && tbd2 && tbd3 && tbd4 && tbd5 && tbd6)
+            if(GameObject* pGo = instance->GetGameObject(GOForceField))
+            {
+                pGo->SetUInt32Value(GAMEOBJECT_FLAGS, 33);
+                pGo->SetGoState(GO_STATE_ACTIVE);
+            }
      };
      
      void UseStatue(GameObject* pGo)
@@ -189,12 +189,12 @@ struct instance_sunken_temple : public ScriptedInstance
      
      void UseLastStatue()
      {
-		GameObject *pAtalaiStatue1 = instance->GetGameObject(GOAtalaiStatue1);
-		GameObject *pAtalaiStatue2 = instance->GetGameObject(GOAtalaiStatue2);
-		GameObject *pAtalaiStatue3 = instance->GetGameObject(GOAtalaiStatue3);
-		GameObject *pAtalaiStatue4 = instance->GetGameObject(GOAtalaiStatue4);
-		GameObject *pAtalaiStatue5 = instance->GetGameObject(GOAtalaiStatue5);	 
-		GameObject *pAtalaiStatue6 = instance->GetGameObject(GOAtalaiStatue6);
+        GameObject *pAtalaiStatue1 = instance->GetGameObject(GOAtalaiStatue1);
+        GameObject *pAtalaiStatue2 = instance->GetGameObject(GOAtalaiStatue2);
+        GameObject *pAtalaiStatue3 = instance->GetGameObject(GOAtalaiStatue3);
+        GameObject *pAtalaiStatue4 = instance->GetGameObject(GOAtalaiStatue4);
+        GameObject *pAtalaiStatue5 = instance->GetGameObject(GOAtalaiStatue5);     
+        GameObject *pAtalaiStatue6 = instance->GetGameObject(GOAtalaiStatue6);
         if (pAtalaiStatue1) pAtalaiStatue1->SummonGameObject(GO_ATALAI_LIGHT2,pAtalaiStatue1->GetPositionX(),pAtalaiStatue1->GetPositionY(),pAtalaiStatue1->GetPositionZ(),0,0,0,0,0,100000);
         if (pAtalaiStatue2) pAtalaiStatue2->SummonGameObject(GO_ATALAI_LIGHT2,pAtalaiStatue2->GetPositionX(),pAtalaiStatue2->GetPositionY(),pAtalaiStatue2->GetPositionZ(),0,0,0,0,0,100000);
         if (pAtalaiStatue3) pAtalaiStatue3->SummonGameObject(GO_ATALAI_LIGHT2,pAtalaiStatue3->GetPositionX(),pAtalaiStatue3->GetPositionY(),pAtalaiStatue3->GetPositionZ(),0,0,0,0,0,100000);
@@ -206,16 +206,16 @@ struct instance_sunken_temple : public ScriptedInstance
 
      void SetData(uint32 type, uint32 data)
      {
-		switch(type)
-		{   
-			case EVENT_STATE:				State = data; break;
-			case EVENT_TROLLBOSS1_DEATH: 	tbd1=data;	break;
-			case EVENT_TROLLBOSS2_DEATH: 	tbd2=data;	break;
-			case EVENT_TROLLBOSS3_DEATH: 	tbd3=data;	break;
-			case EVENT_TROLLBOSS4_DEATH: 	tbd4=data;	break;
-			case EVENT_TROLLBOSS5_DEATH: 	tbd5=data;	break;
-			case EVENT_TROLLBOSS6_DEATH: 	tbd6=data;	break;									
-		}
+        switch(type)
+        {   
+            case EVENT_STATE:                State = data; break;
+            case EVENT_TROLLBOSS1_DEATH:     tbd1=data;    break;
+            case EVENT_TROLLBOSS2_DEATH:     tbd2=data;    break;
+            case EVENT_TROLLBOSS3_DEATH:     tbd3=data;    break;
+            case EVENT_TROLLBOSS4_DEATH:     tbd4=data;    break;
+            case EVENT_TROLLBOSS5_DEATH:     tbd5=data;    break;
+            case EVENT_TROLLBOSS6_DEATH:     tbd6=data;    break;                                    
+        }
      }
 
      uint32 GetData(uint32 type)

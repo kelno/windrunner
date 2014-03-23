@@ -577,59 +577,64 @@ bool GossipSelect_npc_ishanah(Player *player, Creature *_Creature, uint32 sender
 # npc_khadgar
 ######*/
 
-#define KHADGAR_GOSSIP_1    "I've heard your name spoken only in whispers, mage. Who are you?"
-#define KHADGAR_GOSSIP_2    "Go on, please."
-#define KHADGAR_GOSSIP_3    "I see." //6th too this
-#define KHADGAR_GOSSIP_4    "What did you do then?"
-#define KHADGAR_GOSSIP_5    "What happened next?"
-#define KHADGAR_GOSSIP_7    "There was something else I wanted to ask you."
+// Khadgar : 18166
+#define TEXT_HELLO             20037
+#define TEXT_MENU1             20039
+#define TEXT_MENU2             20041
+#define TEXT_MENU3             20043
+#define TEXT_MENU4             20045
+#define TEXT_MENU5             20047
+#define TEXT_MENU6             20049
+#define GOSSIP_ITEM_1          20038
+#define GOSSIP_ITEM_2          20040
+#define GOSSIP_ITEM_3          20042
+#define GOSSIP_ITEM_4          20044
+#define GOSSIP_ITEM_5          20046
+#define GOSSIP_ITEM_6          20048
+#define GOSSIP_ITEM_7          20050
 
-bool GossipHello_npc_khadgar(Player *player, Creature *creature)
+bool GossipHello_npc_khadgar(Player* player, Creature* _Creature)
 {
-    if (creature->isQuestGiver())
-        player->PrepareQuestMenu(creature->GetGUID());
+    player->PrepareQuestMenu(_Creature->GetGUID());
+    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
-    if(!player->hasQuest(10211))
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-
-        player->SEND_GOSSIP_MENU(9243, creature->GetGUID());
-
+    player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
 }
 
-bool GossipSelect_npc_khadgar(Player *player, Creature *creature, uint32 sender, uint32 action)
+bool GossipSelect_npc_khadgar(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
-    switch(action)
+	switch (action)
     {
-    case GOSSIP_ACTION_INFO_DEF+1:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
-        player->SEND_GOSSIP_MENU(9876, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+2:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
-        player->SEND_GOSSIP_MENU(9877, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+3:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
-        player->SEND_GOSSIP_MENU(9878, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+4:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+5);
-        player->SEND_GOSSIP_MENU(9879, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+5:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+6);
-        player->SEND_GOSSIP_MENU(9880, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+6:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_7, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+7);
-        player->SEND_GOSSIP_MENU(9881, creature->GetGUID());
-        break;
-    case GOSSIP_ACTION_INFO_DEF+7:
-        player->ADD_GOSSIP_ITEM(0, KHADGAR_GOSSIP_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
-        player->SEND_GOSSIP_MENU(9243, creature->GetGUID());
-        break;
+        case GOSSIP_ACTION_INFO_DEF+1:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+            player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+2:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
+            player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+3:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
+            player->SEND_GOSSIP_MENU(TEXT_MENU3,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+4:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_5, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+5);
+            player->SEND_GOSSIP_MENU(TEXT_MENU4,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+5:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_6, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+6);
+            player->SEND_GOSSIP_MENU(TEXT_MENU5,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+6:
+            player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_7, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+7);
+            player->SEND_GOSSIP_MENU(TEXT_MENU6,_Creature->GetGUID());
+            break;
+		case GOSSIP_ACTION_INFO_DEF+7:
+            GossipHello_npc_khadgar(player,_Creature);
+            break;
     }
+
     return true;
 }
 

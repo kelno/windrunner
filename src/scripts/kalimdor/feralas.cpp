@@ -191,7 +191,7 @@ void AddSC_feralas()
     newscript->pGossipSelect = &GossipSelect_npc_gregan_brewspewer;
     newscript->RegisterSelf();
 
-	newscript = new Script;
+    newscript = new Script;
     newscript->Name = "npc_oox22fe";
     newscript->GetAI = &GetAI_npc_oox22fe;
     newscript->pQuestAccept = &QuestAccept_npc_oox22fe;

@@ -385,7 +385,7 @@ struct npc_rabid_thistle_bearAI : public ScriptedAI
                 plr->CombatStop();
             }
         }
-		return true;
+        return true;
     }
     
     void UpdateAI(uint32 const diff)
