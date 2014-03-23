@@ -54,8 +54,8 @@ void SummonList::DespawnAll(bool withoutWorldBoss)
     {
         if(Creature *summon = Unit::GetCreature(*m_creature, *i))
         {
-		    if (withoutWorldBoss && summon->isWorldBoss())
-			    continue;
+            if (withoutWorldBoss && summon->isWorldBoss())
+                continue;
 
             summon->CleanupsBeforeDelete();
             summon->AddObjectToRemoveList();
@@ -367,7 +367,7 @@ Unit* ScriptedAI::SelectUnit(SelectAggroTarget targetType, uint32 position, floa
 
     std::list<Unit*> targetList;
     for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
-        if (checkTarget((*itr)->getTarget(), playersOnly, radius,noTank))
+        if (checkTarget((*itr)->getTarget(), playersOnly, radius, noTank))
             targetList.push_back((*itr)->getTarget());
 
     if (position >= targetList.size())
@@ -802,7 +802,8 @@ void ScriptedAI::DoZoneInCombat(Unit* pUnit, bool force)
     for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
     {
         if (Player* i_pl = i->getSource())
-            if (i_pl->IsAlive())
+            if (i_pl->IsAlive()
+                && !i_pl->isGameMaster())
             {
                 pUnit->SetInCombatWith(i_pl);
                 i_pl->SetInCombatWith(pUnit);

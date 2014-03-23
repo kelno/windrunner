@@ -108,12 +108,12 @@ static float kalecPos[] = { 1501.253174, 764.737061, 117.972687, 4.626863 };
 class boss_felmyst : public CreatureScript
 {
 public:
-	boss_felmyst() : CreatureScript("boss_felmyst") {}
+    boss_felmyst() : CreatureScript("boss_felmyst") {}
 
     class boss_felmystAI : public CreatureAINew
     {
         public:
-    	boss_felmystAI(Creature* creature) : CreatureAINew(creature), Summons(me)
+        boss_felmystAI(Creature* creature) : CreatureAINew(creature), Summons(me)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -200,8 +200,7 @@ public:
 
             Summons.DespawnAll();
 
-            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_MOD_TAUNT, true);
-            me->SetFullTauntImmunity(true);
+            me->ApplySpellImmune(0, IMMUNITY_STATE, SPELL_AURA_HASTE_SPELLS, true);
 
             if(pInstance)
                 pInstance->SetData(DATA_FELMYST_EVENT, NOT_STARTED);
@@ -305,12 +304,12 @@ public:
                 return;
 
             if (getPhase() != PHASE_PULL && getPhase() != PHASE_GROUND)
-            	return;
+                return;
 
             if (me->Attack(pTarget, true))
             {
-            	if (!aiInCombat())
-            	    me->GetMotionMaster()->Initialize();
+                if (!aiInCombat())
+                    me->GetMotionMaster()->Initialize();
 
                 if (me->IsPet())
                 {
@@ -351,11 +350,11 @@ public:
             Summons.Summon(summoned);
             if(summoned->GetEntry() == MOB_DEAD)
             {
-            	summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
-            	summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
+                summoned->AI()->AttackStart(selectUnit(SELECT_TARGET_RANDOM, 0));
+                summoned->CastSpell(summoned, SPELL_DEAD_PASSIVE, true);
             }
             else if (summoned->GetEntry() == MOB_VAPOR)
-            	me->SetTarget(summoned->GetGUID());
+                me->SetTarget(summoned->GetGUID());
         }
 
         void onSummonDespawn(Creature* unit)
@@ -723,12 +722,12 @@ public:
 class mob_felmyst_vapor : public CreatureScript
 {
 public:
-	mob_felmyst_vapor() : CreatureScript("mob_felmyst_vapor") {}
+    mob_felmyst_vapor() : CreatureScript("mob_felmyst_vapor") {}
 
     class mob_felmyst_vaporAI : public CreatureAINew
     {
         public:
-    	mob_felmyst_vaporAI(Creature* creature) : CreatureAINew(creature)
+        mob_felmyst_vaporAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -774,12 +773,12 @@ public:
 class mob_felmyst_trail : public CreatureScript
 {
 public:
-	mob_felmyst_trail() : CreatureScript("mob_felmyst_trail") {}
+    mob_felmyst_trail() : CreatureScript("mob_felmyst_trail") {}
 
     class mob_felmyst_trailAI : public Creature_NoMovementAINew
     {
         public:
-    	mob_felmyst_trailAI(Creature* creature) : Creature_NoMovementAINew(creature)
+        mob_felmyst_trailAI(Creature* creature) : Creature_NoMovementAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }
@@ -838,12 +837,12 @@ public:
 class mob_unyielding_dead : public CreatureScript
 {
 public:
-	mob_unyielding_dead() : CreatureScript("mob_unyielding_dead") {}
+    mob_unyielding_dead() : CreatureScript("mob_unyielding_dead") {}
 
     class mob_unyielding_deadAI : public CreatureAINew
     {
         public:
-    	mob_unyielding_deadAI(Creature* creature) : CreatureAINew(creature)
+        mob_unyielding_deadAI(Creature* creature) : CreatureAINew(creature)
         {
             pInstance = ((ScriptedInstance*)creature->GetInstanceData());
         }

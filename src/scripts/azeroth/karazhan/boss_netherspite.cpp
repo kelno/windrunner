@@ -91,24 +91,25 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
     uint64 BeamTarget[3]; // guid's of portals' current targets
     uint32 BuffTimer[3]; // independant buff timer for each portal
 
-    bool IsBetween(WorldObject* u1, WorldObject* target, WorldObject* u2) // the in-line checker
+    bool IsBetween(WorldObject* boss, WorldObject* target, WorldObject* portal) // the in-line checker
     {
-        if(!u1 || !u2 || !target)
+        if(!boss || !portal || !target)
             return false;
 
-        float xn, yn, xp, yp, xh, yh;
-        xn = u1->GetPositionX();
-        yn = u1->GetPositionY();
-        xp = u2->GetPositionX();
-        yp = u2->GetPositionY();
-        xh = target->GetPositionX();
-        yh = target->GetPositionY();
-
+        float xboss, yboss, xportal, yportal, xtarget, ytarget;
+        xboss = boss->GetPositionX();
+        yboss = boss->GetPositionY();
+        xportal = portal->GetPositionX();
+        yportal = portal->GetPositionY();
+        xtarget = target->GetPositionX();
+        ytarget = target->GetPositionY();
+        
         // check if target is between (not checking distance from the beam yet)
-        if(dist(xn,yn,xh,yh)>=dist(xn,yn,xp,yp) || dist(xp,yp,xh,yh)>=dist(xn,yn,xp,yp))
+        if(    dist(xboss,yboss,xtarget,ytarget)>=dist(xboss,yboss,xportal,yportal)  //boss is further from target than from portal
+            || dist(xportal,yportal,xtarget,ytarget)>=dist(xboss,yboss,xportal,yportal)) //portal is further from target than from boss
             return false;
         // check  distance from the beam
-        return (abs((xn-xp)*yh+(yp-yn)*xh-xn*yp+xp*yn)/dist(xn,yn,xp,yp) < 1.5f);
+        return (abs((xboss-xportal)*ytarget+(yportal-yboss)*xtarget-xboss*yportal+xportal*yboss)/dist(xboss,yboss,xportal,yportal) < 2.0f);
     }
 
     float dist(float xa, float ya, float xb, float yb) // auxiliary method for distance
@@ -127,7 +128,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
             BuffTimer[i] = 1000;
 
         HandleDoors(true);
-        DestroyPortals();
+        Destroyportalortals();
         
         m_creature->RemoveAurasDueToSpell(SPELL_NETHERBURN_AURA);
     }
@@ -145,10 +146,12 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
             {
                 PortalGUID[i] = portal->GetGUID();
                 portal->AddAura(PortalVisual[i], portal);
+                portal->SetReactState(REACT_PASSIVE);
+                if(portal->AI()) portal->AI()->SetCombatMovementAllowed(false);
             }
     }
 
-    void DestroyPortals()
+    void Destroyportalortals()
     {
         for(int i=0; i<3; ++i)
         {
@@ -188,8 +191,9 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
                     {
                         Player* p = i->getSource();
                         if(p && p->IsAlive() // alive
-                            && (!target || target->GetDistance2d(portal)>p->GetDistance2d(portal)) // closer than current best
-                            && !p->HasAura(PlayerDebuff[j],0) // not exhausted
+                            && !p->isGameMaster()
+                            && (!target || (target->GetExactDistance2d(portal)) > (p->GetExactDistance2d(portal)) ) // closer than current best
+                            && !p->HasAura(PlayerDebuff[j],0) // not extargetausted
                             && !p->HasAura(PlayerBuff[(j+1)%3],0) // not on another beam
                             && !p->HasAura(PlayerBuff[(j+2)%3],0)
                             && IsBetween(m_creature, p, portal)) // on the beam
@@ -211,7 +215,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
                 // simple target switching isn't working -> using BeamerGUID to cast (workaround)
                 if(!current || target != current)
                 {
-                    //if (current && current->GetTypeId() == TYPEID_PLAYER)
+                    //if (current && current->GetTyportaleId() == TyportalEID_PLAYER)
                     //    current->AddAura(PlayerDebuff[j], current);
                     BeamTarget[j] = target->GetGUID();
                     // remove currently beaming portal
@@ -254,7 +258,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
         m_creature->RemoveAurasDueToSpell(SPELL_NETHERBURN_AURA);
         DoCast(m_creature,SPELL_BANISH_VISUAL,true);
         DoCast(m_creature,SPELL_BANISH_ROOT,true);
-        DestroyPortals();
+        Destroyportalortals();
         PhaseTimer = 30000;
         PortalPhase = false;
         DoScriptText(EMOTE_PHASE_BANISH,m_creature);
@@ -280,7 +284,7 @@ struct TRINITY_DLL_DECL boss_netherspiteAI : public ScriptedAI
     void JustDied(Unit* killer)
     {
         HandleDoors(true);
-        DestroyPortals();
+        Destroyportalortals();
     }
 
     void UpdateAI(const uint32 diff)

@@ -405,7 +405,7 @@ bool GossipSelect_npc_skyguard_handler_irena(Player* pPlayer, Creature* pCreatur
 ######*/
 
 //Support for quest: You're Fired! (10821)
-bool bObeliskOne, bObeliskTwo, bObeliskThree, bObeliskFour, bObeliskFive;	
+bool bObeliskOne, bObeliskTwo, bObeliskThree, bObeliskFour, bObeliskFive;    
 
 enum eLegionObelisk
 {
@@ -417,41 +417,41 @@ LEGION_OBELISK_FIVE          = 185198
 };
 
 bool GOHello_go_legion_obelisk(Player *pPlayer, GameObject* pGo)
-{	
-	if (pPlayer->GetQuestStatus(10821) == QUEST_STATUS_INCOMPLETE)
-	{
-		switch(pGo->GetEntry())
-		{
-			case LEGION_OBELISK_ONE:
+{    
+    if (pPlayer->GetQuestStatus(10821) == QUEST_STATUS_INCOMPLETE)
+    {
+        switch(pGo->GetEntry())
+        {
+            case LEGION_OBELISK_ONE:
                 bObeliskOne = true;
                 break;
-			case LEGION_OBELISK_TWO:
-				bObeliskTwo = true;
+            case LEGION_OBELISK_TWO:
+                bObeliskTwo = true;
                 break;
-			case LEGION_OBELISK_THREE:
+            case LEGION_OBELISK_THREE:
                 bObeliskThree = true;
                 break;
-			case LEGION_OBELISK_FOUR:
+            case LEGION_OBELISK_FOUR:
                 bObeliskFour = true;
                 break;
-			case LEGION_OBELISK_FIVE:
+            case LEGION_OBELISK_FIVE:
                 bObeliskFive = true;
                 break;
-		}
-	
-		if (bObeliskOne && bObeliskTwo && bObeliskThree && bObeliskFour && bObeliskFive)
-		{
-			pGo->SummonCreature(19963, 2943.40f, 4778.20f, 284.49f, 0.94f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
-			//reset global var
-			bObeliskOne = false;
-			bObeliskTwo = false;
-			bObeliskThree = false;
-			bObeliskFour = false;
-			bObeliskFive = false;
-		}
-	}
-	
-	return true;
+        }
+    
+        if (bObeliskOne && bObeliskTwo && bObeliskThree && bObeliskFour && bObeliskFive)
+        {
+            pGo->SummonCreature(19963, 2943.40f, 4778.20f, 284.49f, 0.94f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 120000);
+            //reset global var
+            bObeliskOne = false;
+            bObeliskTwo = false;
+            bObeliskThree = false;
+            bObeliskFour = false;
+            bObeliskFive = false;
+        }
+    }
+    
+    return true;
 }
 
 /*######
@@ -2824,7 +2824,7 @@ void AddSC_blades_edge_mountains()
     newscript->pGossipHello = &GossipHello_npc_saikkal_the_elder;
     newscript->pGossipSelect = &GossipSelect_npc_saikkal_the_elder;
     newscript->RegisterSelf();
-	
+    
     newscript = new Script;
     newscript->Name="go_legion_obelisk";
     newscript->pGOHello =           &GOHello_go_legion_obelisk;

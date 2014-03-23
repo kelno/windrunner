@@ -39,11 +39,11 @@ struct FireworkEvent {
 
     uint32 spellorGobId;
     float size;
-	uint8 posX;
-	uint8 posY;
+    uint8 posX;
+    uint8 posY;
     float ori;
-	float morphX;
-	float morphY;
+    float morphX;
+    float morphY;
 };
 
 struct firework_controllerAI : public ScriptedAI
@@ -52,7 +52,7 @@ struct firework_controllerAI : public ScriptedAI
         ScriptedAI(creature),
         cellSize(3.0f),
         eventId(0)
-	{
+    {
         SetupEvent();
         lastHourDone = time(NULL) / HOUR;
     } 
@@ -70,7 +70,7 @@ struct firework_controllerAI : public ScriptedAI
 
     std::multimap<uint32,FireworkEvent*> eventMap;
     
-	void Reset() {
+    void Reset() {
         me->GetPosition(gridStartX,gridStartY,gridZ);
         me->SetReactState(REACT_PASSIVE);
         me->SetVisibility(VISIBILITY_OFF);
@@ -79,17 +79,17 @@ struct firework_controllerAI : public ScriptedAI
         eventStarted = false;
         currentTime = 0;
         lastEventTime = 0;
-	}
+    }
 
     bool AddEvent(uint32 time, uint32 spellorGobId, float size, uint8 posX, uint8 posY, float ori = 0.0f, float morphX = 0.0f, float morphY = 0.0f)
     {
         if(!spellorGobId)
-		    return false;
-	    if(morphX < -MORPH_MAX || morphX > MORPH_MAX)
+            return false;
+        if(morphX < -MORPH_MAX || morphX > MORPH_MAX)
             morphX = MORPH_MAX;
         if(morphY < -MORPH_MAX || morphY > MORPH_MAX)
-		    morphY = MORPH_MAX;
-		
+            morphY = MORPH_MAX;
+        
         FireworkEvent* event = new FireworkEvent(spellorGobId,size,posX,posY,ori,morphX,morphY);
 
         eventMap.insert(std::make_pair(time,event));
@@ -97,7 +97,7 @@ struct firework_controllerAI : public ScriptedAI
         if(time > endTime)
             endTime = time;
 
-	    return true;
+        return true;
     }
 
     void SetupEvent()
@@ -158,8 +158,8 @@ struct firework_controllerAI : public ScriptedAI
         }
     }
 
-	void UpdateAI(uint32 const diff)
-	{
+    void UpdateAI(uint32 const diff)
+    {
         if(!eventStarted)
         {
             uint32 currentHour = time(NULL) / HOUR;
@@ -198,7 +198,7 @@ struct firework_controllerAI : public ScriptedAI
 
         if(currentTime > endTime)
             eventStarted = false;
-	}
+    }
 
     bool isEventActive()
     {
@@ -216,7 +216,7 @@ bool GossipHello_firework_controller(Player *player, Creature *_Creature)
     player->ADD_GOSSIP_ITEM( 0, "Reload event", GOSSIP_SENDER_MAIN, GOSSIP_RELOAD);
     player->ADD_GOSSIP_ITEM( 0, "Preload spells", GOSSIP_SENDER_MAIN, GOSSIP_PRELOAD);
         
-	player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
+    player->PlayerTalkClass->SendGossipMenu(3,_Creature->GetGUID());
 
     return true;
 }
@@ -249,7 +249,7 @@ bool GossipSelectWithCode_firework_controller( Player *player, Creature *c, uint
         ((firework_controllerAI*)c->AI())->eventId = event;
         ((firework_controllerAI*)c->AI())->SetupEvent();
     }
-	
+    
     player->CLOSE_GOSSIP_MENU();
 
     return true;
@@ -289,7 +289,7 @@ void AddSC_firework_controller()
     newscript->GetAI = &GetAI_firework_controller;
     newscript->pGossipHello = &GossipHello_firework_controller;
     newscript->pGossipSelect = &GossipSelect_firework_controller;
-	newscript->pGossipSelectWithCode = &GossipSelectWithCode_firework_controller;
+    newscript->pGossipSelectWithCode = &GossipSelectWithCode_firework_controller;
     newscript->pReceiveEmote = &ReceiveEmote_firework_controller;
     newscript->RegisterSelf();
 }

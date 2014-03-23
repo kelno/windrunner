@@ -45,7 +45,7 @@ class boss_buru : public CreatureScript
 {
 public:
     boss_buru() : CreatureScript("boss_buru") {}
-	
+    
     class boss_buruAI : public CreatureAINew
     {
         public:
@@ -157,7 +157,7 @@ class buru_egg : public CreatureScript
 {
 public:
     buru_egg() : CreatureScript("buru_egg") {}
-	
+    
     class buru_eggAI : public Creature_NoMovementAINew
     {
         public:
@@ -206,7 +206,7 @@ class buru_egg_trigger : public CreatureScript
 {
 public:
     buru_egg_trigger() : CreatureScript("buru_egg_trigger") {}
-	
+    
     class buru_egg_triggerAI : public Creature_NoMovementAINew
     {
         public:

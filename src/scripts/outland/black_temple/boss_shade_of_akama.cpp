@@ -697,7 +697,7 @@ struct npc_akamaAI : public ScriptedAI
             {
                 me->SetReactState(REACT_AGGRESSIVE);
                 shade->SetReactState(REACT_AGGRESSIVE);
-			    DoZoneInCombat(shade);
+                DoZoneInCombat(shade);
                 AttackStart(shade,false);
                 shade->AI()->AttackStart(me);
                 me->AddThreat(shade, 10000000.0f);

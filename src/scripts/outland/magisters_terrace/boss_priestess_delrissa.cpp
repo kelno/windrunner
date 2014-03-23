@@ -151,12 +151,12 @@ struct boss_priestess_delrissaAI : public ScriptedAI
         SetAddsInCombat(who);
     }
 
-	void SetAddsInCombat(Unit* who)
-	{
-		for(uint8 i = 0; i < Adds.size(); ++i)
+    void SetAddsInCombat(Unit* who)
+    {
+        for(uint8 i = 0; i < Adds.size(); ++i)
             if(Creature* pAdd = Unit::GetCreature(*m_creature, Adds[i]->guid))
-				pAdd->AI()->AttackStart(who);
-	}
+                pAdd->AI()->AttackStart(who);
+    }
 
     void SummonAdds()
     {

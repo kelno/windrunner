@@ -8,7 +8,7 @@
 struct alterac_bowmanAI : public ScriptedAI
 {
     alterac_bowmanAI(Creature *c) : ScriptedAI(c) 
-	{   
+    {   
         shoot_timer = 0;
         SetCombatDistance(80.0f); //Disable melee visual
         SetCombatMovementAllowed(false);
@@ -51,7 +51,7 @@ struct alterac_bowmanAI : public ScriptedAI
         }
 
         if(me->GetDistance(target) > NOMINAL_MELEE_RANGE)
-		{
+        {
             if (shoot_timer < diff)
             {
                 if(me->GetVictim() != target)
@@ -60,20 +60,20 @@ struct alterac_bowmanAI : public ScriptedAI
                 }
                     
                // me->SetInFront(target);
-				DoCast(target,SPELL_SHOOT,false);
+                DoCast(target,SPELL_SHOOT,false);
                 shoot_timer = TIMER_SHOOT;
             } else shoot_timer -= diff;
         } else {
             DoMeleeAttackIfReady();
         }
-	}
-	
-	void MoveInLineOfSight(Unit *who)
-	{    
+    }
+    
+    void MoveInLineOfSight(Unit *who)
+    {    
         if (   !targetGUID
             && isValidTarget(who))
                 targetGUID = who->GetGUID();
-	}
+    }
 
     bool isValidTarget(Unit* target)
     {

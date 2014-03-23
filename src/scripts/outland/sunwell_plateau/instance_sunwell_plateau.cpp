@@ -226,16 +226,16 @@ struct instance_sunwell_plateau : public ScriptedInstance
 
     void OnCreatureDeath(Creature* creature)
     {
-    	switch(creature->GetEntry())
-    	{
-    	    case 25653:
-    	    	if (Unit* summoner = creature->GetSummoner())
-    	    	{
-    	    	    summoner->RemoveAurasDueToSpell(45838);
-    	    	    summoner->RemoveAurasDueToSpell(45839);
-    	    	}
-    		    break;
-    	}
+        switch(creature->GetEntry())
+        {
+            case 25653:
+                if (Unit* summoner = creature->GetSummoner())
+                {
+                    summoner->RemoveAurasDueToSpell(45838);
+                    summoner->RemoveAurasDueToSpell(45839);
+                }
+                break;
+        }
     }
 
     void OnObjectCreate(GameObject* pGo)

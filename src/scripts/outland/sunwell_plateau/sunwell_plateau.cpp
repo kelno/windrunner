@@ -848,7 +848,7 @@ CreatureAI* GetAI_npc_volatile_fiend(Creature *pCreature)
 
 bool GossipHello_npc_selana(Player* player, Creature* _Creature)
 {
-	player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     player->SEND_GOSSIP_MENU(TEXT_HELLO,_Creature->GetGUID());
     return true;
@@ -856,21 +856,21 @@ bool GossipHello_npc_selana(Player* player, Creature* _Creature)
 
 bool GossipSelect_npc_selana(Player* player, Creature* _Creature, uint32 sender, uint32 action)
 {
-	switch (action)
+    switch (action)
     {
         case GOSSIP_ACTION_INFO_DEF+1:
             player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_2, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
             player->SEND_GOSSIP_MENU(TEXT_MENU1,_Creature->GetGUID());
             break;
-		case GOSSIP_ACTION_INFO_DEF+2:
+        case GOSSIP_ACTION_INFO_DEF+2:
             player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_3, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+3);
             player->SEND_GOSSIP_MENU(TEXT_MENU2,_Creature->GetGUID());
             break;
-		case GOSSIP_ACTION_INFO_DEF+3:
+        case GOSSIP_ACTION_INFO_DEF+3:
             player->ADD_GOSSIP_ITEM(0, GOSSIP_ITEM_4, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+4);
             player->SEND_GOSSIP_MENU(TEXT_MENU3,_Creature->GetGUID());
             break;
-		case GOSSIP_ACTION_INFO_DEF+4:
+        case GOSSIP_ACTION_INFO_DEF+4:
             player->SEND_GOSSIP_MENU(TEXT_MENU4,_Creature->GetGUID());
             break;
     }

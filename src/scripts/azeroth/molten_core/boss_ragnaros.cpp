@@ -229,7 +229,7 @@ class Boss_Ragnaros : public CreatureScript
                 if (summoned->getAI())
                     summoned->getAI()->setZoneInCombat(true);
             }
-	
+    
             void onSummonDespawn(Creature* unit)
             {
                 Summons.Despawn(unit);

@@ -522,7 +522,7 @@ bool GossipSelect_npc_jhordy_lapforge(Player *pPlayer, Creature *pCreature, uint
         
         pPlayer->CLOSE_GOSSIP_MENU();
     }
-	return true;
+    return true;
 }
 
 /*####
