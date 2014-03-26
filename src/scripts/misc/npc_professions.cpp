@@ -1,23 +1,7 @@
-/* Copyright (C) 2006 - 2008 ScriptDev2 <https://scriptdev2.svn.sourceforge.net/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
 /* ScriptData
 SDName: Npc_Professions
-SD%Complete: 80
-SDComment: Provides learn/unlearn/relearn-options for professions. Not supported: Unlearn engineering, re-learn engineering, re-learn leatherworking.
+SD%Complete: 85
+SDComment: Provides learn/unlearn/relearn-options for professions. Not supported: Unlearn engineering, re-learn engineering.
 SDCategory: NPCs
 EndScriptData */
 
@@ -178,6 +162,15 @@ there is no difference here (except that default text is chosen with `gameobject
 #define S_UNLEARN_TRANSMUTE     41565
 #define S_UNLEARN_ELIXIR        41564
 #define S_UNLEARN_POTION        41563
+
+/* QUESTS */
+
+#define QUEST_DRAGON_A 5141
+#define QUEST_DRAGON_H 5145
+#define QUEST_ELEMENTAL_A 5144
+#define QUEST_ELEMENTAL_H 5146
+#define QUEST_TRIBAL_A 5143
+#define QUEST_TRIBAL_H 5148
 
 /*###
 # formulas to calculate unlearning cost
@@ -816,6 +809,26 @@ bool GossipSelect_npc_prof_blacksmith(Player *player, Creature *_Creature, uint3
 # start menues leatherworking
 ###*/
 
+bool HasLeatherSpell(Player *player)
+{
+    if (player->HasSpell(S_DRAGON) || player->HasSpell(S_ELEMENTAL) || player->HasSpell(S_TRIBAL))
+        return true;
+    return false;
+}
+
+bool HasDoneLeatherQuest(Player* player)
+{
+    if(   player->GetQuestRewardStatus(QUEST_DRAGON_A)
+       || player->GetQuestRewardStatus(QUEST_DRAGON_H)
+       || player->GetQuestRewardStatus(QUEST_ELEMENTAL_A)
+       || player->GetQuestRewardStatus(QUEST_ELEMENTAL_H)
+       || player->GetQuestRewardStatus(QUEST_TRIBAL_A)
+       || player->GetQuestRewardStatus(QUEST_TRIBAL_H)   )
+       return true;
+
+    return false;
+}
+
 bool GossipHello_npc_prof_leather(Player *player, Creature *_Creature)
 {
     if (_Creature->isQuestGiver())
@@ -827,25 +840,34 @@ bool GossipHello_npc_prof_leather(Player *player, Creature *_Creature)
 
     uint32 eCreature = _Creature->GetEntry();
 
-    if(player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING)>=250 && player->getLevel() > 49 )
+    if(HasDoneLeatherQuest(player))
     {
-        switch (eCreature)
+        if(player->HasSkill(SKILL_LEATHERWORKING) && player->GetBaseSkillValue(SKILL_LEATHERWORKING)>=250 && player->getLevel() > 49 )
         {
-            case 7866:                                      //Peter Galen
-            case 7867:                                      //Thorkaf Dragoneye
-                if(player->HasSpell(S_DRAGON))
-                    player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_DRAGON,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 1);
-                break;
-            case 7868:                                      //Sarah Tanner
-            case 7869:                                      //Brumn Winterhoof
-                if(player->HasSpell(S_ELEMENTAL))
-                    player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_ELEMENTAL,   GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 2);
-                break;
-            case 7870:                                      //Caryssia Moonhunter
-            case 7871:                                      //Se'Jib
-                if(player->HasSpell(S_TRIBAL))
-                    player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_TRIBAL,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 3);
-                break;
+            switch (eCreature)
+            {
+                case 7866:                                      //Peter Galen
+                case 7867:                                      //Thorkaf Dragoneye
+                    if (!HasLeatherSpell(player))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_DRAGON,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 4);
+                    if(player->HasSpell(S_DRAGON))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_DRAGON,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 1);
+                    break;
+                case 7868:                                      //Sarah Tanner
+                case 7869:                                      //Brumn Winterhoof
+                    if (!HasLeatherSpell(player))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_ELEMENTAL,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 5);
+                    if(player->HasSpell(S_ELEMENTAL))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_ELEMENTAL,   GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 2);
+                    break;
+                case 7870:                                      //Caryssia Moonhunter
+                case 7871:                                      //Se'Jib
+                    if (!HasLeatherSpell(player))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_LEARN_TRIBAL,    GOSSIP_SENDER_LEARN,    GOSSIP_ACTION_INFO_DEF + 6);
+                    if(player->HasSpell(S_TRIBAL))
+                        player->ADD_GOSSIP_ITEM( 0, GOSSIP_UNLEARN_TRIBAL,      GOSSIP_SENDER_UNLEARN, GOSSIP_ACTION_INFO_DEF + 3);
+                    break;
+            }
         }
     }
 
@@ -938,6 +960,33 @@ void SendConfirmUnlearn_npc_prof_leather(Player *player, Creature *_Creature, ui
     }
 }
 
+void SendLearn_npc_prof_leather(Player *player, Creature *_Creature, uint32 action)
+{
+    switch(action)
+    {
+        case GOSSIP_ACTION_INFO_DEF + 4:
+            if(!player->HasSpell(S_LEARN_DRAGON))
+            {
+                player->CastSpell(player, S_LEARN_DRAGON, true);
+            }
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 5:
+            if(!player->HasSpell(S_LEARN_ELEMENTAL))
+            {
+                player->CastSpell(player, S_LEARN_ELEMENTAL, true);
+            }
+            break;
+        case GOSSIP_ACTION_INFO_DEF + 6:
+            if(!player->HasSpell(S_LEARN_TRIBAL))
+            {
+                player->CastSpell(player, S_LEARN_TRIBAL, true);
+            }
+            break;
+    }
+    
+    player->CLOSE_GOSSIP_MENU();
+}
+
 bool GossipSelect_npc_prof_leather(Player *player, Creature *_Creature, uint32 sender, uint32 action )
 {
     switch(sender)
@@ -945,6 +994,7 @@ bool GossipSelect_npc_prof_leather(Player *player, Creature *_Creature, uint32 s
         case GOSSIP_SENDER_MAIN:    SendActionMenu_npc_prof_leather(player, _Creature, action); break;
         case GOSSIP_SENDER_UNLEARN: SendConfirmUnlearn_npc_prof_leather(player, _Creature, action); break;
         case GOSSIP_SENDER_CHECK:   SendActionMenu_npc_prof_leather(player, _Creature, action); break;
+        case GOSSIP_SENDER_LEARN :  SendLearn_npc_prof_leather(player, _Creature, action); break;
     }
     return true;
 }
