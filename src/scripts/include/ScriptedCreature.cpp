@@ -714,7 +714,7 @@ void FillSpellSummary()
 
             //Spell targets a single enemy
             if ( TempSpell->EffectImplicitTargetA[j] == TARGET_UNIT_TARGET_ENEMY ||
-                TempSpell->EffectImplicitTargetA[j] == TARGET_DST_TARGET_ENEMY )
+                TempSpell->EffectImplicitTargetA[j] == TARGET_DEST_TARGET_ENEMY )
                 SpellSummary[i].Targets |= 1 << (SELECT_TARGET_SINGLE_ENEMY-1);
 
             //Spell targets AoE at enemy
@@ -726,7 +726,7 @@ void FillSpellSummary()
 
             //Spell targets an enemy
             if ( TempSpell->EffectImplicitTargetA[j] == TARGET_UNIT_TARGET_ENEMY ||
-                TempSpell->EffectImplicitTargetA[j] == TARGET_DST_TARGET_ENEMY ||
+                TempSpell->EffectImplicitTargetA[j] == TARGET_DEST_TARGET_ENEMY ||
                 TempSpell->EffectImplicitTargetA[j] == TARGET_UNIT_AREA_ENEMY_SRC ||
                 TempSpell->EffectImplicitTargetA[j] == TARGET_UNIT_AREA_ENEMY_DST ||
                 TempSpell->EffectImplicitTargetA[j] == TARGET_SRC_CASTER ||

@@ -1494,8 +1494,7 @@ public:
                                 break;
                             }
 
-                            if (Unit *unit = selectUnit(SELECT_TARGET_RANDOM, 0, 100.0f, true, false))
-                                doCast(unit, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
+                            doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
                             scheduleEvent(EVENT_ARMAGEDDON, 4000);
                             break;
