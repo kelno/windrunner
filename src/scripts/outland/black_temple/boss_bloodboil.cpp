@@ -215,7 +215,10 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
 
     void UpdateAI(const uint32 diff)
     {
-        if(!UpdateVictim())
+        //do not update victim if we already have one on phase 2 (extra security to be sure)
+        if(Phase1 && !UpdateVictim())
+            return;
+        else if (!me->GetVictim() && !UpdateVictim())
             return;
             
         if(!m_creature->HasAura(SPELL_BERSERK, 0))
