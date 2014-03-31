@@ -1221,7 +1221,7 @@ class npc_void_spawn : public CreatureScript
 
         void update(const uint32 diff)
         {
-            if (pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
+            if (pInstance && pInstance->GetData(DATA_MURU_EVENT) == NOT_STARTED)
                 me->DisappearAndDie();
 
             if (phaseTimer <= diff)
