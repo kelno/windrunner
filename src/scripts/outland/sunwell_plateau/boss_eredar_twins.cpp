@@ -265,7 +265,7 @@ struct EredarTwin : public ScriptedAI
             //pick a target within the top5 top aggro of our sister, OUR tank excepted
             if(!SisterDead)
                 if(Creature* Sister = Unit::GetCreature((*m_creature),pInstance->GetData64(isSacrolash ? DATA_ALYTHESS : DATA_SACROLASH)))
-                    target = SelectConflagOrNovaTarget(Sister, me->GetVictim());
+                    target = SelectConflagOrNovaTarget(Sister);
 
             //if no target found pick it ourselves
             if(!target)
@@ -306,8 +306,8 @@ struct EredarTwin : public ScriptedAI
         }else EnrageTimer -= diff;
     }
 
-    // Select a random target from top5 threat in sister threat list, given unit excepted
-    Unit* SelectConflagOrNovaTarget(Creature* sister, Unit* except)
+    // Select a random target from top5 threat in sister threat list, except her tank and ours
+    Unit* SelectConflagOrNovaTarget(Creature* sister)
     {
         std::list<HostilReference*>& threatlist = sister->getThreatManager().getThreatList();
 
@@ -315,15 +315,15 @@ struct EredarTwin : public ScriptedAI
         for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
         {
             if (checkTarget((*itr)->getTarget(), true, 100.0f)
-                && (*itr)->getTarget() != except)
+                && (*itr)->getTarget() != me->GetVictim())
             {
                 targetList.push_back((*itr)->getTarget());
             }
-            if(targetList.size() == 5) //only 5 first at threat
+            if(targetList.size() == 5) //only 5 first at threat (threatlist is ordered by threat)
                 break;
         }
 
-        if(targetList.size() == 0) return NULL;
+        if(targetList.size() == 0) return nullptr;
 
         std::list<Unit*>::iterator itr = targetList.begin();
         std::advance(itr, urand(0, targetList.size() - 1));
