@@ -101,6 +101,7 @@ EndScriptData */
 
 //Lord Sanguinar spells
 #define SPELL_BELLOWING_ROAR              44863
+// 3391 Thrash spell ? or more like 12787 since this first seems correctly logged by wowhead ? "In addition to fearing, he has a random "thrash" ability that can be tracked via /combatlog ("Lord Sanguinar gains 2 extra attacks through Thrash") to clear up any confusion about him suddenly dropping a tank to low hp."
 
 //Grand Astromancer Capernian spells
 #define CAPERNIAN_DISTANCE                20                //she casts away from the target
