@@ -179,6 +179,7 @@ struct netherspite_infernalAI : public ScriptedAI
         malchezaar(0), HellfireTimer(0), CleanupTimer(0), point(nullptr) 
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
+        me->AI()->SetCombatMovementAllowed(false);
     }
 
     uint32 HellfireTimer;
@@ -214,6 +215,7 @@ struct netherspite_infernalAI : public ScriptedAI
         if(HellfireTimer)
             if(HellfireTimer <= diff)
         {
+            me->setFaction(14);
             DoCast(m_creature, SPELL_HELLFIRE);
             HellfireTimer = 0;
         }
