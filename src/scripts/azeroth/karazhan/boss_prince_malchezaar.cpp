@@ -149,6 +149,7 @@ struct infernal_relayAI : public ScriptedAI
             posZ = INFERNAL_Z;
         }
 
+        //creature is faction 35 at spawn
         if (Creature *Infernal = m_creature->SummonCreature(NETHERSPITE_INFERNAL, posX, posY, posZ, 0, TEMPSUMMON_TIMED_DESPAWN, 180000))
         {
             //creature is invisible until SPELL_INFERNAL_RELAY touch it
@@ -179,7 +180,6 @@ struct netherspite_infernalAI : public ScriptedAI
         malchezaar(0), HellfireTimer(0), CleanupTimer(0), point(nullptr) 
     {
         pInstance = ((ScriptedInstance*)c->GetInstanceData());
-        me->AI()->SetCombatMovementAllowed(false);
     }
 
     uint32 HellfireTimer;
@@ -198,6 +198,7 @@ struct netherspite_infernalAI : public ScriptedAI
     void Reset()
     {
         me->SetStunned(true);
+        me->AI()->SetCombatMovementAllowed(false);
     }
 
     void Cleanup()
