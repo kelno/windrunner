@@ -44,7 +44,7 @@ EndContentData */
 
 bool GossipHello_npc_brazen(Player *player, Creature *_Creature)
 {
-    player->ADD_GOSSIP_ITEM(0, "I am ready to go to Durnholde Keep.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    player->ADD_GOSSIP_ITEM(0, "Je suis prêt à aller à Durn Gardez.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
     player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
     return true;
 }
@@ -81,10 +81,10 @@ bool GossipHello_npc_erozion(Player *player, Creature *_Creature)
 
     ScriptedInstance* pInstance = ((ScriptedInstance*)_Creature->GetInstanceData());
     if( pInstance && pInstance->GetData(TYPE_BARREL_DIVERSION) != DONE && !player->HasItemCount(ITEM_ENTRY_BOMBS,1) )
-        player->ADD_GOSSIP_ITEM( 0, "I need a pack of Incendiary Bombs.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+        player->ADD_GOSSIP_ITEM( 0, "J'ai besoin d'un paquet de bombes incendiaires.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     if( !player->GetQuestRewardStatus(QUEST_ENTRY_RETURN) && player->GetQuestStatus(QUEST_ENTRY_RETURN) == QUEST_STATUS_COMPLETE )
-        player->ADD_GOSSIP_ITEM( 0, "[PH] Teleport please, i'm tired.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
+        player->ADD_GOSSIP_ITEM( 0, "Téléportation s'il vous plaît, je suis fatigué.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+2);
 
     player->SEND_GOSSIP_MENU(9778, _Creature->GetGUID());
 
@@ -196,13 +196,13 @@ bool GossipSelect_npc_erozion(Player *player, Creature *_Creature, uint32 sender
 //gossip items
 #define GOSSIP_ID_START         9568
 #define GOSSIP_ID_SKARLOC1      9614                        //I'm glad Taretha is alive. We now must find a way to free her...
-#define GOSSIP_ITEM_SKARLOC1    "Taretha cannot see you, Thrall."
+#define GOSSIP_ITEM_SKARLOC1    "Taretha ne peut pas vous voir, Thrall."
 #define GOSSIP_ID_SKARLOC2      9579                        //What do you mean by this? Is Taretha in danger?
-#define GOSSIP_ITEM_SKARLOC2    "The situation is rather complicated, Thrall. It would be best for you to head into the mountains now, before more of Blackmoore's men show up. We'll make sure Taretha is safe."
+#define GOSSIP_ITEM_SKARLOC2    "La situation est assez compliquée, Thrall. Il serait préférable pour vous alliez dans les montagnes maintenant, avant que d'autres hommes de Blackmoore apparaître. Nous ferons en sorte que Taretha soit en lieu sûr."
 #define GOSSIP_ID_SKARLOC3      9580
 
 #define GOSSIP_ID_TARREN        9597                        //tarren mill is beyond these trees
-#define GOSSIP_ITEM_TARREN      "We're ready, Thrall."
+#define GOSSIP_ITEM_TARREN      "Nous sommes prêts, Thrall."
 
 #define GOSSIP_ID_COMPLETE      9578                        //Thank you friends, I owe my freedom to you. Where is Taretha? I hoped to see her
 
@@ -687,7 +687,7 @@ bool GossipHello_npc_thrall_old_hillsbrad(Player *player, Creature *_Creature)
     {
         if (pInstance->GetData(TYPE_BARREL_DIVERSION) == DONE && !pInstance->GetData(TYPE_THRALL_EVENT))
         {
-            player->ADD_GOSSIP_ITEM( 0, "[PH] Start walking.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+            player->ADD_GOSSIP_ITEM( 0, "Commencer à marcher.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
             player->SEND_GOSSIP_MENU(GOSSIP_ID_START, _Creature->GetGUID());
         }
 
@@ -758,9 +758,9 @@ bool GossipSelect_npc_thrall_old_hillsbrad(Player *player, Creature *_Creature, 
 ######*/
 
 #define GOSSIP_ID_EPOCH1        9610                        //Thank you for helping Thrall escape, friends. Now I only hope
-#define GOSSIP_ITEM_EPOCH1      "Strange wizard?"
+#define GOSSIP_ITEM_EPOCH1      "Assistant étrange?"
 #define GOSSIP_ID_EPOCH2        9613                        //Yes, friends. This man was no wizard of
-#define GOSSIP_ITEM_EPOCH2      "We'll get you out. Taretha. Don't worry. I doubt the wizard would wander too far away."
+#define GOSSIP_ITEM_EPOCH2      "Nous allons nous en sortir Taretha. Ne vous inquiétez pas. Je doute que le sorcier se promene trop loin."
 
 struct npc_tarethaAI : public npc_escortAI
 {
