@@ -44,7 +44,7 @@ EndContentData */
 
 bool GossipHello_npc_brazen(Player *player, Creature *_Creature)
 {
-    player->ADD_GOSSIP_ITEM(0, "Je suis prêt à aller à Durn Gardez.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+    player->ADD_GOSSIP_ITEM(0, "Je suis prêt à aller à Fort-de-Durn.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
     player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
     return true;
 }
