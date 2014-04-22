@@ -1157,7 +1157,7 @@ public:
                 addEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(2) | phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 // Phase 3
                 addEvent(EVENT_SHADOW_SPIKE, 4000, 4000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
-                addEvent(EVENT_FLAME_DART, 3000, 3000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
+                addEvent(EVENT_FLAME_DART, 4500, 4500, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 addEvent(EVENT_DARKNESS, 75000, 75000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 addEvent(EVENT_ORBS_EMPOWER, 35000, 35000, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
                 addEvent(EVENT_SINISTER_REFLECTION, 500, 500, EVENT_FLAG_DELAY_IF_CASTING, true, phaseMaskForPhase(3) | phaseMaskForPhase(4) | phaseMaskForPhase(5));
@@ -1201,7 +1201,7 @@ public:
                         scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                         // Phase 3
                         scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
-                        scheduleEvent(EVENT_FLAME_DART, 3000);
+                        scheduleEvent(EVENT_FLAME_DART, 4500);
                         scheduleEvent(EVENT_DARKNESS, 75000);
                         scheduleEvent(EVENT_ORBS_EMPOWER, 35000);
                         scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
@@ -1220,7 +1220,7 @@ public:
                         scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                         // Phase 3
                         scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
-                        scheduleEvent(EVENT_FLAME_DART, 3000);
+                        scheduleEvent(EVENT_FLAME_DART, 4500);
                         scheduleEvent(EVENT_DARKNESS, 25000);
                         scheduleEvent(EVENT_ORBS_EMPOWER, 500);
                         scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
@@ -1496,7 +1496,7 @@ public:
 
                             doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            scheduleEvent(EVENT_ARMAGEDDON, 4000);
+                            disableEvent(EVENT_ARMAGEDDON);
                             break;
                         }
                     }
@@ -2213,7 +2213,7 @@ public:
                         if (Timer[0] <= diff)
                         {
                             doCast(me->GetVictim(), SPELL_SR_HAMMER_OF_JUSTICE, false);
-                            Timer[0] = urand(6000, 8000);
+                            Timer[0] = urand(9000, 12000);
                         }
 
                         if (Timer[1] <= diff)
