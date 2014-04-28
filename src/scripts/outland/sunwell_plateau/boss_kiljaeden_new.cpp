@@ -1,23 +1,6 @@
-/* Copyright (C) 2009 Trinity <http://www.trinitycore.org/>
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- */
-
 #include "precompiled.h"
 #include "def_sunwell_plateau.h"
 
-/*** Spells used during the encounter ***/
 enum SpellIds
 {
     /* Hand of the Deceiver's spells and cosmetics */
@@ -93,10 +76,10 @@ enum SpellIds
     SPELL_VENGEANCE_OF_THE_BLUE_FLIGHT                  = 45839, // Possess the blue dragon from the orb to help the raid.
     SPELL_POWER_OF_THE_BLUE_FLIGHT                      = 45833,
     SPELL_POSSESS_DRAKE_IMMUNE                          = 45838, // immunity while the player possesses the dragon
-    SPELL_RING_OF_BLUE_FLAMES                           = 45825, //Cast this spell when the go is activated
+    SPELL_RING_OF_BLUE_FLAMES                           = 45825, // Cast this spell when the go is activated
     SPELL_DESTROY_DRAKES                                = 46707,
-    SPELL_VISUAL_MOONFIRE                               = 45821, //uppon orb activation
-    SPELL_KNOCK_BACK                                    = 45800, //custom spell, no damage
+    SPELL_VISUAL_MOONFIRE                               = 45821, // uppon orb activation
+    SPELL_KNOCK_BACK                                    = 45800, // custom spell, no damage
 
     // outro
     SPELL_TELEPORT_VISUAL                               = 41232,
@@ -197,8 +180,8 @@ float DeceiverLocations[3][3]=
 // Locations, where Shield Orbs will spawn
 float ShieldOrbLocations[4][2]=
 {
-    {1698.900f, 627.870f},    //middle pont of Sunwell
-    {12.0f, 3.14f},             // First one spawns northeast of KJ
+    {1698.900f, 627.870f},       //middle pont of Sunwell
+    {12.0f, 3.14f},              // First one spawns northeast of KJ
     {12.0f, 3.14f/0.7f},         // Second one spawns southeast
     {12.0f, 3.14f*3.8f}          // Third one spawns (?)
 };
@@ -485,6 +468,7 @@ public:
                 me->setActive(true);
                 Searched = false;
                 me->SetVisibility(VISIBILITY_OFF);
+                me->SetReactState(REACT_PASSIVE);
             }
 
             void FindOrbs()
@@ -703,6 +687,7 @@ public:
                         summoned->SetDisableGravity(true);
                         summoned->SendMovementFlagUpdate();
                         summoned->CastSpell(summoned, SPELL_ANVEENA_PRISON, true);
+                        summoned->SetReactState(REACT_PASSIVE);
                         break;
                     }
                     case CREATURE_KILJAEDEN:
@@ -1122,7 +1107,8 @@ public:
             bool firstDialogueStep;
             bool secondDialogueStep;
             bool thirdDialogueStep;
-
+            
+            uint8 phaseDarknessCount;
         public:
         boss_kiljaedenAI(Creature* creature) : Creature_NoMovementAINew(creature), Summons(me), DialogueHelper(firstDialogue), bumpHelper(2000)
         {
@@ -1131,6 +1117,7 @@ public:
             me->SetDisableGravity(true);
             me->Relocate(KJLocation[0], KJLocation[1], KJLocation[2]);
             me->SendMovementFlagUpdate();
+            phaseDarknessCount = 0;
         }
 
             void onReset(bool onSpawn)
@@ -1201,7 +1188,7 @@ public:
                         scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                         // Phase 3
                         scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
-                        scheduleEvent(EVENT_FLAME_DART, 4500);
+                        scheduleEvent(EVENT_FLAME_DART, 50000,65000);
                         scheduleEvent(EVENT_DARKNESS, 75000);
                         scheduleEvent(EVENT_ORBS_EMPOWER, 35000);
                         scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
@@ -1220,7 +1207,7 @@ public:
                         scheduleEvent(EVENT_SUMMON_SHILEDORB, 10000, 15000);
                         // Phase 3
                         scheduleEvent(EVENT_SHADOW_SPIKE, 4000);
-                        scheduleEvent(EVENT_FLAME_DART, 4500);
+                        scheduleEvent(EVENT_FLAME_DART, 50000,65000);
                         scheduleEvent(EVENT_DARKNESS, 25000);
                         scheduleEvent(EVENT_ORBS_EMPOWER, 500);
                         scheduleEvent(EVENT_SINISTER_REFLECTION, 500);
@@ -1234,6 +1221,7 @@ public:
                         enableEvent(EVENT_ORBS_EMPOWER);
                         break;
                 }
+                phaseDarknessCount = 0;
             }
 
             void onSummon(Creature* summoned)
@@ -1430,7 +1418,19 @@ public:
                             break;
                         case EVENT_FIRE_BLOOM:
                             doCast(NULL, SPELL_FIRE_BLOOM);
-                            scheduleEvent(EVENT_FIRE_BLOOM, 22000);
+                            switch(getPhase())
+                            {
+                            case PHASE_NORMAL:
+                                scheduleEvent(EVENT_FIRE_BLOOM, 22000);
+                                break;
+                            case PHASE_DARKNESS:
+                            case PHASE_ARMAGEDDON:
+                                scheduleEvent(EVENT_FIRE_BLOOM, 40000, 65000);
+                                break;
+                            case PHASE_SACRIFICE:
+                                scheduleEvent(EVENT_FIRE_BLOOM, 90000, 105000);
+                                break;
+                            }
                             break;
                         case EVENT_SUMMON_SHILEDORB:
                             for (uint8 i = 1; i < getPhase(); ++i)
@@ -1457,13 +1457,21 @@ public:
                             break;
                         case EVENT_FLAME_DART:
                             doCast((Unit*)NULL, SPELL_FLAME_DART);
-                            scheduleEvent(EVENT_FLAME_DART, 60000);
+                            scheduleEvent(EVENT_FLAME_DART, 50000, 65000);
                             break;
                         case EVENT_DARKNESS:
+                            phaseDarknessCount++;
                             talk(EMOTE_KJ_DARKNESS);
                             doCast((Unit*)NULL, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
                             scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? 25000 : 45000);
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
+                            scheduleEvent(EVENT_FLAME_DART, 5000, 20000);
+                            if(getPhase() == PHASE_NORMAL)
+                                scheduleEvent(EVENT_FIRE_BLOOM, 25000);
+                            else if(phaseDarknessCount == 1)
+                                scheduleEvent(EVENT_FIRE_BLOOM, 10000, 40000);
+                            else
+                                scheduleEvent(EVENT_FIRE_BLOOM, 15000, 20000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -1488,6 +1496,7 @@ public:
                             break;
                         case EVENT_ARMAGEDDON:
                         { 
+                            //KJ doesn't cast it when channeling
                             if(me->IsNonMeleeSpellCasted(false)) //Already casting something, recheck 1 sec later
                             {
                                 scheduleEvent(EVENT_ARMAGEDDON, 1000);
@@ -1610,7 +1619,7 @@ public:
                     {
                         case EVENT_SHADOWBOLT:
                             doCast(me, SPELL_SHADOW_BOLT_VOLLEY);
-                            scheduleEvent(EVENT_SHADOWBOLT, 2000, 3000);
+                            scheduleEvent(EVENT_SHADOWBOLT, 300);
                             break;
                         case EVENT_FELFIRE:
                             doCast(me, SPELL_FELFIRE_PORTAL);
