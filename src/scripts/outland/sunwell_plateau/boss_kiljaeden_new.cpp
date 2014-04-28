@@ -1505,7 +1505,7 @@ public:
 
                             doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            disableEvent(EVENT_ARMAGEDDON);
+                            scheduleEvent(EVENT_ARMAGEDDON, 35000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
                             break;
                         }
                     }
