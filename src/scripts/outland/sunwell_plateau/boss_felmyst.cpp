@@ -678,7 +678,7 @@ public:
                         scheduleEvent(EVENT_BERSERK, 10000);
                         break;
                     case EVENT_DEMONIC_VAPOR:
-                        if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true))
+                        if (Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0, 150, true)) //useless here ? The spell should do the random itself
                             doCast(me, SPELL_VAPOR_SELECT, true);
 
                         demonicCount++;
@@ -851,7 +851,9 @@ public:
 
         void onReset(bool onSpawn)
         {
-            setZoneInCombat(true);
+            if(pInstance)
+                setZoneInCombat(true);
+
             if(Unit* target = selectUnit(SELECT_TARGET_RANDOM, 0))
             {
                 me->AddThreat(target,500.0f);
@@ -862,13 +864,13 @@ public:
 
         void updateEM(uint32 const diff)
         {
-            if (pInstance->GetData(DATA_FELMYST_EVENT) != IN_PROGRESS)
+            if (pInstance && pInstance->GetData(DATA_FELMYST_EVENT) != IN_PROGRESS)
                 me->DisappearAndDie();
         }
 
         void update(const uint32 diff)
         {
-            if (pInstance->GetData(DATA_FELMYST_EVENT) != IN_PROGRESS)
+            if (pInstance && pInstance->GetData(DATA_FELMYST_EVENT) != IN_PROGRESS)
                 me->DisappearAndDie();
 
             if (!updateVictim())
