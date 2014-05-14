@@ -2005,9 +2005,56 @@ CreatureAI* GetAI_npc_willy(Creature* creature)
     return new npc_willyAI(creature);
 }
 
+/*######
+## grissomMorpher
+######*/
+
+bool GossipHello_custom_grissomMorpher(Player *pPlayer, Creature *pCreature)
+{
+    pPlayer->ADD_GOSSIP_ITEM(0, "Costume 1", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+    pPlayer->ADD_GOSSIP_ITEM(0, "Costume 2", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+    pPlayer->ADD_GOSSIP_ITEM(0, "Costume 3", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
+    pPlayer->ADD_GOSSIP_ITEM(0, "Costume 4", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 3);
+
+    pPlayer->PlayerTalkClass->SendGossipMenu(907, pCreature->GetGUID());
+
+    return true;
+}
+
+bool GossipSelect_custom_grissomMorpher(Player *pPlayer, Creature *pCreature, uint32 sender, uint32 action)
+{
+    uint32 displayid = 19937;
+    switch (action)
+    {
+    case GOSSIP_ACTION_INFO_DEF:
+        displayid = 19937;
+        break;
+    case GOSSIP_ACTION_INFO_DEF + 1:
+        displayid = 19926;
+        break;
+    case GOSSIP_ACTION_INFO_DEF + 2:
+        displayid = 19750;
+        break;
+    case GOSSIP_ACTION_INFO_DEF + 3:
+        displayid = 19928;
+        break;
+    }
+    if (displayid)
+        pPlayer->SetDisplayId(displayid);
+
+    pPlayer->PlayerTalkClass->CloseGossip();
+    return true;
+}
+
 void AddSC_npcs_special()
 {
     Script *newscript;
+
+    newscript = new Script;
+    newscript->Name = "grissommorpher";
+    newscript->pGossipHello = &GossipHello_custom_grissomMorpher;
+    newscript->pGossipSelect = &GossipSelect_custom_grissomMorpher;
+    newscript->RegisterSelf();
 
     newscript = new Script;
     newscript->Name="npc_chicken_cluck";
