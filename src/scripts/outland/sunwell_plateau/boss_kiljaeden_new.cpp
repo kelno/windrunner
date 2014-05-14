@@ -1463,7 +1463,7 @@ public:
                             phaseDarknessCount++;
                             talk(EMOTE_KJ_DARKNESS);
                             doCast((Unit*)NULL, SPELL_DARKNESS_OF_A_THOUSAND_SOULS);
-                            scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? 25000 : 45000);
+                            scheduleEvent(EVENT_DARKNESS, (getPhase() == PHASE_SACRIFICE) ? 28000 : 48000);
                             scheduleEvent(EVENT_SUMMON_SHILEDORB, 9000, 10000);
                             scheduleEvent(EVENT_FLAME_DART, 5000, 20000);
                             if(getPhase() == PHASE_NORMAL)
@@ -1472,6 +1472,8 @@ public:
                                 scheduleEvent(EVENT_FIRE_BLOOM, 10000, 40000);
                             else
                                 scheduleEvent(EVENT_FIRE_BLOOM, 15000, 20000);
+                            if (getPhase() == PHASE_SACRIFICE)
+                                scheduleEvent(EVENT_ARMAGEDDON, 8000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -1505,7 +1507,11 @@ public:
 
                             doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            scheduleEvent(EVENT_ARMAGEDDON, 35000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
+                            disableEvent(EVENT_ARMAGEDDON);
+                            if (getPhase() == PHASE_SACRIFICE)
+                                disableEvent(EVENT_ARMAGEDDON); //timer will be reset uppon casting SPELL_DARKNESS_OF_A_THOUSAND_SOULS
+                            else
+                                scheduleEvent(EVENT_ARMAGEDDON, 35000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
                             break;
                         }
                     }
