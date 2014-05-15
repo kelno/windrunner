@@ -315,7 +315,8 @@ struct EredarTwin : public ScriptedAI
         for (std::list<HostilReference*>::const_iterator itr = threatlist.begin(); itr != threatlist.end(); ++itr)
         {
             if (checkTarget((*itr)->getTarget(), true, 100.0f)
-                && (*itr)->getTarget() != me->GetVictim())
+                && (*itr)->getTarget() != me->GetVictim()
+                && (*itr)->getTarget() != sister->GetVictim() )
             {
                 targetList.push_back((*itr)->getTarget());
             }
