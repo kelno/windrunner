@@ -1472,8 +1472,9 @@ public:
                                 scheduleEvent(EVENT_FIRE_BLOOM, 10000, 40000);
                             else
                                 scheduleEvent(EVENT_FIRE_BLOOM, 15000, 20000);
-                            if (getPhase() == PHASE_SACRIFICE)
-                                scheduleEvent(EVENT_ARMAGEDDON, 8000);
+
+                            me->RemoveAurasDueToSpell(SPELL_ARMAGEDDON_PERIODIC_SUMMON); 
+                            scheduleEvent(EVENT_ARMAGEDDON, 8000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -1498,20 +1499,13 @@ public:
                             break;
                         case EVENT_ARMAGEDDON:
                         { 
-                            //KJ doesn't cast it when channeling
-                            if(me->IsNonMeleeSpellCasted(false)) //Already casting something, recheck 1 sec later
-                            {
-                                scheduleEvent(EVENT_ARMAGEDDON, 1000);
-                                break;
-                            }
-
                             doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
                             disableEvent(EVENT_ARMAGEDDON);
                             if (getPhase() == PHASE_SACRIFICE)
                                 disableEvent(EVENT_ARMAGEDDON); //timer will be reset uppon casting SPELL_DARKNESS_OF_A_THOUSAND_SOULS
                             else
-                                scheduleEvent(EVENT_ARMAGEDDON, 35000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
+                                scheduleEvent(EVENT_ARMAGEDDON, 26000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
                             break;
                         }
                     }
