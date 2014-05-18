@@ -2086,18 +2086,21 @@ bool GOHello_go_arcano_control_unit(Player *pPlayer, GameObject* pGo)
 ## npc_quest_spectrecles
 ######*/
 
+/* Alliance quests : 10643 (item 30719) - 10644 (item 30721)
+   Horde quests : 10625 (item 30719), 10633 (item 30721)
+   */
 bool GossipHello_npc_quest_spectrecles(Player* player, Creature* creature)
 {
     if (creature->isQuestGiver())
         player->PrepareQuestMenu(creature->GetGUID());
-
+    //10634
     if (player->GetQuestStatus(10625) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     if (player->GetQuestStatus(10643) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
-    if (player->GetQuestStatus(10633) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
+    if (player->GetQuestStatus(10633) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30721, 1, true))
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    if (player->GetQuestStatus(10644) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
+    if (player->GetQuestStatus(10644) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30721, 1, true))
         player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
     player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
@@ -2108,16 +2111,10 @@ bool GossipHello_npc_quest_spectrecles(Player* player, Creature* creature)
 bool GossipSelect_npc_quest_spectrecles(Player* player, Creature* creature, uint32 sender, uint32 action)
 {
     if (action == GOSSIP_ACTION_INFO_DEF) {
-        ItemPosCountVec dest;
-        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 30719, 1, false);
-        if (msg == EQUIP_ERR_OK)
-            player->StoreNewItem(dest, 30719, 1, true);
+        player->CastSpell(player, 37602, true); //        Replace Lost Spectrecles T1
     }
     else if (action == GOSSIP_ACTION_INFO_DEF + 1) {
-        ItemPosCountVec dest;
-        uint8 msg = player->CanStoreNewItem(NULL_BAG, NULL_SLOT, dest, 30721, 1, false);
-        if (msg == EQUIP_ERR_OK)
-            player->StoreNewItem(dest, 30721, 1, true);
+        player->CastSpell(player, 37700, true); //        Replace Lost Spectrecles T2
     }
     
     player->CLOSE_GOSSIP_MENU();
