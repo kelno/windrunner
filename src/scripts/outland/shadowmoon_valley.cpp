@@ -2093,15 +2093,17 @@ bool GossipHello_npc_quest_spectrecles(Player* player, Creature* creature)
 {
     if (creature->isQuestGiver())
         player->PrepareQuestMenu(creature->GetGUID());
-    //10634
+
+    const char* lostText = "J'ai perdu mes Lunectoplasmes";
+    
     if (player->GetQuestStatus(10625) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, lostText, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     if (player->GetQuestStatus(10643) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30719, 1, true))
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, lostText, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     if (player->GetQuestStatus(10633) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30721, 1, true))
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, lostText, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
     if (player->GetQuestStatus(10644) == QUEST_STATUS_INCOMPLETE && !player->HasItemCount(30721, 1, true))
-        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, "J'ai perdu mes Lunectoplasmes", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
+        player->ADD_GOSSIP_ITEM(GOSSIP_ICON_CHAT, lostText, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
 
     player->SEND_GOSSIP_MENU(creature->GetNpcTextId(), creature->GetGUID());
 
