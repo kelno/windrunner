@@ -1371,6 +1371,7 @@ public:
                 {
                     if (me->IsBelowHPPercent(25))
                     {
+                        disableEvent(EVENT_DARKNESS); //no darkness before phase changed
                         SetNewArray(thirdDialogue);
                         thirdDialogueStep = true;
                         StartNextDialogueText(SAY_KALEC_3);
