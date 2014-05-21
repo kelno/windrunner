@@ -216,10 +216,14 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
     void UpdateAI(const uint32 diff)
     {
         //do not update victim if we already have one on phase 2 (extra security to be sure)
-        if(Phase1 && !UpdateVictim())
+        if(!UpdateVictim())
             return;
-        else if (!me->GetVictim() && !UpdateVictim())
-            return;
+        if (!Phase1 && me->GetVictim()->GetGUID() != TargetGUID)
+        {
+            Unit* target = Unit::GetUnit((*m_creature), TargetGUID;
+            if (target && me->canAttack(target))
+                AttackStart(target);
+        }
             
         if(!m_creature->HasAura(SPELL_BERSERK, 0))
         {
@@ -295,7 +299,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             if(Phase1)
             {
                 Unit* target = SelectUnit(SELECT_TARGET_RANDOM, 0, 50000, true);
-                if(target && target->IsAlive())
+                if(target && me->canAttack(target))
                 {
                     Phase1 = false;
 
