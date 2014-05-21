@@ -260,7 +260,6 @@ public:
             me->CastSpell(me, SPELL_DOOMFIRE_SPAWN, true);
             _archimondeGUID = NULL;
             _Archimonde = NULL;
-            _CurrentTarget = FindNewFriend();
 
             if (_instance)
             {
@@ -275,7 +274,8 @@ public:
                     }
                 }
             }
-            
+
+            _CurrentTarget = FindNewFriend();
             if(!_CurrentTarget)
                 turnAround(); //no target found, go the other way. This is to prevent some abuses.
         }
