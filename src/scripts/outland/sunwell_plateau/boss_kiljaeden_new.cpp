@@ -237,7 +237,8 @@ enum Kalecgos
     SAY_KALEC_2    = -1580084,
     SAY_KALEC_3    = -1580086,
     SAY_KALEC_4    = -1580088,
-    SAY_KALEC_5    = -1580091,
+    SAY_KALEC_5    = -1580098,
+    SAY_KALEC_6    = -1580091,
 
 };
 
@@ -303,13 +304,13 @@ static const DialogueEntry secondDialogue[] =
 
 static const DialogueEntry thirdDialogue[] =
 {
-    {SAY_KALEC_3,                 CREATURE_KALECGOS,  10000},
-    {SAY_ANVEENA_3,               CREATURE_ANVEENA,   3000},
-    {SAY_KALEC_4,                 CREATURE_KALECGOS,  5000},
-    {SAY_ANVEENA_4,               CREATURE_ANVEENA,   6000},
-    {SAY_KALEC_5,                 CREATURE_KALECGOS,  5000},
-    {SAY_KJ_PHASE5,               CREATURE_KILJAEDEN, 5000},
-    {POINT_END_STUN,              0,                  0},
+    {SAY_KALEC_3,                 CREATURE_KALECGOS,  10000},//Anveena, I love you! Focus on my voice, come back for me now! Only you can cleanse the Sunwell!
+    {SAY_ANVEENA_3,               CREATURE_ANVEENA,   2000}, //Kalec... Kalec?
+    {SAY_KALEC_4,                 CREATURE_KALECGOS,  8000}, //Yes, Anveena! Let fate embrace you now!
+    {SAY_ANVEENA_4,               CREATURE_ANVEENA,   6000}, //The nightmare is over, the spell is broken! Goodbye, Kalec, my love!
+    {SAY_KJ_PHASE5,               CREATURE_KILJAEDEN, 12000},//WATAVIOUDONE ?
+    {SAY_KALEC_5,                 CREATURE_KALECGOS,  5000}, //I have channeled all I can! The power is in your hands!
+    {SAY_KALEC_6,                 CREATURE_KALECGOS,  5000}, //Strike now, heroes, while he is weakened! Vanquish the Deceiver!
     {0,                           0,                  0},
 };
 
@@ -1292,12 +1293,12 @@ public:
                             Anveena->CastSpell((Unit*)NULL, SPELL_SACRIFICE_OF_ANVEENA, true);
                             Anveena->ForcedDespawn(3000);
                         }
-                        break;
-                    case SAY_KJ_PHASE5:
                         me->SetControlled(true, UNIT_STAT_STUNNED);
                         break;
-                    case POINT_END_STUN:
+                    case SAY_KJ_PHASE5:
                         me->SetControlled(false, UNIT_STAT_STUNNED);
+                        break;
+                    case SAY_KALEC_5:
                         setPhase(PHASE_SACRIFICE);
                         break;
                 }
