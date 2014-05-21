@@ -1476,7 +1476,8 @@ public:
                                 scheduleEvent(EVENT_FIRE_BLOOM, 15000, 20000);
 
                             me->RemoveAurasDueToSpell(SPELL_ARMAGEDDON_PERIODIC_SUMMON); 
-                            scheduleEvent(EVENT_ARMAGEDDON, 8000);
+                            if (getPhase() >= PHASE_ARMAGEDDON)
+                                scheduleEvent(EVENT_ARMAGEDDON, 8000);
                             break;
                         case EVENT_ORBS_EMPOWER:
                             if (getPhase() == PHASE_SACRIFICE)
@@ -1503,9 +1504,8 @@ public:
                         { 
                             doCast(me, SPELL_ARMAGEDDON_PERIODIC_SUMMON, true);
 
-                            disableEvent(EVENT_ARMAGEDDON);
                             if (getPhase() == PHASE_SACRIFICE)
-                                disableEvent(EVENT_ARMAGEDDON); //timer will be reset uppon casting SPELL_DARKNESS_OF_A_THOUSAND_SOULS
+                                disableEvent(EVENT_ARMAGEDDON); //timer will be reset uppon EVENT_DARKNESS
                             else
                                 scheduleEvent(EVENT_ARMAGEDDON, 26000); //about ~15 seconds where KJ don't spawns any new armaggedon area on the ground (checked on retail https://www.youtube.com/watch?v=Xwv_UZDl_AM)
                             break;
