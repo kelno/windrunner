@@ -220,7 +220,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             return;
         if (!Phase1 && me->GetVictim()->GetGUID() != TargetGUID)
         {
-            Unit* target = Unit::GetUnit((*m_creature), TargetGUID;
+            Unit* target = Unit::GetUnit((*m_creature), TargetGUID);
             if (target && me->canAttack(target))
                 AttackStart(target);
         }
