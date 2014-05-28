@@ -210,9 +210,11 @@ struct boss_akilzonAI : public ScriptedAI
                 EnterEvadeMode();
                 return;
             }
-            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
-                if (Player* plr = itr->getSource()) {
-                    if (Cloud->GetDistance2d(plr) >= 6 && plr->isAttackableByAOE()))
+            for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) 
+            {
+                if (Player* plr = itr->getSource()) 
+                {
+                    if (Cloud->GetDistance2d(plr) >= 6 && plr->isAttackableByAOE())
                         Cloud->CastCustomSpell(plr, 43137, &bp0, NULL, NULL, true, 0, 0, m_creature->GetGUID());
                 }
             }

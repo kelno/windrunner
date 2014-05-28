@@ -300,7 +300,7 @@ struct boss_grandmaster_vorpilAI : public ScriptedAI
             Map::PlayerList const &PlayerList = map->GetPlayers();
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                 if (Player* i_pl = i->getSource())
-                    if (i_pl->IsAlive() && !i_pl->HasAura(SPELL_BANISH,0)i_pl->isAttackableByAOE())
+                    if (i_pl->IsAlive() && !i_pl->HasAura(SPELL_BANISH,0) && i_pl->isAttackableByAOE())
                         i_pl->TeleportTo(m_creature->GetMapId(), VorpilPosition[0],VorpilPosition[1],VorpilPosition[2], 0, TELE_TO_NOT_LEAVE_COMBAT);
 
             m_creature->Relocate(VorpilPosition[0],VorpilPosition[1],VorpilPosition[2]);
