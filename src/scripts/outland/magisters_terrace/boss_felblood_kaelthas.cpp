@@ -218,7 +218,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         for (i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
-                if(i_pl->IsAlive())
+                if(i_pl->IsAlive() && i_pl->isAttackableByAOE())
                 {
                     i_pl->CastSpell(i_pl, SPELL_TELEPORT_CENTER, true);
                     m_creature->GetNearPoint(m_creature,x,y,z,5,5,0);
@@ -236,7 +236,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         for (i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
             if (Player* i_pl = i->getSource())
-                if(i_pl->IsAlive())
+                if (i_pl->IsAlive() && i_pl->isAttackableByAOE())
                 // Knockback into the air
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_DOT, true, 0, 0, m_creature->GetGUID());
         }
@@ -251,7 +251,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         {
             if (Player* i_pl = i->getSource())
             {
-                if(i_pl->IsAlive())
+                if (i_pl->IsAlive() && i_pl->isAttackableByAOE())
                 {
                     // Also needs an exception in spell system.
                     i_pl->CastSpell(i_pl, SPELL_GRAVITY_LAPSE_FLY, true, 0, 0, m_creature->GetGUID());
@@ -275,16 +275,19 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         Map::PlayerList::const_iterator i;
         for (i = PlayerList.begin(); i != PlayerList.end(); ++i)
         {
-            if(Player* i_pl = i->getSource())
+            if (Player* i_pl = i->getSource())
             {
-                i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_FLY);
-                i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_DOT);
-                WorldPacket data(12);
-                data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
-                data.append(i_pl->GetPackGUID());
-                data << uint32(0);
-                i_pl->SendMessageToSet(&data, true);
-                i_pl->SetCanFly(false);
+                if(i_pl->isGameMaster())
+                {
+                    i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_FLY);
+                    i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_DOT);
+                    WorldPacket data(12);
+                    data.SetOpcode(SMSG_MOVE_UNSET_CAN_FLY);
+                    data.append(i_pl->GetPackGUID());
+                    data << uint32(0);
+                    i_pl->SendMessageToSet(&data, true);
+                    i_pl->SetCanFly(false);
+                }
             }
         }
     }

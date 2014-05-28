@@ -380,7 +380,7 @@ struct boss_janalaiAI : public ScriptedAI
             for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
             {
                 if (Player* i_pl = i->getSource())
-                    if(i_pl->IsAlive() && (m_creature->GetDistance(i_pl) < 100.0f))       // May prevent ghost players to be teleported (strange bug o_O)
+                    if(i_pl->IsAlive() && (m_creature->GetDistance(i_pl) < 100.0f) && !i_pl->isGameMaster())       // May prevent ghost players to be teleported (strange bug o_O)
                         DoTeleportPlayer(i_pl, JanalainPos[0][0]-5+rand()%10, JanalainPos[0][1]-5+rand()%10, JanalainPos[0][2], 0);
             }
             //m_creature->CastSpell(Temp, SPELL_SUMMON_PLAYERS, true); // core bug, spell does not work if too far

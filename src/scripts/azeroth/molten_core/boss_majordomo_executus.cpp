@@ -600,12 +600,12 @@ class Mob_Hot_Coal : public CreatureScript
                             Map::PlayerList const &PlayerList = map->GetPlayers();
 
                     for(Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
-                    if (Player* i_pl = i->getSource())
-                    if (i_pl->IsAlive() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
-                                    {
-                    doCast(i_pl, SPELL_HOTCOAL, true);
-                                        i_pl->CombatStop(true);
-                                    }
+                        if (Player* i_pl = i->getSource())
+                            if (i_pl->IsAlive() && i_pl->isAttackableByAOE() && i_pl->GetDistance(CaolLocation.x, CaolLocation.y, CaolLocation.z) <= 8)
+                                {
+                                    doCast(i_pl, SPELL_HOTCOAL, true);
+                                    i_pl->CombatStop(true);
+                                }
 
                             me->CombatStop(true);
                             scheduleEvent(EV_COAL, 1000);

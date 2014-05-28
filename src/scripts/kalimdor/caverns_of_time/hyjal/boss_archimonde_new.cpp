@@ -208,7 +208,7 @@ public:
             {
                 if (Player* i_pl = i->getSource())
                 {
-                    if (i_pl->IsAlive() && !i_pl->isGameMaster() && i_pl->GetDistance(me) <= 3)
+                    if (i_pl->IsAlive() && i_pl->isAttackableByAOE() && i_pl->GetDistance(me) <= 3)
                     {
                         //i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true, 0, 0, _archimondeGUID); 
                         i_pl->CastSpell(i_pl, SPELL_DOOMFIRE_DAMAGE, true);

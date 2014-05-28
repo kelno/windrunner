@@ -152,7 +152,8 @@ struct instance_shattered_halls : public ScriptedInstance
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
             {
                 if (Player* plr = itr->getSource())
-                    plr->CastSpell(plr, spellid, true);
+                    if (plr->->isAttackableByAOE())
+                        plr->CastSpell(plr, spellid, true);
             }
         }
     }
