@@ -556,7 +556,7 @@ struct boss_headless_horsemanAI : public ScriptedAI
 
         for (Map::PlayerList::const_iterator i = playerList.begin(); i != playerList.end(); ++i)
             if ((me->IsWithinLOSInMap(i->getSource()) || !checkLoS) && me->GetVictim() != i->getSource() &&
-                me->IsWithinDistInMap(i->getSource(), range) && i->getSource()->IsAlive())
+                me->IsWithinDistInMap(i->getSource(), range) && i->getSource()->IsAlive() && i->GetSource()->isAttackableByAOE())
                 temp.push_back(i->getSource());
 
         if (temp.size()) {

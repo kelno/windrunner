@@ -179,7 +179,7 @@ struct boss_gurtogg_bloodboilAI : public ScriptedAI
             {
                 if (Player* i_pl = i->getSource())
                 {
-                     if(i_pl && i_pl->IsAlive())
+                    if (i_pl && i_pl->isAttackableByAOE())
                         targets.push_back(i_pl);
                 }
             }

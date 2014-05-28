@@ -357,7 +357,7 @@ class Boss_Lurker_Below : public CreatureScript
                             Map::PlayerList const &PlayerList = pMap->GetPlayers();
                             for (Map::PlayerList::const_iterator i = PlayerList.begin(); i != PlayerList.end(); ++i)
                             {
-                                if (i->getSource() && i->getSource()->IsAlive() && !i->getSource()->IsPet())
+                                if (i->getSource() && i->getSource()->IsAlive() && !i->getSource()->IsPet() && i->getSource()->isAttackableByAOE())
                                 {
                                     if (me->HasInArc((double)diff/20000*(double)M_PI*2,i->getSource()))
                                     {

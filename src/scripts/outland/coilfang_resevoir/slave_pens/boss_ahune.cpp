@@ -123,7 +123,7 @@ struct boss_ahuneAI : public Scripted_NoMovementAI
         if (!players.isEmpty()) {
             for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                 if (Player* plr = itr->getSource()) {
-                    if (plr->IsWithinMeleeRange(me)) {
+                    if (plr->IsWithinMeleeRange(me) && plr->isAttackableByAOE())) {
                         DoCast(plr, SPELL_COLD_SLAP);
                         plr->CastSpell(plr, SPELL_ICE_SPEAR, true);
                     }
@@ -344,7 +344,7 @@ struct npc_ice_spear_bunnyAI : public Scripted_NoMovementAI
             if (!players.isEmpty()) {
                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr) {
                     if (Player* plr = itr->getSource()) {
-                        if (plr->IsWithinMeleeRange(me))
+                        if (plr->IsWithinMeleeRange(me) && plr->isAttackableByAOE()))
                             plr->CastSpell(plr, SPELL_ICE_SPEAR, true);
                     }
                 }

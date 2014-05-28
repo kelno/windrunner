@@ -746,6 +746,9 @@ struct mob_greyheart_spellbinderAI : public ScriptedAI
             {
                 if (Player* i_pl = itr->getSource())
                 {
+                    if (!i_pl->isAttackableByAOE())
+                        continue;
+
                     bool isCasting = false;
                     for(uint8 i = 0; i < CURRENT_MAX_SPELL; ++i)
                         if(i_pl->m_currentSpells[i])

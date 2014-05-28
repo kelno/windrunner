@@ -240,7 +240,7 @@ public:
                                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                                 {
                                     Player* plr = itr->getSource();
-                                    if (plr && me->GetDistance(plr) <= 7.0f)
+                                    if (plr && me->GetDistance(plr) <= 7.0f && plr->isAttackableByAOE())
                                     {
                                         if (guidPlayerCD[plr->GetGUID()] == 0)
                                         {
@@ -263,7 +263,7 @@ public:
                                 for(Map::PlayerList::const_iterator itr = players.begin(); itr != players.end(); ++itr)
                                 {
                                     Player* plr = itr->getSource();
-                                    if (plr && me->GetDistance(plr) <= 5.0f)
+                                    if (plr && me->GetDistance(plr) <= 5.0f && plr->isAttackableByAOE())
                                         doCast(plr, SPELL_SINGULARITY, true);
                                 }
                             }
