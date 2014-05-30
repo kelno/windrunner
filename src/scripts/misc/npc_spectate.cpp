@@ -109,6 +109,9 @@ std::string GetGamesStringData(BattleGround *arena)
             data += " - ";
     }
 
+    if(data.empty())
+        data = "Escarmouche";
+
     return data;
 }
 
