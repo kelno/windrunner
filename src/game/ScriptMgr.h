@@ -15,7 +15,7 @@
 #include "Database/DBCStructure.h"
 
 #ifndef _TRINITY_SCRIPT_CONFIG
-# define _TRINITY_SCRIPT_CONFIG  "trinitycore.conf"
+# define _TRINITY_SCRIPT_CONFIG  "worldserver.conf"
 #endif _TRINITY_SCRIPT_CONFIG
 
 class Player;
