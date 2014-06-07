@@ -18,7 +18,7 @@ class CreatureScript;
 INSTANTIATE_SINGLETON_1(ScriptMgr);
 
 #ifndef _TRINITY_SCRIPT_CONFIG
-# define _TRINITY_SCRIPT_CONFIG  "trinitycore.conf"
+# define _TRINITY_SCRIPT_CONFIG  "worldserver.conf"
 #endif _TRINITY_SCRIPT_CONFIG
 
 //*** Global data ***

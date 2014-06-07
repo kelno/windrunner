@@ -5,7 +5,7 @@
 #ifndef SC_PRECOMPILED_H
 #define SC_PRECOMPILED_H
 
-#include "../ScriptMgr.h"
+#include "../../game/ScriptMgr.h"
 #include "Cell.h"
 #include "CellImpl.h"
 #include "GridNotifiers.h"
