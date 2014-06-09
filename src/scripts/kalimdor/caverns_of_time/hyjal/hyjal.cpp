@@ -85,7 +85,7 @@ bool GossipHello_npc_jaina_proudmoore(Player *player, Creature *_Creature)
     uint32 RageEncounter = ai->GetInstanceData(DATA_RAGEWINTERCHILLEVENT);
     uint32 AnetheronEncounter = ai->GetInstanceData(DATA_ANETHERONEVENT);
     
-    if(player->isGameMaster()) {
+    if(player->IsGameMaster()) {
         player->ADD_GOSSIP_ITEM(2, "[GM] Toggle Debug Timers", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
         player->ADD_GOSSIP_ITEM(0, "Spawn Archimonde", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 4);
     }
@@ -157,7 +157,7 @@ bool GossipHello_npc_thrall(Player *player, Creature *_Creature)
     if (ai->EventBegun)
         return false;
 
-    if(player->isGameMaster()) {
+    if(player->IsGameMaster()) {
         player->ADD_GOSSIP_ITEM(2, "[GM] Toggle Debug Timers", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     }
 

@@ -633,7 +633,7 @@ struct boss_kalecAI : public ScriptedAI
 
     void DamageTaken(Unit *done_by, uint32 &damage)
     {
-        if (done_by->ToPlayer() && done_by->ToPlayer()->isGameMaster())
+        if (done_by->ToPlayer() && done_by->ToPlayer()->IsGameMaster())
             return;
         if(done_by->GetGUID() != SathGUID)
             damage = 0;

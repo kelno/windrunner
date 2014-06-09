@@ -277,7 +277,7 @@ struct boss_felblood_kaelthasAI : public ScriptedAI
         {
             if (Player* i_pl = i->getSource())
             {
-                if(i_pl->isGameMaster())
+                if(i_pl->IsGameMaster())
                 {
                     i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_FLY);
                     i_pl->RemoveAurasDueToSpell(SPELL_GRAVITY_LAPSE_DOT);
