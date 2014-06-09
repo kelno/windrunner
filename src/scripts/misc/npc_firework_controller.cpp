@@ -257,7 +257,7 @@ bool GossipSelectWithCode_firework_controller( Player *player, Creature *c, uint
 
 bool ReceiveEmote_firework_controller(Player* p, Creature* c, uint32 emote)
 {
-    if(!p->isGameMaster())
+    if(!p->IsGameMaster())
         return true;
 
     switch(emote)

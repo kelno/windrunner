@@ -38,7 +38,7 @@ bool GossipHello_npc_teleporter(Player *pPlayer, Creature *pCreature)
 {
     pPlayer->ADD_GOSSIP_ITEM(0, "Je souhaite être téléporté.", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
     
-    if (pPlayer->isGameMaster()) //add an option to check guid of spawned arrivals
+    if (pPlayer->IsGameMaster()) //add an option to check guid of spawned arrivals
         pPlayer->ADD_GOSSIP_ITEM(0, "Quels sont les GUIDs des PNJ d'arrivée spawn ?", GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
         
     pPlayer->PlayerTalkClass->SendGossipMenu(907,pCreature->GetGUID());
@@ -50,7 +50,7 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
 {
     if (action == GOSSIP_ACTION_INFO_DEF)
     {
-        if (pPlayer->HasLevelInRangeForTeleport() || pPlayer->isGameMaster()) {
+        if (pPlayer->HasLevelInRangeForTeleport() || pPlayer->IsGameMaster()) {
             uint32 destEntry;
             if(pCreature->GetCreatureInfo()->Entry == NPC_TELEPORTER_ENTRY)
                 destEntry = pPlayer->GetTeam() == HORDE ? NPC_ARRIVAL_HORDE_1 : NPC_ARRIVAL_ALLY_1; //depends on player's team
@@ -92,7 +92,7 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
         }
     }
     
-    if (action == GOSSIP_ACTION_INFO_DEF+1 && pPlayer->isGameMaster()) //double check
+    if (action == GOSSIP_ACTION_INFO_DEF+1 && pPlayer->IsGameMaster()) //double check
     {
         uint32 destEntry1, destEntry2;
         if(pCreature->GetCreatureInfo()->Entry == NPC_TELEPORTER_ENTRY)

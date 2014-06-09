@@ -87,7 +87,7 @@ struct mylittlebomblingAI : public ScriptedAI
 
         for(std::list<Player*>::iterator i = playerlist.begin(); i != playerlist.end(); ++i)
         {
-            if((*i) && !(*i)->isGameMaster())
+            if((*i) && !(*i)->IsGameMaster())
             {
                 me->DealDamage((*i), 500000, 0, SPELL_DIRECT_DAMAGE, SPELL_SCHOOL_MASK_FIRE, 0, false);
             }

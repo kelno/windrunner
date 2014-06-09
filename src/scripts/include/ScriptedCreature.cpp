@@ -803,7 +803,7 @@ void ScriptedAI::DoZoneInCombat(Unit* pUnit, bool force)
     {
         if (Player* i_pl = i->getSource())
             if (i_pl->IsAlive()
-                && !i_pl->isGameMaster())
+                && !i_pl->IsGameMaster())
             {
                 pUnit->SetInCombatWith(i_pl);
                 i_pl->SetInCombatWith(pUnit);

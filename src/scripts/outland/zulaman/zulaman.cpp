@@ -290,7 +290,7 @@ CreatureAI* GetAI_npc_harrison_jones(Creature* pCreature)
 bool GossipHello_npc_harrison_jones(Player* pPlayer, Creature* pCreature)
 {
     pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_GONG, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 1);
-    if (pPlayer->isGameMaster())
+    if (pPlayer->IsGameMaster())
         pPlayer->ADD_GOSSIP_ITEM(0, GOSSIP_GONG_DEBUG, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + 2);
     pPlayer->SEND_GOSSIP_MENU(pCreature->GetNpcTextId(), pCreature->GetGUID());
     
@@ -312,7 +312,7 @@ bool GossipSelect_npc_harrison_jones(Player* pPlayer, Creature* pCreature, uint3
             
         return true;
     }
-    else if (action == GOSSIP_ACTION_INFO_DEF+2 && pPlayer->isGameMaster()) {
+    else if (action == GOSSIP_ACTION_INFO_DEF+2 && pPlayer->IsGameMaster()) {
         pPlayer->PlayerTalkClass->CloseGossip();
         CAST_AI(npc_harrison_jonesAI, (pCreature->AI()))->OpenDoorAndStartTimer();
     }

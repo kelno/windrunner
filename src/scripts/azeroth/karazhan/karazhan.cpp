@@ -288,7 +288,7 @@ struct npc_barnesAI : public npc_escortAI
                     RaidWiped = true;
                     for(Map::PlayerList::const_iterator i = PlayerList.begin();i != PlayerList.end(); ++i)
                     {
-                        if (i->getSource()->IsAlive() && !i->getSource()->isGameMaster())
+                        if (i->getSource()->IsAlive() && !i->getSource()->IsGameMaster())
                         {
                             RaidWiped = false;
                             break;
