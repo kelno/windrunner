@@ -16,8 +16,8 @@
 
 /* ScriptData
 SDName: Boss_Watchkeeper_Gargolmar
-SD%Complete: 80
-SDComment: Missing adds to heal him. Surge should be used on target furthest away, not random.
+SD%Complete: 85
+SDComment: Missing adds to heal him (should be handled on the db side).
 SDCategory: Hellfire Citadel, Hellfire Ramparts
 EndScriptData */
 
@@ -37,6 +37,7 @@ EndScriptData */
 #define H_SPELL_MORTAL_WOUND    36814
 #define SPELL_SURGE             34645
 #define SPELL_RETALIATION       22857
+#define SPELL_OVERPOWER         32154   // NYI - Can only be used after the target dodges
 
 struct boss_watchkeeper_gargolmarAI : public ScriptedAI
 {
@@ -116,15 +117,18 @@ struct boss_watchkeeper_gargolmarAI : public ScriptedAI
 
         if (MortalWound_Timer < diff)
         {
-            DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
-            MortalWound_Timer = 5000+rand()%8000;
+            if (m_creature->GetVictim()->IsWithinMeleeRange(me))
+            {
+                DoCast(m_creature->GetVictim(),HeroicMode ? H_SPELL_MORTAL_WOUND : SPELL_MORTAL_WOUND);
+                MortalWound_Timer = 5000+rand()%8000;
+            }
         }else MortalWound_Timer -= diff;
 
         if (Surge_Timer < diff)
         {
             DoScriptText(SAY_SURGE, m_creature);
 
-            if (Unit* target = SelectUnit(SELECT_TARGET_RANDOM,0))
+            if (Unit* target = SelectUnit(SELECT_TARGET_FARTHEST, 0))
                 DoCast(target,SPELL_SURGE);
 
             Surge_Timer = 5000+rand()%8000;
