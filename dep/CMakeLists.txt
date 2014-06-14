@@ -1,0 +1,6 @@
+add_subdirectory(lib)
+add_subdirectory(recastnavigation)
+add_subdirectory(src)
+if(TOOLS)
+  add_subdirectory(libmpq)
+endif()
