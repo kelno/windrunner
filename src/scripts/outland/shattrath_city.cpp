@@ -225,6 +225,7 @@ bool GossipSelect_npc_shattrathflaskvendors(Player *player, Creature *_Creature,
 # npc_zephyr
 ######*/
 
+//TODO : translate me
 #define GOSSIP_HZ "Take me to the Caverns of Time."
 
 bool GossipHello_npc_zephyr(Player *player, Creature *_Creature)
