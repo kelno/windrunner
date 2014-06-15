@@ -1,0 +1,17 @@
+GRANT USAGE ON * . * TO 'trinity'@'localhost' IDENTIFIED BY 'trinity' WITH MAX_QUERIES_PER_HOUR 0 MAX_CONNECTIONS_PER_HOUR 0 MAX_UPDATES_PER_HOUR 0 ;
+
+CREATE DATABASE `wrworld` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+CREATE DATABASE `wrchar` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+CREATE DATABASE `wrauth` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+CREATE DATABASE `wrlogs` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;
+
+GRANT ALL PRIVILEGES ON `wrworld` . * TO 'trinity'@'localhost' WITH GRANT OPTION;
+
+GRANT ALL PRIVILEGES ON `wrchar` . * TO 'trinity'@'localhost' WITH GRANT OPTION;
+
+GRANT ALL PRIVILEGES ON `wrauth` . * TO 'trinity'@'localhost' WITH GRANT OPTION;
+
+GRANT ALL PRIVILEGES ON `wrlogs` . * TO 'trinity'@'localhost' WITH GRANT OPTION;
