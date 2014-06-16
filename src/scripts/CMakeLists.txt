@@ -461,10 +461,10 @@ GET_FILENAME_COMPONENT(PrecompiledBasename ${PrecompiledHeader} NAME_WE)
 SET(PrecompiledBinary "${CMAKE_CURRENT_BINARY_DIR}/${PrecompiledBasename}.pch")
 SET(Sources ${${SourcesVar}})
 SET_SOURCE_FILES_PROPERTIES(${Sources}
-    PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\""
+    PROPERTIES COMPILE_FLAGS "/Yu\"${PrecompiledHeader}\" /FI\"${PrecompiledBinary}\" /Fp\"${PrecompiledBinary}\" /Zm120"
    OBJECT_DEPENDS "${PrecompiledBinary}")  
 SET_SOURCE_FILES_PROPERTIES("include/${PrecompiledSource}"
-PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\""
+PROPERTIES COMPILE_FLAGS "/Yc\"${PrecompiledHeader}\" /Fp\"${PrecompiledBinary}\" /Zm120"
 OBJECT_OUTPUTS "${PrecompiledBinary}")
 # Add precompiled header to SourcesVar
 LIST(APPEND ${SourcesVar} "include/${PrecompiledSource}")
