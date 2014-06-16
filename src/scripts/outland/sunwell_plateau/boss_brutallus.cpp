@@ -432,6 +432,9 @@ struct boss_brutallusAI : public ScriptedAI
             DoScriptText(RAND(YELL_LOVE1,YELL_LOVE2,YELL_LOVE3), me);
             DoCast(me->GetVictim(), SPELL_STOMP);
             StompTimer = 30000;
+            //give some time to heal this
+            me->resetAttackTimer();
+            me->resetAttackTimer(OFF_ATTACK);
         } else StompTimer -= diff;
 
         if (BurnTimer <= diff)
