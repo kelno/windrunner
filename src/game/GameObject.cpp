@@ -399,7 +399,7 @@ void GameObject::Update(uint32 diff)
 
                 if (trapTarget)
                 {
-                    CastSpell(trapTarget, goInfo->trap.spellId,GetOwnerGUID());
+                    CastSpell(trapTarget, goInfo->trap.spellId,(IsBattleGroundTrap ? trapTarget->GetGUID() : GetOwnerGUID()));
                     if(Unit* owner = GetOwner())
                         if(SpellEntry* spellInfo = spellmgr.LookupSpell(goInfo->trap.spellId))
                             owner->ProcDamageAndSpell(trapTarget,PROC_FLAG_ON_TRAP_ACTIVATION,PROC_FLAG_NONE,0,0,BASE_ATTACK,spellInfo);
