@@ -1,0 +1,1 @@
+UPDATE spell_template SET effectImplicitTargetA1 = 25 WHERE id = 23493;
