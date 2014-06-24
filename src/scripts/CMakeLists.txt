@@ -205,6 +205,7 @@ SET(scripts_STAT_SRCS
     custom/custom_zone_silence.cpp
     custom/on_events.cpp
     custom/test.cpp
+	custom/npc_teleporter_pack58.cpp
     kalimdor/ashenvale.cpp
     kalimdor/azshara.cpp
     kalimdor/the_barrens.cpp
