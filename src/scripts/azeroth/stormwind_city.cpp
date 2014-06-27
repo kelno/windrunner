@@ -29,6 +29,7 @@ npc_general_marcus_jonathan
 npc_lady_katrana_prestor
 npc_innkeeper_allison
 npc_monty
+npc_bolvar_fordragon
 EndContentData */
 
 #include "precompiled.h"
@@ -275,6 +276,59 @@ bool ChooseReward_npc_monty(Player* player, Creature* creature, const Quest* que
 }
 
 /*######
+## npc_bolvar_fordragon
+######*/
+
+#define GOSSIP_PACK58 "Teleportez moi a la porte des Tenebres."
+
+bool GossipHello_npc_bolvar_fordragon(Player *player, Creature *_Creature)
+{
+    if (_Creature->isQuestGiver())
+        player->PrepareQuestMenu( _Creature->GetGUID() );
+
+    if (player->GetQuestStatus(80017) == QUEST_STATUS_COMPLETE) //pack58, tp vers la porte des tenebres
+        player->ADD_GOSSIP_ITEM(0, GOSSIP_PACK58, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
+
+    player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
+    return true;
+}
+
+bool GossipSelect_npc_bolvar_fordragon(Player *player, Creature *_Creature, uint32 sender, uint32 action)
+{
+    switch (action)
+    {
+        case GOSSIP_ACTION_INFO_DEF+1:
+            player->TeleportTo(0, -11741.21, -3173.35, -16.49, 3.35); //Porte des tenebres
+            player->CLOSE_GOSSIP_MENU();
+            break;
+    }
+    return true;
+}
+
+bool QuestComplete_npc_bolvar_fordragon(Player* pPlayer, Creature* pCreature, Quest const* pQuest)
+{
+    switch(pQuest->GetQuestId())
+    {
+        case 80003:
+            pPlayer->DoPack58(PACK58_STEP1);
+            break;
+        case 80009:
+            pPlayer->DoPack58(PACK58_HEAL);
+            break;
+        case 80011:
+            pPlayer->DoPack58(PACK58_MELEE);
+            break;
+        case 80013:
+            pPlayer->DoPack58(PACK58_TANK);
+            break;
+        case 80015:
+            pPlayer->DoPack58(PACK58_MAGIC);
+            break;
+    }
+    return true;
+}
+
+/*######
 ## AddSC
 ######*/
 
@@ -319,6 +373,13 @@ void AddSC_stormwind_city()
     newscript = new Script;
     newscript->Name = "npc_monty";
     newscript->pChooseReward = &ChooseReward_npc_monty;
+    newscript->RegisterSelf();
+
+    newscript = new Script;
+    newscript->Name="npc_bolvar_fordragon";
+    newscript->pGossipHello =  &GossipHello_npc_bolvar_fordragon;
+    newscript->pGossipSelect = &GossipSelect_npc_bolvar_fordragon;
+    newscript->pQuestComplete = &QuestComplete_npc_bolvar_fordragon;
     newscript->RegisterSelf();
 }
 

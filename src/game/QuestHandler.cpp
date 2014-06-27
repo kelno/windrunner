@@ -331,6 +331,7 @@ void WorldSession::HandleQuestgiverChooseRewardOpcode( WorldPacket & recv_data )
                             _player->PlayerTalkClass->SendQuestGiverQuestDetails(nextquest,guid,true);
                             
                         (pObject->ToCreature())->AI()->sQuestReward(_player, pQuest, reward);
+                        sScriptMgr.QuestComplete(_player, pObject->ToCreature(), pQuest);
                     }
                     break;
                 case TYPEID_GAMEOBJECT:
@@ -503,10 +504,6 @@ void WorldSession::HandleQuestComplete(WorldPacket& recv_data)
         else
             _player->PlayerTalkClass->SendQuestGiverRequestItems(pQuest, guid, _player->CanRewardQuest(pQuest,false), false);
     }
-    
-    Creature *questGiver = Unit::GetCreature(*GetPlayer(), guid);
-    if (questGiver && pQuest)
-        sScriptMgr.QuestComplete(GetPlayer(), questGiver, pQuest);
 }
 
 void WorldSession::HandleQuestAutoLaunch(WorldPacket& /*recvPacket*/)

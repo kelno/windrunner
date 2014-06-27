@@ -242,6 +242,23 @@ struct DuelInfo
     time_t outOfBound;
 };
 
+enum Pack58
+{
+    PACK58_STEP1,
+    PACK58_MELEE,
+    PACK58_HEAL,
+    PACK58_TANK,
+    PACK58_MAGIC,
+};
+
+enum Pack58Type
+{
+    PACK58_TYPE_MELEE = 0,
+    PACK58_TYPE_HEAL  = 1,
+    PACK58_TYPE_TANK  = 2,
+    PACK58_TYPE_MAGIC = 3,
+};
+
 struct Areas
 {
     uint32 areaID;
@@ -1279,6 +1296,7 @@ class Player : public Unit
         void AutoUnequipOffhandIfNeed();
         bool StoreNewItemInBestSlots(uint32 item_id, uint32 item_count, ItemPrototype const *proto = nullptr);
         uint32 GetEquipedItemsLevelSum();
+        void UnequipAllItems(bool force = false); //destroy items if no room
 
         uint8 _CanTakeMoreSimilarItems(uint32 entry, uint32 count, Item* pItem, uint32* no_space_count = NULL) const;
         uint8 _CanStoreItem( uint8 bag, uint8 slot, ItemPosCountVec& dest, uint32 entry, uint32 count, Item *pItem = NULL, bool swap = false, uint32* no_space_count = NULL, ItemPrototype const* proto = nullptr ) const;
@@ -1624,6 +1642,9 @@ class Player : public Unit
         void learnDefaultSpells(bool loading = false);
         void learnQuestRewardedSpells();
         void learnQuestRewardedSpells(Quest const* quest);
+        void LearnAllClassSpells();
+
+        void DoPack58(uint8 step);
 
         uint32 GetFreeTalentPoints() const { return GetUInt32Value(PLAYER_CHARACTER_POINTS1); }
         void SetFreeTalentPoints(uint32 points) { SetUInt32Value(PLAYER_CHARACTER_POINTS1,points); }
