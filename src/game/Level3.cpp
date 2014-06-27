@@ -1787,41 +1787,7 @@ bool ChatHandler::HandleLearnAllMyClassCommand(const char* /*args*/)
 
 bool ChatHandler::HandleLearnAllMySpellsCommand(const char* /*args*/)
 {
-    ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(m_session->GetPlayer()->getClass());
-    if(!clsEntry)
-        return true;
-    uint32 family = clsEntry->spellfamily;
-
-    //for (uint32 i = 0; i < sSpellStore.GetNumRows(); i++)
-    for (std::map<uint32, SpellEntry*>::iterator itr = objmgr.GetSpellStore()->begin(); itr != objmgr.GetSpellStore()->end(); itr++)
-    {
-        uint32 i = itr->first;
-        SpellEntry const *spellInfo = spellmgr.LookupSpell(i);
-        if(!spellInfo)
-            continue;
-
-        // skip wrong class/race skills
-        if(!m_session->GetPlayer()->IsSpellFitByClassAndRace(spellInfo->Id))
-            continue;
-
-        // skip other spell families
-        if( spellInfo->SpellFamilyName != family)
-            continue;
-
-        //TODO: skip triggered spells
-
-        // skip spells with first rank learned as talent (and all talents then also)
-        uint32 first_rank = spellmgr.GetFirstSpellInChain(spellInfo->Id);
-        if(GetTalentSpellCost(first_rank) > 0 )
-            continue;
-
-        // skip broken spells
-        if(!SpellMgr::IsSpellValid(spellInfo,m_session->GetPlayer(),false))
-            continue;
-
-        m_session->GetPlayer()->learnSpell(i);
-    }
-
+    m_session->GetPlayer()->LearnAllClassSpells();
     SendSysMessage(LANG_COMMAND_LEARN_CLASS_SPELLS);
     return true;
 }

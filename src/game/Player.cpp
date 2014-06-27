@@ -13541,7 +13541,7 @@ bool Player::SatisfyQuestSkillOrClass( Quest const* qInfo, bool msg )
     if( skillOrClass < 0 )
     {
         uint8 reqClass = -int32(skillOrClass);
-        if(getClass() != reqClass)
+        if((getClassMask() & reqClass) == 0)
         {
             if( msg )
                 SendCanTakeQuestResponse( INVALIDREASON_DONT_HAVE_REQ );
@@ -15318,26 +15318,6 @@ bool Player::LoadFromDB( uint32 guid, SQLQueryHolder *holder )
 
     _LoadInventory(holder->GetResult(PLAYER_LOGIN_QUERY_LOADINVENTORY), time_diff);
     
-    /* To be removed one daaaay */
-    if(m_class == CLASS_PALADIN)
-        if(!HasSpell(53087)) // Salvation (-50% threat passive)
-            addSpell(53087,true);
-    if(m_class == CLASS_WARRIOR)
-        if(!HasSpell(45471)) // "Defiance Expertise Passive (DND)"
-            addSpell(45471,true);
-    if(m_race == RACE_ORC)
-        if(!HasSpell(20574))
-            addSpell(20574,true); //Axe Specialization
-    if(m_race == RACE_TROLL)
-        if(m_class == CLASS_ROGUE)
-        {
-            if(!HasSpell(26297)) // Berserker
-                addSpell(26297,true);
-        } else {
-            if(HasSpell(26297))
-                removeSpell(26297);
-        }
-
     // update items with duration and realtime
     UpdateItemDuration(time_diff, true);
 
@@ -19888,6 +19868,151 @@ void Player::learnSkillRewardedSpells()
     }
 }
 
+//TODO : FIXME This learns a lot of non player spells
+void Player::LearnAllClassSpells()
+{
+    ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(m_session->GetPlayer()->getClass());
+    if(!clsEntry)
+        return;
+    uint32 family = clsEntry->spellfamily;
+
+    for (std::map<uint32, SpellEntry*>::iterator itr = objmgr.GetSpellStore()->begin(); itr != objmgr.GetSpellStore()->end(); itr++)
+    {
+        uint32 i = itr->first;
+        SpellEntry const *spellInfo = spellmgr.LookupSpell(i);
+        if(!spellInfo)
+            continue;
+
+        // skip wrong class/race skills
+        if(!m_session->GetPlayer()->IsSpellFitByClassAndRace(spellInfo->Id))
+            continue;
+
+        // skip other spell families
+        if( spellInfo->SpellFamilyName != family)
+            continue;
+
+        // skip server-side/triggered spells
+        if (spellInfo->spellLevel == 0)
+            continue;
+
+        // skip spells with first rank learned as talent (and all talents then also)
+        uint32 first_rank = spellmgr.GetFirstSpellInChain(spellInfo->Id);
+        if(GetTalentSpellCost(first_rank) > 0 )
+            continue;
+
+        // skip broken spells
+        if(!SpellMgr::IsSpellValid(spellInfo,m_session->GetPlayer(),false))
+            continue;
+
+        m_session->GetPlayer()->learnSpell(i);
+    }
+}
+
+void Player::DoPack58(uint8 step)
+{
+    if(step == PACK58_STEP1)
+    {
+        GiveLevel(58);
+        InitTalentForLevel();
+        SetUInt32Value(PLAYER_XP,0);
+        UpdateSkillsToMaxSkillsForLevel();
+        learnSpell(33388); //mount 75
+        uint32 mountid = 0;
+        switch(GetRace())
+        {
+        case RACE_HUMAN:           mountid = 2413; break;
+        case RACE_ORC:             mountid = 1132; break;
+        case RACE_DWARF:           mountid = 5873; break;
+        case RACE_NIGHTELF:        mountid = 8627; break;
+        case RACE_UNDEAD_PLAYER:   mountid = 13332; break;
+        case RACE_TAUREN:          mountid = 15277; break;
+        case RACE_GNOME:           mountid = 13322; break;
+        case RACE_TROLL:           mountid = 8592; break;
+        case RACE_BLOODELF:        mountid = 28927; break;
+        case RACE_DRAENEI:          mountid = 28481; break;
+        }
+        ItemPosCountVec dest;
+        uint8 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, mountid, 1 );
+        if( msg == EQUIP_ERR_OK )
+        {
+            Item * item = StoreNewItem(dest, mountid, true);
+            SendNewItem(item, 1, true, false);
+        }
+
+        switch(getClass())
+        {
+        case CLASS_WARRIOR:
+            learnSpell(266); //guns
+            learnSpell(750); //plate
+            learnSpell(198); //mace
+            learnSpell(8737); //mail
+            learnSpell(674); //ambidextrie
+            learnSpell(200); //arme d'hast
+            break;
+        case CLASS_PALADIN:
+            learnSpell(750); //plate
+            learnSpell(198); //mace
+            learnSpell(8737); //mail
+            break;
+        case CLASS_SHAMAN:
+            learnSpell(8737); //mail
+            learnSpell(198); //mace
+            learnSpell(674); //ambidextrie
+            break;
+        case CLASS_HUNTER:
+            learnSpell(264); //bow
+            learnSpell(8737); //mail
+            learnSpell(674); //ambidextrie
+            learnSpell(200); //arme d'hast
+            break;
+        case CLASS_ROGUE:
+            learnSpell(674); //ambidextrie
+            break;
+        case CLASS_DRUID:
+            learnSpell(199); //2H Mace
+            break;
+        }
+    } else {
+        for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
+        {
+            Item* currentItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
+            if(!currentItem)
+                continue;
+
+            DestroyItem( INVENTORY_SLOT_BAG_0, i, true);
+        }
+        uint8 packType;
+        switch(step)
+        {
+        case PACK58_MELEE: packType = PACK58_TYPE_MELEE; break;
+        case PACK58_HEAL:  packType = PACK58_TYPE_HEAL; break;
+        case PACK58_TANK:  packType = PACK58_TYPE_TANK; break;
+        case PACK58_MAGIC: packType = PACK58_TYPE_MAGIC; break;
+        }
+
+        QueryResult *result = WorldDatabase.PQuery("SELECT item FROM pack58 WHERE class = %u and type = %u",getClass(),packType);
+
+        uint32 count = 0;
+        if(result)
+        {
+            do
+            {
+                count++;
+                Field *fields = result->Fetch();
+                uint32 itemid = fields[0].GetUInt32();
+                if(!itemid)
+                    continue;
+
+                StoreNewItemInBestSlots(itemid, 1);
+            }
+            while( result->NextRow() );
+        }
+        if(count == 0)
+            sLog.outError("DoPack58 : no item for given class (%u) & type (%u)",getClass(),packType);
+    }
+    SaveToDB();
+}
+
 void Player::SendAuraDurationsForTarget(Unit* target)
 {
     for(Unit::AuraMap::const_iterator itr = target->GetAuras().begin(); itr != target->GetAuras().end(); ++itr)
@@ -20121,6 +20246,27 @@ void Player::AddItemDurations( Item *item )
     {
         m_itemDuration.push_back(item);
         item->SendTimeUpdate(this);
+    }
+}
+
+void Player::UnequipAllItems(bool destroy)
+{
+    for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
+    {
+        Item* currentItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
+        if(!currentItem)
+            continue;
+
+        ItemPosCountVec dest;
+        uint8 msg = CanStoreItem( NULL_BAG, NULL_SLOT, dest, currentItem, false );
+        if( msg == EQUIP_ERR_OK )
+        {
+            RemoveItem(INVENTORY_SLOT_BAG_0, i, true);
+            StoreItem( dest, currentItem, true );
+        } else if (destroy)
+        {
+            DestroyItem( INVENTORY_SLOT_BAG_0, i, true);
+        }
     }
 }
 
