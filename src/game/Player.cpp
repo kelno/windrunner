@@ -19285,7 +19285,6 @@ void Player::UpdateVisibilityOf(WorldObject* target)
             target->SendUpdateToPlayer(this);
             if(target->GetTypeId()!=TYPEID_GAMEOBJECT || !((GameObject*)target)->IsTransport()) //exclude transports
                 m_clientGUIDs.insert(target->GetGUID());
-            if(target->isType(TYPEMASK_UNIT))
 
             #ifdef TRINITY_DEBUG
             if((sLog.getLogFilter() & LOG_FILTER_VISIBILITY_CHANGES)==0)
@@ -19868,43 +19867,45 @@ void Player::learnSkillRewardedSpells()
     }
 }
 
-//TODO : FIXME This learns a lot of non player spells
+//Hacky way, learn from a designated trainer for each class
 void Player::LearnAllClassSpells()
 {
-    ChrClassesEntry const* clsEntry = sChrClassesStore.LookupEntry(m_session->GetPlayer()->getClass());
-    if(!clsEntry)
-        return;
-    uint32 family = clsEntry->spellfamily;
-
-    for (std::map<uint32, SpellEntry*>::iterator itr = objmgr.GetSpellStore()->begin(); itr != objmgr.GetSpellStore()->end(); itr++)
+    uint8 playerClass = getClass();
+    uint32 classMaster;
+    switch(playerClass)
     {
-        uint32 i = itr->first;
-        SpellEntry const *spellInfo = spellmgr.LookupSpell(i);
-        if(!spellInfo)
+    case CLASS_WARRIOR:      classMaster = 5479;  break;
+    case CLASS_PALADIN:      classMaster = 928;   break;
+    case CLASS_HUNTER:       classMaster = 5515;  break;
+    case CLASS_ROGUE:        classMaster = 918;   break;
+    case CLASS_PRIEST:       classMaster = 5489;  break;
+    case CLASS_SHAMAN:       classMaster = 20407; break;
+    case CLASS_MAGE:         classMaster = 5498;  break;
+    case CLASS_WARLOCK:      classMaster = 5495;  break;
+    case CLASS_DRUID:        classMaster = 5504;  break;
+    default: return;
+    }
+
+    if(playerClass == CLASS_HUNTER)
+    { // Pet spells
+        uint32 spellsId [119] = {5149,883,1515,6991,2641,982,17254,737,17262,24424,26184,3530,26185,35303,311,26184,17263,7370,35299,35302,17264,1749,231,2441,23111,2976,23111,17266,2981,17262,24609,2976,26094,2982,298,1747,17264,24608,26189,24454,23150,24581,2977,1267,1748,26065,24455,1751,17265,23146,17267,23112,17265,2310,23100,24451,175,24607,2315,2981,24641,25013,25014,17263,3667,24584,3667,2975,23146,25015,1749,26185,1750,35388,17266,24607,25016,23149,24588,23149,295,27361,26202,35306,2619,2977,16698,3666,3666,24582,23112,26202,1751,16698,24582,17268,24599,24589,25017,35391,3489,28343,35307,27347,27349,353,24599,35324,27347,35348,27348,17268,27348,27346,24845,27361,2751,24632,35308 };
+        for (int i = 0; i < 119; i++)
+            addSpell(spellsId[i],true);
+    }
+
+    TrainerSpellData const* trainer_spells = objmgr.GetNpcTrainerSpells(classMaster);
+    if(!trainer_spells)
+    {
+        sLog.outError("Player::LearnAllClassSpell - No trainer spells for entry %u.",playerClass);
+        return;
+    }
+
+    for(auto itr : trainer_spells->spellList)
+    {
+        if(GetTrainerSpellState(itr) != TRAINER_SPELL_GREEN)
             continue;
 
-        // skip wrong class/race skills
-        if(!m_session->GetPlayer()->IsSpellFitByClassAndRace(spellInfo->Id))
-            continue;
-
-        // skip other spell families
-        if( spellInfo->SpellFamilyName != family)
-            continue;
-
-        // skip server-side/triggered spells
-        if (spellInfo->spellLevel == 0)
-            continue;
-
-        // skip spells with first rank learned as talent (and all talents then also)
-        uint32 first_rank = spellmgr.GetFirstSpellInChain(spellInfo->Id);
-        if(GetTalentSpellCost(first_rank) > 0 )
-            continue;
-
-        // skip broken spells
-        if(!SpellMgr::IsSpellValid(spellInfo,m_session->GetPlayer(),false))
-            continue;
-
-        m_session->GetPlayer()->learnSpell(i);
+        learnSpell(itr->spell);
     }
 }
 
@@ -19917,6 +19918,7 @@ void Player::DoPack58(uint8 step)
         SetUInt32Value(PLAYER_XP,0);
         UpdateSkillsToMaxSkillsForLevel();
         learnSpell(33388); //mount 75
+        LearnAllClassSpells();
         uint32 mountid = 0;
         switch(GetRace())
         {
