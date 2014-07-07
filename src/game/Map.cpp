@@ -109,7 +109,9 @@ bool Map::ExistVMap(uint32 mapid,int x,int y)
 
 void Map::LoadVMap(int x,int y)
 {
-                                                            // x and y are swapped !!
+    if (!VMAP::VMapFactory::createOrGetVMapManager()->isMapLoadingEnabled())
+        return;
+                                                // x and y are swapped !!
     int vmapLoadResult = VMAP::VMapFactory::createOrGetVMapManager()->loadMap((sWorld.GetDataPath()+ "vmaps").c_str(),  GetId(), x,y);
     switch(vmapLoadResult)
     {
