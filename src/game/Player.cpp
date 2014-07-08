@@ -19940,40 +19940,21 @@ void Player::DoPack58(uint8 step)
             Item * item = StoreNewItem(dest, mountid, true);
             SendNewItem(item, 1, true, false);
         }
-
-        switch(getClass())
+        //gun, plate, mace, mail, ambi, arme d'hast, épée 1M, épée 2M, 2H mace, bow, dagger, staff, axe, 2M axe, pugi,arbalete, throwing
+        uint32 spellsId[17] = {266,750,198,8737,674,200,201,202,199,264,1180,227,196,197,473,5011,2567};
+        for (int i = 0; i < 17; i++)
         {
-        case CLASS_WARRIOR:
-            learnSpell(266); //guns
-            learnSpell(750); //plate
-            learnSpell(198); //mace
-            learnSpell(8737); //mail
-            learnSpell(674); //ambidextrie
-            learnSpell(200); //arme d'hast
-            break;
-        case CLASS_PALADIN:
-            learnSpell(750); //plate
-            learnSpell(198); //mace
-            learnSpell(8737); //mail
-            break;
-        case CLASS_SHAMAN:
-            learnSpell(8737); //mail
-            learnSpell(198); //mace
-            learnSpell(674); //ambidextrie
-            break;
-        case CLASS_HUNTER:
-            learnSpell(264); //bow
-            learnSpell(8737); //mail
-            learnSpell(674); //ambidextrie
-            learnSpell(200); //arme d'hast
-            break;
-        case CLASS_ROGUE:
-            learnSpell(674); //ambidextrie
-            break;
-        case CLASS_DRUID:
-            learnSpell(199); //2H Mace
-            break;
+            // known spell
+            if(HasSpell(spellsId[i]))
+                continue;
+
+            // check race/class requirement
+            if(!IsSpellFitByClassAndRace(spellsId[i]))
+                continue;
+
+            addSpell(spellsId[i],true);
         }
+
     } else {
         for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
         {
