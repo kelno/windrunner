@@ -64,6 +64,8 @@ struct boss_broggokAI : public ScriptedAI
 
         if (pInstance)
             pInstance->SetData(DATA_BROGGOKEVENT, IN_PROGRESS);
+
+        me->RemoveFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_NON_ATTACKABLE);
     }
     
     void JustDied(Unit* Killer)

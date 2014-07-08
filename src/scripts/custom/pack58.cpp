@@ -152,7 +152,7 @@ bool GossipHello_npc_pack58_duelguy(Player *player, Creature *creature)
 
 bool GossipSelect_npc_pack58_duelguy(Player *player, Creature *creature, uint32 sender, uint32 action )
 {
-    if (action == GOSSIP_ACTION_INFO_DEF+1)-
+    if (action == GOSSIP_ACTION_INFO_DEF+1)
         (creature->AI())->message(MESSAGE_START_DUEL,player->GetGUID());
         
     player->CLOSE_GOSSIP_MENU();
