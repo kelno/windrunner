@@ -19931,7 +19931,7 @@ void Player::DoPack58(uint8 step)
         case RACE_GNOME:           mountid = 13322; break;
         case RACE_TROLL:           mountid = 8592; break;
         case RACE_BLOODELF:        mountid = 28927; break;
-        case RACE_DRAENEI:          mountid = 28481; break;
+        case RACE_DRAENEI:         mountid = 28481; break;
         }
         ItemPosCountVec dest;
         uint8 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, mountid, 1 );
@@ -19953,6 +19953,19 @@ void Player::DoPack58(uint8 step)
                 continue;
 
             addSpell(spellsId[i],true);
+        }
+        if(getClass() == CLASS_SHAMAN)
+        {
+            uint32 totemsId[4] = {5176,5177,5175,5178};
+            for(uint i = 0; i < 4; i++)
+            {
+                msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, totemsId[i], 1 );
+                if( msg == EQUIP_ERR_OK )
+                {
+                    Item * item = StoreNewItem(dest, totemsId[i], true);
+                    SendNewItem(item, 1, true, false);
+                }
+            }
         }
 
     } else {
