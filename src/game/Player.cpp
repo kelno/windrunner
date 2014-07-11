@@ -19926,7 +19926,7 @@ void Player::DoPack58(uint8 step)
         uint32 mountid = 0;
         switch(GetRace())
         {
-        case RACE_HUMAN:           mountid = 2413; break;
+        case RACE_HUMAN:           mountid = 5656; break;
         case RACE_ORC:             mountid = 1132; break;
         case RACE_DWARF:           mountid = 5873; break;
         case RACE_NIGHTELF:        mountid = 8627; break;
@@ -19973,10 +19973,24 @@ void Player::DoPack58(uint8 step)
                 }
             }
         }
-        //also give some money 
-        ModifyMoney(100000); //10 gold
+
+        //relocate homebind
+        WorldLocation loc;
+        uint32 area_id = 0;
+        if (Player::TeamForRace(GetRace()) == ALLIANCE) {
+            loc = WorldLocation(0, -8866.468750, 671.831238, 97.903374, 2.154216);
+            area_id = 1519; // Stormwind
+        } else {
+            loc = WorldLocation(1, 1632.54, -4440.77, 15.4584, 1.0637);
+            area_id = 1637; // Orgrimmar
+        }
+        plr->SetHomebindToLocation(loc, area_id);
 
     } else {
+        
+        //also give some money 
+        ModifyMoney(200000); //20 gold
+
         for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
         {
             Item* currentItem = GetItemByPos( INVENTORY_SLOT_BAG_0, i );
