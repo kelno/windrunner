@@ -19900,12 +19900,16 @@ void Player::LearnAllClassSpells()
         return;
     }
 
-    for(auto itr : trainer_spells->spellList)
+    //the spells in trainer list aren't in the right order, so some spells won't be learned. The i loop is a ugly hack to minimize this.
+    for(int i = 0; i < 4; i++)
     {
-        if(GetTrainerSpellState(itr) != TRAINER_SPELL_GREEN)
-            continue;
+        for(auto itr : trainer_spells->spellList)
+        {
+            if(GetTrainerSpellState(itr) != TRAINER_SPELL_GREEN)
+                continue;
 
-        learnSpell(itr->spell);
+            learnSpell(itr->spell);
+        }
     }
 }
 
