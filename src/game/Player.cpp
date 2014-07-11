@@ -19984,7 +19984,7 @@ void Player::DoPack58(uint8 step)
             loc = WorldLocation(1, 1632.54, -4440.77, 15.4584, 1.0637);
             area_id = 1637; // Orgrimmar
         }
-        plr->SetHomebindToLocation(loc, area_id);
+        SetHomebindToLocation(loc, area_id);
 
     } else {
         
