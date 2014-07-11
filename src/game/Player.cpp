@@ -19958,6 +19958,8 @@ void Player::DoPack58(uint8 step)
 
             addSpell(spellsId[i],true);
         }
+
+        //give totems to shamans
         if(getClass() == CLASS_SHAMAN)
         {
             uint32 totemsId[4] = {5176,5177,5175,5178};
@@ -19971,6 +19973,8 @@ void Player::DoPack58(uint8 step)
                 }
             }
         }
+        //also give some money 
+        ModifyMoney(100000); //10 gold
 
     } else {
         for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
