@@ -29,6 +29,7 @@ bool GossipSelect_npc_teleporter_pvpzone(Player *pPlayer, Creature *pCreature, u
             o = fields[3].GetFloat();
             map = fields[4].GetUInt32();
         }
+        delete query;
     }
     
     if (action == GOSSIP_ACTION_INFO_DEF)

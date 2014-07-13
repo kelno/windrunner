@@ -305,6 +305,8 @@ void npc_escortAI::GetWaypointListFromDB(uint32 entry)
         
         AddWaypoint(pointid, location_x, location_y, location_z, waittime);        
     }while (result->NextRow());
+
+    delete result;
 }
 
 void npc_escortAI::Start(bool bAttack, bool bDefend, bool bRun, uint64 pGUID, uint32 entry)
