@@ -299,6 +299,8 @@ enum WorldConfigs
     CONFIG_TESTSERVER_DISABLE_GLANCING,
     CONFIG_TESTSERVER_DISABLE_MAINHAND,
 
+    CONFIG_INACTIVE_ACCOUNT_TIME,
+
     CONFIG_VALUE_COUNT,
 };
 
@@ -570,6 +572,7 @@ class World
         }
 
         void SetInitialWorldSettings();
+        uint8 StoreInactiveAccounts(); //store characters from accounts inactive since 
         void LoadConfigSettings(bool reload = false);
         void LoadMotdAndTwitter();
 
@@ -699,6 +702,10 @@ class World
         //must be between 1 and 3
         CharTitlesEntry const* getArenaLeaderTitle(uint8 rank);
         CharTitlesEntry const* getGladiatorTitle(uint8 rank);
+
+        //restore all inactive characters on account if any
+        uint8 SetAccountActive(uint32 accountId);
+        uint8 SetAccountInactive(uint32 accountId);
 
     protected:
         void _UpdateGameTime();
