@@ -21828,3 +21828,94 @@ void Player::UpdateArenaTitles()
         UpdateArenaTitleForRank(i,false);
     */
 }
+
+/*
+DELETE FROM inactive_character_action;
+DELETE FROM inactive_character_gifts;
+DELETE FROM inactive_character_inventory;
+DELETE FROM inactive_character_reputation;
+DELETE FROM inactive_character_skills;
+DELETE FROM inactive_character_spell;
+DELETE FROM inactive_characters;
+DELETE FROM inactive_item_instance;
+DELETE FROM inactive_character_social;
+DELETE FROM inactive_pet_spell;
+*/
+
+bool Player::SetCharacterActive(uint64 playerGUID)
+{
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+    //copy from inactive_* tables
+    trans->PAppend("INSERT INTO characters SELECT * FROM inactive_characters WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_action SELECT * FROM inactive_character_action WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_inventory SELECT * FROM inactive_character_inventory WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_pet SELECT * FROM inactive_character_pet WHERE owner = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_queststatus SELECT * FROM inactive_character_queststatus WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_reputation SELECT * FROM inactive_character_reputation WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_skills SELECT * FROM inactive_character_skills WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_social SELECT * FROM inactive_character_social WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO character_spell SELECT * FROM inactive_character_spell WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO item_instance SELECT * FROM inactive_item_instance WHERE owner_guid = %u",playerGUID);
+    //delete from inactive_*
+    trans->PAppend("DELETE FROM inactive_characters WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_action WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_inventory WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_pet WHERE owner = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_queststatus WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_reputation WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_skills WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_social WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_character_spell WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM inactive_item_instance WHERE owner_guid = %u",playerGUID);
+
+    CharacterDatabase.CommitTransaction(trans);
+    
+    sLog.outDebug("Player::SetCharacterActive(%u)",playerGUID);
+
+    return true;
+}
+
+bool Player::SetCharacterInactive(uint64 playerGUID)
+{
+    //First delete some short life/non critical data to simplify process
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+    trans->PAppend("DELETE FROM character_aura WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE FROM character_bgcoord WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE FROM character_instance WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE FROM character_queststatus_daily WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE FROM character_spell_cooldown WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE FROM character_ticket WHERE guid = '%u'",playerGUID);
+    trans->PAppend("DELETE mail.*, mail_items.* FROM mail LEFT JOIN mail_items ON mail_items.mail_id = mail.id WHERE mail.sender = %u OR mail.receiver = %u",playerGUID,playerGUID);
+    trans->PAppend("DELETE pa.*, psc.* FROM pet_aura pa LEFT JOIN pet_spell_cooldown psc ON psc.guid = pa.guid WHERE pa.guid IN (SELECT id FROM character_pet WHERE owner = %u)",playerGUID);
+    trans->PAppend("DELETE g.*, gm.* FROM groups g LEFT JOIN group_member gm ON g.leaderGUID = gm.leaderGUID LEFT JOIN group_instance gi ON g.leaderGUID = gi.leaderGUID WHERE g.leaderGUID = %u",playerGUID);
+    trans->PAppend("UPDATE groups SET looterGUID = 0 WHERE looterGUID = %u",playerGUID);
+    //copy into inactive_* tables
+    trans->PAppend("INSERT INTO inactive_characters SELECT * FROM characters WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_action SELECT * FROM character_action WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_inventory SELECT * FROM character_inventory WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_pet SELECT * FROM character_pet WHERE owner = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_queststatus SELECT * FROM character_queststatus WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_reputation SELECT * FROM character_reputation WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_skills SELECT * FROM character_skills WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_social SELECT * FROM character_social WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_character_spell SELECT * FROM character_spell WHERE guid = %u",playerGUID);
+    trans->PAppend("INSERT INTO inactive_item_instance SELECT item_instance.* FROM item_instance LEFT JOIN auctionhouse ON auctionhouse.itemguid = item_instance.guid WHERE item_instance.owner_guid = %u AND auctionhouse.id IS NULL",playerGUID);
+    //Delete from active tables
+    trans->PAppend("DELETE FROM characters WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_action WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_inventory WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_pet WHERE owner = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_queststatus WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_reputation WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_skills WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_social WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE FROM character_spell WHERE guid = %u",playerGUID);
+    trans->PAppend("DELETE item_instance.* FROM item_instance LEFT JOIN auctionhouse ON auctionhouse.itemguid = item_instance.guid WHERE item_instance.owner_guid = %u AND auctionhouse.id IS NULL",playerGUID);
+    
+    //items in guild banks loose their owner so no problem there
+    CharacterDatabase.CommitTransaction(trans);
+
+    sLog.outDebug("Player::SetCharacterInactive(%u)",playerGUID);
+
+    return true;
+}

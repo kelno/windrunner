@@ -2407,6 +2407,8 @@ class Player : public Unit
         std::vector<Item*> m_itemUpdateQueue;
         bool m_itemUpdateQueueBlocked;
 
+        static bool SetCharacterActive(uint64 playerGUID);
+        static bool SetCharacterInactive(uint64 playerGUID);
     protected:
 
         /*********************************************************/

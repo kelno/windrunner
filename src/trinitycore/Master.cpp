@@ -231,6 +231,7 @@ int Master::Run()
 
     ///- Initialize the World
     sWorld.SetInitialWorldSettings();
+    sWorld.StoreInactiveAccounts();
 
     ///- Catch termination signals
     _HookSignals();

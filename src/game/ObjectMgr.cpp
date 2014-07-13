@@ -1287,27 +1287,16 @@ uint64 ObjectMgr::GetPlayerGUIDByName(std::string name) const
     if(result)
     {
         guid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
-
         delete result;
+    } else { 
+        // else check in inactive characters
+        if(result = CharacterDatabase.PQuery("SELECT guid FROM inactive_characters WHERE name = '%s'", name.c_str()))
+        {
+            guid = MAKE_NEW_GUID((*result)[0].GetUInt32(), 0, HIGHGUID_PLAYER);
+            delete result;
+        }
     }
 
-    return guid;
-}
-
-uint32 ObjectMgr::GetPlayerLowGUIDByName(std::string name) const
-{
-    uint32 guid = 0;
-    
-    CharacterDatabase.escape_string(name);
-    
-    QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE name = '%s'", name.c_str());
-    if (result) {
-        Field* fields = result->Fetch();
-        guid = fields[0].GetUInt32();
-        
-        delete result;
-    }
-    
     return guid;
 }
 
@@ -1327,24 +1316,15 @@ bool ObjectMgr::GetPlayerNameByGUID(const uint64 &guid, std::string &name) const
         name = (*result)[0].GetCppString();
         delete result;
         return true;
+    } else {
+        if(result = CharacterDatabase.PQuery("SELECT name FROM inactive_characters WHERE guid = '%u'", GUID_LOPART(guid)))
+        {
+            name = (*result)[0].GetCppString();
+            delete result;
+            return true;
+        }
     }
 
-    return false;
-}
-
-bool ObjectMgr::GetPlayerNameByLowGUID(uint32 guid, std::string &name) const
-{
-    // TODO: Add support to get Player* by low guid
-    QueryResult* result = CharacterDatabase.PQuery("SELECT name FROM characters WHERE guid = '%u'", guid);
-    
-    if (result) {
-        Field* fields = result->Fetch();
-        name = fields[0].GetCppString();
-        delete result;
-        
-        return true;        
-    }
-    
     return false;
 }
 
@@ -1357,6 +1337,13 @@ uint32 ObjectMgr::GetPlayerTeamByGUID(const uint64 &guid) const
         uint8 race = (*result)[0].GetUInt8();
         delete result;
         return Player::TeamForRace(race);
+    } else {
+        if(result = CharacterDatabase.PQuery("SELECT race FROM inactive_characters WHERE guid = '%u'", GUID_LOPART(guid)))
+        {
+             uint8 race = (*result)[0].GetUInt8();
+             delete result;
+             return Player::TeamForRace(race);
+        }
     }
 
     return 0;
@@ -1370,6 +1357,13 @@ uint32 ObjectMgr::GetPlayerAccountIdByGUID(const uint64 &guid) const
         uint32 acc = (*result)[0].GetUInt32();
         delete result;
         return acc;
+    } else {
+        if(result = CharacterDatabase.PQuery("SELECT account FROM inactive_characters WHERE guid = '%u'", GUID_LOPART(guid)))
+        {
+            uint32 acc = (*result)[0].GetUInt32();
+            delete result;
+            return acc;
+        }
     }
 
     return 0;
@@ -1383,6 +1377,13 @@ uint32 ObjectMgr::GetPlayerAccountIdByPlayerName(const std::string& name) const
         uint32 acc = (*result)[0].GetUInt32();
         delete result;
         return acc;
+    } else {
+        if(result = CharacterDatabase.PQuery("SELECT account FROM inactive_characters WHERE name = '%s'", name.c_str()))
+        {
+            uint32 acc = (*result)[0].GetUInt32();
+            delete result;
+            return acc;
+        }
     }
 
     return 0;
@@ -4957,7 +4958,7 @@ AreaTrigger const* ObjectMgr::GetMapEntranceTrigger(uint32 Map) const
 
 void ObjectMgr::SetHighestGuids()
 {
-    QueryResult *result = CharacterDatabase.Query( "SELECT MAX(guid) FROM characters" );
+    QueryResult *result = CharacterDatabase.Query("SELECT MAX(maxguid) FROM (SELECT c.guid AS maxguid FROM characters c UNION ALL SELECT ic.guid AS maxguid FROM inactive_characters ic) AS subQuery" );
     if( result )
     {
         m_hiCharGuid = (*result)[0].GetUInt32()+1;
@@ -4983,7 +4984,7 @@ void ObjectMgr::SetHighestGuids()
     // pet guids are not saved to DB, set to 0 (pet guid != pet id)
     m_hiPetGuid = 0;
 
-    result = CharacterDatabase.Query( "SELECT MAX(guid) FROM item_instance" );
+    result = CharacterDatabase.Query( "SELECT MAX(maxguid) FROM (SELECT ii.guid AS maxguid FROM item_instance ii UNION ALL SELECT iii.guid AS maxguid FROM inactive_item_instance iii) AS subQuery" );
     if( result )
     {
         m_hiItemGuid = (*result)[0].GetUInt32()+1;

@@ -1,0 +1,2 @@
+ALTER TABLE account
+	ADD COLUMN inactive TINYINT(3) NOT NULL DEFAULT 0 AFTER `online`;

@@ -762,6 +762,10 @@ Anticheat.Movement.Warn = true
 #     FFAZone
 #        Defines custom FFA zones (separated by commas)
 #
+#    InactiveAccountTime
+#        Time in month before characters are stored as inactive. (put in inactive_* tables). 0 to disable
+#         Default: 0        
+#
 #     SanctuaryZone
 #         Defines custom sanctuary zones (separated by commas)
 #

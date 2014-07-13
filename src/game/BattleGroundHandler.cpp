@@ -714,6 +714,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
                 }
             }
         }
+        /*
         //Arena server (WM Tournoi) is open wedsnesday, saturday & sunday from 14 to 22 pm
         if(sWorld.getConfig(CONFIG_ARENASERVER_ENABLED) && sWorld.getConfig(CONFIG_ARENASERVER_USE_CLOSESCHEDULE)) 
         { 
@@ -726,6 +727,7 @@ void WorldSession::HandleBattleGroundArenaJoin( WorldPacket & recv_data )
                 return;
             }
         }
+        */
     }
 
     uint8 arenatype = 0;

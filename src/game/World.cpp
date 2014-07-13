@@ -221,6 +221,8 @@ World::AddSession_ (WorldSession* s)
     
     ASSERT (s);
 
+    SetAccountActive(s->GetAccountId()); //restore all inactive characters on account if any
+
     //NOTE - Still there is race condition in WorldSession* being used in the Sockets
 
     ///- kick already loaded player with same account (if any) and remove session
@@ -1200,6 +1202,7 @@ void World::LoadConfigSettings(bool reload)
     m_configs[CONFIG_RACE_CHANGE_COST] = sConfig.GetIntDefault("Race.Change.Cost", 4);
     
     m_configs[CONFIG_DUEL_AREA_ENABLE] = sConfig.GetBoolDefault("DuelArea.Enabled", 0);
+    m_configs[CONFIG_INACTIVE_ACCOUNT_TIME] = sConfig.GetIntDefault("InactiveAccountTime",0);
 
     m_configs[CONFIG_ARENASERVER_ENABLED] = sConfig.GetBoolDefault("ArenaServer.Enabled", false);
     m_configs[CONFIG_ARENASERVER_USE_CLOSESCHEDULE] = sConfig.GetBoolDefault("ArenaServer.UseCloseSchedule", true);
@@ -3058,7 +3061,7 @@ BanReturn World::BanAccount(BanMode mode, std::string nameOrIP, std::string dura
     uint32 duration_secs = TimeStringToSecs(duration);
     QueryResult *resultAccounts = NULL;                     //used for kicking
     
-    uint32 authorGUID = objmgr.GetPlayerLowGUIDByName(safe_author);
+    uint32 authorGUID = objmgr.GetPlayerGUIDByName(safe_author);
 
     ///- Update the database with ban information
     switch(mode)
@@ -3075,6 +3078,8 @@ BanReturn World::BanAccount(BanMode mode, std::string nameOrIP, std::string dura
         case BAN_CHARACTER:
             //No SQL injection as string is escaped
             resultAccounts = CharacterDatabase.PQuery("SELECT account FROM characters WHERE name = '%s'",nameOrIP.c_str());
+            if(!resultAccounts)
+                CharacterDatabase.PQuery("SELECT account FROM inactive_characters WHERE name = '%s'",nameOrIP.c_str());
             break;
         default:
             return BAN_SYNTAX_ERROR;
@@ -3386,7 +3391,7 @@ void World::UpdateResultQueue()
 void World::UpdateRealmCharCount(uint32 accountId)
 {
     CharacterDatabase.AsyncPQuery(this, &World::_UpdateRealmCharCount, accountId,
-        "SELECT COUNT(guid) FROM characters WHERE account = '%u'", accountId);
+        "SELECT COUNT(listguid) FROM (SELECT c.guid AS listguid FROM characters c WHERE account = %u UNION ALL SELECT ic.guid AS listguid FROM inactive_characters ic WHERE account = %u) AS subQ", accountId, accountId);
 }
 
 void World::_UpdateRealmCharCount(QueryResult *resultCharCount, uint32 accountId)
@@ -3924,4 +3929,78 @@ void World::UpdateArenaSeasonLogs()
             result = LogsDatabase.PQuery("REPLACE INTO arena_season_stats (teamid,time%u) VALUES (%u,1);",i,firstArenaTeams[i-1]->GetId());
         }
     }
+}
+
+uint8 World::StoreInactiveAccounts()
+{
+    uint32 count = 0;
+    uint32 inactiveTime = getConfig(CONFIG_INACTIVE_ACCOUNT_TIME); //in months
+    if(!inactiveTime)
+        return 0;
+
+    time_t timeLimit = time(NULL) - (inactiveTime * MONTH);
+    QueryResult* result = LoginDatabase.PQuery("SELECT id FROM account WHERE inactive = 0 AND last_login < FROM_UNIXTIME(%u)",timeLimit);
+    if(!result)
+        return 0;
+
+    do {
+        Field* fields = result->Fetch();
+        uint32 accountId = fields[0].GetUInt32();
+        SetAccountInactive(accountId);
+        sLog.outDebug("World loading : Set account %u inactive.",accountId);
+        count++;
+    } while (result->NextRow());
+
+    return count;
+}
+
+uint8 World::SetAccountActive(uint32 accountId)
+{
+    uint8 count = 0;
+    bool success = true;
+    QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM inactive_characters WHERE account = %u",accountId);
+    if(!result)
+        return 0;
+
+    do {
+        Field* fields = result->Fetch();
+        uint64 playerGUID = fields[0].GetUInt64();
+        if(!Player::SetCharacterActive(playerGUID))
+        {
+            sLog.outError("World : Failed restoring character %u",playerGUID);
+            success = false;
+        } else {
+            sLog.outDebug("Restored player %u from account %u at relogging.",playerGUID,accountId);
+            count++;
+        }
+    } while (result->NextRow());
+    
+    if(success)
+        LoginDatabase.PQuery("UPDATE account SET inactive = 0 WHERE id = %u",accountId);
+
+    return count;
+}
+
+uint8 World::SetAccountInactive(uint32 accountId)
+{
+    uint8 count = 0;
+    QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE account = %u",accountId);
+    if(!result)
+    {
+        sLog.outError("World::SetAccountInactive() - Query failed for account %u.",accountId);
+        return 0;
+    }
+
+    do {
+        Field* fields = result->Fetch();
+        uint64 playerGUID = fields[0].GetUInt64();
+        if(!Player::SetCharacterInactive(playerGUID))
+            return count;
+        sLog.outDebug("Set player %u from account %u inactive.",playerGUID,accountId);
+        count++;
+    } while (result->NextRow());
+
+    LoginDatabase.PQuery("UPDATE account SET inactive = 1 WHERE id = %u",accountId);
+
+    return count;
 }

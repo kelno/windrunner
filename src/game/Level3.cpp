@@ -5655,7 +5655,7 @@ bool ChatHandler::HandleMuteInfoAccountCommand(const char* args)
         std::string unbanstr = fields[3].GetCppString();
         uint64 unbantimestamp = fields[4].GetUInt64() + (duration * 60);
         std::string authorname;
-        if (!objmgr.GetPlayerNameByLowGUID(authorGUID, authorname))
+        if (!objmgr.GetPlayerNameByGUID(authorGUID, authorname))
             authorname = "<Inconnu>";
         PSendSysMessage("Account %d: Mute %s pour \"%s\" par %s (%s).", accountid, secsToTimeString(fields[0].GetUInt32()).c_str(), fields[1].GetCppString().c_str(), authorname.c_str(), unbanstr.c_str(), (unbantimestamp > uint64(time(NULL))) ? " (actif)" : "");
     } while (result->NextRow());
@@ -5709,7 +5709,7 @@ bool ChatHandler::HandleMuteInfoCharacterCommand(char const* args)
         std::string unbanstr = fields[3].GetCppString();
         uint64 unbantimestamp = fields[4].GetUInt64() + (duration * 60);
         std::string authorname;
-        if (!objmgr.GetPlayerNameByLowGUID(authorGUID, authorname))
+        if (!objmgr.GetPlayerNameByGUID(authorGUID, authorname))
             authorname = "<Inconnu>";
         PSendSysMessage("Account %d: Mute %s pour \"%s\" par %s (%s).", accountid, secsToTimeString(fields[0].GetUInt32()).c_str(), fields[1].GetCppString().c_str(), authorname.c_str(), unbanstr.c_str(), (unbantimestamp > uint64(time(NULL))) ? " (actif)" : "");
     } while (result->NextRow());
