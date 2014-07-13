@@ -13540,7 +13540,7 @@ bool Player::SatisfyQuestSkillOrClass( Quest const* qInfo, bool msg )
     // check class
     if( skillOrClass < 0 )
     {
-        uint8 reqClass = -int32(skillOrClass);
+        uint32 reqClass = -int32(skillOrClass);
         if((getClassMask() & reqClass) == 0)
         {
             if( msg )
@@ -19920,7 +19920,6 @@ void Player::DoPack58(uint8 step)
         GiveLevel(58);
         InitTalentForLevel();
         SetUInt32Value(PLAYER_XP,0);
-        UpdateSkillsToMaxSkillsForLevel();
         learnSpell(33388); //mount 75
         LearnAllClassSpells();
         uint32 mountid = 0;
@@ -19944,12 +19943,16 @@ void Player::DoPack58(uint8 step)
             Item * item = StoreNewItem(dest, mountid, true);
             SendNewItem(item, 1, true, false);
         }
-        //gun, plate, mace, mail, ambi, arme d'hast, épée 1M, épée 2M, 2H mace, bow, dagger, staff, axe, 2M axe, pugi,arbalete, throwing
+        //gun, plate, mace, mail, dual wield, polearm, 1H sword,2H sword, 2H mace, bow, dagger, staff, axe, 2M axe, pugi, crossbow, throwing
         uint32 spellsId[17] = {266,750,198,8737,674,200,201,202,199,264,1180,227,196,197,473,5011,2567};
         for (int i = 0; i < 17; i++)
         {
             // known spell
             if(HasSpell(spellsId[i]))
+                continue;
+
+            //exception : skip dual wield for shaman (this only comes with spec)
+            if(getClass() == CLASS_SHAMAN && spellsId[i] == 674)
                 continue;
 
             // check race/class requirement
@@ -19958,17 +19961,18 @@ void Player::DoPack58(uint8 step)
 
             addSpell(spellsId[i],true);
         }
+        UpdateSkillsToMaxSkillsForLevel();
 
         //give totems to shamans
         if(getClass() == CLASS_SHAMAN)
         {
             uint32 totemsId[4] = {5176,5177,5175,5178};
-            for(uint i = 0; i < 4; i++)
+            for(uint8 i = 0; i < 4; i++)
             {
                 msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, totemsId[i], 1 );
                 if( msg == EQUIP_ERR_OK )
                 {
-                    Item * item = StoreNewItem(dest, totemsId[i], true);
+                    Item * item = StoreNewItem(dest, 1, true);
                     SendNewItem(item, 1, true, false);
                 }
             }
@@ -19977,7 +19981,8 @@ void Player::DoPack58(uint8 step)
         //relocate homebind
         WorldLocation loc;
         uint32 area_id = 0;
-        if (Player::TeamForRace(GetRace()) == ALLIANCE) {
+        if (Player::TeamForRace(GetRace()) == ALLIANCE) 
+        {
             loc = WorldLocation(0, -8866.468750, 671.831238, 97.903374, 2.154216);
             area_id = 1519; // Stormwind
         } else {
@@ -19989,7 +19994,7 @@ void Player::DoPack58(uint8 step)
     } else {
         
         //also give some money 
-        ModifyMoney(200000); //20 gold
+        ModifyMoney(100000); //10 gold
 
         for(int i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; i++)
         {
@@ -20008,7 +20013,7 @@ void Player::DoPack58(uint8 step)
         case PACK58_MAGIC: packType = PACK58_TYPE_MAGIC; break;
         }
 
-        QueryResult *result = WorldDatabase.PQuery("SELECT item FROM pack58 WHERE class = %u and type = %u",getClass(),packType);
+        QueryResult *result = WorldDatabase.PQuery("SELECT item, count FROM pack58 WHERE class = %u and type = %u",getClass(),packType);
 
         uint32 count = 0;
         if(result)
@@ -20018,10 +20023,11 @@ void Player::DoPack58(uint8 step)
                 count++;
                 Field *fields = result->Fetch();
                 uint32 itemid = fields[0].GetUInt32();
-                if(!itemid)
+                uint32 count = fields[1].GetUInt32();
+                if(!itemid || !count)
                     continue;
 
-                StoreNewItemInBestSlots(itemid, 1);
+                StoreNewItemInBestSlots(itemid, count);
             }
             while( result->NextRow() );
         }
