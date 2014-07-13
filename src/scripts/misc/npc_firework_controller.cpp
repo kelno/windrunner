@@ -112,6 +112,7 @@ struct firework_controllerAI : public ScriptedAI
                 if(!AddEvent(fields[0].GetUInt32(),fields[1].GetUInt32(), fields[2].GetFloat(),fields[3].GetUInt8(),fields[4].GetUInt8(), fields[5].GetFloat(),fields[6].GetFloat(),fields[7].GetFloat()))
                     sLog.outError("firework_controller : invalid db entry");
             } while (result->NextRow());
+            delete result;
         }
     }
 

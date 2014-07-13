@@ -77,6 +77,8 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
                 Trinity::NormalizeMapCoord(destX);
             
                 pPlayer->TeleportTo(mapId, destX, destY, destZ, destO);
+
+                delete result;
             }
             else
             {
@@ -121,6 +123,8 @@ bool GossipSelect_npc_teleporter(Player *pPlayer, Creature *pCreature, uint32 se
                 pCreature->Whisper(guid.c_str(), pPlayer->GetGUID());
             }while (result->NextRow());
             
+            delete result;
+
             pPlayer->PlayerTalkClass->CloseGossip();
         }
     }

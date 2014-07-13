@@ -55,6 +55,7 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
             }
             else {
                 pPlayer->PlayerTalkClass->SendGossipMenu(45, pCreature->GetGUID());
+                delete result;
             }
         }
         else {
@@ -85,6 +86,8 @@ bool GossipSelect_npc_lottery(Player* pPlayer, Creature* pCreature, uint32 sende
             num++;
         } while (result->NextRow());
         
+        delete result;
+
         break;
     }
     
