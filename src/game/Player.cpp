@@ -19928,7 +19928,7 @@ void Player::DoPack58(uint8 step)
         case RACE_HUMAN:           mountid = 5656; break;
         case RACE_ORC:             mountid = 1132; break;
         case RACE_DWARF:           mountid = 5873; break;
-        case RACE_NIGHTELF:        mountid = 8627; break;
+        case RACE_NIGHTELF:        mountid = 8629; break;
         case RACE_UNDEAD_PLAYER:   mountid = 13332; break;
         case RACE_TAUREN:          mountid = 15277; break;
         case RACE_GNOME:           mountid = 13322; break;
@@ -19969,10 +19969,11 @@ void Player::DoPack58(uint8 step)
             uint32 totemsId[4] = {5176,5177,5175,5178};
             for(uint8 i = 0; i < 4; i++)
             {
-                msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest, totemsId[i], 1 );
+                ItemPosCountVec dest2;
+                msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest2, totemsId[i], 1 );
                 if( msg == EQUIP_ERR_OK )
                 {
-                    Item * item = StoreNewItem(dest, 1, true);
+                    Item * item = StoreNewItem(dest2, totemsId[i], true);
                     SendNewItem(item, 1, true, false);
                 }
             }
