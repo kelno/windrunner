@@ -21902,7 +21902,6 @@ bool Player::SetCharacterInactive(uint64 playerGUID)
     trans->PAppend("DELETE FROM character_instance WHERE guid = '%u'",playerGUID);
     trans->PAppend("DELETE FROM character_queststatus_daily WHERE guid = '%u'",playerGUID);
     trans->PAppend("DELETE FROM character_spell_cooldown WHERE guid = '%u'",playerGUID);
-    trans->PAppend("DELETE FROM character_ticket WHERE guid = '%u'",playerGUID);
     trans->PAppend("DELETE mail.*, mail_items.* FROM mail LEFT JOIN mail_items ON mail_items.mail_id = mail.id WHERE mail.sender = %u OR mail.receiver = %u",playerGUID,playerGUID);
     trans->PAppend("DELETE pa.*, psc.* FROM pet_aura pa LEFT JOIN pet_spell_cooldown psc ON psc.guid = pa.guid WHERE pa.guid IN (SELECT id FROM character_pet WHERE owner = %u)",playerGUID);
     trans->PAppend("DELETE g.*, gm.* FROM groups g LEFT JOIN group_member gm ON g.leaderGUID = gm.leaderGUID LEFT JOIN group_instance gi ON g.leaderGUID = gi.leaderGUID WHERE g.leaderGUID = %u",playerGUID);
