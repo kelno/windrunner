@@ -3959,32 +3959,38 @@ uint8 World::StoreInactiveAccounts()
         count++;
     } while (result->NextRow());
 
+    delete result;
+
     return count;
 }
 
 uint8 World::SetAccountActive(uint32 accountId)
 {
     uint8 count = 0;
-    bool success = true;
+
+    //we don't check for "inactive" column in account, this could speed things up but this is far more safe and can recover error (and lost characters are A BIT of a major problem)
     QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM inactive_characters WHERE account = %u",accountId);
     if(!result)
-        return 0;
+    {
+        LoginDatabase.PQuery("UPDATE account SET inactive = 0 WHERE id = %u",accountId);
+        return 0; //no inactive characters on account
+    }
+
+    uint64 charGUID;
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
 
     do {
         Field* fields = result->Fetch();
-        uint64 playerGUID = fields[0].GetUInt64();
-        if(!Player::SetCharacterActive(playerGUID))
-        {
-            sLog.outError("World : Failed restoring character %u",playerGUID);
-            success = false;
-        } else {
-            sLog.outDebug("Restored player %u from account %u at relogging.",playerGUID,accountId);
-            count++;
-        }
+        charGUID = fields[0].GetUInt64();
+        Player::SetCharacterActive(trans,charGUID);
+        sLog.outDebug("Set player %u from account %u active.",charGUID,accountId);
+        count++;
     } while (result->NextRow());
+    delete result;
+
+    CharacterDatabase.CommitTransaction(trans);
     
-    if(success)
-        LoginDatabase.PQuery("UPDATE account SET inactive = 0 WHERE id = %u",accountId);
+    LoginDatabase.PQuery("UPDATE account SET inactive = 0 WHERE id = %u",accountId);
 
     return count;
 }
@@ -3995,18 +4001,24 @@ uint8 World::SetAccountInactive(uint32 accountId)
     QueryResult* result = CharacterDatabase.PQuery("SELECT guid FROM characters WHERE account = %u",accountId);
     if(!result)
     {
-        sLog.outError("World::SetAccountInactive() - Query failed for account %u.",accountId);
+        //no active character on account
+        LoginDatabase.PQuery("UPDATE account SET inactive = 1 WHERE id = %u",accountId);
         return 0;
     }
 
+    uint64 charGUID;
+    SQLTransaction trans = CharacterDatabase.BeginTransaction();
+
     do {
         Field* fields = result->Fetch();
-        uint64 playerGUID = fields[0].GetUInt64();
-        if(!Player::SetCharacterInactive(playerGUID))
-            return count;
-        sLog.outDebug("Set player %u from account %u inactive.",playerGUID,accountId);
+        charGUID = fields[0].GetUInt64();
+        Player::SetCharacterInactive(trans,charGUID);
+        sLog.outDebug("Set player %u from account %u inactive.",charGUID,accountId);
         count++;
     } while (result->NextRow());
+    delete result;
+
+    CharacterDatabase.CommitTransaction(trans);
 
     LoginDatabase.PQuery("UPDATE account SET inactive = 1 WHERE id = %u",accountId);
 

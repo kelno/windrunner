@@ -3967,8 +3967,6 @@ void Player::DeleteFromDB(uint64 playerguid, uint32 accountId, bool updateRealmC
         Group* group = objmgr.GetGroupByLeader(leaderGuid);
         if(group)
             RemoveFromGroup(group, playerguid);
-
-        delete resultGroup;
     }
 
     // remove signs from petitions (also remove petitions if owner);
@@ -21860,9 +21858,8 @@ DELETE FROM inactive_character_social;
 DELETE FROM inactive_pet_spell;
 */
 
-bool Player::SetCharacterActive(uint64 playerGUID)
+void Player::SetCharacterActive(SQLTransaction& trans, uint64 playerGUID)
 {
-    SQLTransaction trans = CharacterDatabase.BeginTransaction();
     //copy from inactive_* tables
     trans->PAppend("INSERT INTO characters SELECT * FROM inactive_characters WHERE guid = %u",playerGUID);
     trans->PAppend("INSERT INTO character_action SELECT * FROM inactive_character_action WHERE guid = %u",playerGUID);
@@ -21885,18 +21882,11 @@ bool Player::SetCharacterActive(uint64 playerGUID)
     trans->PAppend("DELETE FROM inactive_character_social WHERE guid = %u",playerGUID);
     trans->PAppend("DELETE FROM inactive_character_spell WHERE guid = %u",playerGUID);
     trans->PAppend("DELETE FROM inactive_item_instance WHERE owner_guid = %u",playerGUID);
-
-    CharacterDatabase.CommitTransaction(trans);
-    
-    sLog.outDebug("Player::SetCharacterActive(%u)",playerGUID);
-
-    return true;
 }
 
-bool Player::SetCharacterInactive(uint64 playerGUID)
+void Player::SetCharacterInactive(SQLTransaction& trans, uint64 playerGUID)
 {
     //First delete some short life/non critical data to simplify process
-    SQLTransaction trans = CharacterDatabase.BeginTransaction();
     trans->PAppend("DELETE FROM character_aura WHERE guid = '%u'",playerGUID);
     trans->PAppend("DELETE FROM character_bgcoord WHERE guid = '%u'",playerGUID);
     trans->PAppend("DELETE FROM character_instance WHERE guid = '%u'",playerGUID);
@@ -21930,9 +21920,4 @@ bool Player::SetCharacterInactive(uint64 playerGUID)
     trans->PAppend("DELETE item_instance.* FROM item_instance LEFT JOIN auctionhouse ON auctionhouse.itemguid = item_instance.guid WHERE item_instance.owner_guid = %u AND auctionhouse.id IS NULL",playerGUID);
     
     //items in guild banks loose their owner so no problem there
-    CharacterDatabase.CommitTransaction(trans);
-
-    sLog.outDebug("Player::SetCharacterInactive(%u)",playerGUID);
-
-    return true;
 }
