@@ -717,6 +717,7 @@ class World
         void InitNewDataForQuestPools();
         void LoadQuestPoolsData();
         void UpdateMonitoring(uint32 diff);
+
     private:
 
         void UpdateArenaSeasonLogs();
