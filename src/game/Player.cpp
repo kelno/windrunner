@@ -19985,8 +19985,9 @@ void Player::DoPack58(uint8 step)
                 }
             }
             break;
-        case CLASS_DRUID:
+        case CLASS_DRUID: //only 1 form seems to appear in the form bar until reconnexion
             addSpell(9634,true); //bear
+            addSpell(6807,true); //maul rank 1
             addSpell(768,true); //cat
             addSpell(783,true); //travel
             addSpell(1066,true); //aqua
