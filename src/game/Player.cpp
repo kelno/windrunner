@@ -19994,6 +19994,9 @@ void Player::DoPack58(uint8 step)
             break;
         case CLASS_HUNTER:
             CastSpell(this,5300,true); //learn some pet related spells
+            addSpell(this,883,true); //call pet
+            addSpell(this,2641,true);//dismiss pet
+            addSpell(this,1515,true); //taming spell
             break;
         default:
             break;
