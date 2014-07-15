@@ -19986,17 +19986,17 @@ void Player::DoPack58(uint8 step)
             }
             break;
         case CLASS_DRUID: //only 1 form seems to appear in the form bar until reconnexion
-            addSpell(9634,true); //bear
-            addSpell(6807,true); //maul rank 1
-            addSpell(768,true); //cat
-            addSpell(783,true); //travel
-            addSpell(1066,true); //aqua
+            learnSpell(9634); //bear
+            learnSpell(6807); //maul rank 1
+            learnSpell(768); //cat
+            learnSpell(783); //travel
+            learnSpell(1066); //aqua
             break;
         case CLASS_HUNTER:
             CastSpell(this,5300,true); //learn some pet related spells
-            addSpell(883,true); //call pet
-            addSpell(2641,true);//dismiss pet
-            addSpell(1515,true); //taming spell
+            learnSpell(883); //call pet
+            learnSpell(2641);//dismiss pet
+            learnSpell(1515); //taming spell
             break;
         default:
             break;
