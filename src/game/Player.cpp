@@ -19926,7 +19926,6 @@ void Player::DoPack58(uint8 step)
         InitTalentForLevel();
         SetUInt32Value(PLAYER_XP,0);
         learnSpell(33388); //mount 75
-        LearnAllClassSpells();
         uint32 mountid = 0;
         switch(GetRace())
         {
@@ -19969,20 +19968,37 @@ void Player::DoPack58(uint8 step)
         UpdateSkillsToMaxSkillsForLevel();
 
         //give totems to shamans
-        if(getClass() == CLASS_SHAMAN)
+        switch(getClass())
         {
-            uint32 totemsId[4] = {5176,5177,5175,5178};
-            for(uint8 i = 0; i < 4; i++)
+            case CLASS_SHAMAN:
             {
-                ItemPosCountVec dest2;
-                msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest2, totemsId[i], 1 );
-                if( msg == EQUIP_ERR_OK )
+                uint32 totemsId[4] = {5176,5177,5175,5178};
+                for(uint8 i = 0; i < 4; i++)
                 {
-                    Item * item = StoreNewItem(dest2, totemsId[i], true);
-                    SendNewItem(item, 1, true, false);
+                    ItemPosCountVec dest2;
+                    msg = CanStoreNewItem( NULL_BAG, NULL_SLOT, dest2, totemsId[i], 1 );
+                    if( msg == EQUIP_ERR_OK )
+                    {
+                        Item * item = StoreNewItem(dest2, totemsId[i], true);
+                        SendNewItem(item, 1, true, false);
+                    }
                 }
             }
+            break;
+        case CLASS_DRUID:
+            addSpell(9634,true); //bear
+            addSpell(768,true); //cat
+            addSpell(783,true); //travel
+            addSpell(1066,true); //aqua
+            break;
+        case CLASS_HUNTER:
+            CastSpell(this,5300,true); //learn some pet related spells
+            break;
+        default:
+            break;
         }
+        
+        LearnAllClassSpells();
 
         //relocate homebind
         WorldLocation loc;
