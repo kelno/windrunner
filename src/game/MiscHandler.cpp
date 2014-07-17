@@ -596,7 +596,7 @@ void WorldSession::HandleAddFriendOpcode( WorldPacket & recv_data )
 
     CharacterDatabase.escape_string(friendName);            // prevent SQL injection - normal name don't must changed by this call
 
-    CharacterDatabase.AsyncPQuery(&WorldSession::HandleAddFriendOpcodeCallBack, GetAccountId(), friendNote, "SELECT guid, race, account FROM characters WHERE name = '%s'", friendName.c_str());
+    CharacterDatabase.AsyncPQuery(&WorldSession::HandleAddFriendOpcodeCallBack, GetAccountId(), friendNote, "SELECT guid, race, account FROM characters WHERE name = '%s' UNION ALL SELECT guid, race, account FROM inactive_characters WHERE name = '%s'", friendName.c_str(),friendName.c_str());
 }
 
 void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 accountId, std::string friendNote)
@@ -653,7 +653,7 @@ void WorldSession::HandleAddFriendOpcodeCallBack(QueryResult *result, uint32 acc
 void WorldSession::HandleDelFriendOpcode( WorldPacket & recv_data )
 {
     PROFILE;
-    
+        
     CHECK_PACKET_SIZE(recv_data, 8);
 
     uint64 friendGUID;
