@@ -2008,7 +2008,7 @@ bool ChatHandler::HandlePInfoCommand(const char* args)
     else
     {
         //                                                     0          1      2      3
-        QueryResult *result = CharacterDatabase.PQuery("SELECT totaltime, level, money, account FROM characters WHERE guid = '%u'", GUID_LOPART(targetGUID));
+        QueryResult *result = CharacterDatabase.PQuery("SELECT totaltime, level, money, account FROM characters WHERE guid = '%u' UNION SELECT totaltime, level, money, account FROM inactive_characters WHERE guid = '%u'", GUID_LOPART(targetGUID), GUID_LOPART(targetGUID));
 //        QueryResult *result = CharacterDatabase.PQuery("SELECT totaltime FROM characters WHERE guid = '%u'", GUID_LOPART(targetGUID));
         if (!result)
         {
