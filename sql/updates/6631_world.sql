@@ -1,0 +1,1 @@
+DELETE FROM npc_trainer where spell IN ( 17862,17937,27229);
