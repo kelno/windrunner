@@ -19965,7 +19965,6 @@ void Player::DoPack58(uint8 step)
 
             addSpell(spellsId[i],true);
         }
-        UpdateSkillsToMaxSkillsForLevel();
 
         //give totems to shamans
         switch(getClass())
@@ -19983,26 +19982,34 @@ void Player::DoPack58(uint8 step)
                         SendNewItem(item, 1, true, false);
                     }
                 }
+                //those totems are learned from quests
+                learnSpell(8071); //stoneskin totem
+                learnSpell(3599); //incendiary totem
+                learnSpell(5394); //healing totem
             }
             break;
-        case CLASS_DRUID: //only 1 form seems to appear in the form bar until reconnexion
-            learnSpell(9634); //bear
-            learnSpell(6807); //maul rank 1
-            learnSpell(768); //cat
-            learnSpell(783); //travel
-            learnSpell(1066); //aqua
-            break;
-        case CLASS_HUNTER:
-            CastSpell(this,5300,true); //learn some pet related spells
-            learnSpell(883); //call pet
-            learnSpell(2641);//dismiss pet
-            learnSpell(1515); //taming spell
-            break;
-        default:
-            break;
+            case CLASS_DRUID: //only 1 form seems to appear in the form bar until reconnexion
+                learnSpell(9634); //bear
+                learnSpell(6807); //maul rank 1
+                learnSpell(768); //cat
+                learnSpell(783); //travel
+                learnSpell(1066); //aqua
+                break;
+            case CLASS_HUNTER:
+                CastSpell(this,5300,true); //learn some pet related spells
+                learnSpell(883); //call pet
+                learnSpell(2641);//dismiss pet
+                learnSpell(1515); //taming spell
+                break;
+            case CLASS_MAGE:
+                learnSpell(10181); //icebolt
+                break;
+            default:
+                break;
         }
         
         LearnAllClassSpells();
+        UpdateSkillsToMaxSkillsForLevel();
 
         //relocate homebind
         WorldLocation loc;
