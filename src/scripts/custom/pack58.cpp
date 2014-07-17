@@ -16,9 +16,9 @@ struct npc_pack58_teleporterAI : public ScriptedAI
 
 bool GossipHello_npc_pack58_teleporter(Player *player, Creature *creature)
 {
-    if(player->getLevel() > 1)
+    if(player->getLevel() > 57)
     {
-        creature->Whisper("Vous devez etre niveau 1 pour utiliser le pack 58.", player->GetGUID());
+        creature->Whisper("Vous êtes trop haut niveau pour utiliser le pack 58.", player->GetGUID());
         return true;
     }
 
