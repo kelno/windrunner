@@ -286,7 +286,7 @@ bool GossipHello_npc_bolvar_fordragon(Player *player, Creature *_Creature)
     if (_Creature->isQuestGiver())
         player->PrepareQuestMenu( _Creature->GetGUID() );
 
-    if (player->GetQuestStatus(80017) == QUEST_STATUS_COMPLETE) //pack58, tp vers la porte des tenebres
+    if (player->GetQuestStatus(80017) > QUEST_STATUS_NONE) //pack58, tp vers la porte des tenebres
         player->ADD_GOSSIP_ITEM(0, GOSSIP_PACK58, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF+1);
 
     player->SEND_GOSSIP_MENU(_Creature->GetNpcTextId(), _Creature->GetGUID());
