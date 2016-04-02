@@ -4,8 +4,6 @@
 /**
  *  @file   OS_NS_sys_socket.h
  *
- *  $Id: OS_NS_sys_socket.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -74,24 +72,22 @@ namespace ACE_OS
 # endif /* ACE_WIN32 */
 
   //@{ @name A set of wrappers for sockets.
-  /// BSD-style <accept> (no QoS).
+  /// BSD-style @c accept (no QoS).
   ACE_NAMESPACE_INLINE_FUNCTION
   ACE_HANDLE accept (ACE_HANDLE handle,
                      struct sockaddr *addr,
                      int *addrlen);
 
-#if !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500))
   /**
-   * QoS-enabled <accept>, which passes @a qos_params to <accept>.  If
-   * the OS platform doesn't support QoS-enabled <accept> then the
-   * @a qos_params are ignored and the BSD-style <accept> is called.
+   * QoS-enabled @c accept, which passes @a qos_params to @c accept.  If
+   * the OS platform doesn't support QoS-enabled @c accept then the
+   * @a qos_params are ignored and the BSD-style @c accept is called.
    */
   extern ACE_Export
   ACE_HANDLE accept (ACE_HANDLE handle,
                      struct sockaddr *addr,
                      int *addrlen,
                      const ACE_Accept_QoS_Params &qos_params);
-#endif  /* !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500)) */
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int bind (ACE_HANDLE s,
@@ -102,24 +98,22 @@ namespace ACE_OS
   ACE_NAMESPACE_INLINE_FUNCTION
   int closesocket (ACE_HANDLE s);
 
-  /// BSD-style <connect> (no QoS).
+  /// BSD-style @c connect (no QoS).
   ACE_NAMESPACE_INLINE_FUNCTION
   int connect (ACE_HANDLE handle,
                struct sockaddr *addr,
                int addrlen);
 
-#if !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500))
   /**
-   * QoS-enabled <connect>, which passes @a qos_params to <connect>.
-   * If the OS platform doesn't support QoS-enabled <connect> then the
-   * @a qos_params are ignored and the BSD-style <connect> is called.
+   * QoS-enabled @c connect, which passes @a qos_params to @c connect.
+   * If the OS platform doesn't support QoS-enabled @c connect then the
+   * @a qos_params are ignored and the BSD-style @c connect is called.
    */
   extern ACE_Export
   int connect (ACE_HANDLE handle,
                const sockaddr *addr,
                int addrlen,
                const ACE_QoS_Params &qos_params);
-#endif  /* !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500)) */
 
   /// Retrieve information about available transport protocols
   /// installed on the local machine. Windows specific...
@@ -144,14 +138,12 @@ namespace ACE_OS
                   char *optval,
                   int *optlen);
 
-#if !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500))
   /// Joins a leaf node into a QoS-enabled multi-point session.
   extern ACE_Export
   ACE_HANDLE join_leaf (ACE_HANDLE socket,
                         const sockaddr *name,
                         int namelen,
                         const ACE_QoS_Params &qos_params);
-#endif  /* !(defined (ACE_HAS_WINCE) && (UNDER_CE < 500)) */
 
   ACE_NAMESPACE_INLINE_FUNCTION
   int listen (ACE_HANDLE handle,
@@ -198,6 +190,14 @@ namespace ACE_OS
                 size_t len,
                 int flags = 0);
 
+  /// internal function used by send when an ENOBUFS condition
+  /// requires a buffer to do a partial send
+  extern ACE_Export
+  ssize_t send_partial_i (ACE_HANDLE handle,
+                          const char *buf,
+                          size_t len,
+                          int flags);
+
   ACE_NAMESPACE_INLINE_FUNCTION
   ssize_t sendmsg (ACE_HANDLE handle,
                    const struct msghdr *msg,
@@ -227,6 +227,12 @@ namespace ACE_OS
                  const iovec *iov,
                  int iovcnt);
 
+  /// internal function used by sendv when an ENOBUFS condition
+  /// requires a buffer to do a partial send
+  extern ACE_Export
+  ssize_t sendv_partial_i (ACE_HANDLE handle,
+                           const iovec *iov,
+                           int iovcnt);
 
   /// Manipulate the options associated with a socket.
   ACE_NAMESPACE_INLINE_FUNCTION
@@ -240,7 +246,7 @@ namespace ACE_OS
   int shutdown (ACE_HANDLE handle,
                 int how);
 
-#if defined (__linux__) && defined (ACE_HAS_IPV6)
+#if defined (ACE_LINUX) && defined (ACE_HAS_IPV6)
   ACE_NAMESPACE_INLINE_FUNCTION
   unsigned int if_nametoindex (const char *ifname);
 
@@ -252,7 +258,7 @@ namespace ACE_OS
 
   ACE_NAMESPACE_INLINE_FUNCTION
   void if_freenameindex (struct if_nameindex *ptr);
-#endif /* __linux__ && ACE_HAS_IPV6 */
+#endif /* ACE_LINUX && ACE_HAS_IPV6 */
 
   /// Initialize WinSock before first use (e.g., when a DLL is first
   /// loaded or the first use of a socket() call.
@@ -300,4 +306,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 # include /**/ "ace/post.h"
 #endif /* ACE_OS_NS_SYS_SOCKET_H */
-

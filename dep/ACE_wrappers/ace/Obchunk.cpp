@@ -1,12 +1,8 @@
-// $Id: Obchunk.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Obchunk.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Obchunk.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID(ace, Obchunk, "$Id: Obchunk.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -18,10 +14,10 @@ ACE_Obchunk::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Obchunk::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("end_ = %x\n"), this->end_));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("cur_ = %x\n"), this->cur_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("end_ = %x\n"), this->end_));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("cur_ = %x\n"), this->cur_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -34,4 +30,3 @@ ACE_Obchunk::ACE_Obchunk (size_t size)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Sig_Handler.h
  *
- *  $Id: Sig_Handler.h 81388 2008-04-23 14:02:05Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -131,6 +129,11 @@ protected:
                                  ACE_Event_Handler **old_sh = 0,
                                  ACE_Sig_Action *old_disp = 0);
 
+  static int remove_handler_i (int signum,
+                               ACE_Sig_Action *new_disp = 0,
+                               ACE_Sig_Action *old_disp = 0,
+                               int sigkey = -1);
+
   /// Check whether the SIGNUM is within the legal range of signals.
   static int in_range (int signum);
 
@@ -160,6 +163,9 @@ private:
 class ACE_Export ACE_Sig_Handlers : public ACE_Sig_Handler
 {
 public:
+  /// Default constructor
+  ACE_Sig_Handlers (void);
+
   // = Registration and removal methods.
   /**
    * Add a new ACE_Event_Handler and a new sigaction associated with
@@ -177,7 +183,7 @@ public:
    * Remove an ACE_Event_Handler currently associated with @a signum.
    * We remove the handler if (1) its sigkey> matches the @a sigkey
    * passed as a parameter or (2) if we've been told to remove all the
-   * handlers, i.e., <sigkey> == -1.  If a new disposition is given it
+   * handlers, i.e., @a sigkey == -1.  If a new disposition is given it
    * is installed and the previous disposition is returned (if desired
    * by the caller).  Returns 0 on success and -1 if @a signum is
    * invalid.
@@ -235,4 +241,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_SIG_HANDLER_H */
-

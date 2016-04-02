@@ -1,8 +1,6 @@
-// $Id: SOCK_Connector.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SOCK_Connector.h"
 #include "ace/INET_Addr.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_NS_sys_socket.h"
 #include "ace/os_include/os_fcntl.h"
@@ -14,8 +12,6 @@
 #if !defined (__ACE_INLINE__)
 #include "ace/SOCK_Connector.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID(ace, SOCK_Connector, "$Id: SOCK_Connector.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -83,11 +79,9 @@ ACE_SOCK_Connector::shared_connect_start (ACE_SOCK_Stream &new_stream,
   if (local_sap != ACE_Addr::sap_any)
     {
       sockaddr *laddr = reinterpret_cast<sockaddr *> (local_sap.get_addr ());
-      int size = local_sap.get_size ();
+      int const size = local_sap.get_size ();
 
-      if (ACE_OS::bind (new_stream.get_handle (),
-                        laddr,
-                        size) == -1)
+      if (ACE_OS::bind (new_stream.get_handle (), laddr, size) == -1)
         {
           // Save/restore errno.
           ACE_Errno_Guard error (errno);
@@ -97,8 +91,7 @@ ACE_SOCK_Connector::shared_connect_start (ACE_SOCK_Stream &new_stream,
     }
 
   // Enable non-blocking, if required.
-  if (timeout != 0
-      && new_stream.enable (ACE_NONBLOCK) == -1)
+  if (timeout != 0 && new_stream.enable (ACE_NONBLOCK) == -1)
     return -1;
   else
     return 0;
@@ -119,8 +112,7 @@ ACE_SOCK_Connector::shared_connect_finish (ACE_SOCK_Stream &new_stream,
       if (error == EINPROGRESS || error == EWOULDBLOCK)
         {
           // This expression checks if we were polling.
-          if (timeout->sec () == 0
-              && timeout->usec () == 0)
+          if (*timeout == ACE_Time_Value::zero)
             {
 #if defined(ACE_WIN32)
               // In order to detect when the socket that has been
@@ -152,9 +144,7 @@ ACE_SOCK_Connector::shared_connect_finish (ACE_SOCK_Stream &new_stream,
 #endif /* ACE_WIN32 */
             }
           // Wait synchronously using timeout.
-          else if (this->complete (new_stream,
-                                   0,
-                                   timeout) == -1)
+          else if (this->complete (new_stream, 0, timeout) == -1)
             error = errno;
           else
             return 0;
@@ -164,16 +154,23 @@ ACE_SOCK_Connector::shared_connect_finish (ACE_SOCK_Stream &new_stream,
   // EISCONN is treated specially since this routine may be used to
   // check if we are already connected.
   if (result != -1 || error == EISCONN)
-    // Start out with non-blocking disabled on the <new_stream>.
-    new_stream.disable (ACE_NONBLOCK);
+    {
+      // Start out with non-blocking disabled on the new_stream.
+      result = new_stream.disable (ACE_NONBLOCK);
+      if (result == -1)
+        {
+          new_stream.close ();
+        }
+    }
   else if (!(error == EWOULDBLOCK || error == ETIMEDOUT))
-    new_stream.close ();
+    {
+      new_stream.close ();
+    }
 
   return result;
 }
 
 // Actively connect and produce a new ACE_SOCK_Stream if things go well...
-
 int
 ACE_SOCK_Connector::connect (ACE_SOCK_Stream &new_stream,
                              const ACE_Addr &remote_sap,
@@ -200,9 +197,7 @@ ACE_SOCK_Connector::connect (ACE_SOCK_Stream &new_stream,
                                 reinterpret_cast<sockaddr *> (remote_sap.get_addr ()),
                                 remote_sap.get_size ());
 
-  return this->shared_connect_finish (new_stream,
-                                      timeout,
-                                      result);
+  return this->shared_connect_finish (new_stream, timeout, result);
 }
 
 #if !defined (ACE_HAS_WINCE)
@@ -238,9 +233,7 @@ ACE_SOCK_Connector::connect (ACE_SOCK_Stream &new_stream,
                                 remote_sap.get_size (),
                                 qos_params);
 
-  return this->shared_connect_finish (new_stream,
-                                      timeout,
-                                      result);
+  return this->shared_connect_finish (new_stream, timeout, result);
 }
 #endif  // ACE_HAS_WINCE
 
@@ -252,30 +245,28 @@ ACE_SOCK_Connector::complete (ACE_SOCK_Stream &new_stream,
                               const ACE_Time_Value *tv)
 {
   ACE_TRACE ("ACE_SOCK_Connector::complete");
-  ACE_HANDLE h = ACE::handle_timed_complete (new_stream.get_handle (),
-                                             tv);
+  ACE_HANDLE h = ACE::handle_timed_complete (new_stream.get_handle (), tv);
   // We failed to get connected.
   if (h == ACE_INVALID_HANDLE)
     {
-#if defined (ACE_WIN32)
+#if defined (ACE_NON_BLOCKING_BUG_DELAY) && ACE_NON_BLOCKING_BUG_DELAY > 0
       // Win32 has a timing problem - if you check to see if the
       // connection has completed too fast, it will fail - so wait
       // <ACE_NON_BLOCKING_BUG_DELAY> microseconds to let it catch up
       // then retry to see if it's a real failure.
       ACE_Time_Value time (0, ACE_NON_BLOCKING_BUG_DELAY);
       ACE_OS::sleep (time);
-      h = ACE::handle_timed_complete (new_stream.get_handle (),
-                                      tv);
+      h = ACE::handle_timed_complete (new_stream.get_handle (), tv);
       if (h == ACE_INVALID_HANDLE)
         {
-#endif /* ACE_WIN32 */
+#endif /* ACE_NON_BLOCKING_BUG_DELAY */
       // Save/restore errno.
       ACE_Errno_Guard error (errno);
       new_stream.close ();
       return -1;
-#if defined (ACE_WIN32)
+#if defined (ACE_NON_BLOCKING_BUG_DELAY) && ACE_NON_BLOCKING_BUG_DELAY > 0
         }
-#endif /* ACE_WIN32 */
+#endif /* ACE_NON_BLOCKING_BUG_DELAY */
     }
 
   if (remote_sap != 0)
@@ -319,7 +310,7 @@ ACE_SOCK_Connector::ACE_SOCK_Connector (ACE_SOCK_Stream &new_stream,
                      protocol) == -1
       && timeout != 0
       && !(errno == EWOULDBLOCK || errno == ETIME || errno == ETIMEDOUT))
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_Connector::ACE_SOCK_Connector")));
 }
@@ -350,11 +341,10 @@ ACE_SOCK_Connector::ACE_SOCK_Connector (ACE_SOCK_Stream &new_stream,
                      perms) == -1
       && timeout != 0
       && !(errno == EWOULDBLOCK || errno == ETIME || errno == ETIMEDOUT))
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_Connector::ACE_SOCK_Connector")));
 }
 #endif  // ACE_HAS_WINCE
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

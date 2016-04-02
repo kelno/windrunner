@@ -4,8 +4,6 @@
 /**
  *  @file    SV_Message.h
  *
- *  $Id: SV_Message.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt
  */
 //==========================================================================
@@ -65,4 +63,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_SV_MESSAGE_H */
-

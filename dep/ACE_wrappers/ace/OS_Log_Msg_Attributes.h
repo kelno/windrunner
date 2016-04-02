@@ -4,8 +4,6 @@
 /**
  *  @file    OS_Log_Msg_Attributes.h
  *
- *  $Id: OS_Log_Msg_Attributes.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Carlos O'Ryan
  */
 //=============================================================================
@@ -23,6 +21,7 @@
 #include /**/ "ace/ACE_export.h"
 #include "ace/os_include/os_stdio.h"
 #include "ace/iosfwd.h"
+#include "ace/Global_Macros.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -50,6 +49,7 @@ protected:
 
   /// Ostream where the new TSS Log_Msg will use.
   ACE_OSTREAM_TYPE *ostream_;
+  void *ostream_refcount_;
 
   /// Priority_mask to be used in new TSS Log_Msg.
   unsigned long priority_mask_;
@@ -59,21 +59,20 @@ protected:
 
   /// Indicates whether we should restart system calls that are
   /// interrupted.
-  int restart_;
+  bool restart_;
 
   /// Depth of the nesting for printing traces.
   int trace_depth_;
 
-#   if defined (ACE_HAS_WIN32_STRUCTURAL_EXCEPTIONS)
+#if defined (ACE_HAS_WIN32_STRUCTURAL_EXCEPTIONS)
   /// Structured exception handling Callbacks, only used under Win32
   ACE_SEH_EXCEPT_HANDLER seh_except_selector_;
   ACE_SEH_EXCEPT_HANDLER seh_except_handler_;
-#   endif /* ACE_HAS_WIN32_STRUCTURAL_EXCEPTIONS */
+#endif /* ACE_HAS_WIN32_STRUCTURAL_EXCEPTIONS */
 
 private:
-  // Prevent copying
-  ACE_OS_Log_Msg_Attributes (const ACE_OS_Log_Msg_Attributes &);
-  ACE_OS_Log_Msg_Attributes &operator= (const ACE_OS_Log_Msg_Attributes &);
+  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_OS_Log_Msg_Attributes &))
+  ACE_UNIMPLEMENTED_FUNC (ACE_OS_Log_Msg_Attributes (const ACE_OS_Log_Msg_Attributes &))
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
@@ -88,4 +87,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_LOG_MSG_ATTRIBUTES_H */
-

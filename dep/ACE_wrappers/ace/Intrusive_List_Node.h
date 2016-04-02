@@ -4,8 +4,6 @@
 /**
  *  @file Intrusive_List_Node.h
  *
- *  $Id: Intrusive_List_Node.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Carlos O'Ryan <coryan@uci.edu>
  */
 //=============================================================================
@@ -14,7 +12,7 @@
 #define ACE_INTRUSIVE_LIST_NODE_H
 #include /**/ "ace/pre.h"
 
-#include /**/ "ace/config-all.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -37,7 +35,6 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * confused using such templates, the class is provided as a helper
  * for our lucky users that only need portability to modern C++
  * compilers.
- *
  */
 template <class T>
 class ACE_Intrusive_List_Node
@@ -83,4 +80,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_INTRUSIVE_LIST_NODE_H */
-

@@ -1,12 +1,10 @@
-// $Id: LSOCK.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/LSOCK.h"
 
-ACE_RCSID(ace, LSOCK, "$Id: LSOCK.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if !defined (ACE_LACKS_UNIX_DOMAIN_SOCKETS)
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_sys_socket.h"
 
 #if !defined (__ACE_INLINE__)
@@ -23,9 +21,9 @@ ACE_LSOCK::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_LSOCK::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("aux_handle_ = %d"), this->aux_handle_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("aux_handle_ = %d"), this->aux_handle_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -59,7 +57,8 @@ ACE_LSOCK::send_handle (const ACE_HANDLE handle) const
   cmsgptr->cmsg_len = sizeof cmsgbuf;
   send_msg.msg_control = cmsgbuf;
   send_msg.msg_controllen = sizeof cmsgbuf;
-  *(ACE_HANDLE *) CMSG_DATA (cmsgptr) = handle;
+  ACE_HANDLE *ph = (ACE_HANDLE *) CMSG_DATA (cmsgptr);
+  *ph = handle;
   send_msg.msg_flags = 0;
 #else
   send_msg.msg_accrights = (char *) &handle;
@@ -143,7 +142,9 @@ ACE_LSOCK::recv_handle (ACE_HANDLE &handle, char *pbuf, ssize_t *len) const
         {
 #if defined (ACE_HAS_4_4BSD_SENDMSG_RECVMSG)
           // Close down the socket that was returned by the MSG_PEEK.
-          ACE_OS::closesocket (*(ACE_HANDLE *) CMSG_DATA ((cmsghdr *) cmsgbuf));
+          cmsghdr  *cmsgptr = (cmsghdr *) cmsgbuf;
+          ACE_HANDLE * ph = (ACE_HANDLE *) CMSG_DATA (cmsgptr);
+          ACE_OS::closesocket (*ph);
           recv_msg.msg_control = cmsgbuf;
           recv_msg.msg_controllen = sizeof cmsgbuf;
 #else
@@ -158,7 +159,8 @@ ACE_LSOCK::recv_handle (ACE_HANDLE &handle, char *pbuf, ssize_t *len) const
             {
 #if defined (ACE_HAS_4_4BSD_SENDMSG_RECVMSG)
               cmsghdr *cmsgptr = (cmsghdr *) cmsgbuf;
-              handle = *(ACE_HANDLE *) CMSG_DATA (cmsgptr);
+              ACE_HANDLE * ph = (ACE_HANDLE *) CMSG_DATA (cmsgptr);
+              handle = *ph;
 #endif /* ACE_HAS_4_4BSD_SENDMSG_RECVMSG */
               return 1;
             }
@@ -179,4 +181,3 @@ ACE_LSOCK::recv_handle (ACE_HANDLE &handle, char *pbuf, ssize_t *len) const
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_LACKS_UNIX_DOMAIN_SOCKETS */
-

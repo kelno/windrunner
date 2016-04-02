@@ -1,5 +1,3 @@
-// $Id: UTF16_Encoding_Converter.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 // ======================================================================
 //
 // The actual conversion methods are covered by the copyright information
@@ -305,7 +303,7 @@ ACE_UTF16_Encoding_Converter::encoded (const ACE_Byte* source,
   static const size_t converted = begin * 4;
 
   ACE_Byte target[converted];
-  ACE_UTF16_Encoding_Converter* converter;
+  ACE_UTF16_Encoding_Converter* converter = 0;
   ACE_NEW_RETURN (converter,
                   ACE_UTF16_Encoding_Converter (false),
                   0);
@@ -362,4 +360,3 @@ ACE_UTF16_Encoding_Converter::get_offsets_from_utf8 (void)
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_USES_WCHAR */
-

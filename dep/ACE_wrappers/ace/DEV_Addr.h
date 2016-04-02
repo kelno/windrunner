@@ -4,8 +4,6 @@
 /**
  *  @file    DEV_Addr.h
  *
- *  $Id: DEV_Addr.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Gerhard Lenzer and Douglas C. Schmidt
  */
 //==========================================================================
@@ -88,4 +86,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_DEV_ADDR_H */
-

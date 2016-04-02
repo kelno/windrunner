@@ -4,8 +4,6 @@
 /**
  *  @file    Thread_Manager.h
  *
- *  $Id: Thread_Manager.h 82588 2008-08-11 13:37:41Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -27,7 +25,7 @@
 #include "ace/Containers.h"
 #include "ace/Free_List.h"
 #include "ace/Singleton.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Synch_Traits.h"
 #include "ace/Basic_Types.h"
 
@@ -174,7 +172,7 @@ class ACE_Export ACE_Thread_Descriptor_Base : public ACE_OS_Thread_Descriptor
   friend class ACE_Double_Linked_List_Iterator<ACE_Thread_Descriptor>;
 public:
   ACE_Thread_Descriptor_Base (void);
-  ~ACE_Thread_Descriptor_Base (void);
+  virtual ~ACE_Thread_Descriptor_Base (void);
 
   // = We need the following operators to make Borland happy.
 
@@ -328,11 +326,14 @@ private:
   /// The AT_Thread_Exit list
   ACE_At_Thread_Exit *at_exit_list_;
 
+#if 0
+/// Currently not used
   /**
    * Stores the cleanup info for a thread.
    * @note This should be generalized to be a stack of ACE_Cleanup_Info's.
    */
-  ACE_Cleanup_Info cleanup_info_;
+  ACE_Cleanup_Info_Node_List cleanup_info_;
+#endif
 
   /// Pointer to an ACE_Thread_Manager or NULL if there's no
   /// ACE_Thread_Manager>
@@ -431,6 +432,11 @@ public:
    * @sa ACE_Free_List
    */
   ACE_Thread_Manager (size_t preaolloc = ACE_DEFAULT_THREAD_MANAGER_PREALLOC,
+                      size_t lwm = ACE_DEFAULT_THREAD_MANAGER_LWM,
+                      size_t inc = ACE_DEFAULT_THREAD_MANAGER_INC,
+                      size_t hwm = ACE_DEFAULT_THREAD_MANAGER_HWM);
+  ACE_Thread_Manager (const ACE_Condition_Attributes &attributes,
+                      size_t preaolloc = ACE_DEFAULT_THREAD_MANAGER_PREALLOC,
                       size_t lwm = ACE_DEFAULT_THREAD_MANAGER_LWM,
                       size_t inc = ACE_DEFAULT_THREAD_MANAGER_INC,
                       size_t hwm = ACE_DEFAULT_THREAD_MANAGER_HWM);
@@ -1262,4 +1268,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_THREAD_MANAGER_H */
-

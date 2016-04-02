@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Service_Types.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/ACE.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -29,4 +26,15 @@ ACE_Service_Type_Impl::name (const ACE_TCHAR *n)
   this->name_ = ACE::strnew (n);
 }
 
+ACE_INLINE int
+ACE_Service_Type_Impl::service_type (void) const
+{
+  return service_type_;
+}
+
+ACE_INLINE void
+ACE_Service_Type_Impl::service_type (int stype)
+{
+  service_type_ = stype;
+}
 ACE_END_VERSIONED_NAMESPACE_DECL

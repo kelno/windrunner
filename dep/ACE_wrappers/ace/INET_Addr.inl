@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: INET_Addr.inl 80826 2008-03-04 14:51:23Z wotte $
-
 
 #include "ace/OS_NS_string.h"
 #include "ace/Global_Macros.h"
@@ -10,7 +7,7 @@
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_INLINE void
-ACE_INET_Addr::reset (void)
+ACE_INET_Addr::reset_i (void)
 {
   ACE_OS::memset (&this->inet_addr_, 0, sizeof (this->inet_addr_));
   if (this->get_type() == AF_INET)
@@ -29,6 +26,9 @@ ACE_INET_Addr::reset (void)
       this->inet_addr_.in6_.sin6_family = AF_INET6;
     }
 #endif  /* ACE_HAS_IPV6 */
+  this->inet_addrs_.clear ();
+  this->inet_addrs_iter_ = this->inet_addrs_.end ();
+
 }
 
 ACE_INLINE int
@@ -71,14 +71,7 @@ ACE_INET_Addr::ip_addr_size (void) const
   else
     return static_cast<int> (sizeof this->inet_addr_.in6_.sin6_addr);
 #else
-  // These _UNICOS changes were picked up from pre-IPv6 code in
-  // get_host_name_i... the IPv6 section above may need something
-  // similar, so keep an eye out for it.
-#  if !defined(_UNICOS)
   return static_cast<int> (sizeof this->inet_addr_.in4_.sin_addr.s_addr);
-#  else /* _UNICOS */
-  return static_cast<int> (sizeof this->inet_addr_.in4_.sin_addr);
-#  endif /* ! _UNICOS */
 #endif /* ACE_HAS_IPV6 */
 }
 
@@ -88,15 +81,17 @@ ACE_INLINE u_short
 ACE_INET_Addr::get_port_number (void) const
 {
   ACE_TRACE ("ACE_INET_Addr::get_port_number");
-#if defined (ACE_LACKS_NTOHS)
-  ACE_NOTSUP_RETURN (0);
-#elif defined (ACE_HAS_IPV6)
+#if defined (ACE_HAS_IPV6)
   if (this->get_type () == PF_INET)
-    return ntohs (this->inet_addr_.in4_.sin_port);
+    return ACE_NTOHS (this->inet_addr_.in4_.sin_port);
   else
-    return ntohs (this->inet_addr_.in6_.sin6_port);
+    return ACE_NTOHS (this->inet_addr_.in6_.sin6_port);
 #else
-  return ntohs (this->inet_addr_.in4_.sin_port);
+# if defined (ACE_VXWORKS) && ACE_VXWORKS >= 0x690
+  return static_cast<u_short> (ACE_NTOHS (this->inet_addr_.in4_.sin_port));
+# else
+  return ACE_NTOHS (this->inet_addr_.in4_.sin_port);
+# endif
 #endif /* ACE_HAS_IPV6 */
 }
 
@@ -218,8 +213,8 @@ ACE_INET_Addr::is_multicast (void) const
     return this->inet_addr_.in6_.sin6_addr.s6_addr[0] == 0xFF;
 #endif /* ACE_HAS_IPV6 */
   return
-    this->inet_addr_.in4_.sin_addr.s_addr >= 0xE0000000 &&  // 224.0.0.0
-    this->inet_addr_.in4_.sin_addr.s_addr <= 0xEFFFFFFF; // 239.255.255.255
+    (*static_cast<const unsigned char*> (
+        static_cast<const void*> (&this->inet_addr_.in4_.sin_addr.s_addr)) & 0xf0) == 0xe0;
 }
 
 #if defined (ACE_HAS_IPV6)

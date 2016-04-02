@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: RW_Mutex.inl 80826 2008-03-04 14:51:23Z wotte $
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_INLINE const ACE_rwlock_t &
@@ -16,9 +13,9 @@ ACE_RW_Mutex::remove (void)
 {
 // ACE_TRACE ("ACE_RW_Mutex::remove");
   int result = 0;
-  if (this->removed_ == 0)
+  if (!this->removed_)
     {
-      this->removed_ = 1;
+      this->removed_ = true;
       result = ACE_OS::rwlock_destroy (&this->lock_);
     }
   return result;

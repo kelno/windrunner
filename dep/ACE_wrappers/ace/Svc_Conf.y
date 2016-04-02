@@ -1,6 +1,4 @@
 %{
-// $Id: Svc_Conf.y 82136 2008-06-23 15:28:40Z sma $
-
 #include "ace/Svc_Conf.h"
 
 #if (ACE_USES_CLASSIC_SVC_CONF == 1)
@@ -9,10 +7,6 @@
 #include "ace/Stream.h"
 #include "ace/Service_Types.h"
 #include "ace/ace_wchar.h"
-
-ACE_RCSID (ace,
-           Svc_Conf_y,
-           "$Id: Svc_Conf.y 82136 2008-06-23 15:28:40Z sma $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -335,11 +329,10 @@ ace_get_module (ACE_Service_Type const * sr,
                 ACE_TCHAR const * svc_name,
                 int & yyerrno)
 {
-  ACE_Service_Type_Impl const * const type = sr->type ();
   ACE_Stream_Type const * const st =
     (sr == 0
      ? 0
-     : dynamic_cast<ACE_Stream_Type const *> (type));
+     : dynamic_cast<ACE_Stream_Type const *> (sr->type ()));
   ACE_Module_Type const * const mt = (st == 0 ? 0 : st->find (svc_name));
 
   if (sr == 0 || st == 0 || mt == 0)

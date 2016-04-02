@@ -4,10 +4,7 @@
 /**
  *  @file   Min_Max.h
  *
- *  $Id: Min_Max.h 80826 2008-03-04 14:51:23Z wotte $
- *
  * Define an appropriate set of min()/max() functions using templates.
- *
  *
  *  @author Derek Dominish <Derek.Dominish@Australia.Boeing.com>
  */
@@ -68,4 +65,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif  /* ACE_MIN_MAX_H */
-

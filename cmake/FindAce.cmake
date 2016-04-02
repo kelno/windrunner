@@ -20,20 +20,10 @@ MACRO(FIND_ACE LIBNAME)
     # This prevents it being taken from cache. - but also broke cmake -i, so we dont use it
     # SET(ACE_LIBRARY ACE_LIBRARY-NOTFOUND)
 
-    FIND_LIBRARY(
-        ACE_LIBRARY "${LIBNAME}"
-        PATHS /usr/lib /usr/local/lib
-        "${CMAKE_INSTALL_PREFIX}/lib" "${parent_dir_}/ACE_wrappers/ace"
-		"${PROJECT_SOURCE_DIR}/dep/ACE_wrappers/ace"
-		"$ENV{ACE_ROOT}/lib"
-        "$ENV{ACE_ROOT}"
-		"${PROJECT_SOURCE_DIR}/dep/lib/win32_release"
-        DOC "Path to ACE library file"
-    )
-    IF(ACE_INCLUDE_DIR AND ACE_LIBRARY)
+    IF(ACE_INCLUDE_DIR)
         SET(ACE_FOUND TRUE)
-    ELSE(ACE_INCLUDE_DIR AND ACE_LIBRARY)
+    ELSE(ACE_INCLUDE_DIR)
         SET(ACE_FOUND FALSE)
-    ENDIF(ACE_INCLUDE_DIR AND ACE_LIBRARY)
+    ENDIF(ACE_INCLUDE_DIR)
 ENDMACRO(FIND_ACE)
 

@@ -1,12 +1,10 @@
-// $Id: Select_Reactor_Base.cpp 81153 2008-03-29 08:17:58Z johnnyw $
-
 #include "ace/Select_Reactor_Base.h"
 #include "ace/Reactor.h"
 #include "ace/Thread.h"
 #include "ace/SOCK_Acceptor.h"
 #include "ace/SOCK_Connector.h"
 #include "ace/Timer_Queue.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Signal.h"
 #include "ace/OS_NS_fcntl.h"
 
@@ -17,11 +15,6 @@
 #ifndef ACE_WIN32
 # include <algorithm>
 #endif  /* !ACE_WIN32 */
-
-ACE_RCSID (ace,
-           Select_Reactor_Base,
-           "$Id: Select_Reactor_Base.cpp 81153 2008-03-29 08:17:58Z johnnyw $")
-
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -83,7 +76,7 @@ ACE_Select_Reactor_Handler_Repository::handle_in_range (ACE_HANDLE handle)
 }
 
 int
-ACE_Select_Reactor_Handler_Repository::open (size_t size)
+ACE_Select_Reactor_Handler_Repository::open (size_type size)
 {
   ACE_TRACE ("ACE_Select_Reactor_Handler_Repository::open");
 
@@ -480,15 +473,15 @@ ACE_Select_Reactor_Handler_Repository_Iterator::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Select_Reactor_Handler_Repository_Iterator::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("rep_ = %u"), this->rep_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("rep_ = %u"), this->rep_));
 # ifdef ACE_WIN32
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("current_ = ")));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("current_ = ")));
   this->current_.dump ();
 # else
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("current_ = %@"), this->current_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("current_ = %@"), this->current_));
 # endif  /* ACE_WIN32 */
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -506,20 +499,20 @@ ACE_Select_Reactor_Handler_Repository::dump (void) const
 #  define ACE_MAX_HANDLEP1_FORMAT_SPECIFIER ACE_TEXT("%d")
 # endif  /* ACE_WIN32 */
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,
               ACE_TEXT ("max_handlep1_ = ")
               ACE_MAX_HANDLEP1_FORMAT_SPECIFIER
               ACE_TEXT ("\n"),
               this->max_handlep1 ()));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("[")));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("[")));
 
   ACE_Event_Handler *event_handler = 0;
 
   for (ACE_Select_Reactor_Handler_Repository_Iterator iter (this);
        iter.next (event_handler) != 0;
        iter.advance ())
-    ACE_DEBUG ((LM_DEBUG,
+    ACELIB_DEBUG ((LM_DEBUG,
                 ACE_TEXT (" (event_handler = %@,")
                 ACE_TEXT (" event_handler->handle_ = ")
                 ACE_HANDLE_FORMAT_SPECIFIER
@@ -527,15 +520,16 @@ ACE_Select_Reactor_Handler_Repository::dump (void) const
                 event_handler,
                 event_handler->get_handle ()));
 
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT (" ]\n")));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT (" ]\n")));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
 ACE_ALLOC_HOOK_DEFINE(ACE_Select_Reactor_Handler_Repository_Iterator)
 
 ACE_Select_Reactor_Notify::ACE_Select_Reactor_Notify (void)
-  : max_notify_iterations_ (-1)
+  : select_reactor_ (0)
+  , max_notify_iterations_ (-1)
 {
 }
 
@@ -588,10 +582,10 @@ ACE_Select_Reactor_Notify::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Select_Reactor_Notify::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("select_reactor_ = %x"), this->select_reactor_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("select_reactor_ = %x"), this->select_reactor_));
   this->notification_pipe_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -604,8 +598,7 @@ ACE_Select_Reactor_Notify::open (ACE_Reactor_Impl *r,
 
   if (disable_notify_pipe == 0)
     {
-      this->select_reactor_ =
-        dynamic_cast<ACE_Select_Reactor_Impl *> (r);
+      this->select_reactor_ = dynamic_cast<ACE_Select_Reactor_Impl *> (r);
 
       if (select_reactor_ == 0)
         {
@@ -691,7 +684,9 @@ ACE_Select_Reactor_Notify::notify (ACE_Event_Handler *event_handler,
   ACE_Event_Handler_var safe_handler (event_handler);
 
   if (event_handler)
-    event_handler->add_reference ();
+    {
+      event_handler->add_reference ();
+    }
 
   ACE_Notification_Buffer buffer (event_handler, mask);
 
@@ -718,7 +713,9 @@ ACE_Select_Reactor_Notify::notify (ACE_Event_Handler *event_handler,
                                sizeof buffer,
                                timeout);
   if (n == -1)
-    return -1;
+    {
+      return -1;
+    }
 
   // No failures.
   safe_handler.release ();
@@ -800,14 +797,9 @@ ACE_Select_Reactor_Notify::dispatch_notify (ACE_Notification_Buffer &buffer)
                                                      more_messages_queued,
                                                      next);
 
-  if (result == 0)
+  if (result == 0 || result == -1)
     {
-      return 0;
-    }
-
-  if (result == -1)
-    {
-      return -1;
+      return result;
     }
 
   if(more_messages_queued)
@@ -850,7 +842,7 @@ ACE_Select_Reactor_Notify::dispatch_notify (ACE_Notification_Buffer &buffer)
           break;
         default:
           // Should we bail out if we get an invalid mask?
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("invalid mask = %d\n"),
                       buffer.mask_));
         }
@@ -874,12 +866,31 @@ ACE_Select_Reactor_Notify::read_notify_pipe (ACE_HANDLE handle,
 {
   ACE_TRACE ("ACE_Select_Reactor_Notify::read_notify_pipe");
 
+  // This is kind of a weird, fragile beast.  We first read with a
+  // regular read.  The read side of this socket is non-blocking, so
+  // the read may end up being short.
+  //
+  // If the read is short, then we do a recv_n to insure that we block
+  // and read the rest of the buffer.
+  //
+  // Now, you might be tempted to say, "why don't we just replace the
+  // first recv with a recv_n?"  I was, too.  But that doesn't work
+  // because of how the calling code in handle_input() works.  In
+  // handle_input, the event will only be dispatched if the return
+  // value from read_notify_pipe() is > 0.  That means that we can't
+  // return zero from this func unless it's an EOF condition.
+  //
+  // Thus, the return value semantics for this are:
+  // -1: nothing read, fatal, unrecoverable error
+  // 0: nothing read at all
+  // 1: complete buffer read
+
   ssize_t const n = ACE::recv (handle, (char *) &buffer, sizeof buffer);
 
   if (n > 0)
     {
       // Check to see if we've got a short read.
-      if (n != sizeof buffer)
+      if ((size_t)n != sizeof buffer)
         {
           ssize_t const remainder = sizeof buffer - n;
 
@@ -887,9 +898,9 @@ ACE_Select_Reactor_Notify::read_notify_pipe (ACE_HANDLE handle,
           // doesn't work we're in big trouble since the input stream
           // won't be aligned correctly.  I'm not sure quite what to
           // do at this point.  It's probably best just to return -1.
-          if (ACE::recv (handle,
-                         ((char *) &buffer) + n,
-                         remainder) != remainder)
+          if (ACE::recv_n (handle,
+                           ((char *) &buffer) + n,
+                           remainder) != remainder)
             return -1;
         }
 
@@ -916,6 +927,9 @@ ACE_Select_Reactor_Notify::handle_input (ACE_HANDLE handle)
   int result = 0;
   ACE_Notification_Buffer buffer;
 
+  // If there is only one buffer in the pipe, this will loop and call
+  // read_notify_pipe() twice.  The first time will read the buffer, and
+  // the second will read the fact that the pipe is empty.
   while ((result = this->read_notify_pipe (handle, buffer)) > 0)
     {
       // Dispatch the buffer
@@ -997,7 +1011,7 @@ ACE_Select_Reactor_Impl::bit_ops (ACE_HANDLE handle,
     {
     case ACE_Reactor::GET_MASK:
       // The work for this operation is done in all cases at the
-      // begining of the function.
+      // beginning of the function.
       break;
     case ACE_Reactor::CLR_MASK:
       ptmf = &ACE_Handle_Set::clr_bit;
@@ -1114,4 +1128,3 @@ ACE_Select_Reactor_Impl::resumable_handler (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

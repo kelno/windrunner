@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: CDR_Stream.inl 82350 2008-07-22 07:36:47Z johnnyw $
-
 #include "ace/OS_NS_string.h"
 #include "ace/OS_Memory.h"
 
@@ -268,6 +265,14 @@ ACE_INLINE ACE_CDR::Boolean
 ACE_OutputCDR::write_longdouble (const ACE_CDR::LongDouble &x)
 {
   return this->write_16 (&x);
+}
+
+ACE_INLINE ACE_CDR::Boolean
+ACE_OutputCDR::write_fixed (const ACE_CDR::Fixed &x)
+{
+  int n;
+  const ACE_CDR::Octet *arr = x.to_octets (n);
+  return this->write_array (arr, ACE_CDR::OCTET_SIZE, ACE_CDR::OCTET_ALIGN, n);
 }
 
 ACE_INLINE ACE_CDR::Boolean
@@ -572,7 +577,6 @@ ACE_OutputCDR::current_alignment (size_t current_alignment)
   this->current_alignment_ = current_alignment;
 #else
   ACE_UNUSED_ARG (current_alignment);
-  return 0;
 #endif /* ACE_LACKS_CDR_ALIGNMENT */
 }
 
@@ -711,6 +715,26 @@ ACE_INLINE ACE_CDR::Boolean
 ACE_InputCDR::read_longdouble (ACE_CDR::LongDouble &x)
 {
   return this->read_16 (&x);
+}
+
+ACE_INLINE ACE_CDR::Boolean
+ACE_InputCDR::read_fixed (ACE_CDR::Fixed &x)
+{
+  ACE_CDR::Octet a[16];
+  for (int i = 0; i < 16; ++i)
+    {
+      if (!this->read_1 (a + i))
+        return false;
+      const unsigned low = a[i] & 0xf;
+      if (low == ACE_CDR::Fixed::POSITIVE ||
+          low == ACE_CDR::Fixed::NEGATIVE)
+        {
+          x = ACE_CDR::Fixed::from_octets (a, i + 1);
+          return true;
+        }
+    }
+
+  return false;
 }
 
 ACE_INLINE size_t
@@ -1020,6 +1044,21 @@ ACE_InputCDR::skip_longdouble (void)
   return this->read_16 (&x);
 }
 
+ACE_INLINE ACE_CDR::Boolean
+ACE_InputCDR::skip_fixed (void)
+{
+  for (int i = 0; i < 16; ++i)
+    {
+      ACE_CDR::Octet x;
+      if (!this->read_1 (&x))
+        return false;
+      const unsigned low = x & 0xf;
+      if (low == 0xc || low == 0xd)
+        return true;
+    }
+  return false;
+}
+
 ACE_INLINE char*
 ACE_InputCDR::end (void)
 {
@@ -1161,6 +1200,13 @@ operator<< (ACE_OutputCDR &os, ACE_CDR::Double x)
 }
 
 ACE_INLINE ACE_CDR::Boolean
+operator<< (ACE_OutputCDR &os, const ACE_CDR::Fixed &x)
+{
+  os.write_fixed (x);
+  return (ACE_CDR::Boolean) os.good_bit ();
+}
+
+ACE_INLINE ACE_CDR::Boolean
 operator<< (ACE_OutputCDR &os, const ACE_CDR::Char *x)
 {
   os.write_string (x);
@@ -1293,6 +1339,12 @@ ACE_INLINE ACE_CDR::Boolean
 operator>> (ACE_InputCDR &is, ACE_CDR::Double &x)
 {
   return is.read_double (x) && is.good_bit ();
+}
+
+ACE_INLINE ACE_CDR::Boolean
+operator>> (ACE_InputCDR &is, ACE_CDR::Fixed &x)
+{
+  return is.read_fixed (x) && is.good_bit ();
 }
 
 ACE_INLINE ACE_CDR::Boolean
@@ -1448,6 +1500,13 @@ ACE_OutputCDR::append_longdouble (ACE_InputCDR &stream)
 {
   ACE_CDR::LongDouble x;
   return stream.read_longdouble (x) ? this->write_longdouble (x) : false;
+}
+
+ACE_INLINE ACE_CDR::Boolean
+ACE_OutputCDR::append_fixed (ACE_InputCDR &stream)
+{
+  ACE_CDR::Fixed x;
+  return stream.read_fixed (x) ? this->write_fixed (x) : false;
 }
 
 ACE_INLINE ACE_CDR::Boolean

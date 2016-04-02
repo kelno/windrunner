@@ -4,8 +4,6 @@
 /**
  *  @file    Functor.h
  *
- *  $Id: Functor.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Non-templatized classes and class template specializations for
  *   implementing function objects that are used in  various places
  *   in ACE.  There are currently two major categories of function
@@ -15,7 +13,6 @@
  *   invoked via an operator() () method.
  *  Non-templatized classes for implementing the GoF Command Pattern,
  *  also known as functors or function objects.
- *
  *
  *  @author Chris Gill <cdgill@cs.wustl.edu>
  *  @author Based on Command Pattern implementations originally done by
@@ -77,6 +74,23 @@ public:
   virtual int execute (void *arg = 0) = 0;
 };
 
+/**
+ * @class ACE_Noop_Command
+ *
+ * Implements a ACE_Command_Base with an empty execute() body.
+ */
+
+class ACE_Export ACE_Noop_Command
+  : public ACE_Command_Base
+{
+public:
+  /// Constructor
+  ACE_Noop_Command();
+
+  /// Implement the empty execute() member function
+  virtual int execute(void*);
+};
+
 ////////////////////////////////////////////////////////////
 // STL-style Functor Classes and Template Specializations //
 ////////////////////////////////////////////////////////////
@@ -89,8 +103,6 @@ template <class TYPE> class ACE_Equal_To;
 template <class TYPE> class ACE_Less_Than;
 
 /**
- * @class ACE_Hash<char>
- *
  * @brief Function object for hashing a char
  */
 template<>
@@ -102,8 +114,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<signed char>
- *
  * @brief Function object for hashing a signed char
  */
 template<>
@@ -115,8 +125,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<unsigned char>
- *
  * @brief Function object for hashing an unsigned char
  */
 template<>
@@ -127,80 +135,7 @@ public:
   unsigned long operator () (unsigned char t) const;
 };
 
-#if 0
-// @@ ADD HASHES FOR ACE TYPES
-
 /**
- * @class ACE_Hash<ACE_INT16>
- *
- * @brief Function object for hashing a 16-bit signed number
- */
-template<>
-class ACE_Export ACE_Hash<ACE_INT16>
-{
-public:
-  /// Simply returns t
-  unsigned long operator () (ACE_INT16 t) const;
-};
-
-/**
- * @class ACE_Hash<ACE_UINT16>
- *
- * @brief Function object for hashing a 16-bit unsigned number
- */
-template<>
-class ACE_Export ACE_Hash<ACE_UINT16>
-{
-public:
-  /// Simply returns t
-  unsigned long operator () (ACE_UINT16 t) const;
-};
-
-/**
- * @class ACE_Hash<ACE_INT32>
- *
- * @brief Function object for hashing a 32-bit signed number
- */
-template<>
-class ACE_Export ACE_Hash<ACE_INT32>
-{
-public:
-  /// Simply returns t
-  unsigned long operator () (ACE_INT32 t) const;
-};
-
-/**
- * @class ACE_Hash<ACE_UINT32>
- *
- * @brief Function object for hashing a 32-bit unsigned number
- */
-template<>
-class ACE_Export ACE_Hash<ACE_UINT32>
-{
-public:
-  /// Simply returns t
-  unsigned long operator () (ACE_UINT32 t) const;
-};
-
-/**
- * @class ACE_Hash<ACE_UINT64>
- *
- * @brief Function object for hashing a 64-bit unsigned number
- */
-template<>
-class ACE_Export ACE_Hash<ACE_UINT64>
-{
-public:
-  /// Simply returns t
-  unsigned long operator () (ACE_UINT64 t) const;
-};
-
-// @@ DONE ADDING HASHES FOR ACE TYPES
-#endif
-
-/**
- * @class ACE_Hash<short>
- *
  * @brief Function object for hashing a short number
  */
 template<>
@@ -212,8 +147,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<unsigned short>
- *
  * @brief Function object for hashing an unsigned short number
  */
 template<>
@@ -225,8 +158,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<int>
- *
  * @brief Function object for hashing an int number
  */
 template<>
@@ -238,8 +169,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<unsigned int>
- *
  * @brief Function object for hashing an unsigned int number
  */
 template<>
@@ -251,8 +180,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<long>
- *
  * @brief Function object for hashing a long number
  */
 template<>
@@ -264,8 +191,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<unsigned long>
- *
  * @brief Function object for hashing an unsigned long number
  */
 template<>
@@ -276,10 +201,8 @@ public:
   unsigned long operator () (unsigned long t) const;
 };
 
-#if !defined (ACE_LACKS_LONGLONG_T) && (ACE_SIZEOF_LONG < 8)
+#if (ACE_SIZEOF_LONG < 8)
 /**
- * @class ACE_Hash<ACE_INT64>
- *
  * @brief Function object for hashing a signed 64-bit number
  */
 template<>
@@ -289,14 +212,10 @@ public:
   /// Simply returns t
   unsigned long operator () (ACE_INT64 t) const;
 };
-#endif /* !ACE_LACKS_LONGLONG_T && ACE_SIZEOF_LONG < 8 */
+#endif /* ACE_SIZEOF_LONG < 8 */
 
-// We can do this even if ACE_LACKS_UNSIGNEDLONGLONG_T because there's an
-// emulation for it in ACE_U_LongLong.
 #if (ACE_SIZEOF_LONG < 8)
 /**
- * @class ACE_Hash<ACE_UINT64>
- *
  * @brief Function object for hashing an unsigned 64-bit number
  */
 template<>
@@ -309,8 +228,6 @@ public:
 #endif /* ACE_SIZEOF_LONG < 8 */
 
 /**
- * @class ACE_Hash<const char *>
- *
  * @brief Function object for hashing a const string
  */
 template<>
@@ -322,8 +239,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<char *>
- *
  * @brief Function object for hashing a string
  */
 template<>
@@ -335,10 +250,7 @@ public:
 };
 
 /**
- * @class ACE_Hash<void *>
- *
- * @brief Function object for hashing a void *
- */
+ * @brief Function object for hashing a void */
 template<>
 class ACE_Export ACE_Hash<void *>
 {
@@ -347,8 +259,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<const char *>
- *
  * @brief Function object for determining whether two const strings are equal.
  */
 template<>
@@ -361,8 +271,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<char *>
- *
  * @brief Function object for determining whether two non-const
  * strings are equal.
  */
@@ -376,8 +284,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<ACE_UINT16>
- *
  * @brief Function object for determining whether two unsigned
  * 16 bit ints are equal.
  */
@@ -391,8 +297,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<ACE_INT16>
- *
  * @brief Function object for determining whether two
  * 16 bit ints are equal.
  */
@@ -406,8 +310,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<ACE_UINT32>
- *
  * @brief Function object for determining whether two unsigned
  * 32 bit ints are equal.
  */
@@ -421,8 +323,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<ACE_INT32>
- *
  * @brief Function object for determining whether two
  * 32 bit ints are equal.
  */
@@ -436,8 +336,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<ACE_UINT64>
- *
  * @brief Function object for determining whether two unsigned
  * 64 bit ints are equal.
  */
@@ -451,8 +349,6 @@ public:
 };
 
 /**
- * @class ACE_Less_Than<const char*>
- *
  * @brief Function object for determining whether the first const string
  * is less than the second const string.
  */
@@ -466,8 +362,6 @@ public:
 };
 
 /**
- * @class ACE_Less_Than<char *>
- *
  * @brief Function object for determining whether the first string
  * is less than the second string.
  */
@@ -484,8 +378,6 @@ public:
 
 #  if ! defined (ACE_LACKS_NATIVE_WCHAR_T)
 /**
- * @class ACE_Hash<wchar_t>
- *
  * @brief Function object for hashing a wchar_t
  */
 template<>
@@ -497,8 +389,6 @@ public:
 };
 #  endif /* ACE_LACKS_NATIVE_WCHAR_T */
 /**
- * @class ACE_Hash<const wchar_t *>
- *
  * @brief Function object for hashing a const string
  */
 template<>
@@ -510,8 +400,6 @@ public:
 };
 
 /**
- * @class ACE_Hash<wchar_t *>
- *
  * @brief Function object for hashing a string
  */
 template<>
@@ -523,8 +411,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<const wchar_t *>
- *
  * @brief Function object for determining whether two const strings are equal.
  */
 template<>
@@ -537,8 +423,6 @@ public:
 };
 
 /**
- * @class ACE_Equal_To<wchar_t *>
- *
  * @brief Function object for determining whether two non-const
  * strings are equal.
  */
@@ -552,8 +436,6 @@ public:
 };
 
 /**
- * @class ACE_Less_Than<const wchar_t *>
- *
  * @brief Function object for determining whether the first const string
  * is less than the second const string.
  */
@@ -567,8 +449,6 @@ public:
 };
 
 /**
- * @class ACE_Less_Than<wchar_t *>
- *
  * @brief Function object for determining whether the first string
  * is less than the second string.
  */
@@ -591,4 +471,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_FUNCTOR_H */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    LSOCK_Dgram.h
  *
- *  $Id: LSOCK_Dgram.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
@@ -72,4 +70,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_LACKS_UNIX_DOMAIN_SOCKETS */
 #include /**/ "ace/post.h"
 #endif /* ACE_LOCAL_SOCK_DGRAM_H */
-

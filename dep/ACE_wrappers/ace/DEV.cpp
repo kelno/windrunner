@@ -1,5 +1,3 @@
-// $Id: DEV.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/DEV.h"
 
 #include "ace/OS_NS_unistd.h"
@@ -8,7 +6,7 @@
 #include "ace/DEV.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, DEV, "$Id: DEV.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -41,4 +39,3 @@ ACE_DEV::close (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

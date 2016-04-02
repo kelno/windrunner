@@ -4,8 +4,6 @@
 /**
  *  @file    POSIX_Proactor.h
  *
- *  $Id: POSIX_Proactor.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali <irfan@cs.wustl.edu>
  *  @author Tim Harrison <harrison@cs.wustl.edu>
  *  @author Alexander Babu Arulanthu <alex@cs.wustl.edu>
@@ -657,4 +655,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_AIO_CALLS  && ACE_HAS_POSIX_REALTIME_SIGNALS */
 #endif /* ACE_POSIX_PROACTOR_H */
-

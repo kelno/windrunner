@@ -4,8 +4,6 @@
 /**
  *  @file    iosfwd.h
  *
- *  $Id: iosfwd.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali
  *
  *  This file contains the portability ugliness for the Standard C++
@@ -44,6 +42,7 @@
 
 # if !defined (ACE_USES_OLD_IOSTREAMS)
 #   include /**/ <iosfwd>
+#define ACE_HAS_CPP98_IOSTREAMS 1
 # else
   // @note If these forward declarations don't work (e.g. aren't
   //       portable), we may have to include "ace/streams.h" as a last
@@ -97,4 +96,3 @@
 #endif /* ACE_LACKS_IOSTREAM_TOTALLY */
 
 #endif /* ACE_IOSFWD_H */
-

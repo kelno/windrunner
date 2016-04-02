@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Unbounded_Set.inl 81642 2008-05-07 19:30:35Z shuston $
-
 #include "ace/Global_Macros.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -13,7 +10,7 @@ ACE_Unbounded_Set_Default_Comparator<T>::operator () (const T  &lhs, const T &rh
 }
 
 template<typename T>
-ACE_Unbounded_Set_Iterator<T>::ACE_Unbounded_Set_Iterator (ACE_Unbounded_Set<T> &s, 
+ACE_Unbounded_Set_Iterator<T>::ACE_Unbounded_Set_Iterator (ACE_Unbounded_Set<T> &s,
                                                            bool end)
   : base_type (s, end)
 {

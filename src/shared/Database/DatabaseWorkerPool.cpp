@@ -97,7 +97,7 @@ void DatabaseWorkerPool::Init_MySQL_Connection()
         ConnectionMap::const_iterator itr = m_sync_connections.find(ACE_Based::Thread::current());
         #ifdef _DEBUG
         if (itr != m_sync_connections.end())
-            sLog.outError("Thread ["UI64FMTD"] already started a MySQL connection", (uint64)ACE_Based::Thread::currentId());
+            sLog.outError("Thread [" UI64FMTD "] already started a MySQL connection", (uint64)ACE_Based::Thread::currentId());
         #endif
         m_sync_connections[ACE_Based::Thread::current()] = conn;
     }
@@ -113,7 +113,7 @@ void DatabaseWorkerPool::End_MySQL_Connection()
         ConnectionMap::iterator itr = m_sync_connections.find(ACE_Based::Thread::current());
         #ifdef _DEBUG
         if (itr == m_sync_connections.end())
-            sLog.outError("Thread ["UI64FMTD" already shut down their MySQL connection.", (uint64)ACE_Based::Thread::currentId());
+            sLog.outError("Thread [" UI64FMTD " already shut down their MySQL connection.", (uint64)ACE_Based::Thread::currentId());
         #endif
         conn = itr->second;
         m_sync_connections.erase(itr);

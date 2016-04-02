@@ -1,5 +1,3 @@
-// $Id: Shared_Object.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Shared_Object.h"
 #include "ace/Global_Macros.h"
 #include "ace/config-all.h"
@@ -11,11 +9,7 @@
 #include "ace/Shared_Object.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID (ace,
-           Shared_Object,
-           "$Id: Shared_Object.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
-  ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 // Initializes object when dynamic linking occurs.
 
@@ -52,4 +46,3 @@ ACE_Shared_Object::~ACE_Shared_Object (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

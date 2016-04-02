@@ -1,9 +1,7 @@
-// $Id: SOCK_SEQPACK_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SOCK_SEQPACK_Acceptor.h"
 
 #include "ace/Auto_Ptr.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_Memory.h"
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_sys_socket.h"
@@ -13,7 +11,7 @@
 #include "ace/SOCK_SEQPACK_Acceptor.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, SOCK_SEQPACK_Acceptor, "SOCK_SEQPACK_Acceptor.cpp,v 4.30 2002/03/08 23:18:09 spark Exp")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -30,7 +28,7 @@ ACE_SOCK_SEQPACK_Acceptor::ACE_SOCK_SEQPACK_Acceptor (void)
 
 int
 ACE_SOCK_SEQPACK_Acceptor::shared_accept_start (ACE_Time_Value *timeout,
-                                        int restart,
+                                        bool restart,
                                         int &in_blocking_mode) const
 {
   ACE_TRACE ("ACE_SOCK_SEQPACK_Acceptor::shared_accept_start");
@@ -63,7 +61,7 @@ ACE_SOCK_SEQPACK_Acceptor::shared_accept_start (ACE_Time_Value *timeout,
 int
 ACE_SOCK_SEQPACK_Acceptor::shared_accept_finish (ACE_SOCK_SEQPACK_Association new_association,
                                          int in_blocking_mode,
-                                         int reset_new_handle) const
+                                         bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_SOCK_SEQPACK_Acceptor::shared_accept_finish ()");
 
@@ -102,8 +100,8 @@ int
 ACE_SOCK_SEQPACK_Acceptor::accept (ACE_SOCK_SEQPACK_Association &new_association,
                            ACE_Addr *remote_addr,
                            ACE_Time_Value *timeout,
-                           int restart,
-                           int reset_new_handle) const
+                           bool restart,
+                           bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_SOCK_SEQPACK_Acceptor::accept");
 
@@ -470,7 +468,7 @@ ACE_SOCK_SEQPACK_Acceptor::ACE_SOCK_SEQPACK_Acceptor (const ACE_Addr &local_sap,
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_SEQPACK_Acceptor")));
 }
@@ -563,7 +561,7 @@ ACE_SOCK_SEQPACK_Acceptor::ACE_SOCK_SEQPACK_Acceptor (const ACE_Addr &local_sap,
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_SEQPACK_Acceptor")));
 }
@@ -582,7 +580,7 @@ ACE_SOCK_SEQPACK_Acceptor::ACE_SOCK_SEQPACK_Acceptor (const ACE_Multihomed_INET_
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_SEQPACK_Acceptor")));
 }
@@ -594,4 +592,3 @@ ACE_SOCK_SEQPACK_Acceptor::close (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

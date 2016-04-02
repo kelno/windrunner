@@ -4,8 +4,6 @@
 /**
  *  @file    FILE_IO.h
  *
- *  $Id: FILE_IO.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -59,8 +57,8 @@ public:
   /// Send n bytes, keep trying until n are sent.
   ssize_t send_n (const void *buf, size_t n) const;
 
-  /// Send all the @a message_blocks chained through their <next> and
-  /// <cont> pointers.  This call uses the underlying OS gather-write
+  /// Send all the @a message_blocks chained through their next and
+  /// cont pointers.  This call uses the underlying OS gather-write
   /// operation to reduce the domain-crossing penalty.
   ssize_t send_n (const ACE_Message_Block *message_block,
                   const ACE_Time_Value *timeout = 0,
@@ -168,4 +166,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_FILE_IO_H */
-

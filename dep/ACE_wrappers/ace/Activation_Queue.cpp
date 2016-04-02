@@ -4,14 +4,10 @@
 #include "ace/Activation_Queue.inl"
 #endif /* __ACE_INLINE__ */
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Method_Request.h"
 #include "ace/Malloc_Base.h"
 #include "ace/Time_Value.h"
-
-ACE_RCSID (ace,
-           Activation_Queue,
-           "$Id: Activation_Queue.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -19,19 +15,19 @@ void
 ACE_Activation_Queue::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,
               ACE_TEXT ("delete_queue_ = %d\n"),
               this->delete_queue_));
-  ACE_DEBUG ((LM_INFO, ACE_TEXT ("queue_: \n")));
+  ACELIB_DEBUG ((LM_INFO, ACE_TEXT ("queue_:\n")));
   if (this->queue_)
     this->queue_->dump();
   else
     //FUZZ: disable check_for_NULL
-    ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("(NULL)\n")));
+    ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("(NULL)\n")));
     //FUZZ: enable check_for_NULL
 
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -136,4 +132,3 @@ ACE_Activation_Queue::enqueue (ACE_Method_Request *mr,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

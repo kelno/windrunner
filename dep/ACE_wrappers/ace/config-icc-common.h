@@ -1,14 +1,10 @@
 // -*- C++ -*-
-//
-// $Id: config-icc-common.h 81935 2008-06-12 22:01:53Z jtc $
-
 #ifndef ACE_LINUX_ICC_COMMON_H
 #define ACE_LINUX_ICC_COMMON_H
 #include /**/ "ace/pre.h"
 
 # define ACE_HAS_CPLUSPLUS_HEADERS
 # define ACE_HAS_STDCPP_STL_INCLUDES
-# define ACE_HAS_TEMPLATE_TYPEDEFS
 # define ACE_HAS_STANDARD_CPP_LIBRARY 1
 # define ACE_HAS_WORKING_EXPLICIT_TEMPLATE_DESTRUCTOR
 # define ACE_USES_STD_NAMESPACE_FOR_STDCPP_LIB 1
@@ -61,18 +57,7 @@
 # define ACE_IMPORT_SINGLETON_DECLARE(SINGLETON_TYPE, CLASS, LOCK) __extension__ extern template class SINGLETON_TYPE<CLASS, LOCK>;
 #endif  /* ACE_HAS_CUSTOM_EXPORT_MACROS == 0 */
 
-// __EXCEPTIONS is defined with -fexceptions, the egcs default.  It
-// is not defined with -fno-exceptions, the ACE default for g++.
-// ACE_HAS_EXCEPTIONS is defined in
-// include/makeinclude/wrapper_macros.GNU, so this really isn't
-// necessary.  Just in case . . .
-# if defined (__EXCEPTIONS) && !defined (ACE_HAS_EXCEPTIONS)
-#   define ACE_HAS_EXCEPTIONS
-# endif /* __EXCEPTIONS && ! ACE_HAS_EXCEPTIONS */
-
-# if defined (ACE_HAS_EXCEPTIONS)
-#   define ACE_NEW_THROWS_EXCEPTIONS
-# endif /* ACE_HAS_EXCEPTIONS */
+#define ACE_NEW_THROWS_EXCEPTIONS
 
 #if (defined (i386) || defined (__i386__)) && !defined (ACE_SIZEOF_LONG_DOUBLE)
 # define ACE_SIZEOF_LONG_DOUBLE 12
@@ -91,11 +76,6 @@
 # define ACE_HAS_INTEL_ASSEMBLY
 #endif
 
-#if !defined (ACE_LACKS_PRAGMA_ONCE)
-  // We define it with a -D with make depend.
-# define ACE_LACKS_PRAGMA_ONCE
-#endif /* ! ACE_LACKS_PRAGMA_ONCE */
-
 #define ACE_TEMPLATES_REQUIRE_SOURCE
 
 #if (__INTEL_COMPILER >= 910)
@@ -109,6 +89,21 @@
 # define ACE_HAS_IA32INTRIN_H
 #endif
 
+// We assume that Intel C++ 15 and higher do have correct C++11 support when
+// it runs with GCC 4.7 or higher emulation mode
+#if (__INTEL_COMPILER > 1400) && defined (__INTEL_CXX11_MODE__)
+# if (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#  define ACE_HAS_CPP11
+# endif
+#endif
+
+// Intel C++ 14 Update 2 has correct C++11 support when it runs with GCC 4.7
+// or higher emulation mode
+#if (__INTEL_COMPILER == 1400) && (__INTEL_COMPILER_UPDATE >= 2) && defined (__INTEL_CXX11_MODE__)
+# if (__GNUC__ >= 5 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+#  define ACE_HAS_CPP11
+# endif
+#endif
+
 #include /**/ "ace/post.h"
 #endif /* ACE_LINUX_ICC_COMMON_H */
-

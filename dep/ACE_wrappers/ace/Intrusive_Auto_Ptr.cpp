@@ -1,5 +1,3 @@
-// $Id: Intrusive_Auto_Ptr.cpp 81166 2008-03-31 15:00:23Z iliyan $
-
 #ifndef ACE_INTRUSIVE_AUTO_PTR_CPP
 #define ACE_INTRUSIVE_AUTO_PTR_CPP
 
@@ -20,4 +18,3 @@ ACE_Intrusive_Auto_Ptr<X>::~ACE_Intrusive_Auto_Ptr (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif  /* !ACE_INTRUSIVE_AUTO_PTR_CPP */
-

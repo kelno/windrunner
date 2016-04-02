@@ -1,13 +1,11 @@
-// $Id: DEV_IO.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/DEV_IO.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/DEV_IO.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, DEV_IO, "$Id: DEV_IO.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -42,9 +40,9 @@ ACE_DEV_IO::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_DEV_IO::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   this->addr_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -129,4 +127,3 @@ ACE_DEV_IO::recv (size_t n, ...) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

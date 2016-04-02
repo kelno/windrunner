@@ -1,16 +1,10 @@
-// $Id: Message_Queue_Vx.cpp 80826 2008-03-04 14:51:23Z wotte $
-
+#include "ace/Message_Queue.h"
 #include "ace/Message_Queue_Vx.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Message_Queue_Vx.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID (ace,
-           Message_Queue_Vx,
-           "$Id: Message_Queue_Vx.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -25,23 +19,23 @@ ACE_Message_Queue_Vx::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Message_Queue_Vx::dump");
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   switch (this->state_)
     {
     case ACE_Message_Queue_Base::ACTIVATED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = ACTIVATED\n")));
       break;
     case ACE_Message_Queue_Base::DEACTIVATED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = DEACTIVATED\n")));
       break;
     case ACE_Message_Queue_Base::PULSED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = PULSED\n")));
       break;
     }
-  ACE_DEBUG ((LM_DEBUG,
+  ACELIB_DEBUG ((LM_DEBUG,
               ACE_TEXT ("low_water_mark = %d\n")
               ACE_TEXT ("high_water_mark = %d\n")
               ACE_TEXT ("cur_bytes = %d\n")
@@ -56,7 +50,7 @@ ACE_Message_Queue_Vx::dump (void) const
               this->cur_count_,
               this->head_,
               this->tail_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -70,7 +64,7 @@ ACE_Message_Queue_Vx::ACE_Message_Queue_Vx (size_t max_messages,
   ACE_TRACE ("ACE_Message_Queue_Vx::ACE_Message_Queue_Vx");
 
   if (this->open (max_messages_, max_message_length_, ns) == -1)
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("open")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("open")));
 }
 
 ACE_Message_Queue_Vx::~ACE_Message_Queue_Vx (void)
@@ -78,7 +72,7 @@ ACE_Message_Queue_Vx::~ACE_Message_Queue_Vx (void)
   ACE_TRACE ("ACE_Message_Queue_Vx::~ACE_Message_Queue_Vx");
 
   if (this->tail_ != 0  &&  this->close () == -1)
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("close")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("close")));
 }
 
 // Don't bother locking since if someone calls this function more than
@@ -333,24 +327,16 @@ ACE_Message_Queue_Vx::dequeue_deadline_i (ACE_Message_Block *& /*dequeued*/)
 // Take a look at the first item without removing it.
 
 int
-ACE_Message_Queue_Vx::wait_not_full_cond (ACE_Guard<ACE_Null_Mutex> &mon,
-                                          ACE_Time_Value *tv)
+ACE_Message_Queue_Vx::wait_not_full_cond (ACE_Time_Value *)
 {
   // Always return here, and let the VxWorks message queue handle blocking.
-  ACE_UNUSED_ARG (mon);
-  ACE_UNUSED_ARG (tv);
-
   return 0;
 }
 
 int
-ACE_Message_Queue_Vx::wait_not_empty_cond (ACE_Guard<ACE_Null_Mutex> &mon,
-                                           ACE_Time_Value *tv)
+ACE_Message_Queue_Vx::wait_not_empty_cond (ACE_Time_Value *)
 {
   // Always return here, and let the VxWorks message queue handle blocking.
-  ACE_UNUSED_ARG (mon);
-  ACE_UNUSED_ARG (tv);
-
   return 0;
 }
 
@@ -366,4 +352,3 @@ ACE_Message_Queue_Vx::peek_dequeue_head (ACE_Message_Block *&,
 #endif /* ACE_VXWORKS */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

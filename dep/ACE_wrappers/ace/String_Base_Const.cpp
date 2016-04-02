@@ -1,5 +1,3 @@
-// $Id: String_Base_Const.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/String_Base_Const.h"
 #include "ace/Numeric_Limits.h"
 
@@ -18,4 +16,3 @@ ACE_String_Base_Const::size_type const ACE_String_Base_Const::npos =
 #endif  /* AIX */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -6,8 +6,6 @@
  *
  *  definitions for network database operations
  *
- *  $Id: os_netdb.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -27,27 +25,15 @@
 #include "ace/os_include/netinet/os_in.h"
 #include "ace/os_include/os_limits.h"
 
-#if !defined (ACE_LACKS_NETDB_H)
-#  if defined (ACE_HAS_STL_QUEUE_CONFLICT)
-#    define queue _Queue_
-#  endif /* ACE_HAS_STL_QUEUE_CONFLICT */
-   extern "C" {
-#  include /**/ <netdb.h>
-   }
-#  if defined (ACE_HAS_STL_QUEUE_CONFLICT)
-#    undef queue
-#  endif /* ACE_HAS_STL_QUEUE_CONFLICT */
-#endif /* !ACE_LACKS_NETDB_H */
-
-#if defined (ACE_VXWORKS) && (ACE_VXWORKS < 0x620)
-#  include /**/ <hostLib.h>
-#endif /* ACE_VXWORKS */
-
 // Place all additions (especially function declarations) within extern "C" {}
 #ifdef __cplusplus
 extern "C"
 {
 #endif /* __cplusplus */
+
+#if !defined (ACE_LACKS_NETDB_H)
+#  include /**/ <netdb.h>
+#endif /* !ACE_LACKS_NETDB_H */
 
 #if defined (ACE_LACKS_HOSTENT)
 struct  hostent {
@@ -106,4 +92,3 @@ struct  servent {
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_OS_NETDB_H */
-

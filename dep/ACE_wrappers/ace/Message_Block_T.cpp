@@ -1,5 +1,3 @@
-// $Id: Message_Block_T.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_MESSAGE_BLOCK_T_CPP
 #define ACE_MESSAGE_BLOCK_T_CPP
 
@@ -52,4 +50,3 @@ ACE_Locked_Data_Block<ACE_LOCK>::clone_nocopy (ACE_Message_Block::Message_Flags 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_MESSAGE_BLOCK_T_CPP */
-

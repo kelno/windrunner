@@ -4,8 +4,6 @@
 /**
  *  @file    Method_Request.h
  *
- *  $Id: Method_Request.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Andres Kruse <Andres.Kruse@cern.ch>
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
@@ -98,4 +96,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_METHOD_REQUEST_H */
-

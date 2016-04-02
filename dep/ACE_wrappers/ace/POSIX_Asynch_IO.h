@@ -4,8 +4,6 @@
 /**
  *  @file    POSIX_Asynch_IO.h
  *
- *  $Id: POSIX_Asynch_IO.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  The implementation classes for POSIX implementation of Asynch
  *  Operations are defined here in this file.
  *
@@ -279,7 +277,6 @@ protected:
  *
  * This class implements <ACE_Asynch_Read_Stream> for all POSIX
  * based implementation of Proactor.
- *
  */
 class ACE_Export ACE_POSIX_Asynch_Read_Stream : public virtual ACE_Asynch_Read_Stream_Impl,
                                                 public ACE_POSIX_Asynch_Operation
@@ -306,7 +303,6 @@ public:
  *
  * @brief This class provides concrete implementation for
  *     <ACE_Asynch_Write_Stream::Result> on POSIX platforms.
- *
  *
  *     This class has all the information necessary for the
  *     @c handler to uniquiely identify the completion of the
@@ -542,7 +538,6 @@ protected:
  *     <ACE_Asynch_Write_File> for POSIX platforms where the
  *     completion strategy for Proactor is based on AIOCB (AIO
  *     Control Blocks).
- *
  */
 class ACE_Export ACE_POSIX_Asynch_Write_File : public virtual ACE_Asynch_Write_File_Impl,
                                                public ACE_POSIX_Asynch_Write_Stream
@@ -586,7 +581,6 @@ private:
  *
  * @brief This is that class which will be passed back to the
  *     handler when the asynchronous accept completes.
- *
  *
  *     This class has all the information necessary for the
  *     handler to uniquiely identify the completion of the
@@ -801,7 +795,6 @@ protected:
 
 /**
  * @class ACE_POSIX_Asynch_Connect
- *
  */
 class ACE_Export ACE_POSIX_Asynch_Connect :
   public virtual ACE_Asynch_Connect_Impl,
@@ -892,10 +885,6 @@ private:
 
   typedef ACE_Map_Manager<ACE_HANDLE, ACE_POSIX_Asynch_Connect_Result *, ACE_SYNCH_NULL_MUTEX>
           MAP_MANAGER;
-
-  /// @deprecated (Two) Deprecated typedefs.  Use the map traits instead.
-  typedef MAP_MANAGER::ITERATOR MAP_ITERATOR;
-  typedef MAP_MANAGER::ENTRY MAP_ENTRY;
 
   /// Map of Result pointers that correspond to all the pending connects.
   MAP_MANAGER result_map_;
@@ -1048,7 +1037,6 @@ public:
  *     will be passed back to the <handler> when the asynchronous
  *     reads completes through the <ACE_Handler::handle_read_stream>
  *     callback.
- *
  */
 class ACE_Export ACE_POSIX_Asynch_Read_Dgram : public virtual ACE_Asynch_Read_Dgram_Impl,
                                                public ACE_POSIX_Asynch_Operation
@@ -1300,4 +1288,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_AIO_CALLS */
 #endif /* ACE_POSIX_ASYNCH_IO_H */
-

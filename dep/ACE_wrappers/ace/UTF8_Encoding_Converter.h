@@ -4,8 +4,6 @@
 /**
  * @file UTF8_Encoding_Converter.h
  *
- * $Id: UTF8_Encoding_Converter.h 80826 2008-03-04 14:51:23Z wotte $
- *
  * This class contains declarations for methods that convert between
  * UTF-8 and the native ACE_TCHAR representation.
  *
@@ -70,4 +68,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_UTF8_ENCODING_CONVERTER_H */
-

@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Log_Msg.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_unistd.h"
 
@@ -41,13 +38,13 @@ ACE_Log_Msg::op_status (void) const
 
 ACE_INLINE
 void
-ACE_Log_Msg::restart (int r)
+ACE_Log_Msg::restart (bool r)
 {
   this->restart_ = r;
 }
 
 ACE_INLINE
-int
+bool
 ACE_Log_Msg::restart (void) const
 {
   return this->restart_;
@@ -223,13 +220,7 @@ ACE_INLINE
 pid_t
 ACE_Log_Msg::getpid (void) const
 {
-  if (ACE_Log_Msg::pid_ == -2)
-    ACE_Log_Msg::pid_ = ACE_OS::getpid ();
-
-  return ACE_Log_Msg::pid_;
+  return ACE_OS::getpid ();
 }
 
-
-
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Token_Collection.h
  *
- *  $Id: Token_Collection.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  The ACE_Token class offers methods for acquiring, renewing,
  *  and releasing a synchronization token on a per-token basis.  The
  *  ACE_Token_Collection offers an interface for performing
@@ -13,7 +11,6 @@
  *  within the collection.
  *
  *  The atomic group operations are not yet implemented.
- *
  *
  *  @author Douglas C. Schmidt (schmidt@cs.wustl.edu)
  *  @author Tim Harrison (harrison@cs.wustl.edu)
@@ -56,7 +53,6 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @bug Although ACE_Token_Collection inherits from ACE_Token_Proxy, it
  * can not be including in a collection.  This is because <clone>
  * returns zero for now.
- *
  */
 class ACE_Export ACE_Token_Collection : public ACE_Token_Proxy
 {
@@ -204,18 +200,6 @@ protected:
   typedef ACE_Map_Manager<TOKEN_NAME, ACE_Token_Proxy *, ACE_Null_Mutex>
     COLLECTION;
 
-  /// Allows iterations through collection_
-  /**
-   * @deprecated Deprecated typedef.  Use COLLECTION::ITERATOR trait instead.
-   */
-  typedef COLLECTION::ITERATOR COLLECTION_ITERATOR;
-
-  /// Allows iterations through collection_
-  /**
-   * @deprecated Deprecated typedef.  Use COLLECTION::ENTRY trait instead.
-   */
-  typedef COLLECTION::ENTRY COLLECTION_ENTRY;
-
   /// COLLECTION maintains a mapping from token names to ACE_Tokens*.
   COLLECTION collection_;
 
@@ -241,4 +225,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_TOKEN_COLLECTION_H */
-

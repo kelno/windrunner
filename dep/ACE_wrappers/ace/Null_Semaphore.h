@@ -4,8 +4,6 @@
 /**
  *  @file    Null_Semaphore.h
  *
- *  $Id: Null_Semaphore.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -16,8 +14,6 @@
 #define ACE_NULL_SEMAPHORE_H
 #include /**/ "ace/pre.h"
 
-// All methods in this class are inline, so there is no
-// need to import or export on Windows. -- CAE 12/18/2003
 #include "ace/os_include/os_errno.h"
 #include "ace/os_include/sys/os_types.h"
 
@@ -103,4 +99,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_NULL_SEMAPHORE_H */
-

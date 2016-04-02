@@ -4,12 +4,9 @@
 /**
  *  @file    Obchunk.h
  *
- *  $Id: Obchunk.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
-
 
 #ifndef ACE_OBCHUNK_H
 #define ACE_OBCHUNK_H
@@ -75,4 +72,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OBCHUNK_H */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Metrics_Cache.h
  *
- *  $Id: Metrics_Cache.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Chris Gill
  */
 //=============================================================================
@@ -138,4 +136,3 @@ METRICS_PTR->report_##NAME##_stop(); \
 #endif /* ACE_ENABLE_TIMEPROBES && ACE_COMPILE_TIMEPROBES */
 
 #endif /* ACE_METRICS_CACHE_H */
-

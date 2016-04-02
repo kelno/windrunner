@@ -4,8 +4,6 @@
 /**
  *  @file   OS_NS_time.h
  *
- *  $Id: OS_NS_time.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -25,20 +23,16 @@
 #  pragma once
 # endif /* ACE_LACKS_PRAGMA_ONCE */
 
-#include "ace/OS_NS_errno.h"
 #include "ace/Basic_Types.h"
 #include "ace/os_include/os_time.h"
+#include "ace/OS_NS_errno.h"
+
 #include /**/ "ace/ACE_export.h"
 
 #if defined (ACE_EXPORT_MACRO)
 #  undef ACE_EXPORT_MACRO
 #endif
 #define ACE_EXPORT_MACRO ACE_Export
-
-# if defined (ACE_HAS_BROKEN_R_ROUTINES)
-#   undef ctime_r
-#   undef asctime_r
-# endif /* ACE_HAS_BROKEN_R_ROUTINES */
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -98,6 +92,16 @@ inline long ace_timezone()
 
 
 #if !defined (ACE_LACKS_DIFFTIME)
+# if defined (_WIN32_WCE) && ((_WIN32_WCE >= 0x600) && (_WIN32_WCE <= 0x700)) && !defined (_USE_32BIT_TIME_T) \
+    && defined (_MSC_VER)
+    // The WinCE 6.0/7.0 SDK ships with a diff_time that uses __time32_t as type
+    // not time_t. This resolves in compilation warnings because time_t
+    // can be 64bit. Disable at this moment the warning for just this method
+    // else we get two compile warnings on each source file that includes
+    // this file.
+#   pragma warning (push)
+#   pragma warning (disable: 4244)
+# endif
 /// Helper for the ACE_OS::difftime() function
 /**
  * We moved the difftime code that used to be in ACE_OS::difftime()
@@ -111,38 +115,32 @@ inline double ace_difftime(time_t t1, time_t t0)
 {
   return difftime (t1, t0);
 }
+# if defined (_WIN32_WCE) && ((_WIN32_WCE >= 0x600) && (_WIN32_WCE <= 0x700)) && !defined (_USE_32BIT_TIME_T) \
+    && defined (_MSC_VER)
+#   pragma warning (pop)
+# endif
 #endif /* !ACE_LACKS_DIFFTIME */
 
 # if defined (ACE_WIN32)
-#   if !defined (ACE_LACKS_LONGLONG_T)
 // 64-bit quad-word definitions.
 typedef unsigned __int64 ACE_QWORD;
 typedef unsigned __int64 ACE_hrtime_t;
 inline ACE_QWORD ACE_MAKE_QWORD (DWORD lo, DWORD hi) { return ACE_QWORD (lo) | (ACE_QWORD (hi) << 32); }
 inline DWORD ACE_LOW_DWORD  (ACE_QWORD q) { return (DWORD) q; }
 inline DWORD ACE_HIGH_DWORD (ACE_QWORD q) { return (DWORD) (q >> 32); }
-#   else
-// Can't find ANY place that ACE_QWORD is used, but hrtime_t is.
-typedef ACE_UINT64 ACE_hrtime_t;
-#   endif // ACE_LACKS_LONGLONG_T
 # elif defined (_TNS_R_TARGET)
 typedef long long ACE_hrtime_t;
 # else /* !ACE_WIN32 */
-#   if defined (ACE_HAS_HI_RES_TIMER) &&  !defined (ACE_LACKS_LONGLONG_T)
+#   if defined (ACE_HAS_HI_RES_TIMER)
   /* hrtime_t is defined on systems (Suns) with ACE_HAS_HI_RES_TIMER */
   typedef hrtime_t ACE_hrtime_t;
-#   else  /* ! ACE_HAS_HI_RES_TIMER  ||  ACE_LACKS_LONGLONG_T */
+#   else  /* ! ACE_HAS_HI_RES_TIMER */
   typedef ACE_UINT64 ACE_hrtime_t;
-#   endif /* ! ACE_HAS_HI_RES_TIMER  ||  ACE_LACKS_LONGLONG_T */
+#   endif /* ! ACE_HAS_HI_RES_TIMER */
 # endif /* ACE_WIN32 */
 
-# if defined (ACE_LACKS_UNSIGNEDLONGLONG_T)
-#   define ACE_HRTIME_CONVERSION(VAL) ACE_U64_TO_U32(VAL)
-#   define ACE_HRTIME_TO_U64(VAL) ACE_U_LongLong(VAL)
-# else
-#   define ACE_HRTIME_CONVERSION(VAL) (VAL)
-#   define ACE_HRTIME_TO_U64(VAL) (VAL)
-# endif
+#define ACE_HRTIME_CONVERSION(VAL) (VAL)
+#define ACE_HRTIME_TO_U64(VAL) (VAL)
 
 namespace ACE_OS
 {
@@ -181,10 +179,6 @@ namespace ACE_OS
 #endif
   ACE_TCHAR *ctime_r (const time_t *clock, ACE_TCHAR *buf, int buflen);
 
-# if defined (difftime)
-#   undef difftime
-# endif /* difftime */
-
 #if !defined (ACE_LACKS_DIFFTIME)
   ACE_NAMESPACE_INLINE_FUNCTION
 #else
@@ -210,6 +204,29 @@ namespace ACE_OS
   struct tm *localtime_r (const time_t *clock,
                           struct tm *res);
 
+#if defined (ACE_USES_ULONG_FOR_STAT_TIME)
+  ACE_NAMESPACE_INLINE_FUNCTION
+  ACE_TCHAR *ctime (const unsigned long *t);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  ACE_TCHAR *ctime_r (const unsigned long *clock, ACE_TCHAR *buf, int buflen);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  struct tm *gmtime (const unsigned long *clock);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  struct tm *gmtime_r (const unsigned long *clock,
+                       struct tm *res);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  struct tm *localtime (const unsigned long *clock);
+
+  ACE_NAMESPACE_INLINE_FUNCTION
+  struct tm *localtime_r (const unsigned long *clock,
+                       struct tm *res);
+#endif
+
+
   // Get the current time.
   extern ACE_Export
   time_t mktime (struct tm *timeptr);
@@ -218,24 +235,23 @@ namespace ACE_OS
   int nanosleep (const struct timespec *requested,
                  struct timespec *remaining = 0);
 
-# if defined (ACE_HAS_POWERPC_TIMER) && defined (ghs)
-  extern ACE_Export
-  void readPPCTimeBase (u_long &most,
-                        u_long &least);
-# endif /* ACE_HAS_POWERPC_TIMER && ghs */
-
   ACE_NAMESPACE_INLINE_FUNCTION
   size_t strftime (char *s,
                    size_t maxsize,
                    const char *format,
-                   const struct tm *timeptr);
+                   const struct tm *timeptr)
+    ACE_GCC_FORMAT_ATTRIBUTE (strftime, 3, 0);
 
+  /**
+   * strptime wrapper. Note that the struct @a tm will always be set to
+   * zero
+   */
   ACE_NAMESPACE_INLINE_FUNCTION
   char *strptime (const char *buf,
                   const char *format,
                   struct tm *tm);
 
-# if defined (ACE_LACKS_STRPTIME) && !defined (ACE_REFUSE_STRPTIME_EMULATION)
+# if defined (ACE_LACKS_STRPTIME)
   extern ACE_Export
   char *strptime_emulation (const char *buf,
                             const char *format,
@@ -244,14 +260,10 @@ namespace ACE_OS
   extern ACE_Export
   int strptime_getnum (const char *buf, int *num, int *bi,
                        int *fi, int min, int max);
-# endif /* ACE_LACKS_STRPTIME && !ACE_REFUSE_STRPTIME_EMULATION */
+# endif /* ACE_LACKS_STRPTIME  */
 
   ACE_NAMESPACE_INLINE_FUNCTION
   time_t time (time_t *tloc = 0);
-
-# if defined (timezone)
-#   undef timezone
-# endif /* timezone */
 
   ACE_NAMESPACE_INLINE_FUNCTION
   long timezone (void);
@@ -286,4 +298,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 # include /**/ "ace/post.h"
 #endif /* ACE_OS_NS_TIME_H */
-

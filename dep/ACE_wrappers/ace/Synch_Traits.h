@@ -4,8 +4,6 @@
 /**
  *  @file    Synch_Traits.h
  *
- *  $Id: Synch_Traits.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -27,18 +25,18 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 // Forward decl
 class ACE_Null_Mutex;
-class ACE_Null_Condition;
 class ACE_Null_Semaphore;
 class ACE_Null_Mutex;
 class ACE_Thread_Mutex;
 class ACE_Process_Mutex;
 class ACE_Recursive_Thread_Mutex;
 class ACE_RW_Thread_Mutex;
-class ACE_Condition_Thread_Mutex;
-class ACE_Condition_Recursive_Thread_Mutex;
 class ACE_Thread_Semaphore;
 
-#if defined (ACE_HAS_TEMPLATE_TYPEDEFS)
+template <class MUTEX> class ACE_Condition;
+typedef ACE_Condition<ACE_Null_Mutex> ACE_Null_Condition;
+typedef ACE_Condition<ACE_Thread_Mutex> ACE_Condition_Thread_Mutex;
+typedef ACE_Condition<ACE_Recursive_Thread_Mutex> ACE_Condition_Recursive_Thread_Mutex;
 
 /**
  * @class ACE_NULL_SYNCH
@@ -64,7 +62,6 @@ public:
 #if defined (ACE_HAS_THREADS)
 
 class ACE_Process_Mutex;
-class ACE_Condition_Recursive_Thread_Mutex;
 
 /**
  * @class ACE_MT_SYNCH
@@ -101,41 +98,6 @@ public:
 #define ACE_SYNCH_NULL_SEMAPHORE ACE_SYNCH::NULL_SEMAPHORE
 #define ACE_SYNCH_SEMAPHORE ACE_SYNCH::SEMAPHORE
 
-#else /* !ACE_HAS_TEMPLATE_TYPEDEFS */
-
-#if defined (ACE_HAS_OPTIMIZED_MESSAGE_QUEUE)
-#define ACE_NULL_SYNCH ACE_Null_Mutex, ACE_Null_Condition, ACE_Null_Mutex
-#define ACE_MT_SYNCH ACE_Thread_Mutex, ACE_Condition_Thread_Mutex, ACE_Thread_Semaphore
-#else
-#define ACE_NULL_SYNCH ACE_Null_Mutex, ACE_Null_Condition
-#define ACE_MT_SYNCH ACE_Thread_Mutex, ACE_Condition_Thread_Mutex
-#endif /* ACE_HAS_OPTIMIZED_MESSAGE_QUEUE */
-
-#if defined (ACE_HAS_THREADS)
-
-#define ACE_SYNCH_MUTEX ACE_Thread_Mutex
-#define ACE_SYNCH_NULL_MUTEX  ACE_Null_Mutex
-#define ACE_SYNCH_RECURSIVE_MUTEX ACE_Recursive_Thread_Mutex
-#define ACE_SYNCH_RW_MUTEX ACE_RW_Thread_Mutex
-#define ACE_SYNCH_CONDITION ACE_Condition_Thread_Mutex
-#define ACE_SYNCH_RECURSIVE_CONDITION ACE_Condition_Recursive_Thread_Mutex
-#define ACE_SYNCH_SEMAPHORE ACE_Thread_Semaphore
-#define ACE_SYNCH_NULL_SEMAPHORE  ACE_Null_Semaphore
-
-#else /* ACE_HAS_THREADS */
-
-#define ACE_SYNCH_MUTEX ACE_Null_Mutex
-#define ACE_SYNCH_NULL_MUTEX ACE_Null_Mutex
-#define ACE_SYNCH_RECURSIVE_MUTEX ACE_Null_Mutex
-#define ACE_SYNCH_RW_MUTEX ACE_Null_Mutex
-#define ACE_SYNCH_CONDITION ACE_Null_Condition
-#define ACE_SYNCH_RECURSIVE_CONDITION ACE_Null_Condition
-#define ACE_SYNCH_SEMAPHORE ACE_Null_Semaphore
-#define ACE_SYNCH_NULL_SEMAPHORE ACE_Null_Mutex
-
-#endif /* ACE_HAS_THREADS */
-#endif /* ACE_HAS_TEMPLATE_TYPEDEFS */
-
 // These are available on *all* platforms
 #define ACE_SYNCH_PROCESS_SEMAPHORE ACE_Process_Semaphore
 #define ACE_SYNCH_PROCESS_MUTEX  ACE_Process_Mutex
@@ -150,4 +112,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_SYNCH_TRAITS_H */
-

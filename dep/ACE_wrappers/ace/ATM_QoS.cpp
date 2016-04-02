@@ -1,8 +1,6 @@
-// $Id: ATM_QoS.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/ATM_QoS.h"
 
-ACE_RCSID(ace, ATM_QoS, "$Id: ATM_QoS.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if defined (ACE_HAS_ATM)
 
@@ -117,7 +115,7 @@ ACE_ATM_QoS::ACE_ATM_QoS(int rate,
 
   qos_.ProviderSpecific.buf = (char *) ACE_OS::malloc(size);
   if (qos_.ProviderSpecific.buf == 0) {
-    ACE_ERROR((LM_ERROR,
+    ACELIB_ERROR((LM_ERROR,
                ACE_TEXT ("ACE_ATM_QoS::ACE_ATM_QoS: Unable to allocate %d bytes for qos_.ProviderSpecific.buf\n"),
                size));
     return;
@@ -297,7 +295,7 @@ ACE_ATM_QoS::set_cbr_rate (int rate,
 
   qos_.ProviderSpecific.buf = (char *) ACE_OS::malloc(size);
   if (qos_.ProviderSpecific.buf == 0) {
-    ACE_ERROR((LM_ERROR,
+    ACELIB_ERROR((LM_ERROR,
                ACE_TEXT ("ACE_ATM_QoS::ACE_ATM_QoS: Unable to allocate %d bytes for qos_.ProviderSpecific.buf\n"),
                size));
     return;
@@ -451,7 +449,7 @@ ACE_ATM_QoS::construct_options (ACE_HANDLE fd,
   ACE_UNUSED_ARG (rate);
   ACE_UNUSED_ARG (flags);
   ACE_UNUSED_ARG (len);
-  return (0);
+  return 0;
 #elif defined (ACE_HAS_FORE_ATM_XTI)
   struct t_opthdr *popt;
   char *buf;
@@ -467,7 +465,7 @@ ACE_ATM_QoS::construct_options (ACE_HANDLE fd,
   buf = (char *) ACE_OS::malloc (info.options);
 
   if (buf == 0)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("Unable to allocate %d bytes for options\n"),
                        info.options),
                       0);
@@ -503,7 +501,7 @@ ACE_ATM_QoS::construct_options (ACE_HANDLE fd,
                             LOCALNAME) < 0)
         {
           ACE_OS::t_error("t_getname (local_address)");
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("Can't get local address!\n")));
           ACE_OS::free (buf);
           return 0;
@@ -621,12 +619,11 @@ ACE_ATM_QoS::construct_options (ACE_HANDLE fd,
   ACE_UNUSED_ARG (rate);
   ACE_UNUSED_ARG (flag);
   ACE_UNUSED_ARG (len);
-  return (0);
+  return 0;
 #endif /* ACE_HAS_FORE_ATM_WS2 */
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_ATM */
-
 

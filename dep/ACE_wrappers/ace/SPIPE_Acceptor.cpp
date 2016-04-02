@@ -1,7 +1,5 @@
-// $Id: SPIPE_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SPIPE_Acceptor.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_sys_stat.h"
 #include "ace/OS_NS_sys_time.h"
 
@@ -9,7 +7,7 @@
 #  include "ace/OS_NS_unistd.h"
 #endif  // ACE_HAS_STREAM_PIPES
 
-ACE_RCSID(ace, SPIPE_Acceptor, "$Id: SPIPE_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -237,7 +235,7 @@ ACE_SPIPE_Acceptor::ACE_SPIPE_Acceptor (const ACE_SPIPE_Addr &local_sap,
   ACE_TRACE ("ACE_SPIPE_Acceptor::ACE_SPIPE_Acceptor");
 
   if (this->open (local_sap, reuse_addr, perms, sa, pipe_mode) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SPIPE_Acceptor")));
 }
@@ -248,8 +246,8 @@ int
 ACE_SPIPE_Acceptor::accept (ACE_SPIPE_Stream &new_io,
                             ACE_SPIPE_Addr *remote_addr,
                             ACE_Time_Value *timeout,
-                            int restart,
-                            int reset_new_handle)
+                            bool restart,
+                            bool reset_new_handle)
 {
   ACE_TRACE ("ACE_SPIPE_Acceptor::accept");
   ACE_UNUSED_ARG (reset_new_handle);
@@ -335,4 +333,3 @@ ACE_SPIPE_Acceptor::accept (ACE_SPIPE_Stream &new_io,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

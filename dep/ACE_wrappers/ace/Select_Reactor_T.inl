@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Select_Reactor_T.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Reactor.h"
 #include "ace/Signal.h"
 #include "ace/Sig_Handler.h"
@@ -116,12 +113,12 @@ ACE_Select_Reactor_T<ACE_SELECT_REACTOR_TOKEN>::remove_handler (int signum,
 }
 
 template <class ACE_SELECT_REACTOR_TOKEN>
-ACE_INLINE int
+ACE_INLINE bool
 ACE_Select_Reactor_T<ACE_SELECT_REACTOR_TOKEN>::uses_event_associations (void)
 {
   // Since the Select_Reactor does not do any event associations, this
-  // function always return 0.
-  return 0;
+  // function always return false.
+  return false;
 }
 
 // = The remaining methods in this file must be called with locks
@@ -221,7 +218,7 @@ ACE_Select_Reactor_T<ACE_SELECT_REACTOR_TOKEN>::deactivate (int do_stop)
     ACE_MT (ACE_GUARD (ACE_SELECT_REACTOR_TOKEN,
                        ace_mon,
                        this->token_));
-    this->deactivated_ = do_stop;
+    this->deactivated_ = static_cast<sig_atomic_t> (do_stop);
   }
 
   this->wakeup_all_threads ();

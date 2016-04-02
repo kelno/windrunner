@@ -4,8 +4,6 @@
 /**
  *  @file    Name_Request_Reply.h
  *
- *  $Id: Name_Request_Reply.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Define the format used to exchange messages between the
  *   ACE_Name Server and its clients.
  *
@@ -205,7 +203,7 @@ public:
   /// Default constructor.
   ACE_Name_Reply (void);
 
-  /// Create a <ACE_Name_Reply> message.
+  /// Create a ACE_Name_Reply message.
   ACE_Name_Reply (ACE_UINT32 type, ACE_UINT32 err); // Type of reply.
 
   /// Initialize length_ in order to ensure correct byte ordering
@@ -263,4 +261,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_NAME_REQUEST_REPLY_H */
-

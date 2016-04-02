@@ -1,15 +1,9 @@
-// $Id: Basic_Stats.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Basic_Stats.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Basic_Stats.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID(ace,
-          Basic_Stats,
-          "$Id: Basic_Stats.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -46,12 +40,14 @@ ACE_Basic_Stats::accumulate (const ACE_Basic_Stats &rhs)
 }
 
 void
-ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg, ACE_UINT32 sf) const
+ACE_Basic_Stats::dump_results (
+  const ACE_TCHAR *msg,
+  ACE_Basic_Stats::scale_factor_type sf) const
 {
 #ifndef ACE_NLOGGING
   if (this->samples_count () == 0u)
     {
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("%s : no data collected\n"), msg));
       return;
     }
@@ -62,7 +58,7 @@ ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg, ACE_UINT32 sf) const
   ACE_UINT64 l_max = this->max_ / sf;
   ACE_UINT64 l_avg = avg / sf;
 
-  ACE_DEBUG ((LM_DEBUG,
+  ACELIB_DEBUG ((LM_DEBUG,
               ACE_TEXT ("%s latency   : %Q[%d]/%Q/%Q[%d] (min/avg/max)\n"),
               msg,
               l_min, this->min_at_,
@@ -76,4 +72,3 @@ ACE_Basic_Stats::dump_results (const ACE_TCHAR *msg, ACE_UINT32 sf) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

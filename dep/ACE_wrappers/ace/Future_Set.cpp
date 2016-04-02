@@ -1,5 +1,3 @@
-// $Id: Future_Set.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_FUTURE_SET_CPP
 #define ACE_FUTURE_SET_CPP
 
@@ -71,7 +69,7 @@ ACE_Future_Set<T>::insert (ACE_Future<T> &future)
   // If a new map entry was created, then attach to the future,
   // otherwise we were already attached to the future or some error
   // occurred so just delete the future holder.
-  if ( result == 0 )
+  if (result == 0)
     // Attach ourself to the ACE_Futures list of observer
     future.attach (this);
   else
@@ -83,7 +81,7 @@ ACE_Future_Set<T>::insert (ACE_Future<T> &future)
 template <class T> void
 ACE_Future_Set<T>::update (const ACE_Future<T> &future)
 {
-  ACE_Message_Block *mb;
+  ACE_Message_Block *mb = 0;
   FUTURE &local_future = const_cast<ACE_Future<T> &> (future);
 
   ACE_NEW (mb,
@@ -117,7 +115,7 @@ ACE_Future_Set<T>::next_readable (ACE_Future<T> &future,
     return 0;
 
   // Remove the hash map entry with the specified future rep from our map.
-  FUTURE_HOLDER *future_holder;
+  FUTURE_HOLDER *future_holder = 0;
   if (this->future_map_.find (future_rep,
                               future_holder) != -1)
     {
@@ -134,4 +132,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_THREADS */
 #endif /* ACE_FUTURE_SET_CPP */
-

@@ -1,14 +1,8 @@
 /* -*- C++ -*- */
-// $Id: config-openvms.h 81935 2008-06-12 22:01:53Z jtc $
-
 // The following configuration file is designed to work for OpenVMS 7.3-2
 
 #ifndef ACE_CONFIG_H
 #define ACE_CONFIG_H
-
-#if !defined (ACE_USE_RCSID)
-# define ACE_USE_RCSID 0
-#endif
 
 #ifdef __cplusplus
 #pragma message disable CODCAUUNR
@@ -35,7 +29,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#undef clearerr
 #undef memset
 #undef memcpy
 #undef memmove
@@ -92,9 +85,6 @@
 
 #define ACE_LACKS_SYMLINKS 1
 
-#define ACE_LACKS_PWD_REENTRANT_FUNCTIONS 1
-#define ACE_LACKS_RAND_REENTRANT_FUNCTIONS 1
-
 #define ACE_HAS_P_READ_WRITE
 #define ACE_HAS_CHARPTR_DL 1
 #define ACE_HAS_CLOCK_GETTIME 1
@@ -107,7 +97,6 @@
 #define ACE_HAS_2_PARAM_ASCTIME_R_AND_CTIME_R 1
 #define ACE_HAS_3_PARAM_WCSTOK 1
 #define ACE_HAS_SIGSUSPEND 1
-#define ACE_HAS_SIG_MACROS 1
 #define ACE_HAS_SIGWAIT 1
 #define ACE_HAS_SIGTIMEDWAIT 1
 
@@ -115,7 +104,6 @@
 #define ACE_HAS_SIGISMEMBER_BUG
 #define ACE_HAS_STRNLEN 1
 #define ACE_HAS_STREAMS 1
-#define ACE_HAS_STRERROR 1
 #define ACE_HAS_UALARM 1
 #define ACE_HAS_VOIDPTR_MMAP 1
 #define ACE_HAS_VOIDPTR_SOCKOPT 1
@@ -129,6 +117,7 @@
 #define ACE_LACKS_SETSCHED
 #define ACE_LACKS_SYSCALL 1
 #define ACE_LACKS_WCSTOULL 1
+#define ACE_LACKS_WCSTOLL
 
 /* (missing) standard data types */
 #define ACE_LACKS_CONST_TIMESPEC_PTR 1
@@ -143,7 +132,7 @@
 #define ACE_LACKS_STRRECVFD 1
 #define ACE_LACKS_T_ERRNO 1
 
-/* POSIX threads ompatibilities */
+/* POSIX threads compatibilities */
 #define ACE_LACKS_RWLOCK_T 1
 #define ACE_LACKS_PTHREAD_KILL 1
 #define ACE_LACKS_THREAD_PROCESS_SCOPING 1
@@ -172,7 +161,6 @@
 
 #define ACE_HAS_CONSISTENT_SIGNAL_PROTOTYPES 1
 #define ACE_HAS_CPLUSPLUS_HEADERS 1
-#define ACE_HAS_EXCEPTIONS 1
 #define ACE_LACKS_LINEBUFFERED_STREAMBUF 1
 
 #define ACE_HAS_GPERF 1
@@ -185,12 +173,18 @@
 #define ACE_HAS_STRING_CLASS 1
 #define ACE_HAS_SVR4_DYNAMIC_LINKING 1
 
-#define ACE_HAS_TEMPLATE_TYPEDEFS 1
 #define ACE_LACKS_NAMED_POSIX_SEM 1
 #define ACE_LACKS_SYSV_SHMEM 1
 #define ACE_LACKS_UNIX_DOMAIN_SOCKETS 1
 #define ACE_LACKS_UNIX_SYSLOG 1
 #define ACE_LACKS_ALPHASORT 1
+#define ACE_LACKS_ISCTYPE
+#define ACE_LACKS_ISBLANK
+
+#define ACE_LACKS_SETENV
+#define ACE_LACKS_UNSETENV
+
+#define ACE_HAS_SOCK_BUF_SIZE_MAX
+#define ACE_HAS_SOCK_BUF_SIZE_MAX_VALUE 65535
 
 #endif
-

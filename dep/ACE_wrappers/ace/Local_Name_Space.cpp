@@ -5,10 +5,6 @@
 #include "ace/OS_NS_string.h"
 #include "ace/Truncate.h"
 
-ACE_RCSID (ace,
-           Local_Name_Space,
-           "$Id: Local_Name_Space.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_NS_String::~ACE_NS_String (void)
@@ -167,4 +163,3 @@ ACE_NS_Internal::type (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

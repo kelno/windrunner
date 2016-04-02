@@ -1,5 +1,3 @@
-// $Id: Auto_Functor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_AUTO_FUNCTOR_CPP
 #define ACE_AUTO_FUNCTOR_CPP
 
@@ -37,4 +35,3 @@ ACE_Utils::Auto_Functor<X,Functor>::reset(X * p, Functor f)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /*ACE_AUTO_FUNCTOR_CPP*/
-

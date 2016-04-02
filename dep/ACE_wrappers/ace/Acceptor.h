@@ -4,8 +4,6 @@
 /**
  *  @file    Acceptor.h
  *
- *  $Id: Acceptor.h 81460 2008-04-28 11:34:23Z elliott_c $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -34,30 +32,38 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * activating the SVC_HANDLER.
  *
  * Implements the basic strategy for passively establishing
- * connections with clients.  An ACE_Acceptor is parameterized
- * by concrete types that conform to the interfaces of
- * PEER_ACCEPTOR and SVC_HANDLER.  The PEER_ACCEPTOR is
- * instantiated with a transport mechanism that passively
- * establishes connections.  The SVC_HANDLER is instantiated
- * with a concrete type that performs the application-specific
- * service.  An ACE_Acceptor inherits from ACE_Service_Object,
- * which in turn inherits from ACE_Event_Handler.  This enables
- * the ACE_Reactor to dispatch the ACE_Acceptor's handle_input
- * method when connection events occur.  The handle_input method
- * performs the ACE_Acceptor's default creation, connection
- * establishment, and service activation strategies.  These
- * strategies can be overridden by subclasses individually or as
- * a group.
+ * connections with clients.  An ACE_Acceptor inherits from
+ * ACE_Service_Object, which in turn inherits from ACE_Event_Handler.
+ * This enables the ACE_Reactor to dispatch the ACE_Acceptor's
+ * handle_input method when connection events occur.  The handle_input
+ * method performs the ACE_Acceptor's default creation, connection
+ * establishment, and service activation strategies.  These strategies
+ * can be overridden by subclasses individually or as a group.
+ *
+ * An ACE_Acceptor is parameterized by concrete types that conform to
+ * the interfaces of SVC_HANDLER and PEER_ACCEPTOR described below.
+ *
+ * @tparam SVC_HANDLER The name of the concrete type that performs the
+ *         application-specific service.  The SVC_HANDLER typically
+ *         inherits from ACE_Svc_Handler.  @see Svc_Handler.h.
+ *
+ * @tparam PEER_ACCEPTOR The name of the class that implements the
+ *         PEER_ACCEPTOR endpoint (e.g., ACE_SOCK_Acceptor) to
+ *         passively establish connections.  A PEER_ACCEPTOR
+ *         implementation must provide a PEER_STREAM and PEER_ADDR
+ *         trait to identify the type of stream (e.g.,
+ *         ACE_SOCK_Stream) and type of address (e.g., ACE_INET_Addr)
+ *         used by the endpoint.
  */
-template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
+template <typename SVC_HANDLER, typename PEER_ACCEPTOR>
 class ACE_Acceptor : public ACE_Service_Object
 {
 public:
 
   // Useful STL-style traits.
-  typedef ACE_PEER_ACCEPTOR_ADDR            addr_type;
-  typedef ACE_PEER_ACCEPTOR                 acceptor_type;
-  typedef SVC_HANDLER                       handler_type;
+  typedef typename PEER_ACCEPTOR::PEER_ADDR addr_type;
+  typedef PEER_ACCEPTOR acceptor_type;
+  typedef SVC_HANDLER handler_type;
   typedef typename SVC_HANDLER::stream_type stream_type;
 
   /// "Do-nothing" constructor.
@@ -89,7 +95,7 @@ public:
    * @param use_select Affects behavior when called back by the reactor
    *                   when a connection can be accepted.  If non-zero,
    *                   this object will accept all pending connections,
-   *                   intead of just the one that triggered the reactor
+   *                   instead of just the one that triggered the reactor
    *                   callback.  Uses ACE_OS::select() internally to
    *                   detect any remaining acceptable connections.
    *                   The default is 1.
@@ -97,7 +103,7 @@ public:
    *                   @p local_addr.  Generally used to request that the
    *                   OS allow reuse of the listen port.  The default is 1.
    */
-  ACE_Acceptor (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
+  ACE_Acceptor (const typename PEER_ACCEPTOR::PEER_ADDR &local_addr,
                 ACE_Reactor *reactor = ACE_Reactor::instance (),
                 int flags = 0,
                 int use_select = 1,
@@ -128,7 +134,7 @@ public:
    * @param use_select Affects behavior when called back by the reactor
    *                   when a connection can be accepted.  If non-zero,
    *                   this object will accept all pending connections,
-   *                   intead of just the one that triggered the reactor
+   *                   instead of just the one that triggered the reactor
    *                   callback.  Uses ACE_OS::select() internally to
    *                   detect any remaining acceptable connections.
    *                   The default is 1.
@@ -139,7 +145,7 @@ public:
    * @retval 0  Success
    * @retval -1 Failure, @c errno contains an error code.
    */
-  virtual int open (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
+  virtual int open (const typename PEER_ACCEPTOR::PEER_ADDR &local_addr,
                     ACE_Reactor *reactor = ACE_Reactor::instance (),
                     int flags = 0,
                     int use_select = 1,
@@ -149,10 +155,10 @@ public:
   virtual ~ACE_Acceptor (void);
 
   /// Return the underlying PEER_ACCEPTOR object.
-  virtual operator ACE_PEER_ACCEPTOR &() const;
+  virtual operator PEER_ACCEPTOR &() const;
 
   /// Return the underlying PEER_ACCEPTOR object.
-  virtual ACE_PEER_ACCEPTOR &acceptor (void) const;
+  virtual PEER_ACCEPTOR &acceptor (void) const;
 
   /// Returns the listening acceptor's {ACE_HANDLE}.
   virtual ACE_HANDLE get_handle (void) const;
@@ -187,15 +193,15 @@ protected:
 
   /**
    * Bridge method for accepting the new connection into the
-   * <svc_handler>.  The default behavior delegates to the
+   * @a svc_handler.  The default behavior delegates to the
    * PEER_ACCEPTOR::accept.
    */
   virtual int accept_svc_handler (SVC_HANDLER *svc_handler);
 
   /**
-   * Bridge method for activating a {svc_handler} with the appropriate
+   * Bridge method for activating a @a svc_handler with the appropriate
    * concurrency strategy.  The default behavior of this method is to
-   * activate the SVC_HANDLER by calling its {open} method (which
+   * activate the SVC_HANDLER by calling its open() method (which
    * allows the SVC_HANDLER to define its own concurrency strategy).
    * However, subclasses can override this strategy to do more
    * sophisticated concurrency activations (such as making the
@@ -235,10 +241,10 @@ public:
 
 protected:
   /// Concrete factory for accepting connections from clients...
-  ACE_PEER_ACCEPTOR peer_acceptor_;
+  PEER_ACCEPTOR peer_acceptor_;
 
   /// Needed to reopen the socket if {accept} fails.
-  ACE_PEER_ACCEPTOR_ADDR peer_acceptor_addr_;
+  typename PEER_ACCEPTOR::PEER_ADDR peer_acceptor_addr_;
 
   /**
    * Flags that indicate how {SVC_HANDLER}'s should be initialized
@@ -270,30 +276,28 @@ protected:
  * SVC_HANDLER, and (3) activating the SVC_HANDLER with a
  * particular concurrency mechanism.
  */
-template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
+template <typename SVC_HANDLER, typename PEER_ACCEPTOR>
 class ACE_Strategy_Acceptor
-  : public ACE_Acceptor <SVC_HANDLER, ACE_PEER_ACCEPTOR_2>
+  : public ACE_Acceptor <SVC_HANDLER, PEER_ACCEPTOR>
 {
 public:
 
   // Useful STL-style traits.
   typedef ACE_Creation_Strategy<SVC_HANDLER>
           creation_strategy_type;
-  typedef ACE_Accept_Strategy<SVC_HANDLER, ACE_PEER_ACCEPTOR_2>
+  typedef ACE_Accept_Strategy<SVC_HANDLER, PEER_ACCEPTOR>
           accept_strategy_type;
   typedef ACE_Concurrency_Strategy<SVC_HANDLER>
           concurrency_strategy_type;
   typedef ACE_Scheduling_Strategy<SVC_HANDLER> scheduling_strategy_type;
-  typedef ACE_Acceptor <SVC_HANDLER, ACE_PEER_ACCEPTOR_2>
+  typedef ACE_Acceptor <SVC_HANDLER, PEER_ACCEPTOR>
           base_type;
 
   // = Define some useful (old style) traits.
   typedef ACE_Creation_Strategy<SVC_HANDLER> CREATION_STRATEGY;
-  typedef ACE_Accept_Strategy<SVC_HANDLER, ACE_PEER_ACCEPTOR_2> ACCEPT_STRATEGY;
+  typedef ACE_Accept_Strategy<SVC_HANDLER, PEER_ACCEPTOR> ACCEPT_STRATEGY;
   typedef ACE_Concurrency_Strategy<SVC_HANDLER> CONCURRENCY_STRATEGY;
   typedef ACE_Scheduling_Strategy<SVC_HANDLER> SCHEDULING_STRATEGY;
-
-
 
   /// Default constructor.
   ACE_Strategy_Acceptor (const ACE_TCHAR service_name[] = 0,
@@ -307,10 +311,10 @@ public:
    * with the Reactor and listen for connection requests at the
    * designated {local_addr}.
    */
-  ACE_Strategy_Acceptor (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
+  ACE_Strategy_Acceptor (const typename PEER_ACCEPTOR::PEER_ADDR &local_addr,
                          ACE_Reactor * = ACE_Reactor::instance (),
                          ACE_Creation_Strategy<SVC_HANDLER> * = 0,
-                         ACE_Accept_Strategy<SVC_HANDLER, ACE_PEER_ACCEPTOR_2> * = 0,
+                         ACE_Accept_Strategy<SVC_HANDLER, PEER_ACCEPTOR> * = 0,
                          ACE_Concurrency_Strategy<SVC_HANDLER> * = 0,
                          ACE_Scheduling_Strategy<SVC_HANDLER> * = 0,
                          const ACE_TCHAR service_name[] = 0,
@@ -341,7 +345,7 @@ public:
    * @param use_select   Affects behavior when called back by the reactor
    *                     when a connection can be accepted.  If non-zero,
    *                     this object will accept all pending connections,
-   *                     intead of just the one that triggered the reactor
+   *                     instead of just the one that triggered the reactor
    *                     callback.  Uses ACE_OS::select() internally to
    *                     detect any remaining acceptable connections.
    *                     The default is 1.
@@ -352,7 +356,7 @@ public:
    * @retval 0  Success
    * @retval -1 Failure, @c errno contains an error code.
    */
-  virtual int open (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
+  virtual int open (const typename PEER_ACCEPTOR::PEER_ADDR &local_addr,
                     ACE_Reactor *reactor,
                     int flags = 0,
                     int use_select = 1,
@@ -364,10 +368,10 @@ public:
    * with the Reactor and listen for connection requests at the
    * designated {local_addr}.
    */
-  virtual int open (const ACE_PEER_ACCEPTOR_ADDR &,
+  virtual int open (const typename PEER_ACCEPTOR::PEER_ADDR &,
                     ACE_Reactor * = ACE_Reactor::instance (),
                     ACE_Creation_Strategy<SVC_HANDLER> * = 0,
-                    ACE_Accept_Strategy<SVC_HANDLER, ACE_PEER_ACCEPTOR_2> * =0,
+                    ACE_Accept_Strategy<SVC_HANDLER, PEER_ACCEPTOR> * =0,
                     ACE_Concurrency_Strategy<SVC_HANDLER> * = 0,
                     ACE_Scheduling_Strategy<SVC_HANDLER> * = 0,
                     const ACE_TCHAR *service_name = 0,
@@ -379,10 +383,10 @@ public:
   virtual ~ACE_Strategy_Acceptor (void);
 
   /// Return the underlying PEER_ACCEPTOR object.
-  virtual operator ACE_PEER_ACCEPTOR &() const;
+  virtual operator PEER_ACCEPTOR &() const;
 
   /// Return the underlying PEER_ACCEPTOR object.
-  virtual ACE_PEER_ACCEPTOR &acceptor (void) const;
+  virtual PEER_ACCEPTOR &acceptor (void) const;
 
   /// Returns the listening acceptor's {ACE_HANDLE}.
   virtual ACE_HANDLE get_handle (void) const;
@@ -498,38 +502,47 @@ protected:
 
   /// Address that the {Strategy_Acceptor} uses to listen for
   /// connections.
-  ACE_PEER_ACCEPTOR_ADDR service_addr_;
+  typename PEER_ACCEPTOR::PEER_ADDR service_addr_;
 };
 
 /**
  * @class ACE_Oneshot_Acceptor
  *
  * @brief Generic factory for passively connecting clients and creating
- * exactly one service handler (SVC_HANDLER).
+ * exactly one service handler of the type SVC_HANDLER specified in the
+ * template.
  *
- * This class works similarly to the regular {ACE_Acceptor},
+ * This class works similarly to the regular ACE_Acceptor, but
  * with the following differences:
- * 1. This class doesn't automagically register {this} with the
- * {ACE_Reactor} since it expects to have its {accept} method
- * called directly.  However, it stashes the {ACE_Reactor}
- * pointer away in case it's needed later to finish accepting
- * a connection asynchronously.
- * 2. The class doesn't need an {ACE_Creation_Strategy} (since
- * the user supplies the SVC_HANDLER) or an
- * {ACE_Accept_Strategy} (since this class only accepts one
- * connection and then removes all traces of itself from the
- * {ACE_Reactor} if it was registered for asynchronous
- * accepts).
+ *  -# ACE_Oneshot_Acceptor doesn't automatically register itself with the
+ *     ACE_Reactor; the caller is expected to call the accept() method
+ *     directly. Since a later call to accept() may require a reactor,
+ *     the constructor and open() methods both accept an ACE_Reactor pointer
+ *     which is saved in case it's needed in accept().
+ *  -# ACE_Oneshot_Acceptor doesn't need an ACE_Creation_Strategy (because
+ *     the user supplies the SVC_HANDLER) or an ACE_Accept_Strategy (because
+ *     this class only accepts one connection and then removes all traces of
+ *     itself from the ACE_Reactor if it was registered for asynchronous
+ *     accepts).
+ *
+ * The usage model for ACE_Oneshot_Acceptor is:
+ *  - Instantiate an object and establish its local address to listen at.
+ *    This can be accomplished using either the address-accepting constructor
+ *    (but there's no error indication) or the default constructor followed
+ *    by a call to open().
+ *  - Call the accept() method. This will attempt to accept a connection
+ *    immediately. If there is no immediately available connection to accept,
+ *    behavior is governed by the ACE_Synch_Options argument passed to open().
  */
-template <class SVC_HANDLER, ACE_PEER_ACCEPTOR_1>
+template <typename SVC_HANDLER, typename PEER_ACCEPTOR>
 class ACE_Oneshot_Acceptor : public ACE_Service_Object
 {
 public:
 
   // Useful STL-style traits.
-  typedef ACE_PEER_ACCEPTOR_ADDR            addr_type;
-  typedef ACE_PEER_ACCEPTOR                 acceptor_type;
-  typedef SVC_HANDLER                       handler_type;
+  typedef typename PEER_ACCEPTOR::PEER_ADDR addr_type;
+  typedef PEER_ACCEPTOR acceptor_type;
+  typedef SVC_HANDLER handler_type;
   typedef typename SVC_HANDLER::stream_type stream_type;
 
   /// Constructor.
@@ -537,25 +550,25 @@ public:
 
   /**
    * Initialize the appropriate strategies for concurrency and then
-   * open the {peer_acceptor} at the designated {local_addr}.  Note
-   * that unlike the {ACE_Acceptor} and {ACE_Strategy_Acceptor}, this
-   * method does NOT register {this} acceptor with the {reactor} at
-   * this point -- it just stashes the {reactor} away in case it's
+   * open the acceptor at the designated @a local_addr.  Note
+   * that unlike ACE_Acceptor and ACE_Strategy_Acceptor, this
+   * method does NOT register this acceptor with the @a reactor at
+   * this point -- the @a reactor parameter is saved in case it's
    * needed later.
    */
-  ACE_Oneshot_Acceptor (const ACE_PEER_ACCEPTOR_ADDR &local_addr,
+  ACE_Oneshot_Acceptor (const typename PEER_ACCEPTOR::PEER_ADDR &local_addr,
                         ACE_Reactor *reactor = ACE_Reactor::instance (),
                         ACE_Concurrency_Strategy<SVC_HANDLER> * = 0);
 
   /**
    * Initialize the appropriate strategies for concurrency and then
-   * open the {peer_acceptor} at the designated {local_addr}.  Note
-   * that unlike the {ACE_Acceptor} and {ACE_Strategy_Acceptor}, this
-   * method does NOT register {this} acceptor with the {reactor} at
-   * this point -- it just stashes the {reactor} away in case it's
+   * open the acceptor at the designated @a local_addr.  Note
+   * that unlike ACE_Acceptor and ACE_Strategy_Acceptor, this
+   * method does NOT register this acceptor with the @a reactor at
+   * this point -- the @a reactor parameter is saved in case it's
    * needed later.
    */
-  int open (const ACE_PEER_ACCEPTOR_ADDR &,
+  int open (const typename PEER_ACCEPTOR::PEER_ADDR &,
             ACE_Reactor *reactor = ACE_Reactor::instance (),
             ACE_Concurrency_Strategy<SVC_HANDLER> * = 0);
 
@@ -566,19 +579,19 @@ public:
   /// Create a {SVC_HANDLER}, accept the connection into the
   /// {SVC_HANDLER}, and activate the {SVC_HANDLER}.
   virtual int accept (SVC_HANDLER * = 0,
-                      ACE_PEER_ACCEPTOR_ADDR *remote_addr = 0,
+                      typename PEER_ACCEPTOR::PEER_ADDR *remote_addr = 0,
                       const ACE_Synch_Options &synch_options = ACE_Synch_Options::defaults,
-                      int restart = 1,
-                      int reset_new_handle = 0);
+                      bool restart = true,
+                      bool reset_new_handle = false);
 
   /// Cancel a oneshot acceptor that was started asynchronously.
   virtual int cancel (void);
 
   /// Return the underlying {PEER_ACCEPTOR} object.
-  virtual operator ACE_PEER_ACCEPTOR &() const;
+  virtual operator PEER_ACCEPTOR &() const;
 
   /// Return the underlying {PEER_ACCEPTOR} object.
-  virtual ACE_PEER_ACCEPTOR &acceptor (void) const;
+  virtual PEER_ACCEPTOR &acceptor (void) const;
 
   /// Close down the {Oneshot_Acceptor}.
   virtual int close (void);
@@ -603,10 +616,10 @@ protected:
   /// Factors out the code shared between the {accept} and
   /// {handle_input} methods.
   int shared_accept (SVC_HANDLER *svc_handler,
-                     ACE_PEER_ACCEPTOR_ADDR *remote_addr,
+                     typename PEER_ACCEPTOR::PEER_ADDR *remote_addr,
                      ACE_Time_Value *timeout,
-                     int restart,
-                     int reset_new_handle);
+                     bool restart,
+                     bool reset_new_handle);
 
   // = Demultiplexing hooks.
   /// Returns the listening acceptor's {ACE_HANDLE}.
@@ -654,16 +667,16 @@ private:
    */
   int register_handler (SVC_HANDLER *svc_handler,
                         const ACE_Synch_Options &options,
-                        int restart);
+                        bool restart);
 
   /// Hold the svc_handler_ across asynchrony boundaries.
   SVC_HANDLER *svc_handler_;
 
   /// Hold the restart flag across asynchrony boundaries.
-  int restart_;
+  bool restart_;
 
   /// Factory that establishes connections passively.
-  ACE_PEER_ACCEPTOR peer_acceptor_;
+  PEER_ACCEPTOR peer_acceptor_;
 
   /// Concurrency strategy for an Acceptor.
   ACE_Concurrency_Strategy<SVC_HANDLER> *concurrency_strategy_;
@@ -686,4 +699,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_ACCEPTOR_H */
-

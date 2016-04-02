@@ -3,11 +3,8 @@
 /**
  *  @file    Codeset_IBM1047.cpp
  *
- *  $Id: Codeset_IBM1047.cpp 81661 2008-05-09 12:05:34Z johnnyw $
- *
  *  Defines the arrays required to convert between ISO8859 (aka
  *  Latin/1) and IBM1047 (aka EBCDIC).
- *
  *
  *  @author Jim Rogers (jrogers@viasoft.com)
  */
@@ -17,10 +14,6 @@
 #include "ace/Codeset_IBM1047.h"
 
 #if defined (ACE_HAS_EBCDIC)
-
-ACE_RCSID (ace,
-           Codeset_IBM1047,
-           "$Id: Codeset_IBM1047.cpp 81661 2008-05-09 12:05:34Z johnnyw $")
 
 #include "ace/OS_Memory.h"
 #include "ace/OS_NS_string.h"
@@ -307,4 +300,3 @@ ACE_ISO8859_IBM1047::write_char_array (ACE_OutputCDR &out,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_EBCDIC */
-

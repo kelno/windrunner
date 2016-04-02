@@ -4,8 +4,6 @@
 /**
  *  @file    Caching_Utility_T.h
  *
- *  $Id: Caching_Utility_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Kirthika Parameswaran <kirthika@cs.wustl.edu>
  */
 //=============================================================================
@@ -23,9 +21,7 @@
 
 #include "ace/Global_Macros.h"
 #include "ace/Cleanup_Strategies_T.h"
-
-// For linkers that cant grok long names.
-#define ACE_Pair_Caching_Utility APUTIL
+#include "ace/Copy_Disabled.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -35,7 +31,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @brief Defines a helper class for the Caching Strategies.
  *
  * This class defines the methods commonly used by the different
- * caching strategies. For instance: <clear_cache> method which
+ * caching strategies. For instance: clear_cache() method which
  * decides and purges the entry from the container.  @note This
  * class helps in the caching_strategies using a container
  * containing entries of <KEY, ACE_Pair<VALUE, attributes>>
@@ -44,7 +40,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * entries to be cleaned up will be delegated.
  */
 template <class KEY, class VALUE, class CONTAINER, class ITERATOR, class ATTRIBUTES>
-class ACE_Pair_Caching_Utility
+class ACE_Pair_Caching_Utility : private ACE_Copy_Disabled
 {
 public:
 
@@ -52,7 +48,7 @@ public:
 
   /// Constructor.
   ACE_Pair_Caching_Utility (ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> *cleanup_strategy = 0,
-                            int delete_cleanup_strategy = 0);
+                            bool delete_cleanup_strategy = false);
 
   /// Destructor.
   ~ACE_Pair_Caching_Utility (void);
@@ -61,8 +57,7 @@ public:
    * Purge entries from the @a container. The Cleanup_Strategy will do the
    * actual job of cleanup once the entries to be cleaned up are decided.
    */
-  int clear_cache (CONTAINER &container,
-                   double purge_percent);
+  int clear_cache (CONTAINER &container, double purge_percent);
 
 protected:
 
@@ -76,14 +71,8 @@ protected:
   CLEANUP_STRATEGY *cleanup_strategy_;
 
   /// Whether the cleanup_strategy should be destroyed or not.
-  int delete_cleanup_strategy_;
-
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Pair_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Pair_Caching_Utility (const ACE_Pair_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
+  bool delete_cleanup_strategy_;
 };
-
-////////////////////////////////////////////////////////////////////////////////
-#define ACE_Recyclable_Handler_Caching_Utility ARHUTIL
 
 /**
  * @class ACE_Recyclable_Handler_Caching_Utility
@@ -91,7 +80,7 @@ protected:
  * @brief Defines a helper class for the Caching Strategies.
  *
  * This class defines the methods commonly used by the different
- * caching strategies. For instance: <clear_cache> method which
+ * caching strategies. For instance: clear_cache() method which
  * decides and purges the entry from the container.  @note This
  * class helps in the caching_strategies using a container
  * containing entries of <KEY, Svc_Handler> kind. The attributes
@@ -100,7 +89,7 @@ protected:
  * be cleaned up will be delegated.
  */
 template <class KEY, class VALUE, class CONTAINER, class ITERATOR, class ATTRIBUTES>
-class ACE_Recyclable_Handler_Caching_Utility
+class ACE_Recyclable_Handler_Caching_Utility : private ACE_Copy_Disabled
 {
 
 public:
@@ -110,13 +99,13 @@ public:
 
   /// Constructor.
   ACE_Recyclable_Handler_Caching_Utility (ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> *cleanup_strategy = 0,
-                                          int delete_cleanup_strategy = 0);
+                                          bool delete_cleanup_strategy = false);
 
   /// Destructor.
   ~ACE_Recyclable_Handler_Caching_Utility (void);
 
   /**
-   * Purge entries from the <container>. The Cleanup_Strategy will do
+   * Purge entries from the @a container. The Cleanup_Strategy will do
    * the actual job of cleanup once the entries to be cleaned up are
    * decided.
    */
@@ -134,15 +123,8 @@ protected:
   CLEANUP_STRATEGY_BASE *cleanup_strategy_;
 
   /// Whether the cleanup_strategy should be destroyed or not.
-  int delete_cleanup_strategy_;
-
-private:
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Recyclable_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Recyclable_Handler_Caching_Utility (const ACE_Recyclable_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
+  bool delete_cleanup_strategy_;
 };
-
-///////////////////////////////////////////////////////////////////////////
-#define ACE_Refcounted_Recyclable_Handler_Caching_Utility ARRHUTIL
 
 /**
  * @class ACE_Refcounted_Recyclable_Handler_Caching_Utility
@@ -160,23 +142,21 @@ private:
  * delegated.
  */
 template <class KEY, class VALUE, class CONTAINER, class ITERATOR, class ATTRIBUTES>
-class ACE_Refcounted_Recyclable_Handler_Caching_Utility
+class ACE_Refcounted_Recyclable_Handler_Caching_Utility : private ACE_Copy_Disabled
 {
-
 public:
-
   typedef ACE_Refcounted_Recyclable_Handler_Cleanup_Strategy<KEY, VALUE, CONTAINER> CLEANUP_STRATEGY;
   typedef ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> CLEANUP_STRATEGY_BASE;
 
   /// Constructor.
   ACE_Refcounted_Recyclable_Handler_Caching_Utility (ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> *cleanup_strategy = 0,
-                                                     int delete_cleanup_strategy = 0);
+                                                     bool delete_cleanup_strategy = false);
 
   /// Destructor.
   ~ACE_Refcounted_Recyclable_Handler_Caching_Utility (void);
 
   /**
-   * Purge entries from the <container>. The Cleanup_Strategy will do
+   * Purge entries from the @a container. The Cleanup_Strategy will do
    * the actual job of cleanup once the entries to be cleaned up are
    * decided.
    */
@@ -194,7 +174,7 @@ protected:
   CLEANUP_STRATEGY_BASE *cleanup_strategy_;
 
   /// Whether the cleanup_strategy should be destroyed or not.
-  int delete_cleanup_strategy_;
+  bool delete_cleanup_strategy_;
 
   /**
    * This figure denotes the number of entries are there in the
@@ -202,13 +182,7 @@ protected:
    * not have been unbound from the container.
    */
   size_t marked_as_closed_entries_;
-
-private:
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Refcounted_Recyclable_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Refcounted_Recyclable_Handler_Caching_Utility (const ACE_Refcounted_Recyclable_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
 };
-
-////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * @class ACE_Handler_Caching_Utility
@@ -216,7 +190,7 @@ private:
  * @brief Defines a helper class for the Caching Strategies.
  *
  * This class defines the methods commonly used by the different
- * caching strategies. For instance: <clear_cache> method which
+ * caching strategies. For instance: clear_cache() method which
  * decides and purges the entry from the container.  @note This
  * class helps in the caching_strategies using a container
  * containing entries of <KEY, HANDLER> kind where the HANDLER
@@ -225,7 +199,7 @@ private:
  * class to which the entries to be cleaned up will be delegated.
  */
 template <class KEY, class VALUE, class CONTAINER, class ITERATOR, class ATTRIBUTES>
-class ACE_Handler_Caching_Utility
+class ACE_Handler_Caching_Utility : private ACE_Copy_Disabled
 {
 public:
 
@@ -234,13 +208,13 @@ public:
 
   /// Constructor.
   ACE_Handler_Caching_Utility (ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> *cleanup_strategy = 0,
-                               int delete_cleanup_strategy = 0);
+                               bool delete_cleanup_strategy = false);
 
   /// Destructor.
   ~ACE_Handler_Caching_Utility (void);
 
   /**
-   * Purge entries from the <container>. The Cleanup_Strategy will do
+   * Purge entries from the @a container. The Cleanup_Strategy will do
    * the actual job of cleanup once the entries to be cleaned up are
    * decided.
    */
@@ -264,29 +238,23 @@ protected:
   CLEANUP_STRATEGY_BASE *cleanup_strategy_;
 
   /// Whether the cleanup_strategy should be destroyed or not.
-  int delete_cleanup_strategy_;
-
-private:
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Handler_Caching_Utility (const ACE_Handler_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
+  bool delete_cleanup_strategy_;
 };
 
-///////////////////////////////////////////////////////////////////////////
-#define ACE_Null_Caching_Utility ANUTIL
 /**
  * @class ACE_Null_Caching_Utility
  *
  * @brief Defines a dummy helper class for the Caching Strategies.
  *
  * This class defines the methods commonly used by the different
- * caching strategies. For instance: <clear_cache> method which
+ * caching strategies. For instance: clear_cache() method which
  * decides and purges the entry from the container.  @note This
  * class is be used with the Null_Caching_Strategy. The
  * Cleanup_Strategy is the callback class to which the entries to
  * be cleaned up will be delegated.
  */
 template <class KEY, class VALUE, class CONTAINER, class ITERATOR, class ATTRIBUTES>
-class ACE_Null_Caching_Utility
+class ACE_Null_Caching_Utility : private ACE_Copy_Disabled
 {
 public:
 
@@ -295,13 +263,13 @@ public:
 
   /// Constructor.
   ACE_Null_Caching_Utility (ACE_Cleanup_Strategy<KEY, VALUE, CONTAINER> *cleanup_strategy = 0,
-                            int delete_cleanup_strategy = 0);
+                            bool delete_cleanup_strategy = false);
 
   /// Destructor.
   ~ACE_Null_Caching_Utility (void);
 
   /**
-   * Purge entries from the <container>. The Cleanup_Strategy will do
+   * Purge entries from the @a container. The Cleanup_Strategy will do
    * the actual job of cleanup once the entries to be cleaned up are
    * decided. @note Here it is a no-op.
    */
@@ -325,11 +293,7 @@ protected:
   CLEANUP_STRATEGY_BASE *cleanup_strategy_;
 
   /// Whether the cleanup_strategy should be destroyed or not.
-  int delete_cleanup_strategy_;
-
-private:
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Null_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Null_Caching_Utility (const ACE_Null_Caching_Utility<KEY,VALUE,CONTAINER,ITERATOR,ATTRIBUTES> &))
+  bool delete_cleanup_strategy_;
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
@@ -345,4 +309,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_CACHING_UTILITY_H */
-

@@ -1,14 +1,11 @@
-// $Id: Sig_Adapter.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Sig_Adapter.h"
-
-ACE_RCSID(ace, Sig_Adapter, "$Id: Sig_Adapter.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 
 ACE_Sig_Adapter::ACE_Sig_Adapter (ACE_Sig_Action &sa, int sigkey)
   : sigkey_ (sigkey),
     type_ (SIG_ACTION),
-    sa_ (sa)
+    sa_ (sa),
+    eh_ (0),
+    sig_func_ (0)
 {
   // ACE_TRACE ("ACE_Sig_Adapter::ACE_Sig_Adapter");
 }
@@ -17,7 +14,8 @@ ACE_Sig_Adapter::ACE_Sig_Adapter (ACE_Event_Handler *eh,
                                   int sigkey)
   : sigkey_ (sigkey),
     type_ (ACE_HANDLER),
-    eh_ (eh)
+    eh_ (eh),
+    sig_func_ (0)
 {
   // ACE_TRACE ("ACE_Sig_Adapter::ACE_Sig_Adapter");
 }
@@ -26,6 +24,7 @@ ACE_Sig_Adapter::ACE_Sig_Adapter (ACE_Sig_Handler_Ex sig_func,
                                   int sigkey)
   : sigkey_ (sigkey),
     type_ (C_FUNCTION),
+    eh_ (0),
     sig_func_ (sig_func)
 {
   // ACE_TRACE ("ACE_Sig_Adapter::ACE_Sig_Adapter");
@@ -78,4 +77,3 @@ ACE_Sig_Adapter::handle_signal (int signum,
     }
   return 0;
 }
-

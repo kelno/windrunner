@@ -4,8 +4,6 @@
 /**
  *  @file    Parse_Node.h
  *
- *  $Id: Parse_Node.h 81239 2008-04-04 22:28:48Z iliyan $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
@@ -521,4 +519,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif  /* ACE_PARSE_NODE_H */
-

@@ -1,5 +1,3 @@
-// $Id: Stats.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Stats.h"
 
 #if !defined (__ACE_INLINE__)
@@ -9,7 +7,7 @@
 #include "ace/OS_NS_stdio.h"
 #include "ace/OS_NS_string.h"
 
-ACE_RCSID(ace, Stats, "$Id: Stats.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -68,15 +66,8 @@ ACE_Stats::mean (ACE_Stats_Value &m,
 {
   if (number_of_samples_ > 0)
     {
-#if defined ACE_LACKS_LONGLONG_T
-      // If ACE_LACKS_LONGLONG_T, then ACE_UINT64 is a user-defined class.
-      // To prevent having to construct a static of that class, declare it
-      // on the stack, and construct it, in each function that needs it.
-      const ACE_U_LongLong ACE_STATS_INTERNAL_OFFSET (0, 8);
-#else  /* ! ACE_LACKS_LONGLONG_T */
       const ACE_UINT64 ACE_STATS_INTERNAL_OFFSET =
         ACE_UINT64_LITERAL (0x100000000);
-#endif /* ! ACE_LACKS_LONGLONG_T */
 
       ACE_UINT64 sum = ACE_STATS_INTERNAL_OFFSET;
       ACE_Unbounded_Queue_Iterator<ACE_INT32> i (samples_);
@@ -273,15 +264,10 @@ ACE_Stats::print_summary (const u_int precision,
     }
   else
     {
-#if !defined (ACE_HAS_WINCE)
       ACE_OS::fprintf (file,
                        ACE_TEXT ("ACE_Stats::print_summary: OVERFLOW: %s\n"),
                        ACE_OS::strerror (overflow_));
-#else
-      // WinCE doesn't have strerror ;(
-      ACE_OS::fprintf (file,
-                       ACE_TEXT ("ACE_Stats::print_summary: OVERFLOW\n"));
-#endif /* ACE_HAS_WINCE */
+
       return -1;
     }
 }
@@ -424,4 +410,3 @@ ACE_Stats::square_root (const ACE_UINT64 n,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

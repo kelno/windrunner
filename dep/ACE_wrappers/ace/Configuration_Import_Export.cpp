@@ -1,5 +1,3 @@
-// $Id: Configuration_Import_Export.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Configuration_Import_Export.h"
 #include "ace/OS_Errno.h"
 #include "ace/OS_NS_stdio.h"
@@ -138,7 +136,8 @@ ACE_Registry_ImpExp::import_config (const ACE_TCHAR* filename)
               // number type
               ACE_TCHAR* endptr = 0;
               unsigned long value = ACE_OS::strtoul (end + 6, &endptr, 16);
-              if (config_.set_integer_value (section, name, value))
+              if (config_.set_integer_value (section, name,
+                                             static_cast<u_int> (value)))
                 {
                   ACE_OS::fclose (in);
                   delete [] buffer;
@@ -254,7 +253,7 @@ ACE_Registry_ImpExp::export_section (const ACE_Configuration_Section_Key& sectio
       ACE_TString header = ACE_TEXT ("[");
       header += path;
       header += ACE_TEXT ("]");
-      header += ACE_TEXT (" \n");
+      header += ACE_TEXT ("\n");
       if (ACE_OS::fputs (header.fast_rep (), out) < 0)
         return -1;
       // Write out each value
@@ -668,4 +667,3 @@ ACE_Ini_ImpExp::squish (ACE_TCHAR *src)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

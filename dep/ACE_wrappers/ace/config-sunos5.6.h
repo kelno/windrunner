@@ -1,6 +1,4 @@
 /* -*- C++ -*- */
-// $Id: config-sunos5.6.h 81935 2008-06-12 22:01:53Z jtc $
-
 // The following configuration file is designed to work for SunOS 5.6
 // platforms using the SunC++ 4.x or g++ compilers.
 
@@ -38,13 +36,7 @@
 #ifndef ACE_TEMPLATES_REQUIRE_SOURCE
 #define ACE_TEMPLATES_REQUIRE_SOURCE            1
 #endif /* ACE_TEMPLATES_REQUIRE_SOURCE */
-#ifndef ACE_HAS_TEMPLATE_TYPEDEFS
-#define ACE_HAS_TEMPLATE_TYPEDEFS               1
-#endif /* ACE_HAS_TEMPLATE_TYPEDEFS */
 // Forte 7 seems to botch this one...
-#if __SUNPRO_CC == 0x540
-#undef ACE_HAS_TEMPLATE_TYPEDEFS
-#endif
 #ifndef ACE_HAS_THR_C_DEST
 #define ACE_HAS_THR_C_DEST                      1
 #endif /* ACE_HAS_THR_C_DEST */
@@ -84,7 +76,6 @@
 // SunOS 5.6 and above support mkstemp
 #undef ACE_LACKS_MKSTEMP
 
-
 // SunOS 5.6 has AIO calls.
 #if !defined (ACE_HAS_AIO_CALLS)
 #define ACE_HAS_AIO_CALLS
@@ -107,9 +98,6 @@
 #define ACE_POSIX_AIOCB_PROACTOR
 #endif /* ACE_POSIX_AIOCB_PROACTOR */
 
-// SunOS 5.6 has a buggy select
-#define ACE_HAS_LIMITED_SELECT
-
 // SunOS 5.6 introduced shm_open, but need to turn on POSIX.1b or higher
 // to pick it up.
 #if defined (_POSIX_C_SOURCE) && (_POSIX_C_SOURCE > 2)
@@ -124,4 +112,3 @@
 #endif /* _XPG4_2 */
 
 #endif /* ACE_CONFIG_H */
-

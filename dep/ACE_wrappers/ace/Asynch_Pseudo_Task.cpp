@@ -1,11 +1,7 @@
-// $Id: Asynch_Pseudo_Task.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Asynch_Pseudo_Task.h"
 
 #include "ace/OS_NS_errno.h"
 #include "ace/OS_NS_signal.h"
-
-ACE_RCSID(ace, Asynch_Pseudo_Task, "$Id: Asynch_Pseudo_Task.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -24,7 +20,7 @@ int
 ACE_Asynch_Pseudo_Task::start (void)
 {
   if (this->reactor_.initialized () == 0)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("%N:%l:%p\n"),
                        ACE_TEXT ("start reactor is not initialized")),
                        -1);
@@ -58,7 +54,7 @@ ACE_Asynch_Pseudo_Task::svc (void)
     sigaddset (&RT_signals, si);
 
   if (ACE_OS::pthread_sigmask (SIG_BLOCK, &RT_signals, 0) != 0)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("Error:(%P | %t):%p\n"),
                 ACE_TEXT ("pthread_sigmask")));
 #endif
@@ -88,7 +84,7 @@ ACE_Asynch_Pseudo_Task::register_io_handler (ACE_HANDLE handle,
   // by the application.
   if (this->reactor_.suspend_handler (handle) == -1)
     {
-      ACE_ERROR
+      ACELIB_ERROR
         ((LM_ERROR,
           ACE_TEXT ("%N:%l:%p\n"),
           ACE_TEXT ("register_io_handler (suspended)")));
@@ -128,4 +124,3 @@ ACE_Asynch_Pseudo_Task::resume_io_handler (ACE_HANDLE handle)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Proactor_Impl.h
  *
- *  $Id: Proactor_Impl.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Alexander Babu Arulanthu <alex@cs.wustl.edu>
  *  @author Alexander Libman <alibman@ihug.com.au>
  */
@@ -263,4 +261,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_HAS_WIN32_OVERLAPPED_IO || ACE_HAS_AIO_CALLS */
 #include /**/ "ace/post.h"
 #endif /* ACE_PROACTOR_IMPL_H */
-

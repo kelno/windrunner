@@ -4,8 +4,6 @@
 /**
  *  @file    Event_Handler.h
  *
- *  $Id: Event_Handler.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //==========================================================================
@@ -38,7 +36,8 @@ typedef unsigned long ACE_Reactor_Mask;
 /**
  * @class ACE_Event_Handler
  *
- * @brief Provides an abstract interface for handling various types of
+ * @brief
+ * Provides an abstract interface for handling various types of
  * I/O, timer, and signal events.
  *
  * Subclasses read/write input/output on an I/O descriptor,
@@ -94,9 +93,9 @@ public:
 
   // = Get/set priority
 
-  // Priorities run from MIN_PRIORITY (which is the "lowest priority")
-  // to MAX_PRIORITY (which is the "highest priority").
   /// Get the priority of the Event_Handler.
+  /// @note Priorities run from MIN_PRIORITY (which is the "lowest priority")
+  /// to MAX_PRIORITY (which is the "highest priority").
   virtual int priority (void) const;
 
   /// Set the priority of the Event_Handler.
@@ -114,7 +113,7 @@ public:
 
   /**
    * Called when timer expires.  @a current_time represents the current
-   * time that the <Event_Handler> was selected for timeout
+   * time that the Event_Handler was selected for timeout
    * dispatching and @a act is the asynchronous completion token that
    * was passed in when <schedule_timer> was invoked.
    */
@@ -124,10 +123,10 @@ public:
   /// Called when a process exits.
   virtual int handle_exit (ACE_Process *);
 
-  /// Called when a <handle_*()> method returns -1 or when the
-  /// <remove_handler> method is called on an ACE_Reactor.  The
+  /// Called when a handle_*() method returns -1 or when the
+  /// remove_handler() method is called on an ACE_Reactor.  The
   /// @a close_mask indicates which event has triggered the
-  /// <handle_close> method callback on a particular @a handle.
+  /// handle_close() method callback on a particular @a handle.
   virtual int handle_close (ACE_HANDLE handle,
                             ACE_Reactor_Mask close_mask);
 
@@ -145,17 +144,17 @@ public:
       /// The application takes responsibility of resuming the handler
       ACE_APPLICATION_RESUMES_HANDLER
     };
+
   /**
    * Called to figure out whether the handler needs to resumed by the
    * reactor or the application can take care of it. The default
    * value of 0 would be returned which would allow the reactor to
    * take care of resumption of the handler. The application can
    * return a value more than zero and decide to resume the handler
-   * themseleves.
+   * themselves.
    *
-   * @note This method is only useful for the ACE_TP_Reactor. Sad
-   * that we have to have this method in a class that is supposed to
-   * be used across different components in ACE.
+   * @note This method has an affect only when used with the
+   * ACE_Dev_Poll_Reactor (and then, only on Linux) or the ACE_TP_Reactor.
    */
   virtual int resume_handler (void);
 
@@ -178,8 +177,8 @@ public:
    * non-sockets (such as ACE_STDIN).  This is commonly used in
    * situations where the Reactor is used to demultiplex read events
    * on ACE_STDIN on UNIX.  Note that @a event_handler must be a
-   * subclass of ACE_Event_Handler.  If the <get_handle> method of
-   * this event handler returns <ACE_INVALID_HANDLE> we default to
+   * subclass of ACE_Event_Handler.  If the get_handle() method of
+   * this event handler returns ACE_INVALID_HANDLE we default to
    * reading from ACE_STDIN.
    */
   static ACE_THR_FUNC_RETURN read_adapter (void *event_handler);
@@ -194,7 +193,7 @@ public:
                                      ACE_Thread_Manager *thr_mgr,
                                      int flags = THR_DETACHED);
 
-  /// Performs the inverse of the <register_stdin_handler> method.
+  /// Performs the inverse of the register_stdin_handler() method.
   static int remove_stdin_handler (ACE_Reactor *reactor,
                                    ACE_Thread_Manager *thr_mgr);
 
@@ -239,7 +238,8 @@ public:
   /**
    * @class Reference_Counting_Policy
    *
-   * @brief This policy dictates the reference counting requirements
+   * @brief
+   * This policy dictates the reference counting requirements
    * for the handler.
    *
    * This policy allows applications to configure whether it wants the
@@ -314,9 +314,7 @@ private:
  */
 class ACE_Export ACE_Event_Handler_var
 {
-
 public:
-
   /// Default constructor.
   ACE_Event_Handler_var (void);
 
@@ -347,16 +345,55 @@ public:
   /// Reset the handler.
   void reset (ACE_Event_Handler *p = 0);
 
+#if defined (ACE_HAS_CPP11)
+  /// Bool operator to check if the ACE_Event_Handler_var has a value
+  explicit operator bool() const;
+  /// Equality operator to compare with nullptr_t
+  bool operator ==(std::nullptr_t) const;
+  /// Not equal operator to compare with nullptr_t
+  bool operator !=(std::nullptr_t) const;
+#endif
+
 private:
 
   /// Handler.
   ACE_Event_Handler *ptr_;
 };
 
+#if defined ACE_HAS_CPP11
+
+/// Define that we can use in user code to check if this
+/// helper factory method is there
+#define ACE_HAS_ACE_MAKE_EVENT_HANDLER
+
+namespace ACE
+{
+  /// With C++11 it is common to not use C++ new and delete, but
+  /// use std::make_shared and std::make_unique. This will not
+  /// work for ACE event handlers so we introduce a new
+  /// ACE::make_event_handler which can be used in user code to
+  /// allocate a new ACE event handler instance and directly assign
+  /// it to a ACE_Event_Handler_var
+  /// As user this now makes it for example possible to implement
+  /// the following when Simple_Handler is derived from ACE_Event_Handler
+  /// ACE_Event_Handler_var v =
+  ///   ACE::make_event_handler<Simple_Handler> (reactor.get());
+  template<class T,
+           typename = typename
+             std::enable_if<std::is_base_of<ACE_Event_Handler, T>::value>::type,
+           typename ...Args> inline
+  ACE_Event_Handler_var make_event_handler (Args&& ...args)
+  {
+    return ACE_Event_Handler_var (new T (std::forward<Args> (args)...));
+  }
+}
+
+#endif
+
 /**
  * @class ACE_Notification_Buffer
  *
- * @brief Simple wrapper for passing <ACE_Event_Handler *>s and
+ * @brief Simple wrapper for passing ACE_Event_Handler *s and
  * ACE_Reactor_Masks between threads.
  */
 class ACE_Export ACE_Notification_Buffer
@@ -367,7 +404,7 @@ public:
   ACE_Notification_Buffer (ACE_Event_Handler *eh,
                            ACE_Reactor_Mask mask);
 
-  /// Default dtor.
+  /// Default destructor.
   ~ACE_Notification_Buffer (void);
 
   /// Pointer to the Event_Handler that will be dispatched
@@ -386,4 +423,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_EVENT_HANDLER_H */
-

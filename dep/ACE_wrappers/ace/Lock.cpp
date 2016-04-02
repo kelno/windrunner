@@ -1,12 +1,10 @@
-// $Id: Lock.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Lock.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Lock.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, Lock, "$Id: Lock.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -86,4 +84,3 @@ ACE_Adaptive_Lock::dump (void) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

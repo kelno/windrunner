@@ -1,5 +1,3 @@
-// $Id: SPIPE_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SPIPE_Stream.h"
 #include "ace/OS_Memory.h"
 
@@ -7,7 +5,7 @@
 #include "ace/SPIPE_Stream.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, SPIPE_Stream, "$Id: SPIPE_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -102,4 +100,3 @@ ACE_SPIPE_Stream::recv (size_t n, ...) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

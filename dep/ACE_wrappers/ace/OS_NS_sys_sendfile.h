@@ -4,8 +4,6 @@
 /**
  *  @file    OS_NS_sys_sendfile.h
  *
- *  $Id: OS_NS_sys_sendfile.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Ossama Othman <ossama@dre.vanderbilt.edu>
  */
 //=============================================================================
@@ -22,6 +20,7 @@
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
 #include "ace/Basic_Types.h"  /* For ssize_t and off_t. */
+#include "ace/config-all.h"
 
 #if defined (ACE_EXPORT_MACRO)
 #  undef ACE_EXPORT_MACRO
@@ -40,13 +39,13 @@ namespace ACE_OS
                     off_t * offset,
                     size_t count);
 
-#ifndef ACE_HAS_SENDFILE
+#if defined ACE_HAS_SENDFILE && ACE_HAS_SENDFILE == 0
   extern ACE_Export
   ssize_t sendfile_emulation (ACE_HANDLE out_fd,
                               ACE_HANDLE in_fd,
                               off_t * offset,
                               size_t count);
-#endif  /* !ACE_HAS_SENDFILE */
+#endif  /* ACE_HAS_SENDFILE==0 */
 
 }
 
@@ -63,4 +62,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif  /* ACE_OS_NS_SYS_SENDFILE_H */
-

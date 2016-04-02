@@ -4,8 +4,6 @@
 /**
  *  @file    Lock_Adapter_T.h
  *
- *  $Id: Lock_Adapter_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -28,7 +26,7 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @class ACE_Lock_Adapter
  *
  * @brief This is an adapter that allows applications to transparently
- * combine the <ACE_Lock> abstract base class (which contains
+ * combine the ACE_Lock abstract base class (which contains
  * pure virtual methods) with any of the other concrete ACE
  * synchronization classes (e.g., ACE_Mutex, ACE_Semaphore,
  * ACE_RW_Mutex, etc.).
@@ -43,14 +41,14 @@ public:
 
   // = Initialization/Finalization methods.
 
-  /// Constructor. All locking requests will be forwarded to <lock>.
+  /// Constructor. All locking requests will be forwarded to @a lock.
   ACE_Lock_Adapter (ACE_LOCKING_MECHANISM &lock);
 
   /// Constructor. Since no lock is provided by the user, one will be
   /// created internally.
   ACE_Lock_Adapter (void);
 
-  /// Destructor. If <lock_> was not passed in by the user, it will be
+  /// Destructor. If @c lock_ was not passed in by the user, it will be
   /// deleted.
   virtual ~ACE_Lock_Adapter (void);
 
@@ -67,29 +65,29 @@ public:
   /**
    * Block until the thread acquires a read lock.  If the locking
    * mechanism doesn't support read locks then this just calls
-   * <acquire>.
+   * acquire().
    */
   virtual int acquire_read (void);
 
   /**
    * Block until the thread acquires a write lock.  If the locking
    * mechanism doesn't support read locks then this just calls
-   * <acquire>.
+   * acquire().
    */
   virtual int acquire_write (void);
 
   /// Conditionally acquire a read lock.  If the locking mechanism
-  /// doesn't support read locks then this just calls <acquire>.
+  /// doesn't support read locks then this just calls acquire().
   virtual int tryacquire_read (void);
 
   /// Conditionally acquire a write lock.  If the locking mechanism
-  /// doesn't support read locks then this just calls <acquire>.
+  /// doesn't support read locks then this just calls acquire().
   virtual int tryacquire_write (void);
 
   /**
    * Conditionally try to upgrade a lock held for read to a write lock.
    * If the locking mechanism doesn't support read locks then this just
-   * calls <acquire>. Returns 0 on success, -1 on failure.
+   * calls acquire(). Returns 0 on success, -1 on failure.
    */
   virtual int tryacquire_write_upgrade (void);
 
@@ -121,4 +119,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_LOCK_ADAPTER_T_H */
-

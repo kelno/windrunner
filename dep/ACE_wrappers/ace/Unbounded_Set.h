@@ -4,8 +4,6 @@
 /**
  *  @file Unbounded_Set.h
  *
- *  $Id: Unbounded_Set.h 81642 2008-05-07 19:30:35Z shuston $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -101,4 +99,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_UNBOUNDED_SET_H */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Shared_Memory_SV.h
  *
- *  $Id: Shared_Memory_SV.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -99,4 +97,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_SHARED_MALLOC_SV_H */
-

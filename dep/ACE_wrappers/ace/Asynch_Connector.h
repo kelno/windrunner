@@ -4,8 +4,6 @@
 /**
  *  @file    Asynch_Connector.h
  *
- *  $Id: Asynch_Connector.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Alexander Libman <alibman@ihug.com.au>
  */
 //=============================================================================
@@ -169,4 +167,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_WIN32 || ACE_HAS_AIO_CALLS */
 #include /**/ "ace/post.h"
 #endif /* ACE_ASYNCH_CONNECTOR_H */
-

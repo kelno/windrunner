@@ -1,16 +1,10 @@
-// $Id: Message_Queue_NT.cpp 80826 2008-03-04 14:51:23Z wotte $
-
+#include "ace/Message_Queue.h"
 #include "ace/Message_Queue_NT.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Message_Queue_NT.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID (ace,
-           Message_Queue_NT,
-           "$Id: Message_Queue_NT.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -33,10 +27,13 @@ ACE_Message_Queue_NT::open (DWORD max_threads)
 {
   ACE_TRACE ("ACE_Message_Queue_NT::open");
   this->max_cthrs_ = max_threads;
+  this->state_ = ACE_Message_Queue_Base::ACTIVATED;
   this->completion_port_ = ::CreateIoCompletionPort (ACE_INVALID_HANDLE,
                                                      0,
                                                      ACE_Message_Queue_Base::ACTIVATED,
                                                      max_threads);
+  if (this->completion_port_ == 0)
+    this->state_ = ACE_Message_Queue_Base::DEACTIVATED;
   return (this->completion_port_ == 0 ? -1 : 0);
 }
 
@@ -198,24 +195,24 @@ ACE_Message_Queue_NT::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Message_Queue_NT::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   switch (this->state_)
     {
     case ACE_Message_Queue_Base::ACTIVATED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = ACTIVATED\n")));
       break;
     case ACE_Message_Queue_Base::DEACTIVATED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = DEACTIVATED\n")));
       break;
     case ACE_Message_Queue_Base::PULSED:
-      ACE_DEBUG ((LM_DEBUG,
+      ACELIB_DEBUG ((LM_DEBUG,
                   ACE_TEXT ("state = PULSED\n")));
       break;
     }
 
-  ACE_DEBUG ((LM_DEBUG,
+  ACELIB_DEBUG ((LM_DEBUG,
               ACE_TEXT ("max_cthrs_ = %d\n")
               ACE_TEXT ("cur_thrs_ = %d\n")
               ACE_TEXT ("cur_bytes = %d\n")
@@ -228,11 +225,10 @@ ACE_Message_Queue_NT::dump (void) const
               this->cur_length_,
               this->cur_count_,
               this->completion_port_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
 #endif /* ACE_HAS_WIN32_OVERLAPPED_IO */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

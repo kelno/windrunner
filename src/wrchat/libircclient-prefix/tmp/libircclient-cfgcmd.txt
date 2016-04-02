@@ -1,0 +1,1 @@
+cmd='/media/DATA/serv/windrunner/sources/dep/libircclient/configure;--prefix=<INSTALL_DIR>;--enable-openssl;--enable-shared'

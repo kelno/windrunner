@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Local_Tokens.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #if defined (ACE_HAS_TOKENS_LIBRARY)
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -74,7 +71,7 @@ ACE_Tokens::dec_reference (void)
   ACE_TRACE ("ACE_Tokens::dec_reference");
   if (this->reference_count_ == 0)
     {
-      ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("dec_reference already zero")));
+      ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("dec_reference already zero")));
       return 0;
     }
 
@@ -139,20 +136,6 @@ ACE_Tokens::name (void)
   ACE_TRACE ("ACE_Tokens::name");
   return this->token_name_;
 }
-
-#if 0
-ACE_INLINE ACE_Token_Proxy *
-ACE_Tokens::current_owner (void)
-{
-  ACE_TRACE ("ACE_Tokens::current_owner");
-  // ACE_GUARD_RETURN ???
-
-  if (this->owner () == 0)
-    return 0;
-  else
-    return this->owner ()->proxy ();
-}
-#endif /* 0 */
 
 // ************************************************************
 

@@ -4,8 +4,6 @@
 /**
  *  @file    Dev_Poll_Reactor.h
  *
- *  $Id: Dev_Poll_Reactor.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @c /dev/poll (or Linux @c sys_epoll) based Reactor implementation.
  *
  *  @author  Ossama Othman <ossama@dre.vanderbilt.edu>
@@ -43,7 +41,8 @@
 #if defined (ACE_HAS_DEV_POLL)
 struct pollfd;
 #elif defined (ACE_HAS_EVENT_POLL)
-struct epoll_event;
+#  include "ace/Array_Map.h"
+#  include /**/ <sys/epoll.h>
 #endif
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -52,87 +51,6 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 class ACE_Sig_Handler;
 class ACE_Dev_Poll_Reactor;
 
-/**
- * @class ACE_Dev_Poll_Event_Tuple
- *
- * @brief Class that associates specific event mask with a given event
- *        handler.
- *
- * This class merely provides a means to associate an event mask
- * with an event handler.  Such an association is needed since it is
- * not possible to retrieve the event mask from the "interest set"
- * stored in the `/dev/poll' or `/dev/epoll' driver.  Without this
- * external association, it would not be possible keep track of the
- * event mask for a given event handler when suspending it or resuming
- * it.
- *
- * @note An ACE_Handle_Set is not used since the number of handles may
- *       exceed its capacity (ACE_DEFAULT_SELECT_REACTOR_SIZE).
- */
-class ACE_Dev_Poll_Event_Tuple
-{
-public:
-
-  /// Constructor.
-  ACE_Dev_Poll_Event_Tuple (void);
-
-public:
-
-  /// The event handler.
-  ACE_Event_Handler *event_handler;
-
-  /// The event mask for the above event handler.
-  ACE_Reactor_Mask mask;
-
-  /// Flag that states whether or not the event handler is suspended.
-  char suspended;
-};
-
-// ---------------------------------------------------------------------
-
-#if 0
-/**
- * @class ACE_Dev_Poll_Ready_Set
- *
- * @brief Class that contains the list of "ready" file descriptors.
- *
- * This class points to an array of pollfd structures corresponding to
- * "ready" file descriptors, such as those corresponding to event
- * handlers that request an additional callback after being initially
- * dispatched (i.e. return a value greater than zero).
- * @par
- * The idea is to store the "ready" set in an existing area of memory
- * that already contains pollfd instances.  Doing so is safe since the
- * "ready" set is dispatched before polling for additional events,
- * thus avoiding being potentially overwritten during the event poll.
- * @par
- * When the "ready" set is dispatched, all that needs to be done is to
- * iterate over the contents of the array.  There is no need to "walk"
- * the array in search of ready file descriptors since the array by
- * design only contains ready file descriptors.  As such, this
- * implementation of a ready set is much more efficient in the
- * presence of a large number of file descriptors in terms of both
- * time and space than the one used in the Select_Reactor, for
- * example.
- */
-class ACE_Dev_Poll_Ready_Set
-{
-public:
-
-  /// Constructor.
-  ACE_Dev_Poll_Ready_Set (void);
-
-public:
-
-  /// The array containing the pollfd structures corresponding to the
-  /// "ready" file descriptors.
-  struct pollfd *pfds;
-
-  /// The number of "ready" file descriptors in the above array.
-  int nfds;
-
-};
-#endif  /* 0 */
 
 // ---------------------------------------------------------------------
 
@@ -240,6 +158,14 @@ public:
   /// Dump the state of an object.
   virtual void dump (void) const;
 
+  /// Method called by ACE_Dev_Poll_Reactor to obtain one notification.
+  /// THIS METHOD MUST BE CALLED WITH THE REACTOR TOKEN HELD!
+  ///
+  /// @return -1 on error, else 0 and @arg nb has the notify to
+  ///            dispatch. Note that the contained event handler may be
+  ///            0 if there were only wake-ups (no handlers to dispatch).
+  int dequeue_one (ACE_Notification_Buffer &nb);
+
 protected:
 
   /**
@@ -279,124 +205,6 @@ protected:
    */
   ACE_Notification_Queue notification_queue_;
 #endif /* ACE_HAS_REACTOR_NOTIFICATION_QUEUE */
-
-};
-
-// ---------------------------------------------------------------------
-
-/**
- * @class ACE_Dev_Poll_Reactor_Handler_Repository
- *
- * @internal
-
- * @brief Used to map ACE_HANDLEs onto the appropriate
- *        ACE_Event_Handler *.
- *
- *
- * This class is simply a container that maps a handle to its
- * corresponding event handler.  It is not meant for use outside of
- * the Dev_Poll_Reactor.
- */
-class ACE_Dev_Poll_Reactor_Handler_Repository
-{
-public:
-
-  /// Constructor.
-  ACE_Dev_Poll_Reactor_Handler_Repository (void);
-
-  /// Initialize a repository of the appropriate @a size.
-  int open (size_t size);
-
-  /// Close down the repository.
-  int close (void);
-
-  /**
-   * @name Repository Manipulation Operations
-   *
-   * Methods used to search and modify the handler repository.
-   */
-  //@{
-
-  /**
-   * Return the @c ACE_Event_Handler associated with @c ACE_HANDLE.  If
-   * @a index_p is non-zero, then return the index location of the
-   * handle, if found.
-   */
-  ACE_Event_Handler *find (ACE_HANDLE handle, size_t *index_p = 0);
-
-  /// Set the event mask for event handler associated with the given
-  /// handle.
-  void mask (ACE_HANDLE handle, ACE_Reactor_Mask mask);
-
-  /// Retrieve the event mask for the event handler associated with
-  /// the given handle.
-  ACE_Reactor_Mask mask (ACE_HANDLE handle);
-
-  /// Mark the event handler associated with the given handle as
-  /// "suspended."
-  void suspend (ACE_HANDLE handle);
-
-  /// Mark the event handler associated with the given handle as
-  /// "resumed."
-  void resume (ACE_HANDLE handle);
-
-  /// Is the event handler for the given handle suspended?
-  int suspended (ACE_HANDLE handle) const;
-
-  /// Bind the ACE_Event_Handler to the @c ACE_HANDLE with the
-  /// appropriate ACE_Reactor_Mask settings.
-  int bind (ACE_HANDLE handle,
-            ACE_Event_Handler *handler,
-            ACE_Reactor_Mask mask);
-
-  /// Remove the binding for @c ACE_HANDLE; optionally decrement the associated
-  /// handler's reference count.
-  int unbind (ACE_HANDLE handle, bool decr_refcnt = true);
-
-  /// Remove all the (@c ACE_HANDLE, @c ACE_Event_Handler) tuples.
-  int unbind_all (void);
-
-  /**
-   * @name Sanity Checking
-   *
-   * Methods used to prevent "out-of-range" errors when indexing the
-   * underlying handler array.
-   */
-  //@{
-
-  // Check the @a handle to make sure it's a valid @c ACE_HANDLE that
-  // within the range of legal handles (i.e., greater than or equal to
-  // zero and less than @c max_size_).
-  int invalid_handle (ACE_HANDLE handle) const;
-
-  // Check the handle to make sure it's a valid @c ACE_HANDLE that is
-  // within the range of currently registered handles (i.e., greater
-  // than or equal to zero and less than @c max_handlep1_).
-  int handle_in_range (ACE_HANDLE handle) const;
-
-  //@}
-
-  /// Returns the current table size.
-  size_t size (void) const;
-
-  /// Dump the state of an object.
-  void dump (void) const;
-
-  /// Declare the dynamic allocation hooks.
-  ACE_ALLOC_HOOK_DECLARE;
-
-private:
-
-  /// Maximum number of handles.
-  int max_size_;
-
-  /// The underlying array of event handlers.
-  /**
-   * The array of event handlers is directly indexed directly using
-   * an @c ACE_HANDLE value.  This is Unix-specific.
-   */
-  ACE_Dev_Poll_Event_Tuple *handlers_;
-
 };
 
 // ---------------------------------------------------------------------
@@ -444,6 +252,155 @@ typedef ACE_Reactor_Token_T<ACE_DEV_POLL_TOKEN> ACE_Dev_Poll_Reactor_Token;
 
 class ACE_Export ACE_Dev_Poll_Reactor : public ACE_Reactor_Impl
 {
+
+  /**
+   * @struct Event_Tuple
+   *
+   * @brief Struct that collects event registration information for a handle.
+   *
+   * @internal Internal use only
+   *
+   * This struct merely provides a means to associate an event mask
+   * with an event handler.  Such an association is needed since it is
+   * not possible to retrieve the event mask from the "interest set"
+   * stored in the `/dev/poll' or `/dev/epoll' driver.  Without this
+   * external association, it would not be possible keep track of the
+   * event mask for a given event handler when suspending it or resuming
+   * it.
+   *
+   * @note An ACE_Handle_Set is not used since the number of handles may
+   *       exceed its capacity (ACE_DEFAULT_SELECT_REACTOR_SIZE).
+   */
+  struct Event_Tuple
+  {
+    /// Constructor to set up defaults.
+    Event_Tuple (ACE_Event_Handler *eh = 0,
+                 ACE_Reactor_Mask m = ACE_Event_Handler::NULL_MASK,
+                 bool is_suspended = false,
+                 bool is_controlled = false);
+
+    /// The event handler.
+    ACE_Event_Handler *event_handler;
+
+    /// The event mask for the above event handler.
+    ACE_Reactor_Mask mask;
+
+    /// Flag that states whether or not the event handler is suspended.
+    bool suspended;
+
+    /// Flag to say whether or not this handle is registered with epoll.
+    bool controlled;
+  };
+
+
+  // ---------------------------------------------------------------------
+
+  /**
+   * @class Handler_Repository
+   *
+   * @internal
+   *
+   * @brief Used to map ACE_HANDLEs onto the appropriate Event_Tuple.
+   *
+   * This class is simply a container that maps a handle to its
+   * corresponding event tuple. It is not meant for use outside of
+   * the Dev_Poll_Reactor.
+   *
+   * @note Calls to any method in this class, and any modification to a
+   *       Event_Tuple returned from this class's methods, must be made
+   *       while holding the repository lock.
+   */
+  class Handler_Repository
+  {
+  public:
+
+    /// Constructor.
+    Handler_Repository (void);
+
+    /// Initialize a repository that can map handles up to the value @a size.
+    /// Since the event tuples are accessed directly using the handle as
+    /// an index, @a size sets the maximum handle value, minus 1.
+    int open (size_t size);
+
+    /// Close down the repository.
+    int close (void);
+
+    /**
+     * @name Repository Manipulation Operations
+     *
+     * Methods used to search and modify the handler repository.
+     */
+    //@{
+
+    /// Return a pointer to the Event_Tuple associated with @a handle.
+    /// If there is none associated, returns 0 and sets errno.
+    Event_Tuple *find (ACE_HANDLE handle);
+
+
+    /// Bind the ACE_Event_Handler to the @c ACE_HANDLE with the
+    /// appropriate ACE_Reactor_Mask settings.
+    int bind (ACE_HANDLE handle,
+              ACE_Event_Handler *handler,
+              ACE_Reactor_Mask mask);
+
+    /// Remove the binding for @a handle; optionally decrement the associated
+    /// handler's reference count.
+    int unbind (ACE_HANDLE handle, bool decr_refcnt = true);
+
+    /// Remove all the registered tuples.
+    int unbind_all (void);
+
+    //@}
+
+    /**
+     * @name Sanity Checking
+     *
+     * Methods used to prevent "out-of-range" errors when indexing the
+     * underlying handler array.
+     */
+    //@{
+
+    // Check the @a handle to make sure it's a valid @c ACE_HANDLE that
+    // within the range of legal handles (i.e., greater than or equal to
+    // zero and less than @c max_size_).
+    bool invalid_handle (ACE_HANDLE handle) const;
+
+    // Check the handle to make sure it's a valid @c ACE_HANDLE that is
+    // within the range of currently registered handles (i.e., greater
+    // than or equal to zero and less than @c max_handlep1_).
+    bool handle_in_range (ACE_HANDLE handle) const;
+
+    //@}
+
+    /// Returns the current table size.
+    size_t size (void) const;
+
+    /// Returns the current table size.
+    size_t max_size (void) const;
+
+    /// Dump the state of an object.
+    void dump (void) const;
+
+    /// Declare the dynamic allocation hooks.
+    ACE_ALLOC_HOOK_DECLARE;
+
+  private:
+
+    /// Current number of handles.
+    int size_;
+
+    /// Maximum number of handles.
+    int max_size_;
+
+    /// The underlying array of event handlers.
+    /**
+     * The array of event handlers is directly indexed directly using
+     * an @c ACE_HANDLE value.  This is Unix-specific.
+     */
+    Event_Tuple *handlers_;
+
+  };
+
 public:
 
   /// Initialize @c ACE_Dev_Poll_Reactor with the default size.
@@ -471,7 +428,7 @@ public:
    *       access violations.
    */
   ACE_Dev_Poll_Reactor (size_t size,
-                        int restart = 0,
+                        bool restart = false,
                         ACE_Sig_Handler * = 0,
                         ACE_Timer_Queue * = 0,
                         int disable_notify_pipe = 0,
@@ -484,7 +441,7 @@ public:
 
   /// Initialization.
   virtual int open (size_t size,
-                    int restart = 0,
+                    bool restart = false,
                     ACE_Sig_Handler * = 0,
                     ACE_Timer_Queue * = 0,
                     int disable_notify_pipe = 0,
@@ -604,7 +561,7 @@ public:
                                 ACE_Event_Handler *event_handler,
                                 ACE_Reactor_Mask mask);
 
-  /// Register @a event_handler> with all the @a handles> in the @c
+  /// Register @a event_handler with all the @a handles in the @c
   /// Handle_Set.
   virtual int register_handler (const ACE_Handle_Set &handles,
                                 ACE_Event_Handler *event_handler,
@@ -622,8 +579,8 @@ public:
                                 ACE_Event_Handler **old_sh = 0,
                                 ACE_Sig_Action *old_disp = 0);
 
-  /// Registers <new_sh> to handle a set of signals <sigset> using the
-  /// <new_disp>.
+  /// Registers @a new_sh to handle a set of signals @a sigset using the
+  /// @a new_disp.
   virtual int register_handler (const ACE_Sig_Set &sigset,
                                 ACE_Event_Handler *new_sh,
                                 ACE_Sig_Action *new_disp = 0);
@@ -647,7 +604,7 @@ public:
                               ACE_Reactor_Mask mask);
 
   /**
-   * Removes all handles in <handle_set>.  If @a mask ==
+   * Removes all handles in @a handle_set.  If @a mask ==
    * ACE_Event_Handler::DONT_CALL then the <handle_close> method of
    * the associated <event_handler>s is not invoked.
    */
@@ -665,7 +622,7 @@ public:
                               ACE_Sig_Action *old_disp = 0,
                               int sigkey = -1);
 
-  /// Calls <remove_handler> for every signal in <sigset>.
+  /// Calls <remove_handler> for every signal in @a sigset.
   virtual int remove_handler (const ACE_Sig_Set &sigset);
 
   // = Suspend and resume Handlers.
@@ -701,9 +658,9 @@ public:
   /// the application.
   virtual int resumable_handler (void);
 
-  /// Return 1 if we any event associations were made by the reactor
-  /// for the handles that it waits on, 0 otherwise.
-  virtual int uses_event_associations (void);
+  /// Return true if we any event associations were made by the reactor
+  /// for the handles that it waits on, false otherwise.
+  virtual bool uses_event_associations (void);
 
   // = Timer management.
 
@@ -793,7 +750,7 @@ public:
 
   /**
    * Set the maximum number of times that ACE_Reactor_Impl will
-   * iterate and dispatch the <ACE_Event_Handlers> that are passed in
+   * iterate and dispatch the ACE_Event_Handlers that are passed in
    * via the notify queue before breaking out of its
    * <ACE_Message_Queue::dequeue> loop.  By default, this is set to
    * -1, which means "iterate until the queue is empty."  Setting this
@@ -805,7 +762,7 @@ public:
 
   /**
    * Get the maximum number of times that the ACE_Reactor_Impl will
-   * iterate and dispatch the <ACE_Event_Handlers> that are passed in
+   * iterate and dispatch the ACE_Event_Handlers that are passed in
    * via the notify queue before breaking out of its
    * <ACE_Message_Queue::dequeue> loop.
    */
@@ -850,13 +807,13 @@ public:
   /// table.
   virtual size_t size (void) const;
 
-  /// Returns a reference to the Reactor's internal lock.
+  /// Returns a reference to the Reactor's internal repository lock.
   virtual ACE_Lock &lock (void);
 
   /// Wake up all threads waiting in the event loop.
   virtual void wakeup_all_threads (void);
 
-  /// Transfers ownership of Reactor_Impl to the new_owner.
+  /// Transfers ownership of Reactor_Impl to the @a new_owner.
   /**
    * @note There is no need to set the owner of the event loop for the
    *       ACE_Dev_Poll_Reactor.  Multiple threads may invoke the
@@ -869,13 +826,13 @@ public:
   /**
    * @note There is no need to set the owner of the event loop for the
    *       ACE_Dev_Poll_Reactor.  Multiple threads may invoke the
-   *       event loop simulataneously.  As such, this method is a
+   *       event loop simultaneously.  As such, this method is a
    *       no-op.
    */
   virtual int owner (ACE_thread_t *owner);
 
   /// Get the existing restart value.
-  virtual int restart (void);
+  virtual bool restart (void);
 
   /// Set a new value for restart and return the original value.
   /**
@@ -885,7 +842,7 @@ public:
    *
    * @return Returns the previous "restart" value.
    */
-  virtual int restart (int r);
+  virtual bool restart (bool r);
 
   /// Set position of the owner thread.
   /**
@@ -1008,8 +965,18 @@ protected:
                           ACE_Reactor_Mask mask);
 
   /// Remove the event handler associated with the given handle and
-  /// event mask from the "interest set."
-  int remove_handler_i (ACE_HANDLE handle, ACE_Reactor_Mask mask);
+  /// event mask from the "interest set." If @a eh is supplied, only do the
+  /// remove if @eh matches the event handler that's registered for @a handle.
+  /// The caller is expected to be holding the repo token on entry and have
+  /// @repo_guard referencing that token. It will be temporarily released
+  /// during a handle_close() callback if needed; if it is released for the
+  //// callback it will be reacquired before return.
+  // FUZZ: disable check_for_ACE_Guard
+  int remove_handler_i (ACE_HANDLE handle,
+                        ACE_Reactor_Mask mask,
+                        ACE_Guard<ACE_SYNCH_MUTEX> &repo_guard,
+                        ACE_Event_Handler *eh = 0);
+  // FUZZ: enable check_for_ACE_Guard
 
   /// Temporarily remove the given handle from the "interest set."
   int suspend_handler_i (ACE_HANDLE handle);
@@ -1044,28 +1011,13 @@ protected:
    */
   ACE_HANDLE poll_fd_;
 
-  /// The maximum number of file descriptors over which demultiplexing
-  /// will occur.
-  size_t size_;
-
-  /// Track HANDLES we are interested in for various events that must
-  /// be dispatched *without* polling.
-  /// ACE_Dev_Poll_Ready_Set ready_set_;
-
 #if defined (ACE_HAS_EVENT_POLL)
-  /// Table of event structures to be filled by epoll_wait:
-  struct epoll_event *events_;
-
-  /// Pointer to the next epoll_event array element that contains the next
-  /// event to be dispatched.
-  struct epoll_event *start_pevents_;
-
-  /// The last element in the event array plus one.
-  /**
-   * The loop that dispatches IO events stops when this->start_pevents_ ==
-   * this->end_pevents_.
-   */
-  struct epoll_event *end_pevents_;
+  /// Event structure to be filled by epoll_wait. epoll_wait() only gets
+  /// one event at a time and we rely on it's internals for fairness.
+  /// If this struct's fd is ACE_INVALID_HANDLE, the rest is indeterminate.
+  /// If the fd is good, the event is one that's been retrieved by
+  /// epoll_wait() but not yet processed.
+  struct epoll_event event_;
 
 #else
   /// The pollfd array that `/dev/poll' will feed its results to.
@@ -1084,18 +1036,23 @@ protected:
   struct pollfd *end_pfds_;
 #endif  /* ACE_HAS_EVENT_POLL */
 
-  /// This flag is used to keep track of whether we are actively handling
-  /// events or not.
-  sig_atomic_t deactivated_;
-
-  /// Lock used for synchronization of reactor state.
+  /// Token serializing event waiter threads.
   ACE_Dev_Poll_Reactor_Token token_;
 
   /// Adapter used to return internal lock to outside world.
   ACE_Lock_Adapter<ACE_Dev_Poll_Reactor_Token> lock_adapter_;
 
+  /// This flag is used to keep track of whether we are actively handling
+  /// events or not.
+  sig_atomic_t deactivated_;
+
+  /// Token used to protect manipulation of the handler repository.
+  /// No need to hold the waiter token to change the repo.
+  //  ACE_DEV_POLL_TOKEN repo_token_;
+  ACE_SYNCH_MUTEX repo_lock_;
+
   /// The repository that contains all registered event handlers.
-  ACE_Dev_Poll_Reactor_Handler_Repository handler_rep_;
+  Handler_Repository handler_rep_;
 
   /// Defined as a pointer to allow overriding by derived classes...
   ACE_Timer_Queue *timer_queue_;
@@ -1132,7 +1089,7 @@ protected:
   /// Restart the handle_events event loop method automatically when
   /// polling function in use (ioctl() in this case) is interrupted
   /// via an EINTR signal.
-  int restart_;
+  bool restart_;
 
 protected:
 
@@ -1164,8 +1121,7 @@ protected:
     /// 2) wait quietly for the token, not waking another thread. This
     /// is appropriate for cases where a thread wants to wait for and
     /// dispatch an event, not causing an existing waiter to relinquish the
-    /// token, and also queueing up behind other threads waiting to modify
-    /// event records.
+    /// token.
     int acquire_quietly (ACE_Time_Value *max_wait = 0);
 
     /// A helper method that acquires the token at a high priority, and
@@ -1188,7 +1144,6 @@ protected:
     int owner_;
 
   };
-
 };
 
 
@@ -1250,4 +1205,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif  /* ACE_DEV_POLL_REACTOR_H */
-

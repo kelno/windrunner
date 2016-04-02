@@ -4,8 +4,6 @@
 /**
  *  @file    Select_Reactor_Base.h
  *
- *  $Id: Select_Reactor_Base.h 82393 2008-07-23 10:52:34Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -92,7 +90,6 @@ public:
 class ACE_Event_Tuple
 {
 public:
-
   /// Default constructor.
   ACE_Event_Tuple (void);
 
@@ -106,7 +103,6 @@ public:
   bool operator!= (const ACE_Event_Tuple &rhs) const;
 
 public:
-
   /// Handle.
   ACE_HANDLE handle_;
 
@@ -180,6 +176,11 @@ public:
   /// Read one of the notify call on the @a handle into the
   /// @a buffer. This could be because of a thread trying to unblock
   /// the Reactor_Impl
+  ///
+  /// Return value semantics for this are:
+  /// -1: nothing read, fatal, unrecoverable error
+  ///  0: nothing read at all
+  ///  1: complete buffer read
   virtual int read_notify_pipe (ACE_HANDLE handle,
                                 ACE_Notification_Buffer &buffer);
 
@@ -502,7 +503,7 @@ protected:
   /// appropriate point specified by <requeue_position_>.
   virtual void renew (void) = 0;
 
-  /// Check to see if the <Event_Handler> associated with @a handle is
+  /// Check to see if the Event_Handler associated with @a handle is
   /// suspended. Returns 0 if not, 1 if so.
   virtual int is_suspended_i (ACE_HANDLE handle) = 0;
 
@@ -554,7 +555,7 @@ protected:
 
   /// Restart the <handle_events> event-loop method automatically when
   /// <select> is interrupted via <EINTR>.
-  int restart_;
+  bool restart_;
 
   /**
    * Position that the main ACE_Select_Reactor thread is requeued in
@@ -570,7 +571,7 @@ protected:
 
   /**
    * True if state has changed during dispatching of
-   * <ACE_Event_Handlers>, else false.  This is used to determine
+   * ACE_Event_Handlers, else false.  This is used to determine
    * whether we need to make another trip through the
    * <Select_Reactor>'s <wait_for_multiple_events> loop.
    */
@@ -609,4 +610,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_SELECT_REACTOR_BASE_H */
-

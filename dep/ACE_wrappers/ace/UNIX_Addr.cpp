@@ -1,8 +1,6 @@
-// $Id: UNIX_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/UNIX_Addr.h"
 
-ACE_RCSID(ace, UNIX_Addr, "$Id: UNIX_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if !defined (ACE_LACKS_UNIX_DOMAIN_SOCKETS)
 
@@ -16,14 +14,12 @@ ACE_ALLOC_HOOK_DEFINE(ACE_UNIX_Addr)
 
 // Set a pointer to the address.
 void
-ACE_UNIX_Addr::set_addr (void *addr, int len)
+ACE_UNIX_Addr::set_addr (const void *addr, int len)
 {
   ACE_TRACE ("ACE_UNIX_Addr::set_addr");
 
   this->ACE_Addr::base_set (AF_UNIX, len);
-  ACE_OS::memcpy ((void *) &this->unix_addr_,
-                  (void *) addr,
-                  len);
+  ACE_OS::memcpy (&this->unix_addr_, addr, len);
 }
 
 // Return a pointer to the underlying address.
@@ -149,4 +145,3 @@ ACE_UNIX_Addr::ACE_UNIX_Addr (const char rendezvous_point[])
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_LACKS_UNIX_DOMAIN_SOCKETS */
-

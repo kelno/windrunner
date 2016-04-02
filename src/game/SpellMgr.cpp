@@ -2336,7 +2336,7 @@ void SpellMgr::OverrideSpellItemEnchantment()
 // set data in core for now
 void SpellMgr::LoadSpellCustomAttr()
 {
-    mSpellCustomAttr.resize(objmgr.GetMaxSpellId());
+    mSpellCustomAttr.resize(objmgr.GetMaxSpellId() + 1);
 
     SpellEntry* spellInfo;
     //for(uint32 i = 0; i < objmgr.GetSpellStore()->size(); ++i)

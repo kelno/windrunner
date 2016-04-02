@@ -1,9 +1,7 @@
-// $Id: Containers_T.cpp 82588 2008-08-11 13:37:41Z johnnyw $
-
 #ifndef ACE_CONTAINERS_T_CPP
 #define ACE_CONTAINERS_T_CPP
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Malloc_Base.h"
 #include "ace/OS_Memory.h"
 
@@ -442,9 +440,9 @@ ACE_Double_Linked_List_Iterator_Base<T>::do_retreat (void)
 template <class T> void
 ACE_Double_Linked_List_Iterator_Base<T>::dump_i (void) const
 {
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("current_ = %x"), this->current_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("current_ = %x"), this->current_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 }
 
 //--------------------------------------------------
@@ -795,35 +793,6 @@ ACE_Double_Linked_List<T>::dump (void) const
   // Dump the state of an object.
 #endif /* ACE_HAS_DUMP */
 }
-
-#if 0
-template <class T> T *
-ACE_Double_Linked_List<T>::find (const T &item)
-{
-  for (ACE_Double_Linked_List_Iterator<T> iter (*this);
-       !iter.done ();
-       iter.advance ())
-    {
-      T *temp = iter.next ();
-
-      if (*temp == item)
-        return temp;
-    }
-
-  return 0;
-}
-
-template <class T> int
-ACE_Double_Linked_List<T>::remove (const T &item)
-{
-  T *temp = this->find (item);
-
-  if (temp != 0)
-    return this->remove (temp);
-  else
-    return -1;
-}
-#endif /* 0 */
 
 template <class T> int
 ACE_Double_Linked_List<T>::remove (T *n)
@@ -1621,7 +1590,7 @@ template <class T> int
 ACE_Ordered_MultiSet<T>::find (const T &item,
                                ITERATOR &iter) const
 {
-  // search an occurance of item, using iterator's current position as a hint
+  // search an occurrence of item, using iterator's current position as a hint
   ACE_DNode<T> *node = iter.current_;
   int const result = locate (item, node, node);
 
@@ -1651,10 +1620,10 @@ ACE_Ordered_MultiSet<T>::dump (void) const
 #if defined (ACE_HAS_DUMP)
   //  ACE_TRACE ("ACE_Ordered_MultiSet<T>::dump");
   //
-  //  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  //  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nhead_ = %u"), this->head_));
-  //  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nhead_->next_ = %u"), this->head_->next_));
-  //  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("\ncur_size_ = %d\n"), this->cur_size_));
+  //  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  //  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nhead_ = %u"), this->head_));
+  //  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("\nhead_->next_ = %u"), this->head_->next_));
+  //  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("\ncur_size_ = %d\n"), this->cur_size_));
   //
   //  T *item = 0;
   //  size_t count = 1;
@@ -1662,9 +1631,9 @@ ACE_Ordered_MultiSet<T>::dump (void) const
   //  for (ACE_Ordered_MultiSet_Iterator<T> iter (*(ACE_Ordered_MultiSet<T> *) this);
   //       iter.next (item) != 0;
   //       iter.advance ())
-  //    ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("count = %d\n"), count++));
+  //    ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("count = %d\n"), count++));
   //
-  //  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  //  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -1779,7 +1748,7 @@ ACE_Ordered_MultiSet<T>::locate (const T &item, ACE_DNode<T> *start_position,
     return 0;
 }
 
-// Looks for first occurance of <item> in the ordered set, using the
+// Looks for first occurrence of <item> in the ordered set, using the
 // passed starting position as a hint: if there is such an instance,
 // it updates the new_position pointer to point to one such node and
 // returns 0; if there is no such node, then if there is a node before
@@ -1930,4 +1899,3 @@ ACE_Array<T>::operator== (const ACE_Array<T> &s) const
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_CONTAINERS_T_CPP */
-

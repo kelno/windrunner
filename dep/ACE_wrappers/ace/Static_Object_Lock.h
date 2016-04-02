@@ -4,8 +4,6 @@
 /**
  *  @file    Static_Object_Lock.h
  *
- *  $Id: Static_Object_Lock.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author David L. Levine <levine@cs.wustl.edu>
  *  @author Matthias Kerkhoff
  *  @author Per Andersson
@@ -76,4 +74,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_STATIC_OBJECT_LOCK_H */
-

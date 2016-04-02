@@ -4,15 +4,11 @@
 /**
  *  @file    WIN32_Asynch_IO.h
  *
- *  $Id: WIN32_Asynch_IO.h 80826 2008-03-04 14:51:23Z wotte $
- *
- *
  *  These classes only works on Win32 platforms.
  *
  *  The implementation of ACE_Asynch_Transmit_File,
  *  ACE_Asynch_Accept, and ACE_Asynch_Connect are only supported if
  *  ACE_HAS_WINSOCK2 is defined or you are on WinNT 4.0 or higher.
- *
  *
  *  @author Irfan Pyarali <irfan@cs.wustl.edu>
  *  @author Tim Harrison <harrison@cs.wustl.edu>
@@ -111,10 +107,10 @@ public:
   /// Destructor.
   virtual ~ACE_WIN32_Asynch_Result (void);
 
-  /// Simulate error value to use in the post_completion ()
+  /// Simulate error value to use in the post_completion()
   void set_error (u_long errcode);
 
-  /// Simulate value to use in the post_completion ()
+  /// Simulate value to use in the post_completion()
   void set_bytes_transferred (size_t nbytes);
 
 protected:
@@ -151,15 +147,14 @@ protected:
  *
  * @brief This class abstracts out the common things needed for
  * implementing Asynch_Operation for WIN32 platform.
- *
  */
 class ACE_Export ACE_WIN32_Asynch_Operation : public virtual ACE_Asynch_Operation_Impl
 {
 public:
   /**
    * Initializes the factory with information which will be used with
-   * each asynchronous call.  If (<handle> == ACE_INVALID_HANDLE),
-   * <ACE_Handler::handle> will be called on the @a handler to get the
+   * each asynchronous call.  If (@a handle == ACE_INVALID_HANDLE),
+   * ACE_Handler::handle() will be called on the @a handler to get the
    * correct handle.
    */
   int open (const ACE_Handler::Proxy_Ptr &handler_proxy,
@@ -310,7 +305,7 @@ protected:
  * @brief This class is a factory for starting off asynchronous reads
  *     on a stream.
  *
- *     Once <open> is called, multiple asynchronous <read>s can
+ *     Once open() is called, multiple asynchronous read()s can
  *     started using this class.  An ACE_Asynch_Read_Stream::Result
  *     will be passed back to the @a handler when the asynchronous
  *     reads completes through the <ACE_Handler::handle_read_stream>
@@ -351,8 +346,8 @@ public:
 
   /**
    * Initializes the factory with information which will be used with
-   * each asynchronous call.  If (<handle> == ACE_INVALID_HANDLE),
-   * <ACE_Handler::handle> will be called on the @a handler to get the
+   * each asynchronous call.  If (@a handle == ACE_INVALID_HANDLE),
+   * ACE_Handler::handle() will be called on the @a handler to get the
    * correct handle.
    */
   int open (const ACE_Handler::Proxy_Ptr &handler_proxy,
@@ -488,12 +483,11 @@ protected:
  * @brief This class is a factory for starting off asynchronous writes
  *    on a stream.
  *
- *
- *     Once <open> is called, multiple asynchronous <writes>s can
+ *     Once open() is called, multiple asynchronous <writes>s can
  *     started using this class.  A ACE_Asynch_Write_Stream::Result
  *     will be passed back to the @a handler when the asynchronous
  *     write completes through the
- *     <ACE_Handler::handle_write_stream> callback.
+ *     ACE_Handler::handle_write_stream() callback.
  */
 class ACE_Export ACE_WIN32_Asynch_Write_Stream : public virtual ACE_Asynch_Write_Stream_Impl,
                                                  public ACE_WIN32_Asynch_Operation
@@ -530,8 +524,8 @@ public:
 
   /**
    * Initializes the factory with information which will be used with
-   * each asynchronous call.  If (<handle> == ACE_INVALID_HANDLE),
-   * <ACE_Handler::handle> will be called on the @a handler to get the
+   * each asynchronous call.  If (@a handle == ACE_INVALID_HANDLE),
+   * ACE_Handler::handle() will be called on the @a handler to get the
    * correct handle.
    */
   int open (const ACE_Handler::Proxy_Ptr &handler_proxy,
@@ -548,11 +542,6 @@ public:
 
   /// Return the underlying proactor.
   ACE_Proactor* proactor (void) const;
-
-protected:
-  /// This is the method which does the real work and is there so that
-  /// the ACE_Asynch_Write_File class can use it too.
-  int shared_write (ACE_WIN32_Asynch_Write_Stream_Result *result);
 };
 
 /**
@@ -943,7 +932,7 @@ private:
   /**
    * This method belongs to ACE_WIN32_Asynch_Write_Stream. It is here
    * to avoid compiler warnings. This method is forwarded to the
-   * ACE_WIN32_Asynch_Write_Stream class.
+   * Write_File specific method with 0 offset values.
    */
   int write (ACE_Message_Block &message_block,
              size_t bytes_to_write,
@@ -1348,7 +1337,6 @@ private:
 /**
  * @class ACE_WIN32_Asynch_Transmit_File_Result
  *
- *
  * @brief This class implements ACE_Asynch_Transmit_File::Result for
  *     WIN32 platforms.
  *
@@ -1678,7 +1666,6 @@ protected:
  *     will be passed back to the @a handler when the asynchronous
  *     reads completes through the <ACE_Handler::handle_read_stream>
  *     callback.
- *
  */
 class ACE_Export ACE_WIN32_Asynch_Read_Dgram : public virtual ACE_Asynch_Read_Dgram_Impl,
                                                public ACE_WIN32_Asynch_Operation
@@ -1857,7 +1844,6 @@ protected:
  * @brief This class is a factory for starting off asynchronous writes
  *    on a UDP socket.
  *
- *
  *     Once <open> is called, multiple asynchronous <writes>s can
  *     started using this class.  A ACE_Asynch_Write_Stream::Result
  *     will be passed back to the @a handler when the asynchronous
@@ -1935,4 +1921,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_HAS_WIN32_OVERLAPPED_IO && ACE_HAS_WINSOCK2 */
 #include /**/ "ace/post.h"
 #endif /* ACE_WIN32_ASYNCH_IO_H */
-

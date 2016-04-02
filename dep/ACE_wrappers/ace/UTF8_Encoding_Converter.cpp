@@ -1,5 +1,3 @@
-// $Id: UTF8_Encoding_Converter.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/UTF8_Encoding_Converter.h"
 
 #if defined (ACE_USES_WCHAR)
@@ -90,4 +88,3 @@ ACE_UTF8_Encoding_Converter::encoded (const ACE_Byte* source,
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_USES_WCHAR */
-

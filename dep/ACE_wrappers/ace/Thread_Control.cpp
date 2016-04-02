@@ -1,18 +1,5 @@
-// $Id: Thread_Control.cpp 80826 2008-03-04 14:51:23Z wotte $
-
-// <HACK ON>
-#include "ace/config-all.h"
-#if defined (ACE_LEGACY_MODE)
-// This silly include breaks a cycle when compiling in backwards
-// compatibility mode
-#  include "ace/Thread_Exit.h"
-#endif  /* ACE_LEGACY_MODE */
-// </HACK OFF>
-
 #include "ace/Thread_Control.h"
 #include "ace/Thread_Manager.h"
-
-ACE_RCSID(ace, Thread_Control, "$Id: Thread_Control.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 #if !defined (ACE_HAS_INLINED_OSCALLS)
 # include "ace/Thread_Control.inl"
@@ -29,7 +16,7 @@ ACE_Thread_Control::dump (void) const
 }
 
 int
-ACE_Thread_Control::insert (ACE_Thread_Manager *tm, int insert)
+ACE_Thread_Control::insert (ACE_Thread_Manager *tm, bool insert)
 {
   ACE_OS_TRACE ("ACE_Thread_Control::insert");
 
@@ -44,7 +31,6 @@ ACE_Thread_Control::insert (ACE_Thread_Manager *tm, int insert)
 }
 
 // Initialize the thread controller.
-
 ACE_Thread_Control::ACE_Thread_Control (ACE_Thread_Manager *t,
                                         int insert)
   : tm_ (t),
@@ -61,7 +47,6 @@ ACE_Thread_Control::ACE_Thread_Control (ACE_Thread_Manager *t,
 }
 
 // Automatically kill thread on exit.
-
 ACE_Thread_Control::~ACE_Thread_Control (void)
 {
   ACE_OS_TRACE ("ACE_Thread_Control::~ACE_Thread_Control");
@@ -74,7 +59,6 @@ ACE_Thread_Control::~ACE_Thread_Control (void)
 }
 
 // Exit from thread (but clean up first).
-
 ACE_THR_FUNC_RETURN
 ACE_Thread_Control::exit (ACE_THR_FUNC_RETURN exit_status, int do_thr_exit)
 {
@@ -94,4 +78,3 @@ ACE_Thread_Control::exit (ACE_THR_FUNC_RETURN exit_status, int do_thr_exit)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

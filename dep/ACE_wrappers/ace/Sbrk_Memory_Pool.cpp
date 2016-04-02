@@ -1,10 +1,8 @@
-// $Id: Sbrk_Memory_Pool.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/OS_NS_unistd.h"
 #include "ace/Sbrk_Memory_Pool.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
-ACE_RCSID(ace, Sbrk_Memory_Pool, "$Id: Sbrk_Memory_Pool.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if !defined (ACE_LACKS_SBRK)
 
@@ -20,16 +18,16 @@ ACE_Sbrk_Memory_Pool::acquire (size_t nbytes,
 {
   ACE_TRACE ("ACE_Sbrk_Memory_Pool::acquire");
   rounded_bytes = this->round_up (nbytes);
-  // ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("(%P|%t) acquiring more chunks, nbytes = %d, rounded_bytes = %d\n"), nbytes, rounded_bytes));
+  // ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("(%P|%t) acquiring more chunks, nbytes = %d, rounded_bytes = %d\n"), nbytes, rounded_bytes));
   void *cp = ACE_OS::sbrk (rounded_bytes);
 
   if (cp == MAP_FAILED)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        "(%P|%t) cp = %u\n",
                        cp),
                       0);
   else
-    // ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("(%P|%t) acquired more chunks, nbytes = %d, rounded_bytes = %d, new break = %u\n"), nbytes, rounded_bytes, cp));
+    // ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("(%P|%t) acquired more chunks, nbytes = %d, rounded_bytes = %d, new break = %u\n"), nbytes, rounded_bytes, cp));
   return cp;
 }
 
@@ -122,4 +120,3 @@ ACE_Sbrk_Memory_Pool::round_up (size_t nbytes)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* !ACE_LACKS_SBRK */
-

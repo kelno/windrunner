@@ -4,8 +4,6 @@
 /**
  *  @file   PI_Malloc.h
  *
- *  $Id: PI_Malloc.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Priyanka Gontla <pgontla@ece.uci.edu>
  *  @author Based on code that existed in other ACE files.
  */
@@ -211,4 +209,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_PI_MALLOC_H */
-

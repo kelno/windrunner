@@ -4,8 +4,6 @@
 /**
  *  @file    ATM_Stream.h
  *
- *  $Id: ATM_Stream.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Joe Hoffert
  */
 //=============================================================================
@@ -105,4 +103,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_HAS_ATM */
 #include /**/ "ace/post.h"
 #endif /* ACE_ATM_STREAM_H */
-

@@ -3,8 +3,6 @@
 /**
  *  @file   config-win32-msvc-8.h
  *
- *  $Id: config-win32-msvc-8.h 81935 2008-06-12 22:01:53Z jtc $
- *
  *  @brief  Microsoft Visual C++ 8.0 configuration file.
  *
  *  This file is the ACE configuration file for Microsoft Visual C++ version 8.
@@ -37,11 +35,10 @@
 #endif
 
 // Windows' timeval is non-conformant (defined in terms of long instead of
-// time_t) and VC8 (on desktop, not CE) changed time_t to a 64-bit value
-// even when compiling a 32-bit application. Therefore, ace/Time_Value
-// needs to rearrange a few things for this compiler. See Time_Value.h
-// for complete details.
-#if !defined (ACE_HAS_WINCE)
+// time_t) and VC8 changed time_t to a 64-bit value even when compiling a
+// 32-bit application. Therefore, ace/Time_Value needs to rearrange a few
+// things for this compiler. See Time_Value.h for complete details.
+#if !defined (_USE_32BIT_TIME_T)
 #  define ACE_HAS_TIME_T_LONG_MISMATCH
 #endif
 
@@ -53,20 +50,25 @@
 #define ACE_STRCASECMP_EQUIVALENT ::_stricmp
 #define ACE_STRNCASECMP_EQUIVALENT ::_strnicmp
 #define ACE_WCSDUP_EQUIVALENT ::_wcsdup
+#if defined (ACE_HAS_WINCE)
+# define ACE_FILENO_EQUIVALENT ::_fileno
+#else
+# define ACE_FILENO_EQUIVALENT(X) (_get_osfhandle (::_fileno (X)))
+#endif
 
-#define ACE_HAS_EXCEPTIONS
-
-// Windows Mobile 5 doesn't do sig_atomic_t, but maybe future versions will.
-#  if !defined (_WIN32_WCE) || (_WIN32_WCE > 0x501)
+// Windows Mobile 6 doesn't do sig_atomic_t, but maybe future versions will.
+// This has been true up thrugh the versions. We don't have any indication
+// that this might be supported in the future, but it is an easy enough fix
+// to bump the wince revision number when a new version is released.
+#  if !defined (_WIN32_WCE) || (_WIN32_WCE > 0x601)
 #    define ACE_HAS_SIG_ATOMIC_T
-#  endif /* !Win CE 5.0 or less */
+#  endif /* !Win CE 6.0 or less */
 
-#define ACE_HAS_STRERROR
 #define ACE_LACKS_STRPTIME
 
 #if !defined (ACE_HAS_WINCE)
-#  define ACE_HAS_INTRIN_H
-#  define ACE_HAS_INTRINSIC_INTERLOCKED
+# define ACE_HAS_INTRIN_H
+# define ACE_HAS_INTRINSIC_INTERLOCKED
 #endif
 
 #if !defined (_WIN32_WCE) || (_WIN32_WCE >= 0x501)
@@ -77,7 +79,6 @@
 #define ACE_LACKS_STRRECVFD
 #define ACE_HAS_CPLUSPLUS_HEADERS
 
-#define ACE_HAS_TEMPLATE_TYPEDEFS
 #define ACE_TEMPLATES_REQUIRE_SOURCE
 
 // Platform provides ACE_TLI function prototypes.
@@ -114,14 +115,20 @@
 // Maybe in the future.
 
 // Disable warning of using Microsoft Extension.
-# pragma warning(disable:4231)
+#pragma warning(disable:4231)
+
+// 'class1' : inherits 'class2::member' via dominance
+#pragma warning(disable:4250)
+
+// 'this' : used in base member initializer list
+#pragma warning(disable:4355)
 
 // CE (at least thru Windows Mobile 5) doesn't have the new, secure CRT.
 #if !defined (ACE_HAS_WINCE) && !defined (ACE_HAS_TR24731_2005_CRT)
 #  define ACE_HAS_TR24731_2005_CRT
 #endif
 
-//Detect Platform SDK 64-bit (AMD64) compiler using _MSC_FULL_VER
+// Detect Platform SDK 64-bit (AMD64) compiler using _MSC_FULL_VER
 #if (defined (_WIN64) || defined (WIN64)) && _MSC_FULL_VER < 140050000
 #  define ACE_AUTO_PTR_LACKS_RESET
 #  define ACE_MSVC_USES_DOUBLE_UNDERSCORE_STAT64
@@ -146,4 +153,3 @@
 
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIG_WIN32_MSVC_8_H */
-

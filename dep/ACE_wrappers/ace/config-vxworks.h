@@ -1,6 +1,4 @@
 //* -*- C++ -*- */
-// $Id: config-vxworks.h 81046 2008-03-21 10:11:12Z johnnyw $
-
 // The following configuration file is designed to work for VxWorks
 // Based on ACE_VXWORKS it will select the correct config file
 
@@ -29,28 +27,52 @@
 #    define ACE_VXWORKS 0x650
 #   elif (_WRS_VXWORKS_MINOR == 6)
 #    define ACE_VXWORKS 0x660
+#   elif (_WRS_VXWORKS_MINOR == 7)
+#    define ACE_VXWORKS 0x670
+#   elif (_WRS_VXWORKS_MINOR == 8)
+#    define ACE_VXWORKS 0x680
+#   elif (_WRS_VXWORKS_MINOR == 9)
+#    define ACE_VXWORKS 0x690
 #   endif
 #  endif
 # endif
 #endif /* ! ACE_VXWORKS */
 
-#if (ACE_VXWORKS == 0x551)
-# include "ace/config-vxworks5.x.h"
-#elif (ACE_VXWORKS == 0x620)
-# include "ace/config-vxworks6.2.h"
-#elif (ACE_VXWORKS == 0x630)
-# include "ace/config-vxworks6.3.h"
-#elif (ACE_VXWORKS == 0x640)
+#if (ACE_VXWORKS == 0x640)
 # include "ace/config-vxworks6.4.h"
 #elif (ACE_VXWORKS == 0x650)
 # include "ace/config-vxworks6.5.h"
 #elif (ACE_VXWORKS == 0x660)
 # include "ace/config-vxworks6.6.h"
+#elif (ACE_VXWORKS == 0x670)
+# include "ace/config-vxworks6.7.h"
+#elif (ACE_VXWORKS == 0x680)
+# include "ace/config-vxworks6.8.h"
+#elif (ACE_VXWORKS == 0x690)
+# include "ace/config-vxworks6.9.h"
 #else
-#error Unknown VxWorks version
+#error Unknown or unsupported VxWorks version
+#endif
+
+// Adapt to system argument changes added at VxWorks 6.9 and 64-bit.
+// It would be nicer to typedef the data types, but without including the
+// applicable VxWorks headers here, that doesn't work.
+#if (ACE_VXWORKS < 0x690)
+#  define ACE_VX_USR_ARG_T int
+#  define ACE_VX_TASK_ID int
+#  define ACE_VX_ARG_FORMAT "%x"
+#  define ACE_VX_TASK_ID_ERROR ERROR
+#else
+#  define ACE_VX_USR_ARG_T _Vx_usr_arg_t
+#  define ACE_VX_TASK_ID TASK_ID
+#  ifdef _WRS_CONFIG_LP64
+#    define ACE_VX_ARG_FORMAT "%lx"
+#  else
+#    define ACE_VX_ARG_FORMAT "%x"
+#  endif
+#  define ACE_VX_TASK_ID_ERROR TASK_ID_ERROR
 #endif
 
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIG_VXWORKS_H */
-
 

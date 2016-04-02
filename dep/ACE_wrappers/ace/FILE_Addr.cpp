@@ -1,8 +1,6 @@
-// $Id: FILE_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/FILE_Addr.h"
 #include "ace/Lib_Find.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_stdlib.h"
 #include "ace/OS_NS_string.h"
 #include "ace/os_include/sys/os_socket.h"
@@ -11,7 +9,7 @@
 #include "ace/FILE_Addr.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, FILE_Addr, "$Id: FILE_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -28,15 +26,21 @@ ACE_FILE_Addr::set (const ACE_FILE_Addr &sa)
 {
   if (sa.get_type () == AF_ANY)
     {
-#if defined (ACE_DEFAULT_TEMP_FILE)
+#if defined (ACE_DISABLE_MKTEMP)
+      // Built without mktemp support; punt back to caller.
+      errno = ENOTSUP;
+      return -1;
+#else
+
+#  if defined (ACE_DEFAULT_TEMP_FILE)
       // Create a temporary file.
       ACE_OS::strcpy (this->filename_,
                       ACE_DEFAULT_TEMP_FILE);
-#else /* ACE_DEFAULT_TEMP_FILE */
+#  else /* ACE_DEFAULT_TEMP_FILE */
       if (ACE::get_temp_dir (this->filename_, MAXPATHLEN - 15) == -1)
         // -15 for ace-file-XXXXXX
         {
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("Temporary path too long, ")
                       ACE_TEXT ("defaulting to current directory\n")));
           this->filename_[0] = 0;
@@ -45,12 +49,13 @@ ACE_FILE_Addr::set (const ACE_FILE_Addr &sa)
       // Add the filename to the end
       ACE_OS::strcat (this->filename_, ACE_TEXT ("ace-fileXXXXXX"));
 
-#endif /* ACE_DEFAULT_TEMP_FILE */
+#  endif /* ACE_DEFAULT_TEMP_FILE */
 
       if (ACE_OS::mktemp (this->filename_) == 0)
         return -1;
       this->base_set (AF_FILE,
                       static_cast<int> (ACE_OS::strlen (this->filename_) + 1));
+#endif /* ACE_DISABLE_MKTEMP */
     }
   else
     {
@@ -116,10 +121,9 @@ ACE_FILE_Addr::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_FILE_Addr::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("filename_ = %s"), this->filename_));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("filename_ = %s"), this->filename_));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 ACE_END_VERSIONED_NAMESPACE_DECL
-

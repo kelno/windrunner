@@ -4,8 +4,6 @@
 /**
  *  @file    Registry_Name_Space.h
  *
- *  $Id: Registry_Name_Space.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali (irfan@cs.wustl.edu)
  */
 //=============================================================================
@@ -67,18 +65,18 @@ public:
   /**
    * Overwrite the value or type of an existing name in a
    * ACE_Name_Space or bind a new name to the context, if it didn't
-   * exist yet. (Wide charcter strings interface).
+   * exist yet. (Wide character strings interface).
    */
   int rebind (const ACE_NS_WString &name_in,
               const ACE_NS_WString &value_in,
               const char *type_in = "");
 
-  /// Delete a name from a ACE_Name_Space (Wide charcter strings
+  /// Delete a name from a ACE_Name_Space (Wide character strings
   /// Interface).
   int unbind (const ACE_NS_WString &name_in);
 
   /// Get value and type of a given name binding (Wide chars).  The
-  /// caller is responsible for deleting both <value_out> and <type_out>!
+  /// caller is responsible for deleting both @a value_out and @a type_out!
   int resolve (const ACE_NS_WString &name_in,
                ACE_NS_WString &value_out,
                char *&type_out);
@@ -138,4 +136,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_REGISTRY_NAME_SPACE_H */
-

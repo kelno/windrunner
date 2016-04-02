@@ -1,11 +1,8 @@
 // -*- C++ -*-
-//
-// $Id: Recursive_Thread_Mutex.inl 80826 2008-03-04 14:51:23Z wotte $
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_INLINE ACE_recursive_thread_mutex_t &
-ACE_Recursive_Thread_Mutex::mutex (void)
+ACE_Recursive_Thread_Mutex::lock (void)
 {
   return lock_;
 }

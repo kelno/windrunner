@@ -4,8 +4,6 @@
 /**
  *  @file    Task_Ex_T.h
  *
- *  $Id: Task_Ex_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Kobi Cohen-Arazi <kobi-co@barak-online.net>
  */
 //=============================================================================
@@ -26,7 +24,7 @@
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 // Forward decls...
-template <ACE_SYNCH_DECL> class ACE_Module;
+template <ACE_SYNCH_DECL, class TIME_POLICY> class ACE_Module;
 
 /**
  * @class ACE_Task_Ex
@@ -57,13 +55,14 @@ template <ACE_SYNCH_DECL> class ACE_Module;
  * When User (and legacy code) write ACE_Task<ACE_MT_SYNCH>, specialized ACE_Task
  * code is in action.
  */
-template <ACE_SYNCH_DECL, class ACE_MESSAGE_TYPE>
-class ACE_Task_Ex : public ACE_Task_Base
+template <ACE_SYNCH_DECL, class ACE_MESSAGE_TYPE, class TIME_POLICY = ACE_System_Time_Policy>
+class ACE_Task_Ex : public ACE_Task_Base,
+                    private ACE_Copy_Disabled
 {
 public:
-  friend class ACE_Module<ACE_SYNCH_USE>;
+  friend class ACE_Module<ACE_SYNCH_USE, TIME_POLICY>;
   friend class ACE_Module_Type;
-  typedef ACE_Message_Queue_Ex<ACE_MESSAGE_TYPE, ACE_SYNCH_USE> MESSAGE_QUEUE_EX;
+  typedef ACE_Message_Queue_Ex<ACE_MESSAGE_TYPE, ACE_SYNCH_USE, TIME_POLICY> MESSAGE_QUEUE_EX;
 
   // = Initialization/termination methods.
   /**
@@ -125,12 +124,6 @@ public: // Should be protected:
    */
   int put_next (ACE_MESSAGE_TYPE *msg, ACE_Time_Value *timeout = 0);
 
-  /**
-   * Tests whether we can enqueue a message without blocking.
-   * @deprecated This method is deprecated and will go away in the future.
-   */
-  int can_put (ACE_MESSAGE_TYPE *);
-
   // = ACE_Task utility routines to identify names et al.
   /// Return the name of the enclosing Module if there's one associated
   /// with the Task, else returns 0.
@@ -138,16 +131,16 @@ public: // Should be protected:
 
   // = Pointers to next ACE_Task_Base (if ACE is part of an ACE_Stream).
   /// Get next Task pointer.
-  ACE_Task<ACE_SYNCH_USE> *next (void);
+  ACE_Task<ACE_SYNCH_USE, TIME_POLICY> *next (void);
 
   /// Set next Task pointer.
-  void next (ACE_Task<ACE_SYNCH_USE> *);
+  void next (ACE_Task<ACE_SYNCH_USE, TIME_POLICY> *);
 
   /// Alwasy return 0. @todo FIXME
-  ACE_Task<ACE_SYNCH_USE> *sibling (void);
+  ACE_Task<ACE_SYNCH_USE, TIME_POLICY> *sibling (void);
 
   /// Return the Task's Module if there is one, else returns 0.
-  ACE_Module<ACE_SYNCH_USE> *module (void) const;
+  ACE_Module<ACE_SYNCH_USE, TIME_POLICY> *module (void) const;
 
   /**
    * Flush the task's queue, i.e., free all of the enqueued
@@ -169,22 +162,16 @@ public: // Should be protected:
   bool delete_msg_queue_;
 
   /// Back-pointer to the enclosing module.
-  ACE_Module<ACE_SYNCH_USE> *mod_;
+  ACE_Module<ACE_SYNCH_USE, TIME_POLICY> *mod_;
 
   /// Pointer to adjacent ACE_Task.
-  ACE_Task<ACE_SYNCH_USE> *next_;
+  ACE_Task<ACE_SYNCH_USE, TIME_POLICY> *next_;
 
   /// Dump the state of an object.
   void dump (void) const;
 
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
-
-private:
-
-  // = Disallow these operations.
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Task_Ex<ACE_SYNCH_USE, ACE_MESSAGE_TYPE> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Task_Ex (const ACE_Task_Ex<ACE_SYNCH_USE, ACE_MESSAGE_TYPE> &))
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
@@ -203,4 +190,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_TASK_EX_H */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Intrusive_Auto_Ptr.h
  *
- *  $Id: Intrusive_Auto_Ptr.h 81388 2008-04-23 14:02:05Z johnnyw $
- *
  *  @author Iliyan Jeliazkov <iliyan@ociweb.com>
  *
  *  @note Modeled on http://www.boost.org/boost/intrusive_ptr.hpp
@@ -163,4 +161,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_INTRUSIVE_AUTO_PTR_H */
-

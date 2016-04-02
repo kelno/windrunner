@@ -4,8 +4,6 @@
 /**
  *  @file OS_Thread_Adapter.h
  *
- *  $Id: OS_Thread_Adapter.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Carlos O'Ryan <coryan@uci.edu>
  */
 //=============================================================================
@@ -50,6 +48,7 @@ public:
                          , ACE_SEH_EXCEPT_HANDLER selector = 0
                          , ACE_SEH_EXCEPT_HANDLER handler = 0
 # endif /* ACE_HAS_WIN32_STRUCTURAL_EXCEPTIONS */
+                         , long cancel_flags = 0
                          );
 
   /**
@@ -63,11 +62,9 @@ protected:
 
   /// Ensure that this object is allocated on the heap.
   ~ACE_OS_Thread_Adapter (void);
-
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_THREAD_ADAPTER_H */
-

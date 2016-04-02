@@ -1,9 +1,5 @@
 // -*- C++ -*-
-// $Id: OS_Errno.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/OS_Errno.h"
-
-ACE_RCSID(ace, OS_Errno, "$Id: OS_Errno.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 // Inlining this class on debug builds with gcc on Solaris can cause
 // deadlocks during static initialization. On non debug builds it
@@ -45,4 +41,3 @@ ACE_CE_Errno::fini ()
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_WINCE_BROKEN_ERRNO */
-

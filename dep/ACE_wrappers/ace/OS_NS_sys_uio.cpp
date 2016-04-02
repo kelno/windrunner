@@ -1,8 +1,4 @@
-// $Id: OS_NS_sys_uio.cpp 81756 2008-05-22 09:47:33Z johnnyw $
-
 #include "ace/OS_NS_sys_uio.h"
-
-ACE_RCSID(ace, OS_NS_sys_uio, "$Id: OS_NS_sys_uio.cpp 81756 2008-05-22 09:47:33Z johnnyw $")
 
 #if !defined (ACE_HAS_INLINED_OSCALLS)
 # include "ace/OS_NS_sys_uio.inl"
@@ -128,4 +124,3 @@ ACE_OS::writev_emulation (ACE_HANDLE handle, const iovec *iov, int n)
 # endif /* ACE_LACKS_WRITEV */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

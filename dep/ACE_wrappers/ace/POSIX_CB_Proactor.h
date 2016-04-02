@@ -4,8 +4,6 @@
 /**
  *  @file    POSIX_CB_Proactor.h
  *
- *  $Id: POSIX_CB_Proactor.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Alexander Libman <alibman@ihug.com.au>
  */
 //=============================================================================
@@ -95,4 +93,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_AIO_CALLS */
 #endif /* ACE_POSIX_CB_PROACTOR_H*/
-

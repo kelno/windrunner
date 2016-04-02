@@ -4,11 +4,8 @@
 /**
  *  @file    Env_Value_T.h
  *
- *  $Id: Env_Value_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  Template to encapsulate getting a value from an environment variable
  *  and using a supplied default value if not in the environment.
- *
  *
  *  @author Chris Cleeland (derived from work by Carlos O'Ryan)
  */
@@ -22,6 +19,7 @@
 #include /**/ "ace/config-all.h"
 #include "ace/Global_Macros.h"
 #include "ace/OS_NS_stdlib.h"
+#include "ace/Copy_Disabled.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -38,19 +36,18 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * value.
  */
 template <class T>
-class ACE_Env_Value
+class ACE_Env_Value : private ACE_Copy_Disabled
 {
 public:
   /**
    * Default constructor which isn't bound to a specific environment
    * variable name or a default value.  Before being useful it must
-   * <open>'d.
+   * open()'d.
    */
   ACE_Env_Value (void);
 
-  /// Constructor that calls <open>.
-  ACE_Env_Value (const ACE_TCHAR *varname,
-                 const T &vardefault);
+  /// Constructor that calls open().
+  ACE_Env_Value (const ACE_TCHAR *varname, const T &vardefault);
 
   /// Destroy the value.
   ~ACE_Env_Value (void);
@@ -66,10 +63,6 @@ public:
   const ACE_TCHAR *varname (void) const;
 
 private:
-  /// Disallow copying and assignment.
-  ACE_UNIMPLEMENTED_FUNC (ACE_Env_Value(const ACE_Env_Value<T> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_Env_Value<T> operator=(const ACE_Env_Value<T> &))
-
   void fetch_value (void);
 
   const ACE_TCHAR *varname_;
@@ -164,4 +157,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_ENV_VALUE_T_H */
-

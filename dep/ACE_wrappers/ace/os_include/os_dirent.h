@@ -6,8 +6,6 @@
  *
  *  format of directory entries
  *
- *  $Id: os_dirent.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -26,10 +24,6 @@
 
 #include "ace/os_include/sys/os_types.h"
 #include "ace/os_include/os_limits.h"
-
-#if defined (ACE_VXWORKS) && (ACE_VXWORKS < 0x620)
-#  include "ace/os_include/os_unistd.h"  // VxWorks needs this to compile
-#endif /* ACE_VXWORKS */
 
 #if !defined (ACE_LACKS_DIRENT_H)
 # include /**/ <dirent.h>
@@ -64,6 +58,7 @@ struct dirent {
 };
 
 #define ACE_DIRENT dirent
+#define ACE_HAS_TCHAR_DIRENT
 
 struct ACE_DIR {
   /// The name of the directory we are looking into
@@ -82,6 +77,7 @@ struct ACE_DIR {
   int started_reading_;
 };
 #elif defined (ACE_WIN32) && (__BORLANDC__) && defined (ACE_USES_WCHAR)
+#define ACE_HAS_TCHAR_DIRENT
 #define ACE_DIRENT wdirent
 typedef wDIR ACE_DIR;
 #else
@@ -106,4 +102,3 @@ int alphasort (const void *, const void *);
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_OS_DIRENT_H */
-

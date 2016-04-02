@@ -1,12 +1,10 @@
-// $Id: TLI_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/TLI_Acceptor.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/ACE.h"
 #include "ace/OS_NS_string.h"
 #include "ace/OS_Memory.h"
 
-ACE_RCSID(ace, TLI_Acceptor, "$Id: TLI_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if defined (ACE_HAS_TLI)
 
@@ -30,7 +28,7 @@ public:
   ACE_HANDLE open (ACE_HANDLE fd, int size);
   int close (void);
 
-  int enqueue (const char device[], int restart, int rwflag);
+  int enqueue (const char device[], bool restart, int rwflag);
   int dequeue (ACE_TLI_Request *&ptr);
   int remove (int sequence_number);
 
@@ -238,7 +236,7 @@ ACE_TLI_Request_Queue::ACE_TLI_Request_Queue (void)
 
 int
 ACE_TLI_Request_Queue::enqueue (const char device[],
-                                      int restart, int rwflag)
+                                      bool restart, int rwflag)
 {
   ACE_TRACE ("ACE_TLI_Request_Queue::enqueue");
   ACE_TLI_Request *temp = this->alloc ();
@@ -400,7 +398,7 @@ ACE_TLI_Acceptor::ACE_TLI_Acceptor (const ACE_Addr &remote_sap,
                   info,
                   back,
                   dev) == ACE_INVALID_HANDLE)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_TLI_Acceptor::ACE_TLI_Acceptor")));
 }
@@ -430,7 +428,7 @@ ACE_TLI_Acceptor::close (void)
 // events while we are trying to accept a new connection request.
 
 int
-ACE_TLI_Acceptor::handle_async_event (int restart, int rwf)
+ACE_TLI_Acceptor::handle_async_event (bool restart, int rwf)
 {
   ACE_TRACE ("ACE_TLI_Acceptor::handle_async_event");
   int event = this->look ();
@@ -456,8 +454,8 @@ int
 ACE_TLI_Acceptor::accept (ACE_TLI_Stream &new_tli_sap,
                           ACE_Addr *remote_addr,
                           ACE_Time_Value *timeout,
-                          int restart,
-                          int reset_new_handle,
+                          bool restart,
+                          bool reset_new_handle,
                           int rwf,
                           netbuf *udata,
                           netbuf *opt)
@@ -551,4 +549,3 @@ ACE_TLI_Acceptor::accept (ACE_TLI_Stream &new_tli_sap,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_TLI */
-

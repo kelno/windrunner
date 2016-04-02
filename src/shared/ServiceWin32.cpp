@@ -34,7 +34,7 @@
 #endif
 #endif
 
-extern int main(int argc, char ** argv);
+//extern int main(int argc, char ** argv);
 extern char serviceLongName[];
 extern char serviceName[];
 extern char serviceDescription[];
@@ -49,6 +49,7 @@ typedef WINADVAPI BOOL (WINAPI *CSD_T)(SC_HANDLE, DWORD, LPCVOID);
 
 bool WinServiceInstall()
 {
+#ifdef LOLWHATEVER
     CSD_T ChangeService_Config2;
     HMODULE advapi32;
     SC_HANDLE serviceControlManager = OpenSCManager(0, 0, SC_MANAGER_CREATE_SERVICE);
@@ -118,11 +119,13 @@ bool WinServiceInstall()
         }
         CloseServiceHandle(serviceControlManager);
     }
+#endif
     return true;
 }
 
 bool WinServiceUninstall()
 {
+#ifdef LOLWHATEVER
     SC_HANDLE serviceControlManager = OpenSCManager(0, 0, SC_MANAGER_CONNECT);
 
     if (serviceControlManager)
@@ -142,11 +145,13 @@ bool WinServiceUninstall()
 
         CloseServiceHandle(serviceControlManager);
     }
+#endif
     return true;
 }
 
 void WINAPI ServiceControlHandler(DWORD controlCode)
 {
+#ifdef LOLWHATEVER
     switch (controlCode)
     {
         case SERVICE_CONTROL_INTERROGATE:
@@ -182,8 +187,10 @@ void WINAPI ServiceControlHandler(DWORD controlCode)
     }
 
     SetServiceStatus(serviceStatusHandle, &serviceStatus);
+#endif
 }
 
+#ifdef LOLWHATEVER
 void WINAPI ServiceMain(DWORD argc, char *argv[])
 {
     // initialise service status
@@ -243,9 +250,11 @@ void WINAPI ServiceMain(DWORD argc, char *argv[])
         SetServiceStatus(serviceStatusHandle, &serviceStatus);
     }
 }
+#endif
 
 bool WinServiceRun()
 {
+#ifdef LOLWHATEVER
     SERVICE_TABLE_ENTRY serviceTable[] =
     {
         { serviceName, ServiceMain },
@@ -257,6 +266,7 @@ bool WinServiceRun()
         sLog.outError("StartService Failed. Error [%u]", ::GetLastError());
         return false;
     }
+#endif
     return true;
 }
 #endif

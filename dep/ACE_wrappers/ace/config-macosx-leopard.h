@@ -1,10 +1,13 @@
 /* -*- C++ -*- */
-// $Id: config-macosx-leopard.h 81858 2008-06-07 03:31:22Z dai_y $
-
 // This configuration file is designed to work with the MacOS X operating system.
 
 #ifndef ACE_CONFIG_MACOSX_LEOPARD_H
 #define ACE_CONFIG_MACOSX_LEOPARD_H
+
+#define ACE_HAS_MAC_OSX
+#define ACE_HAS_NET_IF_DL_H
+
+#define ACE_HAS_VOID_UNSETENV
 
 #if ! defined (__ACE_INLINE__)
 #define __ACE_INLINE__
@@ -24,13 +27,15 @@
 # include "ace/config-g++-common.h"
 #endif /* __GNUG__ */
 
+#define ACE_ISCTYPE_EQUIVALENT __isctype
+
 #ifndef ACE_HAS_NONCONST_FD_ISSET
 #define ACE_HAS_NONCONST_FD_ISSET
 #endif
 
 #define ACE_HAS_WORKING_EXPLICIT_TEMPLATE_DESTRUCTOR
 
-#define ACE_SIZE_T_FORMAT_SPECIFIER ACE_TEXT ("%lu")
+#define ACE_SIZE_T_FORMAT_SPECIFIER_ASCII "%lu"
 
 #if !defined (__i386__)
 # if defined (ACE_HAS_PENTIUM)
@@ -80,11 +85,10 @@
 
 #define ACE_HAS_AIO_CALLS
 
+#define ACE_HAS_ICMP_SUPPORT 1
+
 //Platform supports sigsuspend()
 #define ACE_HAS_SIGSUSPEND
-
-//Platform/compiler has macros for sig{empty,fill,add,del}set (e.g., SCO and FreeBSD)
-#define ACE_HAS_SIG_MACROS
 
 #define ACE_LACKS_GETPGID
 #define ACE_LACKS_RWLOCK_T
@@ -94,12 +98,8 @@
 
 #define ACE_HAS_NONCONST_SELECT_TIMEVAL
 
-//?
-#define ACE_LACKS_SIGSET
-
 #define ACE_NEEDS_SCHED_H
 
-// Use of <malloc.h> is deprecated.
 #define ACE_LACKS_MALLOC_H
 
 #define ACE_HAS_ALT_CUSERID
@@ -113,6 +113,7 @@
 
 #define ACE_LACKS_STRRECVFD
 
+#define ACE_HAS_SOCKADDR_IN_SIN_LEN
 #define ACE_HAS_SOCKADDR_IN6_SIN6_LEN
 
 // Platform supports System V IPC (most versions of UNIX, but not Win32)
@@ -145,9 +146,6 @@
 // Compiler supports the ssize_t typedef.
 #define ACE_HAS_SSIZE_T
 
-// Compiler/platform supports strerror ().
-#define ACE_HAS_STRERROR
-
 // Compiler/platform provides the sockio.h file.
 #define ACE_HAS_SYS_SOCKIO_H
 
@@ -178,7 +176,6 @@
 # define ACE_HAS_THREADS
 // And they're even POSIX pthreads
 # define ACE_HAS_PTHREADS
-# define ACE_HAS_PTHREADS_STD
 # define ACE_HAS_PTHREAD_SCHEDPARAM
 # define ACE_HAS_THREAD_SPECIFIC_STORAGE
 #endif  /* ACE_MT_SAFE == 1 */
@@ -203,6 +200,15 @@
 #define ACE_LACKS_STATIC_DATA_MEMBER_TEMPLATES
 #define ACE_LACKS_UNNAMED_SEMAPHORE
 
+#if !defined (__DARWIN_UNIX03)
+#define ACE_HAS_VOID_UNSETENV
+#endif
+
+#define ACE_LACKS_CONDATTR_SETCLOCK
+#define ACE_LACKS_CLOCKID_T
+#define ACE_LACKS_CLOCK_MONOTONIC
+#define ACE_LACKS_CLOCK_REALTIME
+
 // dlcompat package (not part of base Darwin) is needed for dlopen().
 // You may download directly from sourceforge and install or use fink
 // Fink installer puts libraries in /sw/lib and headers in /sw/include
@@ -224,5 +230,4 @@
 #error "Compiler must be upgraded, see http://developer.apple.com"
 #endif /* __APPLE_CC__ */
 
-#endif /* ACE_CONFIG_MACOSX_TIGER_H */
-
+#endif /* ACE_CONFIG_MACOSX_LEOPARD_H */

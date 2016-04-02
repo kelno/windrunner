@@ -4,8 +4,6 @@
 /**
  *  @file   OS_NS_fcntl.h
  *
- *  $Id: OS_NS_fcntl.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -44,10 +42,6 @@ namespace ACE_OS {
              int cmd,
              long arg = 0);
 
-#if !defined (ACE_DEFAULT_OPEN_PERMS)
-#  define ACE_DEFAULT_OPEN_PERMS ACE_DEFAULT_FILE_PERMS
-#endif  /* ACE_DEFAULT_OPEN_PERMS */
-
   /// The O_APPEND flag is only partly supported on Win32. If you specify
   /// O_APPEND, then the file pointer will be positioned at the end of
   /// the file initially during open, but it is not re-positioned at
@@ -81,4 +75,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 # include /**/ "ace/post.h"
 #endif /* ACE_OS_NS_FCNTL_H */
-

@@ -1,15 +1,11 @@
 #include "ace/SV_Semaphore_Simple.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/ACE.h"
 #include "ace/os_include/sys/os_sem.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/SV_Semaphore_Simple.inl"
 #endif /* !__ACE_INLINE__ */
-
-ACE_RCSID (ace,
-           SV_Semaphore_Simple,
-           "$Id: SV_Semaphore_Simple.cpp 82559 2008-08-07 20:23:07Z parsons $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -114,7 +110,7 @@ ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple (key_t k,
 {
   ACE_TRACE ("ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple");
   if (this->open (k, flags, initial_value, n, perms) == -1)
-    ACE_ERROR ((LM_ERROR,  ACE_TEXT ("%p\n"),  ACE_TEXT ("ACE_SV_Semaphore::ACE_SV_Semaphore")));
+    ACELIB_ERROR ((LM_ERROR,  ACE_TEXT ("%p\n"),  ACE_TEXT ("ACE_SV_Semaphore::ACE_SV_Semaphore")));
 }
 
 // Convert name to key.  This function is used internally to create keys
@@ -138,15 +134,15 @@ ACE_SV_Semaphore_Simple::name_2_key (const char *name)
   // Basically "hash" the values in the <name>.  This won't
   // necessarily guarantee uniqueness of all keys.
   // But (IMHO) CRC32 is good enough for most purposes (Carlos)
-#if defined (ACE_WIN64) || defined (ACE_WIN32)
+#if defined (ACE_WIN32) && defined (_MSC_VER)
   // The cast below is legit...
 #  pragma warning(push)
 #  pragma warning(disable : 4312)
-#endif /* ACE_WIN64 */
-  return (key_t) ACE::crc32 (name);
-#if defined (ACE_WIN64) || defined (ACE_WIN32)
+#endif /* defined (ACE_WIN32) && defined (_MSC_VER) */
+  return (key_t)(intptr_t)ACE::crc32 (name);
+#if defined (ACE_WIN32) && defined (_MSC_VER)
 #  pragma warning(pop)
-#endif /* ACE_WIN64 */
+#endif /* defined (ACE_WIN32) && defined (_MSC_VER) */
 }
 
 // Open or create a ACE_SV_Semaphore.  We return 1 if all is OK, else
@@ -183,7 +179,7 @@ ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple (const char *name,
                   initial_value,
                   n,
                   perms) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple")));
 }
@@ -201,7 +197,7 @@ ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple (const wchar_t *name,
                   initial_value,
                   nsems,
                   perms) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple")));
 }
@@ -213,7 +209,8 @@ ACE_SV_Semaphore_Simple::~ACE_SV_Semaphore_Simple (void)
   this->close ();
 }
 
-ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple (void)
+ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple (void) :
+  sem_number_ (0)
 {
   ACE_TRACE ("ACE_SV_Semaphore_Simple::ACE_SV_Semaphore_Simple");
   this->init ();
@@ -235,4 +232,3 @@ ACE_SV_Semaphore_Simple::remove (void) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

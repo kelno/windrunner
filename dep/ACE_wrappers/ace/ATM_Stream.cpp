@@ -1,10 +1,8 @@
-// $Id: ATM_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/ATM_Stream.h"
 
-ACE_RCSID (ace, ATM_Stream, "$Id: ATM_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 #if defined (ACE_HAS_ATM)
+
+#include "ace/OS_NS_string.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/ATM_Stream.inl"
@@ -118,7 +116,7 @@ ACE_ATM_Stream::get_peer_name (void) const
   if ((total_len = atm2text (buffer,sizeof buffer,
  (struct sockaddr *) & (name.sockaddratmsvc),
                             A2T_PRETTY|A2T_NAME)) < 0) {
-    ACE_DEBUG ((LM_DEBUG,ACE_TEXT ("ACE_ATM_Stream (get_peer_name) :%d"),errno));
+    ACELIB_DEBUG ((LM_DEBUG,ACE_TEXT ("ACE_ATM_Stream (get_peer_name) :%d"),errno));
     return 0;
   }
 
@@ -216,7 +214,7 @@ ACE_ATM_Stream::get_vpi_vci (ACE_UINT16 &vpi,
 
   vpi = conn_prop.vpi;
   vci = conn_prop.vci;
-  return (0);
+  return 0;
 #elif defined (ACE_HAS_FORE_ATM_WS2)
   ATM_CONNECTION_ID connID;
   DWORD bytes = 0;
@@ -247,7 +245,7 @@ ACE_ATM_Stream::get_vpi_vci (ACE_UINT16 &vpi,
                          SO_ATMPVC,
                          reinterpret_cast<char*> (&mypvcaddr),
                          &addrpvclen) < 0) {
-    ACE_DEBUG (LM_DEBUG,
+    ACELIB_DEBUG (LM_DEBUG,
               ACE_TEXT ("ACE_ATM_Stream::get_vpi_vci: getsockopt %d\n"),
               errno);
     return -1;
@@ -263,7 +261,7 @@ ACE_ATM_Stream::get_vpi_vci (ACE_UINT16 &vpi,
                          SOL_ATM,SO_VCID,
                          reinterpret_cast<char*> (&mypvcid),
                          &pvcidlen) < 0) {
-    ACE_DEBUG (LM_DEBUG,
+    ACELIB_DEBUG (LM_DEBUG,
               ACE_TEXT ("ACE_ATM_Stream::get_vpi_vci: getsockopt %d\n"),
               errno);
     return -1;
@@ -273,19 +271,18 @@ ACE_ATM_Stream::get_vpi_vci (ACE_UINT16 &vpi,
 
   return 0;
 #else
-  ACE_DEBUG (LM_DEBUG,
+  ACELIB_DEBUG (LM_DEBUG,
             ACE_TEXT ("ACE_ATM_Stream::get_vpi_vci: Not implemented in this ATM version. Update to >= 0.62\n Or patch 0.59"));
   ACE_UNUSED_ARG (vci);
   ACE_UNUSED_ARG (vpi);
 
-  return (-1);
+  return -1;
 #endif /* SO_ATMPVC || SO_VCID */
 #else
-  return (-1);
+  return -1;
 #endif /* ACE_HAS_FORE_ATM_XTI || ACE_HAS_FORE_ATM_WS2 || ACE_HAS_LINUX_ATM */
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_ATM */
-

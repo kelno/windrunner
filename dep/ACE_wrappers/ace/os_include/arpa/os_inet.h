@@ -6,8 +6,6 @@
  *
  *  definitions for internet operations
  *
- *  $Id: os_inet.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -18,7 +16,7 @@
 
 #include /**/ "ace/pre.h"
 
-#include /**/ "ace/config-all.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -32,9 +30,9 @@
    }
 #endif /* !ACE_LACKS_ARPA_INET_H */
 
-#if defined (ACE_VXWORKS)
+#if defined (ACE_USES_INETLIB_H)
 #  include /**/ <inetLib.h>
-#endif /* ACE_VXWORKS */
+#endif /* ACE_USES_INETLIB_H */
 
 /**
  * In some environments it is useful to swap the bytes on write, for
@@ -72,4 +70,3 @@ extern "C"
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_ARPA_OS_INET_H */
-

@@ -6,8 +6,6 @@
  *
  *  main sockets header
  *
- *  $Id: os_socket.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -18,7 +16,7 @@
 
 #include /**/ "ace/pre.h"
 
-#include "ace/config-lite.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -30,9 +28,9 @@
 #  include /**/ <sys/socket.h>
 #endif /* !ACE_LACKS_SYS_SOCKET_H */
 
-#if defined (ACE_VXWORKS) && (ACE_VXWORKS < 0x620)
+#if defined (ACE_USES_SOCKLIB_H)
 #  include /**/ <sockLib.h>
-#endif /* ACE_VXWORKS */
+#endif /* ACE_USES_SOCKLIB_H */
 
 // Place all additions (especially function declarations) within extern "C" {}
 #ifdef __cplusplus
@@ -40,7 +38,7 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#if !defined (ACE_HAS_MSG) && !defined (SCO)
+#if !defined (ACE_HAS_MSG)
    struct msghdr {};
 #endif /* ACE_HAS_MSG */
 
@@ -305,4 +303,3 @@ extern "C"
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_SYS_OS_SOCKET_H */
-

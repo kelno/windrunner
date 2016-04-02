@@ -1,5 +1,3 @@
-// $Id: SPIPE_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SPIPE_Addr.h"
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_unistd.h"
@@ -9,7 +7,7 @@
 #include "ace/SPIPE_Addr.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, SPIPE_Addr, "$Id: SPIPE_Addr.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -24,14 +22,12 @@ ACE_SPIPE_Addr::dump (void) const
 
 // Set a pointer to the address.
 void
-ACE_SPIPE_Addr::set_addr (void *addr, int len)
+ACE_SPIPE_Addr::set_addr (const void *addr, int len)
 {
   ACE_TRACE ("ACE_SPIPE_Addr::set_addr");
 
   this->ACE_Addr::base_set (AF_SPIPE, len);
-  ACE_OS::memcpy ((void *) &this->SPIPE_addr_,
-                  (void *) addr,
-                  len);
+  ACE_OS::memcpy (&this->SPIPE_addr_, addr, len);
 }
 
 // Return the address.
@@ -165,4 +161,3 @@ ACE_SPIPE_Addr::ACE_SPIPE_Addr (const ACE_TCHAR *addr,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

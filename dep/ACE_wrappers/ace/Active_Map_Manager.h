@@ -4,7 +4,7 @@
 /**
  *  @file    Active_Map_Manager.h
  *
- *  $Id: Active_Map_Manager.h 80826 2008-03-04 14:51:23Z wotte $
+ *  $Id: Active_Map_Manager.h 93359 2011-02-11 11:33:12Z mcorino $
  *
  *  @author Irfan Pyarali
  */
@@ -68,7 +68,7 @@ public:
   void decode (const void *data);
 
   /// Encode state of the active key into @a data.  @a data must be as
-  /// big as the value returned from <size>.
+  /// big as the value returned from size().
   void encode (void *data) const;
 
   /// Compare keys.
@@ -78,7 +78,7 @@ public:
   // = This really should be protected but because of template
   // friends, they are not.
 
-  /// Increment the <slot_generation> number.
+  /// Increment the slot_generation number.
   void increment_slot_generation_count (void);
 
 private:
@@ -95,7 +95,7 @@ private:
     /// Slot index in the active map.
     ACE_UINT32 slot_index_;
 
-    /// Slot generation number of <slot_index_> slot in the active map.
+    /// Slot generation number of @c slot_index_ slot in the active map.
     ACE_UINT32 slot_generation_;
   };
 
@@ -114,4 +114,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_ACTIVE_MAP_MANAGER_H */
-

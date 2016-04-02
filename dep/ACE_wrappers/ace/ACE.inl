@@ -1,6 +1,6 @@
 // -*- C++ -*-
 //
-// $Id: ACE.inl 80826 2008-03-04 14:51:23Z wotte $
+// $Id: ACE.inl 95761 2012-05-15 18:23:04Z johnnyw $
 
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_NS_Thread.h"
@@ -230,7 +230,7 @@ ACE::send_i (ACE_HANDLE handle, const void *buf, size_t len)
 ACE_INLINE ssize_t
 ACE::recv_i (ACE_HANDLE handle, void *buf, size_t len)
 {
-#if defined (ACE_WIN32) || defined (ACE_OPENVMS) || defined (ACE_TANDEM_T1248_PTHREADS)
+#if defined (ACE_WIN32) || defined (ACE_OPENVMS)
   return ACE_OS::recv (handle, (char *) buf, len);
 #else
   return ACE_OS::read (handle, (char *) buf, len);
@@ -238,36 +238,21 @@ ACE::recv_i (ACE_HANDLE handle, void *buf, size_t len)
 }
 
 ACE_INLINE int
-ACE::handle_read_ready (ACE_HANDLE handle,
-                        const ACE_Time_Value *timeout)
+ACE::handle_read_ready (ACE_HANDLE handle, const ACE_Time_Value *timeout)
 {
-  return ACE::handle_ready (handle,
-                            timeout,
-                            1,
-                            0,
-                            0);
+  return ACE::handle_ready (handle, timeout, 1, 0, 0);
 }
 
 ACE_INLINE int
-ACE::handle_write_ready (ACE_HANDLE handle,
-                         const ACE_Time_Value *timeout)
+ACE::handle_write_ready (ACE_HANDLE handle, const ACE_Time_Value *timeout)
 {
-  return ACE::handle_ready (handle,
-                            timeout,
-                            0,
-                            1,
-                            0);
+  return ACE::handle_ready (handle, timeout, 0, 1, 0);
 }
 
 ACE_INLINE int
-ACE::handle_exception_ready (ACE_HANDLE handle,
-                             const ACE_Time_Value *timeout)
+ACE::handle_exception_ready (ACE_HANDLE handle, const ACE_Time_Value *timeout)
 {
-  return ACE::handle_ready (handle,
-                            timeout,
-                            0,
-                            0,
-                            1);
+  return ACE::handle_ready (handle, timeout, 0, 0, 1);
 }
 
 ACE_INLINE void
@@ -281,6 +266,22 @@ ACE_INLINE void
 ACE::strdelete (wchar_t *s)
 {
   delete [] s;
+}
+#endif /* ACE_HAS_WCHAR */
+
+ACE_INLINE bool
+ACE::isdotdir (const char *s)
+{
+  return (s[0] == '.' &&
+          ((s[1] == 0) || (s[1] == '.' && s[2] == 0)));
+}
+
+#if defined (ACE_HAS_WCHAR)
+ACE_INLINE bool
+ACE::isdotdir (const wchar_t *s)
+{
+  return (s[0] == ACE_TEXT ('.') &&
+          ((s[1] == 0) || (s[1] == ACE_TEXT ('.') && s[2] == 0)));
 }
 #endif /* ACE_HAS_WCHAR */
 
@@ -301,24 +302,6 @@ ACE::log2 (u_long num)
     num >>= 1;
 
   return log;
-}
-
-ACE_INLINE ACE_TCHAR
-ACE::nibble2hex (u_int n)
-{
-  // Hexadecimal characters.
-#if defined (ACE_VXWORKS) && !defined (__DCPLUSPLUS__)
-  // temporary solution to prevent Windriver GNU toolchains from spewing
-  // loads of warnings when inlining.
-  // problem (incorrect warning leftover from older GNU) has been reported as
-  // TSR to Windriver.
-  const ACE_TCHAR hex_chars[] = ACE_TEXT ("0123456789abcdef");
-#else
-  static const ACE_TCHAR hex_chars[] = ACE_TEXT ("0123456789abcdef");
-#endif
-
-  // Yes, this works for UNICODE
-  return hex_chars[n & 0x0f];
 }
 
 ACE_INLINE int

@@ -1,5 +1,3 @@
-// $Id: UTF32_Encoding_Converter.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 // ======================================================================
 //
 // The actual conversion methods are covered by the copyright information
@@ -252,4 +250,3 @@ ACE_UTF32_Encoding_Converter::encoded (const ACE_Byte* source,
 
 ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_USES_WCHAR */
-

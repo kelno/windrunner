@@ -1,10 +1,8 @@
-// -*- C++ -*-
+// // -*- C++ -*-
 
 //=============================================================================
 /**
  *  @file    Hash_Map_Manager_T.h
- *
- *  $Id: Hash_Map_Manager_T.h 81735 2008-05-19 19:14:10Z johnnyw $
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
@@ -22,7 +20,7 @@
 
 #include "ace/Default_Constants.h"
 #include "ace/Functor_T.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include <iterator>
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -53,8 +51,14 @@ public:
   /// Key accessor.
   EXT_ID& key (void);
 
+  /// Read-only key accessor.
+  const EXT_ID& key (void) const;
+
   /// Item accessor.
   INT_ID& item (void);
+
+  /// Read-only item accessor.
+  const INT_ID& item (void) const;
 
   /// Key used to look up an entry.
   /// @deprecated Use key()
@@ -553,9 +557,6 @@ protected:
   /// Accessor of the underlying table
   ACE_Hash_Map_Entry<EXT_ID, INT_ID> *table (void);
 
-  /// Accessor of the current size attribute
-  size_t cur_size (void) const;
-
 private:
   /**
    * Array of ACE_Hash_Map_Entry *s, each of which points to an
@@ -762,8 +763,8 @@ protected:
  * ACE_Hash_Map_Manager_Ex it is iterating upon since locking is
  * inherently inefficient and/or error-prone within an STL-style
  * iterator.  If you require locking, you can explicitly use an
- * ACE_Guard or ACE_Read_Guard on the ACE_Hash_Map_Manager_Ex's
- * internal lock, which is accessible via its <mutex> method.
+ * ACE_GUARD or ACE_READ_GUARD on the ACE_Hash_Map_Manager_Ex's
+ * internal lock, which is accessible via its mutex() method.
  */
 template <class EXT_ID, class INT_ID, class HASH_KEY, class COMPARE_KEYS, class ACE_LOCK>
 class ACE_Hash_Map_Iterator_Ex : public ACE_Hash_Map_Iterator_Base_Ex<EXT_ID, INT_ID, HASH_KEY, COMPARE_KEYS, ACE_LOCK>
@@ -832,8 +833,8 @@ public:
  * ACE_Hash_Map_Manager_Ex it is iterating upon since locking is
  * inherently inefficient and/or error-prone within an STL-style
  * iterator.  If you require locking, you can explicitly use an
- * ACE_Guard or ACE_Read_Guard on the ACE_Hash_Map_Manager_Ex's
- * internal lock, which is accessible via its <mutex> method.
+ * ACE_GUARD or ACE_READ_GUARD on the ACE_Hash_Map_Manager_Ex's
+ * internal lock, which is accessible via its mutex() method.
  */
 template <class EXT_ID, class INT_ID, class HASH_KEY, class COMPARE_KEYS, class ACE_LOCK>
 class ACE_Hash_Map_Const_Iterator_Ex : public ACE_Hash_Map_Const_Iterator_Base_Ex<EXT_ID, INT_ID, HASH_KEY, COMPARE_KEYS, ACE_LOCK>
@@ -891,8 +892,8 @@ public:
  * ACE_Hash_Map_Manager_Ex it is iterating upon since locking is
  * inherently inefficient and/or error-prone within an STL-style
  * iterator.  If you require locking, you can explicitly use an
- * ACE_Guard or ACE_Read_Guard on the ACE_Hash_Map_Manager_Ex's
- * internal lock, which is accessible via its <mutex> method.
+ * ACE_GUARD or ACE_READ_GUARD on the ACE_Hash_Map_Manager_Ex's
+ * internal lock, which is accessible via its mutex() method.
  *
  * Note that a creation method for this new iterator cannot be added
  * to the hash map, since this would require adding explicit template
@@ -976,8 +977,8 @@ protected:
  * ACE_Hash_Map_Manager_Ex it is iterating upon since locking is
  * inherently inefficient and/or error-prone within an STL-style
  * iterator.  If you require locking, you can explicitly use an
- * ACE_Guard or ACE_Read_Guard on the ACE_Hash_Map_Manager_Ex's
- * internal lock, which is accessible via its <mutex> method.
+ * ACE_GUARD or ACE_READ_GUARD on the ACE_Hash_Map_Manager_Ex's
+ * internal lock, which is accessible via its mutex() method.
  */
 template <class EXT_ID, class INT_ID, class HASH_KEY, class COMPARE_KEYS, class ACE_LOCK>
 class ACE_Hash_Map_Reverse_Iterator_Ex : public ACE_Hash_Map_Iterator_Base_Ex<EXT_ID, INT_ID, HASH_KEY, COMPARE_KEYS, ACE_LOCK>
@@ -1033,7 +1034,7 @@ public:
  * ACE_Hash_Map_Manager_Ex it is iterating upon since locking is
  * inherently inefficient and/or error-prone within an STL-style
  * iterator.  If you require locking, you can explicitly use an
- * ACE_Guard or ACE_Read_Guard on the ACE_Hash_Map_Manager_Ex's
+ * ACE_GUARD or ACE_READ_GUARD on the ACE_Hash_Map_Manager_Ex's
  * internal lock, which is accessible via its <mutex> method.
  */
 template <class EXT_ID, class INT_ID, class HASH_KEY, class COMPARE_KEYS, class ACE_LOCK>
@@ -1301,4 +1302,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_HASH_MAP_MANAGER_T_H */
-

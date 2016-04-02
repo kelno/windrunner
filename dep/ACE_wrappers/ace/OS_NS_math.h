@@ -4,8 +4,6 @@
 /**
  *  @file   OS_NS_math.h
  *
- *  $Id: OS_NS_math.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -40,7 +38,6 @@
  * as macros on some platforms. This way macro definitions will
  * be usable later as there is no way to save the macro definition
  * using the pre-processor.
- *
  */
 inline double ace_log2_helper (double x)
 {
@@ -88,12 +85,40 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 namespace ACE_OS
 {
   /// This method computes the largest integral value not greater than x.
-  ACE_NAMESPACE_INLINE_FUNCTION
-  double floor (double x);
+  template <typename T>
+  inline
+  T floor (T x)
+  {
+    return ACE_STD_NAMESPACE::floor (x);
+  }
+
+#if defined (ACE_HAS_WINCE)
+  /// Windows CE has an intrinsic floor for float
+  template <>
+  inline
+  float floor (float x)
+  {
+    return ACE_STD_NAMESPACE::floorf (x);
+  }
+#endif
 
   /// This method computes the smallest integral value not less than x.
-  ACE_NAMESPACE_INLINE_FUNCTION
-  double ceil (double x);
+  template <typename T>
+  inline
+  T ceil (T x)
+  {
+    return ACE_STD_NAMESPACE::ceil (x);
+  }
+
+#if defined (ACE_HAS_WINCE)
+  /// Windows CE has an intrinsic ceil for float
+  template <>
+  inline
+  float ceil (float x)
+  {
+    return ACE_STD_NAMESPACE::ceilf (x);
+  }
+#endif
 
   /// This method computes the base-2 logarithm of x.
   ACE_NAMESPACE_INLINE_FUNCTION
@@ -113,4 +138,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 # include /**/ "ace/post.h"
 #endif /* ACE_OS_NS_MATH_H */
-

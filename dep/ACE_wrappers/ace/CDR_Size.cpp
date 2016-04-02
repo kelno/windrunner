@@ -7,10 +7,6 @@
 # include "ace/CDR_Size.inl"
 #endif /* ! __ACE_INLINE__ */
 
-ACE_RCSID (ace,
-           CDR_Size,
-           "$Id: CDR_Size.cpp 82559 2008-08-07 20:23:07Z parsons $")
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_CDR::Boolean
@@ -260,4 +256,3 @@ operator<< (ACE_SizeCDR &ss, const ACE_CString &x)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -1,9 +1,7 @@
-// $Id: Pipe.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Pipe.h"
 #include "ace/SOCK_Acceptor.h"
 #include "ace/SOCK_Connector.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_sys_socket.h"
 #include "ace/OS_Memory.h"
 #include "ace/Truncate.h"
@@ -18,7 +16,7 @@
 #include "ace/Pipe.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, Pipe, "$Id: Pipe.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -27,11 +25,10 @@ ACE_Pipe::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_Pipe::dump");
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("handles_[0] = %d"), this->handles_[0]));
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\nhandles_[1] = %d"), this->handles_[1]));
-  ACE_DEBUG ((LM_DEBUG, ACE_TEXT ("\n")));
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("handles_[0] = %d"), this->handles_[0]));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_TEXT ("\nhandles_[1] = %d\n"), this->handles_[1]));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -40,7 +37,7 @@ ACE_Pipe::open (int buffer_size)
 {
   ACE_TRACE ("ACE_Pipe::open");
 
-#if defined (ACE_LACKS_SOCKETPAIR) || defined (__Lynx__)
+#if defined (ACE_LACKS_SOCKETPAIR)
   ACE_INET_Addr my_addr;
   ACE_SOCK_Acceptor acceptor;
   ACE_SOCK_Connector connector;
@@ -97,9 +94,10 @@ ACE_Pipe::open (int buffer_size)
     }
 # endif /* ! ACE_LACKS_TCP_NODELAY */
 
-# if defined (ACE_LACKS_SOCKET_BUFSIZ)
+# if defined (ACE_LACKS_SO_RCVBUF) && defined (ACE_LACKS_SO_SNDBUF)
     ACE_UNUSED_ARG (buffer_size);
-# else  /* ! ACE_LACKS_SOCKET_BUFSIZ */
+# endif
+# if !defined (ACE_LACKS_SO_RCVBUF)
   if (reader.set_option (SOL_SOCKET,
                          SO_RCVBUF,
                          reinterpret_cast <void *> (&buffer_size),
@@ -109,21 +107,23 @@ ACE_Pipe::open (int buffer_size)
       this->close ();
       return -1;
     }
-  else if (writer.set_option (SOL_SOCKET,
-                              SO_SNDBUF,
-                              reinterpret_cast <void *> (&buffer_size),
-                              sizeof (buffer_size)) == -1
+# endif /* !ACE_LACKS_SO_RCVBUF */
+# if !defined (ACE_LACKS_SO_SNDBUF)
+  if (writer.set_option (SOL_SOCKET,
+                         SO_SNDBUF,
+                         reinterpret_cast <void *> (&buffer_size),
+                         sizeof (buffer_size)) == -1
            && errno != ENOTSUP)
     {
       this->close ();
       return -1;
     }
-# endif /* ! ACE_LACKS_SOCKET_BUFSIZ */
+# endif /* !ACE_LACKS_SO_SNDBUF */
 
 #elif defined (ACE_HAS_STREAM_PIPES) || defined (__QNX__)
   ACE_UNUSED_ARG (buffer_size);
   if (ACE_OS::pipe (this->handles_) == -1)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("%p\n"),
                        ACE_TEXT ("pipe")),
                       -1);
@@ -141,7 +141,7 @@ ACE_Pipe::open (int buffer_size)
                         (void *) arg) == -1)
     {
       this->close ();
-      ACE_ERROR_RETURN ((LM_ERROR,
+      ACELIB_ERROR_RETURN ((LM_ERROR,
                          ACE_TEXT ("%p\n"),
                          ACE_TEXT ("ioctl")), -1);
     }
@@ -152,13 +152,14 @@ ACE_Pipe::open (int buffer_size)
                           SOCK_STREAM,
                           0,
                           this->handles_) == -1)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("%p\n"),
                        ACE_TEXT ("socketpair")),
                       -1);
-# if defined (ACE_LACKS_SOCKET_BUFSIZ)
+# if defined (ACE_LACKS_SO_SNDBUF) && defined (ACE_LACKS_SO_RCVBUF)
   ACE_UNUSED_ARG (buffer_size);
-# else  /* ! ACE_LACKS_SOCKET_BUFSIZ */
+# endif
+# if !defined (ACE_LACKS_SO_RCVBUF)
   if (ACE_OS::setsockopt (this->handles_[0],
                           SOL_SOCKET,
                           SO_RCVBUF,
@@ -169,6 +170,8 @@ ACE_Pipe::open (int buffer_size)
       this->close ();
       return -1;
     }
+# endif
+# if !defined (ACE_LACKS_SO_SNDBUF)
   if (ACE_OS::setsockopt (this->handles_[1],
                           SOL_SOCKET,
                           SO_SNDBUF,
@@ -179,7 +182,7 @@ ACE_Pipe::open (int buffer_size)
       this->close ();
       return -1;
     }
-# endif /* ! ACE_LACKS_SOCKET_BUFSIZ */
+# endif /* ! ACE_LACKS_SO_SNDBUF */
 # if defined (ACE_OPENVMS) && !defined (ACE_LACKS_TCP_NODELAY)
   int one = 1;
   // OpenVMS implements socketpair(AF_UNIX...) by returning AF_INET sockets.
@@ -232,7 +235,7 @@ ACE_Pipe::ACE_Pipe (ACE_HANDLE handles[2])
   ACE_TRACE ("ACE_Pipe::ACE_Pipe");
 
   if (this->open (handles) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("ACE_Pipe::ACE_Pipe")));
 }
 
@@ -249,21 +252,20 @@ ACE_Pipe::close (void)
 {
   ACE_TRACE ("ACE_Pipe::close");
 
-  int result = 0;
-
-  // Note that the following will work even if we aren't closing down
-  // sockets because <ACE_OS::closesocket> will just call <::close> in
-  // that case!
-
-  if (this->handles_[0] != ACE_INVALID_HANDLE)
-    result = ACE_OS::closesocket (this->handles_[0]);
-  this->handles_[0] = ACE_INVALID_HANDLE;
-
-  if (this->handles_[1] != ACE_INVALID_HANDLE)
-    result |= ACE_OS::closesocket (this->handles_[1]);
-  this->handles_[1] = ACE_INVALID_HANDLE;
-
+  int result = this->close_read ();
+  result |= this->close_write ();
   return result;
+}
+
+int
+ACE_Pipe::close_read (void)
+{
+  return this->close_handle (0);
+}
+
+int ACE_Pipe::close_write (void)
+{
+  return this->close_handle (1);
 }
 
 // Send N char *ptrs and int lengths.  Note that the char *'s precede
@@ -358,4 +360,3 @@ ACE_Pipe::recv (size_t n, ...) const
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

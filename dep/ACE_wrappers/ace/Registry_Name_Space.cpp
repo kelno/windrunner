@@ -1,8 +1,6 @@
-// $Id: Registry_Name_Space.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Registry_Name_Space.h"
 
-ACE_RCSID(ace, Registry_Name_Space, "$Id: Registry_Name_Space.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if (defined (ACE_WIN32) && defined (ACE_USES_WCHAR))
 // This only works on Win32 platforms when ACE_USES_WCHAR is turned on
@@ -16,7 +14,7 @@ ACE_Registry_Name_Space::ACE_Registry_Name_Space (void)
 ACE_Registry_Name_Space::ACE_Registry_Name_Space (ACE_Name_Options *name_options)
 {
   if (this->open (name_options) != 0)
-    ACE_ERROR ((LM_ERROR,  ACE_TEXT ("%p\n"),
+    ACELIB_ERROR ((LM_ERROR,  ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_Registry_Name_Space::open")));
 }
 
@@ -36,7 +34,7 @@ ACE_Registry_Name_Space::open (ACE_Name_Options *name_options)
                                                         HKEY_LOCAL_MACHINE,
                                                         host);
   if (result != 0)
-    ACE_ERROR_RETURN ((LM_ERROR,  ACE_TEXT ("%p\n"),
+    ACELIB_ERROR_RETURN ((LM_ERROR,  ACE_TEXT ("%p\n"),
                        ACE_TEXT ("ACE_Predefined_Naming_Context::connect")),
                       result);
   else
@@ -52,7 +50,7 @@ ACE_Registry_Name_Space::open (ACE_Name_Options *name_options)
       result = predefined.bind_context (name,
                                         this->context_);
       if (result != 0)
-        ACE_ERROR_RETURN ((LM_ERROR,  ACE_TEXT ("%p\n"),  ACE_TEXT ("ACE_Registry::Naming_Context::bind_context")), result);
+        ACELIB_ERROR_RETURN ((LM_ERROR,  ACE_TEXT ("%p\n"),  ACE_TEXT ("ACE_Registry::Naming_Context::bind_context")), result);
     }
   return 0;
 }
@@ -254,7 +252,10 @@ ACE_Registry_Name_Space::list_name_entries (ACE_BINDING_SET &set,
                                   value,
                                   type);
           if (result != 0)
-            ACE_ERROR_RETURN ((LM_ERROR,  ACE_TEXT ("%p\n"),  ACE_TEXT ("ACE_Registry::Naming_Context::resolve")), result);
+            ACELIB_ERROR_RETURN ((LM_ERROR,
+                              ACE_TEXT ("%p\n"),
+                              ACE_TEXT ("ACE_Registry::Naming_Context::resolve")),
+                              result);
 
           // Complete binding
           ACE_Name_Binding binding (key, value, type);
@@ -291,4 +292,3 @@ ACE_Registry_Name_Space::dump (void) const
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_WIN32 && ACE_USES_WCHAR */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Token_Manager.h
  *
- *  $Id: Token_Manager.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Tim Harrison (harrison@cs.wustl.edu)
  */
 //=============================================================================
@@ -120,20 +118,6 @@ private:
   typedef ACE_Map_Manager<TOKEN_NAME, ACE_Tokens *, ACE_Null_Mutex>
   COLLECTION;
 
-  /// Allows iterations through collection_
-  /**
-   * @deprecated Deprecated typedef.  Use COLLECTION::ITERATOR trait
-   * instead.
-   */
-  typedef COLLECTION::ITERATOR COLLECTION_ITERATOR;
-
-  /// Allows iterations through collection_
-  /**
-   * @deprecated Deprecated typedef.  Use COLLECTION::ENTRY trait
-   * instead.
-   */
-  typedef COLLECTION::ENTRY COLLECTION_ENTRY;
-
   /// COLLECTION maintains a mapping from token names to ACE_Tokens*.
   COLLECTION collection_;
 };
@@ -148,4 +132,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_TOKEN_MANAGER_H */
-

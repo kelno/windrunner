@@ -4,8 +4,6 @@
 /**
  *  @file    Reactor_Timer_Interface.h
  *
- *  $Id: Reactor_Timer_Interface.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali <irfan@oomworks.com>
  */
 //=============================================================================
@@ -58,4 +56,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_REACTOR_TIMER_INTERFACE_H */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    IO_Cntl_Msg.h
  *
- *  $Id: IO_Cntl_Msg.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt
  */
 //==========================================================================
@@ -110,4 +108,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_IO_CNTL_MSG_H */
-

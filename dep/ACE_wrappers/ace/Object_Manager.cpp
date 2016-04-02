@@ -1,5 +1,3 @@
-// $Id: Object_Manager.cpp 81450 2008-04-25 21:24:33Z mitza $
-
 #include "ace/Object_Manager.h"
 #if !defined (ACE_LACKS_ACE_TOKEN)
 # include "ace/Token_Manager.h"
@@ -10,7 +8,7 @@
 #  include "ace/Service_Config.h"
 #endif /* ! ACE_LACKS_ACE_SVCCONF */
 #include "ace/Signal.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Malloc.h"
 #include "ace/Sig_Adapter.h"
 #include "ace/Framework_Component.h"
@@ -30,8 +28,9 @@
 #include "ace/Null_Mutex.h"
 #include "ace/Mutex.h"
 #include "ace/RW_Thread_Mutex.h"
-
-ACE_RCSID(ace, Object_Manager, "$Id: Object_Manager.cpp 81450 2008-04-25 21:24:33Z mitza $")
+#if defined (ACE_DISABLE_WIN32_ERROR_WINDOWS) && !defined (ACE_HAS_WINCE)
+  #include "ace/OS_NS_stdlib.h"
+#endif // ACE_DISABLE_WIN32_ERROR_WINDOWS
 
 #if ! defined (ACE_APPLICATION_PREALLOCATED_OBJECT_DEFINITIONS)
 # define ACE_APPLICATION_PREALLOCATED_OBJECT_DEFINITIONS
@@ -50,6 +49,16 @@ ACE_RCSID(ace, Object_Manager, "$Id: Object_Manager.cpp 81450 2008-04-25 21:24:3
 #endif /* ACE_APPLICATION_PREALLOCATED_ARRAY_DELETIONS */
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+
+// Note the following fix was derived from that proposed by Jochen Kalmbach
+// http://blog.kalmbachnet.de/?postid=75
+#if defined (ACE_DISABLE_WIN32_ERROR_WINDOWS) && !defined (ACE_HAS_WINCE)
+LPTOP_LEVEL_EXCEPTION_FILTER WINAPI ACEdisableSetUnhandledExceptionFilter (
+  LPTOP_LEVEL_EXCEPTION_FILTER /*lpTopLevelExceptionFilter*/)
+{
+  return 0;
+}
+#endif // ACE_DISABLE_WIN32_ERROR_WINDOWS
 
 // Singleton pointer.
 ACE_Object_Manager *ACE_Object_Manager::instance_ = 0;
@@ -159,9 +168,9 @@ LONG _stdcall ACE_UnhandledExceptionFilter (PEXCEPTION_POINTERS pExceptionInfo)
   DWORD dwExceptionCode = pExceptionInfo->ExceptionRecord->ExceptionCode;
 
   if (dwExceptionCode == EXCEPTION_ACCESS_VIOLATION)
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: ACCESS VIOLATION\n")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: ACCESS VIOLATION\n")));
   else
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: UNHANDLED EXCEPTION\n")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("\nERROR: UNHANDLED EXCEPTION\n")));
 
   return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -243,21 +252,71 @@ ACE_Object_Manager::init (void)
             }
 #     endif /* ACE_HAS_TSS_EMULATION */
 
-#if defined (ACE_DISABLE_WIN32_ERROR_WINDOWS) && \
-    defined (ACE_WIN32) && !defined (ACE_HAS_WINCE)
-#if defined (_DEBUG) && (defined (_MSC_VER) || defined (__INTEL_COMPILER))
+#if defined (ACE_DISABLE_WIN32_ERROR_WINDOWS) && !defined (ACE_HAS_WINCE)
+#if defined (_DEBUG) && (defined (_MSC_VER) || defined (__INTEL_COMPILER) || defined (__MINGW32__))
           _CrtSetReportMode( _CRT_ERROR, _CRTDBG_MODE_FILE );
           _CrtSetReportFile( _CRT_ERROR, _CRTDBG_FILE_STDERR );
           _CrtSetReportMode( _CRT_ASSERT, _CRTDBG_MODE_FILE );
           _CrtSetReportFile( _CRT_ASSERT, _CRTDBG_FILE_STDERR );
-#endif /* _DEBUG && _MSC_VER || __INTEL_COMPILER */
+#endif /* _DEBUG && _MSC_VER || __INTEL_COMPILER || __MINGW32__ */
 
           // The system does not display the critical-error-handler message box
           SetErrorMode(SEM_FAILCRITICALERRORS);
 
           // And this will catch all unhandled exceptions.
           SetUnhandledExceptionFilter (&ACE_UnhandledExceptionFilter);
-#endif /* ACE_DISABLE_WIN32_ERROR_WINDOWS && ACE_WIN32 && !ACE_HAS_WINCE */
+
+#  if (_MSC_VER >= 1400) // VC++ 8.0 and above
+          // And this will stop the abort system call from being treated as a crash
+          _set_abort_behavior( 0,  _CALL_REPORTFAULT);
+#  endif
+  // Note the following fix was derived from that proposed by Jochen Kalmbach
+  // http://blog.kalmbachnet.de/?postid=75
+  // See also:
+  // http://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=101337
+  //
+  // Starting with VC8 (VS2005), Microsoft changed the behaviour of the CRT in some
+  // security related and special situations. The are many situations in which our
+  // ACE_UnhandledExceptionFilter will never be called. This is a major change to
+  // the previous versions of the CRT and is not very well documented.
+  // The CRT simply forces the call to the default-debugger without informing the
+  // registered unhandled exception filter. Jochen's solution is to stop the CRT
+  // from calling SetUnhandledExceptionFilter() after we have done so above.
+  // NOTE this only works for intel based windows builds.
+
+#  if (_MSC_VER >= 1400) \
+      || (__MINGW32_MAJOR_VERSION > 3)  || \
+          ((__MINGW32_MAJOR_VERSION == 3) && \
+           (__MINGW32_MINOR_VERSION >= 15)) // VC++ 8.0 and above || MingW32 >= 3.15
+#    ifdef _M_IX86
+          HMODULE hKernel32 = ACE_TEXT_LoadLibrary (ACE_TEXT ("kernel32.dll"));
+          if (hKernel32)
+            {
+              void *pOrgEntry =
+                reinterpret_cast<void*> (GetProcAddress (hKernel32, "SetUnhandledExceptionFilter"));
+              if (pOrgEntry)
+                {
+                  unsigned char newJump[ 100 ];
+                  DWORD dwOrgEntryAddr = reinterpret_cast<DWORD> (pOrgEntry);
+                  dwOrgEntryAddr += 5; // add 5 for 5 op-codes for jmp far
+                  void *pNewFunc = reinterpret_cast<void*> (&ACEdisableSetUnhandledExceptionFilter);
+                  DWORD dwNewEntryAddr = reinterpret_cast<DWORD> (pNewFunc);
+                  DWORD dwRelativeAddr = dwNewEntryAddr - dwOrgEntryAddr;
+
+                  newJump[ 0 ] = 0xE9;  // JMP absolute
+                  ACE_OS::memcpy (&newJump[ 1 ], &dwRelativeAddr, sizeof (pNewFunc));
+                  SIZE_T bytesWritten;
+                  WriteProcessMemory (
+                    GetCurrentProcess (),
+                    pOrgEntry,
+                    newJump,
+                    sizeof (pNewFunc) + 1,
+                    &bytesWritten);
+                }
+            }
+#    endif // _M_IX86
+#  endif // (_MSC_VER >= 1400) // VC++ 8.0 and above.
+#endif /* ACE_DISABLE_WIN32_ERROR_WINDOWS */
 
 
 #     if !defined (ACE_LACKS_ACE_SVCCONF)
@@ -380,7 +439,8 @@ ACE_Object_Manager::instance (void)
 int
 ACE_Object_Manager::at_exit_i (void *object,
                                ACE_CLEANUP_FUNC cleanup_hook,
-                               void *param)
+                               void *param,
+                               const char* name)
 {
   ACE_MT (ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, ace_mon,
     *instance_->internal_lock_, -1));
@@ -398,7 +458,22 @@ ACE_Object_Manager::at_exit_i (void *object,
       return -1;
     }
 
-  return exit_info_.at_exit_i (object, cleanup_hook, param);
+  return exit_info_.at_exit_i (object, cleanup_hook, param, name);
+}
+
+int
+ACE_Object_Manager::remove_at_exit_i (void *object)
+{
+  ACE_MT (ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, ace_mon,
+    *instance_->internal_lock_, -1));
+
+  if (shutting_down_i ())
+    {
+      errno = EAGAIN;
+      return -1;
+    }
+
+  return exit_info_.remove (object);
 }
 
 #if defined (ACE_MT_SAFE) && (ACE_MT_SAFE != 0)
@@ -467,7 +542,7 @@ ACE_Object_Manager::get_singleton_lock (ACE_Thread_Mutex *&lock)
 
           if (lock == 0)
             {
-              ACE_Cleanup_Adapter<ACE_Thread_Mutex> *lock_adapter;
+              ACE_Cleanup_Adapter<ACE_Thread_Mutex> *lock_adapter = 0;
               ACE_NEW_RETURN (lock_adapter,
                               ACE_Cleanup_Adapter<ACE_Thread_Mutex>,
                               -1);
@@ -477,7 +552,9 @@ ACE_Object_Manager::get_singleton_lock (ACE_Thread_Mutex *&lock)
               // termination.  This call will cause us to grab the
               // ACE_Object_Manager::instance ()->internal_lock_
               // again; that's why it is a recursive lock.
-              ACE_Object_Manager::at_exit (lock_adapter);
+              ACE_Object_Manager::at_exit (lock_adapter,
+                                           0,
+                                           typeid (*lock_adapter).name ());
             }
         }
     }
@@ -515,7 +592,7 @@ ACE_Object_Manager::get_singleton_lock (ACE_Mutex *&lock)
 
           if (lock == 0)
             {
-              ACE_Cleanup_Adapter<ACE_Mutex> *lock_adapter;
+              ACE_Cleanup_Adapter<ACE_Mutex> *lock_adapter = 0;
               ACE_NEW_RETURN (lock_adapter,
                               ACE_Cleanup_Adapter<ACE_Mutex>,
                               -1);
@@ -599,7 +676,7 @@ ACE_Object_Manager::get_singleton_lock (ACE_RW_Thread_Mutex *&lock)
 
           if (lock == 0)
             {
-              ACE_Cleanup_Adapter<ACE_RW_Thread_Mutex> *lock_adapter;
+              ACE_Cleanup_Adapter<ACE_RW_Thread_Mutex> *lock_adapter = 0;
               ACE_NEW_RETURN (lock_adapter,
                               ACE_Cleanup_Adapter<ACE_RW_Thread_Mutex>,
                               -1);
@@ -887,4 +964,3 @@ ACE_Static_Object_Lock::cleanup_lock (void)
 #endif /* ACE_HAS_THREADS */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

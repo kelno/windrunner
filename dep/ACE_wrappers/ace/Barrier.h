@@ -4,8 +4,6 @@
 /**
  *  @file    Barrier.h
  *
- *  $Id: Barrier.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -101,7 +99,7 @@ public:
                const ACE_TCHAR *name = 0,
                void *arg = 0);
 
-  /// Default dtor.
+  /// Default destructor.
   ~ACE_Barrier (void);
 
   /// Block the caller until all @c count threads have called @c wait and
@@ -156,29 +154,6 @@ private:
   ACE_Barrier (const ACE_Barrier &);
 };
 
-#if 0
-/**
- * @class ACE_Process_Barrier
- *
- * @brief Implements "barrier synchronization" using ACE_Process_Mutexes!
- *
- * This class is just a simple wrapper for ACE_Barrier that
- * selects the USYNC_PROCESS variant for the locks.
- */
-class ACE_Export ACE_Process_Barrier : public ACE_Barrier
-{
-public:
-  /// Create a Process_Barrier, passing in the optional @a name.
-  ACE_Process_Barrier (unsigned int count, const ACE_TCHAR *name = 0);
-
-  /// Dump the state of an object.
-  void dump (void) const;
-
-  /// Declare the dynamic allocation hooks.
-  ACE_ALLOC_HOOK_DECLARE;
-};
-#endif /* 0 */
-
 /**
  * @class ACE_Thread_Barrier
  *
@@ -193,7 +168,7 @@ public:
   /// Create a Thread_Barrier, passing in the optional @a name.
   ACE_Thread_Barrier (unsigned int count, const ACE_TCHAR *name = 0);
 
-  /// Default dtor.
+  /// Default destructor.
   ~ACE_Thread_Barrier (void);
 
   /// Dump the state of an object.
@@ -213,4 +188,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_BARRIER_H */
-

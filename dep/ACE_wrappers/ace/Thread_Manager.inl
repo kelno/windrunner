@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Thread_Manager.inl 82588 2008-08-11 13:37:41Z johnnyw $
-
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_INLINE
@@ -268,9 +265,7 @@ ACE_Thread_Manager::at_exit (void *object,
   if (td == 0)
     return -1;
   else
-    return td->at_exit (object,
-                        cleanup_hook,
-                        param);
+    return td->at_exit (object, cleanup_hook, param);
 }
 
 ACE_INLINE void

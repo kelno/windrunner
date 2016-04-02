@@ -1,5 +1,3 @@
-// $Id: Reverse_Lock_T.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_REVERSE_LOCK_T_CPP
 #define ACE_REVERSE_LOCK_T_CPP
 
@@ -91,4 +89,3 @@ ACE_Reverse_Lock<ACE_LOCKING_MECHANISM>::tryacquire_write_upgrade (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_REVERSE_LOCK_T_CPP */
-

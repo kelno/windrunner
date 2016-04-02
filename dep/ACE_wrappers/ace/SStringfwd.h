@@ -4,8 +4,6 @@
 /**
  *  @file    SStringfwd.h
  *
- *  $Id: SStringfwd.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  Forward declarations and typedefs of ACE string types.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -33,7 +31,7 @@
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
-template <class CHAR> class ACE_String_Base;  // Forward declaration.
+template <class ACE_CHAR_T> class ACE_String_Base;  // Forward declaration.
 
 typedef ACE_WCHAR_T ACE_WSTRING_TYPE;
 
@@ -53,4 +51,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif  /* ACE_SSTRINGFWD_H */
-

@@ -1,5 +1,3 @@
-// $Id: Monitor_Control_Types.cpp 82328 2008-07-15 17:20:17Z parsons $
-
 #include "ace/Monitor_Control_Types.h"
 
 #if defined (ACE_HAS_MONITOR_FRAMEWORK) && (ACE_HAS_MONITOR_FRAMEWORK == 1)
@@ -53,17 +51,20 @@ namespace ACE
     Monitor_Control_Types::Constraint&
     Monitor_Control_Types::Constraint::operator= (const Constraint& rhs)
     {
-      if (this->control_action != 0)
+      if (this != &rhs)
         {
-          this->control_action->remove_ref ();
-        }
+          if (this->control_action != 0)
+            {
+              this->control_action->remove_ref ();
+            }
 
-      this->expr = rhs.expr;
-      this->control_action = rhs.control_action;
+          this->expr = rhs.expr;
+          this->control_action = rhs.control_action;
 
-      if (this->control_action != 0)
-        {
-          this->control_action->add_ref ();
+          if (this->control_action != 0)
+            {
+              this->control_action->add_ref ();
+            }
         }
 
       return *this;
@@ -74,6 +75,5 @@ namespace ACE
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_MONITOR_FRAMEWORK==1 */
-
 
 

@@ -4,8 +4,6 @@
 /**
  *  @file    Bound_Ptr.h
  *
- *  $Id: Bound_Ptr.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Christopher Kohlhoff <chris@kohlhoff.com>
  *  @author Boris Kolpackov <boris@codesynthesis.com>
  */
@@ -223,7 +221,7 @@ public:
 
   /// Allows us to check for NULL on all ACE_Strong_Bound_Ptr
   /// objects.
-  int null (void) const;
+  bool null (void) const;
 
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
@@ -359,7 +357,7 @@ public:
   long remove_ref (void);
 
   /// Allows us to check for NULL on all ACE_Weak_Bound_Ptr objects.
-  int null (void) const;
+  bool null (void) const;
 
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
@@ -386,4 +384,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_BOUND_PTR_H */
-

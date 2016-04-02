@@ -1,7 +1,5 @@
-// $Id: Process_Mutex.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Process_Mutex.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/ACE.h"
 #include "ace/Guard_T.h"
 #include "ace/Process_Mutex.h"
@@ -11,7 +9,7 @@
 #include "ace/Process_Mutex.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, Process_Mutex, "$Id: Process_Mutex.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -22,9 +20,9 @@ ACE_Process_Mutex::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
 // ACE_TRACE ("ACE_Process_Mutex::dump");
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   this->lock_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -88,4 +86,3 @@ ACE_Process_Mutex::~ACE_Process_Mutex (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

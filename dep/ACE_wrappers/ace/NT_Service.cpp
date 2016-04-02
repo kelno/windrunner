@@ -1,5 +1,3 @@
-// $Id: NT_Service.cpp 81862 2008-06-09 10:41:41Z sma $
-
 #include "ace/config-all.h"
 #if defined (ACE_WIN32) && !defined (ACE_LACKS_WIN32_SERVICES)
 
@@ -9,7 +7,7 @@
 #include "ace/NT_Service.inl"
 #endif /* __ACE_INLINE__ */
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Service_Object.h"
 #include "ace/OS_NS_errno.h"
 
@@ -616,4 +614,3 @@ ACE_NT_Service::wait_for_service_state (DWORD desired_state,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_WIN32 && !ACE_LACKS_WIN32_SERVICES */
-

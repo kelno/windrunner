@@ -1,5 +1,3 @@
-// $Id: Service_Object.cpp 81826 2008-06-02 15:29:53Z schmidt $
-
 #include "ace/config-all.h"
 
 #include "ace/Service_Object.h"
@@ -12,21 +10,17 @@
 #include "ace/Service_Types.h"
 #include "ace/DLL.h"
 #include "ace/ACE.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #if defined (ACE_OPENVMS)
 # include "ace/Lib_Find.h"
 #endif
 
-ACE_RCSID (ace,
-           Service_Object,
-           "$Id: Service_Object.cpp 81826 2008-06-02 15:29:53Z schmidt $")
-
-  ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
 ACE_ALLOC_HOOK_DEFINE(ACE_Service_Object)
-  ACE_ALLOC_HOOK_DEFINE(ACE_Service_Type)
+ACE_ALLOC_HOOK_DEFINE(ACE_Service_Type)
 
-  void
+void
 ACE_Service_Type::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
@@ -40,9 +34,9 @@ ACE_Service_Type::dump (void) const
   // the generated C++ code.
   ACE_OS::fprintf(stderr,
                   "// [ST] dump, this=%p, name=%s, type=%p, so=%p, active=%d\n",
-                  this,
-                  this->name_,
-                  this->type_,
+                  static_cast<void const *> (this),
+                  ACE_TEXT_ALWAYS_CHAR (this->name_),
+                  static_cast<void const *> (this->type_),
                   (this->type_ != 0) ? this->type_->object () : 0,
                   this->active_);
 
@@ -88,7 +82,7 @@ int
 ACE_Service_Type::fini (void)
 {
   if (ACE::debug ())
-    ACE_DEBUG ((LM_DEBUG,
+    ACELIB_DEBUG ((LM_DEBUG,
                 ACE_TEXT ("ACE (%P|%t) ST::fini - destroying name=%s, dll=%s\n"),
                 this->name_,
                 this->dll_.dll_name_));
@@ -110,6 +104,9 @@ ACE_Service_Type::fini (void)
     }
 
   int ret = this->type_->fini ();
+
+  // Ensure type is 0 to prevent invalid access after call to fini.
+  this->type_ = 0;
 
   // Ensure that closing the DLL is done after type_->fini() as it may
   // require access to the code for the service object destructor,
@@ -178,4 +175,3 @@ ACE_Dynamic_Svc_Registrar::ACE_Dynamic_Svc_Registrar (const ACE_TCHAR* alloc_nam
 #endif
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

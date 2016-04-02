@@ -4,8 +4,6 @@
 /**
  *  @file    Auto_Event.h
  *
- *  $Id: Auto_Event.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -32,35 +30,85 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * @brief Auto Events.
  *
  * Specialization of Event mechanism which wakes up one waiting
- * thread on <signal>.  All platforms support process-scope locking
+ * thread on @c signal.  All platforms support process-scope locking
  * support.  However, only Win32 platforms support global naming and
  * system-scope locking support.
  */
-class ACE_Export ACE_Auto_Event : public ACE_Event
+template <class TIME_POLICY = ACE_System_Time_Policy>
+class ACE_Auto_Event_T : public ACE_Event_T<TIME_POLICY>
+{
+public:
+  /// Constructor which will create auto event
+  ACE_Auto_Event_T (int initial_state = 0,
+                    int type = USYNC_THREAD,
+                    const char *name = 0,
+                    void *arg = 0) : ACE_Event_T<TIME_POLICY> (0,
+                              initial_state,
+                              type,
+                              ACE_TEXT_CHAR_TO_TCHAR (name),
+                              arg)
+  {
+  }
+
+#if defined (ACE_HAS_WCHAR)
+  /// Constructor which will create auto event (wchar_t version)
+  ACE_Auto_Event_T (int initial_state,
+                    int type,
+                    const wchar_t *name,
+                    void *arg = 0) : ACE_Event_T<TIME_POLICY> (0,
+                              initial_state,
+                              type,
+                              ACE_TEXT_WCHAR_TO_TCHAR (name),
+                              arg)
+  {
+  }
+#endif /* ACE_HAS_WCHAR */
+
+  /// Default dtor.
+  virtual ~ACE_Auto_Event_T (void)
+  {
+  }
+
+  /// Dump the state of an object.
+  void dump (void) const
+  {
+#if defined (ACE_HAS_DUMP)
+  ACE_Event_T<TIME_POLICY>::dump ();
+#endif /* ACE_HAS_DUMP */
+  }
+
+  /// Declare the dynamic allocation hooks
+  ACE_ALLOC_HOOK_DECLARE;
+};
+
+class ACE_Auto_Event :
+  public ACE_Auto_Event_T<ACE_System_Time_Policy>
 {
 public:
   /// Constructor which will create auto event
   ACE_Auto_Event (int initial_state = 0,
                   int type = USYNC_THREAD,
                   const char *name = 0,
-                  void *arg = 0);
+                  void *arg = 0)
+  : ACE_Auto_Event_T<ACE_System_Time_Policy> (initial_state, type, name, arg)
+  {
+  }
 
 #if defined (ACE_HAS_WCHAR)
   /// Constructor which will create auto event (wchar_t version)
   ACE_Auto_Event (int initial_state,
                   int type,
                   const wchar_t *name,
-                  void *arg = 0);
+                  void *arg = 0)
+  : ACE_Auto_Event_T<ACE_System_Time_Policy> (initial_state, type, name, arg)
+  {
+  }
 #endif /* ACE_HAS_WCHAR */
 
   /// Default dtor.
-  ~ACE_Auto_Event (void);
-
-  /// Dump the state of an object.
-  void dump (void) const;
-
-  /// Declare the dynamic allocation hooks
-  ACE_ALLOC_HOOK_DECLARE;
+  virtual ~ACE_Auto_Event (void)
+  {
+  }
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
@@ -69,6 +117,13 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include "ace/Auto_Event.inl"
 #endif /* __ACE_INLINE__ */
 
+#if defined (ACE_TEMPLATES_REQUIRE_SOURCE)
+#include "ace/Auto_Event.cpp"
+#endif /* ACE_TEMPLATES_REQUIRE_SOURCE */
+
+#if defined (ACE_TEMPLATES_REQUIRE_PRAGMA)
+#pragma implementation ("Auto_Event.cpp")
+#endif /* ACE_TEMPLATES_REQUIRE_PRAGMA */
+
 #include /**/ "ace/post.h"
 #endif /* ACE_AUTO_EVENT_H */
-

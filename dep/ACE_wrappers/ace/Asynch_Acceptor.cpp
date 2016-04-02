@@ -1,6 +1,4 @@
 /* -*- C++ -*- */
-// $Id: Asynch_Acceptor.cpp 82444 2008-07-28 13:33:07Z johnnyw $
-
 #ifndef ACE_ASYNCH_ACCEPTOR_C
 #define ACE_ASYNCH_ACCEPTOR_C
 
@@ -10,15 +8,13 @@
 # pragma once
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
-ACE_RCSID(ace, Asynch_Acceptor, "$Id: Asynch_Acceptor.cpp 82444 2008-07-28 13:33:07Z johnnyw $")
-
 #if defined (ACE_HAS_WIN32_OVERLAPPED_IO) || defined (ACE_HAS_AIO_CALLS)
 // This only works on platforms that support async i/o.
 
 #include "ace/OS_Errno.h"
 #include "ace/OS_Memory.h"
 #include "ace/OS_NS_sys_socket.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Message_Block.h"
 #include "ace/INET_Addr.h"
 #include "ace/SOCK_Stream.h"
@@ -32,7 +28,8 @@ ACE_Asynch_Acceptor<HANDLER>::ACE_Asynch_Acceptor (void)
     pass_addresses_ (false),
     validate_new_connection_ (false),
     reissue_accept_ (1),
-    bytes_to_read_ (0)
+    bytes_to_read_ (0),
+    addr_family_ (0)
 {
 }
 
@@ -70,7 +67,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
   // Create the listener socket
   this->listen_handle_ = ACE_OS::socket (address.get_type (), SOCK_STREAM, 0);
   if (this->listen_handle_ == ACE_INVALID_HANDLE)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("%p\n"),
                        ACE_TEXT ("ACE_OS::socket")),
                       -1);
@@ -81,7 +78,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
                                  this->proactor ()) == -1)
     {
       ACE_Errno_Guard g (errno);
-      ACE_ERROR ((LM_ERROR,
+      ACELIB_ERROR ((LM_ERROR,
                   ACE_TEXT ("%p\n"),
                   ACE_TEXT ("ACE_Asynch_Accept::open")));
       ACE_OS::closesocket (this->listen_handle_);
@@ -100,7 +97,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
                               sizeof one) == -1)
         {
           ACE_Errno_Guard g (errno);
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("%p\n"),
                       ACE_TEXT ("ACE_OS::setsockopt")));
           ACE_OS::closesocket (this->listen_handle_);
@@ -118,7 +115,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
                       address.get_type()) == -1)
     {
       ACE_Errno_Guard g (errno);
-      ACE_ERROR ((LM_ERROR,
+      ACELIB_ERROR ((LM_ERROR,
                   ACE_TEXT ("%p\n"),
                   ACE_TEXT ("ACE::bind_port")));
       ACE_OS::closesocket (this->listen_handle_);
@@ -132,7 +129,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
                     address.get_size ()) == -1)
     {
       ACE_Errno_Guard g (errno);
-      ACE_ERROR ((LM_ERROR,
+      ACELIB_ERROR ((LM_ERROR,
                   ACE_TEXT ("%p\n"),
                   ACE_TEXT ("ACE_OS::bind")));
       ACE_OS::closesocket (this->listen_handle_);
@@ -144,7 +141,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
   if (ACE_OS::listen (this->listen_handle_, backlog) == -1)
     {
       ACE_Errno_Guard g (errno);
-      ACE_ERROR ((LM_ERROR,
+      ACELIB_ERROR ((LM_ERROR,
                   ACE_TEXT ("%p\n"),
                   ACE_TEXT ("ACE_OS::listen")));
       ACE_OS::closesocket (this->listen_handle_);
@@ -162,7 +159,7 @@ ACE_Asynch_Acceptor<HANDLER>::open (const ACE_INET_Addr &address,
       if (this->accept (bytes_to_read) == -1)
         {
           ACE_Errno_Guard g (errno);
-          ACE_ERROR ((LM_ERROR,
+          ACELIB_ERROR ((LM_ERROR,
                       ACE_TEXT ("%p\n"),
                       ACE_TEXT ("ACE_Asynch_Acceptor::accept")));
           ACE_OS::closesocket (this->listen_handle_);
@@ -187,7 +184,7 @@ ACE_Asynch_Acceptor<HANDLER>::set_handle (ACE_HANDLE listen_handle)
                                  this->listen_handle_,
                                  0,
                                  this->proactor ()) == -1)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("%p\n"),
                        ACE_TEXT ("ACE_Asynch_Accept::open")),
                       -1);
@@ -299,8 +296,10 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
   // If no errors
   if (!error)
     {
-      // Update the Proactor.
-      new_handler->proactor (this->proactor ());
+      // Update the Proactor unless make_handler() or constructed handler
+      // set up its own.
+      if (new_handler->proactor () == 0)
+        new_handler->proactor (this->proactor ());
 
       // Pass the addresses
       if (this->pass_addresses_)
@@ -338,7 +337,7 @@ ACE_Asynch_Acceptor<HANDLER>::handle_accept (const ACE_Asynch_Accept::Result &re
       && result.error () != ECANCELED
 #endif
       )
-    this->accept (this->bytes_to_read_);
+    this->accept (this->bytes_to_read_, result.act ());
 }
 
 template <class HANDLER> int
@@ -447,13 +446,6 @@ ACE_Asynch_Acceptor<HANDLER>::make_handler (void)
   return handler;
 }
 
-/* static */
-template <class HANDLER> size_t
-ACE_Asynch_Acceptor<HANDLER>::address_size (void)
-{
-  return sizeof (sockaddr) + sizeof (sockaddr_in);
-}
-
 template <class HANDLER> bool
 ACE_Asynch_Acceptor<HANDLER>::pass_addresses (void) const
 {
@@ -512,4 +504,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_WIN32 || ACE_HAS_AIO_CALLS */
 #endif /* ACE_ASYNCH_ACCEPTOR_C */
-

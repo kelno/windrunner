@@ -1,14 +1,12 @@
-// $Id: LSOCK_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/LSOCK_Acceptor.h"
 
 #if !defined (ACE_LACKS_UNIX_DOMAIN_SOCKETS)
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_NS_sys_socket.h"
 
-ACE_RCSID(ace, LSOCK_Acceptor, "$Id: LSOCK_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -34,9 +32,9 @@ ACE_LSOCK_Acceptor::dump (void) const
 #if defined (ACE_HAS_DUMP)
   ACE_TRACE ("ACE_LSOCK_Acceptor::dump");
 
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   this->local_addr_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -74,7 +72,7 @@ ACE_LSOCK_Acceptor::ACE_LSOCK_Acceptor (const ACE_Addr &remote_sap,
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 "ACE_LSOCK_Acceptor::ACE_LSOCK_Acceptor"));
 }
 
@@ -84,8 +82,8 @@ int
 ACE_LSOCK_Acceptor::accept (ACE_LSOCK_Stream &new_stream,
                             ACE_Addr *remote_addr,
                             ACE_Time_Value *timeout,
-                            int restart,
-                            int reset_new_handle) const
+                            bool restart,
+                            bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_LSOCK_Acceptor::accept");
 
@@ -141,4 +139,3 @@ ACE_LSOCK_Acceptor::remove (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_LACKS_UNIX_DOMAIN_SOCKETS */
-

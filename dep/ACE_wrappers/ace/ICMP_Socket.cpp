@@ -1,19 +1,12 @@
-// $Id: ICMP_Socket.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/ICMP_Socket.h"
 
 #if defined (ACE_HAS_ICMP_SUPPORT) && (ACE_HAS_ICMP_SUPPORT == 1)
 
 #include "ace/ACE.h"
-#include "ace/Log_Msg.h"
+#include "ace/Sock_Connect.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_NS_netdb.h"
 #include "ace/OS_NS_sys_socket.h"
-
-
-ACE_RCSID (ace,
-           ICMP_Socket,
-           "$Id: ICMP_Socket.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -91,11 +84,11 @@ ACE_ICMP_Socket::open (ACE_Addr const & local,
 
   // Check if icmp protocol is supported on this host
   int proto_number = -1;
-  protoent *proto;
+  protoent *proto = 0;
 
-  if (! (proto = getprotobyname ("icmp")))
+  if (! (proto = ACE_OS::getprotobyname ("icmp")))
     {
-      ACE_ERROR_RETURN
+      ACELIB_ERROR_RETURN
         ((LM_ERROR,
           ACE_TEXT ("(%P|%t) ACE_ICMP_Socket::open: %p; %s\n"),
           ACE_TEXT ("getprotobyname"),
@@ -107,7 +100,7 @@ ACE_ICMP_Socket::open (ACE_Addr const & local,
 
   if (proto_number != IPPROTO_ICMP || proto_number != protocol)
     {
-      ACE_ERROR_RETURN ((LM_ERROR,
+      ACELIB_ERROR_RETURN ((LM_ERROR,
                          ACE_TEXT ("(%P|%t) ACE::ICMP_Socket::open - ")
                          ACE_TEXT ("only IPPROTO_ICMP protocol is ")
                          ACE_TEXT ("currently supported.\n")),
@@ -184,4 +177,3 @@ ACE_ICMP_Socket::calculate_checksum (unsigned short * paddress,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif  /* ACE_HAS_ICMP_SUPPORT == 1 */
-

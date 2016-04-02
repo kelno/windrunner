@@ -4,8 +4,6 @@
 /**
  *  @file   config-all.h
  *
- *  $Id: config-all.h 81661 2008-05-09 12:05:34Z johnnyw $
- *
  *  @author (Originally in OS.h)Doug Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -17,7 +15,7 @@
 
 #include /**/ "ace/pre.h"
 
-#include "ace/config-lite.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -76,6 +74,10 @@
 # define ACE_HAS_MONITOR_FRAMEWORK 1
 #endif
 
+#if !defined (ACE_HAS_SENDFILE)
+# define ACE_HAS_SENDFILE 0
+#endif
+
 #if !defined (ACE_HAS_MONITOR_POINTS)
 # define ACE_HAS_MONITOR_POINTS 0
 #endif
@@ -87,4 +89,3 @@
 #include /**/ "ace/post.h"
 
 #endif /* ACE_CONFIG_ALL_H */
-

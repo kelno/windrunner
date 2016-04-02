@@ -3,8 +3,6 @@
 /**
  *  @file    Sched_Params.cpp
  *
- *  $Id: Sched_Params.cpp 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author David Levine
  */
 //=============================================================================
@@ -21,7 +19,7 @@
 #  include /**/ <sys/priocntl.h>
 #endif /* ACE_HAS_PRIOCNTL && ACE_HAS_THREADS */
 
-ACE_RCSID(ace, Sched_Params, "$Id: Sched_Params.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -84,9 +82,7 @@ ACE_Sched_Params::priority_min (const Policy policy,
         }
     }
 #elif defined(ACE_HAS_PTHREADS) && \
-      (!defined(ACE_LACKS_SETSCHED) || defined (ACE_TANDEM_T1248_PTHREADS) || \
-       defined (ACE_HAS_PTHREAD_SCHEDPARAM))
-
+      (!defined(ACE_LACKS_SETSCHED))
   switch (scope)
     {
     case ACE_SCOPE_THREAD:
@@ -115,10 +111,14 @@ ACE_Sched_Params::priority_min (const Policy policy,
         }
     }
 
-#elif defined (ACE_HAS_WTHREADS)
+#elif defined (ACE_HAS_WTHREADS) && !defined (ACE_HAS_WINCE)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
   return THREAD_PRIORITY_IDLE;
+#elif defined (ACE_HAS_WTHREADS) && defined (ACE_HAS_WINCE)
+  ACE_UNUSED_ARG (policy);
+  ACE_UNUSED_ARG (scope);
+  return 255;
 #elif defined (ACE_VXWORKS)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
@@ -188,7 +188,7 @@ ACE_Sched_Params::priority_max (const Policy policy,
         }
     }
 #elif defined(ACE_HAS_PTHREADS) && \
-      (!defined(ACE_LACKS_SETSCHED) || defined (ACE_TANDEM_T1248_PTHREADS) || \
+      (!defined(ACE_LACKS_SETSCHED) || \
        defined (ACE_HAS_PTHREAD_SCHEDPARAM))
 
   switch (scope)
@@ -219,10 +219,14 @@ ACE_Sched_Params::priority_max (const Policy policy,
         }
     }
 
-#elif defined (ACE_HAS_WTHREADS)
+#elif defined (ACE_HAS_WTHREADS) && !defined (ACE_HAS_WINCE)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
   return THREAD_PRIORITY_TIME_CRITICAL;
+#elif defined (ACE_HAS_WTHREADS) && defined (ACE_HAS_WINCE)
+  ACE_UNUSED_ARG (policy);
+  ACE_UNUSED_ARG (scope);
+  return 0;
 #elif defined (ACE_VXWORKS)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
@@ -243,7 +247,7 @@ ACE_Sched_Params::next_priority (const Policy policy,
                                  const int priority,
                                  const int scope)
 {
-#if defined (ACE_HAS_WTHREADS)
+#if defined (ACE_HAS_WTHREADS) && !defined (ACE_HAS_WINCE)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
   switch (priority)
@@ -266,15 +270,14 @@ ACE_Sched_Params::next_priority (const Policy policy,
         return priority;  // unknown priority:  should never get here
     }
 #elif defined(ACE_HAS_THREADS) && \
-      (!defined(ACE_LACKS_SETSCHED) || defined (ACE_TANDEM_T1248_PTHREADS) || \
+      (!defined(ACE_LACKS_SETSCHED) || \
        defined (ACE_HAS_PTHREAD_SCHEDPARAM))
   // including STHREADS, and PTHREADS
   int const max = priority_max (policy, scope);
   return priority < max  ?  priority + 1  :  max;
-#elif defined (ACE_VXWORKS)
-  return priority > priority_max (policy, scope)
-           ?  priority - 1
-           :  priority_max (policy, scope);
+#elif defined (ACE_VXWORKS) || defined (ACE_HAS_WINCE)
+  int const max = priority_max (policy, scope);
+  return priority > max ?  priority - 1 :  max;
 #else
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
@@ -288,7 +291,7 @@ ACE_Sched_Params::previous_priority (const Policy policy,
                                      const int priority,
                                      const int scope)
 {
-#if defined (ACE_HAS_WTHREADS)
+#if defined (ACE_HAS_WTHREADS) && !defined (ACE_HAS_WINCE)
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
   switch (priority)
@@ -311,16 +314,14 @@ ACE_Sched_Params::previous_priority (const Policy policy,
         return priority;  // unknown priority:  should never get here
     }
 #elif defined(ACE_HAS_THREADS) && \
-      (!defined(ACE_LACKS_SETSCHED) || defined (ACE_TANDEM_T1248_PTHREADS) || \
+      (!defined(ACE_LACKS_SETSCHED) || \
        defined (ACE_HAS_PTHREAD_SCHEDPARAM))
   // including STHREADS and PTHREADS
   int const min = priority_min (policy, scope);
-
   return priority > min ? priority - 1 : min;
-#elif defined (ACE_VXWORKS)
-  return priority < priority_min (policy, scope)
-           ?  priority + 1
-           :  priority_min (policy, scope);
+#elif defined (ACE_VXWORKS) || defined (ACE_HAS_WINCE)
+  int const min = priority_min (policy, scope);
+  return priority < min ?  priority + 1 :  min;
 #else
   ACE_UNUSED_ARG (policy);
   ACE_UNUSED_ARG (scope);
@@ -330,4 +331,3 @@ ACE_Sched_Params::previous_priority (const Policy policy,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

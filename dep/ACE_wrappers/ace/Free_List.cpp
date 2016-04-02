@@ -1,5 +1,3 @@
-// $Id: Free_List.cpp 81107 2008-03-27 11:12:42Z johnnyw $
-
 #ifndef ACE_FREE_LIST_CPP
 #define ACE_FREE_LIST_CPP
 
@@ -161,4 +159,3 @@ ACE_Locked_Free_List<T, ACE_LOCK>::dealloc (size_t n)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_FREE_LIST_CPP */
-

@@ -4,8 +4,6 @@
 /**
  *  @file    Containers_T.h
  *
- *  $Id: Containers_T.h 82588 2008-08-11 13:37:41Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -72,7 +70,6 @@ class ACE_Allocator;
  *       -# Default constructor
  *       -# Copy constructor
  *       -# operator=
- *
  */
 template <class T>
 class ACE_Bounded_Stack
@@ -203,7 +200,6 @@ private:
  *       -# Default constructor
  *       -# Copy constructor
  *       -# operator=
- *
  */
 template <class T, size_t ACE_SIZE>
 class ACE_Fixed_Stack
@@ -368,7 +364,6 @@ private:
  *       -# Default constructor
  *       -# Copy constructor
  *       -# operator=
- *
  */
 template <class T>
 class ACE_Unbounded_Stack
@@ -817,7 +812,6 @@ public:
  *       -# Default constructor
  *       -# Copy constructor
  *       -# operator=
- *
  */
 template <class T>
 class ACE_Double_Linked_List
@@ -1396,7 +1390,6 @@ public:
  *       -# Copy constructor
  *       -# operator=
  *       -# operator==
- *
  */
 template <class T, size_t ACE_SIZE>
 class ACE_Fixed_Set
@@ -1589,7 +1582,6 @@ private:
  *       -# Copy constructor
  *       -# operator=
  *       -# operator==
- *
  */
 template <class T>
 class ACE_Bounded_Set
@@ -1786,7 +1778,6 @@ private:
  * does not impose any restriction on how that ordering operator is
  * implemented.  The set is implemented as a linked list.
  *
- *
  * <b> Requirements and Performance Characteristics</b>
  *   - Internal Structure
  *       Double linked list
@@ -1810,8 +1801,6 @@ private:
  *       -# operator=
  *       -# operator==
  *       -# operator<
- *
- *
  */
 template <class T>
 class ACE_Ordered_MultiSet
@@ -1920,7 +1909,7 @@ private:
                    ACE_DNode<T> **new_position);
 
   /**
-   * Looks for first occurance of @a item in the ordered set, using the
+   * Looks for first occurrence of @a item in the ordered set, using the
    * passed starting position as a hint: if there is such an instance, it
    * updates the new_position pointer to point to this node and returns 0;
    * if there is no such node, then if there is a node before where the
@@ -1993,12 +1982,7 @@ class ACE_Array : public ACE_Array_Base<T>
 public:
   // Define a "trait"
   typedef T TYPE;
-
   typedef ACE_Array_Iterator<T> ITERATOR;
-
-  // = Exceptions.
-
-  // = Initialization and termination methods.
 
   /// Dynamically create an uninitialized array.
   /**
@@ -2071,4 +2055,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_CONTAINERS_T_H */
-

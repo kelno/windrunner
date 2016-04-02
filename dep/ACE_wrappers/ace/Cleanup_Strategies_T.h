@@ -4,8 +4,6 @@
 /**
  *  @file    Cleanup_Strategies_T.h
  *
- *  $Id: Cleanup_Strategies_T.h 81388 2008-04-23 14:02:05Z johnnyw $
- *
  *  @author Kirthika Parameswaran <kirthika@cs.wustl.edu>
  */
 //=============================================================================
@@ -147,4 +145,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* CLEANUP_STRATEGIES_H */
-

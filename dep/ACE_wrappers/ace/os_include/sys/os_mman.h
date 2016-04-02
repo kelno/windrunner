@@ -6,8 +6,6 @@
  *
  *  memory management declarations
  *
- *  $Id: os_mman.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -18,7 +16,7 @@
 
 #include /**/ "ace/pre.h"
 
-#include "ace/config-lite.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -31,14 +29,7 @@
 #endif /* ACE_LACKS_MMAP */
 
 #if !defined (ACE_LACKS_SYS_MMAN_H)
-   // Fixes a problem with HP/UX.
-#  if defined (ACE_HAS_BROKEN_MMAP_H)
-     extern "C" {
-#  endif /* ACE_HAS_BROKEN_MMAP_H */
 #  include /**/ <sys/mman.h>
-#  if defined (ACE_HAS_BROKEN_MMAP_H)
-     }
-#  endif /* ACE_HAS_BROKEN_MMAP_H */
 #endif /* ACE_LACKS_SYS_MMAN_H */
 
 // Place all additions (especially function declarations) within extern "C" {}
@@ -88,13 +79,12 @@ PAGE_NOCACHE  */
 #   define ACE_MAP_FIXED MAP_FIXED
 # endif /* ! ACE_MAP_FIXED */
 
-# if !defined (MAP_FAILED) || defined (ACE_HAS_BROKEN_MAP_FAILED)
-#   undef MAP_FAILED
+# if !defined (MAP_FAILED)
 #   define MAP_FAILED ((void *) -1)
 # elif defined (ACE_HAS_LONG_MAP_FAILED)
 #   undef MAP_FAILED
 #   define MAP_FAILED ((void *) -1L)
-# endif /* !MAP_FAILED || ACE_HAS_BROKEN_MAP_FAILED */
+# endif /* !MAP_FAILED */
 
 #if !defined (PROT_RDWR)
 #  define PROT_RDWR (PROT_READ|PROT_WRITE)
@@ -120,4 +110,3 @@ PAGE_NOCACHE  */
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_SYS_OS_MMAN_H */
-

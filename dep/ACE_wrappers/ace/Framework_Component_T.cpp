@@ -1,5 +1,3 @@
-// $Id: Framework_Component_T.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_FRAMEWORK_COMPONENT_T_CPP
 #define ACE_FRAMEWORK_COMPONENT_T_CPP
 
@@ -31,4 +29,3 @@ ACE_Framework_Component_T<Concrete>::close_singleton (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_FRAMEWORK_COMPONENT_T_CPP */
-

@@ -1,6 +1,4 @@
 // -*- MPC -*-
-// $Id: other.mpb 80826 2008-03-04 14:51:23Z wotte $
-
 feature(ace_other) {
   Source_Files(ACE_COMPONENTS) {
     Local_Name_Space.cpp

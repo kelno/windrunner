@@ -4,8 +4,6 @@
 /**
  *  @file    MEM_Stream.h
  *
- *  $Id: MEM_Stream.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Nanbor Wang <nanbor@cs.wustl.edu>
  */
 //=============================================================================
@@ -13,7 +11,10 @@
 
 #ifndef ACE_MEM_STREAM_H
 #define ACE_MEM_STREAM_H
+
 #include /**/ "ace/pre.h"
+
+#include /**/ "ace/ACE_export.h"
 
 #include "ace/MEM_IO.h"
 
@@ -79,48 +80,6 @@ public:
   ssize_t send_n (const void *buf, size_t n, int flags);
   ssize_t recv_n (void *buf, size_t n, int flags);
 
-#if 0
-  /**
-   * Try to send exactly @a len bytes into @a buf from <handle> (uses
-   * the <send> call).  If <send> blocks for longer than @a timeout the
-   * number of bytes actually sent is returned with @c errno == ETIME.
-   * If a timeout does not occur, <send_n> return @a len (i.e., the
-   * number of bytes requested to be sent).
-   */
-  ssize_t send_n (const void *buf,
-                  size_t len,
-                  int flags,
-                  const ACE_Time_Value *timeout);
-
-  /**
-   * Try to recv exactly @a len bytes into @a buf from <handle> (uses
-   * the <ACE::recv_n> call).  The ACE_Time_Value indicates how long
-   * to blocking trying to receive.  If @a timeout == 0, the caller
-   * will block until action is possible, else will wait until the
-   * relative time specified in *@a timeout elapses).  If <recv> blocks
-   * for longer than @a timeout the number of bytes actually read is
-   * returned with @c errno == ETIME.  If a timeout does not occur,
-   * <recv_n> return @a len (i.e., the number of bytes requested to be
-   * read).
-   */
-  ssize_t recv_n (void *buf,
-                  size_t len,
-                  int flags,
-                  const ACE_Time_Value *timeout);
-
-  /**
-   * Send an <iovec> of size @a n to the connected socket (uses
-   * <ACE::sendv_n>).  Will block until all bytes are sent or an error
-   * occurs.
-   */
-  ssize_t sendv_n (const iovec iov[],
-                   size_t n) const;
-
-  /// Receive an <iovec> of size @a n to the connected socket.
-  ssize_t recvv_n (iovec iov[],
-                   size_t n) const;
-#endif /* 0 */
-
   // = Selectively close endpoints.
 
   /// Close down the reader.
@@ -156,4 +115,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_MEM_STREAM_H */
-

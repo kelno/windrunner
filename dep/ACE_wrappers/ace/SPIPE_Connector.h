@@ -4,8 +4,6 @@
 /**
  *  @file    SPIPE_Connector.h
  *
- *  $Id: SPIPE_Connector.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt <schmidt@cs.wustl.edu>
  *  @author Prashant Jain <pjain@cs.wustl.edu>
  */
@@ -95,7 +93,7 @@ public:
                int pipe_mode = PIPE_READMODE_MESSAGE | PIPE_WAIT);
 
   /// Resets any event associations on this handle
-  int reset_new_handle (ACE_HANDLE handle);
+  bool reset_new_handle (ACE_HANDLE handle);
 
   // = Meta-type info
   typedef ACE_SPIPE_Addr PEER_ADDR;
@@ -116,4 +114,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_SPIPE_CONNECTOR_H */
-

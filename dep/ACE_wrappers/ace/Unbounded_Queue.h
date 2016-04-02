@@ -4,8 +4,6 @@
 /**
  *  @file Unbounded_Queue.h
  *
- *  $Id: Unbounded_Queue.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -144,7 +142,6 @@ private:
  *       -# Default constructor
  *       -# Copy constructor
  *       -# operator=
- *
  */
 template <class T>
 class ACE_Unbounded_Queue
@@ -185,17 +182,17 @@ public:
 
   // = Check boundary conditions.
 
-  /// Returns 1 if the container is empty, otherwise returns 0.
+  /// Returns true if the container is empty, otherwise returns false.
   /**
    * Constant time check to see if the queue is empty.
    */
-  int is_empty (void) const;
+  bool is_empty (void) const;
 
   /// Returns 0.
   /**
    * The queue cannot be full, so it always returns 0.
    */
-  int is_full (void) const;
+  bool is_full (void) const;
 
   // = Classic queue operations.
 
@@ -295,4 +292,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_UNBOUNDED_QUEUE_H */
-

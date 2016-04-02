@@ -1,7 +1,4 @@
 // -*- C++ -*-
-//
-// $Id: Thread.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/OS_NS_string.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -13,14 +10,14 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 ACE_INLINE int
 ACE_Thread::keycreate (ACE_thread_key_t *keyp,
 #if defined (ACE_HAS_THR_C_DEST)
-                       ACE_THR_C_DEST destructor,
+                       ACE_THR_C_DEST destructor
 #else
-                       ACE_THR_DEST destructor,
+                       ACE_THR_DEST destructor
 #endif /* ACE_HAS_THR_C_DEST */
-                       void *inst)
+                       )
 {
   // ACE_TRACE ("ACE_Thread::keycreate");
-  return ACE_OS::thr_keycreate (keyp, destructor, inst);
+  return ACE_OS::thr_keycreate (keyp, destructor);
 }
 
 // Free up the key so that other threads can reuse it.
@@ -171,7 +168,7 @@ ACE_Thread::disablecancel (struct cancel_state *old_state)
     {
       ACE_OS::memset (old_state,
                       0,
-                      sizeof (old_state));
+                      sizeof (*old_state));
       old_state->cancelstate = old_cstate;
     }
 

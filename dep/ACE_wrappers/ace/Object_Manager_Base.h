@@ -4,8 +4,6 @@
 /**
  *  @file    Object_Manager_Base.h
  *
- *  $Id: Object_Manager_Base.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Jesper S. M|ller<stophph@diku.dk>
  *  @author and a cast of thousands...
@@ -18,7 +16,7 @@
 #define ACE_OBJECT_MANAGER_BASE_H
 #include /**/ "ace/pre.h"
 
-#include "ace/config-lite.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -104,7 +102,7 @@ protected:
 
   /**
    * Flag indicating whether the ACE_Object_Manager was dynamically
-   * allocated by ACE.  (If is was dynamically allocated by the
+   * allocated by ACE. (If is was dynamically allocated by the
    * application, then the application is responsible for destroying
    * it.)
    */
@@ -205,7 +203,7 @@ public:
   static ACE_OS_Object_Manager *instance (void);
 
   /// For <ACE_OS::atexit> support.
-  int at_exit (ACE_EXIT_HOOK func);
+  int at_exit (ACE_EXIT_HOOK func, const char* name = 0);
 
 //private:
   /// Singleton instance pointer.
@@ -246,4 +244,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OBJECT_MANAGER_BASE_H */
-

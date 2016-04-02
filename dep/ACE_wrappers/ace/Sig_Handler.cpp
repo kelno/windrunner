@@ -1,5 +1,3 @@
-// $Id: Sig_Handler.cpp 81388 2008-04-23 14:02:05Z johnnyw $
-
 #include "ace/Sig_Handler.h"
 #include "ace/Sig_Adapter.h"
 #include "ace/Signal.h"
@@ -12,7 +10,7 @@
 #include "ace/Sig_Handler.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, Sig_Handler, "$Id: Sig_Handler.cpp 81388 2008-04-23 14:02:05Z johnnyw $")
+
 
 #if defined (ACE_HAS_SIG_C_FUNC)
 
@@ -54,6 +52,9 @@ ACE_ALLOC_HOOK_DEFINE(ACE_Sig_Handler)
 
 ACE_Sig_Handler::~ACE_Sig_Handler (void)
 {
+  for (int s = 1; s < ACE_NSIG; ++s)
+    if (ACE_Sig_Handler::signal_handlers_[s])
+      ACE_Sig_Handler::remove_handler_i (s);
 }
 
 void
@@ -71,7 +72,7 @@ ACE_Sig_Handler::sig_pending (void)
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
           ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
           (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-          ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+          ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, 0));
   return ACE_Sig_Handler::sig_pending_ != 0;
 }
 
@@ -83,7 +84,7 @@ ACE_Sig_Handler::sig_pending (int pending)
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
           ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
           (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-          ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+          ACE_GUARD (ACE_Recursive_Thread_Mutex, m, *lock));
   ACE_Sig_Handler::sig_pending_ = pending;
 }
 
@@ -94,7 +95,7 @@ ACE_Sig_Handler::handler (int signum)
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, 0));
 
   if (ACE_Sig_Handler::in_range (signum))
     return ACE_Sig_Handler::signal_handlers_[signum];
@@ -127,7 +128,7 @@ ACE_Sig_Handler::handler (int signum,
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, 0));
 
   return ACE_Sig_Handler::handler_i (signum, new_sh);
 }
@@ -148,8 +149,7 @@ ACE_Sig_Handler::register_handler_i (int signum,
   if (ACE_Sig_Handler::in_range (signum))
     {
       ACE_Sig_Action sa; // Define a "null" action.
-      ACE_Event_Handler *sh = ACE_Sig_Handler::handler_i (signum,
-                                                          new_sh);
+      ACE_Event_Handler *sh = ACE_Sig_Handler::handler_i (signum, new_sh);
 
       // Return a pointer to the old <ACE_Sig_Handler> if the user
       // asks for this.
@@ -162,9 +162,9 @@ ACE_Sig_Handler::register_handler_i (int signum,
         new_disp = &sa;
 
       new_disp->handler (ace_signal_handler_dispatcher);
-#if !defined (ACE_HAS_LYNXOS_SIGNALS)
+#if !defined (ACE_HAS_LYNXOS4_SIGNALS)
       new_disp->flags (new_disp->flags () | SA_SIGINFO);
-#endif /* ACE_HAS_LYNXOS_SIGNALS */
+#endif /* ACE_HAS_LYNXOS4_SIGNALS */
       return new_disp->register_action (signum, old_disp);
     }
   else
@@ -186,13 +186,40 @@ ACE_Sig_Handler::register_handler (int signum,
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, -1));
 
   return ACE_Sig_Handler::register_handler_i (signum,
                                               new_sh,
                                               new_disp,
                                               old_sh,
                                               old_disp);
+}
+
+int
+ACE_Sig_Handler::remove_handler_i (int signum,
+                                   ACE_Sig_Action *new_disp,
+                                   ACE_Sig_Action *old_disp,
+                                   int)
+{
+  ACE_TRACE ("ACE_Sig_Handler::remove_handler_i");
+
+  ACE_Sig_Action sa (SIG_DFL, (sigset_t *) 0); // Reset to default disposition.
+
+  if (new_disp == 0)
+    new_disp = &sa;
+
+  ACE_Event_Handler *eh = ACE_Sig_Handler::signal_handlers_[signum];
+  ACE_Sig_Handler::signal_handlers_[signum] = 0;
+
+  // Allow the event handler to close down if necessary.
+  if (eh)
+    {
+      eh->handle_close (ACE_INVALID_HANDLE,
+                        ACE_Event_Handler::SIGNAL_MASK);
+    }
+
+  // Register either the new disposition or restore the default.
+  return new_disp->register_action (signum, old_disp);
 }
 
 // Remove an ACE_Event_Handler.
@@ -207,22 +234,12 @@ ACE_Sig_Handler::remove_handler (int signum,
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, -1));
 
   if (ACE_Sig_Handler::in_range (signum))
-    {
-      ACE_Sig_Action sa (SIG_DFL, (sigset_t *) 0); // Define the default disposition.
+    return ACE_Sig_Handler::remove_handler_i (signum, new_disp, old_disp);
 
-      if (new_disp == 0)
-        new_disp = &sa;
-
-      ACE_Sig_Handler::signal_handlers_[signum] = 0;
-
-      // Register either the new disposition or restore the default.
-      return new_disp->register_action (signum, old_disp);
-    }
-
-    return -1;
+  return -1;
 }
 
 // Master dispatcher function that gets called by a signal handler and
@@ -250,20 +267,7 @@ ACE_Sig_Handler::dispatch (int signum,
   if (eh != 0)
     {
       if (eh->handle_signal (signum, siginfo, ucontext) == -1)
-        {
-          // Define the default disposition.
-          ACE_Sig_Action sa ((ACE_SignalHandler) SIG_DFL, (sigset_t *) 0);
-
-          ACE_Sig_Handler::signal_handlers_[signum] = 0;
-
-          // Remove the current disposition by registering the default
-          // disposition.
-          sa.register_action (signum);
-
-          // Allow the event handler to close down if necessary.
-          eh->handle_close (ACE_INVALID_HANDLE,
-                            ACE_Event_Handler::SIGNAL_MASK);
-        }
+        ACE_Sig_Handler::remove_handler_i (signum);
 #if defined (ACE_WIN32)
       else
         // Win32 is weird in the sense that it resets the signal
@@ -271,8 +275,7 @@ ACE_Sig_Handler::dispatch (int signum,
         // dispatched.  Therefore, to workaround this "feature" we
         // must re-register the <ACE_Event_Handler> with <signum>
         // explicitly.
-        ACE_Sig_Handler::register_handler_i (signum,
-                                             eh);
+        ACE_Sig_Handler::register_handler_i (signum, eh);
 #endif /* ACE_WIN32*/
     }
 }
@@ -324,6 +327,10 @@ ACE_Sig_Handlers_Set::instance (int signum)
 
 ACE_ALLOC_HOOK_DEFINE(ACE_Sig_Handlers)
 
+ACE_Sig_Handlers::ACE_Sig_Handlers (void)
+{
+}
+
 void
 ACE_Sig_Handlers::dump (void) const
 {
@@ -346,7 +353,7 @@ ACE_Sig_Handlers::register_handler (int signum,
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, -1));
 
   if (ACE_Sig_Handler::in_range (signum))
     {
@@ -400,7 +407,10 @@ ACE_Sig_Handlers::register_handler (int signum,
       // Add the ACE signal handler to the set of handlers for this
       // signal (make sure it goes before the external one if there is
       // one of these).
-      if (ACE_Sig_Handlers_Set::instance (signum)->insert (ace_sig_adapter) == -1)
+
+      int result = ACE_Sig_Handlers_Set::instance (signum)->insert (ace_sig_adapter);
+
+      if (result == -1)
         {
           // We couldn't reinstall our handler, so let's pretend like
           // none of this happened...
@@ -429,7 +439,9 @@ ACE_Sig_Handlers::register_handler (int signum,
 
           // Default is to restart signal handlers.
           new_disp->flags (new_disp->flags () | SA_RESTART);
+#if !defined (ACE_HAS_LYNXOS4_SIGNALS)
           new_disp->flags (new_disp->flags () | SA_SIGINFO);
+#endif /* ACE_HAS_LYNXOS4_SIGNALS */
 
           // Finally install (possibly reinstall) the ACE signal
           // handler disposition with the SA_RESTART mode enabled.
@@ -470,7 +482,7 @@ ACE_Sig_Handlers::remove_handler (int signum,
   ACE_MT (ACE_Recursive_Thread_Mutex *lock =
     ACE_Managed_Object<ACE_Recursive_Thread_Mutex>::get_preallocated_object
       (ACE_Object_Manager::ACE_SIG_HANDLER_LOCK);
-    ACE_Guard<ACE_Recursive_Thread_Mutex> m (*lock));
+    ACE_GUARD_RETURN (ACE_Recursive_Thread_Mutex, m, *lock, -1));
 
   if (ACE_Sig_Handler::in_range (signum))
     {
@@ -483,7 +495,7 @@ ACE_Sig_Handlers::remove_handler (int signum,
 
       for (ACE_Event_Handler **eh;
            handler_iterator.next (eh) != 0;
-           handler_iterator.advance ())
+           )
         {
           // Type-safe downcast would be nice here...
           ACE_Sig_Adapter *sh = (ACE_Sig_Adapter *) *eh;
@@ -551,14 +563,12 @@ ACE_Sig_Handlers::dispatch (int signum,
 
   for (ACE_Event_Handler **eh = 0;
        handler_iterator.next (eh) != 0;
-       handler_iterator.advance ())
-    {
-      if ((*eh)->handle_signal (signum, siginfo, ucontext) == -1)
-        {
-          handler_set->remove (*eh);
-          delete *eh;
-        }
-    }
+       )
+    if ((*eh)->handle_signal (signum, siginfo, ucontext) == -1)
+      {
+        handler_set->remove (*eh);
+        delete *eh;
+      }
 }
 
 // Return the first item in the list of handlers.  Note that this will
@@ -612,4 +622,3 @@ ACE_Sig_Handlers::handler (int signum, ACE_Event_Handler *new_sh)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

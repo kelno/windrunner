@@ -4,8 +4,6 @@
 /**
  * @file Monitor_Admin_Manager.h
  *
- * $Id: Monitor_Admin_Manager.h 81691 2008-05-14 11:09:21Z johnnyw $
- *
  * @author Jeff Parsons <j.parsons@vanderbilt.edu>
  */
 //=============================================================================
@@ -68,4 +66,3 @@ ACE_FACTORY_DECLARE (ACE, MC_ADMINMANAGER)
 #include /**/ "ace/post.h"
 
 #endif // MONITOR_ADMIN_MANAGER_H
-

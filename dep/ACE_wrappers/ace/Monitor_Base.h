@@ -4,8 +4,6 @@
 /**
  * @file Monitor_Base.h
  *
- * $Id: Monitor_Base.h 82333 2008-07-16 01:01:32Z johnnyw $
- *
  * @author Jeff Parsons <j.parsons@vanderbilt.edu>
  */
 //=============================================================================
@@ -150,4 +148,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif // MONITOR_BASE_H
-

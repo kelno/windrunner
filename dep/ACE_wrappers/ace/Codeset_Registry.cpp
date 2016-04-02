@@ -2,10 +2,7 @@
 /**
  *  @file   Codeset_Registry.cpp
  *
- *  $Id: Codeset_Registry.cpp 80826 2008-03-04 14:51:23Z wotte $
- *
  *  emulated codset regstry functions
- *
  *
  *  @author Phil Mesnier <mesnier_p@ociweb.com>
  */
@@ -15,15 +12,9 @@
 #include "ace/OS_Memory.h"
 #include "ace/OS_NS_string.h"
 
-// $Id: Codeset_Registry.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #if !defined (__ACE_INLINE__)
 #include "ace/Codeset_Registry.inl"
 #endif /* __ACE_INLINE__ */
-
-ACE_RCSID (ace,
-           Codeset_Registry,
-           "$Id: Codeset_Registry.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -109,4 +100,3 @@ ACE_Codeset_Registry::get_max_bytes_i (ACE_CDR::ULong codeset_id)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -4,8 +4,6 @@
 /**
  *  @file    String_Base_Const.h
  *
- *  $Id: String_Base_Const.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Nanbor Wang <nanbor@cs.wustl.edu>
  */
 //=============================================================================
@@ -50,4 +48,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_STRING_BASE_CONST_H */
-

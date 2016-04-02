@@ -1,12 +1,10 @@
-// $Id: Dump.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Dump.h"
 #include "ace/Guard_T.h"
 #include "ace/Thread_Mutex.h"
 #include "ace/Object_Manager.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
-ACE_RCSID(ace, Dump, "$Id: Dump.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -139,4 +137,3 @@ ACE_ODB::remove_object (const void *this_ptr)
 ACE_ODB *ACE_ODB::instance_ = 0;
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

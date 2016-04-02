@@ -4,8 +4,6 @@
 /**
  *  @file    Naming_Context.h
  *
- *  $Id: Naming_Context.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Gerhard Lenzer
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  *  @author Prashant Jain <pjain@uci.edu>
@@ -126,7 +124,7 @@ public:
   /**
    * Overwrite the value or type of an existing name in a
    * ACE_Naming_Context or bind a new name to the context, if it
-   * didn't exist yet. (Wide charcter strings interface).
+   * didn't exist yet. (Wide character strings interface).
    */
   int rebind (const ACE_NS_WString &name_in,
               const ACE_NS_WString &value_in,
@@ -135,13 +133,13 @@ public:
   /**
    * Overwrite the value or type of an existing name in a
    * ACE_Naming_Context or bind a new name to the context, if it
-   * didn't exist yet. ( charcter strings interface)
+   * didn't exist yet. ( character strings interface)
    */
   int rebind (const char *name_in,
               const char *value_in,
               const char *type_in = "");
 
-  /// Delete a name from a ACE_Naming_Context (Wide charcter strings
+  /// Delete a name from a ACE_Naming_Context (Wide character strings
   /// Interface).
   int unbind (const ACE_NS_WString &name_in);
 
@@ -269,7 +267,6 @@ private:
 
   /// 1 if we're on the same local machine as the name server, else 0.
   int local (void);
-
 };
 
 /**
@@ -337,17 +334,17 @@ public:
   void use_registry (bool x);
 
   /// Return debug status
-  int debug (void);
+  bool debug (void);
 
   /// Return verbose status
-  int verbose (void);
+  bool verbose (void);
 
 private:
   /// Extra debugging info
-  int debugging_;
+  bool debugging_;
 
   /// Extra verbose messages
-  int verbosity_;
+  bool verbosity_;
 
   /// Use Win32 Registry
   bool use_registry_;
@@ -385,4 +382,3 @@ ACE_STATIC_SVC_DECLARE_EXPORT (ACE, ACE_Naming_Context)
 
 #include /**/ "ace/post.h"
 #endif /* ACE_NAMING_CONTEXT_H */
-

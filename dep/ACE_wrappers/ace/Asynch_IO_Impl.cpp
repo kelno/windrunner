@@ -1,5 +1,3 @@
-// $Id: Asynch_IO_Impl.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Asynch_IO_Impl.h"
 
 #if defined (ACE_HAS_WIN32_OVERLAPPED_IO) || defined (ACE_HAS_AIO_CALLS)
@@ -115,4 +113,3 @@ ACE_Asynch_Write_Dgram_Result_Impl::ACE_Asynch_Write_Dgram_Result_Impl (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_WIN32_OVERLAPPED_IO || ACE_HAS_AIO_CALLS */
-

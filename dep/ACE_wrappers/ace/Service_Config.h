@@ -4,8 +4,6 @@
 /**
  *  @file    Service_Config.h
  *
- *  $Id: Service_Config.h 81673 2008-05-09 19:09:43Z iliyan $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //====================================================================
@@ -57,6 +55,33 @@ class ACE_DLL;
   ACE_TEXT ("() \"") \
   ACE_TEXT (parameters) \
   ACE_TEXT ("\"")
+#if defined (ACE_VERSIONED_SO) && (ACE_VERSIONED_SO == 2)
+#define ACE_DYNAMIC_VERSIONED_SERVICE_DIRECTIVE(ident, libpathname, version, objectclass, parameters) \
+  ACE_TEXT ("dynamic ") \
+  ACE_TEXT (ident) \
+  ACE_TEXT (" Service_Object * ") \
+  ACE_DLL_PREFIX \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT ("-") \
+  ACE_TEXT (version) \
+  ACE_DLL_SUFFIX \
+  ACE_TEXT (":") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("() \"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"")
+#else
+#define ACE_DYNAMIC_VERSIONED_SERVICE_DIRECTIVE(ident, libpathname, version, objectclass, parameters) \
+  ACE_TEXT ("dynamic ") \
+  ACE_TEXT (ident) \
+  ACE_TEXT (" Service_Object * ") \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT (":") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("() \"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"")
+#endif /* ACE_VERSIONED_SO */
 #define ACE_REMOVE_SERVICE_DIRECTIVE(ident) \
   ACE_TEXT ("remove ") \
   ACE_TEXT (ident)
@@ -80,6 +105,37 @@ class ACE_Svc_Conf_Param;
   ACE_TEXT (" params=\"") \
   ACE_TEXT (parameters) \
   ACE_TEXT ("\"/></dynamic></ACE_Svc_Conf>")
+#if defined (ACE_VERSIONED_SO) && (ACE_VERSIONED_SO == 2)
+#define ACE_DYNAMIC_VERSIONED_SERVICE_DIRECTIVE(ident, libpathname, version, objectclass, parameters) \
+  ACE_TEXT ("<ACE_Svc_Conf><dynamic id=\"") \
+  ACE_TEXT (ident) \
+  ACE_TEXT ("\" type=\"Service_Object\">") \
+  ACE_TEXT ("<initializer path=\"") \
+  ACE_DLL_PREFIX \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT ("-") \
+  ACE_TEXT (version) \
+  ACE_DLL_SUFFIX \
+  ACE_TEXT ("\" init=\"") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("\"") \
+  ACE_TEXT (" params=\"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"/></dynamic></ACE_Svc_Conf>")
+#else
+#define ACE_DYNAMIC_VERSIONED_SERVICE_DIRECTIVE(ident, libpathname, version, objectclass, parameters) \
+  ACE_TEXT ("<ACE_Svc_Conf><dynamic id=\"") \
+  ACE_TEXT (ident) \
+  ACE_TEXT ("\" type=\"Service_Object\">") \
+  ACE_TEXT ("<initializer path=\"") \
+  ACE_TEXT (libpathname) \
+  ACE_TEXT ("\" init=\"") \
+  ACE_TEXT (objectclass) \
+  ACE_TEXT ("\"") \
+  ACE_TEXT (" params=\"") \
+  ACE_TEXT (parameters) \
+  ACE_TEXT ("\"/></dynamic></ACE_Svc_Conf>")
+#endif
 #define ACE_REMOVE_SERVICE_DIRECTIVE(ident) \
   ACE_TEXT ("<ACE_Svc_Conf><remove id=\"") \
   ACE_TEXT (ident) \
@@ -159,8 +215,8 @@ template<>
 class ACE_Export ACE_Threading_Helper<ACE_Thread_Mutex>
 {
 public:
-  ACE_Threading_Helper ();
-  ~ACE_Threading_Helper ();
+  ACE_Threading_Helper (void);
+  ~ACE_Threading_Helper (void);
 
   void set (void*);
   void* get (void);
@@ -178,8 +234,8 @@ template<>
 class ACE_Export ACE_Threading_Helper<ACE_Null_Mutex>
 {
 public:
-  ACE_Threading_Helper ();
-  ~ACE_Threading_Helper ();
+  ACE_Threading_Helper (void);
+  ~ACE_Threading_Helper (void);
 
   void set (void*);
   void* get (void);
@@ -367,6 +423,8 @@ private:
    * - '-d' Turn on debugging mode
    * - '-f' Specifies a configuration file name other than the default
    *        svc.conf. Can be specified multiple times to use multiple files.
+   *        If any configuration file is provided with this option then
+   *        the default svc.conf will be ignored.
    * - '-k' Specifies the rendezvous point to use for the ACE distributed
    *        logger.
    * - '-y' Explicitly enables the use of static services. This flag
@@ -380,7 +438,13 @@ private:
    * - '-S' Specifies a service directive string. Enclose the string in quotes
    *        and escape any embedded quotes with a backslash. This option
    *        specifies service directives without the need for a configuration
-   *        file.
+   *        file. Can be specified multiple times.
+   *
+   * Note: Options '-f' and '-S' complement each other. Directives from files
+   * and from '-S' option are processed together in the following order. First,
+   * all files are processed in the order they are specified in @a argv
+   * parameter. Second, all directive strings are executed in the order the
+   * directives appear in @a argv parameter.
    *
    * @param argc The number of commandline arguments.
    * @param argv The array with commandline arguments
@@ -682,4 +746,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_SERVICE_CONFIG_H */
-

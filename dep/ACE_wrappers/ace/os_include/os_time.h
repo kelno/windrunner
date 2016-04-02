@@ -6,8 +6,6 @@
  *
  *  time types
  *
- *  $Id: os_time.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -18,7 +16,7 @@
 
 #include /**/ "ace/pre.h"
 
-#include "ace/config-lite.h"
+#include /**/ "ace/config-lite.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -81,10 +79,6 @@ extern "C"
 {
 #endif /* __cplusplus */
 
-#if defined (ACE_HAS_BROKEN_CTIME)
-#  undef ctime
-#endif /* ACE_HAS_BROKEN_CTIME */
-
 // There are a lot of threads-related macro definitions in the config files.
 // They came in at different times and from different places and platform
 // requirements as threads evolved.  They are probably not all needed - some
@@ -108,17 +102,9 @@ typedef struct timespec * ACE_TIMESPEC_PTR;
 typedef const struct timespec * ACE_TIMESPEC_PTR;
 #endif /* ACE_LACKS_CONST_TIMESPEC_PTR */
 
-#if defined (DIGITAL_UNIX)
-  extern char *_Pctime_r (const time_t *, char *);
-  extern struct tm *_Plocaltime_r (const time_t *, struct tm *);
-  extern struct tm *_Pgmtime_r (const time_t *, struct tm *);
-  extern char *_Pasctime_r (const struct tm *, char *);
-#endif /* DIGITAL_UNIX */
-
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_OS_TIME_H */
-

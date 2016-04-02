@@ -1,9 +1,6 @@
 // -*- C++ -*-
-//
-// $Id: Map_Manager.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Guard_T.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -56,7 +53,7 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::ACE_Map_Manager (size_t size,
     cur_size_ (0)
 {
   if (this->open (size, alloc) == -1)
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("ACE_Map_Manager\n")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("ACE_Map_Manager\n")));
 }
 
 template <class EXT_ID, class INT_ID, class ACE_LOCK> ACE_INLINE
@@ -67,7 +64,7 @@ ACE_Map_Manager<EXT_ID, INT_ID, ACE_LOCK>::ACE_Map_Manager (ACE_Allocator *alloc
     cur_size_ (0)
 {
   if (this->open (ACE_DEFAULT_MAP_SIZE, alloc) == -1)
-    ACE_ERROR ((LM_ERROR, ACE_TEXT ("ACE_Map_Manager\n")));
+    ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("ACE_Map_Manager\n")));
 }
 
 template <class EXT_ID, class INT_ID, class ACE_LOCK> ACE_INLINE int
@@ -725,5 +722,32 @@ ACE_Map_Reverse_Iterator<EXT_ID, INT_ID, ACE_LOCK>::operator-- (int)
   --*this;
   return retv;
 }
+
+template <class EXT_ID, class INT_ID, class ACE_LOCK> ACE_INLINE
+ACE_Map_Entry<EXT_ID, INT_ID>&
+ACE_Map_Iterator_Base<EXT_ID, INT_ID, ACE_LOCK>::operator* (void) const
+{
+  ACE_Map_Entry<EXT_ID, INT_ID> *retv = 0;
+
+  int const result = this->next (retv);
+  ACE_ASSERT (result != 0);
+  ACE_UNUSED_ARG (result);
+
+  return *retv;
+}
+
+template <class EXT_ID, class INT_ID, class ACE_LOCK> ACE_INLINE
+ACE_Map_Entry<EXT_ID, INT_ID>&
+ACE_Map_Const_Iterator_Base<EXT_ID, INT_ID, ACE_LOCK>::operator* (void) const
+{
+  ACE_Map_Entry<EXT_ID, INT_ID> *retv = 0;
+
+  int const result = this->next (retv);
+  ACE_ASSERT (result != 0);
+  ACE_UNUSED_ARG (result);
+
+  return *retv;
+}
+
 
 ACE_END_VERSIONED_NAMESPACE_DECL

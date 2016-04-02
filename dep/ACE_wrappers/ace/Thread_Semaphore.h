@@ -4,8 +4,6 @@
 /**
  *  @file    Thread_Semaphore.h
  *
- *  $Id: Thread_Semaphore.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -47,7 +45,7 @@ public:
                         void * = 0,
                         int max = 0x7FFFFFFF);
 
-  /// Default dtor.
+  /// Default destructor.
   ~ACE_Thread_Semaphore (void);
 
   /// Dump the state of an object.
@@ -62,8 +60,6 @@ public:
 template <class T> class ACE_Malloc_Lock_Adapter_T;
 
 /**
- * @class ACE_Malloc_Lock_Adapter_T<ACE_Thread_Semaphore>
- *
  * @brief Template specialization of ACE_Malloc_Lock_Adapter_T for
  * ACE_Thread_Semaphore.
  *
@@ -87,4 +83,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_THREAD_SEMAPHORE_H */
-

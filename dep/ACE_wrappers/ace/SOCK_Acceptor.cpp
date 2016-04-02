@@ -1,8 +1,6 @@
-// $Id: SOCK_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SOCK_Acceptor.h"
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_Errno.h"
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_sys_socket.h"
@@ -16,7 +14,7 @@
 #include "ace/OS_QoS.h"
 #endif  // ACE_HAS_WINCE
 
-ACE_RCSID(ace, SOCK_Acceptor, "$Id: SOCK_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -33,7 +31,7 @@ ACE_SOCK_Acceptor::ACE_SOCK_Acceptor (void)
 
 int
 ACE_SOCK_Acceptor::shared_accept_start (ACE_Time_Value *timeout,
-                                        int restart,
+                                        bool restart,
                                         int &in_blocking_mode) const
 {
   ACE_TRACE ("ACE_SOCK_Acceptor::shared_accept_start");
@@ -66,7 +64,7 @@ ACE_SOCK_Acceptor::shared_accept_start (ACE_Time_Value *timeout,
 int
 ACE_SOCK_Acceptor::shared_accept_finish (ACE_SOCK_Stream new_stream,
                                          int in_blocking_mode,
-                                         int reset_new_handle) const
+                                         bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_SOCK_Acceptor::shared_accept_finish ()");
 
@@ -105,8 +103,8 @@ int
 ACE_SOCK_Acceptor::accept (ACE_SOCK_Stream &new_stream,
                            ACE_Addr *remote_addr,
                            ACE_Time_Value *timeout,
-                           int restart,
-                           int reset_new_handle) const
+                           bool restart,
+                           bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_SOCK_Acceptor::accept");
 
@@ -135,7 +133,7 @@ ACE_SOCK_Acceptor::accept (ACE_SOCK_Stream &new_stream,
                                                addr,
                                                len_ptr));
       while (new_stream.get_handle () == ACE_INVALID_HANDLE
-             && restart != 0
+             && restart
              && errno == EINTR
              && timeout == 0);
 
@@ -161,8 +159,8 @@ ACE_SOCK_Acceptor::accept (ACE_SOCK_Stream &new_stream,
                            ACE_Accept_QoS_Params qos_params,
                            ACE_Addr *remote_addr,
                            ACE_Time_Value *timeout,
-                           int restart,
-                           int reset_new_handle) const
+                           bool restart,
+                           bool reset_new_handle) const
 {
   ACE_TRACE ("ACE_SOCK_Acceptor::accept");
 
@@ -192,7 +190,7 @@ ACE_SOCK_Acceptor::accept (ACE_SOCK_Stream &new_stream,
                                                len_ptr,
                                                qos_params));
       while (new_stream.get_handle () == ACE_INVALID_HANDLE
-             && restart != 0
+             && restart
              && errno == EINTR
              && timeout == 0);
 
@@ -242,6 +240,19 @@ ACE_SOCK_Acceptor::shared_open (const ACE_Addr &local_sap,
       else
         local_inet6_addr = *reinterpret_cast<sockaddr_in6 *> (local_sap.get_addr ());
 
+# if defined (ACE_WIN32)
+      // on windows vista and later, Winsock can support dual stack sockets
+      // but this must be explicitly set prior to the bind. Since this
+      // behavior is the default on *nix platforms, it should be benigh to
+      // just do it here. On older platforms the setsockopt will fail, but
+      // that should be OK.
+      int zero = 0;
+      ACE_OS::setsockopt (this->get_handle (),
+                          IPPROTO_IPV6,
+                          IPV6_V6ONLY,
+                          (char *)&zero,
+                          sizeof (zero));
+# endif /* ACE_WIN32 */
       // We probably don't need a bind_port written here.
       // There are currently no supported OS's that define
       // ACE_LACKS_WILDCARD_BIND.
@@ -340,7 +351,7 @@ ACE_SOCK_Acceptor::ACE_SOCK_Acceptor (const ACE_Addr &local_sap,
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_Acceptor")));
 }
@@ -392,7 +403,7 @@ ACE_SOCK_Acceptor::ACE_SOCK_Acceptor (const ACE_Addr &local_sap,
                   protocol_family,
                   backlog,
                   protocol) == -1)
-    ACE_ERROR ((LM_ERROR,
+    ACELIB_ERROR ((LM_ERROR,
                 ACE_TEXT ("%p\n"),
                 ACE_TEXT ("ACE_SOCK_Acceptor")));
 }
@@ -404,4 +415,3 @@ ACE_SOCK_Acceptor::close (void)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

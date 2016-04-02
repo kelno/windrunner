@@ -1,5 +1,3 @@
-// $Id: Pagefile_Memory_Pool.cpp 82559 2008-08-07 20:23:07Z parsons $
-
 // Pagefile_Memory_Pool.cpp
 #include "ace/Pagefile_Memory_Pool.h"
 
@@ -7,7 +5,7 @@
 #include "ace/Pagefile_Memory_Pool.inl"
 #endif /* __ACE_INLINE__ */
 
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/Auto_Ptr.h"
 #include "ace/RW_Thread_Mutex.h"
 #include "ace/OS_NS_sys_mman.h"
@@ -21,7 +19,7 @@
 #include "ace/Based_Pointer_Repository.h"
 #endif /* ACE_HAS_POSITION_INDEPENDENT_POINTERS == 1  */
 
-ACE_RCSID(ace, Pagefile_Memory_Pool, "$Id: Pagefile_Memory_Pool.cpp 82559 2008-08-07 20:23:07Z parsons $")
+
 
 #if defined (ACE_WIN32) && !defined (ACE_HAS_PHARLAP)
 #if !defined (ACE_HAS_WINCE)
@@ -93,6 +91,10 @@ ACE_Pagefile_Memory_Pool::ACE_Pagefile_Memory_Pool (const ACE_TCHAR *backing_sto
       && ACE_OS::strlen (this->backing_store_name_) < sizeof this->backing_store_name_)
       ACE_OS::strcat (this->backing_store_name_,
                       ACE_TEXT ("_"));
+}
+
+ACE_Pagefile_Memory_Pool::~ACE_Pagefile_Memory_Pool (void)
+{
 }
 
 void *
@@ -383,4 +385,3 @@ ACE_Pagefile_Memory_Pool::map (int &first_time,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_WIN32 && !ACE_HAS_PHARLAP */
-

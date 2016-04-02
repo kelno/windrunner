@@ -1,6 +1,4 @@
 // -*- C++ -*-
-// $Id: OS_NS_arpa_inet.inl 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/OS_NS_string.h"
 #include "ace/OS_NS_errno.h"
 #include "ace/OS_NS_stdio.h"
@@ -14,11 +12,11 @@ ACE_OS::inet_addr (const char *name)
 #if defined (ACE_LACKS_INET_ADDR)
   ACE_UNUSED_ARG (name);
   ACE_NOTSUP_RETURN (0);
-#elif defined (ACE_HAS_NONCONST_GETBY)
+#elif defined (ACE_HAS_NONCONST_INET_ADDR)
   return ::inet_addr (const_cast <char*> (name));
 #else
   return ::inet_addr (name);
-#endif /* ACE_HAS_NONCONST_GETBY */
+#endif /* ACE_HAS_NONCONST_INET_ADDR */
 }
 
 ACE_INLINE char *
@@ -29,9 +27,7 @@ ACE_OS::inet_ntoa (const struct in_addr addr)
   ACE_UNUSED_ARG (addr);
   ACE_NOTSUP_RETURN (0);
 #else
-  ACE_OSCALL_RETURN (::inet_ntoa (addr),
-                     char *,
-                     0);
+  ACE_OSCALL_RETURN (::inet_ntoa (addr), char *, 0);
 #endif
 }
 

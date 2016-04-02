@@ -4,8 +4,6 @@
 /**
  *  @file    Shared_Object.h
  *
- *  $Id: Shared_Object.h 81348 2008-04-14 09:00:32Z johnnyw $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //==========================================================================
@@ -60,4 +58,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_SHARED_OBJECT_H */
-

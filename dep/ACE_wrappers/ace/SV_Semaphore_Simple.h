@@ -4,8 +4,6 @@
 /**
  *  @file    SV_Semaphore_Simple.h
  *
- *  $Id: SV_Semaphore_Simple.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //==========================================================================
@@ -29,7 +27,7 @@
 #if defined (ACE_WIN32)
    // Default semaphore key and mutex name
 #  if !defined (ACE_DEFAULT_SEM_KEY)
-#    define ACE_DEFAULT_SEM_KEY "ACE_SEM_KEY"
+#    define ACE_DEFAULT_SEM_KEY const_cast <char*>("ACE_SEM_KEY")
 #  endif /* ACE_DEFAULT_SEM_KEY */
 #else /* !defined (ACE_WIN32) */
    // Default semaphore key
@@ -110,7 +108,7 @@ public:
    * call is intended to be called from a server, for example, when it
    * is being shut down, as we do an IPC_RMID on the ACE_SV_Semaphore,
    * regardless of whether other processes may be using it or not.
-   * Most other processes should use <close> below.
+   * Most other processes should use close() below.
    */
   int remove (void) const;
 
@@ -195,4 +193,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* _SV_SEMAPHORE_SIMPLE_H */
-

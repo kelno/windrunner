@@ -70,10 +70,7 @@ void LoadGameObjectModelList()
         fread(&v1, sizeof(Vector3), 1, model_list_file);
         fread(&v2, sizeof(Vector3), 1, model_list_file);
 
-        model_list.insert
-        (
-            ModelList::value_type( displayId, GameobjectModelData(std::string(buff,name_length),AABox(v1,v2)) )
-        );
+        model_list.emplace(displayId, GameobjectModelData(GameobjectModelData(std::string(buff, name_length), AABox(v1, v2))));
     }
     fclose(model_list_file);
 }

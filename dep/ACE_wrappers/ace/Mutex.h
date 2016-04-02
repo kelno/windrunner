@@ -4,8 +4,6 @@
 /**
  *  @file    Mutex.h
  *
- *  $Id: Mutex.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //==========================================================================
@@ -144,6 +142,7 @@ public:
 
   /// Return the underlying mutex.
   const ACE_mutex_t &lock (void) const;
+  ACE_mutex_t &lock (void);
 
   /// Dump the state of an object.
   void dump (void) const;
@@ -190,4 +189,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_MUTEX_H */
-

@@ -3,8 +3,6 @@
 /**
  *  @file    Svc_Conf_Tokens.h
  *
- *  $Id: Svc_Conf_Tokens.h 81335 2008-04-11 01:53:36Z iliyan $
- *
  *  @author Iliyan Jeliazkov <iliyan@ociweb.com>
  */
 //====================================================================
@@ -27,4 +25,3 @@
 #  undef YYSTYPE_IS_DECLARED
 
 #endif /* ifndef BISON_SVC_CONF_TAB_H */
-

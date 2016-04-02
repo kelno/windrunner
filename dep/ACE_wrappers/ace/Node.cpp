@@ -1,5 +1,3 @@
-// $Id: Node.cpp 81624 2008-05-06 17:14:57Z wotte $
-
 #ifndef ACE_NODE_CPP
 #define ACE_NODE_CPP
 
@@ -44,4 +42,3 @@ ACE_Node<T, C>::ACE_Node (const ACE_Node<T, C> &s)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_NODE_CPP */
-

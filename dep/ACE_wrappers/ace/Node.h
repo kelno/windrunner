@@ -4,8 +4,6 @@
 /**
  *  @file Node.h
  *
- *  $Id: Node.h 81624 2008-05-06 17:14:57Z wotte $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
@@ -83,4 +81,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_NODE_H */
-

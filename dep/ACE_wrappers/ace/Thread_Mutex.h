@@ -4,8 +4,6 @@
 /**
  *  @file    Thread_Mutex.h
  *
- *  $Id: Thread_Mutex.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -49,7 +47,6 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  */
 class ACE_Export ACE_Thread_Mutex
 {
-  friend class ACE_Condition_Thread_Mutex;
 public:
   /// Constructor.
   ACE_Thread_Mutex (const ACE_TCHAR *name = 0,
@@ -78,7 +75,7 @@ public:
   int acquire (ACE_Time_Value &tv);
 
   /**
-   * If @a tv == 0 the call <acquire()> directly.  Otherwise, Block the
+   * If @a tv == 0 the call acquire() directly.  Otherwise, Block the
    * thread until we acquire the mutex or until @a tv times out, in
    * which case -1 is returned with @c errno == @c ETIME.  Note that
    * @a tv is assumed to be in "absolute" rather than "relative" time.
@@ -130,15 +127,16 @@ public:
   int tryacquire_write (void);
 
   /**
-   * This is only here to make the ACE_Thread_Mutex
-   * interface consistent with the other synchronization APIs.
-   * Assumes the caller has already acquired the mutex using one of
-   * the above calls, and returns 0 (success) always.
+   * This is only here to make the ACE_Thread_Mutex interface
+   * consistent with the other synchronization APIs.  Assumes the
+   * caller has already acquired the mutex using one of the above
+   * calls, and returns 0 (success) always.
    */
   int tryacquire_write_upgrade (void);
 
   /// Return the underlying mutex.
   const ACE_thread_mutex_t &lock (void) const;
+  ACE_thread_mutex_t &lock (void);
 
   /// Dump the state of an object.
   void dump (void) const;
@@ -146,7 +144,7 @@ public:
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
 
-  // protected:
+protected:
   /// Mutex type that supports single-process locking efficiently.
   ACE_thread_mutex_t lock_;
 
@@ -173,4 +171,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_THREAD_MUTEX_H */
-

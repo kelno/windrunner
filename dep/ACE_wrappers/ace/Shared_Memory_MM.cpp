@@ -1,15 +1,8 @@
-// $Id: Shared_Memory_MM.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Shared_Memory_MM.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Shared_Memory_MM.inl"
 #endif /* __ACE_INLINE__ */
-
-
-ACE_RCSID (ace,
-           Shared_Memory_MM,
-           "$Id: Shared_Memory_MM.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -109,4 +102,3 @@ ACE_Shared_Memory_MM::free (void *p)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

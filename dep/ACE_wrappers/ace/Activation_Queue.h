@@ -4,8 +4,6 @@
 /**
  *  @file    Activation_Queue.h
  *
- *  $Id: Activation_Queue.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Andres Kruse <Andres.Kruse@cern.ch>
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
@@ -23,6 +21,7 @@
 #endif /* ACE_LACKS_PRAGMA_ONCE */
 
 #include "ace/Message_Queue.h"
+#include "ace/Copy_Disabled.h"
 #include "ace/Condition_Thread_Mutex.h"
 
 /// Define to be compatible with the terminology in the POSA2 book!
@@ -35,7 +34,8 @@ class ACE_Method_Request;
 /**
  * @class ACE_Activation_Queue
  *
- * @brief Reifies a method into a request.  Subclasses typically
+ * @brief
+ * Reifies a method into a request.  Subclasses typically
  * represent necessary state and behavior.
  *
  * Maintains a priority-ordered queue of ACE_Method_Request objects.
@@ -50,7 +50,6 @@ class ACE_Method_Request;
 class ACE_Export ACE_Activation_Queue
 {
 public:
-  // = Initialization and termination methods.
   /// Constructor.
   /**
    * Initializes a new activation queue.
@@ -139,12 +138,6 @@ public:
   /// Declare the dynamic allocation hooks.
   ACE_ALLOC_HOOK_DECLARE;
 
-private:
-
-  // = Prevent copying and assignment.
-  ACE_Activation_Queue (const ACE_Activation_Queue &);
-  void operator= (const ACE_Activation_Queue &);
-
 protected:
 
   /// Stores the Method_Requests.
@@ -161,6 +154,8 @@ private:
   /// Allocation strategy of the message blocks.
   ACE_Allocator *data_block_allocator_;
 
+  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_Activation_Queue &))
+  ACE_UNIMPLEMENTED_FUNC (ACE_Activation_Queue (const ACE_Activation_Queue &))
 };
 
 ACE_END_VERSIONED_NAMESPACE_DECL
@@ -171,4 +166,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_ACTIVATION_QUEUE_H */
-

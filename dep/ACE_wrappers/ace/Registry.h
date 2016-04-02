@@ -4,8 +4,6 @@
 /**
  *  @file    Registry.h
  *
- *  $Id: Registry.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali (irfan@cs.wustl.edu)
  */
 //=============================================================================
@@ -460,7 +458,10 @@ public:
       {
       public:
         /// Constructor
-        Iteration_State ();
+        Iteration_State (void);
+
+        /// Destructor
+        virtual ~Iteration_State (void);
 
         /// Set the iterator reference.
         void iterator (Binding_Iterator *iterator);
@@ -557,4 +558,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_WIN32 && !ACE_LACKS_WIN32_REGISTRY */
 #include /**/ "ace/post.h"
 #endif /* ACE_REGISTRY_H */
-

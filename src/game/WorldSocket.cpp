@@ -726,7 +726,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
 
     N.SetHexStr ("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7");
     g.SetDword (7);
-    I.SetHexStr (fields[5].GetString ());
+    I.SetHexStr (fields[5].GetString ()); //sha_pass_hash
 
     //In case of leading zeros in the I hash, restore them
     uint8 mDigest[SHA_DIGEST_LENGTH];
@@ -737,7 +737,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
 
     std::reverse (mDigest, mDigest + SHA_DIGEST_LENGTH);
 
-    s.SetHexStr (fields[7].GetString ());
+    s.SetHexStr (fields[7].GetString ()); //s
     sha1.UpdateData (s.AsByteArray (), s.GetNumBytes ());
     sha1.UpdateData (mDigest, SHA_DIGEST_LENGTH);
     sha1.Finalize ();
@@ -746,7 +746,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
 
     const char* sStr = s.AsHexStr ();                       //Must be freed by OPENSSL_free()
     const char* vStr = v.AsHexStr ();                       //Must be freed by OPENSSL_free()
-    const char* vold = fields[6].GetString ();
+    const char* vold = fields[6].GetString (); //v
 
     DEBUG_LOG ("WorldSocket::HandleAuthSession: (s,v) check s: %s v_old: %s v_new: %s",
                 sStr,
@@ -794,7 +794,7 @@ int WorldSocket::HandleAuthSession (WorldPacket& recvPacket)
     id = fields[0].GetUInt32 ();
     security = fields[1].GetUInt16 ();
     groupid = fields[11].GetUInt16();
-    K.SetHexStr (fields[2].GetString ());
+    K.SetHexStr (fields[2].GetString ()); //sessionkey
 
     time_t mutetime = time_t (fields[9].GetUInt64 ());
 

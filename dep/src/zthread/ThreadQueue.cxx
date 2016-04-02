@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <iterator>
 
 namespace ZThread {
 

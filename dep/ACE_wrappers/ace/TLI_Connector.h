@@ -4,8 +4,6 @@
 /**
  *  @file    TLI_Connector.h
  *
- *  $Id: TLI_Connector.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
@@ -16,7 +14,7 @@
 #include /**/ "ace/pre.h"
 
 #include "ace/TLI_Stream.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -106,7 +104,7 @@ public:
                 ACE_Time_Value *tv);
 
   /// Resets any event associations on this handle
-  int reset_new_handle (ACE_HANDLE handle);
+  bool reset_new_handle (ACE_HANDLE handle);
 
   // = Meta-type info
   typedef ACE_INET_Addr PEER_ADDR;
@@ -128,4 +126,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_HAS_TLI */
 #include /**/ "ace/post.h"
 #endif /* ACE_TLI_CONNECTOR_H */
-

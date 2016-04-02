@@ -9,11 +9,6 @@
 
 #include "ace/OS_NS_stdio.h"
 
-ACE_RCSID (ace,
-           Capabilities,
-           "$Id: Capabilities.cpp 80826 2008-03-04 14:51:23Z wotte $")
-
-
 #define ACE_ESC ((ACE_TCHAR)0x1b)
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -223,7 +218,7 @@ ACE_Capabilities::is_entry (const ACE_TCHAR *name, const ACE_TCHAR *line)
         ++line;
       else
         {
-          ACE_DEBUG ((LM_DEBUG,
+          ACELIB_DEBUG ((LM_DEBUG,
                       ACE_TEXT ("Invalid entry\n")));
           break;
         }
@@ -314,7 +309,7 @@ ACE_Capabilities::getent (const ACE_TCHAR *fname, const ACE_TCHAR *name)
   FILE *fp = ACE_OS::fopen (fname, ACE_TEXT ("r"));
 
   if (fp == 0)
-    ACE_ERROR_RETURN ((LM_ERROR,
+    ACELIB_ERROR_RETURN ((LM_ERROR,
                        ACE_TEXT ("Can't open %s file\n"),
                        fname),
                       -1);
@@ -353,4 +348,3 @@ ACE_Capabilities::getent (const ACE_TCHAR *fname, const ACE_TCHAR *name)
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

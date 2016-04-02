@@ -1,5 +1,3 @@
-// $Id: IOStream_T.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_IOSTREAM_T_CPP
 #define ACE_IOSTREAM_T_CPP
 
@@ -245,4 +243,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_HAS_STRING_CLASS */
 #endif /* ACE_LACKS_ACE_IOSTREAM */
 #endif /* ACE_IOSTREAM_T_CPP */
-

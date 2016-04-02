@@ -1,5 +1,3 @@
-// $Id: Monitor_Admin_Manager.cpp 81691 2008-05-14 11:09:21Z johnnyw $
-
 #include "ace/Monitor_Admin_Manager.h"
 
 #if defined (ACE_HAS_MONITOR_FRAMEWORK) && (ACE_HAS_MONITOR_FRAMEWORK == 1)
@@ -39,5 +37,4 @@ ACE_STATIC_SVC_DEFINE (MC_ADMINMANAGER,
 ACE_FACTORY_DEFINE (ACE, MC_ADMINMANAGER)
 
 #endif /* ACE_HAS_MONITOR_FRAMEWORK==1 */
-
 

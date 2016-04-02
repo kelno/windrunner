@@ -4,8 +4,6 @@
 /**
  *  @file    Map_T.h
  *
- *  $Id: Map_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali <irfan@cs.wustl.edu>
  */
 //=============================================================================
@@ -14,10 +12,10 @@
 #define ACE_MAP_T_H
 #include /**/ "ace/pre.h"
 
-#include "ace/Pair_T.h"
 #include "ace/Map_Manager.h"
 #include "ace/Hash_Map_Manager_T.h"
 #include "ace/Active_Map_Manager.h"
+#include "ace/Pair_T.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
 # pragma once
@@ -830,7 +828,7 @@ class ACE_Active_Map_Manager_Adapter : public ACE_Map<KEY, VALUE>
 public:
 
   // = Traits.
-  typedef ACE_Pair<KEY, VALUE>
+  typedef std::pair<KEY, VALUE>
           expanded_value;
   typedef ACE_Active_Map_Manager_Iterator_Adapter<ACE_Reference_Pair<const KEY, VALUE>, expanded_value>
           iterator_impl;
@@ -851,11 +849,11 @@ public:
   /// Close down and release dynamically allocated resources.
   virtual ~ACE_Active_Map_Manager_Adapter (void);
 
-  /// Initialize a <Map> with size @a length.
+  /// Initialize a Map with size @a length.
   virtual int open (size_t length = ACE_DEFAULT_MAP_SIZE,
                     ACE_Allocator *alloc = 0);
 
-  /// Close down a <Map> and release dynamically allocated resources.
+  /// Close down a Map and release dynamically allocated resources.
   virtual int close (void);
 
   /**
@@ -870,11 +868,10 @@ public:
   /**
    * Add @a key / @a value pair to the map.  @a key is an "inout" parameter
    * and maybe modified/extended by the map to add additional
-   * information.  To recover original key, call the <recover_key>
+   * information.  To recover original key, call the recover_key()
    * method.
    */
-  virtual int bind_modify_key (const VALUE &value,
-                               KEY &key);
+  virtual int bind_modify_key (const VALUE &value, KEY &key);
 
   /**
    * Produce a key and return it through @a key which is an "out"
@@ -910,7 +907,7 @@ public:
   virtual int bind_create_key (const VALUE &value);
 
   /// Recovers the original key potentially modified by the map during
-  /// <bind_modify_key>.
+  /// bind_modify_key().
   virtual int recover_key (const KEY &modified_key,
                            KEY &original_key);
 
@@ -983,7 +980,7 @@ public:
   virtual void dump (void) const;
 
   /// Accessor to implementation object.
-  ACE_Active_Map_Manager<ACE_Pair<KEY, VALUE> > &impl (void);
+  ACE_Active_Map_Manager<std::pair<KEY, VALUE> > &impl (void);
 
   /// Accessor to key adapter.
   KEY_ADAPTER &key_adapter (void);
@@ -999,7 +996,7 @@ protected:
                       expanded_value *&internal_value);
 
   /// All implementation details are forwarded to this class.
-  ACE_Active_Map_Manager<ACE_Pair<KEY, VALUE> > implementation_;
+  ACE_Active_Map_Manager<std::pair<KEY, VALUE> > implementation_;
 
   /// Adapts between the user key and the Active_Map_Manager_Key.
   KEY_ADAPTER key_adapter_;
@@ -1145,11 +1142,11 @@ public:
   /// Close down and release dynamically allocated resources.
   virtual ~ACE_Hash_Map_Manager_Ex_Adapter (void);
 
-  /// Initialize a <Map> with size @a length.
+  /// Initialize a Map with size @a length.
   virtual int open (size_t length = ACE_DEFAULT_MAP_SIZE,
                     ACE_Allocator *alloc = 0);
 
-  /// Close down a <Map> and release dynamically allocated resources.
+  /// Close down a Map and release dynamically allocated resources.
   virtual int close (void);
 
   /**
@@ -1204,7 +1201,7 @@ public:
   virtual int bind_create_key (const VALUE &value);
 
   /// Recovers the original key potentially modified by the map during
-  /// <bind_modify_key>.
+  /// bind_modify_key().
   virtual int recover_key (const KEY &modified_key,
                            KEY &original_key);
 
@@ -1609,4 +1606,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_MAP_T_H */
-

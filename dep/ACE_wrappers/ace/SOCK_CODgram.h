@@ -4,8 +4,6 @@
 /**
  *  @file    SOCK_CODgram.h
  *
- *  $Id: SOCK_CODgram.h 81509 2008-04-28 22:00:49Z shuston $
- *
  *  @author Doug Schmidt
  */
 //=============================================================================
@@ -141,4 +139,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_SOCK_CODGRAM_H */
-

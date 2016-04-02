@@ -1,13 +1,11 @@
-// $Id: Signal.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Signal.h"
-// #include "ace/Log_Msg.h"
+// #include "ace/Log_Category.h"
 
 #if !defined (__ACE_INLINE__)
 #include "ace/Signal.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, Signal, "$Id: Signal.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -219,4 +217,3 @@ ACE_Sig_Action::ACE_Sig_Action (const ACE_Sig_Set &signals,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

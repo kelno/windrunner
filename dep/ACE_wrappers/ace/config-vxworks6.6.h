@@ -1,6 +1,4 @@
 //* -*- C++ -*- */
-// $Id: config-vxworks6.6.h 80826 2008-03-04 14:51:23Z wotte $
-
 // The following configuration file is designed to work for VxWorks
 // 6.6 platforms using one of these compilers:
 // 1) The GNU g++ compiler that is shipped with VxWorks 6.6
@@ -22,9 +20,13 @@
 
 #if !defined (__RTP__)
 # undef ACE_HAS_IOCTL_INT_3_PARAM
+# define ACE_HAS_TASKCPUAFFINITYSET
 #endif
+
+#define ACE_HAS_VXATOMICLIB
+#define ACE_HAS_CPUSET_T
+#define ACE_HAS_VXCPULIB
 
 #include /**/ "ace/post.h"
 #endif /* ACE_CONFIG_VXWORKS_6_6_H */
-
 

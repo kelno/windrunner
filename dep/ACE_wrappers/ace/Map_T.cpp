@@ -1,5 +1,3 @@
-// $Id: Map_T.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_MAP_T_CPP
 #define ACE_MAP_T_CPP
 
@@ -340,8 +338,8 @@ ACE_Active_Map_Manager_Iterator_Adapter<T, VALUE>::dereference () const
 {
   // The following syntax is necessary to work around certain broken compilers.
   // In particular, please do not prefix implementation_ with this->
-  return T ((*implementation_).int_id_.first (),
-            (*implementation_).int_id_.second ());
+  return T ((*implementation_).int_id_.first,
+            (*implementation_).int_id_.second);
 }
 
 template <class T, class VALUE> void
@@ -386,8 +384,8 @@ ACE_Active_Map_Manager_Reverse_Iterator_Adapter<T, VALUE>::dereference () const
 {
   // The following syntax is necessary to work around certain broken compilers.
   // In particular, please do not prefix implementation_ with this->
-  return T ((*implementation_).int_id_.first (),
-            (*implementation_).int_id_.second ());
+  return T ((*implementation_).int_id_.first,
+            (*implementation_).int_id_.second);
 }
 
 template <class T, class VALUE> void
@@ -443,13 +441,13 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::bind_modify_key (const 
       // of <expanded_value>.
       result = this->key_adapter_.encode (key,
                                           active_key,
-                                          internal_value->first ());
+                                          internal_value->first);
       if (result == 0)
         {
           // Copy user value into <expanded_value>.
-          internal_value->second (value);
+          internal_value->second = value;
           // Copy new, modified key back to the user key.
-          key = internal_value->first ();
+          key = internal_value->first;
         }
       else
         {
@@ -479,15 +477,15 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::bind_create_key (const 
   if (result == 0)
     {
       // Encode the active key into key part of <expanded_value>.
-      result = this->key_adapter_.encode (internal_value->first (),
+      result = this->key_adapter_.encode (internal_value->first,
                                           active_key,
-                                          internal_value->first ());
+                                          internal_value->first);
       if (result == 0)
         {
           // Copy user value into <expanded_value>.
-          internal_value->second (value);
+          internal_value->second = value;
           // Copy new, modified key to the user key.
-          key = internal_value->first ();
+          key = internal_value->first;
         }
       else
         {
@@ -510,13 +508,13 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::bind_create_key (const 
   if (result == 0)
     {
       // Encode the active key into key part of <expanded_value>.
-      result = this->key_adapter_.encode (internal_value->first (),
+      result = this->key_adapter_.encode (internal_value->first,
                                           active_key,
-                                          internal_value->first ());
+                                          internal_value->first);
       if (result == 0)
         {
           // Copy user value into <expanded_value>.
-          internal_value->second (value);
+          internal_value->second = value;
         }
       else
         {
@@ -567,7 +565,7 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::find (const KEY &key,
   if (result == 0)
     {
       // Copy value.
-      value = internal_value->second ();
+      value = internal_value->second;
     }
 
   return result;
@@ -592,7 +590,7 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::rebind (const KEY &key,
   if (result == 0)
     {
       // Reset value.
-      internal_value->second (value);
+      internal_value->second = value;
     }
 
   return result;
@@ -610,10 +608,10 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::rebind (const KEY &key,
   if (result == 0)
     {
       // Copy old value.
-      old_value = internal_value->second ();
+      old_value = internal_value->second;
 
       // Reset to new value.
-      internal_value->second (value);
+      internal_value->second = value;
     }
 
   return result;
@@ -632,11 +630,11 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::rebind (const KEY &key,
   if (result == 0)
     {
       // Copy old key and value.
-      old_key = internal_value->first ();
-      old_value = internal_value->second ();
+      old_key = internal_value->first;
+      old_value = internal_value->second;
 
       // Reset to new value.
-      internal_value->second (value);
+      internal_value->second = value;
     }
 
   return result;
@@ -686,7 +684,7 @@ ACE_Active_Map_Manager_Adapter<KEY, VALUE, KEY_ADAPTER>::unbind (const KEY &key,
   if (result == 0)
     {
       // Copy value.
-      value = internal_value->second ();
+      value = internal_value->second;
     }
 
   return result;
@@ -1341,4 +1339,3 @@ ACE_Map_Manager_Adapter<KEY, VALUE, KEY_GENERATOR>::rend_impl (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_MAP_T_CPP */
-

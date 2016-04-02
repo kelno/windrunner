@@ -4,8 +4,6 @@
 /**
  *  @file    FILE_Connector.h
  *
- *  $Id: FILE_Connector.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Doug Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -15,7 +13,7 @@
 #include /**/ "ace/pre.h"
 
 #include "ace/FILE_IO.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/os_include/os_fcntl.h"
 
 #if !defined (ACE_LACKS_PRAGMA_ONCE)
@@ -90,7 +88,7 @@ public:
                int perms = ACE_DEFAULT_FILE_PERMS);
 
   /// Resets any event associations on this handle
-  int reset_new_handle (ACE_HANDLE handle);
+  bool reset_new_handle (ACE_HANDLE handle);
 
   /// Dump the state of an object.
   void dump (void) const;
@@ -111,4 +109,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_FILE_CONNECTOR_H */
-

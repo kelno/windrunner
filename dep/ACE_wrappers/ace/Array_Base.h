@@ -4,8 +4,6 @@
 /**
  *  @file Array_Base.h
  *
- *  $Id: Array_Base.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
  */
 //=============================================================================
@@ -67,21 +65,21 @@ public:
   ACE_Array_Base (size_type size = 0,
                   ACE_Allocator * the_allocator = 0);
 
-  /// Dynamically initialize the entire array to the <default_value>.
+  /// Dynamically initialize the entire array to the @a default_value.
   ACE_Array_Base (size_type size,
                   T const & default_value,
                   ACE_Allocator * the_allocator = 0);
 
   /**
    * The copy constructor performs initialization by making an exact
-   * copy of the contents of parameter <s>, i.e., *this == s will
+   * copy of the contents of parameter @a s, i.e., *this == s will
    * return true.
    */
   ACE_Array_Base (ACE_Array_Base<T> const & s);
 
   /**
    * Assignment operator performs an assignment by making an exact
-   * copy of the contents of parameter <s>, i.e., *this == s will
+   * copy of the contents of parameter @a s, i.e., *this == s will
    * return true.  Note that if the <max_size_> of <array_> is >= than
    * <s.max_size_> we can copy it without reallocating.  However, if
    * <max_size_> is < <s.max_size_> we must delete the <array_>,
@@ -118,7 +116,7 @@ public:
   size_type size (void) const;
 
   /**
-   * Changes the size of the array to match <new_size>.
+   * Changes the size of the array to match @a new_size.
    * It copies the old contents into the new array.
    * Return -1 on failure.
    */
@@ -128,7 +126,7 @@ public:
   size_type max_size (void) const;
 
   /**
-   * Changes the size of the array to match <new_size>.
+   * Changes the size of the array to match @a new_size.
    * It copies the old contents into the new array.
    * Return -1 on failure.
    * It does not affect new_size
@@ -166,11 +164,11 @@ public:
 protected:
 
   /// Returns 1 if @a slot is within range, i.e., 0 >= @a slot <
-  /// <cur_size_>, else returns 0.
+  /// @c cur_size_, else returns 0.
   bool in_range (size_type slot) const;
 
-  /// Maximum size of the array, i.e., the total number of <T> elements
-  /// in <array_>.
+  /// Maximum size of the array, i.e., the total number of @c T elements
+  /// in @c array_.
   size_type max_size_;
 
   /**
@@ -212,7 +210,7 @@ public:
 
   // = Iteration methods.
 
-  /// Pass back the <next_item> that hasn't been seen in the Array.
+  /// Pass back the @a next_item that hasn't been seen in the Array.
   /// Returns 0 when all items have been seen, else 1.
   int next (T *&next_item);
 
@@ -254,4 +252,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif /* ACE_ARRAY_BASE_H */
-

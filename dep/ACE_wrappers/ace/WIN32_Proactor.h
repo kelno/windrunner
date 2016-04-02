@@ -4,8 +4,6 @@
 /**
  *  @file    WIN32_Proactor.h
  *
- *  $Id: WIN32_Proactor.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Irfan Pyarali (irfan@cs.wustl.edu)
  *  @author Tim Harrison (harrison@cs.wustl.edu)
  *  @author Alexander Babu Arulanthu <alex@cs.wustl.edu>
@@ -323,4 +321,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #endif /* ACE_WIN32 */
 #include /**/ "ace/post.h"
 #endif /* ACE_PROACTOR_H */
-

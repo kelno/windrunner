@@ -1,5 +1,3 @@
-// $Id: Typed_SV_Message.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #ifndef ACE_TYPED_SV_MESSAGE_CPP
 #define ACE_TYPED_SV_MESSAGE_CPP
 
@@ -28,4 +26,3 @@ ACE_Typed_SV_Message<T>::dump (void) const
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_TYPED_SV_MESSAGE_CPP */
-

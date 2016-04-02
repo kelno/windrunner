@@ -1,5 +1,3 @@
-// $Id: SPIPE.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/SPIPE.h"
 
 #include "ace/OS_NS_unistd.h"
@@ -8,7 +6,7 @@
 #include "ace/SPIPE.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, SPIPE, "$Id: SPIPE.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -80,4 +78,3 @@ ACE_SPIPE::set_duplex_handle (ACE_HANDLE handle)
 #endif /* ACE_HAS_STREAM_PIPES */
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

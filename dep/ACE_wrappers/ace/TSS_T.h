@@ -4,8 +4,6 @@
 /**
  *  @file    TSS_T.h
  *
- *  $Id: TSS_T.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *   Moved from Synch.h.
  *
  *  @author Douglas C. Schmidt <schmidt@cs.wustl.edu>
@@ -36,8 +34,13 @@
 # endif /* ACE_HAS_THREADS && (ACE_HAS_THREAD_SPECIFIC_STORAGE || ACE_HAS_TSS_EMULATION) */
 
 #include "ace/Thread_Mutex.h"
+#include "ace/Copy_Disabled.h"
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
+
+#if defined (ACE_HAS_THR_C_DEST)
+class ACE_TSS_Adapter;
+#endif
 
 /**
  * @class ACE_TSS
@@ -69,10 +72,9 @@ ACE_BEGIN_VERSIONED_NAMESPACE_DECL
  * instances of this type are dynamicaly allocated. On the stack it is
  * typically allocated inside the ACE_Thread::svc() method which
  * limits its lifetime appropriately.
- *
  */
 template <class TYPE>
-class ACE_TSS
+class ACE_TSS : private ACE_Copy_Disabled
 {
 public:
   /**
@@ -193,10 +195,21 @@ protected:
 
   /// "Destructor" that deletes internal TYPE * when thread exits.
   static void cleanup (void *ptr);
+
+  /// Obtains a plain value stored in the thread-specific storage.
+# if defined (ACE_HAS_THR_C_DEST)
+  ACE_TSS_Adapter *ts_value (void) const;
+# else
+  TYPE *ts_value (void) const;
+# endif /* ACE_HAS_THR_C_DEST */
+
+  /// Stores a new plain value in the thread-specific storage.
+# if defined (ACE_HAS_THR_C_DEST)
+  int ts_value (ACE_TSS_Adapter *new_tss_adapter) const;
+# else
+  int ts_value (TYPE *new_ts_obj) const;
+# endif /* ACE_HAS_THR_C_DEST */
 #endif /* defined (ACE_HAS_THREADS) && (defined (ACE_HAS_THREAD_SPECIFIC_STORAGE) || defined (ACE_HAS_TSS_EMULATION)) */
-  // = Disallow copying...
-  ACE_UNIMPLEMENTED_FUNC (void operator= (const ACE_TSS<TYPE> &))
-  ACE_UNIMPLEMENTED_FUNC (ACE_TSS (const ACE_TSS<TYPE> &))
 };
 
 /**
@@ -251,4 +264,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 #include /**/ "ace/post.h"
 #endif /* ACE_TSS_T_H */
-

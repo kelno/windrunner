@@ -1,5 +1,3 @@
-// $Id: Monitor_Control_Action.cpp 81691 2008-05-14 11:09:21Z johnnyw $
-
 #include "ace/Monitor_Control_Action.h"
 
 #if defined (ACE_HAS_MONITOR_FRAMEWORK) && (ACE_HAS_MONITOR_FRAMEWORK == 1)
@@ -41,6 +39,5 @@ namespace ACE
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_MONITOR_FRAMEWORK==1 */
-
 
 

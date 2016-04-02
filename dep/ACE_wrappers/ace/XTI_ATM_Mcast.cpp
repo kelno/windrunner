@@ -1,8 +1,6 @@
-// $Id: XTI_ATM_Mcast.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/XTI_ATM_Mcast.h"
 
-ACE_RCSID(ace, XTI_ATM_Mcast, "$Id: XTI_ATM_Mcast.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if defined (ACE_HAS_XTI_ATM)
 
@@ -68,4 +66,3 @@ ACE_XTI_ATM_Mcast::add_leaf (ACE_TLI_Stream &current_stream,
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_XTI_ATM */
-

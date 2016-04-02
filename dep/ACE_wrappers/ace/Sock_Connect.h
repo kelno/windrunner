@@ -4,8 +4,6 @@
 /**
  *  @file   Sock_Connect.h
  *
- *  $Id: Sock_Connect.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Priyanka Gontla <pgontla@ece.uci.edu>
  *  @author Based on code that existed formerly in ACE.h.
  */
@@ -105,4 +103,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 #include /**/ "ace/post.h"
 
 #endif  /* ACE_SOCK_CONNECT_H */
-

@@ -690,7 +690,7 @@ float GetSpellMaxRange(uint32 id)
 
 void FillSpellSummary()
 {
-    SpellSummary = new TSpellSummary[objmgr.GetMaxSpellId()];
+    SpellSummary = new TSpellSummary[objmgr.GetMaxSpellId() + 1];
 
     SpellEntry const* TempSpell;
 

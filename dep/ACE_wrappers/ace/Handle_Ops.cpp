@@ -1,14 +1,8 @@
-// $Id: Handle_Ops.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Handle_Ops.h"
 
 #include "ace/OS_NS_errno.h"
 #include "ace/OS_NS_fcntl.h"
 #include "ace/Time_Value.h"
-
-ACE_RCSID (ace,
-           Handle_Ops,
-           "$Id: Handle_Ops.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
@@ -46,4 +40,3 @@ ACE::handle_timed_open (ACE_Time_Value *timeout,
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

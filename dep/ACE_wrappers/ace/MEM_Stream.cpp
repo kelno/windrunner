@@ -1,5 +1,3 @@
-// $Id: MEM_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/MEM_Stream.h"
 
 #if (ACE_HAS_POSITION_INDEPENDENT_POINTERS == 1)
@@ -8,7 +6,7 @@
 #include "ace/MEM_Stream.inl"
 #endif /* __ACE_INLINE__ */
 
-ACE_RCSID(ace, MEM_Stream, "$Id: MEM_Stream.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -45,4 +43,3 @@ ACE_MEM_Stream::close (void)
 ACE_END_VERSIONED_NAMESPACE_DECL
 
 #endif /* ACE_HAS_POSITION_INDEPENDENT_POINTERS == 1 */
-

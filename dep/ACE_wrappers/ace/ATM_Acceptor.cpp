@@ -1,8 +1,6 @@
-// $Id: ATM_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/ATM_Acceptor.h"
 
-ACE_RCSID(ace, ATM_Acceptor, "$Id: ATM_Acceptor.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 #if defined (ACE_HAS_ATM)
 
@@ -75,13 +73,13 @@ ACE_ATM_Acceptor::get_local_addr (ACE_ATM_Addr &local_addr)
   if (ACE_OS::getsockname (acceptor_.get_handle (),
  (struct sockaddr *) & (myaddr->sockaddratmsvc),
                           &addrlen) < 0) {
-    ACE_DEBUG ((LM_DEBUG,
+    ACELIB_DEBUG ((LM_DEBUG,
                ACE_TEXT ("ATM_Acceptor (get_local_addr): ioctl: %d\n"),
                errno));
     return -1;
   }
 
-  return (0);
+  return 0;
 #else
   ACE_UNUSED_ARG (local_addr);
 
@@ -172,7 +170,7 @@ ACE_ATM_Acceptor::open (const ACE_Addr &remote_sap,
                                 params.get_flags ()
                                ))
       == ACE_INVALID_HANDLE) {
-    ACE_DEBUG (LM_DEBUG,
+    ACELIB_DEBUG (LM_DEBUG,
               ACE_TEXT ("Acceptor (socket): socket %d\n"),
               errno);
     return (ACE_INVALID_HANDLE);
@@ -209,7 +207,7 @@ ACE_ATM_Acceptor::open (const ACE_Addr &remote_sap,
                       &(local_sap_addr->sockaddratmsvc)),
                     sizeof (local_sap_addr->sockaddratmsvc)
                    ) == -1) {
-    ACE_DEBUG (LM_DEBUG,
+    ACELIB_DEBUG (LM_DEBUG,
               ACE_TEXT ("Acceptor (open): bind %d\n"),
               errno);
     return -1;
@@ -218,7 +216,7 @@ ACE_ATM_Acceptor::open (const ACE_Addr &remote_sap,
   if (ACE_OS::listen (handle,
                       backlog)
       == -1) {
-    ACE_DEBUG (LM_DEBUG,
+    ACELIB_DEBUG (LM_DEBUG,
               ACE_TEXT ("Acceptor (listen): listen %d\n"),
               errno);
     return -1;
@@ -236,8 +234,8 @@ int
 ACE_ATM_Acceptor::accept (ACE_ATM_Stream &new_sap,
                           ACE_Addr *remote_addr,
                           ACE_Time_Value *timeout,
-                          int restart,
-                          int reset_new_handle,
+                          bool restart,
+                          bool reset_new_handle,
                           ACE_ATM_Params params,
                           ACE_ATM_QoS qos)
 {
@@ -298,7 +296,7 @@ ACE_ATM_Acceptor::accept (ACE_ATM_Stream &new_sap,
   ACE_UNUSED_ARG (reset_new_handle);
   ACE_UNUSED_ARG (params);
   ACE_UNUSED_ARG (qos);
-  return (0);
+  return 0;
 #endif /* ACE_HAS_FORE_ATM_XTI */
 }
 
@@ -307,4 +305,3 @@ ACE_END_VERSIONED_NAMESPACE_DECL
 
 
 #endif /* ACE_HAS_ATM */
-

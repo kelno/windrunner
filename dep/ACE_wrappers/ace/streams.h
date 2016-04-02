@@ -4,8 +4,6 @@
 /**
  *  @file    streams.h
  *
- *  $Id: streams.h 82445 2008-07-28 13:40:01Z johnnyw $
- *
  *  @author Irfan Pyarali
  *
  *  This file contains the portability ugliness for the Standard C++
@@ -13,8 +11,6 @@
  *  will need to be updated.
  *
  *  This files deals with the streams includes.
- *
- *
  */
 //=============================================================================
 
@@ -136,4 +132,3 @@
 
 #include /**/ "ace/post.h"
 #endif /* ACE_STREAMS_H */
-

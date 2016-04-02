@@ -6,8 +6,6 @@
  *
  *  asynchronous input and output (REALTIME)
  *
- *  $Id: os_aio.h 80826 2008-03-04 14:51:23Z wotte $
- *
  *  @author Don Hinton <dhinton@dresystems.com>
  *  @author This code was originally in various places including ace/OS.h.
  */
@@ -45,4 +43,3 @@ extern "C"
 
 #include /**/ "ace/post.h"
 #endif /* ACE_OS_INCLUDE_OS_AIO_H */
-

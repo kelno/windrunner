@@ -1,7 +1,5 @@
-// $Id: Process_Semaphore.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Process_Semaphore.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/OS_Memory.h"
 
 #if !defined (__ACE_INLINE__)
@@ -10,7 +8,7 @@
 
 #include "ace/ACE.h"
 
-ACE_RCSID(ace, Process_Semaphore, "$Id: Process_Semaphore.cpp 80826 2008-03-04 14:51:23Z wotte $")
+
 
 ACE_BEGIN_VERSIONED_NAMESPACE_DECL
 
@@ -19,9 +17,9 @@ ACE_Process_Semaphore::dump (void) const
 {
 #if defined (ACE_HAS_DUMP)
 // ACE_TRACE ("ACE_Process_Semaphore::dump");
-  ACE_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_BEGIN_DUMP, this));
   this->lock_.dump ();
-  ACE_DEBUG ((LM_DEBUG, ACE_END_DUMP));
+  ACELIB_DEBUG ((LM_DEBUG, ACE_END_DUMP));
 #endif /* ACE_HAS_DUMP */
 }
 
@@ -109,4 +107,3 @@ ACE_Malloc_Lock_Adapter_T<ACE_Process_Semaphore>::operator () (const ACE_TCHAR *
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-

@@ -1,8 +1,6 @@
-// $Id: Filecache.cpp 80826 2008-03-04 14:51:23Z wotte $
-
 #include "ace/Filecache.h"
 #include "ace/Object_Manager.h"
-#include "ace/Log_Msg.h"
+#include "ace/Log_Category.h"
 #include "ace/ACE.h"
 #include "ace/Guard_T.h"
 #include "ace/OS_NS_string.h"
@@ -10,10 +8,6 @@
 #include "ace/OS_NS_unistd.h"
 #include "ace/OS_NS_fcntl.h"
 #include "ace/Truncate.h"
-
-ACE_RCSID (ace,
-           Filecache,
-           "$Id: Filecache.cpp 80826 2008-03-04 14:51:23Z wotte $")
 
 #if defined (ACE_WIN32)
 // Specifies no sharing flags.
@@ -56,14 +50,14 @@ ACE_Filecache_Handle::init (void)
 }
 
 ACE_Filecache_Handle::ACE_Filecache_Handle (void)
-  : file_ (0), handle_ (0), mapit_ (0)
+  : file_ (0), handle_ (0)
 {
   this->init ();
 }
 
 ACE_Filecache_Handle::ACE_Filecache_Handle (const ACE_TCHAR *filename,
                                             ACE_Filecache_Flag mapit)
-  : file_ (0), handle_ (0), mapit_ (mapit)
+  : file_ (0), handle_ (0)
 {
   this->init ();
   // Fetch the file from the Virtual_Filesystem let the
@@ -76,8 +70,8 @@ ACE_Filecache_Handle::ACE_Filecache_Handle (const ACE_TCHAR *filename,
 
 ACE_Filecache_Handle::ACE_Filecache_Handle (const ACE_TCHAR *filename,
                                             int size,
-                                            ACE_Filecache_Flag mapit)
-  : file_ (0), handle_ (0), mapit_ (mapit)
+                                            ACE_Filecache_Flag )
+  : file_ (0), handle_ (0)
 {
   this->init ();
 
@@ -168,6 +162,7 @@ template <>
 ACE_Filecache_Hash_Entry::ACE_Hash_Map_Entry (ACE_Filecache_Hash_Entry *next,
                                               ACE_Filecache_Hash_Entry *prev)
   : ext_id_ (0),
+    int_id_ (0),
     next_ (next),
     prev_ (prev)
 {
@@ -250,7 +245,7 @@ ACE_Filecache::insert_i (const ACE_TCHAR *filename,
                       ACE_Filecache_Object (filename, filelock, 0, mapit),
                       0);
 
-      //      ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("   (%t) CVF: creating %s\n"), filename));
+      //      ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("   (%t) CVF: creating %s\n"), filename));
 
       if (this->hash_.bind (filename, handle) == -1)
         {
@@ -373,7 +368,7 @@ ACE_Filecache::fetch (const ACE_TCHAR *filename, int mapit)
               filelock.release ();
           }
         }
-      //      ACE_DEBUG ((LM_DEBUG,  ACE_TEXT ("   (%t) CVF: found %s\n"), filename));
+      //      ACELIB_DEBUG ((LM_DEBUG,  ACE_TEXT ("   (%t) CVF: found %s\n"), filename));
     }
 
   return handle;
@@ -694,8 +689,8 @@ ACE_Filecache_Object::error (void) const
 int
 ACE_Filecache_Object::error_i (int error_value, const ACE_TCHAR *s)
 {
-  s = s;
-  ACE_ERROR ((LM_ERROR, ACE_TEXT ("%p.\n"), s));
+  ACE_UNUSED_ARG (s);
+  ACELIB_ERROR ((LM_ERROR, ACE_TEXT ("%p.\n"), s));
   this->error_ = error_value;
   return error_value;
 }
@@ -738,18 +733,9 @@ ACE_Filecache_Object::update (void) const
   if (ACE_OS::stat (this->filename_, &statbuf) == -1)
     result = 1;
   else
-    // non-portable code may follow
-#if defined (ACE_HAS_WINCE)
-    // Yup, non-portable... there's probably a way to safely implement
-    // difftime() on WinCE, but for now, this will have to do. It flags
-    // every file as having changed since cached.
-    result = 1;
-#else
     result = ACE_OS::difftime (this->stat_.st_mtime, statbuf.st_mtime) < 0;
-#endif /* ACE_HAS_WINCE */
 
   return result;
 }
 
 ACE_END_VERSIONED_NAMESPACE_DECL
-
